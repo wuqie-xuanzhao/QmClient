@@ -261,11 +261,6 @@ static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
 static bool ApplyQmSafeGraphicsRecovery()
 {
 	bool Changed = false;
-	if(str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") != 0)
-	{
-		str_copy(g_Config.m_GfxBackend, "OpenGL");
-		Changed = true;
-	}
 	const int FallbackGLMajor = 0;
 	const int FallbackGLMinor = 0;
 	if(g_Config.m_GfxGLMajor != FallbackGLMajor || g_Config.m_GfxGLMinor != FallbackGLMinor || g_Config.m_GfxGLPatch != 0)
@@ -330,7 +325,7 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	const bool Changed = ApplyQmSafeGraphicsRecovery();
 	if(Changed)
 	{
-		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting graphics to auto-detected OpenGL in windowed mode without FSAA", Latest.m_aPath);
+		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting safe graphics settings in windowed mode without FSAA", Latest.m_aPath);
 	}
 	else
 	{
@@ -6296,6 +6291,9 @@ int main(int argc, const char **argv)
 			g_Config.m_ClAntiPingWeapons = 1;
 		}
 	}
+	// 在清理旧遗留开关前记录其真实模式，供后续语义开关迁移使用。
+	const bool WasLegacyCollisionHitbox = g_Config.m_QmShowCollisionHitbox != 0 && g_Config.m_QmHitboxMode == 0;
+	const bool WasHitboxMode = g_Config.m_QmHitboxMode != 0;
 	if(g_Config.m_ClConfigVersion < 3)
 	{
 		if(g_Config.m_QmShowCollisionHitbox && !g_Config.m_QmHitboxMode)
@@ -6304,7 +6302,35 @@ int main(int argc, const char **argv)
 		g_Config.m_QmHitboxColorFreeze = g_Config.m_QmCollisionHitboxColorFreeze;
 		g_Config.m_QmShowCollisionHitbox = 0;
 	}
-	g_Config.m_ClConfigVersion = 3;
+	if(g_Config.m_ClConfigVersion < 4)
+	{
+		if(WasLegacyCollisionHitbox)
+		{
+			// 遗留模式不显示 Tee 圆和武器，只显示地图危险边界、探针及拾取物。
+			g_Config.m_QmHitboxShowMap = 1;
+			g_Config.m_QmHitboxShowTeeCollision = 0;
+			g_Config.m_QmHitboxShowTeeFreeze = 1;
+			g_Config.m_QmHitboxShowTeeDeath = 1;
+			g_Config.m_QmHitboxShowPickups = 1;
+			g_Config.m_QmHitboxShowHammer = 0;
+			g_Config.m_QmHitboxShowProjectiles = 0;
+			g_Config.m_QmHitboxShowLasers = 0;
+			g_Config.m_QmHitboxShowFreezeLasers = 0;
+			g_Config.m_QmHitboxShowHook = 0;
+		}
+		else if(WasHitboxMode || g_Config.m_QmHitboxShowMap || g_Config.m_QmHitboxShowTees || g_Config.m_QmHitboxShowPickups || g_Config.m_QmHitboxShowWeapons)
+		{
+			g_Config.m_QmHitboxShowTeeCollision = g_Config.m_QmHitboxShowTees;
+			g_Config.m_QmHitboxShowTeeFreeze = g_Config.m_QmHitboxShowTees;
+			g_Config.m_QmHitboxShowTeeDeath = g_Config.m_QmHitboxShowTees;
+			g_Config.m_QmHitboxShowHammer = g_Config.m_QmHitboxShowWeapons;
+			g_Config.m_QmHitboxShowProjectiles = g_Config.m_QmHitboxShowWeapons;
+			g_Config.m_QmHitboxShowLasers = g_Config.m_QmHitboxShowWeapons;
+			g_Config.m_QmHitboxShowFreezeLasers = g_Config.m_QmHitboxShowWeapons;
+			g_Config.m_QmHitboxShowHook = g_Config.m_QmHitboxShowWeapons;
+		}
+	}
+	g_Config.m_ClConfigVersion = 4;
 
 	RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);
 

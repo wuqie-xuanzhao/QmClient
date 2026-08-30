@@ -16,6 +16,7 @@ MACRO_CONFIG_INT(QmPerfLogfile, qm_perf_logfile, 0, 0, 1, CFGFLAG_CLIENT | CFGFL
 MACRO_CONFIG_INT(QmPerfDebugThresholdMs, qm_perf_debug_threshold_ms, 4, 1, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Performance debug log threshold (ms)")
 MACRO_CONFIG_INT(QmPerfStutterDiagnostics, qm_perf_stutter_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable client stutter diagnostics at startup")
 MACRO_CONFIG_INT(QmMacosGraphicsDiagnostics, qm_macos_graphics_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable macOS graphics diagnostics and Instruments signposts")
+MACRO_CONFIG_INT(QmVulkanApiVersion, qm_vulkan_api_version, 11, 11, 14, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Vulkan API version: 11=1.1 compatibility, 14=1.4 strict")
 MACRO_CONFIG_INT(QmProcessHighPriority, qm_process_high_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle client process normal/high priority on Windows")
 MACRO_CONFIG_INT(QmNetQos, qm_net_qos, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Prioritize outgoing game traffic on Windows (best effort)")
 MACRO_CONFIG_INT(QmAssetsPreviewBudgetMbOverride, qm_assets_preview_budget_mb_override, 0, 0, 16384, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Resource preview VRAM budget override (MB, 0=auto)")
@@ -114,6 +115,15 @@ MACRO_CONFIG_INT(QmHitboxShowMap, qm_hitbox_show_map, 0, 0, 1, CFGFLAG_CLIENT | 
 MACRO_CONFIG_INT(QmHitboxShowTees, qm_hitbox_show_tees, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show Tee Collision in Hitbox Mode")
 MACRO_CONFIG_INT(QmHitboxShowPickups, qm_hitbox_show_pickups, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show Pickup Ranges in Hitbox Mode")
 MACRO_CONFIG_INT(QmHitboxShowWeapons, qm_hitbox_show_weapons, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show Weapon Interactions in Hitbox Mode")
+// 语义化碰撞箱显示开关。旧的 ShowTees/ShowWeapons 保留用于配置迁移。
+MACRO_CONFIG_INT(QmHitboxShowTeeCollision, qm_hitbox_show_tee_collision, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tee collision (Tee to Tee)")
+MACRO_CONFIG_INT(QmHitboxShowTeeFreeze, qm_hitbox_show_tee_freeze, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tee freeze probe (Tee to Freeze)")
+MACRO_CONFIG_INT(QmHitboxShowTeeDeath, qm_hitbox_show_tee_death, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Tee death probe")
+MACRO_CONFIG_INT(QmHitboxShowHammer, qm_hitbox_show_hammer, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hammer interaction")
+MACRO_CONFIG_INT(QmHitboxShowProjectiles, qm_hitbox_show_projectiles, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Projectile / explosion range")
+MACRO_CONFIG_INT(QmHitboxShowLasers, qm_hitbox_show_lasers, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Laser / shotgun interaction")
+MACRO_CONFIG_INT(QmHitboxShowFreezeLasers, qm_hitbox_show_freeze_lasers, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Freeze laser collision volume")
+MACRO_CONFIG_INT(QmHitboxShowHook, qm_hitbox_show_hook, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hook interaction")
 MACRO_CONFIG_INT(QmHitboxAlpha, qm_hitbox_alpha, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hitbox Mode Global Opacity")
 MACRO_CONFIG_INT(QmHitboxPlayerScope, qm_hitbox_player_scope, 2, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all")
 MACRO_CONFIG_COL(QmHitboxColorFreeze, qm_hitbox_color_freeze, 16711935, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hitbox Mode Freeze Border Color")
@@ -210,8 +220,6 @@ MACRO_CONFIG_INT(QmInputOverlay, qm_input_overlay, 0, 0, 1, CFGFLAG_CLIENT | CFG
 MACRO_CONFIG_INT(QmInputOverlayScale, qm_input_overlay_scale, 20, 1, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay keyboard scale (percent)")
 MACRO_CONFIG_INT(QmInputOverlayMouseScale, qm_input_overlay_mouse_scale, 20, 1, 200, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay mouse scale (percent)")
 MACRO_CONFIG_INT(QmInputOverlayOpacity, qm_input_overlay_opacity, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay opacity (percent)")
-MACRO_CONFIG_INT(QmInputOverlayPosX, qm_input_overlay_pos_x, 71, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay X position (percent)")
-MACRO_CONFIG_INT(QmInputOverlayPosY, qm_input_overlay_pos_y, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Input overlay Y position (percent)")
 
 // Notification Bar / 通知栏
 MACRO_CONFIG_INT(QmHudNotificationsSystem, qm_hud_notifications_system, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notification bar overrides server system messages (except version info)")
@@ -495,6 +503,12 @@ MACRO_CONFIG_STR(QmNeteaseHookHelperPath, qm_netease_hook_helper_path, 512, "", 
 // 网易云歌词展示开关。关闭展示时后台桥接仍可继续采集并维护当前歌曲状态。
 MACRO_CONFIG_INT(QmLyrics, qm_lyrics, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Netease lyric integration")
 MACRO_CONFIG_INT(QmLyricsInMediaIsland, qm_lyrics_in_media_island, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show current Netease lyric in Media Island")
+
+// 汽水音乐 Hook 集成(共享同一套歌词展示开关)。
+// 与网易云 Hook 互斥:默认关闭,用户在 Lyrics 设置里切换。
+MACRO_CONFIG_INT(QmSodaHookEnable, qm_soda_hook_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable SodaMusic hook integration")
+MACRO_CONFIG_INT(QmSodaHookTimeoutMs, qm_soda_hook_timeout_ms, 1500, 250, 10000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "SodaMusic hook heartbeat timeout (milliseconds)")
+MACRO_CONFIG_STR(QmSodaHookHelperPath, qm_soda_hook_helper_path, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "SodaMusic hook helper path (empty=beside QmClient)")
 
 // Speedrun Timer - 速通倒计时器
 MACRO_CONFIG_INT(QmSpeedrunTimer, qm_speedrun_timer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun countdown timer")

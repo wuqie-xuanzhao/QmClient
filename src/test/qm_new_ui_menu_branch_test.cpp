@@ -74,6 +74,58 @@ TEST(QmNewUiMenuBranches, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemanti
 	EXPECT_FALSE(QmTextMatchesIncludeExcludeFilter(nullptr, "", ""));
 }
 
+TEST(QmCollisionHitbox, SemanticTogglesAndFreezeLaserVolumeAreIndependent)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Menu = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Hitbox = ReadTestSourceFile("src/game/client/components/qmclient/collision_hitbox.cpp");
+	const std::string Client = ReadTestSourceFile("src/engine/client/client.cpp");
+
+	for(const char *pConfigName : {
+		    "QmHitboxShowMap",
+		    "QmHitboxShowTeeCollision",
+		    "QmHitboxShowTeeFreeze",
+		    "QmHitboxShowTeeDeath",
+		    "QmHitboxShowPickups",
+		    "QmHitboxShowHammer",
+		    "QmHitboxShowProjectiles",
+		    "QmHitboxShowLasers",
+		    "QmHitboxShowFreezeLasers",
+		    "QmHitboxShowHook"})
+	{
+		EXPECT_NE(Config.find(std::string("MACRO_CONFIG_INT(") + pConfigName), std::string::npos) << pConfigName;
+	}
+
+	for(const char *pState : {
+		    "g_Config.m_QmHitboxShowMap",
+		    "g_Config.m_QmHitboxShowTeeCollision",
+		    "g_Config.m_QmHitboxShowTeeFreeze",
+		    "g_Config.m_QmHitboxShowTeeDeath",
+		    "g_Config.m_QmHitboxShowPickups",
+		    "g_Config.m_QmHitboxShowHammer",
+		    "g_Config.m_QmHitboxShowProjectiles",
+		    "g_Config.m_QmHitboxShowLasers",
+		    "g_Config.m_QmHitboxShowFreezeLasers",
+		    "g_Config.m_QmHitboxShowHook"})
+	{
+		EXPECT_NE(Menu.find(pState), std::string::npos) << pState;
+		EXPECT_NE(Hitbox.find(pState), std::string::npos) << pState;
+	}
+
+	EXPECT_NE(Hitbox.find("LASERTYPE_FREEZE"), std::string::npos);
+	EXPECT_NE(Hitbox.find("LASERGUNTYPE_FREEZE"), std::string::npos);
+	EXPECT_NE(Hitbox.find("LASERGUNTYPE_EXPFREEZE"), std::string::npos);
+	EXPECT_NE(Hitbox.find("BuildHitboxCapsuleOutline"), std::string::npos);
+	EXPECT_NE(Hitbox.find("CCharacterCore::PhysicalSize()"), std::string::npos);
+	EXPECT_NE(Client.find("if(g_Config.m_ClConfigVersion < 4)"), std::string::npos);
+	EXPECT_NE(Client.find("g_Config.m_QmHitboxShowTeeCollision = g_Config.m_QmHitboxShowTees"), std::string::npos);
+	EXPECT_NE(Client.find("g_Config.m_QmHitboxShowFreezeLasers = g_Config.m_QmHitboxShowWeapons"), std::string::npos);
+	EXPECT_NE(Hitbox.find("RenderHammerHitboxes();"), std::string::npos);
+	EXPECT_NE(Hitbox.find("RenderProjectileHitboxes();"), std::string::npos);
+	EXPECT_NE(Hitbox.find("RenderLaserHitboxes();"), std::string::npos);
+	EXPECT_NE(Hitbox.find("RenderHookHitboxes();"), std::string::npos);
+}
+
 namespace
 {
 
@@ -1492,11 +1544,14 @@ TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string PlayersSource = ReadTextFile("src/game/client/components/players.cpp");
 	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string RegistrySource = ReadTextFile("src/game/client/QmUi/QmCardRegistry.cpp");
 
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimDurationMs, qm_weapon_switch_anim_duration_ms, 300"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimDistance, qm_weapon_switch_anim_distance, 40"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimRotation, qm_weapon_switch_anim_rotation, 360"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponSwitchAnimEasing, qm_weapon_switch_anim_easing"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponReloadAnim, qm_weapon_reload_anim"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponReloadAnimProbability, qm_weapon_reload_anim_probability"), std::string::npos);
 
 	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimDurationMs"), std::string::npos);
 	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimDistance"), std::string::npos);
@@ -1504,12 +1559,30 @@ TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 	EXPECT_NE(PlayersSource.find("g_Config.m_QmWeaponSwitchAnimEasing"), std::string::npos);
 
 	const std::string WeaponAnimationContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualWeaponAnimationContent(");
-	const size_t Toggle = WeaponAnimationContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim");
-	ASSERT_NE(Toggle, std::string::npos);
-	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-duration\", \"Weapon switch duration\"", Toggle), std::string::npos);
-	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-distance\", \"Weapon switch distance\"", Toggle), std::string::npos);
-	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-rotation\", \"Weapon switch rotation\"", Toggle), std::string::npos);
-	EXPECT_NE(WeaponAnimationContent.find("Localize(\"Weapon switch easing\")", Toggle), std::string::npos);
+	const size_t SwitchToggle = WeaponAnimationContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim");
+	const size_t ReloadToggle = WeaponAnimationContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim");
+	const size_t ReloadProbability = WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-reload-animation-probability\", \"Weapon reload animation probability\"");
+	const size_t SharedControls = WeaponAnimationContent.find("if(!g_Config.m_QmWeaponSwitchAnim && !g_Config.m_QmWeaponReloadAnim)");
+	const size_t SwitchControls = WeaponAnimationContent.find("if(!g_Config.m_QmWeaponSwitchAnim)", SharedControls);
+	ASSERT_NE(SwitchToggle, std::string::npos);
+	ASSERT_NE(ReloadToggle, std::string::npos);
+	ASSERT_NE(ReloadProbability, std::string::npos);
+	ASSERT_NE(SharedControls, std::string::npos);
+	ASSERT_NE(SwitchControls, std::string::npos);
+	EXPECT_LT(SwitchToggle, ReloadToggle);
+	EXPECT_LT(ReloadToggle, ReloadProbability);
+	EXPECT_LT(ReloadProbability, SharedControls);
+	EXPECT_LT(SharedControls, SwitchControls);
+	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-duration\", \"Weapon switch duration\"", SwitchControls), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-distance\", \"Weapon switch distance\"", SwitchControls), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("RenderValue(\"qmclient-weapon-switch-rotation\", \"Weapon switch rotation\"", SwitchControls), std::string::npos);
+	EXPECT_NE(WeaponAnimationContent.find("Localize(\"Weapon switch easing\")", SwitchControls), std::string::npos);
+
+	const std::string VisualDeck = FunctionBody(MenusSource, "void CMenus::RenderSettingsQmClientVisualDeck(");
+	EXPECT_NE(VisualDeck.find("ResolveQmVisualWeaponAnimationHeight(Metrics, g_Config.m_QmWeaponSwitchAnim != 0, g_Config.m_QmWeaponReloadAnim != 0)"), std::string::npos);
+	EXPECT_NE(VisualDeck.find("(g_Config.m_QmWeaponReloadAnim ? 2u : 0u)"), std::string::npos);
+	EXPECT_NE(VisualDeck.find("HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim, &g_Config.m_QmWeaponReloadAnim)"), std::string::npos);
+	EXPECT_NE(RegistrySource.find("装填动画 zhuangtian donghua reload animation"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, ProcessPriorityAndImeHaveVisibleSettings)
@@ -4173,13 +4246,13 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_NE(StartupHook.find("ListDirectoryInfo"), std::string::npos);
 	EXPECT_NE(StartupHook.find("ReadFileStr"), std::string::npos);
 
-	EXPECT_NE(Recovery.find("str_copy(g_Config.m_GfxBackend, \"OpenGL\");"), std::string::npos);
+	EXPECT_EQ(Recovery.find("str_copy(g_Config.m_GfxBackend, \"OpenGL\");"), std::string::npos);
 	EXPECT_NE(Recovery.find("const int FallbackGLMajor = 0;"), std::string::npos);
 	EXPECT_NE(Recovery.find("const int FallbackGLMinor = 0;"), std::string::npos);
 	EXPECT_EQ(Recovery.find("CONF_PLATFORM_MACOS"), std::string::npos);
 	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = 0;"), std::string::npos);
 	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = 0;"), std::string::npos);
-	EXPECT_NE(StartupHook.find("resetting graphics to auto-detected OpenGL in windowed mode without FSAA"), std::string::npos);
+	EXPECT_NE(StartupHook.find("resetting safe graphics settings in windowed mode without FSAA"), std::string::npos);
 	EXPECT_EQ(StartupHook.find("CONF_PLATFORM_MACOS"), std::string::npos);
 
 	const size_t HookCall = Source.find("RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);");
@@ -4279,7 +4352,7 @@ TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
 	EXPECT_FALSE(ShouldSyncActualOpenGLVersion(EBackendType::BACKEND_TYPE_OPENGL_ES, {1, 0, 0}, {3, 2, 0}));
 }
 
-TEST(QmNewUiMenuBranches, VulkanSelectionKeepsCompatibilityAndHighestTiersSeparate)
+TEST(QmNewUiMenuBranches, VulkanApiSelectionDefaultsTo11AndTreats14AsStrict)
 {
 	EXPECT_EQ(gs_BackendVulkanMinimumVersion.m_Major, 1);
 	EXPECT_EQ(gs_BackendVulkanMinimumVersion.m_Minor, 1);
@@ -4295,24 +4368,31 @@ TEST(QmNewUiMenuBranches, VulkanSelectionKeepsCompatibilityAndHighestTiersSepara
 	EXPECT_EQ(ClampVulkanVersionToSupportedRange({2, 0, 0}).m_Minor, 4);
 	EXPECT_EQ(MinVulkanVersion({1, 4, 0}, {1, 2, 37}).m_Minor, 2);
 	EXPECT_EQ(MinVulkanVersion({1, 1, 99}, {1, 4, 0}).m_Minor, 1);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(11).m_Minor, 1);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(12).m_Minor, 1);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(13).m_Minor, 1);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(14).m_Minor, 4);
 
 	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp");
 	const std::string GraphicsThreadedSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	const std::string VulkanSource = ReadTextFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
+	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string ClampDriverVersion = FunctionBody(BackendSource, "void CGraphicsBackend_SDL_GL::ClampDriverVersion(");
 	const std::string DriverVersions = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDriverVersion(");
 	const std::string DetectedVersion = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion(");
 	const std::string ResolveApiVersion = FunctionBody(VulkanSource, "bool ResolveRequestedVulkanApiVersion(");
 	const std::string CreateInstance = FunctionBody(VulkanSource, "bool CreateVulkanInstance(");
 	const std::string SelectGpu = FunctionBody(VulkanSource, "bool SelectGpu(");
+	const std::string InitVulkanSdl = FunctionBody(VulkanSource, "int InitVulkanSDL(");
 
 	EXPECT_NE(DriverVersions.find("Major = 0;"), std::string::npos);
 	EXPECT_NE(DriverVersions.find("Minor = 0;"), std::string::npos);
 	EXPECT_EQ(ClampDriverVersion.find("NormalizeRequestedVulkanVersion"), std::string::npos);
 	EXPECT_EQ(ClampDriverVersion.find("g_Config.m_GfxGLMajor = Version.m_Major"), std::string::npos);
-	EXPECT_NE(ResolveApiVersion.find("ClampVulkanVersionToSupportedRange(LoaderVersion)"), std::string::npos);
-	EXPECT_EQ(ResolveApiVersion.find("RequestedVersion = gs_BackendVulkanMinimumVersion"), std::string::npos);
+	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVulkanApiVersion, qm_vulkan_api_version, 11, 11, 14"), std::string::npos);
+	EXPECT_NE(ResolveApiVersion.find("ResolveConfiguredVulkanApiVersion(g_Config.m_QmVulkanApiVersion)"), std::string::npos);
+	EXPECT_EQ(ResolveApiVersion.find("ClampVulkanVersionToSupportedRange(LoaderVersion)"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("SDL_Vulkan_GetVkGetInstanceProcAddr"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("vkEnumerateInstanceVersion"), std::string::npos);
 	EXPECT_NE(VulkanSource.find("FirstCompatibleDeviceIndex"), std::string::npos);
@@ -4321,9 +4401,28 @@ TEST(QmNewUiMenuBranches, VulkanSelectionKeepsCompatibilityAndHighestTiersSepara
 	EXPECT_NE(GraphicsThreadedSource.find("Falling back to automatically detected OpenGL"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("s_GfxBackendChanged = true;"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("s_GfxGpuChanged = true;"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("s_GfxVulkanApiVersionChanged = true;"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Vulkan API\")"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("g_Config.m_QmVulkanApiVersion"), std::string::npos);
 	EXPECT_NE(CreateInstance.find("VKAppInfo.apiVersion = m_RequestedApiVersion;"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("IsVulkanVersionAtLeast(DeviceVersion, gs_BackendVulkanMinimumVersion)"), std::string::npos);
+	EXPECT_NE(CreateInstance.find("VkInstance CreatedInstance = VK_NULL_HANDLE;"), std::string::npos);
+	EXPECT_NE(CreateInstance.find("m_LastVulkanInstanceCreateResult = Res;"), std::string::npos);
+	EXPECT_NE(CreateInstance.find("Res == VK_ERROR_INCOMPATIBLE_DRIVER"), std::string::npos);
+	EXPECT_NE(CreateInstance.find("if(Res != VK_SUCCESS)"), std::string::npos);
+	EXPECT_NE(CreateInstance.find("The Vulkan driver rejected the requested Vulkan 1.4 instance"), std::string::npos);
+	EXPECT_NE(SelectGpu.find("const SVulkanVersion RequiredVersion"), std::string::npos);
+	EXPECT_NE(SelectGpu.find("IsVulkanVersionAtLeast(DeviceVersion, RequiredVersion)"), std::string::npos);
+	EXPECT_NE(SelectGpu.find("HasRequiredVersionDevice"), std::string::npos);
+	EXPECT_NE(SelectGpu.find("m_RequiredVulkanVersionUnavailable = true;"), std::string::npos);
+	EXPECT_NE(SelectGpu.find("m_RequiredVulkanVersionUnavailable = !HasRequiredVersionDevice;"), std::string::npos);
 	EXPECT_NE(SelectGpu.find("m_EffectiveApiVersion"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("g_Config.m_QmVulkanApiVersion = 11;"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("falling back to Vulkan 1.1"), std::string::npos);
+	EXPECT_EQ(InitVulkanSdl.find("m_LastVulkanInstanceCreateResult != VK_ERROR_INCOMPATIBLE_DRIVER"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("The selected Vulkan 1.4 instance could not be created"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("FallbackToVulkan11"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("ResetInitializationDiagnostics();"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("DestroyVulkanInstance();"), std::string::npos);
 	EXPECT_NE(DetectedVersion.find("BACKEND_TYPE_VULKAN"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("\"Vulkan (%s)\""), std::string::npos);
 }

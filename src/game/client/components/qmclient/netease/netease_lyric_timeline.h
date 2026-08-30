@@ -18,6 +18,7 @@ namespace NeteaseLyrics
 
 	// 选择当前句。时间在第一句之前或明确的时间空洞中返回无效，不显示旧句。
 	SSelectedLine SelectCurrentLine(const STimeline &Timeline, int64_t PositionMs);
+	bool AreTimelinesEquivalent(const STimeline &Left, const STimeline &Right);
 
 	struct SPlaybackAnchor
 	{
@@ -48,6 +49,7 @@ namespace NeteaseLyrics
 
 namespace QmNetease
 {
+	using NeteaseLyrics::AreTimelinesEquivalent;
 	using NeteaseLyrics::IsSnapshotStale;
 	using NeteaseLyrics::SelectCurrentLine;
 	using NeteaseLyrics::SGenerationState;

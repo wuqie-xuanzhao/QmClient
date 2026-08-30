@@ -29,6 +29,7 @@ public:
 
 	bool GetCurrentLyric(char *pBuffer, size_t BufferSize, ColorRGBA *pColor = nullptr) const;
 	bool HasCurrentLyric() const;
+	bool HasActiveLyrics() const;
 	uint64_t CurrentSongId() const;
 	uint64_t CurrentGeneration() const;
 	const NeteaseLyrics::SCurrentState &Snapshot() const { return m_LyricState.Snapshot(); }
@@ -47,6 +48,10 @@ private:
 	std::string m_LastMediaTitle;
 	std::string m_LastMediaArtist;
 	bool m_WaitingForBridgeIdentity = false;
+	uint64_t m_BridgeSyncWaitStartTick = 0;
+	uint64_t m_LastSmtcAlignedBridgeSongId = 0;
+	uint64_t m_LastSmtcAlignedBridgeGeneration = 0;
+	bool m_ActiveLyrics = false;
 	bool m_LastBridgePositionValid = false;
 	bool m_Initialized = false;
 };

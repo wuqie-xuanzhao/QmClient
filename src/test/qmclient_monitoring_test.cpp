@@ -7605,6 +7605,8 @@ TEST(QmMonitoringHelpers, QmClientDeckMeasureRevisionsDoNotPreMeasureContent)
 		EXPECT_NE(FunctionDeck.find(pState), std::string::npos) << pState;
 	for(const char *pState : {"g_Config.m_QmChatBubble", "g_Config.m_QmCameraDrift", "g_Config.m_QmDynamicFov", "g_Config.m_QmAspectPreset", "g_Config.m_QmSkinChangeTransition", "g_Config.m_QmWeaponSwitchAnim", "g_Config.m_QmHitboxMode", "g_Config.m_QmShowCollisionHitbox"})
 		EXPECT_NE(VisualDeck.find(pState), std::string::npos) << pState;
+	for(const char *pState : {"g_Config.m_QmHitboxShowMap", "g_Config.m_QmHitboxShowTeeCollision", "g_Config.m_QmHitboxShowTeeFreeze", "g_Config.m_QmHitboxShowTeeDeath", "g_Config.m_QmHitboxShowHammer", "g_Config.m_QmHitboxShowProjectiles", "g_Config.m_QmHitboxShowLasers", "g_Config.m_QmHitboxShowFreezeLasers", "g_Config.m_QmHitboxShowHook"})
+		EXPECT_NE(VisualDeck.find(pState), std::string::npos) << pState;
 
 	EXPECT_NE(BlockWords.find("str_copy(s_aBlockWordsLayoutConfigCache"), std::string::npos);
 	EXPECT_NE(BlockWords.find("++s_BlockWordsLayoutRevision"), std::string::npos);

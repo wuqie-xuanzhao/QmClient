@@ -446,9 +446,17 @@ inline float ResolveQmVisualSkinTransitionHeight(const SSettingsContentMetrics &
 	return 7.0f * StandardRow + Notes + (Enabled ? 5.0f * StandardRow : 0.0f);
 }
 
+inline float ResolveQmVisualWeaponAnimationHeight(const SSettingsContentMetrics &Metrics, const bool SwitchEnabled, const bool ReloadEnabled)
+{
+	// 两个独立开关始终可见；装填概率、共享范围和切枪参数按各自开关展开。
+	const int Rows = 2 + (ReloadEnabled ? 1 : 0) + (SwitchEnabled || ReloadEnabled ? 1 : 0) + (SwitchEnabled ? 4 : 0);
+	return Rows * Metrics.m_RowStep + Metrics.m_LineSpacing;
+}
+
 inline float ResolveQmVisualCollisionHitboxHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
 {
-	return (Enabled ? 10.0f : 1.0f) * Metrics.m_RowStep;
+	// 总开关、十个语义开关、玩家范围、三项颜色和透明度共十六行。
+	return (Enabled ? 16.0f : 1.0f) * Metrics.m_RowStep;
 }
 
 inline float ResolveQmVisualFocusModeHeight(const SSettingsContentMetrics &Metrics)
@@ -647,7 +655,8 @@ inline float ResolveQmHudInputOverlayHeight(const SSettingsContentMetrics &Metri
 {
 	if(!Enabled)
 		return Metrics.m_LineHeight;
-	return 5.0f * Metrics.m_RowStep + 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing) - Metrics.m_LineSpacing;
+	// 复选框、三个数值项和编辑器按钮共五行（水平/垂直位置已删除，由 HUD 编辑器接管）。
+	return 5.0f * Metrics.m_RowStep;
 }
 
 inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metrics, const bool Expanded)

@@ -419,6 +419,10 @@ namespace QmNeteaseBridge
 			return;
 		NeteaseLyrics::STimeline ParsedTimeline;
 		const bool ParsedLyrics = Kind == "lyrics" && NeteaseLyrics::ParseRawLyrics(Raw, &ParsedTimeline);
+		// 加载中的空结果或格式异常不能清掉已经生效的时间轴。歌曲切换由
+		// progress 的 songId 立即清理，合法歌词报告只负责安装新时间轴。
+		if(Kind == "lyrics" && !ParsedLyrics)
+			return;
 		const uint64_t ReportTick = NowTick();
 		bool NeedPublish = false;
 		bool ForcePublish = false;
@@ -469,19 +473,18 @@ namespace QmNeteaseBridge
 				if(Decision == NeteaseLyrics::ELyricSongDecision::SwitchSong && SwitchSongLocked(SongId))
 					ForcePublish = true;
 				m_LastReportTick = ReportTick;
-				if(ParsedLyrics)
+				if(ParsedLyrics && m_Source == QmNeteaseHook::ENeteaseLyricSource::Frontend && NeteaseLyrics::AreTimelinesEquivalent(m_Timeline, ParsedTimeline))
 				{
-					m_Timeline = std::move(ParsedTimeline);
-					m_Source = QmNeteaseHook::ENeteaseLyricSource::Frontend;
-					m_CurrentLyric.clear();
-					m_LineStartMs = -1;
-					m_LineEndMs = -1;
-					ClearPendingLyricsLocked();
+					// Worker 会周期性重放同一份歌词。仅刷新 heartbeat，不能
+					// 清空当前句，否则 HUD 会收到无效脉冲并反复收起。
+					return;
 				}
-				else if(m_Source == QmNeteaseHook::ENeteaseLyricSource::Frontend || m_Source == QmNeteaseHook::ENeteaseLyricSource::None)
-					ClearLyricsLocked();
-				// malformed Frontend 报告不能清掉仍然有效的歌词结果，
-				// 等待下一次合法报告。
+				m_Timeline = std::move(ParsedTimeline);
+				m_Source = QmNeteaseHook::ENeteaseLyricSource::Frontend;
+				m_CurrentLyric.clear();
+				m_LineStartMs = -1;
+				m_LineEndMs = -1;
+				ClearPendingLyricsLocked();
 				NeedPublish = true;
 			}
 		}
@@ -556,6 +559,8 @@ namespace QmNeteaseBridge
 				Snapshot.m_Flags |= QmNeteaseHook::V5_FLAG_PLAYING_HINT;
 			HighPriorityTimelineActive = m_Timeline.m_HasTiming && !m_Timeline.m_vLines.empty() &&
 						     m_Source == QmNeteaseHook::ENeteaseLyricSource::Frontend;
+			if(HighPriorityTimelineActive)
+				Snapshot.m_Flags |= QmNeteaseHook::V5_FLAG_LYRIC_TIMELINE_VALID;
 			if(HighPriorityTimelineActive)
 				Snapshot.m_LyricSource = (uint32_t)m_Source;
 			if(!m_CurrentLyric.empty() && m_Source != QmNeteaseHook::ENeteaseLyricSource::None)

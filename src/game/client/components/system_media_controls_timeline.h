@@ -29,6 +29,13 @@ namespace SystemMediaControls
 	class CTimelineGenerationTracker
 	{
 	public:
+		void Reset()
+		{
+			m_LastProperties = {};
+			m_Generation = 0;
+			m_HasProperties = false;
+		}
+
 		uint64_t Update(const STimelineProperties &Properties)
 		{
 			if(!m_HasProperties || !(Properties == m_LastProperties))

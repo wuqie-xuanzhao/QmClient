@@ -2514,7 +2514,7 @@ polish = "Instalowanie aktualizacji. Proszę czekać..."
 [[message]]
 key = "Draw lines showing screen/clickbox center"
 [message.translations]
-simplified_chinese = "绘制线条显示屏幕/点击框中心"
+simplified_chinese = "绘制线条显示屏幕/碰撞箱中心"
 traditional_chinese = "繪製線條顯示屏幕/點擊框中心"
 japanese = "画面/クリックボックスの中心を示す線を描画"
 korean = "화면/클릭박스 중심을 보여주는 선 그리기"
@@ -2706,7 +2706,7 @@ polish = "Włącz broń moda na %d: %s"
 [[message]]
 key = "Enable rainbow rendering for hook"
 [message.translations]
-simplified_chinese = "启用钩子彩虹渲染"
+simplified_chinese = "启用钩索彩虹渲染"
 traditional_chinese = "啟用鉤子彩虹渲染"
 japanese = "フックのレインボーレンダリングを有効化"
 korean = "갈고리 무지개 렌더링 활성화"
@@ -3442,7 +3442,7 @@ polish = "Ukryj wskaźnik dla tee na ekranie"
 [[message]]
 key = "Hide other players' ghosts when frozen"
 [message.translations]
-simplified_chinese = "如果其他玩家的幽灵被冻结则隐藏"
+simplified_chinese = "自己被冻结时隐藏其他玩家的幽灵"
 traditional_chinese = "如果其他玩家的幽靈被凍結則隱藏"
 japanese = "凍結時に他のプレイヤーのゴーストを非表示"
 korean = "얼었을 때 다른 플레이어의 유령 숨기기"
@@ -3650,7 +3650,7 @@ polish = "Uwzględnij emotikonę przy zapisywaniu/wczytywaniu presetów konfigur
 [[message]]
 key = "Include name when saving/loading config preset"
 [message.translations]
-simplified_chinese = "保存/加载配置方案时包含名字"
+simplified_chinese = "保存/加载配置方案时包含昵称"
 traditional_chinese = "保存/加載配置方案時包含名字"
 japanese = "設定プリセットの保存/読み込み時に名前を含める"
 korean = "설정 프리셋 저장/불러오기 시 이름 포함"
@@ -5202,7 +5202,7 @@ polish = "Kolor zamrożonego Tee we wskaźniku gracza"
 [[message]]
 key = "Player indicator unfreezing Tee color"
 [message.translations]
-simplified_chinese = "玩家指示器中脱困中 Tee 的颜色"
+simplified_chinese = "玩家指示器中正在解冻的 Tee 的颜色"
 traditional_chinese = "玩家指示器中脫困中 Tee 的顏色"
 japanese = "プレイヤーインジケーターのフリーズ解除中の Tee の色"
 korean = "플레이어 표시기에서 얼어 풀리는 Tee 색상"
@@ -6690,7 +6690,7 @@ polish = "Pokaż klan jeśli wróg"
 [[message]]
 key = "Show clan on nameplates for enemies"
 [message.translations]
-simplified_chinese = "敌对关系时在名字板显示战队"
+simplified_chinese = "敌对关系时在铭牌上显示战队"
 traditional_chinese = "敵對關係時在名字板顯示戰隊"
 japanese = "敵のネームプレートにクランを表示"
 korean = "적의 이름표에 클랜 표시"
@@ -6946,7 +6946,7 @@ polish = "Pokaż powód wrogości"
 [[message]]
 key = "Show flag on name plate"
 [message.translations]
-simplified_chinese = "名字板上显示国旗"
+simplified_chinese = "在铭牌上显示国旗"
 traditional_chinese = "名字板上顯示國旗"
 japanese = "ネームプレートに国旗を表示"
 korean = "이름표에 국기 표시"
@@ -7298,7 +7298,7 @@ polish = "Pokaż kolorowe kółko pingu przy nazwach"
 [[message]]
 key = "Show ping ring on name plate"
 [message.translations]
-simplified_chinese = "在名字板上显示 Ping 圆环"
+simplified_chinese = "在铭牌上显示 Ping 圆环"
 traditional_chinese = "在名字板上顯示 Ping 圓環"
 japanese = "ネームプレートに Ping リングを表示"
 korean = "이름표에 핑 링 표시"
@@ -7426,7 +7426,7 @@ polish = "Pokaż sekundy na zegarze"
 [[message]]
 key = "Show skin name on name plate to find missing skins"
 [message.translations]
-simplified_chinese = "在名字板上显示皮肤名，便于查找缺失皮肤"
+simplified_chinese = "在铭牌上显示皮肤名称，便于查找缺失皮肤"
 traditional_chinese = "在名字板上顯示皮膚名，便於查找缺失皮膚"
 japanese = "ネームプレートにスキン名を表示して不足スキンを検索"
 korean = "이름표에 스킨 이름을 표시하여 누락된 스킨 찾기"

@@ -665,7 +665,17 @@ namespace QmNeteaseCdp
 
 	bool CCdpSession::Evaluate(std::string_view Expression, std::string *pValueJson, int TimeoutMs)
 	{
-		const std::string Params = "{\"expression\":\"" + JsonEscape(Expression) + "\",\"returnByValue\":true,\"awaitPromise\":false}";
+		return EvaluateImpl(Expression, pValueJson, TimeoutMs, false);
+	}
+
+	bool CCdpSession::EvaluateAwaitPromise(std::string_view Expression, std::string *pValueJson, int TimeoutMs)
+	{
+		return EvaluateImpl(Expression, pValueJson, TimeoutMs, true);
+	}
+
+	bool CCdpSession::EvaluateImpl(std::string_view Expression, std::string *pValueJson, int TimeoutMs, bool AwaitPromise)
+	{
+		const std::string Params = "{\"expression\":\"" + JsonEscape(Expression) + "\",\"returnByValue\":true,\"awaitPromise\":" + (AwaitPromise ? "true" : "false") + "}";
 		std::string Result;
 		if(!Command("Runtime.evaluate", Params, &Result, TimeoutMs))
 			return false;
@@ -761,7 +771,7 @@ namespace QmNeteaseCdp
 	std::string BuildInstallHookScript()
 	{
 		return R"JS((() => {
-const bridgeVersion = "9";
+const bridgeVersion = "13";
 if (window.__QM_NCM_BRIDGE_VERSION__ !== bridgeVersion) {
   if (window.__QM_NCM_BRIDGE_TIMER__) {
     try { clearInterval(window.__QM_NCM_BRIDGE_TIMER__); } catch (_) {}
@@ -775,6 +785,7 @@ if (window.__QM_NCM_BRIDGE_VERSION__ !== bridgeVersion) {
   window.__QM_NCM_PROGRESS_STREAM__ = null;
   window.__QM_NCM_NATIVE_PROGRESS__ = null;
   window.__QM_NCM_LAST_REPORT_AT__ = 0;
+  window.__QM_NCM_LYRIC_STATE__ = null;
 }
 window.__QM_NCM_BRIDGE_VERSION__ = bridgeVersion;
 const report = (value) => { try { if (typeof window.__qmReport === "function") window.__qmReport(JSON.stringify(value)); } catch (_) {} };
@@ -854,6 +865,85 @@ const readPlaying = () => {
   } catch (_) {}
   return null;
 };
+const lyricState = () => {
+  let state = window.__QM_NCM_LYRIC_STATE__;
+  if (!state) {
+    state = {songId:"", songChangedAt:0, sawLoading:false, previousContentKey:"", reportedContentKey:"", reportedKey:"", candidateKey:"", candidateCount:0, fetchSongId:"", fetchRequestedAt:0, fetchPending:false, fetchCompleted:false, fetchGeneration:0};
+    window.__QM_NCM_LYRIC_STATE__ = state;
+  }
+  return state;
+};
+const resetLyricCandidate = (state) => {
+  state.candidateKey = "";
+  state.candidateCount = 0;
+};
+const noteLyricSong = (songId, now) => {
+  const state = lyricState();
+  if (songId && state.songId !== songId) {
+    state.songId = songId;
+    state.songChangedAt = now;
+    state.sawLoading = false;
+    state.previousContentKey = state.reportedContentKey;
+    state.reportedKey = "";
+    state.fetchSongId = "";
+    state.fetchRequestedAt = 0;
+    state.fetchPending = false;
+    state.fetchCompleted = false;
+    resetLyricCandidate(state);
+  }
+  return state;
+};
+const serializeLyricLines = (lines) => {
+  if (!Array.isArray(lines)) return "";
+  const output = [];
+  let hasText = false;
+  for (const line of lines) {
+    if (!line || typeof line !== "object" || typeof line.lyric !== "string") continue;
+    const seconds = Number(line.time);
+    if (!Number.isFinite(seconds) || seconds < 0 || seconds > Number.MAX_SAFE_INTEGER / 1000) continue;
+    const totalMs = Math.round(seconds * 1000);
+    const minutes = Math.floor(totalMs / 60000);
+    const remainder = totalMs - minutes * 60000;
+    const wholeSeconds = String(Math.floor(remainder / 1000)).padStart(2, "0");
+    const milliseconds = String(remainder % 1000).padStart(3, "0");
+    const text = line.lyric.replace(/[\r\n]+/g, " ");
+    if (text.trim()) hasText = true;
+    output.push(`[${minutes}:${wholeSeconds}.${milliseconds}]${text}`);
+  }
+  return hasText ? output.join("\n") : "";
+};
+const finishStoreLyricFetch = (songId, fetchGeneration, success) => {
+  const state = lyricState();
+  if (state.songId !== songId || state.fetchGeneration !== fetchGeneration) return;
+  state.fetchPending = false;
+  state.fetchCompleted = success;
+  if (success) state.sawLoading = true;
+  resetLyricCandidate(state);
+};
+const requestStoreLyrics = (songId, state, now) => {
+  if (state.fetchSongId === songId && now - state.fetchRequestedAt < 30000) return false;
+  try {
+    const owner = window.__QM_NCM_STORE_OWNER__;
+    const dispatch = owner && typeof owner.getDispatch === "function" ? owner.getDispatch() : null;
+    if (typeof dispatch !== "function") return false;
+    state.fetchSongId = songId;
+    state.fetchRequestedAt = now;
+    state.fetchPending = true;
+    state.fetchCompleted = false;
+    state.fetchGeneration += 1;
+    const fetchGeneration = state.fetchGeneration;
+    const result = dispatch({type:"async:lyric/fetchLyric", payload:{force:true}});
+    if (result && typeof result.then === "function")
+      result.then(() => finishStoreLyricFetch(songId, fetchGeneration, true), () => finishStoreLyricFetch(songId, fetchGeneration, false));
+    else
+      finishStoreLyricFetch(songId, fetchGeneration, true);
+    return true;
+  } catch (_) {
+    state.fetchPending = false;
+    state.fetchCompleted = false;
+  }
+  return false;
+};
 const reportProgress = (force) => {
   try {
     const now = Date.now();
@@ -864,8 +954,64 @@ const reportProgress = (force) => {
     if (nativeProgress && typeof nativeProgress.positionMs === "number" && Number.isFinite(nativeProgress.positionMs)) payload.positionMs = nativeProgress.positionMs;
     if (playing && typeof playing.isPlaying === "boolean") payload.playing = playing.isPlaying;
     if (!payload.songId && payload.positionMs == null && payload.playing == null) return;
+    if (payload.songId) noteLyricSong(payload.songId, now);
     window.__QM_NCM_LAST_REPORT_AT__ = now;
     window.__QM_NCM_LAST_PROGRESS__ = payload;
+    report(payload);
+  } catch (_) {}
+};
+const reportStoreLyrics = () => {
+  try {
+    const store = findStore();
+    const playing = readPlaying();
+    const songId = playing ? playing.songId : "";
+    if (!store || !songId) return;
+    const now = Date.now();
+    const state = noteLyricSong(songId, now);
+    const lyric = store["async:lyric"];
+    if (state.fetchSongId !== songId) {
+      requestStoreLyrics(songId, state, now);
+      resetLyricCandidate(state);
+      return;
+    }
+    if (state.fetchPending || !state.fetchCompleted) {
+      if (now - state.fetchRequestedAt >= 30000)
+        requestStoreLyrics(songId, state, now);
+      resetLyricCandidate(state);
+      return;
+    }
+    if (!lyric || (!lyric.isLoading && Array.isArray(lyric.lyricLines) && lyric.lyricLines.length === 0 && lyric.currentUsedLyric === "none" && lyric.displayType === "default"))
+      requestStoreLyrics(songId, state, now);
+    if (!lyric || lyric.isLoading || !Array.isArray(lyric.lyricLines)) {
+      if (lyric && lyric.isLoading) state.sawLoading = true;
+      resetLyricCandidate(state);
+      return;
+    }
+    const lrc = serializeLyricLines(lyric.lyricLines);
+    if (!lrc) {
+      resetLyricCandidate(state);
+      return;
+    }
+    const contentKey = lrc;
+    if (!state.sawLoading && state.previousContentKey && contentKey === state.previousContentKey && now - state.songChangedAt < 5000) {
+      resetLyricCandidate(state);
+      return;
+    }
+    const lyricVersion = `${String(lyric.currentUsedLyric || "")}:${String(lyric.currentUsedLyricVersion == null ? "" : lyric.currentUsedLyricVersion)}`;
+    const key = `${songId}\n${lyricVersion}\n${contentKey}`;
+    if (state.reportedKey === key) return;
+    if (state.candidateKey !== key) {
+      state.candidateKey = key;
+      state.candidateCount = 1;
+      return;
+    }
+    state.candidateCount += 1;
+    if (state.candidateCount < 3) return;
+    const payload = {kind:"lyrics", songId, rawLyrics:{lrc}, timestamp:now};
+    state.reportedKey = key;
+    state.reportedContentKey = contentKey;
+    resetLyricCandidate(state);
+    window.__QM_NCM_RAW_LYRICS__ = payload;
     report(payload);
   } catch (_) {}
 };
@@ -907,9 +1053,9 @@ const installLegacyLyrics = () => {
     }
   } catch (_) {}
 };
-const install = () => { installProgress(); installLegacyLyrics(); reportProgress(false); };
+const install = () => { installProgress(); installLegacyLyrics(); reportProgress(false); reportStoreLyrics(); };
 install();
-if (!window.__QM_NCM_BRIDGE_TIMER__) window.__QM_NCM_BRIDGE_TIMER__ = setInterval(install, 500);
+if (!window.__QM_NCM_BRIDGE_TIMER__) window.__QM_NCM_BRIDGE_TIMER__ = setInterval(install, 250);
 return "installed";
 })())JS";
 	}

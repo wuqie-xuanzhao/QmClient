@@ -10,16 +10,36 @@
 
 #include <algorithm>
 #include <chrono>
+#include <string_view>
 
 namespace
 {
+	bool ContainsAsciiInsensitive(std::string_view Text, std::string_view Needle)
+	{
+		if(Needle.empty() || Text.size() < Needle.size())
+			return false;
+		for(size_t Offset = 0; Offset <= Text.size() - Needle.size(); ++Offset)
+		{
+			bool Match = true;
+			for(size_t Index = 0; Index < Needle.size(); ++Index)
+			{
+				const char TextChar = Text[Offset + Index] >= 'A' && Text[Offset + Index] <= 'Z' ? (char)(Text[Offset + Index] - 'A' + 'a') : Text[Offset + Index];
+				const char NeedleChar = Needle[Index] >= 'A' && Needle[Index] <= 'Z' ? (char)(Needle[Index] - 'A' + 'a') : Needle[Index];
+				if(TextChar != NeedleChar)
+				{
+					Match = false;
+					break;
+				}
+			}
+			if(Match)
+				return true;
+		}
+		return false;
+	}
+
 	bool IsNeteaseSourceAppId(std::string_view SourceAppId)
 	{
-		std::string Lower(SourceAppId);
-		std::transform(Lower.begin(), Lower.end(), Lower.begin(), [](unsigned char Character) {
-			return Character >= 'A' && Character <= 'Z' ? (char)(Character - 'A' + 'a') : (char)Character;
-		});
-		return Lower.find("cloudmusic") != std::string::npos || Lower.find("netease") != std::string::npos;
+		return ContainsAsciiInsensitive(SourceAppId, "cloudmusic") || ContainsAsciiInsensitive(SourceAppId, "netease");
 	}
 
 	uint64_t MonotonicTickMs()
@@ -43,6 +63,10 @@ void CNeteaseIntegration::OnInit()
 	m_LastMediaTitle.clear();
 	m_LastMediaArtist.clear();
 	m_WaitingForBridgeIdentity = false;
+	m_BridgeSyncWaitStartTick = 0;
+	m_LastSmtcAlignedBridgeSongId = 0;
+	m_LastSmtcAlignedBridgeGeneration = 0;
+	m_ActiveLyrics = false;
 	m_LastBridgePositionValid = false;
 	m_Initialized = true;
 }
@@ -60,6 +84,10 @@ void CNeteaseIntegration::OnShutdown()
 	m_LastMediaTitle.clear();
 	m_LastMediaArtist.clear();
 	m_WaitingForBridgeIdentity = false;
+	m_BridgeSyncWaitStartTick = 0;
+	m_LastSmtcAlignedBridgeSongId = 0;
+	m_LastSmtcAlignedBridgeGeneration = 0;
+	m_ActiveLyrics = false;
 	m_LastBridgePositionValid = false;
 	m_Initialized = false;
 }
@@ -77,11 +105,22 @@ void CNeteaseIntegration::OnReset()
 	m_LastMediaTitle.clear();
 	m_LastMediaArtist.clear();
 	m_WaitingForBridgeIdentity = false;
+	m_BridgeSyncWaitStartTick = 0;
+	m_LastSmtcAlignedBridgeSongId = 0;
+	m_LastSmtcAlignedBridgeGeneration = 0;
+	m_ActiveLyrics = false;
 	m_LastBridgePositionValid = false;
 }
 
 void CNeteaseIntegration::ClearForStaleMedia()
 {
+	const NeteaseLyrics::SCurrentState &State = m_LyricState.Snapshot();
+	const bool HasLyricState = State.m_SongId != 0 || State.m_Generation != 0 || State.m_HasSong || State.m_LyricValid || !State.m_CurrentLyric.empty();
+	const bool HasBridgeState = m_LastBridgeSequence != 0 || m_LastBridgeGeneration != 0 || m_LastBridgeSnapshotTick != 0 || m_LastBridgePositionMs != 0;
+	const bool HasIdentityState = m_LastCloudMusicPid != 0 || m_BlockedBridgeSongId != 0 || m_BlockedBridgeGeneration != 0 || m_WaitingForBridgeIdentity || m_BridgeSyncWaitStartTick != 0 || m_LastSmtcAlignedBridgeSongId != 0 || m_LastSmtcAlignedBridgeGeneration != 0 || m_ActiveLyrics || m_LastBridgePositionValid || !m_LastMediaTitle.empty() || !m_LastMediaArtist.empty();
+	if(!HasLyricState && !HasBridgeState && !HasIdentityState)
+		return;
+
 	m_LyricState.MarkStopped();
 	m_LastBridgeSequence = 0;
 	m_LastBridgeGeneration = 0;
@@ -91,13 +130,24 @@ void CNeteaseIntegration::ClearForStaleMedia()
 	m_BlockedBridgeSongId = 0;
 	m_BlockedBridgeGeneration = 0;
 	m_WaitingForBridgeIdentity = false;
+	m_BridgeSyncWaitStartTick = 0;
+	m_LastSmtcAlignedBridgeSongId = 0;
+	m_LastSmtcAlignedBridgeGeneration = 0;
+	m_ActiveLyrics = false;
 	m_LastBridgePositionValid = false;
+	m_LastMediaTitle.clear();
+	m_LastMediaArtist.clear();
 }
 
 void CNeteaseIntegration::OnUpdate()
 {
 	if(!m_Initialized || GameClient() == nullptr)
 		return;
+	if(!g_Config.m_QmNeteaseHookEnable)
+	{
+		ClearForStaleMedia();
+		return;
+	}
 
 	QmNeteaseHook::SSnapshotV5 BridgeSnapshot{};
 	const bool HasBridgeSnapshot = GameClient()->m_SystemMediaControls.GetNeteaseSnapshot(BridgeSnapshot);
@@ -117,78 +167,93 @@ void CNeteaseIntegration::OnUpdate()
 		ClearForStaleMedia();
 		return;
 	}
-	const std::string MediaTitle = MediaState.m_aTitle;
-	const std::string MediaArtist = MediaState.m_aArtist;
+	const std::string_view MediaTitle(MediaState.m_aTitle);
+	const std::string_view MediaArtist(MediaState.m_aArtist);
 	if(NeteaseLyrics::IsMeaningfulMediaIdentityChange(m_LastMediaTitle, m_LastMediaArtist, MediaTitle, MediaArtist))
 	{
-		// SMTC metadata 可能早于私有 songId 报告变化，必须立即丢弃旧句，
-		// 并隔离旧 Bridge 身份，避免下一帧重新接受上一首歌词。
-		m_BlockedBridgeSongId = m_LyricState.Snapshot().m_HasSong ? m_LyricState.Snapshot().m_SongId : 0;
-		m_BlockedBridgeGeneration = m_LastBridgeGeneration;
+		// 只使用上一次已经和 SMTC 元数据对齐的 Bridge 身份作为基线。
+		// Bridge 若先切歌，当前快照已经前进，后续 SMTC 变化不应再次阻断它。
+		m_BlockedBridgeSongId = m_LastSmtcAlignedBridgeSongId;
+		m_BlockedBridgeGeneration = m_LastSmtcAlignedBridgeGeneration;
 		m_WaitingForBridgeIdentity = m_BlockedBridgeSongId != 0;
+		m_BridgeSyncWaitStartTick = m_WaitingForBridgeIdentity ? MonotonicTickMs() : 0;
 		m_LyricState.ClearLyrics();
+		m_ActiveLyrics = false;
 		m_LastBridgeSequence = 0;
 		m_LastBridgePositionMs = 0;
 		m_LastBridgePositionValid = false;
 	}
 	if(!MediaTitle.empty())
 	{
-		const bool TitleChanged = !m_LastMediaTitle.empty() && MediaTitle != m_LastMediaTitle;
-		m_LastMediaTitle = MediaTitle;
-		if(TitleChanged || !MediaArtist.empty())
-			m_LastMediaArtist = MediaArtist;
+		if(m_LastMediaTitle != MediaTitle)
+			m_LastMediaTitle.assign(MediaTitle);
+		if(m_LastMediaArtist != MediaArtist)
+			m_LastMediaArtist.assign(MediaArtist);
 	}
 	if(!HasBridgeSnapshot)
 	{
 		const uint64_t HookTimeout = (uint64_t)std::max(1, g_Config.m_QmNeteaseHookTimeoutMs);
 		const uint64_t PausedGrace = std::max<uint64_t>(1500, HookTimeout);
 		const NeteaseLyrics::SCurrentState &State = m_LyricState.Snapshot();
-		if(NeteaseLyrics::ShouldPreservePausedLyric(
-			   MediaState.m_PlaybackState == CSystemMediaControls::EPlaybackState::Paused,
-			   State.m_HasSong,
-			   State.m_LyricValid,
-			   m_LastBridgeSnapshotTick,
-			   MonotonicTickMs(),
-			   PausedGrace))
+		if(NeteaseLyrics::ShouldPreserveBridgeState(State.m_HasSong && (State.m_LyricValid || m_ActiveLyrics), m_LastBridgeSnapshotTick, MonotonicTickMs(), PausedGrace))
 			return;
 		// 切歌后的阻断必须跨过短暂的 reader 失败；否则旧快照恢复时
-		// 会再次被当成新歌接受。歌词已经清空，因此这里只保留阻断状态。
+		// 会再次被当成新歌接受。超过上限则放弃这次等待，避免永久卡住。
 		if(m_WaitingForBridgeIdentity)
-			return;
+		{
+			const uint64_t Now = MonotonicTickMs();
+			if(m_BridgeSyncWaitStartTick == 0 || Now < m_BridgeSyncWaitStartTick || Now - m_BridgeSyncWaitStartTick <= 3000)
+				return;
+			m_WaitingForBridgeIdentity = false;
+			m_BlockedBridgeSongId = 0;
+			m_BlockedBridgeGeneration = 0;
+			m_BridgeSyncWaitStartTick = 0;
+		}
 		if(State.m_HasSong)
 			ClearForStaleMedia();
 		return;
 	}
 	m_LastBridgeSnapshotTick = MonotonicTickMs();
+	const uint64_t NowTick = m_LastBridgeSnapshotTick;
 	if(m_LastCloudMusicPid != 0 && BridgeSnapshot.m_CloudMusicPid != m_LastCloudMusicPid)
 	{
 		m_LyricState.ClearLyrics();
+		m_ActiveLyrics = false;
 		m_LastBridgeSequence = 0;
 		m_LastBridgeGeneration = 0;
 		m_LastBridgePositionMs = 0;
 		m_LastBridgePositionValid = false;
+		m_LastSmtcAlignedBridgeSongId = 0;
+		m_LastSmtcAlignedBridgeGeneration = 0;
 	}
 	m_LastCloudMusicPid = BridgeSnapshot.m_CloudMusicPid;
 	if(m_WaitingForBridgeIdentity)
 	{
 		const bool HasCandidateSong = (BridgeSnapshot.m_Flags & QmNeteaseHook::V5_FLAG_HAS_SONG) != 0 && BridgeSnapshot.m_SongId != 0;
-		if(!HasCandidateSong)
+		const bool StillWaiting = NeteaseLyrics::ShouldWaitForBridgeIdentity(
+			m_BlockedBridgeSongId,
+			m_BlockedBridgeGeneration,
+			HasCandidateSong ? BridgeSnapshot.m_SongId : 0,
+			BridgeSnapshot.m_Generation,
+			m_BridgeSyncWaitStartTick,
+			NowTick,
+			3000);
+		if(StillWaiting)
 		{
-			// 空身份快照可能只是 Helper 切歌/重连的中间态，不能解除对旧
-			// songId 的阻断。记录更高 generation 作为旧快照的下界。
-			if(m_BlockedBridgeGeneration != 0 && BridgeSnapshot.m_Generation > m_BlockedBridgeGeneration)
+			if(!HasCandidateSong && m_BlockedBridgeGeneration != 0 && BridgeSnapshot.m_Generation > m_BlockedBridgeGeneration)
 				m_BlockedBridgeGeneration = BridgeSnapshot.m_Generation;
-			m_LastBridgeSequence = BridgeSnapshot.m_Sequence;
-			return;
-		}
-		if(NeteaseLyrics::IsBridgeIdentityStillBlocked(m_BlockedBridgeSongId, m_BlockedBridgeGeneration, BridgeSnapshot.m_SongId, BridgeSnapshot.m_Generation))
-		{
 			m_LastBridgeSequence = BridgeSnapshot.m_Sequence;
 			return;
 		}
 		m_BlockedBridgeSongId = 0;
 		m_BlockedBridgeGeneration = 0;
 		m_WaitingForBridgeIdentity = false;
+		m_BridgeSyncWaitStartTick = 0;
+		if(HasCandidateSong)
+		{
+			m_LastSmtcAlignedBridgeSongId = BridgeSnapshot.m_SongId;
+			m_LastSmtcAlignedBridgeGeneration = BridgeSnapshot.m_Generation;
+		}
 	}
 
 	if((BridgeSnapshot.m_Flags & QmNeteaseHook::V5_FLAG_HAS_SONG) == 0 || BridgeSnapshot.m_SongId == 0 ||
@@ -196,6 +261,11 @@ void CNeteaseIntegration::OnUpdate()
 	{
 		ClearForStaleMedia();
 		return;
+	}
+	if(m_LastSmtcAlignedBridgeSongId == 0 && BridgeSnapshot.m_SongId != 0)
+	{
+		m_LastSmtcAlignedBridgeSongId = BridgeSnapshot.m_SongId;
+		m_LastSmtcAlignedBridgeGeneration = BridgeSnapshot.m_Generation;
 	}
 
 	const bool SongChanged = m_LyricState.UpdateSong(BridgeSnapshot.m_SongId);
@@ -242,6 +312,8 @@ void CNeteaseIntegration::OnUpdate()
 		return;
 	}
 	m_LastBridgeSequence = BridgeSnapshot.m_Sequence;
+	m_ActiveLyrics = (BridgeSnapshot.m_Flags & QmNeteaseHook::V5_FLAG_LYRIC_TIMELINE_VALID) != 0 ||
+			 ((BridgeSnapshot.m_Flags & QmNeteaseHook::V5_FLAG_LYRIC_VALID) != 0 && BridgeSnapshot.m_LyricSource != (uint32_t)QmNeteaseHook::ENeteaseLyricSource::None);
 	if(PositionAnchored)
 	{
 		m_LastBridgePositionMs = BridgeSnapshot.m_PositionMs;
@@ -290,6 +362,11 @@ bool CNeteaseIntegration::GetCurrentLyric(char *pBuffer, size_t BufferSize, Colo
 bool CNeteaseIntegration::HasCurrentLyric() const
 {
 	return g_Config.m_QmLyrics != 0 && g_Config.m_QmLyricsInMediaIsland != 0 && m_LyricState.Snapshot().m_LyricValid;
+}
+
+bool CNeteaseIntegration::HasActiveLyrics() const
+{
+	return g_Config.m_QmLyrics != 0 && g_Config.m_QmLyricsInMediaIsland != 0 && m_LyricState.Snapshot().m_HasSong && m_ActiveLyrics;
 }
 
 uint64_t CNeteaseIntegration::CurrentSongId() const

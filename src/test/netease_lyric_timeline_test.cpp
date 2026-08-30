@@ -28,6 +28,39 @@ TEST(NeteaseLyricTimeline, SelectsBoundedLinesAndGaps)
 	EXPECT_EQ(SelectCurrentLine(Timeline, 100000).m_Index, 2);
 }
 
+TEST(NeteaseLyricTimeline, DetectsEquivalentTimelineReports)
+{
+	STimeline Left = MakeTimeline();
+	Left.m_vLines[0].m_vWords = {{1000, 1200, "o"}, {1200, 1500, "ne"}};
+	const STimeline Right = Left;
+	EXPECT_TRUE(AreTimelinesEquivalent(Left, Right));
+}
+
+TEST(NeteaseLyricTimeline, DetectsEveryDisplayRelevantTimelineChange)
+{
+	const STimeline Original = MakeTimeline();
+
+	STimeline Changed = Original;
+	Changed.m_HasTiming = false;
+	EXPECT_FALSE(AreTimelinesEquivalent(Original, Changed));
+
+	Changed = Original;
+	Changed.m_vLines[0].m_Text = "changed";
+	EXPECT_FALSE(AreTimelinesEquivalent(Original, Changed));
+
+	Changed = Original;
+	Changed.m_vLines[0].m_StartMs += 1;
+	EXPECT_FALSE(AreTimelinesEquivalent(Original, Changed));
+
+	Changed = Original;
+	Changed.m_vLines[0].m_EndMs += 1;
+	EXPECT_FALSE(AreTimelinesEquivalent(Original, Changed));
+
+	Changed = Original;
+	Changed.m_vLines[0].m_vWords.push_back({1000, 1200, "one"});
+	EXPECT_FALSE(AreTimelinesEquivalent(Original, Changed));
+}
+
 TEST(NeteaseLyricTimeline, PlaybackAnchorPausesAndResumesWithoutRenderClockGuess)
 {
 	SPlaybackAnchor Anchor;

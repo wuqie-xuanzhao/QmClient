@@ -4,10 +4,14 @@
 
 #include <base/color.h>
 
+#include <engine/graphics.h>
+
 #include <generated/protocol.h>
 
 #include <game/client/component.h>
 #include <game/mapitems.h>
+
+#include <vector>
 
 inline ColorRGBA QmWeaponTrajectoryBaseColor(
 	int Weapon,
@@ -110,6 +114,10 @@ inline bool QmWeaponTrajectoryIsTeleGunWall(int Weapon, int FrontTileIndex, int 
 
 class CQmWeaponTrajectory : public CComponent
 {
+	std::vector<vec2> m_vPoints;
+	std::vector<IGraphics::CLineItem> m_vLineSegments;
+	std::vector<IGraphics::CFreeformItem> m_vLineQuadSegments;
+
 public:
 	int Sizeof() const override { return sizeof(*this); }
 	void Render(const CNetObj_Character *pPrevChar, const CNetObj_Character *pPlayerChar, int ClientId);

@@ -471,10 +471,9 @@ CSystemMediaControls::~CSystemMediaControls() = default;
 void CSystemMediaControls::SyncNeteaseHookConfiguration()
 {
 	const bool HookEnabled = g_Config.m_QmNeteaseHookEnable != 0;
-	const std::string HelperPath = g_Config.m_QmNeteaseHookHelperPath;
 	const bool ConfigurationChanged = !m_NeteaseHookConfigInitialized ||
 					  HookEnabled != m_LastNeteaseHookEnabled ||
-					  (HookEnabled && HelperPath != m_LastNeteaseHookHelperPath);
+					  (HookEnabled && m_LastNeteaseHookHelperPath != g_Config.m_QmNeteaseHookHelperPath);
 	if(!ConfigurationChanged)
 		return;
 
@@ -483,14 +482,19 @@ void CSystemMediaControls::SyncNeteaseHookConfiguration()
 		if(SystemMediaControls::ShouldStopNeteaseHookForConfigurationChange(m_NeteaseHookConfigInitialized, m_LastNeteaseHookEnabled))
 			m_pNeteaseHook->Stop();
 		if(HookEnabled)
-			m_pNeteaseHook->Start(HelperPath.c_str(), g_Config.m_QmNeteaseHookTimeoutMs);
+			m_pNeteaseHook->Start(g_Config.m_QmNeteaseHookHelperPath, g_Config.m_QmNeteaseHookTimeoutMs);
 	}
 
 	m_NeteaseHookConfigInitialized = true;
 	m_LastNeteaseHookEnabled = HookEnabled;
-	m_LastNeteaseHookHelperPath = HelperPath;
+	if(HookEnabled)
+		m_LastNeteaseHookHelperPath.assign(g_Config.m_QmNeteaseHookHelperPath);
+	else
+		m_LastNeteaseHookHelperPath.clear();
 	m_HasNeteaseSnapshot = false;
 	m_NeteaseSnapshot = {};
+	m_LastNeteaseHookReadFrame = 0;
+	m_NeteaseHookReadFrameInitialized = false;
 }
 
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
@@ -612,6 +616,14 @@ void CSystemMediaControls::ThreadMain()
 				const auto PlaybackRate = PlaybackInfo.PlaybackRate();
 				State.m_PlaybackRate = PlaybackRate ? std::max(0.0, PlaybackRate.Value()) : 1.0;
 				const std::string SourceAppId = winrt::to_string(Session.SourceAppUserModelId());
+				const bool SourceChanged = SystemMediaControls::MediaSourceChanged(State.m_aSourceAppId, SourceAppId.c_str());
+				if(SourceChanged)
+				{
+					// 当前会话切换时，旧播放器的标题/封面不能和新来源
+					// 组合发布；同时让下一次循环立即读取新会话属性。
+					ClearMediaDetails(State, AlbumArtKey, m_pShared.get());
+					TimelineGenerationTracker.Reset();
+				}
 				str_copy(State.m_aSourceAppId, SourceAppId.c_str(), sizeof(State.m_aSourceAppId));
 
 				const auto Timeline = Session.GetTimelineProperties();
@@ -641,7 +653,7 @@ void CSystemMediaControls::ThreadMain()
 				HasMedia = true;
 
 				const auto Now = std::chrono::steady_clock::now();
-				if(Now - LastPropsUpdate >= std::chrono::seconds(1))
+				if(SourceChanged || Now - LastPropsUpdate >= std::chrono::seconds(1))
 				{
 					LastPropsUpdate = Now;
 					try
@@ -783,6 +795,8 @@ void CSystemMediaControls::ThreadMain()
 void CSystemMediaControls::OnInit()
 {
 	m_pNeteaseHook = std::make_unique<CQmNeteaseHookProvider>();
+	m_LastNeteaseHookReadFrame = 0;
+	m_NeteaseHookReadFrameInitialized = false;
 	SyncNeteaseHookConfiguration();
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	m_pWinrt = std::make_unique<SWinrt>();
@@ -817,21 +831,46 @@ void CSystemMediaControls::OnShutdown()
 	m_LastNeteaseHookHelperPath.clear();
 	m_HasNeteaseSnapshot = false;
 	m_NeteaseSnapshot = {};
+	m_LastNeteaseHookReadFrame = 0;
+	m_NeteaseHookReadFrameInitialized = false;
 }
 
 void CSystemMediaControls::OnUpdate()
 {
 	SyncNeteaseHookConfiguration();
-	// v5 是网易云私有补充数据。即使歌词关闭也持续读取，使开关只控制展示。
-	m_HasNeteaseSnapshot = false;
-	m_NeteaseSnapshot = {};
-	if(m_pNeteaseHook && m_LastNeteaseHookEnabled)
+	// v5 是网易云私有补充数据。只在短帧窗口到期时读取，避免主线程每帧
+	// 重试共享内存、复制快照和计算校验和。
+	if(!m_LastNeteaseHookEnabled)
 	{
-		QmNeteaseHook::SSnapshotV5 Snapshot{};
-		if(m_pNeteaseHook->ReadV5(&Snapshot, g_Config.m_QmNeteaseHookTimeoutMs))
+		if(m_HasNeteaseSnapshot)
 		{
-			m_NeteaseSnapshot = Snapshot;
-			m_HasNeteaseSnapshot = true;
+			m_HasNeteaseSnapshot = false;
+			m_NeteaseSnapshot = {};
+		}
+		if(m_NeteaseHookReadFrameInitialized)
+		{
+			m_LastNeteaseHookReadFrame = 0;
+			m_NeteaseHookReadFrameInitialized = false;
+		}
+	}
+	else if(m_pNeteaseHook)
+	{
+		const uint64_t CurrentFrame = Client() != nullptr ? Client()->PerfFrame() : 0;
+		if(SystemMediaControls::ShouldRefreshNeteaseHookSnapshot(CurrentFrame, m_LastNeteaseHookReadFrame, m_NeteaseHookReadFrameInitialized))
+		{
+			m_LastNeteaseHookReadFrame = CurrentFrame;
+			m_NeteaseHookReadFrameInitialized = true;
+			QmNeteaseHook::SSnapshotV5 Snapshot{};
+			if(m_pNeteaseHook->ReadV5(&Snapshot, g_Config.m_QmNeteaseHookTimeoutMs))
+			{
+				m_NeteaseSnapshot = Snapshot;
+				m_HasNeteaseSnapshot = true;
+			}
+			else
+			{
+				m_NeteaseSnapshot = {};
+				m_HasNeteaseSnapshot = false;
+			}
 		}
 	}
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED

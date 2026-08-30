@@ -79,9 +79,6 @@
 %i seconds left
 == 还剩下 %i 秒钟
 
-%s (/%s %s)
-== %s（/%s %s）
-
 %s and %s have swapped
 == %s 与 %s 已完成交换
 
@@ -263,9 +260,6 @@ A demo with this name already exists
 A folder with this name already exists
 == 已有同名文件夹
 
-a player
-== 一名玩家
-
 A screenshot with this name already exists
 == 已有同名截图
 
@@ -292,18 +286,6 @@ Active color
 
 Active disconnect
 == 主动断开
-
-Active line font size
-== 当前行字号
-
-Active line font size (px)
-== 活动行字号 px
-
-Active line scale
-== 当前行缩放
-
-Active line scale (%)
-== 活动行缩放百分比
 
 Active moderator mode disabled because you are afk.
 == 由于你已挂机，主动管理员模式已关闭
@@ -677,9 +659,6 @@ Always show own player's hook collision line
 Always translate
 == 始终翻译
 
-AMLL TTML DB API base URL (mirror)
-== AMLL TTML DB API 基地址（可改成镜像）
-
 Amount
 == 预测量
 
@@ -772,9 +751,6 @@ Appearance / Name Plate
 
 Append to log file instead of overwriting
 == 追加到日志文件而不是每次覆盖
-
-Apple Music media-user-token
-== Apple Music 媒体用户令牌
 
 Applied to %d same-family part(s).
 == 已应用到 %d 个同族部件。
@@ -942,7 +918,7 @@ AUS
 == 澳洲
 
 Auth level required to send phone to others.
-== 你向其他人发送电话所需的身份验证级别
+== 向其他玩家传送所需的身份验证级别
 
 Authed name color in scoreboard
 == 管理权限者名字在计分板上的颜色
@@ -989,9 +965,6 @@ Auto enable/disable IME on text focus
 Auto execute
 == 自动执行
 
-Auto fetch lyrics
-== 自动获取歌词
-
 Auto fetch replay info on refresh
 == 刷新时是否自动获取回放信息
 
@@ -1006,9 +979,6 @@ Auto greet friend text
 
 Auto greet friends entering map
 == 自动问候进图的好友
-
-Auto hot-reload after external saves
-== 外部保存后自动热重载
 
 Auto login Axiom server
 == 自动登录 Axiom 服务器
@@ -1094,9 +1064,6 @@ Auto-fetch all players' skins for dummy rotation queue
 Auto-fetch all players' skins for rotation queue
 == 自动获取全图玩家皮肤并作为轮换队列
 
-Auto-fetch lyrics on detecting new song
-== 检测新歌时自动联网拉取歌词
-
 Auto-follow delay
 == 自动跟随延迟
 
@@ -1128,7 +1095,7 @@ Auto-save chat log
 == 自动保存聊天记录
 
 Auto-save history count (0=disable)
-== 自动保存历史数量（0=禁用自动过图历史记录）
+== 自动保存历史记录数量（0=禁用）
 
 Auto-screenshot on game end
 == 游戏结束时自动截图
@@ -1337,9 +1304,6 @@ Background image in menu
 Background music volume
 == 背景音乐音量
 
-Background opacity
-== 背景透明度
-
 Background stroke color
 == 背景描边颜色
 
@@ -1404,7 +1368,7 @@ Best input delay compensation percentage
 == Best input 延迟补偿百分比
 
 Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Best input 插值模式（1=linear 2=cubic 3=smooth）
+== Best input 插值模式（1=线性，2=三次，3=平滑）
 
 Best input others
 == 最佳输入（他人）
@@ -1414,9 +1378,6 @@ Best input prediction offset (0.01 tick)
 
 Best input smooth percentage
 == Best input 平滑百分比
-
-Best match
-== 最佳匹配
 
 Better scoreboard
 == 更好的计分板
@@ -1437,7 +1398,7 @@ Bind movement, jump, hook, and fire actions
 == 绑定移动、跳跃、钩爪和开火操作
 
 Bind only to IPv4, otherwise bind to all interfaces
-== 是否仅绑定到 ipv4，否则绑定到所有可用接口
+== 仅绑定到 IPv4，否则绑定到所有接口
 
 Bind scoreboard, emote, and console actions
 == 绑定计分板、表情和控制台操作
@@ -1573,9 +1534,6 @@ Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = 玩家坐标
-
-Cache TTL
-== 缓存有效期
 
 Calculate unfinished maps for player in certain mode
 == 计算玩家某个模式下的未完成图
@@ -1749,7 +1707,7 @@ Chat export failed
 == 聊天记录导出失败
 
 Chat fade smooth time (milliseconds)
-== 聊天消息淡出平滑时间（毫秒）
+== 聊天消息淡出过渡时长（毫秒）
 
 Chat font size
 == 聊天字体大小
@@ -1764,7 +1722,7 @@ Chat messages to send when entering freeze, comma-separated (empty=none)
 == 进入冻结状态时发送的聊天消息，以逗号分隔（空=无消息）
 
 Chat score increases per message and decreases by 1 per tick
-== 每条消息的聊天分数都会增加，并且每次勾选都会减少 1。
+== 每条消息都会增加聊天分数，每个 tick 减少 1。
 
 Chat sound volume
 == 聊天提示音量
@@ -1985,12 +1943,6 @@ Client prediction time is high
 Client uptime
 == 客户端启动时间
 
-Clock drift hard cut threshold (ms)
-== 时钟漂移硬切阈值 ms
-
-Clock drift hard-snap
-== 时钟漂移硬切阈值
-
 Close
 == 关闭
 
@@ -2004,7 +1956,7 @@ Collision hitbox
 == 碰撞箱
 
 Collision Line Opacity
-== 碰撞体积线条透明度
+== 碰撞线不透明度
 
 Color
 == 颜色
@@ -2013,16 +1965,16 @@ Color of authenticated player names on scoreboard
 == 计分板中已认证玩家的名称颜色
 
 Color of hook collision line tip segment
-== 指定钩子辅助线末端提示段的颜色。
+== 钩索辅助线末端线段的颜色
 
 Color of hook line hitting hookable tile
-== 指定击中可挂钩图块的挂钩线的颜色。
+== 击中可钩图块时的钩索线颜色
 
 Color of hook line hitting tee
-== 指定击中球座的钩线的颜色。
+== 击中 Tee 时的钩索线颜色
 
 Color of hook line not hitting anything
-== 指定未触及任何物体的钩线的颜色。
+== 未击中任何物体时的钩索线颜色
 
 Colorize ping on scoreboard
 == 计分板中是否对 ping 值着色
@@ -2117,9 +2069,6 @@ Config Changes
 Config directory
 == 配置目录（cfg）
 
-Config file: data/input_overlay.json
-== 配置文件：data/input_overlay.json
-
 Config Files
 == 配置文件
 
@@ -2127,7 +2076,7 @@ Config Filters
 == 配置过滤器
 
 Config version. Helps new client fix old config errors.
-== 配置版本。帮助新客户修复旧配置的错误。
+== 配置版本。帮助新客户端修复旧配置错误。
 
 Configs
 == 客户端配置
@@ -2445,7 +2394,7 @@ Country flag for grouping this community (ISO 3166-1 numeric)
 == 将此社区分组的国家/地区标志（ISO 3166-1 数字）
 
 CP border overlay alpha (0-100)
-== CP 点边界的覆盖实体 alpha（0-100）
+== 检查点边框覆盖层的实体不透明度（0-100）
 
 CP opacity
 == CP 点不透明度
@@ -2494,12 +2443,6 @@ Current cut is invalid or already added
 
 Current file
 == 当前文件
-
-Current line color
-== 当前行颜色
-
-Current line lyric color
-== 歌词当前行颜色
 
 Current rescue mode: %s
 == 当前救援模式：%s
@@ -2550,13 +2493,13 @@ Custom prompt template
 == 自定义提示词模板
 
 Custom Provider API Key
-== 自定义 Provider API Key
+== 自定义提供商 API 密钥
 
 Custom Provider endpoint
-== 自定义 Provider 端点
+== 自定义提供商端点
 
 Custom Provider model name
-== 自定义 Provider 模型名称
+== 自定义提供商模型名称
 
 Custom translation prompt (overrides built-in)
 == 自定义翻译提示词（覆盖内置提示词）
@@ -2694,7 +2637,7 @@ Deaths
 == 死亡数
 
 Debug Curl.
-== 调试卷曲
+== 调试 Curl
 
 Debug graph
 == 调试图表
@@ -2715,10 +2658,10 @@ Debug performance graph panel
 == 调试性能图表面板
 
 Debug quad layer clipping.
-== 调试四层裁剪
+== 调试四边形图层裁剪
 
 Debug quad layer cluster clipping.
-== 调试四层簇裁剪
+== 调试四边形图层簇裁剪
 
 Debug SQL.
 == 调试 SQL
@@ -2814,7 +2757,7 @@ Delay between SQL queries for a single player (in seconds)
 == 单个玩家的 SQL 查询之间的延迟（秒）
 
 Delay in seconds before loading a saved game or swapping
-== 加载保存游戏或交换之前延迟几秒
+== 加载存档或交换位置前的延迟时间（秒）
 
 Delete
 == 删除
@@ -2898,10 +2841,10 @@ Deprecated: jump hint Y position, migrated to qm_jump_hint_y on startup
 == 已废弃：跳跃提示垂直位置，启动时迁移到 qm_jump_hint_y
 
 Depth freeze tile overlay alpha (0-100)
-== 深度冻结图块的叠加实体 alpha (0-100)
+== 深度冻结图块覆盖层的实体不透明度（0-100）
 
 Depth unfreeze tile overlay alpha (0-100)
-== 深度解冻图块的叠加实体 alpha (0-100)
+== 深度解冻图块覆盖层的实体不透明度（0-100）
 
 Deselect
 == 取消选择
@@ -3065,18 +3008,6 @@ Displays your ping to the current server
 Dissolve
 == 消散
 
-Distance fade per line
-== 远离行透明度衰减
-
-Distance scale falloff
-== 远离行缩小幅度
-
-Distant line opacity decay per line (%)
-== 远离行每行透明度衰减 %
-
-Distant line shrink per line (%)
-== 远离行每行缩小百分比
-
 Do not auto-show server info on entering map
 == 进图时不自动显示服务器信息
 
@@ -3162,7 +3093,7 @@ Dragger Outline Color
 == 光索外框颜色
 
 Draw lines showing screen/clickbox center
-== 绘制线条显示屏幕/点击框中心
+== 绘制线条显示屏幕/碰撞箱中心
 
 Draw on the in game background
 == 在游戏背景上绘制
@@ -3171,7 +3102,7 @@ Draw shadow behind emote
 == 在表情后绘制阴影
 
 Draw tile layers when using custom background (solid)
-== 使用自定义背景（实体）时是否绘制图块图层
+== 使用纯色自定义背景时绘制图块图层
 
 Draw where mouse is
 == 绘制鼠标所在位置
@@ -3351,13 +3282,13 @@ Dynamic FOV intensity
 == 动态视野强度
 
 Dynamic FOV intensity (0-200)
-== 动态视野强度（0 - 200）
+== 动态视场角强度（0-200）
 
 Dynamic FOV smoothness
 == 动态视野平滑度
 
 Dynamic FOV smoothness (0=instant, 100=smoothest)
-== 动态视野平滑度（0 = 瞬时，100 = 最平滑）
+== 动态视场角平滑度（0=瞬时，100=最平滑）
 
 Dynamic Island
 == 灵动岛
@@ -3522,7 +3453,7 @@ Enable coloring and hearts for friends
 == 为好友启用着色和爱心
 
 Enable controller
-== 使用手柄
+== 启用控制器
 
 Enable custom prediction margin when frozen
 == 冻结时启用自定义预测边距
@@ -3561,7 +3492,7 @@ Enable enhanced scoreboard presentation
 == 启用增强计分板显示
 
 Enable event triggers (server eye-emotes on holidays, client Christmas skin)
-== 启用事件触发（服务器在某些节日的眼睁表情，客户端的圣诞皮肤）
+== 启用事件触发器（节日期间服务器显示眼睛表情，客户端使用圣诞皮肤）
 
 Enable fast input for other players in Gores mode
 == Gores 模式下对其他玩家也启用快速输入
@@ -3573,7 +3504,7 @@ Enable fast map download
 == 实现地图的快速下载
 
 Enable fat skin
-== 启用脂肪皮
+== 启用肥胖皮肤
 
 Enable freeze call sound
 == 启用冻结呼叫声
@@ -3618,7 +3549,7 @@ Enable Jelly Tee
 == 启用 Q 弹 Tee
 
 Enable KCP/legacy transport statistics query and sample output
-== 启用 KCP/legacy 传输统计查询与采样输出
+== 启用 KCP/传统传输统计查询和采样输出
 
 Enable keyboard shortcuts in replay player
 == 在回放玩家中启用键盘快捷键
@@ -3631,12 +3562,6 @@ Enable left swipe offset on chat fade
 
 Enable LLM thinking mode (may increase response time)
 == 启用 LLM 思考模式（可能增加响应时间）
-
-Enable local lyrics cache
-== 启用本地歌词缓存
-
-Enable lyric HUD overlay
-== 启用歌词 HUD 叠加层
 
 Enable lyrics
 == 启用歌词
@@ -3655,6 +3580,15 @@ Enable mod weapon on %d: %s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
 == 启用 MySQL 后端而不是 SQLite 后端（当没有 MySQL 服务器可访问时，sv_sqlite_file 仍用作后备写入服务器）
+
+Enable Netease lyric integration
+== 启用网易云音乐歌词集成
+
+Enable Netease music Hook
+== 启用网易云音乐 Hook
+
+Enable Netease Music hook integration
+== 启用网易云音乐 Hook 集成
 
 Enable new IME candidate bar
 == 启用新版 IME 候选栏
@@ -3684,7 +3618,7 @@ Enable QmClient style background 3D particles
 == 启用 QmClient 风格背景 3D 粒子
 
 Enable rainbow rendering for hook
-== 启用钩子彩虹渲染
+== 启用钩索彩虹渲染
 
 Enable rainbow rendering for other players' Tees
 == 对其他玩家也启用 Tee 彩虹渲染
@@ -3708,7 +3642,7 @@ Enable replays
 == 启用短时回放
 
 Enable saving games (/save and /load)
-== 启用保存游戏（/保存和/加载）
+== 启用游戏存档（/save 和 /load）
 
 Enable server message sound
 == 启用服务器消息提示音
@@ -3728,14 +3662,20 @@ Enable skin switch animation
 Enable smooth cinematic camera while free spectating
 == 自由观战时启用平滑电影镜头
 
+Enable SodaMusic Hook
+== 启用汽水音乐 Hook
+
+Enable SodaMusic hook integration
+== 启用汽水音乐 Hook 集成
+
 Enable sound
-== 声音启用
+== 启用声音
 
 Enable sound when rendering video
 == 渲染视频时启用声音
 
 Enable spectator cursor (if available)
-== 启用观看玩家的光标（如果可用）
+== 启用旁观光标（如果可用）
 
 Enable speedrun timer
 == 启用速通计时器
@@ -3754,9 +3694,6 @@ Enable switch countdown
 
 Enable system media control
 == 启用系统媒体控制
-
-Enable system media lyrics
-== 启用系统媒体歌词
 
 Enable system media transport control integration
 == 启用系统媒体传输控制集成
@@ -3780,13 +3717,13 @@ Enable tile outlines
 == 启用图块轮廓
 
 Enable UDP KCP transport negotiation (old clients keep legacy UDP, hot-switch fallback)
-== 启用 UDP 上层 KCP 传输协商（旧客户端保持 legacy UDP，可热关闭回退）
+== 启用 UDP KCP 传输协商（旧客户端保持传统 UDP，支持热切换回退）
 
 Enable UI runtime v2 debug logging
 == 启用 UI 运行时 v2 调试日志
 
 Enable UPnP support (requires -DCONF_UPNP=ON at compile time).
-== 启用 UPnP 支持。（编译时需要-DCONF_UPNP=ON）
+== 启用 UPnP 支持（编译时需要 -DCONF_UPNP=ON）
 
 Enable visual markers for enemy list
 == 启用敌对列表视觉标记
@@ -3809,9 +3746,6 @@ Enable warlist
 Enable word filter list
 == 启用屏蔽词列表
 
-Enable word-by-word highlighting
-== 启用歌词逐字高亮
-
 Enable Zen Mode
 == 启用禅模式（Zen Mode）
 
@@ -3819,7 +3753,7 @@ Enable Zen mode
 == 启用禅模式
 
 Enable/disable infinite hook.
-== 打开/关闭无限挂钩
+== 启用/禁用无限钩索
 
 Enable/disable quad alignment. When enabled, red lines show how moving quads/points align and snap to others
 == 启用/禁用四边形对齐。启用后，红线显示移动四边形/点时如何对齐并捕捉到其他四边形/点
@@ -3864,7 +3798,7 @@ Entities background color
 == 实体层背景颜色
 
 Entity assets
-== 实体的资产
+== 实体资源
 
 Entity Background Image
 == 实体层背景图
@@ -4001,9 +3935,6 @@ f = Frame rate
 Fade and slide
 == 淡入并滑入
 
-Fade duration
-== 淡入淡出时长
-
 Fade in
 == 淡入
 
@@ -4110,10 +4041,10 @@ Fetch Info
 == 回放信息
 
 Fifo file (non-Windows) or named pipe (Windows) for server console input
-== Fifo 文件（非 Windows）或命名管道 (Windows) 用作服务器控制台的输入
+== Fifo 文件（非 Windows）或命名管道（Windows）用于服务器控制台输入
 
 Fifo file (non-Windows) or named pipe (Windows) used as input for client console
-== Fifo 文件（非 Windows）或命名管道 (Windows) 用作客户端控制台的输入
+== Fifo 文件（非 Windows）或命名管道（Windows）用于客户端控制台输入
 
 File
 == 文件
@@ -4143,10 +4074,10 @@ Filter connecting players
 == 筛选正在连接的玩家
 
 Filter empty servers in browser
-== 过滤掉浏览器中的空服务器
+== 过滤服务器浏览器中的空服务器
 
 Filter full servers in browser
-== 在浏览器中过滤掉完整的服务器
+== 过滤服务器浏览器中的满人服务器
 
 Filter game type
 == 要过滤的游戏类型
@@ -4164,7 +4095,7 @@ Filter out servers without friends
 == 过滤掉没有好友的服务器
 
 Filter out spectators from player count
-== 从玩家号码中过滤掉观众
+== 从玩家数量中排除旁观者
 
 Filtered word console color
 == 被屏蔽词控制台颜色
@@ -4257,7 +4188,7 @@ FPS
 == FPS
 
 Fraction of players needed to pass a vote
-== 超过这个比例的玩家需要同意投票才能成功
+== 投票通过所需的玩家比例
 
 Frags
 == 击杀数
@@ -4290,13 +4221,16 @@ Freeze
 == 冻结
 
 Freeze bar opacity (0 invisible, 100 fully visible)
-== 冻结内冻结条的不透明度（0 不可见，100 完全可见）
+== 冻结条不透明度（0 不可见，100 完全可见）
 
 Freeze border color
 == 冻结边框颜色
 
 Freeze Collision Border Color
 == 冻结碰撞边框颜色
+
+Freeze laser collision volume
+== 冻结激光碰撞体积
 
 Freeze Laser Inner Color
 == 冻结激光内色
@@ -4383,7 +4317,7 @@ FSAA samples
 == 全屏抗锯齿（FSAA）采样倍数
 
 FSAA samples (may cause lag)
-== FSAA 样本（可能会导致延迟）
+== FSAA 采样数（可能导致卡顿）
 
 FTAPI
 == FTAPI
@@ -4413,10 +4347,10 @@ Game
 == 游戏
 
 Game assets
-== 游戏资产
+== 游戏资源
 
 Game graphics assets not from Teeworlds
-== 非来自 Teeworlds 的游戏图形资产
+== 非 Teeworlds 的游戏图形资源
 
 Game info
 == 游戏信息
@@ -4467,7 +4401,7 @@ Gap between statusbar items
 == 状态栏项目之间的间隔
 
 Gap between tee and nametag
-== 三通与铭牌间隙尺寸
+== Tee 与铭牌之间的间距
 
 General
 == 常规
@@ -4485,7 +4419,7 @@ Ghost tools
 == 影子工具
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
-== 鬼魂的可见性（alpha 值，0 不可见，100 完全可见）
+== 幽灵不透明度（0 不可见，100 完全可见）
 
 Ghosts directory
 == 影子目录
@@ -4661,6 +4595,9 @@ Gun
 Hammer
 == 锤子
 
+Hammer interaction
+== 锤子交互
+
 Hammer Mode:
 == 锤子模式：
 
@@ -4778,12 +4715,6 @@ Hide kill and finish messages in Zen mode
 Hide kill/finish messages
 == 隐藏死亡/完成消息
 
-Hide lyrics on pause
-== 暂停时隐藏歌词
-
-Hide lyrics when no system media
-== 无系统媒体状态时隐藏歌词
-
 Hide map progress
 == 隐藏地图进度
 
@@ -4800,7 +4731,7 @@ Hide non-friend names/clans and show client ID
 == 隐藏非好友姓名/战队并显示客户端 ID
 
 Hide other players' ghosts when frozen
-== 如果其他玩家的幽灵被冻结则隐藏
+== 自己被冻结时隐藏其他玩家的幽灵
 
 Hide own chat bubble (only when authenticated in remote console)
 == 隐藏自己的聊天气泡（仅在远程控制台已鉴权时生效）
@@ -4818,7 +4749,7 @@ Hide player names in Zen Mode
 == 禅模式下隐藏玩家名字
 
 Hide projectile effects in Zen Mode
-== 禅模式下隐藏炮击特效
+== 禅模式下隐藏投射物特效
 
 Hide scoreboard
 == 隐藏计分板
@@ -4860,19 +4791,10 @@ Hide UI for focused gameplay
 == 隐去 UI 专注游戏
 
 Hide weapon fire effects in Zen Mode
-== 禅模式下隐藏武器火焰特效
+== 禅模式下隐藏武器开火特效
 
 Hide weapon muzzle flashes
 == 隐藏武器火焰
-
-Hide when no lyrics found (instead of showing hint)
-== 未找到歌词时隐藏（而非显示提示）
-
-Hide when paused
-== 暂停时隐藏
-
-Hide without media state
-== 无媒体状态时隐藏
 
 High Detail
 == 显示地图细节
@@ -4914,7 +4836,7 @@ Hitbox Mode Global Opacity
 == 碰撞箱模式全局透明度
 
 Hitbox Mode Override
-== 碰撞箱模式总开关 (Hitbox mode)
+== 碰撞箱模式开关
 
 Hitbox Mode Player Scope: 0=local, 1=local+clone, 2=all
 == 碰撞箱模式玩家范围：0=本地 1=本地+分身 2=所有玩家
@@ -4944,7 +4866,7 @@ Hook collision line
 == 钩子辅助线
 
 Hook collision line alpha (0 invisible, 100 fully visible)
-== 钩子辅助线 Alpha（0 不可见，100 完全可见）
+== 钩索辅助线不透明度（0 不可见，100 完全可见）
 
 Hook collision line length follows cursor distance
 == 钩子辅助线长度跟随光标距离
@@ -4958,6 +4880,9 @@ Hook Collisions
 Hook collisions
 == 钩子辅助线
 
+Hook interaction
+== 钩索交互
+
 Hook line tip
 == 辅助线提示
 
@@ -4968,7 +4893,7 @@ Hook strength scope
 == 钩索强度范围
 
 Hook through teleporters (deprecated, use special entities instead)
-== 钩子穿过传送器（已弃用，请使用特殊实体代替）
+== 钩索穿过传送器（已弃用，请改用特殊实体）
 
 Hookable/Unhookable tile outline color
 == 可钩/不可钩图块轮廓颜色
@@ -4998,7 +4923,7 @@ How far the tractor tracks a tee
 == 拖拉机将跟踪 tee 多远
 
 How long expression lasts
-== 眼神的表情能持续多久
+== 表情持续时间
 
 How long the server message of the day is displayed
 == 当天服务器消息显示多长时间
@@ -5037,7 +4962,7 @@ HUD animation speed (percent)
 == HUD 动画速度（百分比）
 
 HUD assets
-== HUD 的资产
+== HUD 资源
 
 HUD editor layout
 == HUD 编辑器布局
@@ -5085,13 +5010,7 @@ If chat score exceeds this value, the player is muted for sv_spam_mute_duration 
 == 如果聊天分数超过此值，玩家将被静音 sv_spam_mute_duration 秒
 
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
-== 如果你射击它们，激光是否可以击中你，并且它们将你拉向弹跳原点（所有新地图为 0），或者如果你射击它们，激光就不能击中你，并且它们将其他人拉向射击者
-
-Ignore cache providers
-== 忽略缓存来源
-
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
-== 歌词搜索时忽略缓存的来源列表（用 | 分隔，如 QQ|Kugou）
+== 激光被射击时是否可以击中自己并将自己拉回反弹起点（所有新地图设为 0）；否则激光不会击中自己，而是将其他玩家拉向射击者。
 
 Ignore clan tag when searching friends
 == 搜索好友时忽略战队标签
@@ -5103,7 +5022,7 @@ Ignore voice distance attenuation
 == 忽略语音距离衰减
 
 Ignored legacy Dynamic Island edge margin
-== Ignored legacy Dynamic Island edge margin
+== 已忽略旧版灵动岛边缘外边距
 
 Import from clipboard
 == 从剪贴板导入
@@ -5126,12 +5045,6 @@ In-game crosshair scale percent (50=half, 200=double)
 Inactive color
 == 按键未激活时颜色
 
-Inactive line font size (px)
-== 非活动行字号 px
-
-Inactive line opacity
-== 非当前行不透明度
-
 Include clan when saving/loading config preset
 == 保存/加载配置方案时包含战队
 
@@ -5145,7 +5058,7 @@ Include emoticon when saving/loading config preset
 == 保存/加载配置方案时包含表情
 
 Include name when saving/loading config preset
-== 保存/加载配置方案时包含名字
+== 保存/加载配置方案时包含昵称
 
 Include seconds in local time display
 == 在本地时间显示中包含秒
@@ -5199,7 +5112,7 @@ Indicator transparency
 == 指示器透明度
 
 Infinite hook for super players on/off.
-== 超级玩家开/关的无尽钩子
+== 超级玩家无限钩索开/关
 
 Info
 == 信息
@@ -5250,19 +5163,13 @@ Input overlay display
 == 按键显示叠加
 
 Input overlay keyboard scale (percent)
-== 输入覆盖键盘比例（百分比）
+== 输入叠加层键盘缩放比例（百分比）
 
 Input overlay mouse scale (percent)
-== 输入覆盖鼠标比例（百分比）
+== 输入叠加层鼠标缩放比例（百分比）
 
 Input overlay opacity (percent)
 == 输入叠加不透明度（百分比）
-
-Input overlay X position (percent)
-== 输入叠加 X 位置（百分比）
-
-Input overlay Y position (percent)
-== 输入叠加 Y 位置（百分比）
 
 Input smoothing
 == 输入平滑
@@ -5348,9 +5255,6 @@ Invalid Y coordinate.
 Invert camera drift direction
 == 反转相机漂移方向
 
-Invite %s to the locked team
-== 邀请 %s 加入锁定队伍
-
 Invite a person to a locked team
 == 邀请某人加入锁定的队伍
 
@@ -5399,9 +5303,6 @@ Join QQ group
 Join red
 == 加入红队
 
-Join team %s
-== 加入队伍 %s
-
 Join the team of the specified player
 == 加入指定玩家的队伍
 
@@ -5444,11 +5345,8 @@ k = Resend loss
 Kaomoji
 == 表情符号
 
-Karaoke edge softness
-== 逐字高亮边缘柔化
-
 Keep hook when teleporting
-== 传送时保持钩子
+== 传送时保持钩索
 
 Keep unsent message on chat close
 == 关闭聊天时保留未发送内容
@@ -5570,6 +5468,9 @@ Large text for friend join (use %s for friend name)
 Laser
 == 激光
 
+Laser / shotgun interaction
+== 激光/霰弹枪交互
+
 Laser colors
 == 激光颜色
 
@@ -5577,10 +5478,10 @@ Laser effect enhancement
 == 激光效果增强
 
 Laser glow intensity (0-100)
-== 激光辉光强度 (0-100)
+== 激光辉光强度（0-100）
 
 Laser Opacity (0=transparent, 100=opaque)
-== 激光半透明度 (0=完全透明，100=不透明)
+== 激光不透明度（0=完全透明，100=完全不透明）
 
 Laser Rounded Ends (0=square, 1=round)
 == 激光圆角端点 (0=方角，1=圆角)
@@ -5592,7 +5493,7 @@ Laser size
 == 激光大小
 
 Laser Size/Thickness (percentage, 100=default)
-== 激光大小/粗细 (百分比，100=默认)
+== 激光大小/粗细（百分比，100=默认）
 
 Last entered
 == 最后进入
@@ -5646,7 +5547,7 @@ Lenny:
 == Lenny ͡° ͜ʖ ͡°:
 
 Let server start ghost
-== 让服务器启动 ghost
+== 允许服务器启动幽灵
 
 Let server start race recorder
 == 让服务器启动比赛记录器
@@ -5672,38 +5573,14 @@ Limit information in spectator mode
 Limiter threshold (percent)
 == 限幅器阈值（百分比）
 
-Line scroll duration
-== 行切换滚动时长
-
-Line spacing
-== 行间距
-
-Line switch scroll duration (ms)
-== 行切换滚动时长 ms
-
 Line width
 == 线宽
 
 Linear
 == 线性
 
-Lines
-== 行数
-
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
-
-Lines above active
-== 当前行上方行数
-
-Lines above active line
-== 活动行上方显示行数
-
-Lines below active
-== 当前行下方行数
-
-Lines below active line
-== 活动行下方显示行数
 
 List all commands that are available in practice mode
 == 列出练习模式下可用的所有命令
@@ -5779,9 +5656,6 @@ Load
 
 Load drawings from a given csv file (defaults to map name)
 == 从指定 CSV 文件加载绘图（默认使用地图名）
-
-Load save %s
-== 载入存档 %s
 
 Load sound files in thread
 == 加载声音文件线程
@@ -5861,21 +5735,6 @@ Local
 Local + Dummy
 == 本地 + 分身
 
-Local ESLRC file
-== 本地 ESLRC 文件
-
-Local LRC file
-== 本地 LRC 文件
-
-Local media folders
-== 本地媒体目录
-
-Local media library directories (separate by |)
-== 歌词本地媒体库目录（多个目录用 | 分隔）
-
-Local music file
-== 本地音乐文件
-
 Local only
 == 仅本地
 
@@ -5883,7 +5742,7 @@ Local particle effects
 == 本地粒子效果
 
 Local particles: show particles behind own Tee (e.g. freeze snow)
-== 本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）
+== 本地粒子：显示自己 Tee 身后的粒子（例如冻结雪花）
 
 Local saves
 == 本地存档
@@ -5897,9 +5756,6 @@ Local test mode, no server needed
 Local Time
 == 本地时间
 
-Local TTML file
-== 本地 TTML 文件
-
 Local-only
 == 仅本地资源
 
@@ -5908,9 +5764,6 @@ Lock delay
 
 Lock team
 == 锁定队伍
-
-Lock the team so other players cannot join directly
-== 锁定队伍，其他玩家不能直接加入
 
 Locked
 == 锁定
@@ -5933,86 +5786,11 @@ Lose weapons when teleporting (useful for race maps)
 Low to high
 == 由低到高
 
-LRCLIB API base URL (mirror)
-== LRCLIB API 基地址（可改成镜像）
-
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 歌词自动搜索来源顺序/启用列表（空=默认；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
-
-Lyric background color
-== 歌词背景颜色
-
-Lyric background opacity
-== 歌词背景透明度
-
-Lyric fade in/out time
-== 歌词淡入淡出时间
-
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-== 歌词 HTTP 代理（如 http://127.0.0.1:7890）
-
-Lyric HTTP request timeout (ms)
-== 歌词 HTTP 请求超时 ms
-
-Lyric HUD edge margin (px)
-== 歌词 HUD 贴边外边距 px
-
-Lyric outline color
-== 歌词描边颜色
-
-Lyric outline opacity
-== 歌词描边透明度
-
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-== 歌词搜索策略（0=按来源顺序，1=并发最佳匹配）
-
-Lyric snap to Dynamic Island threshold
-== 歌词吸附灵动岛阈值
-
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 歌词数据源（0=自动最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
-
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== 歌词来源独立匹配阈值（空=全局阈值；如 QQ=60|LrcLib=70）
-
 Lyrics
 == 歌词
 
-Lyrics cache expiration days (0=forever)
-== 歌词缓存过期天数（0=永久）
-
-Lyrics fuzzy match score threshold
-== 歌词模糊匹配分数阈值
-
-Lyrics HTTP timeout
-== 歌词 HTTP 超时
-
-Lyrics line spacing (px)
-== 歌词行间距 px
-
-Lyrics search type
-== 歌词搜索策略
-
-Lyrics source
-== 歌词来源
-
-Lyrics source order
-== 歌词来源顺序
-
-Lyrics translation/transliteration color
-== 歌词翻译/音译颜色
-
-Lyrics: empty track
-== 歌词：歌词为空
-
-Lyrics: no lyrics found
-== 歌词：未找到歌词
-
-Lyrics: no media playing
-== 歌词：没有正在播放的媒体
-
-Lyrics: searching...
-== 歌词：正在搜索……
+Lyrics sources and display
+== 歌词来源与显示
 
 Main Asset
 == 主材质
@@ -6070,9 +5848,6 @@ Manual
 
 Manual concurrency: %d
 == 手动并发数：%d
-
-Manual lyric timeline offset (ms, step 500ms)
-== 歌词手动时间轴偏移 ms（运行时按 500ms 步进）
 
 Manual scope
 == 手动范围
@@ -6170,12 +5945,6 @@ Mark the end of a demo cut
 Markers
 == 标记
 
-Marquee for long lyrics
-== 歌词超长时跑马灯
-
-Marquee speed
-== 歌词跑马灯速度
-
 Master server URL to register
 == 要注册的主服务器 URL
 
@@ -6183,10 +5952,7 @@ Match %d of %d
 == 匹配 %d/%d
 
 Match ghost by map version instead of map name
-== 按地图版本而不是仅按地图名称匹配鬼魂
-
-Match score threshold
-== 匹配评分阈值
+== 按地图版本而不是地图名称匹配幽灵
 
 Matched with callable peer
 == 已匹配到可通话对端
@@ -6321,7 +6087,7 @@ Menu main panel opacity
 == 菜单主面板透明度
 
 Menu opacity (0-100)
-== 菜单不透明度 (Menu opacity 0-100)
+== 菜单不透明度（0-100）
 
 Menu opened. Press Esc key again to close menu.
 == 菜单已打开，再次点击 Esc 以关闭
@@ -6407,9 +6173,6 @@ Minimum delay allowed between invitations.
 Minimum dynamic camera cursor distance
 == 最小动态相机光标距离
 
-Minimum inactive line opacity (%)
-== 非活动行最小不透明度 %
-
 Minimum match chars
 == 最少匹配字符数
 
@@ -6441,7 +6204,7 @@ Minutes
 == 分钟
 
 Minutes on server before a player can call a map change vote (0 = disabled)
-== 玩家可以否决地图更改投票之前服务器上的时间分钟数（0 = 禁用）
+== 玩家发起地图更改投票前必须在服务器上游玩的分钟数（0=禁用）
 
 Minutes to save replay on ESC menu
 == ESC 菜单保存回放的分钟数
@@ -6540,7 +6303,7 @@ Mute emoticons
 == 屏蔽表情
 
 Mute flag sounds
-== 使旗帜声音静音
+== 静音旗帜音效
 
 Mute hammer sound in Zen mode
 == 禅模式下静音锤击音效
@@ -6549,7 +6312,7 @@ Mute hammer sounds
 == 静音锤击
 
 Mute hook sound
-== 静音挂钩声音
+== 静音钩索音效
 
 Mute jump sound in Zen Mode
 == 禅模式下静音跳跃音效
@@ -6558,22 +6321,22 @@ Mute jump sounds
 == 静音跳跃
 
 Mute map sounds
-== 静音地图声音
+== 静音地图音效
 
 Mute microphone
 == 静音麦克风
 
 Mute movement sound
-== 静音运动声音
+== 静音移动音效
 
 Mute pick-up sounds
-== 静音拾音器声音
+== 静音拾取音效
 
 Mute player
 == 屏蔽玩家
 
 Mute player status sounds
-== 静音玩家状态声音
+== 静音玩家状态音效
 
 Mute player with client ID
 == 使用客户端 ID 将玩家静音
@@ -6585,13 +6348,13 @@ Mute time for players from different teams after a vote (seconds, 0 to disable m
 == 来自不同队伍的玩家被投票后的禁言时间（单位：秒，0 为禁用禁言）
 
 Mute weapon out of ammo sound
-== 武器无弹药静音
+== 静音武器弹药耗尽音效
 
 Mute weapon sounds
-== 武器声音静音
+== 静音武器音效
 
 Mute weapon switch sound
-== 静音武器开关声音
+== 静音切换武器音效
 
 Mute when not active
 == 在后台时静音
@@ -6621,43 +6384,43 @@ Name Plate
 == 昵称板块
 
 Name plate clan line X offset
-== 名字板战队行 X 偏移
+== 铭牌战队行 X 偏移
 
 Name plate clan line Y offset
-== 名字板战队行 Y 偏移
+== 铭牌战队行 Y 偏移
 
 Name plate coord line X offset
-== 名字板坐标行 X 偏移
+== 铭牌坐标行 X 偏移
 
 Name plate coord line Y offset
-== 名字板坐标行 Y 偏移
+== 铭牌坐标行 Y 偏移
 
 Name plate elements allow free X movement
-== 名字板元素允许 X 轴自由移动
+== 铭牌元素可沿 X 轴自由移动
 
 Name plate elements allow free Y movement
-== 名字板元素允许 Y 轴自由移动
+== 铭牌元素可沿 Y 轴自由移动
 
 Name plate elements freely movable within bounds
-== 名字板元素允许在框内自由移动
+== 铭牌元素可在边界内自由移动
 
 Name plate key line X offset
-== 名字板按键行 X 偏移
+== 铭牌按键行 X 偏移
 
 Name plate key line Y offset
-== 名字板按键行 Y 偏移
+== 铭牌按键行 Y 偏移
 
 Name plate name line X offset
-== 名字板昵称行 X 偏移
+== 铭牌昵称行 X 偏移
 
 Name plate name line Y offset
-== 名字板昵称行 Y 偏移
+== 铭牌昵称行 Y 偏移
 
 Name plate strength line X offset
-== 名字板强弱行 X 偏移
+== 铭牌强弱行 X 偏移
 
 Name plate strength line Y offset
-== 名字板强弱行 Y 偏移
+== 铭牌强弱行 Y 偏移
 
 Name plates offset
 == 昵称距离
@@ -6675,31 +6438,31 @@ Name: %s
 == 名称：%s
 
 Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
-== 名牌钩子强度图标范围（0=自己 1=他人 2=强钩 3=弱钩 4=所有玩家）
+== 铭牌钩索强度图标范围（0=自己，1=他人，2=强钩，3=弱钩，4=所有玩家）
 
 Nameplate position X
-== 名字牌显示坐标 X
+== 铭牌 X 坐标
 
 Nameplate position Y
-== 名字牌显示坐标 Y
+== 铭牌 Y 坐标
 
 Nameplate size
 == 铭牌尺寸
 
 Nameplate strong hook icon color
-== 名牌强钩图标颜色
+== 铭牌强钩图标颜色
 
 Nameplate text
 == 名牌文字
 
 Nameplate text border color
-== 名牌文字边框颜色
+== 铭牌文字边框颜色
 
 Nameplate text border range
-== 名牌文字边框范围
+== 铭牌文字边框范围
 
 Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)
-== 名牌文字效果（1=边框 2=渐变 4=彩虹 8=发光）
+== 铭牌文字效果（1=边框，2=渐变，4=彩虹，8=发光）
 
 Nameplate text effects demo manual target client ID (-1=None)
 == 铭牌文本特效演示手动目标客户端 ID（-1=无）
@@ -6726,16 +6489,16 @@ Nameplate weak hook icon color
 == 铭牌弱钩图标颜色
 
 Nameplate X alignment hint duration window (ms)
-== 名字牌 X 对齐提示持续判定窗口（毫秒）
+== 铭牌 X 坐标对齐提示持续时间窗口（毫秒）
 
 Nameplate X alignment hint highlight color
-== 名字牌 X 对齐提示高亮颜色
+== 铭牌 X 坐标对齐提示高亮颜色
 
 Nameplate X alignment hint strict mode
-== 名字牌 X 对齐提示严格模式
+== 铭牌 X 坐标对齐提示严格模式
 
 Nameplate X alignment hint with local player
-== 名字牌显示与本地玩家 X 对齐的提示
+== 铭牌与本地玩家 X 坐标对齐提示
 
 Nameplates
 == 名牌
@@ -6751,6 +6514,12 @@ Negative stability buffer (for Gores)
 
 Net
 == 净击杀
+
+Netease hook heartbeat timeout (milliseconds)
+== 网易云音乐 Hook 心跳超时时间（毫秒）
+
+Netease hook helper path (empty=beside QmClient)
+== 网易云音乐 Hook 辅助程序路径（留空则使用 QmClient 所在目录中的程序）
 
 Netlimit: exponential moving average alpha
 == Netlimit：指数移动平均线的 Alpha
@@ -6802,12 +6571,6 @@ News
 
 Next
 == 下一个
-
-Next line color
-== 下一行颜色
-
-Next line lyric color
-== 歌词下一行颜色
 
 Next page in console
 == 控制台下一页
@@ -7140,7 +6903,7 @@ Ok
 == 确定
 
 Old chat style: no tee icons, no background
-== 旧的聊天风格：无球座，无背景
+== 旧版聊天样式：不显示 Tee 图标，不显示背景
 
 Oldschool
 == 传统
@@ -7164,7 +6927,7 @@ Only allow authorized clients to vote
 == 只允许经过授权的客户端进行投票
 
 Only save ghost if better than previous record
-== 只保存比之前记录更好的鬼魂。
+== 仅在成绩优于之前记录时保存幽灵
 
 Only save improvements
 == 只保存更佳记录
@@ -7201,6 +6964,9 @@ Open color picker
 
 Open DDNet Wiki
 == 打开 DDNet Wiki
+
+Open editor
+== 打开编辑器
 
 Open emote selector
 == 打开表情选择器
@@ -7243,6 +7009,9 @@ Open the folder containing demo files
 
 Open the folder containing screenshots
 == 打开存放截图的文件夹
+
+Open the input overlay editor
+== 打开输入叠加层编辑器
 
 Open the saves file
 == 打开存档密码文件
@@ -7298,11 +7067,8 @@ Optional authentication key for the DNSBL provider
 Other
 == 其他
 
-Other lines font size
-== 其他行字号
-
 Other players' hook line width
-== 其他玩家的钩子辅助线宽度
+== 其他玩家的钩索辅助线宽度
 
 Others
 == 他人
@@ -7315,9 +7081,6 @@ Outgoing language
 
 Outgoing translation target language code
 == 出站翻译目标语言代码
-
-Outline color
-== 描边颜色
 
 Outline global opacity
 == 轮廓全局透明度
@@ -7338,16 +7101,13 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 == 输出设备打开失败，建议重插耳机/扬声器后刷新，或重新选择输出设备
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
-== 输出 KCP 协商、fallback 和会话生命周期调试日志
+== 输出 KCP 协商、回退和会话生命周期调试日志
 
 Output switch
 == 输出切换
 
 Output voice debug log
 == 输出语音调试日志
-
-Overall lyrics opacity (%)
-== 歌词整体不透明度 %
 
 Overlay entities
 == 显示实体层
@@ -7362,16 +7122,16 @@ Override current clan even if preset clan name is empty
 == 即使配置方案里的战队名为空也覆盖当前战队
 
 Override Death Tile Entity Alpha (0-100)
-== 覆盖死亡图块的实体 alpha (0-100)
+== 覆盖死亡图块的实体不透明度（0-100）
 
 Override Entity Alpha for Unfreeze Tiles (0-100)
-== 覆盖实体 alpha 以解冻图块 (0-100)
+== 覆盖解冻图块的实体不透明度（0-100）
 
 Override Entry
 == 覆盖条目
 
 Override Freeze Tile Entity Alpha (0-100)
-== 覆盖冻结图块的实体 alpha (0-100)
+== 覆盖冻结图块的实体不透明度（0-100）
 
 Override Group
 == 覆盖群组
@@ -7389,7 +7149,7 @@ Overwrite clan even if empty
 == 即使战队为空也覆盖
 
 Own hook line width
-== 自己的钩子辅助线宽度
+== 自己的钩索辅助线宽度
 
 p = Ping latency
 == p = Ping 延迟
@@ -7419,7 +7179,7 @@ Particle alpha
 == 粒子透明度
 
 Particle assets
-== 粒子资产
+== 粒子资源
 
 Particle collision
 == 粒子碰撞
@@ -7490,9 +7250,6 @@ Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
 == 按名字单独音量（name=percent）
 
-Per-word highlight (karaoke)
-== 逐字高亮（卡拉 OK）
-
 Performance debug log threshold (ms)
 == 性能调试日志阈值（毫秒）
 
@@ -7539,7 +7296,7 @@ Pie menu
 == 饼菜单
 
 Pie menu rename list (separate with |, e.g., name1|name2)
-== 饼菜单改名名单（使用 | 分隔，如：璇梦 1|璇梦 2）
+== 饼菜单改名名单（使用 | 分隔，例如：name1|name2）
 
 Ping
 == 延迟
@@ -7588,9 +7345,6 @@ Play/pause the current demo
 
 Playback volume
 == 播放音量
-
-Played word color
-== 已播放词颜色
 
 Player
 == 玩家
@@ -7647,7 +7401,7 @@ Player indicator frozen Tee color
 == 玩家指示器中冻结 Tee 的颜色
 
 Player indicator unfreezing Tee color
-== 玩家指示器中脱困中 Tee 的颜色
+== 玩家指示器中正在解冻的 Tee 的颜色
 
 Player is currently authed in rcon.
 == 玩家已登入管理员。
@@ -7824,7 +7578,7 @@ Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 a
 == 预测开火并显示武器物理预测（需 cl_antiping_grenade 1 与 cl_antiping_weapons 1）
 
 Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))
-== 预测冻结图块（0 = 关闭，1 = 开启，2 = 部分（允许冻结时少量移动）
+== 预测冻结图块（0=关闭，1=开启，2=部分预测（冻结时允许少量移动））
 
 Predict grenade trajectory (only with cl_antiping 1)
 == 预测榴弹轨迹（仅在 cl_antiping 为 1 时）
@@ -8000,11 +7754,11 @@ Progress bar height
 Progress bar width
 == 进度条宽度
 
+Projectile / explosion range
+== 投射物/爆炸范围
+
 Protect names and skins while streaming
 == 直播时保护名称和皮肤
-
-Provider thresholds
-== 来源匹配阈值
 
 PTT release delay (ms)
 == PTT 释放延迟（毫秒）
@@ -8019,10 +7773,10 @@ Pulse amplitude
 == 脉冲幅度
 
 Pulse Amplitude (0-100)
-== 脉冲振幅 (0-100)
+== 脉冲振幅（0-100）
 
 Pulse animation speed (percentage, 100=normal)
-== 脉冲动画速度 ( 百分比，100=正常)
+== 脉冲动画速度（百分比，100=正常）
 
 Pulse speed
 == 脉冲速度
@@ -8118,34 +7872,16 @@ QmClient sidebar module order
 == 栖梦侧栏模块排序
 
 QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
-== QmUi 动效强度：0=关闭 1=降低 2=完整
+== QmUi 动效强度：0=关闭，1=降低，2=完整
 
 QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform
-== QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀
+== QmUi 颜色动画插值：0=sRGB 线性，1=OKLAB 感知均匀
 
 QQ group: 1076765929 (click to copy)
 == QQ 群：1076765929（点击复制）
 
 Quads are used for background decoration
 == 显示用作背景装饰的贴图
-
-Query current map info
-== 查询当前地图信息
-
-Query map info for %s
-== 查询地图 %s 的信息
-
-Query points for %s
-== 查询玩家 %s 的分数
-
-Query rank for %s
-== 查询玩家 %s 的排名
-
-Query server setting: %s
-== 查询服务器设置：%s
-
-Query team rank for %s
-== 查询玩家 %s 所在队伍的排名
 
 Queue is empty
 == 队列为空
@@ -8211,7 +7947,7 @@ Random Colors
 == 随机颜色
 
 Random emote when hit by hammer/grenade
-== 被锤子/榴弹击中时随机表情
+== 被锤子/榴弹枪击中时随机播放表情
 
 Random emoticon
 == 随机表情
@@ -8235,7 +7971,7 @@ Ratio threshold for local target language detection
 == 本地目标语言识别占比阈值
 
 Read new feature indicators
-== 已读的设置界面新功能标识
+== 将设置界面新功能提示标记为已读
 
 Reason
 == 原因
@@ -8630,12 +8366,6 @@ Reply
 Reply to messages from muted players
 == 回复静音玩家的消息
 
-Reply to the last whisper target
-== 回复上一个私聊对象
-
-Reply to the last whisper target: %s
-== 对上一个私聊对象说：%s
-
 Reply with dummy
 == 使用分身回复
 
@@ -8669,12 +8399,6 @@ Report service URL
 Reports are not available on Axiom servers
 == Axiom 服务器内不可使用举报功能
 
-Request a position swap
-== 请求交换位置
-
-Request to swap positions with %s
-== 请求和 %s 交换位置
-
 Request to swap your tee with another team member
 == 请求与另一名队友交换 Tee
 
@@ -8682,7 +8406,7 @@ Requesting to join the game
 == 正在请求加入游戏
 
 Require KCP-capable client to upgrade session (keep off during grayscale for fallback)
-== 要求支持 KCP 的客户端才能升级会话（灰度期保持关闭以允许 fallback）
+== 要求支持 KCP 的客户端升级会话（灰度发布期间保持关闭以支持回退）
 
 Rescue is not enabled on this server and you're not in a team with /practice turned on. Note that you can't earn a rank with practice enabled.
 == 本服未开启救援功能，且你所在队伍也没有开启 /practice。注意：练习模式下无法获得排名
@@ -8695,9 +8419,6 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 救援/冻结：%d/%d
-
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-== 救援：自动模式下传送出冻结；手动模式下落地记录救援点，冻结时传送出去
 
 Reset
 == 重置
@@ -8895,7 +8616,7 @@ Rule line 9.
 == 规则第 9 行
 
 Run "hot_reload" on local server with rcon auth on map save
-== 在本地服务器上运行“hot_reload”，同时在地图保存上进行 rcon 验证
+== 保存地图时，在已通过 RCON 认证的本地服务器上运行“hot_reload”
 
 Run chai script
 == 运行 chai 脚本
@@ -8995,12 +8716,6 @@ Save team with code r.
 
 Save the best demo of each race
 == 保存每场游戏最佳记录的回放
-
-Save the current team
-== 保存当前队伍
-
-Save the team as %s
-== 将队伍保存为 %s
 
 Save unsent chat draft
 == 保存未发送的聊天草稿
@@ -9119,12 +8834,6 @@ Screenshots
 Screenshots directory
 == 截图目录
 
-Scroll long lines
-== 滚动长歌词
-
-Scroll speed
-== 滚动速度
-
 Search
 == 搜索
 
@@ -9228,7 +8937,7 @@ Send aim data with sub-tick precision
 == 以亚 tick 精度发送瞄准数据
 
 Send client input to others before correct input (increases server bandwidth)
-== 在正确的报价之前将客户端输入发送给其他客户端。增加服务器所需的带宽
+== 在校正输入前将客户端输入发送给其他客户端（会增加服务器带宽占用）
 
 Send emote when entering freeze
 == 进入冻结状态发送表情
@@ -9271,9 +8980,6 @@ Sends a command to the antibot
 
 Separate with commas
 == 用 , 分隔
-
-Sequential
-== 按顺序
 
 Server
 == 服务器
@@ -9549,10 +9255,10 @@ Show clan if war
 == 如果有敌对则显示战队
 
 Show clan name on nameplate
-== 在名牌上显示战队名称
+== 在铭牌上显示战队名称
 
 Show clan on nameplates for enemies
-== 敌对关系时在名字板显示战队
+== 敌对关系时在铭牌上显示战队
 
 Show client ID
 == 显示客户端 ID
@@ -9585,7 +9291,7 @@ Show colors in spectator selection
 == 旁观选择中显示颜色
 
 Show combo hint when hooking or hammering player within 2 seconds
-== 2 秒内连续钩中或锤中玩家时显示连击提示
+== 2 秒内钩中或锤击玩家时显示连击提示
 
 Show compact vote HUD
 == 显示小型投票 HUD
@@ -9602,8 +9308,8 @@ Show coordinates above players
 Show country flags in nameplates
 == 在玩家昵称旁显示国旗
 
-Show current and next lyric lines on HUD
-== 在 HUD 上显示当前和下一句歌词
+Show current Netease lyric in Media Island
+== 在灵动岛中显示当前网易云音乐歌词
 
 Show daily message to client
 == 显示给客户端的每日消息
@@ -9680,9 +9386,6 @@ Show enemy reason
 Show entities
 == 实体层显示开关
 
-Show existing saves
-== 查看已有存档
-
 Show eye wheel and expressions
 == 显示眼轮和表情
 
@@ -9696,7 +9399,7 @@ Show finish messages
 == 显示完成消息
 
 Show flag on name plate
-== 名字板上显示国旗
+== 在铭牌上显示国旗
 
 Show FPS
 == 显示 FPS
@@ -9717,7 +9420,7 @@ Show friend join in large text
 == 大字显示好友进服
 
 Show friend tag (♥) on nametag
-== 在名牌上显示好友标记 (♥ )
+== 在铭牌上显示好友标记（♥）
 
 Show friends only
 == 只显示好友
@@ -9729,10 +9432,10 @@ Show frozen Tee HUD only in team
 == 仅在队伍内显示冻结 Tee HUD
 
 Show frozen tee particles
-== 显示冷冻 tee 的粒子
+== 显示冻结 Tee 的粒子
 
 Show ghost
-== 显示影子
+== 显示幽灵
 
 Show ghost at unpredictable position of other players
 == 在其他玩家的不可预测位置显示幽灵
@@ -9771,7 +9474,7 @@ Show hookable/unhookable tile outlines
 == 显示可钩/不可钩图块轮廓
 
 Show how weapons, shields, hearts, and flags appear in game
-== 展示武​​器、盾牌、红心和旗帜如何在游戏中出现
+== 显示武器、护盾、爱心和旗帜在游戏中的效果
 
 Show HUD
 == HUD 开关
@@ -9788,11 +9491,8 @@ Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
 == 重要服务器提示改走通知栏
 
-Show in Dynamic Island
-== 显示在灵动岛内
-
 Show in-game FPS
-== 显示游戏内 FPS 
+== 显示游戏内 FPS
 
 Show in-game HUD
 == 显示游戏内 HUD
@@ -9804,7 +9504,7 @@ Show in-game HUD (clone control state)
 == 显示游戏内 HUD（分身控制状态）
 
 Show in-game HUD (DDRace HUD)
-== 显示游戏内 HUD (DDRace HUD)
+== 显示游戏内 HUD（DDRace HUD）
 
 Show in-game HUD (dummy controls)
 == 显示游戏内 HUD（分身控制）
@@ -9819,7 +9519,7 @@ Show in-game HUD (health + ammo)
 == 显示游戏内 HUD（血量 + 弹药）
 
 Show in-game HUD (jumps used)
-== 显示游戏中的 HUD（你已经使用过的跳跃）
+== 显示游戏内 HUD（已使用的跳跃次数）
 
 Show in-game HUD (keyboard blocking status)
 == 显示游戏内 HUD（卡键状态）
@@ -9867,7 +9567,7 @@ Show ingame HUD
 == 显示 HUD
 
 Show input overlay
-== 显示输入覆盖
+== 显示输入叠加层
 
 Show inputs
 == 显示按键
@@ -9916,12 +9616,6 @@ Show logs of the last i seconds
 
 Show lyrics inside Dynamic Island
 == 将歌词显示在灵动岛内
-
-Show lyrics translation (if available)
-== 显示歌词翻译（若有）
-
-Show lyrics transliteration (if available)
-== 显示歌词音译（若有）
 
 Show map details
 == 显示地图细节
@@ -10002,16 +9696,16 @@ Show other players' hook collision lines
 == 显示其他玩家的钩子辅助线
 
 Show other players' hook collision lines (2 always shown)
-== 显示其他玩家的钩子辅助线（2 条始终显示）
+== 显示其他玩家的钩索辅助线（2 始终显示）
 
 Show other players' hook collision lines when rendering video
-== 渲染视频时显示其他玩家的钩子辅助线
+== 渲染视频时显示其他玩家的钩索辅助线
 
 Show other team players (2=own team only)
 == 显示其他队伍的玩家（2 只显示自己队伍）
 
 Show other team players (alpha, 0=invisible, 100=visible)
-== 显示其他队伍的玩家（alpha 值，0 不可见，100 完全可见）
+== 其他队伍玩家的不透明度（0 不可见，100 完全可见）
 
 Show other tees' trails
 == 显示其他 Tee 的拖尾
@@ -10023,7 +9717,7 @@ Show others (own team only)
 == 仅显示同队伍
 
 Show others' nameplate coordinates
-== 名字牌显示他人坐标
+== 显示其他玩家的铭牌坐标
 
 Show outdated version warning
 == 显示版本过旧提示
@@ -10038,10 +9732,10 @@ Show own coordinates
 == 显示自己坐标
 
 Show own hook collision lines (2 always shown)
-== 显示自己玩家的钩子辅助线（2 始终显示）
+== 显示自己的钩索辅助线（2 始终显示）
 
 Show own nameplate coordinates
-== 名字牌显示自己坐标
+== 显示自己的铭牌坐标
 
 Show own nametag (for demo recording)
 == 显示自己的铭牌（用于回放录制）
@@ -10065,7 +9759,7 @@ Show ping colored circle in nameplates
 == 在玩家昵称旁显示延迟颜色圆圈
 
 Show ping ring on name plate
-== 在名字板上显示 Ping 圆环
+== 在铭牌上显示 Ping 圆环
 
 Show player hitboxes (1=predicted only, 2=predicted and unpredicted)
 == 显示玩家命中框（1=仅预测，2=预测和未预测）
@@ -10107,7 +9801,7 @@ Show Qm badge
 == 显示 Qm 标识
 
 Show Qm badge: identify via central server and mark QmClient users on nameplate/scoreboard
-== 显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户
+== 显示 Qm 标识：通过中心服务器识别 QmClient 用户，并在铭牌和计分板上标记
 
 Show QmClient config variables
 == 显示栖梦配置变量
@@ -10139,9 +9833,6 @@ Show server help and usage messages
 Show server prompts and Echo messages as popups
 == 将服务器提示和 Echo 消息显示为弹窗
 
-Show server settings
-== 查看服务器设置列表
-
 Show settings card borders
 == 显示设置卡片边框
 
@@ -10152,7 +9843,7 @@ Show skin date and author
 == 显示皮肤日期和作者
 
 Show skin name on name plate to find missing skins
-== 在名字板上显示皮肤名，便于查找缺失皮肤
+== 在铭牌上显示皮肤名称，便于查找缺失皮肤
 
 Show skin names in nameplate
 == 在玩家昵称旁显示皮肤名
@@ -10203,7 +9894,7 @@ Show Tee Collision in Hitbox Mode
 == 碰撞箱模式显示 Tee 碰撞体
 
 Show tee emotes
-== 显示 tee 表情
+== 显示 Tee 表情
 
 Show tee status bar
 == 显示 Tee 状态栏
@@ -10240,9 +9931,6 @@ Show tiles layers from BG map
 
 Show toast
 == 显示提示消息
-
-Show translation
-== 显示翻译
 
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 显示影响自身玩家的调整参数信息（0 = 关闭，1 = 显示已改变的，2 = 显示全部）
@@ -10291,9 +9979,6 @@ Show X
 
 Show Y
 == 显示 Y
-
-Show your current team
-== 查看自己所在队伍
 
 Show zzz emoji next to afk players
 == 在挂机玩家旁显示 zzz 表情
@@ -10535,9 +10220,6 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 == 系统媒体控制
 
-Snap threshold
-== 吸附阈值
-
 Snapshot Age
 == 快照年龄
 
@@ -10561,6 +10243,12 @@ Snapshot tick gap
 
 Social
 == 社交功能
+
+SodaMusic hook heartbeat timeout (milliseconds)
+== 汽水音乐 Hook 心跳超时时间（毫秒）
+
+SodaMusic hook helper path (empty=beside QmClient)
+== 汽水音乐 Hook 辅助程序路径（留空则使用 QmClient 所在目录中的程序）
 
 Solid
 == 纯色
@@ -10713,7 +10401,7 @@ Speedrun timer seconds
 == 速通计时器秒
 
 Speedrun timer time (MM:SS, legacy)
-== 速通计时器时间（MMSS 格式，兼容旧版）
+== 速通计时器时间（MM:SS 格式，兼容旧版）
 
 Sphere
 == 球体
@@ -10944,7 +10632,7 @@ Switch team
 == 切换队伍
 
 Switch tile overlay alpha (0-100)
-== 开关图块的覆盖实体 alpha (0-100)
+== 开关图块覆盖层的实体不透明度（0-100）
 
 Switch to grenade
 == 切换到榴弹枪
@@ -10999,15 +10687,6 @@ System media control
 
 System media controls
 == 系统媒体控制
-
-System media lyric font size
-== 系统媒体歌词字体大小
-
-System media lyrics display lines
-== 系统媒体歌词显示行数
-
-System media lyrics time offset (milliseconds)
-== 系统媒体歌词时间偏移（毫秒）
 
 System message
 == 系统消息
@@ -11159,8 +10838,14 @@ Tee 0.7
 Tee appearance
 == Tee 外观
 
-Tee hitbox
-== Tee 碰撞箱
+Tee collision (Tee to Tee)
+== Tee 碰撞（Tee 与 Tee）
+
+Tee death probe
+== Tee 死亡探针
+
+Tee freeze probe (Tee to Freeze)
+== Tee 冻结探针（Tee 与 Freeze）
 
 Tee hitbox color
 == Tee 碰撞箱颜色
@@ -11250,7 +10935,7 @@ Teleports you to teleporter i
 == 将你传送到传送器 i
 
 Teletile overlay alpha (0-100)
-== Teletile 的覆盖实体 alpha (0-100)
+== 传送图块覆盖层的实体不透明度（0-100）
 
 Temporarily disable dummy hammering
 == 临时禁用分身锤
@@ -11492,9 +11177,6 @@ Time limit
 Time limit: %d min
 == 规定时限：%d 分钟
 
-Time offset
-== 时间偏移
-
 Time to wait before changing team: %s
 == 距离下次切换队伍还需等待：%s
 
@@ -11725,9 +11407,6 @@ Translation button active color
 
 Translation button cancel color
 == 翻译按钮取消时的颜色
-
-Translation color
-== 翻译颜色
 
 Translation color alpha migration completed flag
 == 翻译颜色透明度迁移已完成标记
@@ -11981,9 +11660,6 @@ Unknown status
 Unlock a team
 == 解锁队伍
 
-Unlock the team
-== 解锁队伍
-
 Unmute
 == 取消静音
 
@@ -12002,14 +11678,11 @@ Unmute player with list index
 Unmute:
 == 取消禁言：
 
-Unplayed word color
-== 未播放词颜色
-
 Unpredictable ghost opacity (0-100)
 == 不可预测幽灵透明度（0-100）
 
 Unpredictable shadow tee transparency (0 invisible, 100 fully visible)
-== 不可预测的阴影 tee 透明度（0 不可见，100 完全可见）
+== 不可预测阴影 Tee 的不透明度（0 不可见，100 完全可见）
 
 Unpredicted ghost opacity
 == 未预测影子不透明度
@@ -12056,14 +11729,8 @@ URL for downloading maps (must start with https://)
 URL for downloading skins
 == 用于下载皮肤的 URL
 
-Usage
-== 用法
-
 Usage: %s %s
 == 用法：%s %s
-
-Usage: /%s %s
-== 用法：/%s %s
 
 Use 12 hour clock
 == 使用 12 小时制
@@ -12078,7 +11745,7 @@ Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 == 使用另一套 antiping 平滑算法，与 cl_antiping_smooth 不兼容
 
 Use alternative world tick calculation making hooks behave as if all players have Strong.
-== 是否对世界刻度使用替代计算，这使得钩子的行为就像所有玩家都具有强项一样。
+== 使用替代的世界 tick 计算，使钩索表现得像所有玩家都拥有强钩。
 
 Use colored skins for frozen tees
 == 冻结 Tee 使用彩色皮肤
@@ -12126,13 +11793,13 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 == 使用 K 键自杀（重新开始），Q 键暂停并旁观其他玩家。其他按键绑定可在设置中查看。
 
 Use mouse sensitivity when dynamic camera is on
-== 开启动态摄像头时使用鼠标感应
+== 启用动态摄像机时使用鼠标灵敏度
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换
 
 Use native UI for IME (may break IME in fullscreen mode, requires restart)
-== 使用本机 UI 进行 IME（可能会导致 IME 无法在全屏模式下工作）（更改需要重新启动）
+== 使用 IME 原生界面（可能导致 IME 在全屏模式下无法工作，需要重启）
 
 Use new smoothing algorithm
 == 使用新的平滑算法
@@ -12330,7 +11997,7 @@ Voice chat settings and diagnostics
 == 语音聊天设置与诊断
 
 Voice distance radius (Tiles)
-== 语音距离半径（Tiles）
+== 语音距离半径（图块）
 
 Voice distance radius (tiles)
 == 语音距离半径（格）
@@ -12407,6 +12074,12 @@ Vote yes/no
 Voting
 == 投票
 
+Vulkan API
+== Vulkan API 版本
+
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+== Vulkan API 版本：11=1.1 兼容模式，14=1.4 严格模式
+
 Wait for current vote to end before calling a new one.
 == 请先等待当前投票结束，再发起新的投票
 
@@ -12481,9 +12154,6 @@ Weapon
 
 Weapon animation
 == 武器动画
-
-Weapon interaction range
-== 武器交互范围
 
 Weapon range color
 == 武器范围颜色
@@ -12644,15 +12314,6 @@ Whisper option color
 Whisper something to someone (private message)
 == 向某人发送私聊消息
 
-Whisper to %s
-== 对 %s 说悄悄话
-
-Whisper to %s: %s
-== 对 %s 说悄悄话：%s
-
-Whisper: /w player message
-== 发送私聊：/w 玩家名 内容
-
 White
 == 白色
 
@@ -12703,9 +12364,6 @@ Word Filter
 
 Word filter action: 0=replace matching words, 1=hide entire message
 == 屏蔽词操作：0=替换匹配词，1=隐藏整条消息
-
-Word highlight soft edge width (px)
-== 逐字边缘软过渡宽度 px
 
 Write local console contents to a text file
 == 将本地控制台内容写入文本文件
@@ -13019,9 +12677,6 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 你的超时保护码已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee
 
-yourself
-== 自己
-
 z = Zoom
 == z = 缩放
 
@@ -13114,6 +12769,26 @@ Inactive
 [Auto camera]
 Unavailable for this player
 == 此玩家不可用
+
+[Config help]
+%s (default: "%s", max length: %d)
+== %s（默认值：“%s”，最大长度：%d）
+
+[Config help]
+%s (default: $%0*X)
+== %s（默认值：$%0*X）
+
+[Config help]
+%s (default: %d)
+== %s（默认值：%d）
+
+[Config help]
+%s (default: %d, min: %d)
+== %s（默认值：%d，最小值：%d）
+
+[Config help]
+%s (default: %d, min: %d, max: %d)
+== %s（默认值：%d，最小值：%d，最大值：%d）
 
 [data_version.h]
 You may have installed only DDNet.exe. Please use the full QmClient folder.

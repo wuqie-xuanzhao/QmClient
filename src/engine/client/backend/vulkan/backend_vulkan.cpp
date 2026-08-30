@@ -1130,6 +1130,8 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	bool m_FrameProfilingActive = false;
 	uint32_t m_RequestedApiVersion = VK_API_VERSION_1_1;
 	uint32_t m_EffectiveApiVersion = VK_API_VERSION_1_1;
+	VkResult m_LastVulkanInstanceCreateResult = VK_SUCCESS;
+	bool m_RequiredVulkanVersionUnavailable = false;
 
 	size_t m_ThreadCount = 1;
 	static constexpr size_t MAIN_THREAD_INDEX = 0;
@@ -1179,7 +1181,7 @@ private:
 
 	std::vector<SBufferContainer> m_vBufferContainers;
 
-	VkInstance m_VKInstance;
+	VkInstance m_VKInstance = VK_NULL_HANDLE;
 	VkPhysicalDevice m_VKGPU;
 	uint32_t m_VKGraphicsQueueIndex = std::numeric_limits<uint32_t>::max();
 	VkDevice m_VKDevice;
@@ -1188,7 +1190,7 @@ private:
 	SSwapImgViewportExtent m_VKSwapImgAndViewportExtent;
 
 #ifdef VK_EXT_debug_utils
-	VkDebugUtilsMessengerEXT m_DebugMessenger;
+	VkDebugUtilsMessengerEXT m_DebugMessenger = VK_NULL_HANDLE;
 #endif
 
 	VkDescriptorSetLayout m_StandardTexturedDescriptorSetLayout;
@@ -1253,6 +1255,8 @@ private:
 	bool m_RenderTargetActive = false;
 	bool m_AcquireSemaphoreConsumed = false;
 	int m_ActiveRenderTargetId = -1;
+	// 渲染目标渲染通道进行中收到的销毁请求，延迟到 Cmd_RenderTarget_End 后统一处理（目标 id + 当时的 image 句柄，防止重建复用后误销毁）
+	std::vector<std::pair<size_t, VkImage>> m_vPendingRenderTargetDestroy;
 	bool m_SavedHasDynamicViewport = false;
 	VkOffset2D m_SavedDynamicViewportOffset{};
 	VkExtent2D m_SavedDynamicViewportSize{};
@@ -1368,6 +1372,15 @@ protected:
 		if(std::find(m_Warning.m_vWarnings.begin(), m_Warning.m_vWarnings.end(), pWarning) == m_Warning.m_vWarnings.end())
 			m_Warning.m_vWarnings.emplace_back(pWarning);
 		m_Warning.m_WarningType = WarningType;
+	}
+
+	void ResetInitializationDiagnostics()
+	{
+		std::unique_lock<std::mutex> Lock(m_ErrWarnMutex);
+		m_Error = {};
+		m_Warning = {};
+		m_ErrorHelper.clear();
+		m_HasError = false;
 	}
 
 	const char *CheckVulkanCriticalError(VkResult CallResult)
@@ -4270,10 +4283,32 @@ public:
 			return false;
 		}
 
-		const SVulkanVersion RequestedVersion = ClampVulkanVersionToSupportedRange(LoaderVersion);
+		if(g_Config.m_QmVulkanApiVersion != 11 && g_Config.m_QmVulkanApiVersion != 14)
+		{
+			log_warn("gfx/vulkan", "Unsupported Vulkan API selection %d; falling back to Vulkan 1.1.", g_Config.m_QmVulkanApiVersion);
+			g_Config.m_QmVulkanApiVersion = 11;
+		}
+
+		SVulkanVersion RequestedVersion = ResolveConfiguredVulkanApiVersion(g_Config.m_QmVulkanApiVersion);
+		if(!IsVulkanVersionAtLeast(LoaderVersion, RequestedVersion))
+		{
+			log_warn("gfx/vulkan", "Vulkan API %d.%d was selected, but the installed loader only supports %d.%d.%d; falling back to Vulkan 1.1.", RequestedVersion.m_Major, RequestedVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
+			g_Config.m_QmVulkanApiVersion = 11;
+			RequestedVersion = gs_BackendVulkanMinimumVersion;
+		}
 		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
 		log_info("gfx/vulkan", "requesting Vulkan API %d.%d.%d, loader supports %d.%d.%d", RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
 		return true;
+	}
+
+	void DestroyVulkanInstance()
+	{
+		if(m_VKInstance == VK_NULL_HANDLE)
+			return;
+		if(g_Config.m_DbgGfx == DEBUG_GFX_MODE_MINIMUM || g_Config.m_DbgGfx == DEBUG_GFX_MODE_ALL)
+			UnregisterDebugCallback();
+		vkDestroyInstance(m_VKInstance, nullptr);
+		m_VKInstance = VK_NULL_HANDLE;
 	}
 
 	std::vector<VkImageUsageFlags> OurImageUsages()
@@ -4391,11 +4426,20 @@ public:
 
 		bool TryAgain = false;
 
-		VkResult Res = vkCreateInstance(&VKInstanceInfo, NULL, &m_VKInstance);
+		VkInstance CreatedInstance = VK_NULL_HANDLE;
+		VkResult Res = vkCreateInstance(&VKInstanceInfo, NULL, &CreatedInstance);
+		m_LastVulkanInstanceCreateResult = Res;
 		const char *pCritErrorMsg = CheckVulkanCriticalError(Res);
 		if(pCritErrorMsg != nullptr)
 		{
-			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating instance failed.", pCritErrorMsg);
+			if(m_RequestedApiVersion == VK_API_VERSION_1_4 && Res == VK_ERROR_INCOMPATIBLE_DRIVER)
+			{
+				log_warn("gfx/vulkan", "The Vulkan driver rejected the requested Vulkan 1.4 instance; Vulkan 1.1 will be tried instead.");
+			}
+			else
+			{
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating instance failed.", pCritErrorMsg);
+			}
 			return false;
 		}
 		else if(Res == VK_ERROR_LAYER_NOT_PRESENT || Res == VK_ERROR_EXTENSION_NOT_PRESENT)
@@ -4404,6 +4448,14 @@ public:
 		if(TryAgain && TryDebugExtensions)
 			return CreateVulkanInstance(vVKLayers, vVKExtensions, false);
 
+		if(Res != VK_SUCCESS)
+		{
+			if(pCritErrorMsg == nullptr)
+				SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "Creating instance failed.");
+			return false;
+		}
+
+		m_VKInstance = CreatedInstance;
 		return true;
 	}
 
@@ -4458,6 +4510,11 @@ public:
 
 	[[nodiscard]] bool SelectGpu(char *pRendererName, char *pVendorName, char *pVersionName)
 	{
+		m_RequiredVulkanVersionUnavailable = false;
+		const SVulkanVersion RequiredVersion = {
+			(int)VK_API_VERSION_MAJOR(m_RequestedApiVersion),
+			(int)VK_API_VERSION_MINOR(m_RequestedApiVersion),
+			(int)VK_API_VERSION_PATCH(m_RequestedApiVersion)};
 		uint32_t DevicesCount = 0;
 		auto Res = vkEnumeratePhysicalDevices(m_VKInstance, &DevicesCount, nullptr);
 		if(Res != VK_SUCCESS)
@@ -4467,6 +4524,7 @@ public:
 		}
 		if(DevicesCount == 0)
 		{
+			m_RequiredVulkanVersionUnavailable = true;
 			SetError(EGfxErrorType::GFX_ERROR_TYPE_INIT, "No vulkan compatible devices found.");
 			return false;
 		}
@@ -4480,6 +4538,7 @@ public:
 		}
 		if(DevicesCount == 0)
 		{
+			m_RequiredVulkanVersionUnavailable = true;
 			SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_MISSING_INTEGRATED_GPU_DRIVER, "No vulkan compatible devices found.");
 			return false;
 		}
@@ -4499,6 +4558,7 @@ public:
 		STWGraphicGpu::ETWGraphicsGpuType AutoGpuType = STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INVALID;
 
 		bool IsAutoGpu = str_comp(g_Config.m_GfxGpuName, "auto") == 0;
+		bool HasRequiredVersionDevice = false;
 
 		bool UserSelectedGpuChosen = false;
 		for(auto &CurDevice : vDeviceList)
@@ -4515,7 +4575,11 @@ public:
 
 			auto IsDenied = CCommandProcessorFragment_Vulkan::IsGpuDenied(DeviceProp.vendorID, DeviceProp.driverVersion, DevApiMajor, DevApiMinor, DevApiPatch);
 			const SVulkanVersion DeviceVersion = {DevApiMajor, DevApiMinor, DevApiPatch};
-			if(IsVulkanVersionAtLeast(DeviceVersion, gs_BackendVulkanMinimumVersion) && !IsDenied)
+			if(IsVulkanVersionAtLeast(DeviceVersion, RequiredVersion))
+			{
+				HasRequiredVersionDevice = true;
+			}
+			if(IsVulkanVersionAtLeast(DeviceVersion, RequiredVersion) && !IsDenied)
 			{
 				if(FirstCompatibleDeviceIndex == InvalidDeviceIndex)
 					FirstCompatibleDeviceIndex = Index;
@@ -4550,9 +4614,17 @@ public:
 
 		if(m_pGpuList->m_vGpus.empty())
 		{
+			m_RequiredVulkanVersionUnavailable = !HasRequiredVersionDevice;
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "No device supporting the required Vulkan %d.%d API was found.", gs_BackendVulkanMinimumVersion.m_Major, gs_BackendVulkanMinimumVersion.m_Minor);
-			SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_NO_DEVICE_WITH_REQUIRED_VERSION, aBuf);
+			if(m_RequiredVulkanVersionUnavailable)
+			{
+				str_format(aBuf, sizeof(aBuf), "No device supporting the required Vulkan %d.%d API was found.", RequiredVersion.m_Major, RequiredVersion.m_Minor);
+				SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_NO_DEVICE_WITH_REQUIRED_VERSION, aBuf);
+			}
+			else
+			{
+				SetWarning(EGfxWarningType::GFX_WARNING_TYPE_INIT_FAILED_MISSING_INTEGRATED_GPU_DRIVER, "No vulkan compatible devices found.");
+			}
 			return false;
 		}
 		if(FoundDeviceIndex == InvalidDeviceIndex)
@@ -5134,7 +5206,10 @@ public:
 	{
 #ifdef VK_EXT_debug_utils
 		if(m_DebugMessenger != VK_NULL_HANDLE)
+		{
 			DestroyDebugUtilsMessengerEXT(m_DebugMessenger);
+			m_DebugMessenger = VK_NULL_HANDLE;
+		}
 #endif
 	}
 
@@ -6614,21 +6689,54 @@ public:
 		if(!GetVulkanLayers(vVKLayers))
 			return -1;
 
-		if(!CreateVulkanInstance(vVKLayers, vVKExtensions, true))
-			return -1;
+		const auto CreateConfiguredVulkanInstance = [&]() {
+			if(!CreateVulkanInstance(vVKLayers, vVKExtensions, true))
+				return false;
 
-		if(g_Config.m_DbgGfx == DEBUG_GFX_MODE_MINIMUM || g_Config.m_DbgGfx == DEBUG_GFX_MODE_ALL)
-		{
-			SetupDebugCallback();
-
-			for(auto &VKLayer : vVKLayers)
+			if(g_Config.m_DbgGfx == DEBUG_GFX_MODE_MINIMUM || g_Config.m_DbgGfx == DEBUG_GFX_MODE_ALL)
 			{
-				dbg_msg("vulkan", "Validation layer: %s", VKLayer.c_str());
-			}
-		}
+				SetupDebugCallback();
 
-		if(!SelectGpu(pRendererString, pVendorString, pVersionString))
-			return -1;
+				for(auto &VKLayer : vVKLayers)
+				{
+					dbg_msg("vulkan", "Validation layer: %s", VKLayer.c_str());
+				}
+			}
+			return true;
+		};
+
+		const auto FallbackToVulkan11 = [&](const char *pReason) {
+			log_warn("gfx/vulkan", "%s Falling back to Vulkan 1.1.", pReason);
+			g_Config.m_QmVulkanApiVersion = 11;
+			DestroyVulkanInstance();
+			m_RequestedApiVersion = VK_API_VERSION_1_1;
+			m_EffectiveApiVersion = VK_API_VERSION_1_1;
+			m_RequiredVulkanVersionUnavailable = false;
+			ResetInitializationDiagnostics();
+			*m_pGpuList = {};
+			if(!CreateConfiguredVulkanInstance())
+			{
+				DestroyVulkanInstance();
+				return false;
+			}
+			if(!SelectGpu(pRendererString, pVendorString, pVersionString))
+			{
+				DestroyVulkanInstance();
+				return false;
+			}
+			return true;
+		};
+
+		if(!CreateConfiguredVulkanInstance())
+		{
+			if(m_RequestedApiVersion != VK_API_VERSION_1_4 || !FallbackToVulkan11("The selected Vulkan 1.4 instance could not be created."))
+				return -1;
+		}
+		else if(!SelectGpu(pRendererString, pVendorString, pVersionString))
+		{
+			if(m_RequestedApiVersion != VK_API_VERSION_1_4 || !m_RequiredVulkanVersionUnavailable || !FallbackToVulkan11("No physical device supports the selected Vulkan 1.4 API."))
+				return -1;
+		}
 
 		if(!CreateLogicalDevice(vVKLayers))
 			return -1;
@@ -8337,8 +8445,22 @@ public:
 	{
 		if(pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size())
 			return true;
-		if(m_RenderTargetActive && m_ActiveRenderTargetId == pCommand->m_TargetId)
+		if(m_RenderingPaused)
+		{
+			// 渲染暂停时 GPU 已空闲且无活跃录制，直接销毁即可，
+			// 避免对已结束且已提交的交换链渲染通道再次调用 vkCmdEndRenderPass
+			DestroyRenderTarget(m_vRenderTargets[pCommand->m_TargetId]);
 			return true;
+		}
+		if(m_RenderTargetActive)
+		{
+			// 渲染目标渲染通道进行中：既不能中途提交当前命令缓冲（会打断渲染通道），
+			// 也不能在渲染通道中间结束命令缓冲，延迟到 Cmd_RenderTarget_End 后统一销毁
+			if(m_ActiveRenderTargetId == pCommand->m_TargetId)
+				return true;
+			m_vPendingRenderTargetDestroy.emplace_back(pCommand->m_TargetId, m_vRenderTargets[pCommand->m_TargetId].m_Image);
+			return true;
+		}
 		if(m_vRenderTargets[pCommand->m_TargetId].m_Image != VK_NULL_HANDLE && !SubmitCurrentCommandsAndRestartSwapPass())
 			return false;
 		DestroyRenderTarget(m_vRenderTargets[pCommand->m_TargetId]);
@@ -8347,6 +8469,8 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderTarget_Begin(const CCommandBuffer::SCommand_RenderTarget_Begin *pCommand)
 	{
+		if(m_RenderingPaused)
+			return true;
 		if(pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || m_RenderTargetActive)
 			return true;
 		SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
@@ -8385,6 +8509,8 @@ public:
 	[[nodiscard]] bool Cmd_RenderTarget_End(const CCommandBuffer::SCommand_RenderTarget_End *pCommand)
 	{
 		(void)pCommand;
+		if(m_RenderingPaused)
+			return true;
 		if(!m_RenderTargetActive || m_ActiveRenderTargetId < 0 || (size_t)m_ActiveRenderTargetId >= m_vRenderTargets.size())
 			return true;
 		auto &CommandBuffer = GetMainGraphicCommandBuffer();
@@ -8397,12 +8523,28 @@ public:
 		m_DynamicViewportOffset = m_SavedDynamicViewportOffset;
 		m_DynamicViewportSize = m_SavedDynamicViewportSize;
 		BeginSwapRenderPass(m_VKRenderPassLoad);
+
+		// 处理渲染目标渲染通道期间收到的销毁请求：先提交并等待 GPU 完成，再逐个销毁
+		if(!m_vPendingRenderTargetDestroy.empty())
+		{
+			if(!SubmitCurrentCommandsAndRestartSwapPass())
+				return false;
+			for(const auto &PendingDestroy : m_vPendingRenderTargetDestroy)
+			{
+				if(PendingDestroy.first < m_vRenderTargets.size() && PendingDestroy.second != VK_NULL_HANDLE &&
+					m_vRenderTargets[PendingDestroy.first].m_Image == PendingDestroy.second)
+					DestroyRenderTarget(m_vRenderTargets[PendingDestroy.first]);
+			}
+			m_vPendingRenderTargetDestroy.clear();
+		}
 		return true;
 	}
 
 	[[nodiscard]] bool Cmd_RenderTarget_Readback(const CCommandBuffer::SCommand_RenderTarget_Readback *pCommand)
 	{
 		if(pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || pCommand->m_pImage == nullptr)
+			return true;
+		if(m_RenderingPaused)
 			return true;
 		SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
 		if(Target.m_Image == VK_NULL_HANDLE || Target.m_Width == 0 || Target.m_Height == 0)
@@ -8528,6 +8670,8 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderTarget_Draw(const CCommandBuffer::SCommand_RenderTarget_Draw *pCommand)
 	{
+		if(m_RenderingPaused)
+			return true;
 		if(pCommand->m_TargetId < 0 || (size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || pCommand->m_W <= 0.0f || pCommand->m_H <= 0.0f || pCommand->m_pVertices == nullptr || pCommand->m_PrimCount == 0)
 			return true;
 		SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
@@ -8574,7 +8718,7 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderTarget_CaptureBackbuffer(const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *pCommand)
 	{
-		if(!SupportsBackbufferCapture() || HasMultiSampling() || m_RenderTargetActive || !m_SwapRenderPassActive || pCommand->m_TargetId < 0 ||
+		if(m_RenderingPaused || !SupportsBackbufferCapture() || HasMultiSampling() || m_RenderTargetActive || !m_SwapRenderPassActive || pCommand->m_TargetId < 0 ||
 			(size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || m_CurImageIndex >= m_vSwapChainImages.size())
 			return true;
 		SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
@@ -8619,6 +8763,8 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderTarget_GaussianBlurPass(const CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass *pCommand)
 	{
+		if(m_RenderingPaused)
+			return true;
 		if(!m_GaussianBlurPipelineValid || HasMultiSampling() || !m_RenderTargetActive || m_ActiveRenderTargetId < 0 || pCommand->m_SourceTargetId < 0 ||
 			(size_t)m_ActiveRenderTargetId >= m_vRenderTargets.size() || (size_t)pCommand->m_SourceTargetId >= m_vRenderTargets.size() ||
 			pCommand->m_SourceTargetId == m_ActiveRenderTargetId || pCommand->m_Radius < 1 || pCommand->m_Radius > IGraphics::GAUSSIAN_BLUR_MAX_RADIUS)

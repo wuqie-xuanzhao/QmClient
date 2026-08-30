@@ -89,6 +89,7 @@ CInput::CInput()
 {
 	std::fill(std::begin(m_aCurrentKeyStates), std::end(m_aCurrentKeyStates), false);
 	std::fill(std::begin(m_aFrameKeyStates), std::end(m_aFrameKeyStates), false);
+	std::fill(std::begin(m_aGlobalKeyStates), std::end(m_aGlobalKeyStates), false);
 
 	m_vInputEvents.reserve(32);
 	m_LastUpdate = 0;
@@ -96,6 +97,9 @@ CInput::CInput()
 
 	m_InputCounter = 1;
 	m_InputGrabbed = false;
+	m_GlobalMousePos = vec2(0.0f, 0.0f);
+	m_GlobalMouseDelta = vec2(0.0f, 0.0f);
+	m_HasGlobalMousePos = false;
 
 	m_MouseFocus = true;
 
@@ -336,6 +340,45 @@ bool CInput::NativeMousePressed(int Index) const
 	return (i & SDL_BUTTON(Index)) != 0;
 }
 
+bool CInput::GamepadButtonIsPressed(int Button) const
+{
+	if(Button < 0 || Button >= NUM_JOYSTICK_BUTTONS || m_pActiveJoystick == nullptr)
+		return false;
+	return m_aCurrentKeyStates[KEY_JOYSTICK_BUTTON_0 + Button];
+}
+
+float CInput::GamepadAxisValue(int Axis) const
+{
+	if(Axis < 0 || Axis >= NUM_JOYSTICK_AXES || m_pActiveJoystick == nullptr)
+		return 0.0f;
+	return std::clamp(m_pActiveJoystick->GetAxisValue(Axis), -1.0f, 1.0f);
+}
+
+int CInput::GamepadPlayerIndex() const
+{
+	return m_pActiveJoystick == nullptr ? 0 : std::clamp(m_pActiveJoystick->GetIndex(), 0, 2);
+}
+
+vec2 CInput::GlobalMousePos() const
+{
+	return m_GlobalMousePos;
+}
+
+bool CInput::GlobalMousePressed(int Index) const
+{
+#if SDL_VERSION_ATLEAST(2, 0, 4)
+	const Uint32 Buttons = SDL_GetGlobalMouseState(nullptr, nullptr);
+	return Index > 0 && (Buttons & SDL_BUTTON(Index)) != 0;
+#else
+	return NativeMousePressed(Index);
+#endif
+}
+
+vec2 CInput::GlobalMouseDelta() const
+{
+	return m_GlobalMouseDelta;
+}
+
 const std::vector<IInput::CTouchFingerState> &CInput::TouchFingerStates() const
 {
 	return m_vTouchFingerStates;
@@ -432,6 +475,13 @@ bool CInput::KeyIsPressed(int Key) const
 {
 	dbg_assert(Key >= KEY_FIRST && Key < KEY_LAST, "Key invalid: %d", Key);
 	return m_aCurrentKeyStates[Key];
+}
+
+bool CInput::GlobalKeyIsPressed(int Key) const
+{
+	if(Key < KEY_FIRST || Key >= KEY_LAST)
+		return false;
+	return m_aGlobalKeyStates[Key];
 }
 
 bool CInput::KeyPress(int Key) const
@@ -978,8 +1028,29 @@ int CInput::Update()
 	char aExtra[128];
 	str_format(aExtra, sizeof(aExtra), "events=%d has_composition=%d", EventCount, HasComposition() ? 1 : 0);
 	LogPerfStage(m_pClient, "sdl_poll_events", EventPumpTimer.ElapsedMs(), EventCount > 64, aExtra);
+	UpdateGlobalInputState();
 
 	return 0;
+}
+
+void CInput::UpdateGlobalInputState()
+{
+	int NumKeys = 0;
+	const Uint8 *pKeyboardState = SDL_GetKeyboardState(&NumKeys);
+	for(int Key = KEY_FIRST; Key < KEY_LAST; ++Key)
+		m_aGlobalKeyStates[Key] = pKeyboardState != nullptr && Key >= 0 && Key < NumKeys && pKeyboardState[Key] != 0;
+
+#if SDL_VERSION_ATLEAST(2, 0, 4)
+	int X = 0;
+	int Y = 0;
+	SDL_GetGlobalMouseState(&X, &Y);
+	const vec2 NewPosition((float)X, (float)Y);
+	m_GlobalMouseDelta = m_HasGlobalMousePos ? NewPosition - m_GlobalMousePos : vec2(0.0f, 0.0f);
+	m_GlobalMousePos = NewPosition;
+	m_HasGlobalMousePos = true;
+#else
+	m_GlobalMouseDelta = vec2(0.0f, 0.0f);
+#endif
 }
 
 void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)

@@ -36,6 +36,7 @@
 #include <game/client/components/countryflags.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/qmclient/input_overlay.h>
 #include <game/client/components/qmclient/keyword_reply_rules.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/translate/translate_ui_settings.h>
@@ -132,7 +133,8 @@ namespace
 		{qm_module::EQmModuleId::DummyMiniView, qm_module::EQmModuleColumn::Right, 13, "dummy_miniview"},
 		{qm_module::EQmModuleId::DynamicIsland, qm_module::EQmModuleColumn::Right, 14, "dynamic_island"},
 		{qm_module::EQmModuleId::SystemMediaControls, qm_module::EQmModuleColumn::Right, 15, "system_media_controls"},
-		{qm_module::EQmModuleId::Background3D, qm_module::EQmModuleColumn::Right, 16, "background_3d"}}};
+		{qm_module::EQmModuleId::Lyrics, qm_module::EQmModuleColumn::Right, 16, "lyrics"},
+		{qm_module::EQmModuleId::Background3D, qm_module::EQmModuleColumn::Right, 17, "background_3d"}}};
 }
 
 using SQmGlobalSearchCard = qm_card_registry::SCardSearchResult;
@@ -893,9 +895,15 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 		return;
 
 	RenderCheckbox(&g_Config.m_QmHitboxShowMap, "Map danger border", Localize("Map danger border"), &g_Config.m_QmHitboxShowMap);
-	RenderCheckbox(&g_Config.m_QmHitboxShowTees, "Tee hitbox", Localize("Tee hitbox"), &g_Config.m_QmHitboxShowTees);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTeeCollision, "Tee collision (Tee to Tee)", Localize("Tee collision (Tee to Tee)"), &g_Config.m_QmHitboxShowTeeCollision);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTeeFreeze, "Tee freeze probe (Tee to Freeze)", Localize("Tee freeze probe (Tee to Freeze)"), &g_Config.m_QmHitboxShowTeeFreeze);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTeeDeath, "Tee death probe", Localize("Tee death probe"), &g_Config.m_QmHitboxShowTeeDeath);
 	RenderCheckbox(&g_Config.m_QmHitboxShowPickups, "Pickup range", Localize("Pickup range"), &g_Config.m_QmHitboxShowPickups);
-	RenderCheckbox(&g_Config.m_QmHitboxShowWeapons, "Weapon interaction range", Localize("Weapon interaction range"), &g_Config.m_QmHitboxShowWeapons);
+	RenderCheckbox(&g_Config.m_QmHitboxShowHammer, "Hammer interaction", Localize("Hammer interaction"), &g_Config.m_QmHitboxShowHammer);
+	RenderCheckbox(&g_Config.m_QmHitboxShowProjectiles, "Projectile / explosion range", Localize("Projectile / explosion range"), &g_Config.m_QmHitboxShowProjectiles);
+	RenderCheckbox(&g_Config.m_QmHitboxShowLasers, "Laser / shotgun interaction", Localize("Laser / shotgun interaction"), &g_Config.m_QmHitboxShowLasers);
+	RenderCheckbox(&g_Config.m_QmHitboxShowFreezeLasers, "Freeze laser collision volume", Localize("Freeze laser collision volume"), &g_Config.m_QmHitboxShowFreezeLasers);
+	RenderCheckbox(&g_Config.m_QmHitboxShowHook, "Hook interaction", Localize("Hook interaction"), &g_Config.m_QmHitboxShowHook);
 
 	CUIRect Row, LabelColumn, ControlColumn;
 	Content.HSplitTop(LineHeight, &Row, &Content);
@@ -930,11 +938,27 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly)
 {
 	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, "Weapon switch animation", Localize("Weapon switch animation"), &g_Config.m_QmWeaponSwitchAnim);
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim, "Play a flip animation while reloading weapons", Localize("Play a flip animation while reloading weapons"), &g_Config.m_QmWeaponReloadAnim);
 	Content.HSplitTop(ContentGap, nullptr, &Content);
-	if(!g_Config.m_QmWeaponSwitchAnim)
-		return;
 
 	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int Min, int Max, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	if(g_Config.m_QmWeaponReloadAnim)
+	{
+		static int s_QmWeaponReloadAnimProbabilityInputId;
+		RenderValue("qmclient-weapon-reload-animation-probability", "Weapon reload animation probability", &s_QmWeaponReloadAnimProbabilityInputId, &g_Config.m_QmWeaponReloadAnimProbability, 0, 100, "%");
+	}
+
+	if(!g_Config.m_QmWeaponSwitchAnim && !g_Config.m_QmWeaponReloadAnim)
+		return;
+
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	static std::vector<const char *> s_WeaponSwitchAnimScopeDropDownNames;
 	s_WeaponSwitchAnimScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
@@ -963,13 +987,9 @@ void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHe
 		g_Config.m_QmWeaponSwitchAnimScope = NewScope;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int Min, int Max, const char *pSuffix = "") {
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
-		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	};
+	if(!g_Config.m_QmWeaponSwitchAnim)
+		return;
+
 	static int s_QmWeaponSwitchAnimDurationInputId;
 	static int s_QmWeaponSwitchAnimDistanceInputId;
 	static int s_QmWeaponSwitchAnimRotationInputId;
@@ -1409,7 +1429,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			"临渊捕鱼", "?hook?", "放肆zero", "Q币", "洛天依", "spider", "贝塔塔塔", "见月", "咩子的银耳", "Cancer", "少女`",
 			"长亭寂寞独自愁", "fantuan", "无言鱼", "胖人老许", "夏日", "张宁我儿", "拌饭", "shengyan", "修勾在修沟", "taffy",
 			"杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫",
-			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "迟渔", "潇洒的吗喽", "weijiu"};
+			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "迟渔", "潇洒的吗喽", "weijiu", "2284463973"};
 		const auto BuildSponsorLines = [this, TipSize](float MaxLineWidth) {
 			static std::vector<std::string> Lines;
 			static float s_CachedMaxLineWidth = -1.0f;
@@ -3213,23 +3233,16 @@ void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, const SSettingsCon
 	static int s_QmInputOverlayScaleInputId;
 	static int s_QmInputOverlayMouseScaleInputId;
 	static int s_QmInputOverlayOpacityInputId;
-	static int s_QmInputOverlayPosXInputId;
-	static int s_QmInputOverlayPosYInputId;
 	RenderValue("qmclient-input-overlay-keyboard-size", "Keyboard size", &s_QmInputOverlayScaleInputId, &g_Config.m_QmInputOverlayScale, 1, 200);
 	RenderValue("qmclient-input-overlay-mouse-size", "Mouse size", &s_QmInputOverlayMouseScaleInputId, &g_Config.m_QmInputOverlayMouseScale, 1, 200);
 	RenderValue("qmclient-input-overlay-opacity", "Opacity", &s_QmInputOverlayOpacityInputId, &g_Config.m_QmInputOverlayOpacity, 0, 100);
-	RenderValue("qmclient-input-overlay-horizontal-position", "Horizontal position", &s_QmInputOverlayPosXInputId, &g_Config.m_QmInputOverlayPosX, 0, 100);
-	RenderValue("qmclient-input-overlay-vertical-position", "Vertical position", &s_QmInputOverlayPosYInputId, &g_Config.m_QmInputOverlayPosY, 0, 100);
 
-	Content.HSplitTop(Metrics.m_SmallSize, &Row, &Content);
-	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-	RenderQmHudLabel("qmclient-input-overlay-config-file", &Row, Localize("Config file: data/input_overlay.json"), Metrics.m_SmallSize);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-	Content.HSplitTop(Metrics.m_SmallSize, &Row, &Content);
-	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-	RenderQmHudLabel("qmclient-input-overlay-auto-hot-reload", &Row, Localize("Auto hot-reload after external saves"), Metrics.m_SmallSize);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmHudLabel("qmclient-input-overlay-editor", &LabelColumn, Localize("Editor"), BodySize);
+	static CButtonContainer s_InputOverlayEditorButton;
+	if(!PrewarmOnly && DoButton_Menu(&s_InputOverlayEditorButton, Localize("Open editor"), 0, &ControlColumn))
+		GameClient()->m_InputOverlay.OpenEditor();
 }
 
 void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool Expanded, bool PrewarmOnly)
@@ -3270,9 +3283,6 @@ void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight,
 void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly)
 {
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, "Enable system media control", Localize("Enable system media control"), &g_Config.m_QmSmtcEnable);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, "Enable Netease music Hook", Localize("Enable Netease music Hook"), &g_Config.m_QmNeteaseHookEnable);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmLyrics);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, "Show lyrics inside Dynamic Island", Localize("Show lyrics inside Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland);
 	if(!g_Config.m_QmSmtcEnable)
 		return;
 
@@ -3295,6 +3305,17 @@ void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineH
 	if(DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &s_SmtcNext, "qmclient-smtc-next", Localize("Next"), 0, &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
 		GameClient()->m_SystemMediaControls.Next();
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, "Enable Netease music Hook", Localize("Enable Netease music Hook"), &g_Config.m_QmNeteaseHookEnable);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, "Enable SodaMusic Hook", Localize("Enable SodaMusic Hook"), &g_Config.m_QmSodaHookEnable);
+	// 两个 Hook 互斥:同一时间只能有一个歌词来源,避免优先级歧义。
+	if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
+		g_Config.m_QmSodaHookEnable = 0;
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmLyrics);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, "Show lyrics inside Dynamic Island", Localize("Show lyrics inside Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland);
 }
 
 void CMenus::RenderQmHudNotificationsBasicContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)
@@ -4310,7 +4331,8 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::HudNotifications: return ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0);
 		case EQmModuleId::Voice: return ResolveQmHudVoiceHeight(Metrics, g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return ResolveQmHudDynamicIslandHeight(Metrics, DynamicIslandOriginalStyle, ContentWidth);
-		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(6.0f) : Rows(4.0f);
+		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
+		case EQmModuleId::Lyrics: return Rows(4.0f);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return Rows(1.0f);
 		}
@@ -4332,6 +4354,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::Voice: return ResolveQmHudVoiceRevision(g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? 1u : 0u;
 		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? 1u : 0u;
+		case EQmModuleId::Lyrics: return 0u;
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DRevision(g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return 0u;
 		}
@@ -4443,7 +4466,15 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::SystemMediaControls:
 			return [this, LineHeight, LineSpacing](CUIRect Content) {
 				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, &g_Config.m_QmSmtcEnable);
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, &g_Config.m_QmNeteaseHookEnable) || Changed;
+				return Changed;
+			};
+		case EQmModuleId::Lyrics:
+			return [this, LineHeight, LineSpacing](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, &g_Config.m_QmNeteaseHookEnable);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, &g_Config.m_QmSodaHookEnable) || Changed;
+				// 互斥:同一时间只能有一个歌词来源。
+				if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
+					g_Config.m_QmSodaHookEnable = 0;
 				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, &g_Config.m_QmLyrics) || Changed;
 				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, &g_Config.m_QmLyricsInMediaIsland) || Changed;
 				return Changed;
@@ -4525,6 +4556,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		AddCard(EQmModuleId::Voice, "qm:voice", "Voice", "Voice chat settings and diagnostics", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudVoiceContent(Content, Metrics, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, LineSpacing, DynamicIslandOriginalStyle](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, LineSpacing, DynamicIslandOriginalStyle); });
 		AddCard(EQmModuleId::SystemMediaControls, "qm:system_media_controls", "SMTC", "System media control", [this, LineHeight, BodySize, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudSystemMediaControlsContent(Content, LineHeight, BodySize, LineSpacing, ReadOnly); });
+		AddCard(EQmModuleId::Lyrics, "qm:lyrics", "Lyrics", "Lyrics sources and display", [this, LineHeight, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudLyricsContent(Content, LineHeight, LineSpacing, ReadOnly); });
 		AddCard(EQmModuleId::Background3D, "qm:background_3d", "3D Background", "Configure background 3D particle effects", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudBackground3DContent(Content, Metrics, LabelWidth, ReadOnly); });
 	};
 	uint64_t CardLayoutRevision = 0;
@@ -4842,7 +4874,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		case EQmModuleId::FocusMode:
 			return ResolveQmVisualFocusModeHeight(Metrics);
 		case EQmModuleId::WeaponAnimation:
-			return g_Config.m_QmWeaponSwitchAnim ? Rows(6.0f) + Metrics.m_LineSpacing : Rows(1.0f) + Metrics.m_LineSpacing;
+			return ResolveQmVisualWeaponAnimationHeight(Metrics, g_Config.m_QmWeaponSwitchAnim != 0, g_Config.m_QmWeaponReloadAnim != 0);
 		case EQmModuleId::Streamer: return Rows(3.0f);
 		case EQmModuleId::EntityOverlay: return Rows(9.0f);
 		case EQmModuleId::CollisionHitbox:
@@ -4860,8 +4892,21 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 			       (g_Config.m_QmDynamicFov ? 2u : 0u) |
 			       (g_Config.m_QmAspectPreset == 6 ? 4u : 0u);
 		case EQmModuleId::SkinTransition: return g_Config.m_QmSkinChangeTransition ? 1u : 0u;
-		case EQmModuleId::WeaponAnimation: return g_Config.m_QmWeaponSwitchAnim ? 1u : 0u;
-		case EQmModuleId::CollisionHitbox: return (g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox) ? 1u : 0u;
+		case EQmModuleId::WeaponAnimation:
+			return (g_Config.m_QmWeaponSwitchAnim ? 1u : 0u) |
+			       (g_Config.m_QmWeaponReloadAnim ? 2u : 0u);
+		case EQmModuleId::CollisionHitbox:
+			return (g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox ? 1u : 0u) |
+			       (g_Config.m_QmHitboxShowMap ? 1u << 1 : 0u) |
+			       (g_Config.m_QmHitboxShowTeeCollision ? 1u << 2 : 0u) |
+			       (g_Config.m_QmHitboxShowTeeFreeze ? 1u << 3 : 0u) |
+			       (g_Config.m_QmHitboxShowTeeDeath ? 1u << 4 : 0u) |
+			       (g_Config.m_QmHitboxShowPickups ? 1u << 5 : 0u) |
+			       (g_Config.m_QmHitboxShowHammer ? 1u << 6 : 0u) |
+			       (g_Config.m_QmHitboxShowProjectiles ? 1u << 7 : 0u) |
+			       (g_Config.m_QmHitboxShowLasers ? 1u << 8 : 0u) |
+			       (g_Config.m_QmHitboxShowFreezeLasers ? 1u << 9 : 0u) |
+			       (g_Config.m_QmHitboxShowHook ? 1u << 10 : 0u);
 		default: return 0u;
 		}
 	};
@@ -4911,7 +4956,9 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 			};
 		case EQmModuleId::WeaponAnimation:
 			return [this, LineHeight, LineSpacing](CUIRect Content) {
-				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, &g_Config.m_QmWeaponSwitchAnim);
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, &g_Config.m_QmWeaponSwitchAnim);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim, &g_Config.m_QmWeaponReloadAnim) || Changed;
+				return Changed;
 			};
 		case EQmModuleId::CollisionHitbox:
 			return [this, LineHeight](CUIRect Content) {

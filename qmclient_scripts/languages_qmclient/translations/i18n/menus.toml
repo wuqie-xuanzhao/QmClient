@@ -1218,7 +1218,7 @@ polish = "Sloty audio"
 [[message]]
 key = "Auth level required to send phone to others."
 [message.translations]
-simplified_chinese = "你向其他人发送电话所需的身份验证级别"
+simplified_chinese = "向其他玩家传送所需的身份验证级别"
 traditional_chinese = "你向其他人發送電話所需的身份驗證級別"
 japanese = "他の人に電話を送信するために必要な認証レベル"
 korean = "다른 사람에게 전화를 보내는 데 필요한 인증 수준."
@@ -1778,7 +1778,7 @@ polish = "Adres wiązania dla klienta/serwera"
 [[message]]
 key = "Bind only to IPv4, otherwise bind to all interfaces"
 [message.translations]
-simplified_chinese = "是否仅绑定到 ipv4，否则绑定到所有可用接口"
+simplified_chinese = "仅绑定到 IPv4，否则绑定到所有接口"
 traditional_chinese = "是否僅綁定到 ipv4，否則綁定到所有可用接口"
 japanese = "IPv4 のみにバインドする。それ以外の場合はすべてのインターフェースにバインドする"
 korean = "IPv4에만 바인딩, 그렇지 않으면 모든 인터페이스에 바인딩"
@@ -2226,7 +2226,7 @@ polish = "Dni przechowywania logów czatu"
 [[message]]
 key = "Chat score increases per message and decreases by 1 per tick"
 [message.translations]
-simplified_chinese = "每条消息的聊天分数都会增加，并且每次勾选都会减少 1。"
+simplified_chinese = "每条消息都会增加聊天分数，每个 tick 减少 1。"
 traditional_chinese = "每條消息的聊天分數都會增加，並且每次勾選都會減少 1。"
 japanese = "チャットスコアはメッセージごとに増加し、1 ティックごとに 1 減少します"
 korean = "채팅 점수는 메시지당 증가하고 틱당 1씩 감소"
@@ -2610,7 +2610,7 @@ polish = "Kolor nazw uwierzytelnionych graczy na tablicy wyników"
 [[message]]
 key = "Color of hook collision line tip segment"
 [message.translations]
-simplified_chinese = "指定钩子辅助线末端提示段的颜色。"
+simplified_chinese = "钩索辅助线末端线段的颜色"
 traditional_chinese = "鉤子輔助線末端提示段顏色"
 japanese = "フック補助線の先端セグメントの色"
 korean = "갈고리 보조선 끝 부분 색상"
@@ -2626,7 +2626,7 @@ polish = "Kolor końcowego segmentu linii asysty haka"
 [[message]]
 key = "Color of hook line hitting hookable tile"
 [message.translations]
-simplified_chinese = "指定击中可挂钩图块的挂钩线的颜色。"
+simplified_chinese = "击中可钩图块时的钩索线颜色"
 traditional_chinese = "擊中可掛鈎圖塊的鉤線顏色"
 japanese = "フック可能なタイルに当たったフックラインの色"
 korean = "갈고리 가능 타일에 닿은 갈고리 선 색상"
@@ -2642,7 +2642,7 @@ polish = "Kolor linii haka trafiającej w zaczepialny kafelek"
 [[message]]
 key = "Color of hook line hitting tee"
 [message.translations]
-simplified_chinese = "指定击中球座的钩线的颜色。"
+simplified_chinese = "击中 Tee 时的钩索线颜色"
 traditional_chinese = "擊中球座的鉤線顏色"
 japanese = "Tee に当たったフックラインの色"
 korean = "티에 맞은 갈고리 선 색상"
@@ -2658,7 +2658,7 @@ polish = "Kolor linii haka trafiającej w tee"
 [[message]]
 key = "Color of hook line not hitting anything"
 [message.translations]
-simplified_chinese = "指定未触及任何物体的钩线的颜色。"
+simplified_chinese = "未击中任何物体时的钩索线颜色"
 traditional_chinese = "未擊中任何物體的鉤線顏色"
 japanese = "何も当たらなかったフックラインの色"
 korean = "아무것도 맞지 않은 갈고리 선 색상"
@@ -2786,7 +2786,7 @@ polish = "Katalog konfiguracji"
 [[message]]
 key = "Config version. Helps new client fix old config errors."
 [message.translations]
-simplified_chinese = "配置版本。帮助新客户修复旧配置的错误。"
+simplified_chinese = "配置版本。帮助新客户端修复旧配置错误。"
 traditional_chinese = "配置版本。幫助新客戶修復舊配置的錯誤。"
 japanese = "設定バージョン。新しいクライアントが古い設定のエラーを修正するのに役立ちます"
 korean = "설정 버전. 새 클라이언트가 이전 설정 오류를 수정하는 데 도움"
@@ -3474,7 +3474,7 @@ polish = "Dezaktywuj wszystkie"
 [[message]]
 key = "Debug Curl."
 [message.translations]
-simplified_chinese = "调试卷曲"
+simplified_chinese = "调试 Curl"
 traditional_chinese = "調試卷曲"
 japanese = "Curl のデバッグ"
 korean = "Curl 디버그"
@@ -3522,7 +3522,7 @@ polish = "Tryb debugowania."
 [[message]]
 key = "Debug quad layer clipping."
 [message.translations]
-simplified_chinese = "调试四层裁剪"
+simplified_chinese = "调试四边形图层裁剪"
 traditional_chinese = "調試四層裁剪"
 japanese = "クワッドレイヤークリッピングのデバッグ"
 korean = "쿼드 레이어 클리핑 디버그"
@@ -3538,7 +3538,7 @@ polish = "Debugowanie przycinania warstw czworokątów."
 [[message]]
 key = "Debug quad layer cluster clipping."
 [message.translations]
-simplified_chinese = "调试四层簇裁剪"
+simplified_chinese = "调试四边形图层簇裁剪"
 traditional_chinese = "調試四層簇裁剪"
 japanese = "デバッグクアッドレイヤークラスタークリッピング"
 korean = "디버그 쿼드 레이어 클러스터 클리핑"
@@ -3746,7 +3746,7 @@ polish = "Opóźnienie między zapytaniami SQL dla pojedynczego gracza (w sekund
 [[message]]
 key = "Delay in seconds before loading a saved game or swapping"
 [message.translations]
-simplified_chinese = "加载保存游戏或交换之前延迟几秒"
+simplified_chinese = "加载存档或交换位置前的延迟时间（秒）"
 traditional_chinese = "加載保存遊戲或交換之前延遲幾秒"
 japanese = "保存ゲームのロードまたはスワップ前の遅延（秒）"
 korean = "저장된 게임을 로드하거나 교체하기 전 지연 시간 (초)"
@@ -4290,7 +4290,7 @@ polish = "Kolor konturu przeciągacza"
 [[message]]
 key = "Draw tile layers when using custom background (solid)"
 [message.translations]
-simplified_chinese = "使用自定义背景（实体）时是否绘制图块图层"
+simplified_chinese = "使用纯色自定义背景时绘制图块图层"
 traditional_chinese = "使用自定義背景（實體）時是否繪製圖塊圖層"
 japanese = "カスタム背景（ソリッド）使用時にタイルレイヤーを描画"
 korean = "사용자 정의 배경 (단색) 사용 시 타일 레이어 그리기"
@@ -5106,7 +5106,7 @@ polish = "Włącz kolorowanie i serduszka dla znajomych"
 [[message]]
 key = "Enable controller"
 [message.translations]
-simplified_chinese = "使用手柄"
+simplified_chinese = "启用控制器"
 traditional_chinese = "使用手柄"
 japanese = "コントローラーを有効化"
 korean = "컨트롤러 사용"
@@ -5170,7 +5170,7 @@ polish = "Włącz emotki oczu? 1=włączone, 0=wyłączone, -1=wyłączone."
 [[message]]
 key = "Enable event triggers (server eye-emotes on holidays, client Christmas skin)"
 [message.translations]
-simplified_chinese = "启用事件触发（服务器在某些节日的眼睁表情，客户端的圣诞皮肤）"
+simplified_chinese = "启用事件触发器（节日期间服务器显示眼睛表情，客户端使用圣诞皮肤）"
 traditional_chinese = "啟用事件觸發（伺服器在某些節日的眼睜表情，客戶端的聖誕皮膚）"
 japanese = "イベントトリガー（休日のサーバーアイエモート、クライアントのクリスマススキン）を有効にする"
 korean = "이벤트 트리거 활성화 (서버의 휴일 눈 이모트, 클라이언트 크리스마스 스킨)"
@@ -5202,7 +5202,7 @@ polish = "Włącz szybkie pobieranie map"
 [[message]]
 key = "Enable fat skin"
 [message.translations]
-simplified_chinese = "启用脂肪皮"
+simplified_chinese = "启用肥胖皮肤"
 traditional_chinese = "啟用脂肪皮"
 japanese = "ファットスキンを有効にする"
 korean = "뚱뚱한 스킨 활성화"
@@ -5346,7 +5346,7 @@ polish = "Włącz sterowanie dotykowe w grze"
 [[message]]
 key = "Enable KCP/legacy transport statistics query and sample output"
 [message.translations]
-simplified_chinese = "启用 KCP/legacy 传输统计查询与采样输出"
+simplified_chinese = "启用 KCP/传统传输统计查询和采样输出"
 traditional_chinese = "啟用 KCP/legacy 傳輸統計查詢與採樣輸出"
 japanese = "KCP/レガシー転送統計クエリとサンプル出力を有効にする"
 korean = "KCP/레거시 전송 통계 쿼리 및 샘플 출력 활성화"
@@ -5490,7 +5490,7 @@ polish = "Włącz powtórki"
 [[message]]
 key = "Enable saving games (/save and /load)"
 [message.translations]
-simplified_chinese = "启用保存游戏（/保存和/加载）"
+simplified_chinese = "启用游戏存档（/save 和 /load）"
 traditional_chinese = "启用保存游戏（/save 和 /load）"
 japanese = "ゲーム保存（/save と /load）を有効にする"
 korean = "게임 저장 활성화 (/save 및 /load)"
@@ -5570,7 +5570,7 @@ polish = "Włącz rotację kolejki skórek"
 [[message]]
 key = "Enable sound"
 [message.translations]
-simplified_chinese = "声音启用"
+simplified_chinese = "启用声音"
 traditional_chinese = "聲音啟用"
 japanese = "サウンドを有効にする"
 korean = "소리 활성화"
@@ -5602,7 +5602,7 @@ polish = "Włącz dźwięk podczas renderowania wideo"
 [[message]]
 key = "Enable spectator cursor (if available)"
 [message.translations]
-simplified_chinese = "启用观看玩家的光标（如果可用）"
+simplified_chinese = "启用旁观光标（如果可用）"
 traditional_chinese = "啟用觀看玩家的光標（如果可用）"
 japanese = "観戦カーソルを有効にする（利用可能な場合）"
 korean = "관전자 커서 활성화 (가능한 경우)"
@@ -5650,7 +5650,7 @@ polish = "Włącz dźwięk czatu drużyny"
 [[message]]
 key = "Enable UDP KCP transport negotiation (old clients keep legacy UDP, hot-switch fallback)"
 [message.translations]
-simplified_chinese = "启用 UDP 上层 KCP 传输协商（旧客户端保持 legacy UDP，可热关闭回退）"
+simplified_chinese = "启用 UDP KCP 传输协商（旧客户端保持传统 UDP，支持热切换回退）"
 traditional_chinese = "啟用 UDP 上層 KCP 傳輸協商（舊客戶端保持 legacy UDP，可熱關閉回退）"
 japanese = "UDP KCP 転送ネゴシエーションを有効にする（古いクライアントはレガシー UDP を維持、ホットスイッチフォールバック）"
 korean = "UDP KCP 전송 협상 활성화 (오래된 클라이언트는 레거시 UDP 유지, 핫 스위치 폴백)"
@@ -5666,7 +5666,7 @@ polish = "Włącz negocjację transportu UDP KCP (starsi klienci zachowują lega
 [[message]]
 key = "Enable UPnP support (requires -DCONF_UPNP=ON at compile time)."
 [message.translations]
-simplified_chinese = "启用 UPnP 支持。（编译时需要-DCONF_UPNP=ON）"
+simplified_chinese = "启用 UPnP 支持（编译时需要 -DCONF_UPNP=ON）"
 traditional_chinese = "啟用 UPnP 支持。（編譯時需要-DCONF_UPNP=ON）"
 japanese = "UPnP サポートを有効にする（コンパイル時に -DCONF_UPNP=ON が必要）"
 korean = "UPnP 지원 활성화 (컴파일 시 -DCONF_UPNP=ON 필요)"
@@ -5682,7 +5682,7 @@ polish = "Włącz obsługę UPnP (wymaga -DCONF_UPNP=ON podczas kompilacji)"
 [[message]]
 key = "Enable/disable infinite hook."
 [message.translations]
-simplified_chinese = "打开/关闭无限挂钩"
+simplified_chinese = "启用/禁用无限钩索"
 traditional_chinese = "启用/禁用无限钩索"
 japanese = "無限フックの有効/無効"
 korean = "무한 갈고리 활성화/비활성화"
@@ -5794,7 +5794,7 @@ polish = "Kolor tła encji"
 [[message]]
 key = "Entity assets"
 [message.translations]
-simplified_chinese = "实体的资产"
+simplified_chinese = "实体资源"
 traditional_chinese = "實體的資產"
 japanese = "エンティティアセット"
 korean = "엔티티 에셋"
@@ -6178,7 +6178,7 @@ polish = "Stopy"
 [[message]]
 key = "Fifo file (non-Windows) or named pipe (Windows) for server console input"
 [message.translations]
-simplified_chinese = "Fifo 文件（非 Windows）或命名管道 (Windows) 用作服务器控制台的输入"
+simplified_chinese = "Fifo 文件（非 Windows）或命名管道（Windows）用于服务器控制台输入"
 traditional_chinese = "Fifo 文件（非 Windows）或命名管道 (Windows) 用作伺服器控制台的輸入"
 japanese = "サーバーコンソール入力用の Fifo ファイル（非 Windows）または名前付きパイプ（Windows）"
 korean = "서버 콘솔 입력용 Fifo 파일 (비 Windows) 또는 네임드 파이프 (Windows)"
@@ -6194,7 +6194,7 @@ polish = "Plik Fifo (nie Windows) lub nazwany potok (Windows) dla wejścia konso
 [[message]]
 key = "Fifo file (non-Windows) or named pipe (Windows) used as input for client console"
 [message.translations]
-simplified_chinese = "Fifo 文件（非 Windows）或命名管道 (Windows) 用作客户端控制台的输入"
+simplified_chinese = "Fifo 文件（非 Windows）或命名管道（Windows）用于客户端控制台输入"
 traditional_chinese = "Fifo 文件（非 Windows）或命名管道 (Windows) 用作客戶端控制台的輸入"
 japanese = "クライアントコンソール入力用の Fifo ファイル（非 Windows）または名前付きパイプ（Windows）"
 korean = "클라이언트 콘솔 입력용 Fifo 파일 (비 Windows) 또는 네임드 파이프 (Windows)"
@@ -6274,7 +6274,7 @@ polish = "Filtruj łączących się graczy"
 [[message]]
 key = "Filter empty servers in browser"
 [message.translations]
-simplified_chinese = "过滤掉浏览器中的空服务器"
+simplified_chinese = "过滤服务器浏览器中的空服务器"
 traditional_chinese = "過濾掉瀏覽器中的空伺服器"
 japanese = "ブラウザで空のサーバーをフィルターする"
 korean = "브라우저에서 빈 서버 필터링"
@@ -6290,7 +6290,7 @@ polish = "Filtruj puste serwery w przeglądarce"
 [[message]]
 key = "Filter full servers in browser"
 [message.translations]
-simplified_chinese = "在浏览器中过滤掉完整的服务器"
+simplified_chinese = "过滤服务器浏览器中的满人服务器"
 traditional_chinese = "在瀏覽器中過濾掉完整的伺服器"
 japanese = "ブラウザで満員のサーバーをフィルターする"
 korean = "브라우저에서 꽉 찬 서버 필터링"
@@ -6386,7 +6386,7 @@ polish = "Filtruj serwery bez znajomych"
 [[message]]
 key = "Filter out spectators from player count"
 [message.translations]
-simplified_chinese = "从玩家号码中过滤掉观众"
+simplified_chinese = "从玩家数量中排除旁观者"
 traditional_chinese = "從玩家號碼中過濾掉觀眾"
 japanese = "プレイヤー数から観戦者を除外"
 korean = "플레이어 수에서 관전자 제외"
@@ -6450,7 +6450,7 @@ polish = "Wymusz głosowanie"
 [[message]]
 key = "Fraction of players needed to pass a vote"
 [message.translations]
-simplified_chinese = "超过这个比例的玩家需要同意投票才能成功"
+simplified_chinese = "投票通过所需的玩家比例"
 traditional_chinese = "投票通過所需的玩家比例"
 japanese = "投票成立に必要なプレイヤーの割合"
 korean = "투표 통과에 필요한 플레이어 비율"
@@ -6514,7 +6514,7 @@ polish = "Swobodny ruch"
 [[message]]
 key = "Freeze bar opacity (0 invisible, 100 fully visible)"
 [message.translations]
-simplified_chinese = "冻结内冻结条的不透明度（0 不可见，100 完全可见）"
+simplified_chinese = "冻结条不透明度（0 不可见，100 完全可见）"
 traditional_chinese = "凍結內凍結條的不透明度（0 不可見，100 完全可見）"
 japanese = "フリーズバーの不透明度（0 不可視、100 完全可視）"
 korean = "빙결 바 불투명도 (0 투명, 100 완전 불투명)"
@@ -6722,7 +6722,7 @@ polish = "Próbki FSAA"
 [[message]]
 key = "FSAA samples (may cause lag)"
 [message.translations]
-simplified_chinese = "FSAA 样本（可能会导致延迟）"
+simplified_chinese = "FSAA 采样数（可能导致卡顿）"
 traditional_chinese = "FSAA 樣本（可能會導致延遲）"
 japanese = "FSAA サンプル（ラグの原因になる可能性あり）"
 korean = "FSAA 샘플 (지연 발생 가능)"
@@ -6770,7 +6770,7 @@ polish = "Pełny ekran"
 [[message]]
 key = "Game assets"
 [message.translations]
-simplified_chinese = "游戏资产"
+simplified_chinese = "游戏资源"
 traditional_chinese = "遊戲資產"
 japanese = "ゲームアセット"
 korean = "게임 에셋"
@@ -6786,7 +6786,7 @@ polish = "Zasoby gry"
 [[message]]
 key = "Game graphics assets not from Teeworlds"
 [message.translations]
-simplified_chinese = "非来自 Teeworlds 的游戏图形资产"
+simplified_chinese = "非 Teeworlds 的游戏图形资源"
 traditional_chinese = "非來自 Teeworlds 的遊戲圖形資產"
 japanese = "Teeworlds 以外のゲームグラフィックアセット"
 korean = "Teeworlds 외 게임 그래픽 에셋"
@@ -6930,7 +6930,7 @@ polish = "Rozgrywka"
 [[message]]
 key = "Gap between tee and nametag"
 [message.translations]
-simplified_chinese = "三通与铭牌间隙尺寸"
+simplified_chinese = "Tee 与铭牌之间的间距"
 traditional_chinese = "三通與銘牌間隙尺寸"
 japanese = "Tee とネームタグの間のギャップ"
 korean = "티와 이름표 사이 간격"
@@ -6946,7 +6946,7 @@ polish = "Odstęp między tee a znacznikiem imienia"
 [[message]]
 key = "Ghost visibility (alpha, 0=invisible, 100=visible)"
 [message.translations]
-simplified_chinese = "鬼魂的可见性（alpha 值，0 不可见，100 完全可见）"
+simplified_chinese = "幽灵不透明度（0 不可见，100 完全可见）"
 traditional_chinese = "鬼魂的可見性（alpha 值，0 不可見，100 完全可見）"
 japanese = "ゴーストの可視性（アルファ、0=不可視、100=可視）"
 korean = "유령 가시성 (알파, 0=투명, 100=보임)"
@@ -7070,6 +7070,38 @@ brazilian_portuguese = "Backend gráfico"
 portuguese = "Backend gráfico"
 turkish = "Grafik arka ucu"
 polish = "Backend graficzny"
+
+[[message]]
+key = "Vulkan API"
+[message.translations]
+simplified_chinese = "Vulkan API 版本"
+traditional_chinese = "Vulkan API 版本"
+japanese = "Vulkan API のバージョン"
+korean = "Vulkan API 버전"
+russian = "API Vulkan"
+german = "Vulkan-API"
+spanish = "API de Vulkan"
+french = "API Vulkan"
+brazilian_portuguese = "API do Vulkan"
+portuguese = "API do Vulkan"
+turkish = "Vulkan API'si"
+polish = "API Vulkan"
+
+[[message]]
+key = "Vulkan API version: 11=1.1 compatibility, 14=1.4 strict"
+[message.translations]
+simplified_chinese = "Vulkan API 版本：11=1.1 兼容模式，14=1.4 严格模式"
+traditional_chinese = "Vulkan API 版本：11=1.1 相容模式，14=1.4 嚴格模式"
+japanese = "Vulkan API バージョン：11=1.1 互換、14=1.4 厳格"
+korean = "Vulkan API 버전: 11=1.1 호환 모드, 14=1.4 엄격 모드"
+russian = "Версия API Vulkan: 11=совместимость 1.1, 14=строгий режим 1.4"
+german = "Vulkan-API-Version: 11=1.1-Kompatibilität, 14=striktes 1.4"
+spanish = "Versión de la API de Vulkan: 11=compatibilidad 1.1, 14=modo estricto 1.4"
+french = "Version de l'API Vulkan : 11=compatibilité 1.1, 14=mode strict 1.4"
+brazilian_portuguese = "Versão da API do Vulkan: 11=compatibilidade 1.1, 14=modo estrito 1.4"
+portuguese = "Versão da API do Vulkan: 11=compatibilidade 1.1, 14=modo estrito 1.4"
+turkish = "Vulkan API sürümü: 11=1.1 uyumluluk, 14=katı 1.4 modu"
+polish = "Wersja API Vulkan: 11=zgodność 1.1, 14=ścisły tryb 1.4"
 
 [[message]]
 key = "Graphics card"
@@ -7458,7 +7490,7 @@ polish = "Linia kolizji haka"
 [[message]]
 key = "Hook collision line alpha (0 invisible, 100 fully visible)"
 [message.translations]
-simplified_chinese = "钩子辅助线 Alpha（0 不可见，100 完全可见）"
+simplified_chinese = "钩索辅助线不透明度（0 不可见，100 完全可见）"
 traditional_chinese = "鉤子輔助線 Alpha（0 不可見，100 完全可見）"
 japanese = "フック衝突線のアルファ（0 不可視、100 完全可視）"
 korean = "갈고리 충돌선 알파 (0 투명, 100 완전 불투명)"
@@ -7570,7 +7602,7 @@ polish = "Zakres siły haka"
 [[message]]
 key = "Hook through teleporters (deprecated, use special entities instead)"
 [message.translations]
-simplified_chinese = "钩子穿过传送器（已弃用，请使用特殊实体代替）"
+simplified_chinese = "钩索穿过传送器（已弃用，请改用特殊实体）"
 traditional_chinese = "鉤子穿過傳送器（已棄用，請使用特殊實體代替）"
 japanese = "テレポーターを通るフック（非推奨、代わりに特殊エンティティを使用）"
 korean = "텔레포터를 통한 갈고리 (비권장, 대신 특수 엔티티 사용)"
@@ -7634,7 +7666,7 @@ polish = "Jak daleko traktor śledzi tee"
 [[message]]
 key = "How long expression lasts"
 [message.translations]
-simplified_chinese = "眼神的表情能持续多久"
+simplified_chinese = "表情持续时间"
 traditional_chinese = "眼神的表情能持續多久"
 japanese = "表情の持続時間"
 korean = "표정 지속 시간"
@@ -7842,7 +7874,7 @@ polish = "Prędkość animacji HUD (procent)"
 [[message]]
 key = "HUD assets"
 [message.translations]
-simplified_chinese = "HUD 的资产"
+simplified_chinese = "HUD 资源"
 traditional_chinese = "HUD 的資產"
 japanese = "HUD アセット"
 korean = "HUD 에셋"
@@ -7938,7 +7970,7 @@ polish = "Jeśli wynik czatu przekroczy tę wartość, gracz zostanie wyciszony 
 [[message]]
 key = "If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter."
 [message.translations]
-simplified_chinese = "如果你射击它们，激光是否可以击中你，并且它们将你拉向弹跳原点（所有新地图为 0），或者如果你射击它们，激光就不能击中你，并且它们将其他人拉向射击者"
+simplified_chinese = "激光被射击时是否可以击中自己并将自己拉回反弹起点（所有新地图设为 0）；否则激光不会击中自己，而是将其他玩家拉向射击者。"
 traditional_chinese = "如果你射擊它們，激光是否可以擊中你，並且它們將你拉向彈跳原點（所有新地圖為 0），或者如果你射擊它們，激光就不能擊中你，並且它們將其他人拉向射擊者"
 japanese = "レーザーを撃ったときにレーザーが自分に当たり、バウンス元に引き寄せられるか（すべての新しいマップでは 0）、またはレーザーが自分に当たらず、他の人を射手に引き寄せるかを設定します。"
 korean = "레이저를 쏘면 맞을 수 있고 바운스 원점으로 끌어당기는 경우(모든 새 맵은 0), 또는 레이저를 쏘면 맞지 않고 다른 사람을 발사자에게 끌어당기는 경우입니다."
@@ -8018,7 +8050,7 @@ polish = "Czułość kontrolera w grze"
 [[message]]
 key = "Infinite hook for super players on/off."
 [message.translations]
-simplified_chinese = "超级玩家开/关的无尽钩子"
+simplified_chinese = "超级玩家无限钩索开/关"
 traditional_chinese = "超級玩家開/關的無盡鉤子"
 japanese = "スーパープレイヤーの無限フックのオン/オフ。"
 korean = "슈퍼 플레이어용 무한 갈고리 켜기/끄기"
@@ -8242,7 +8274,7 @@ polish = "Skok"
 [[message]]
 key = "Keep hook when teleporting"
 [message.translations]
-simplified_chinese = "传送时保持钩子"
+simplified_chinese = "传送时保持钩索"
 traditional_chinese = "傳送時保持鉤子"
 japanese = "テレポート時にフックを維持する"
 korean = "순간이동 시 갈고리 유지"
@@ -8450,7 +8482,7 @@ polish = "Kliknij lewym przyciskiem część Frankensteina, aby zmienić jej odc
 [[message]]
 key = "Let server start ghost"
 [message.translations]
-simplified_chinese = "让服务器启动 ghost"
+simplified_chinese = "允许服务器启动幽灵"
 traditional_chinese = "讓伺服器啟動 ghost"
 japanese = "サーバーにゴーストを開始させる"
 korean = "서버가 고스트를 시작하도록 함"
@@ -8898,7 +8930,7 @@ polish = "Adres URL serwera głównego do rejestracji"
 [[message]]
 key = "Match ghost by map version instead of map name"
 [message.translations]
-simplified_chinese = "按地图版本而不是仅按地图名称匹配鬼魂"
+simplified_chinese = "按地图版本而不是地图名称匹配幽灵"
 traditional_chinese = "按地圖版本而不是僅按地圖名稱匹配鬼魂"
 japanese = "マップ名ではなくマップバージョンでゴーストを一致させる"
 korean = "맵 이름 대신 맵 버전으로 고스트 일치"
@@ -9570,7 +9602,7 @@ polish = "Minimalna szerokość kolumny nazwy w przeglądarce serwerów"
 [[message]]
 key = "Minutes on server before a player can call a map change vote (0 = disabled)"
 [message.translations]
-simplified_chinese = "玩家可以否决地图更改投票之前服务器上的时间分钟数（0 = 禁用）"
+simplified_chinese = "玩家发起地图更改投票前必须在服务器上游玩的分钟数（0=禁用）"
 traditional_chinese = "玩家可以否決地圖更改投票之前伺服器上的時間分鐘數（0 = 禁用）"
 japanese = "プレイヤーがマップ変更投票を呼び出せるまでのサーバー滞在時間（分）（0 = 無効）"
 korean = "플레이어가 맵 변경 투표를 요청할 수 있기까지 서버에서 보내야 하는 시간 (분) (0 = 비활성화)"
@@ -9794,7 +9826,7 @@ polish = "Ruch"
 [[message]]
 key = "Mute flag sounds"
 [message.translations]
-simplified_chinese = "使旗帜声音静音"
+simplified_chinese = "静音旗帜音效"
 traditional_chinese = "使旗幟聲音靜音"
 japanese = "フラグサウンドをミュート"
 korean = "깃발 소리 음소거"
@@ -9810,7 +9842,7 @@ polish = "Wycisz dźwięki flagi"
 [[message]]
 key = "Mute hook sound"
 [message.translations]
-simplified_chinese = "静音挂钩声音"
+simplified_chinese = "静音钩索音效"
 traditional_chinese = "靜音掛鉤聲音"
 japanese = "フックサウンドをミュート"
 korean = "갈고리 소리 음소거"
@@ -9826,7 +9858,7 @@ polish = "Wycisz dźwięk haka"
 [[message]]
 key = "Mute map sounds"
 [message.translations]
-simplified_chinese = "静音地图声音"
+simplified_chinese = "静音地图音效"
 traditional_chinese = "靜音地圖聲音"
 japanese = "マップサウンドをミュート"
 korean = "맵 소리 음소거"
@@ -9842,7 +9874,7 @@ polish = "Wycisz dźwięki mapy"
 [[message]]
 key = "Mute movement sound"
 [message.translations]
-simplified_chinese = "静音运动声音"
+simplified_chinese = "静音移动音效"
 traditional_chinese = "靜音運動聲音"
 japanese = "移動サウンドをミュート"
 korean = "이동 소리 음소거"
@@ -9858,7 +9890,7 @@ polish = "Wycisz dźwięk ruchu"
 [[message]]
 key = "Mute pick-up sounds"
 [message.translations]
-simplified_chinese = "静音拾音器声音"
+simplified_chinese = "静音拾取音效"
 traditional_chinese = "靜音拾音器聲音"
 japanese = "ピックアップサウンドをミュート"
 korean = "획득 소리 음소거"
@@ -9874,7 +9906,7 @@ polish = "Wycisz dźwięki podnoszenia przedmiotów"
 [[message]]
 key = "Mute player status sounds"
 [message.translations]
-simplified_chinese = "静音玩家状态声音"
+simplified_chinese = "静音玩家状态音效"
 traditional_chinese = "靜音玩家狀態聲音"
 japanese = "プレイヤーステータスサウンドをミュート"
 korean = "플레이어 상태 소리 음소거"
@@ -9906,7 +9938,7 @@ polish = "Czas wyciszenia dla graczy z innych drużyn po głosowaniu (sekundy, 0
 [[message]]
 key = "Mute weapon out of ammo sound"
 [message.translations]
-simplified_chinese = "武器无弹药静音"
+simplified_chinese = "静音武器弹药耗尽音效"
 traditional_chinese = "武器無彈藥靜音"
 japanese = "武器の弾切れサウンドをミュート"
 korean = "무기 탄약 부족 소리 음소거"
@@ -9922,7 +9954,7 @@ polish = "Wycisz dźwięk braku amunicji w broni"
 [[message]]
 key = "Mute weapon sounds"
 [message.translations]
-simplified_chinese = "武器声音静音"
+simplified_chinese = "静音武器音效"
 traditional_chinese = "武器聲音靜音"
 japanese = "武器サウンドをミュート"
 korean = "무기 소리 음소거"
@@ -9938,7 +9970,7 @@ polish = "Wycisz dźwięki broni"
 [[message]]
 key = "Mute weapon switch sound"
 [message.translations]
-simplified_chinese = "静音武器开关声音"
+simplified_chinese = "静音切换武器音效"
 traditional_chinese = "靜音武器開關聲音"
 japanese = "武器切り替えサウンドをミュート"
 korean = "무기 전환 소리 음소거"
@@ -10562,7 +10594,7 @@ polish = "Liczba opcji głosowania wysyłanych na tick"
 [[message]]
 key = "Old chat style: no tee icons, no background"
 [message.translations]
-simplified_chinese = "旧的聊天风格：无球座，无背景"
+simplified_chinese = "旧版聊天样式：不显示 Tee 图标，不显示背景"
 traditional_chinese = "舊的聊天風格：無球座，無背景"
 japanese = "古いチャットスタイル: ティーアイコンなし、背景なし"
 korean = "이전 채팅 스타일: 티 아이콘 없음, 배경 없음"
@@ -10626,7 +10658,7 @@ polish = "Zezwalaj tylko autoryzowanym klientom na głosowanie"
 [[message]]
 key = "Only save ghost if better than previous record"
 [message.translations]
-simplified_chinese = "只保存比之前记录更好的鬼魂。"
+simplified_chinese = "仅在成绩优于之前记录时保存幽灵"
 traditional_chinese = "只保存比之前記錄更好的鬼魂。"
 japanese = "以前の記録より良い場合のみゴーストを保存"
 korean = "이전 기록보다 나은 경우에만 고스트 저장"
@@ -10866,7 +10898,7 @@ polish = "Inne"
 [[message]]
 key = "Other players' hook line width"
 [message.translations]
-simplified_chinese = "其他玩家的钩子辅助线宽度"
+simplified_chinese = "其他玩家的钩索辅助线宽度"
 traditional_chinese = "其他玩家的鉤子輔助線寬度"
 japanese = "他のプレイヤーのフックラインの幅"
 korean = "다른 플레이어의 갈고리 선 너비"
@@ -10914,7 +10946,7 @@ polish = "Tylko inni"
 [[message]]
 key = "Output KCP negotiation, fallback, and session lifecycle debug logs"
 [message.translations]
-simplified_chinese = "输出 KCP 协商、fallback 和会话生命周期调试日志"
+simplified_chinese = "输出 KCP 协商、回退和会话生命周期调试日志"
 traditional_chinese = "輸出 KCP 協商、fallback 和會話生命週期調試日誌"
 japanese = "KCP ネゴシエーション、フォールバック、セッションライフサイクルのデバッグログを出力"
 korean = "KCP 협상, 폴백 및 세션 수명 주기 디버그 로그 출력"
@@ -10978,7 +11010,7 @@ polish = "Zastąp lokalizację szacowania pingu, opcje: auto, af, as, as:cn, eu,
 [[message]]
 key = "Own hook line width"
 [message.translations]
-simplified_chinese = "自己的钩子辅助线宽度"
+simplified_chinese = "自己的钩索辅助线宽度"
 traditional_chinese = "自己的鉤子輔助線寬度"
 japanese = "自分のフックラインの幅"
 korean = "자신의 갈고리 선 너비"
@@ -11058,7 +11090,7 @@ polish = "Część zaktualizowana."
 [[message]]
 key = "Particle assets"
 [message.translations]
-simplified_chinese = "粒子资产"
+simplified_chinese = "粒子资源"
 traditional_chinese = "粒子資產"
 japanese = "パーティクルアセット"
 korean = "파티클 에셋"
@@ -11746,7 +11778,7 @@ polish = "Przewiduj ogień i pokazuj przewidywaną fizykę broni (wymaga cl_anti
 [[message]]
 key = "Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))"
 [message.translations]
-simplified_chinese = "预测冻结图块（0 = 关闭，1 = 开启，2 = 部分（允许冻结时少量移动）"
+simplified_chinese = "预测冻结图块（0=关闭，1=开启，2=部分预测（冻结时允许少量移动））"
 traditional_chinese = "預測凍結圖塊（0 = 關閉，1 = 開啟，2 = 部分（允許凍結時少量移動）"
 japanese = "フリーズタイルを予測（0 = オフ, 1 = オン, 2 = 部分（フリーズ時の小さな移動を許可））"
 korean = "얼음 타일 예측 (0 = 끄기, 1 = 켜기, 2 = 부분 (얼었을 때 약간의 움직임 허용))"
@@ -12754,7 +12786,7 @@ polish = "Zgłoszenia nie są dostępne na serwerach Axiom"
 [[message]]
 key = "Require KCP-capable client to upgrade session (keep off during grayscale for fallback)"
 [message.translations]
-simplified_chinese = "要求支持 KCP 的客户端才能升级会话（灰度期保持关闭以允许 fallback）"
+simplified_chinese = "要求支持 KCP 的客户端升级会话（灰度发布期间保持关闭以支持回退）"
 traditional_chinese = "要求支持 KCP 的客戶端才能升級會話（灰度期保持關閉以允許 fallback）"
 japanese = "KCP 対応クライアントにセッションアップグレードを要求（グレースケール中はフォールバックのためにオフのまま）"
 korean = "KCP 지원 클라이언트가 세션을 업그레이드하도록 요구 (그레이스케일 중에는 fallback을 위해 꺼두기)"
@@ -13186,7 +13218,7 @@ polish = "Linia regulaminu 9."
 [[message]]
 key = "Run \"hot_reload\" on local server with rcon auth on map save"
 [message.translations]
-simplified_chinese = "在本地服务器上运行“hot_reload”，同时在地图保存上进行 rcon 验证"
+simplified_chinese = "保存地图时，在已通过 RCON 认证的本地服务器上运行“hot_reload”"
 traditional_chinese = "在本地伺服器上運行“hot_reload”，同時在地圖保存上進行 rcon 驗證"
 japanese = "マップ保存時に rcon 認証でローカルサーバー上で「hot_reload」を実行"
 korean = "맵 저장 시 rcon 인증으로 로컬 서버에서 \"hot_reload\" 실행"
@@ -13938,7 +13970,7 @@ polish = "Wysyłaj dane celowania z precyzją sub-tick"
 [[message]]
 key = "Send client input to others before correct input (increases server bandwidth)"
 [message.translations]
-simplified_chinese = "在正确的报价之前将客户端输入发送给其他客户端。增加服务器所需的带宽"
+simplified_chinese = "在校正输入前将客户端输入发送给其他客户端（会增加服务器带宽占用）"
 traditional_chinese = "在正確的報價之前將客戶端輸入發送給其他客戶端。增加伺服器所需的帶寬"
 japanese = "正しい入力の前にクライアント入力を他者に送信（サーバー帯域幅を増加）"
 korean = "올바른 입력 전에 다른 클라이언트에게 클라이언트 입력 전송 (서버 대역폭 증가)"
@@ -14482,7 +14514,7 @@ polish = "Pokaż klan nad tabliczkami z nazwami"
 [[message]]
 key = "Show clan name on nameplate"
 [message.translations]
-simplified_chinese = "在名牌上显示战队名称"
+simplified_chinese = "在铭牌上显示战队名称"
 traditional_chinese = "在名牌上顯示戰隊名稱"
 japanese = "ネームプレートにクラン名を表示"
 korean = "이름표에 클랜 이름 표시"
@@ -14834,7 +14866,7 @@ polish = "Pokaż ikonę znajomego na tabliczkach z nazwami"
 [[message]]
 key = "Show friend tag (♥) on nametag"
 [message.translations]
-simplified_chinese = "在名牌上显示好友标记 (♥ )"
+simplified_chinese = "在铭牌上显示好友标记（♥）"
 traditional_chinese = "在名牌上顯示好友標記 (♥ )"
 japanese = "ネームタグにフレンドタグ（♥）を表示"
 korean = "이름표에 친구 태그 (♥) 표시"
@@ -14850,7 +14882,7 @@ polish = "Pokaż znacznik znajomego (♥) na tabliczce z nazwą"
 [[message]]
 key = "Show frozen tee particles"
 [message.translations]
-simplified_chinese = "显示冷冻 tee 的粒子"
+simplified_chinese = "显示冻结 Tee 的粒子"
 traditional_chinese = "顯示冷凍 tee 的粒子"
 japanese = "凍結 Tee のパーティクルを表示"
 korean = "얼어붙은 티 파티클 표시"
@@ -14866,7 +14898,7 @@ polish = "Pokaż cząsteczki zamrożonego tee"
 [[message]]
 key = "Show ghost"
 [message.translations]
-simplified_chinese = "显示影子"
+simplified_chinese = "显示幽灵"
 traditional_chinese = "顯示影子"
 japanese = "ゴーストを表示"
 korean = "고스트 표시"
@@ -14978,7 +15010,7 @@ polish = "Pokaż wskaźnik liczbowy siły haka"
 [[message]]
 key = "Show how weapons, shields, hearts, and flags appear in game"
 [message.translations]
-simplified_chinese = "展示武​​器、盾牌、红心和旗帜如何在游戏中出现"
+simplified_chinese = "显示武器、护盾、爱心和旗帜在游戏中的效果"
 traditional_chinese = "展示武​​器、盾牌、紅心和旗幟如何在遊戲中出現"
 japanese = "武器、盾、ハート、フラグがゲーム内でどのように表示されるかを表示"
 korean = "무기, 방패, 하트, 깃발이 게임에서 어떻게 나타나는지 표시"
@@ -15026,7 +15058,7 @@ polish = "Pokaż ważne komunikaty podczas renderowania wideo"
 [[message]]
 key = "Show in-game FPS"
 [message.translations]
-simplified_chinese = "显示游戏内 FPS "
+simplified_chinese = "显示游戏内 FPS"
 traditional_chinese = "顯示遊戲內 FPS "
 japanese = "ゲーム内 FPS を表示"
 korean = "게임 내 FPS 표시"
@@ -15090,7 +15122,7 @@ polish = "Pokaż HUD w grze (stan sterowania klonem)"
 [[message]]
 key = "Show in-game HUD (DDRace HUD)"
 [message.translations]
-simplified_chinese = "显示游戏内 HUD (DDRace HUD)"
+simplified_chinese = "显示游戏内 HUD（DDRace HUD）"
 traditional_chinese = "顯示遊戲內 HUD (DDRace HUD)"
 japanese = "ゲーム内 HUD を表示（DDRace HUD）"
 korean = "게임 내 HUD 표시 (DDRace HUD)"
@@ -15170,7 +15202,7 @@ polish = "Pokaż HUD w grze (zdrowie + amunicja)"
 [[message]]
 key = "Show in-game HUD (jumps used)"
 [message.translations]
-simplified_chinese = "显示游戏中的 HUD（你已经使用过的跳跃）"
+simplified_chinese = "显示游戏内 HUD（已使用的跳跃次数）"
 traditional_chinese = "顯示遊戲中的 HUD（你已經使用過的跳躍）"
 japanese = "ゲーム内 HUD を表示（使用済みジャンプ数）"
 korean = "게임 내 HUD 표시 (사용한 점프 횟수)"
@@ -15666,7 +15698,7 @@ polish = "Pokaż linie kolizji haka innych graczy"
 [[message]]
 key = "Show other players' hook collision lines (2 always shown)"
 [message.translations]
-simplified_chinese = "显示其他玩家的钩子辅助线（2 条始终显示）"
+simplified_chinese = "显示其他玩家的钩索辅助线（2 始终显示）"
 traditional_chinese = "顯示其他玩家的鉤子輔助線（2 條始終顯示）"
 japanese = "他のプレイヤーのフック衝突線を表示（2 本は常に表示）"
 korean = "다른 플레이어의 갈고리 충돌선 표시 (2개는 항상 표시)"
@@ -15682,7 +15714,7 @@ polish = "Pokaż linie kolizji haka innych graczy (2 zawsze widoczne)"
 [[message]]
 key = "Show other players' hook collision lines when rendering video"
 [message.translations]
-simplified_chinese = "渲染视频时显示其他玩家的钩子辅助线"
+simplified_chinese = "渲染视频时显示其他玩家的钩索辅助线"
 traditional_chinese = "渲染視頻時顯示其他玩家的鉤子輔助線"
 japanese = "動画レンダリング時に他のプレイヤーのフック衝突線を表示"
 korean = "비디오 렌더링 시 다른 플레이어의 갈고리 충돌선 표시"
@@ -15714,7 +15746,7 @@ polish = "Pokaż graczy z innych drużyn (2 = tylko własna drużyna)"
 [[message]]
 key = "Show other team players (alpha, 0=invisible, 100=visible)"
 [message.translations]
-simplified_chinese = "显示其他队伍的玩家（alpha 值，0 不可见，100 完全可见）"
+simplified_chinese = "其他队伍玩家的不透明度（0 不可见，100 完全可见）"
 traditional_chinese = "顯示其他隊伍的玩家（alpha 值，0 不可見，100 完全可見）"
 japanese = "他のチームのプレイヤーを表示（アルファ、0 = 非表示、100 = 表示）"
 korean = "다른 팀 플레이어 표시 (알파, 0 = 투명, 100 = 완전 표시)"
@@ -15762,7 +15794,7 @@ polish = "Pokaż innych (tylko własna drużyna)"
 [[message]]
 key = "Show own hook collision lines (2 always shown)"
 [message.translations]
-simplified_chinese = "显示自己玩家的钩子辅助线（2 始终显示）"
+simplified_chinese = "显示自己的钩索辅助线（2 始终显示）"
 traditional_chinese = "顯示自己玩家的鉤子輔助線（2 始終顯示）"
 japanese = "自分のフック衝突線を表示（2 本は常に表示）"
 korean = "자신의 갈고리 충돌선 표시 (2개는 항상 표시)"
@@ -16082,7 +16114,7 @@ polish = "Pokaż siłę/słabość w etykiecie (0 = wył., 1 = ikona, 2 = ikona+
 [[message]]
 key = "Show tee emotes"
 [message.translations]
-simplified_chinese = "显示 tee 表情"
+simplified_chinese = "显示 Tee 表情"
 traditional_chinese = "顯示 tee 表情"
 japanese = "Tee の表情を表示"
 korean = "티 이모트 표시"
@@ -18418,7 +18450,7 @@ polish = "Serwer gniazda Unix do rejestracji adresów IP (tylko Unix)"
 [[message]]
 key = "Unpredictable shadow tee transparency (0 invisible, 100 fully visible)"
 [message.translations]
-simplified_chinese = "不可预测的阴影 tee 透明度（0 不可见，100 完全可见）"
+simplified_chinese = "不可预测阴影 Tee 的不透明度（0 不可见，100 完全可见）"
 traditional_chinese = "不可預測的陰影 tee 透明度（0 不可見，100 完全可見）"
 japanese = "予測不能なシャドウ Tee の透明度（0 で非表示、100 で完全表示）"
 korean = "예측 불가능한 그림자 티 투명도 (0: 보이지 않음, 100: 완전히 보임)"
@@ -18546,7 +18578,7 @@ polish = "URL do pobierania skórek"
 [[message]]
 key = "Use alternative world tick calculation making hooks behave as if all players have Strong."
 [message.translations]
-simplified_chinese = "是否对世界刻度使用替代计算，这使得钩子的行为就像所有玩家都具有强项一样。"
+simplified_chinese = "使用替代的世界 tick 计算，使钩索表现得像所有玩家都拥有强钩。"
 traditional_chinese = "是否對世界刻度使用替代計算，這使得鉤子的行為就像所有玩家都具有強項一樣。"
 japanese = "代替ワールドティック計算を使用し、全プレイヤーが Strong を持っているかのようにフックを動作させる。"
 korean = "모든 플레이어가 Strong을 가진 것처럼 갈고리가 작동하도록 대체 월드 틱 계산 사용"
@@ -18594,7 +18626,7 @@ polish = "Użyj trybu wysokiej przepustowości (podwaja przepustowość serwera,
 [[message]]
 key = "Use mouse sensitivity when dynamic camera is on"
 [message.translations]
-simplified_chinese = "开启动态摄像头时使用鼠标感应"
+simplified_chinese = "启用动态摄像机时使用鼠标灵敏度"
 traditional_chinese = "開啟動態攝像頭時使用鼠標感應"
 japanese = "動的カメラオン時にマウス感度を使用"
 korean = "동적 카메라가 켜져 있을 때 마우스 감도 사용"
@@ -18610,7 +18642,7 @@ polish = "Użyj czułości myszy, gdy włączona jest dynamiczna kamera"
 [[message]]
 key = "Use native UI for IME (may break IME in fullscreen mode, requires restart)"
 [message.translations]
-simplified_chinese = "使用本机 UI 进行 IME（可能会导致 IME 无法在全屏模式下工作）（更改需要重新启动）"
+simplified_chinese = "使用 IME 原生界面（可能导致 IME 在全屏模式下无法工作，需要重启）"
 traditional_chinese = "使用本機 UI 進行 IME（可能會導致 IME 無法在全屏模式下工作）（更改需要重新啟動）"
 japanese = "IME にネイティブ UI を使用（フルスクリーンモードで IME が機能しなくなる可能性あり、再起動が必要）"
 korean = "IME에 기본 UI 사용 (전체 화면 모드에서 IME가 작동하지 않을 수 있음, 재시작 필요)"

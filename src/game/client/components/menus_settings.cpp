@@ -3576,6 +3576,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
 	static bool s_GfxBackendChanged = false;
 	static bool s_GfxGpuChanged = false;
+	static bool s_GfxVulkanApiVersionChanged = false;
 
 	static int s_InitDisplayAllVideoModes = g_Config.m_GfxDisplayAllVideoModes;
 
@@ -3710,7 +3711,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const uint32_t FoundBackendCount = (uint32_t)s_vSupportedBackendInfos.size();
 	const auto &GpuList = Graphics()->GetGpus();
 	const int OldWindowMode = g_Config.m_GfxFullscreen ? (g_Config.m_GfxFullscreen == 1 ? 4 : (g_Config.m_GfxFullscreen == 2 ? 3 : 2)) : (g_Config.m_GfxBorderless ? 1 : 0);
-	const int GraphicsBackendRowCount = (FoundBackendCount > 1 ? 1 : 0) + (GpuList.m_vGpus.size() > 1 ? 1 : 0);
+	const bool VulkanBackendSelected = str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0;
+	const int GraphicsBackendRowCount = (FoundBackendCount > 1 ? 1 : 0) + (VulkanBackendSelected ? 1 : 0) + (GpuList.m_vGpus.size() > 1 ? 1 : 0);
 	const qm_card_registry::SCardDefault *pDisplayDefault = qm_card_registry::FindByStableId("deck:graphics-display");
 	const qm_card_registry::SCardDefault *pVisualDefault = qm_card_registry::FindByStableId("deck:graphics-visual");
 	const qm_card_registry::SCardDefault *pIconsDefault = qm_card_registry::FindByStableId("deck:graphics-icons");
@@ -3749,7 +3751,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static CButtonContainer s_GraphicsIconCustomColorResetId;
 
 	const bool RenderOnly = Ui()->RenderOnly();
-	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pIconsDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsIconsMinCardHeight, IconsChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
+	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pIconsDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsIconsMinCardHeight, IconsChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, VulkanBackendSelected, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(5);
 		const SSettingsCardSpec ModesSpec{pModesDefault->m_pStableId, Localize(pModesDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pModesDefault)};
 		const SSettingsCardSpec DisplaySpec{pDisplayDefault->m_pStableId, Localize(pDisplayDefault->m_pTitle), qm_card_registry::ResolveLocalizedDescription(*pDisplayDefault)};
@@ -3850,7 +3852,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Graphics()->ResizeToScreen();
 			}
 		} }, GraphicsModesMeasureRevision);
-		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsPage, GraphicsDisplayRowCount, FoundBackendCount, BodySize, DoGraphicsNumericField, OldWindowMode](CUIRect ContentRect) {
+		AddCard(DisplaySpec, GraphicsDisplayMinCardHeight, DisplayChromeHeight, [this, GraphicsMetrics, GraphicsPage, GraphicsDisplayRowCount, FoundBackendCount, VulkanBackendSelected, BodySize, DoGraphicsNumericField, OldWindowMode](CUIRect ContentRect) {
 		CUIRect Button;
 		char aBuf[128];
 		CUIRect CardView = ContentRect; // switches
@@ -4017,6 +4019,19 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					s_GfxBackendChanged = true;
 					CheckSettings = true;
 					InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::BACKEND_CHANGED);
+				});
+			}
+			if(VulkanBackendSelected)
+			{
+				CUIRect Row = NextRow();
+				static CUi::SDropDownState s_VulkanApiVersionDropDownState;
+				static CScrollRegion s_VulkanApiVersionDropDownScrollRegion;
+				const char *apVulkanApiVersions[] = {"1.1", "1.4"};
+				const int Selected = g_Config.m_QmVulkanApiVersion == 14 ? 1 : 0;
+				DoGraphicsChoiceRow(Row, Localize("Vulkan API"), "graphics-vulkan-api", apVulkanApiVersions, std::size(apVulkanApiVersions), Selected, s_VulkanApiVersionDropDownState, s_VulkanApiVersionDropDownScrollRegion, [](int NewValue) {
+					g_Config.m_QmVulkanApiVersion = NewValue == 1 ? 14 : 11;
+					s_GfxVulkanApiVersionChanged = true;
+					CheckSettings = true;
 				});
 			}
 			if(Graphics()->GetGpus().m_vGpus.size() > 1)
@@ -4299,7 +4314,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	{
 		m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
 					  !s_GfxBackendChanged &&
-					  !s_GfxGpuChanged);
+					  !s_GfxGpuChanged &&
+					  !s_GfxVulkanApiVersionChanged);
 	}
 }
 

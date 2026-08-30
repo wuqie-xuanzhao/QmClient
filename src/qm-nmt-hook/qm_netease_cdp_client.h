@@ -29,9 +29,13 @@ namespace QmNeteaseCdp
 		void SetNotificationCallback(TNotificationCallback Callback);
 		bool Command(std::string_view Method, std::string_view ParametersJson, std::string *pResultJson, int TimeoutMs = 1500);
 		bool Evaluate(std::string_view Expression, std::string *pValueJson, int TimeoutMs = 1500);
+		// awaitPromise 用于 Node/Electron 主进程 inspector 的 executeJavaScript 桥
+		// (返回 Promise 的异步调用);普通页面 evaluate 保持默认 false。
+		bool EvaluateAwaitPromise(std::string_view Expression, std::string *pValueJson, int TimeoutMs = 1500);
 		bool Pump(int TimeoutMs = 250);
 
 	private:
+		bool EvaluateImpl(std::string_view Expression, std::string *pValueJson, int TimeoutMs, bool AwaitPromise);
 		struct SImpl;
 		std::unique_ptr<SImpl> m_pImpl;
 	};

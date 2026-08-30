@@ -49,6 +49,33 @@ static constexpr float CHAT_SCROLLBAR_WIDTH = 5.0f;
 static constexpr float CHAT_SCROLLBAR_MARGIN = 2.0f;
 static constexpr float CHAT_SCROLLBAR_ALPHA_SCALE = 0.70f;
 
+struct SQmChatEmojiCursorLayout
+{
+	CUIRect m_Rect;
+	float m_RequiredHeight;
+};
+
+static SQmChatEmojiCursorLayout LayoutQmChatEmoji(CTextCursor &Cursor, float Size)
+{
+	// 图片作为一个不可拆分的字符参与聊天行的换行和高度计算。
+	const float TextLineHeight = Cursor.m_AlignedFontSize + Cursor.m_AlignedLineSpacing > 0.0f ?
+					     Cursor.m_AlignedFontSize + Cursor.m_AlignedLineSpacing :
+					     Cursor.m_FontSize;
+	const float LineRight = Cursor.m_StartX + Cursor.m_LineWidth;
+	if(Cursor.m_LineWidth > 0.0f && Cursor.m_X > Cursor.m_StartX && Cursor.m_X + Size > LineRight)
+	{
+		Cursor.m_X = Cursor.m_StartX;
+		Cursor.m_Y += TextLineHeight;
+		++Cursor.m_LineCount;
+	}
+
+	const CUIRect Rect = {Cursor.m_X, Cursor.m_Y, Size, Size};
+	Cursor.m_X += Size;
+	Cursor.m_LongestLineWidth = maximum(Cursor.m_LongestLineWidth, Cursor.m_X - Cursor.m_StartX);
+	Cursor.m_MaxCharacterHeight = maximum(Cursor.m_MaxCharacterHeight, Size);
+	return {Rect, Rect.y - Cursor.m_StartY + Size};
+}
+
 static int BlockWordsSeparatorLength(const char *pStr)
 {
 	const unsigned char C0 = (unsigned char)pStr[0];
@@ -330,6 +357,7 @@ CChat::CLine::CLine()
 	m_aYOffset[0] = -1.0f;
 	m_aYOffset[1] = -1.0f;
 	m_TextYOffset = 0.0f;
+	m_ContentWidth = 0.0f;
 	m_CutOffProgress = 0.0f;
 	CChat::ResetPresentationState(m_Presentation);
 	m_ForceVisible = false;
@@ -346,9 +374,12 @@ void CChat::CLine::Reset(CChat &This)
 	m_Time = 0;
 	m_aText[0] = '\0';
 	m_aName[0] = '\0';
+	m_ChatEmoji = EQmChatEmoji::NONE;
+	m_ChatEmojiRect = {};
 	m_aYOffset[0] = -1.0f;
 	m_aYOffset[1] = -1.0f;
 	m_TextYOffset = 0.0f;
+	m_ContentWidth = 0.0f;
 	m_CutOffProgress = 0.0f;
 	CChat::ResetPresentationState(m_Presentation);
 	m_Friend = false;
@@ -430,6 +461,7 @@ void CChat::RegisterCommand(const char *pName, const char *pParams, const char *
 			return;
 
 	m_vServerCommands.emplace_back(pName, pParams, pHelpText);
+	m_ServerCommandsNeedSorting = true;
 }
 
 void CChat::UnregisterCommand(const char *pName)
@@ -448,6 +480,8 @@ void CChat::RebuildChat()
 		// recalculate sizes
 		Line.m_aYOffset[0] = -1.0f;
 		Line.m_aYOffset[1] = -1.0f;
+		Line.m_ChatEmojiRect = {};
+		Line.m_ContentWidth = 0.0f;
 		Line.m_CutOffProgress = 0.0f;
 		Line.m_Presentation.m_RenderYInitialized = false;
 	}
@@ -585,6 +619,7 @@ void CChat::Reset()
 	m_aSavedInputText[0] = '\0';
 	m_SavedInputPending = false;
 	m_ServerSupportsCommandInfo = false;
+	m_ServerCommandsNeedSorting = false;
 	m_aCurrentInputText[0] = '\0';
 	DisableMode();
 	m_vServerCommands.clear();
@@ -885,6 +920,12 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 	}
 	else if(Event.m_Flags & IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
+		if(m_ServerCommandsNeedSorting)
+		{
+			std::sort(m_vServerCommands.begin(), m_vServerCommands.end());
+			m_ServerCommandsNeedSorting = false;
+		}
+
 		if(GameClient()->m_BindChat.ChatDoBinds(m_Input.GetString()))
 			; // Do nothing as bindchat was executed
 		else if(GameClient()->m_TClient.ChatDoSpecId(m_Input.GetString()))
@@ -898,8 +939,6 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 		GameClient()->OnRelease();
 		m_Input.Clear();
 	}
-	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_TAB && m_Input.GetString()[0] == '/')
-		return true;
 	if(Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
 		const bool ShiftPressed = Input()->ShiftIsPressed();
@@ -918,7 +957,7 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 			str_truncate(m_aCompletionBuffer, sizeof(m_aCompletionBuffer), m_Input.GetString() + m_PlaceholderOffset, m_PlaceholderLength);
 		}
 
-		if(!m_CompletionUsed)
+		if(!m_CompletionUsed && m_aCompletionBuffer[0] != '/')
 		{
 			// Create the completion list of player names through which the player can iterate
 			const char *PlayerName, *FoundInput;
@@ -944,6 +983,71 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 				});
 		}
 
+		if(m_aCompletionBuffer[0] == '/' && !m_vServerCommands.empty())
+		{
+			CCommand *pCompletionCommand = nullptr;
+
+			const size_t NumCommands = m_vServerCommands.size();
+
+			if(ShiftPressed && m_CompletionUsed)
+				m_CompletionChosen--;
+			else if(!ShiftPressed)
+				m_CompletionChosen++;
+			m_CompletionChosen = (m_CompletionChosen + 2 * NumCommands) % (2 * NumCommands);
+
+			m_CompletionUsed = true;
+
+			const char *pCommandStart = m_aCompletionBuffer + 1;
+			for(size_t i = 0; i < 2 * NumCommands; ++i)
+			{
+				int SearchType;
+				int Index;
+
+				if(ShiftPressed)
+				{
+					SearchType = ((m_CompletionChosen - i + 2 * NumCommands) % (2 * NumCommands)) / NumCommands;
+					Index = (m_CompletionChosen - i + NumCommands) % NumCommands;
+				}
+				else
+				{
+					SearchType = ((m_CompletionChosen + i) % (2 * NumCommands)) / NumCommands;
+					Index = (m_CompletionChosen + i) % NumCommands;
+				}
+
+				auto &Command = m_vServerCommands[Index];
+
+				if(str_startswith_nocase(Command.m_aName, pCommandStart))
+				{
+					pCompletionCommand = &Command;
+					m_CompletionChosen = Index + SearchType * NumCommands;
+					break;
+				}
+			}
+
+			// 插入命令
+			if(pCompletionCommand)
+			{
+				char aBuf[MAX_LINE_LENGTH];
+				// 添加补全项之前的内容
+				str_truncate(aBuf, sizeof(aBuf), m_Input.GetString(), m_PlaceholderOffset);
+
+				// 添加命令
+				str_append(aBuf, "/");
+				str_append(aBuf, pCompletionCommand->m_aName);
+
+				// 添加分隔符
+				const char *pSeparator = pCompletionCommand->m_aParams[0] == '\0' ? "" : " ";
+				str_append(aBuf, pSeparator);
+
+				// 添加补全项之后的内容
+				str_append(aBuf, m_Input.GetString() + m_PlaceholderOffset + m_PlaceholderLength);
+
+				m_PlaceholderLength = str_length(pSeparator) + str_length(pCompletionCommand->m_aName) + 1;
+				m_Input.Set(aBuf);
+				m_Input.SetCursorOffset(m_PlaceholderOffset + m_PlaceholderLength);
+			}
+		}
+		else
 		{
 			// find next possible name
 			const char *pCompletionString = nullptr;
@@ -985,6 +1089,19 @@ bool CChat::OnInput(const IInput::CEvent &Event)
 				char aBuf[MAX_LINE_LENGTH];
 				// add part before the name
 				str_truncate(aBuf, sizeof(aBuf), m_Input.GetString(), m_PlaceholderOffset);
+
+				// 必要时为命令参数中的玩家名加引号
+				char aQuoted[128];
+				if(m_Input.GetString()[0] == '/' && (str_find(pCompletionString, " ") || str_find(pCompletionString, "\"")))
+				{
+					// 转义玩家名
+					str_copy(aQuoted, "\"");
+					char *pDst = aQuoted + str_length(aQuoted);
+					str_escape(&pDst, pCompletionString, aQuoted + sizeof(aQuoted));
+					str_append(aQuoted, "\"");
+
+					pCompletionString = aQuoted;
+				}
 
 				// add the name
 				str_append(aBuf, pCompletionString);
@@ -1581,6 +1698,9 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		}
 	}
 	pLine = pFilteredLine;
+	const EQmChatEmoji ChatEmoji = QmChatEmojiFromText(pLine);
+	char aChatBubbleText[256];
+	str_copy(aChatBubbleText, pLine);
 
 	// trim right and set maximum length to 256 utf8-characters
 	int Length = 0;
@@ -1633,6 +1753,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		PreviousLine.m_CustomColor == CustomColor &&
 		PreviousLine.m_ForceVisible == ForceVisible &&
 		PreviousLine.m_ConsoleSuppressed == BlockWordsConsolePrinted &&
+		PreviousLine.m_ChatEmoji == ChatEmoji &&
 		CanMergePlayerMessages(PreviousLine.m_ClientId, PreviousLine.m_TeamNumber, PreviousLine.m_aText, PreviousLine.m_Time, ClientId, Team, pLine, Now))
 	{
 		const int PreviousTeam = PreviousLine.m_TeamNumber;
@@ -1654,11 +1775,13 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		PreviousLine.m_Time = Now;
 		PreviousLine.m_aYOffset[0] = -1.0f;
 		PreviousLine.m_aYOffset[1] = -1.0f;
+		PreviousLine.m_ChatEmojiRect = {};
+		PreviousLine.m_ContentWidth = 0.0f;
 		PreviousLine.m_CutOffProgress = 0.0f;
 		BeginLinePresentation(PreviousLine.m_Presentation, PreviousLine.m_Time, true);
 
 		CGameClient::CClientData &ClientData = GameClient()->m_aClients[ClientId];
-		str_copy(ClientData.m_aChatBubbleText, pLine, sizeof(ClientData.m_aChatBubbleText));
+		str_copy(ClientData.m_aChatBubbleText, aChatBubbleText, sizeof(ClientData.m_aChatBubbleText));
 		ClientData.m_ChatBubbleStartTick = Now;
 		ClientData.m_ChatBubbleExpireTick = Now + time_freq() * g_Config.m_QmChatBubbleDuration;
 		return;
@@ -1706,6 +1829,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	CurrentLine.m_Highlighted = Highlighted;
 
 	str_copy(CurrentLine.m_aText, pLine);
+	CurrentLine.m_ChatEmoji = ChatEmoji;
 	CurrentLine.m_ServerMessageClass = ResolveLineServerMessageClass(ClientId, CurrentLine.m_aText, KnownServerMessageClass);
 
 	if(CurrentLine.m_ClientId == SERVER_MSG)
@@ -1838,14 +1962,15 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	if(ClientId >= 0 && ClientId < MAX_CLIENTS)
 	{
 		CGameClient::CClientData &ClientData = GameClient()->m_aClients[ClientId];
-		str_copy(ClientData.m_aChatBubbleText, pLine, sizeof(ClientData.m_aChatBubbleText));
+		str_copy(ClientData.m_aChatBubbleText, aChatBubbleText, sizeof(ClientData.m_aChatBubbleText));
 		const int64_t BubbleStartTick = time();
 		ClientData.m_ChatBubbleStartTick = BubbleStartTick;
 		ClientData.m_ChatBubbleExpireTick = BubbleStartTick + time_freq() * g_Config.m_QmChatBubbleDuration;
 	}
 
-	// TClient
-	GameClient()->m_Translate.AutoTranslate(CurrentLine);
+	// 表情码保留原文，但不应进入翻译任务。
+	if(QmChatEmojiShouldTranslate(CurrentLine.m_ChatEmoji))
+		GameClient()->m_Translate.AutoTranslate(CurrentLine);
 }
 
 void CChat::OnPrepareLines(float y)
@@ -1902,7 +2027,9 @@ void CChat::OnPrepareLines(float y)
 			continue;
 		}
 
-		if(Line.m_TextContainerIndex.Valid() && !ForceRecreate)
+		const bool RenderChatEmoji = GameClient()->m_QmChatEmoji.CanRender(Line.m_ChatEmoji);
+		const bool LinePrepared = RenderChatEmoji ? Line.m_ChatEmojiRect.w > 0.0f : Line.m_TextContainerIndex.Valid() && Line.m_ChatEmojiRect.w <= 0.0f;
+		if(LinePrepared && !ForceRecreate)
 		{
 			// 已有容器也必须消耗相同的垂直预算，
 			// 否则只有“首次创建”时受高度限制，后续帧又会溢出。
@@ -1918,6 +2045,7 @@ void CChat::OnPrepareLines(float y)
 
 		TextRender()->DeleteTextContainer(Line.m_TextContainerIndex);
 		Graphics()->DeleteQuadContainer(Line.m_QuadContainerIndex);
+		Line.m_ChatEmojiRect = {};
 		const bool MergedPlayerMessages = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();
 		const bool MultipleAuthors = Line.m_vMergedAuthors.size() > 1;
 
@@ -2026,7 +2154,12 @@ void CChat::OnPrepareLines(float y)
 				AppendCursor.m_LineWidth -= MeasureCursor.m_LongestLineWidth;
 			}
 
-			if(pTranslatedText)
+			if(RenderChatEmoji)
+			{
+				const SQmChatEmojiCursorLayout EmojiLayout = LayoutQmChatEmoji(AppendCursor, QmChatEmojiChatDisplaySize(FontSize));
+				Line.m_aYOffset[OffsetType] = maximum(AppendCursor.Height(), EmojiLayout.m_RequiredHeight) + RealMsgPaddingY;
+			}
+			else if(pTranslatedText)
 			{
 				TextRender()->TextEx(&AppendCursor, pTranslatedText);
 				if(pTranslatedLanguage)
@@ -2053,7 +2186,8 @@ void CChat::OnPrepareLines(float y)
 				TextRender()->TextEx(&AppendCursor, pText);
 			}
 
-			Line.m_aYOffset[OffsetType] = AppendCursor.Height() + RealMsgPaddingY;
+			if(!RenderChatEmoji)
+				Line.m_aYOffset[OffsetType] = AppendCursor.Height() + RealMsgPaddingY;
 		}
 
 		const float LineHeight = Line.m_aYOffset[OffsetType];
@@ -2178,7 +2312,12 @@ void CChat::OnPrepareLines(float y)
 			AppendCursor.m_LineWidth -= LineCursor.m_LongestLineWidth;
 		}
 
-		if(pTranslatedText)
+		if(RenderChatEmoji)
+		{
+			const SQmChatEmojiCursorLayout EmojiLayout = LayoutQmChatEmoji(AppendCursor, QmChatEmojiChatDisplaySize(FontSize));
+			Line.m_ChatEmojiRect = EmojiLayout.m_Rect;
+		}
+		else if(pTranslatedText)
 		{
 			if(pGradient != nullptr && Line.m_CustomColor == std::nullopt && ColoredParts.Colors().empty())
 				CMessageGradient::AddTextSplits(AppendCursor, pTranslatedText, pGradient, Color);
@@ -2232,7 +2371,7 @@ void CChat::OnPrepareLines(float y)
 			AppendCursor.m_vColorSplits.clear();
 		}
 
-		if(!g_Config.m_ClChatOld && (Line.m_aText[0] != '\0' || Line.m_aName[0] != '\0'))
+		if(Line.m_aText[0] != '\0' || Line.m_aName[0] != '\0')
 		{
 			float FullWidth = RealMsgPaddingX * 1.5f;
 			if(!IsScoreBoardOpen && !g_Config.m_ClChatOld)
@@ -2243,8 +2382,12 @@ void CChat::OnPrepareLines(float y)
 			{
 				FullWidth += maximum(LineCursor.m_LongestLineWidth, AppendCursor.m_LongestLineWidth);
 			}
-			Graphics()->SetColor(1, 1, 1, 1);
-			Line.m_QuadContainerIndex = Graphics()->CreateRectQuadContainer(Begin, TargetY, FullWidth, LineHeight, MessageRounding(), IGraphics::CORNER_ALL);
+			Line.m_ContentWidth = maximum(0.0f, FullWidth);
+			if(!g_Config.m_ClChatOld)
+			{
+				Graphics()->SetColor(1, 1, 1, 1);
+				Line.m_QuadContainerIndex = Graphics()->CreateRectQuadContainer(Begin, TargetY, FullWidth, LineHeight, MessageRounding(), IGraphics::CORNER_ALL);
+			}
 		}
 
 		TextRender()->SetRenderFlags(CurRenderFlags);
@@ -2457,11 +2600,7 @@ void CChat::OnRender()
 		ScrollbarHandleY = ScrollbarRect.y + TrackRange * BacklogLineToScrollbarValue(m_BacklogCurLine, MaxScroll);
 		vec2 MousePos = GetChatMousePos();
 		if(HudEditorScope.m_Applied && ChatRect.w > 0.0f)
-		{
-			const float Scale = HudEditorScope.m_TargetRect.w / ChatRect.w;
-			MousePos.x = (MousePos.x - HudEditorScope.m_TargetRect.x) / Scale;
-			MousePos.y = (MousePos.y - HudEditorScope.m_TargetRect.y) / Scale;
-		}
+			MousePos = InverseHudTransformPoint(MousePos, ChatRect, HudEditorScope.m_TargetRect);
 		const bool InsideRail =
 			MousePos.x >= ScrollbarRect.x &&
 			MousePos.x <= ScrollbarRect.x + ScrollbarRect.w &&
@@ -2500,11 +2639,7 @@ void CChat::OnRender()
 
 	vec2 MousePos = GetChatMousePos();
 	if(HudEditorScope.m_Applied && ChatRect.w > 0.0f)
-	{
-		const float Scale = HudEditorScope.m_TargetRect.w / ChatRect.w;
-		MousePos.x = (MousePos.x - HudEditorScope.m_TargetRect.x) / Scale;
-		MousePos.y = (MousePos.y - HudEditorScope.m_TargetRect.y) / Scale;
-	}
+		MousePos = InverseHudTransformPoint(MousePos, ChatRect, HudEditorScope.m_TargetRect);
 	const bool LanguageMenuOpen = m_LanguageMenuOpen || Ui()->IsPopupOpen(&m_LanguagePopupContext);
 	const bool ChatLineMenuOpen = Ui()->IsPopupOpen(&m_ChatLinePopupContext);
 	const bool MouseDown = Input()->KeyIsPressed(KEY_MOUSE_1);
@@ -2611,18 +2746,25 @@ void CChat::OnRender()
 		if(AnimAlpha <= 0.001f)
 			continue;
 
-		const CUIRect RenderedTextRect = {x + AnimOffsetX, RenderY, ChatRect.w - x, LineHeight};
-		if(CopyClickReleased && MousePos.x >= RenderedTextRect.x && MousePos.x <= RenderedTextRect.x + RenderedTextRect.w &&
-			MousePos.y >= RenderedTextRect.y && MousePos.y <= RenderedTextRect.y + RenderedTextRect.h)
+		const float RenderScale = maximum(0.0f, Line.m_Presentation.m_RenderScale);
+		const float RenderedContentWidth = Line.m_ContentWidth * RenderScale;
+		const CUIRect RenderedTextRect = {x + AnimOffsetX, RenderY, RenderedContentWidth, LineHeight * RenderScale};
+		const bool MouseInsideLine = IsChatLineHit(RenderedTextRect, MousePos);
+		if(CopyClickReleased && MouseInsideLine)
 		{
 			pClickedLine = &Line;
 		}
 
-		if(ChatLineMenuRequested && MousePos.x >= RenderedTextRect.x && MousePos.x <= RenderedTextRect.x + RenderedTextRect.w &&
-			MousePos.y >= RenderedTextRect.y && MousePos.y <= RenderedTextRect.y + RenderedTextRect.h)
+		if(ChatLineMenuRequested && MouseInsideLine)
 		{
 			pMenuLine = &Line;
 		}
+		const bool IsPopupTarget =
+			(ChatLineMenuOpen && m_ChatLinePopupContext.m_LineIndex == LineIndex &&
+				m_ChatLinePopupContext.m_ClientId == Line.m_ClientId &&
+				m_ChatLinePopupContext.m_TeamNumber == Line.m_TeamNumber &&
+				str_comp(m_ChatLinePopupContext.m_aText, Line.m_aText) == 0) ||
+			(ChatLineMenuRequested && pMenuLine == &Line);
 
 		// Draw backgrounds for messages in one batch
 		if(!g_Config.m_ClChatOld)
@@ -2630,7 +2772,7 @@ void CChat::OnRender()
 			Graphics()->TextureClear();
 			if(Line.m_QuadContainerIndex != -1)
 			{
-				const float QuadScale = Line.m_Presentation.m_RenderScale;
+				const float QuadScale = RenderScale;
 				const float QuadY = Line.m_TextYOffset - RealMsgPaddingY / 2.0f;
 				const float QuadOffsetX = AnimOffsetX + x * (1.0f - QuadScale);
 				const float QuadOffsetY = AnimOffsetY + QuadY * (1.0f - QuadScale);
@@ -2638,8 +2780,16 @@ void CChat::OnRender()
 				Graphics()->RenderQuadContainerEx(Line.m_QuadContainerIndex, 0, -1, QuadOffsetX, QuadOffsetY, QuadScale, QuadScale);
 			}
 		}
+		if(IsPopupTarget && RenderedTextRect.w > 0.0f && RenderedTextRect.h > 0.0f)
+		{
+			Graphics()->TextureClear();
+			const ColorRGBA SelectionColor = ColorRGBA(0.20f, 0.55f, 0.88f, 0.35f * AnimAlpha);
+			const float Rounding = g_Config.m_ClChatOld ? 0.0f : MessageRounding();
+			Graphics()->DrawRect(RenderedTextRect.x, RenderedTextRect.y, RenderedTextRect.w, RenderedTextRect.h, SelectionColor, IGraphics::CORNER_ALL, Rounding);
+		}
 
-		if(Line.m_TextContainerIndex.Valid())
+		const bool RenderChatEmoji = Line.m_ChatEmojiRect.w > 0.0f && GameClient()->m_QmChatEmoji.CanRender(Line.m_ChatEmoji);
+		if(Line.m_TextContainerIndex.Valid() || RenderChatEmoji)
 		{
 			RenderedAnyLines = true;
 			ExtendBounds(x + AnimOffsetX, RenderY, ChatRect.w - x, LineHeight);
@@ -2657,9 +2807,23 @@ void CChat::OnRender()
 				RenderTools()->RenderTee(pIdleState, &TeeRenderInfo, EMOTE_NORMAL, vec2(1, 0.1f), TeeRenderPos, AnimAlpha);
 			}
 
-			const ColorRGBA TextColor = DefaultTextColor.WithMultipliedAlpha(AnimAlpha);
-			const ColorRGBA TextOutlineColor = DefaultTextOutlineColor.WithMultipliedAlpha(AnimAlpha);
-			TextRender()->RenderTextContainer(Line.m_TextContainerIndex, TextColor, TextOutlineColor, AnimOffsetX, AnimOffsetY);
+			if(RenderChatEmoji)
+			{
+				GameClient()->m_QmChatEmoji.Render(
+					Line.m_ChatEmoji,
+					Line.m_ChatEmojiRect.x + AnimOffsetX,
+					Line.m_ChatEmojiRect.y + AnimOffsetY,
+					Line.m_ChatEmojiRect.w,
+					Line.m_ChatEmojiRect.h,
+					AnimAlpha);
+			}
+
+			if(Line.m_TextContainerIndex.Valid())
+			{
+				const ColorRGBA TextColor = DefaultTextColor.WithMultipliedAlpha(AnimAlpha);
+				const ColorRGBA TextOutlineColor = DefaultTextOutlineColor.WithMultipliedAlpha(AnimAlpha);
+				TextRender()->RenderTextContainer(Line.m_TextContainerIndex, TextColor, TextOutlineColor, AnimOffsetX, AnimOffsetY);
+			}
 		}
 	}
 
@@ -2669,7 +2833,7 @@ void CChat::OnRender()
 	}
 	if(ChatLineMenuRequested && pMenuLine != nullptr && pMenuLine->m_aText[0] != '\0')
 	{
-		OpenChatLineMenu(*pMenuLine, MousePos);
+		OpenChatLineMenu(*pMenuLine, GetUiMousePos());
 	}
 
 	if(ShowChatScrollbar)
@@ -2855,7 +3019,7 @@ void CChat::SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTransl
 		return;
 
 	// 自动出站翻译
-	if(AllowOutgoingTranslation && GameClient()->m_Translate.ShouldAutoTranslateOutgoing(pLine))
+	if(AllowOutgoingTranslation && QmChatEmojiShouldTranslate(QmChatEmojiFromText(pLine)) && GameClient()->m_Translate.ShouldAutoTranslateOutgoing(pLine))
 	{
 		GameClient()->m_Translate.StartAutoOutgoingTranslate(Team, pLine);
 		return;
@@ -2898,6 +3062,13 @@ vec2 CChat::GetChatMousePos() const
 	const vec2 UiMousePos = Ui()->UpdatedMousePos() * vec2(Ui()->Screen()->w, Ui()->Screen()->h) / WindowSize;
 	const vec2 UiToChatScale(Width / Ui()->Screen()->w, Height / Ui()->Screen()->h);
 	return UiMousePos * UiToChatScale;
+}
+
+vec2 CChat::GetUiMousePos() const
+{
+	const CUIRect *pScreen = Ui()->Screen();
+	const vec2 WindowSize(maximum(1.0f, (float)Graphics()->WindowWidth()), maximum(1.0f, (float)Graphics()->WindowHeight()));
+	return vec2(pScreen->x, pScreen->y) + Ui()->UpdatedMousePos() * vec2(pScreen->w, pScreen->h) / WindowSize;
 }
 
 void CChat::RenderTranslateButton(const CUIRect &ButtonRect)
@@ -2998,6 +3169,8 @@ bool CChat::TranslateVisibleChatLines()
 			continue;
 		if(Line.m_CutOffProgress >= 1.0f)
 			continue;
+		if(!QmChatEmojiShouldTranslate(Line.m_ChatEmoji))
+			continue;
 		if(!IsManualVisibleTranslateCandidate(Line.m_ClientId, Line.m_aText[0] != '\0', Line.m_pTranslateResponse != nullptr, GameClient()->m_aLocalIds, std::size(GameClient()->m_aLocalIds)))
 			continue;
 
@@ -3073,13 +3246,14 @@ void CChat::CloseLanguageMenu()
 	m_TranslateButton.m_IsPressed = false;
 }
 
-void CChat::OpenChatLineMenu(const CLine &Line, vec2 ChatMousePos)
+void CChat::OpenChatLineMenu(const CLine &Line, vec2 UiMousePos)
 {
 	CloseLanguageMenu();
 
 	m_ChatLinePopupContext.m_pChat = this;
 	m_ChatLinePopupContext.m_ClientId = Line.m_ClientId;
 	m_ChatLinePopupContext.m_TeamNumber = Line.m_TeamNumber;
+	m_ChatLinePopupContext.m_LineIndex = GetLineIndex(&Line);
 	str_copy(m_ChatLinePopupContext.m_aText, Line.m_aText);
 	m_ChatLinePopupContext.m_PlayerLine = Line.m_vMergedAuthors.size() <= 1 && Line.m_ClientId >= 0 && Line.m_ClientId < MAX_CLIENTS;
 	m_ChatLinePopupContext.m_LocalPlayer = m_ChatLinePopupContext.m_PlayerLine && GameClient()->IsLocalClientId(Line.m_ClientId);
@@ -3096,20 +3270,14 @@ void CChat::OpenChatLineMenu(const CLine &Line, vec2 ChatMousePos)
 
 	constexpr float MenuWidth = 188.0f;
 	constexpr float MenuHeight = 266.0f;
-	const float Height = 300.0f;
-	const float Width = Height * Graphics()->ScreenAspect();
-	const vec2 ChatToUiScale(Ui()->Screen()->w / Width, Ui()->Screen()->h / Height);
-	vec2 MenuPos = ChatMousePos * ChatToUiScale;
-	MenuPos.x = std::clamp(MenuPos.x, 0.0f, maximum(0.0f, Ui()->Screen()->w - MenuWidth));
-	MenuPos.y = std::clamp(MenuPos.y, 0.0f, maximum(0.0f, Ui()->Screen()->h - MenuHeight));
-
-	Ui()->DoPopupMenu(&m_ChatLinePopupContext, MenuPos.x, MenuPos.y, MenuWidth, MenuHeight, &m_ChatLinePopupContext, PopupChatLineMenu);
+	Ui()->DoPopupMenu(&m_ChatLinePopupContext, UiMousePos.x, UiMousePos.y, MenuWidth, MenuHeight, &m_ChatLinePopupContext, PopupChatLineMenu);
 }
 
 void CChat::CloseChatLineMenu()
 {
 	if(Ui()->IsPopupOpen(&m_ChatLinePopupContext))
 		Ui()->ClosePopupMenu(&m_ChatLinePopupContext, true);
+	m_ChatLinePopupContext.m_LineIndex = -1;
 }
 
 void CChat::AddTextToBlockWords(const char *pText)

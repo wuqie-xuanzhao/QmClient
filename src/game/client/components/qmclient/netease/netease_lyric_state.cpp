@@ -58,9 +58,38 @@ namespace NeteaseLyrics
 		return BlockedGeneration == 0 || CandidateGeneration == 0 || CandidateGeneration <= BlockedGeneration;
 	}
 
+	ESmtcBridgeSyncDecision DecideSmtcBridgeSync(uint64_t BaselineSongId, uint64_t BaselineGeneration, uint64_t CandidateSongId, uint64_t CandidateGeneration)
+	{
+		if(BaselineSongId == 0)
+			return ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED;
+		if(CandidateSongId == 0)
+			return ESmtcBridgeSyncDecision::WAIT_FOR_BRIDGE_ADVANCE;
+		if(CandidateSongId != BaselineSongId)
+			return ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED;
+		if(BaselineGeneration == 0 || CandidateGeneration == 0)
+			return ESmtcBridgeSyncDecision::WAIT_FOR_BRIDGE_ADVANCE;
+		return CandidateGeneration > BaselineGeneration ? ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED : ESmtcBridgeSyncDecision::WAIT_FOR_BRIDGE_ADVANCE;
+	}
+
+	bool ShouldWaitForBridgeIdentity(uint64_t BaselineSongId, uint64_t BaselineGeneration, uint64_t CandidateSongId, uint64_t CandidateGeneration, uint64_t WaitStartTick, uint64_t NowTick, uint64_t MaxWaitMs)
+	{
+		if(DecideSmtcBridgeSync(BaselineSongId, BaselineGeneration, CandidateSongId, CandidateGeneration) == ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED)
+			return false;
+		if(WaitStartTick == 0 || NowTick < WaitStartTick)
+			return false;
+		return NowTick - WaitStartTick <= MaxWaitMs;
+	}
+
 	bool ShouldPreservePausedLyric(bool Paused, bool HasSong, bool LyricValid, uint64_t LastBridgeTick, uint64_t NowTick, uint64_t GraceMs)
 	{
 		if(!Paused || !HasSong || !LyricValid || LastBridgeTick == 0 || NowTick < LastBridgeTick)
+			return false;
+		return NowTick - LastBridgeTick <= GraceMs;
+	}
+
+	bool ShouldPreserveBridgeState(bool HasLyricState, uint64_t LastBridgeTick, uint64_t NowTick, uint64_t GraceMs)
+	{
+		if(!HasLyricState || LastBridgeTick == 0 || NowTick < LastBridgeTick)
 			return false;
 		return NowTick - LastBridgeTick <= GraceMs;
 	}

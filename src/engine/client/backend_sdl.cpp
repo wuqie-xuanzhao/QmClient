@@ -1183,7 +1183,7 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		dbg_assert_failed("Invalid m_BackendType: %d", m_BackendType);
 	}
 	if(m_BackendType == BACKEND_TYPE_VULKAN)
-		log_info("gfx", "Creating Vulkan context with automatic API negotiation");
+		log_info("gfx", "Creating Vulkan context with configured API selection");
 	else
 		log_info("gfx", "Created %s %d.%d context", pBackendName, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor);
 

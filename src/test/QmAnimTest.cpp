@@ -543,7 +543,7 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, true), 120.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudPlayerStatsHeight(Metrics, true, false), 245.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, false), 20.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 150.0f);
+		EXPECT_FLOAT_EQ(ResolveQmHudInputOverlayHeight(Metrics, true), 250.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, false), 390.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudNotificationsHeight(Metrics, true, true), 490.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudDummyMiniViewHeight(Metrics, false), 25.0f);
@@ -552,9 +552,6 @@ namespace
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, false, false, 0, false, false), 145.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudVoiceHeight(Metrics, true, true, false, 0, false, false), 425.75f);
 		EXPECT_NEAR(ResolveQmHudVoiceHeight(Metrics, true, true, true, 1, true, true), 798.7f, 0.001f);
-		EXPECT_FLOAT_EQ(ResolveQmHudLyricsPreviewHeight(4, 1), 42.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudLyricsPreviewHeight(12, 2), 43.0f);
-		EXPECT_FLOAT_EQ(ResolveQmHudLyricsHeight(Metrics, 12, 2), 1243.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, false, false, false, false, false, false), 20.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, false, false, false, false, false), 470.0f);
 		EXPECT_FLOAT_EQ(ResolveQmHudBackground3DHeight(Metrics, 600.0f, true, true, true, true, true, true), 670.0f);

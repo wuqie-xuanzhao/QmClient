@@ -14,7 +14,7 @@ namespace QmNeteaseHook
 	constexpr wchar_t PROTOCOL_MAPPING_NAME_V5_W[] = L"Local\\QmClient.NeteaseHook.v5";
 	constexpr wchar_t PROTOCOL_WRITER_MUTEX_NAME_V5_W[] = L"Local\\QmClient.NeteaseHook.v5.Writer";
 	constexpr uint32_t V5_MAX_LYRIC_BYTES = 1024;
-	constexpr uint32_t V5_KNOWN_FLAGS = 0x1FU;
+	constexpr uint32_t V5_KNOWN_FLAGS = (1U << 6) - 1U;
 
 	constexpr uint32_t PROTOCOL_MAGIC = 0x514D4E48; // "Q MNH"
 	constexpr uint16_t PROTOCOL_SCHEMA_VERSION = 2;
@@ -92,6 +92,9 @@ namespace QmNeteaseHook
 	constexpr uint32_t V5_FLAG_POSITION_VALID = 1U << 2;
 	constexpr uint32_t V5_FLAG_PLAYING_HINT = 1U << 3;
 	constexpr uint32_t V5_FLAG_POSITION_ANCHORED = 1U << 4;
+	// 时间轴存在但当前进度可能处于歌词空洞；该标志用于保持 HUD
+	// 歌词区域稳定，不等同于当前句有效。
+	constexpr uint32_t V5_FLAG_LYRIC_TIMELINE_VALID = 1U << 5;
 
 // v5 使用自然 8 字节对齐，x86/x64 的布局一致；共享内存中不放指针、句柄或 STL 对象。
 #pragma pack(push, 8)

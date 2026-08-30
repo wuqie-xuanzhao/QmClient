@@ -79,9 +79,6 @@
 %i seconds left
 == %i saniye kaldı
 
-%s (/%s %s)
-== %s (/%s %s)
-
 %s and %s have swapped
 == %s ve %s yer değiştirdi
 
@@ -263,9 +260,6 @@ A demo with this name already exists
 A folder with this name already exists
 == Bu isimde bir klasör zaten mevcut
 
-a player
-== bir oyuncu
-
 A screenshot with this name already exists
 == Bu isimde bir ekran görüntüsü zaten mevcut
 
@@ -292,18 +286,6 @@ Active color
 
 Active disconnect
 == Aktif bağlantı kesme
-
-Active line font size
-== Etkin satır yazı tipi boyutu
-
-Active line font size (px)
-== Active lyrics line font size px
-
-Active line scale
-== Etkin satır ölçeği
-
-Active line scale (%)
-== Active lyrics line scale percent
 
 Active moderator mode disabled because you are afk.
 == AFK olduğun için aktif moderatör modu devre dışı bırakıldı.
@@ -677,9 +659,6 @@ Always show own player's hook collision line
 Always translate
 == Her zaman çevir
 
-AMLL TTML DB API base URL (mirror)
-== AMLL TTML DB API base URL (can be changed to a mirror)
-
 Amount
 == Miktar
 
@@ -772,9 +751,6 @@ Appearance / Name Plate
 
 Append to log file instead of overwriting
 == Günlük dosyasının üzerine yazmak yerine sonuna ekle
-
-Apple Music media-user-token
-== Apple Media kullanıcı-medya-belirteci
 
 Applied to %d same-family part(s).
 == %d adet aynı aile parçasına uygulandı.
@@ -989,9 +965,6 @@ Auto enable/disable IME on text focus
 Auto execute
 == Otomatik çalıştır
 
-Auto fetch lyrics
-== Şarkı sözlerini otomatik getir
-
 Auto fetch replay info on refresh
 == Yenilemede tekrar bilgilerini otomatik getir
 
@@ -1006,9 +979,6 @@ Auto greet friend text
 
 Auto greet friends entering map
 == Haritaya giren arkadaşları otomatik selamla
-
-Auto hot-reload after external saves
-== Harici kaydetmelerden sonra otomatik yeniden yükle
 
 Auto login Axiom server
 == Axiom sunucusuna otomatik giriş
@@ -1093,9 +1063,6 @@ Auto-fetch all players' skins for dummy rotation queue
 
 Auto-fetch all players' skins for rotation queue
 == Haritadaki Tüm Oyuncuların Skinlerini Otomatik Al ve Döngü Kuyruğu Olarak Kullan
-
-Auto-fetch lyrics on detecting new song
-== Auto fetch lyrics online when a new song is detected
 
 Auto-follow delay
 == Otomatik takip gecikmesi
@@ -1337,9 +1304,6 @@ Background image in menu
 Background music volume
 == Arka plan müziği sesi
 
-Background opacity
-== Arka plan opaklığı
-
 Background stroke color
 == Arka plan vuruş rengi
 
@@ -1414,9 +1378,6 @@ Best input prediction offset (0.01 tick)
 
 Best input smooth percentage
 == Best input yumuşatma yüzdesi
-
-Best match
-== En iyi eşleşme
 
 Better scoreboard
 == Geliştirilmiş skor tablosu
@@ -1573,9 +1534,6 @@ Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = Oyuncu konumu
-
-Cache TTL
-== Önbellek TTL
 
 Calculate unfinished maps for player in certain mode
 == Belirli bir modda oyuncu için bitmemiş haritaları hesapla
@@ -1985,12 +1943,6 @@ Client prediction time is high
 Client uptime
 == İstemci çalışma süresi
 
-Clock drift hard cut threshold (ms)
-== Clock drift hard-snap threshold ms
-
-Clock drift hard-snap
-== Saat kayması sert yakalama eşiği
-
 Close
 == Kapat
 
@@ -2116,9 +2068,6 @@ Config Changes
 
 Config directory
 == Yapılandırma dizini (cfg)
-
-Config file: data/input_overlay.json
-== Yapılandırma dosyası: data/input_overlay.json
 
 Config Files
 == Yapılandırma Dosyaları
@@ -2494,12 +2443,6 @@ Current cut is invalid or already added
 
 Current file
 == Geçerli dosya
-
-Current line color
-== Geçerli satır rengi
-
-Current line lyric color
-== Geçerli şarkı sözü satırı rengi
 
 Current rescue mode: %s
 == Mevcut kurtarma modu: %s
@@ -3065,18 +3008,6 @@ Displays your ping to the current server
 Dissolve
 == Çözün
 
-Distance fade per line
-== Satır başına mesafe solması
-
-Distance scale falloff
-== Mesafe ölçeği düşüşü
-
-Distant line opacity decay per line (%)
-== Lyrics opacity fade percent per distance line
-
-Distant line shrink per line (%)
-== Lyrics scale shrink percent per distance line
-
 Do not auto-show server info on entering map
 == Girerken sunucu bilgisini otomatik gösterme
 
@@ -3632,12 +3563,6 @@ Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 == LLM Düşünme Modu’nu etkinleştir (yanıt süresini artırabilir)
 
-Enable local lyrics cache
-== Yerel şarkı sözü önbelleğini etkinleştir
-
-Enable lyric HUD overlay
-== Enable lyrics HUD overlay
-
 Enable lyrics
 == Şarkı sözlerini etkinleştir
 
@@ -3655,6 +3580,15 @@ Enable mod weapon on %d: %s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
 == SQLite yerine MySQL arka ucu etkinleştir (MySQL sunucusuna ulaşılamadığında sv_sqlite_file'a geri dön)
+
+Enable Netease lyric integration
+== Netease şarkı sözü entegrasyonunu etkinleştir
+
+Enable Netease music Hook
+== Netease Music Hook'u etkinleştir
+
+Enable Netease Music hook integration
+== Netease Music Hook entegrasyonunu etkinleştir
 
 Enable new IME candidate bar
 == Yeni IME aday çubuğunu etkinleştir
@@ -3728,6 +3662,12 @@ Enable skin switch animation
 Enable smooth cinematic camera while free spectating
 == Serbest izlerken akıcı sinematik kamerayı etkinleştir
 
+Enable SodaMusic Hook
+== SodaMusic Hook'u etkinleştir
+
+Enable SodaMusic hook integration
+== SodaMusic Hook entegrasyonunu etkinleştir
+
 Enable sound
 == Sesi etkinleştir
 
@@ -3754,9 +3694,6 @@ Enable switch countdown
 
 Enable system media control
 == Sistem medya kontrolünü etkinleştir
-
-Enable system media lyrics
-== Sistem medya şarkı sözlerini etkinleştir
 
 Enable system media transport control integration
 == Sistem medya iletim kontrol entegrasyonunu etkinleştir
@@ -3808,9 +3745,6 @@ Enable warlist
 
 Enable word filter list
 == Kelime filtresi listesini etkinleştir
-
-Enable word-by-word highlighting
-== Enable karaoke word highlighting
 
 Enable Zen Mode
 == Zen Modu’nu etkinleştir
@@ -4000,9 +3934,6 @@ f = Frame rate
 
 Fade and slide
 == Soldur ve kaydır
-
-Fade duration
-== Solma süresi
 
 Fade in
 == Soldurarak aç
@@ -4297,6 +4228,9 @@ Freeze border color
 
 Freeze Collision Border Color
 == Donma çarpışma kenar rengi
+
+Freeze laser collision volume
+== Freeze lazer çarpışma hacmi
 
 Freeze Laser Inner Color
 == Donma Lazer İç Rengi
@@ -4661,6 +4595,9 @@ Gun
 Hammer
 == Çekiç
 
+Hammer interaction
+== Çekiç etkileşimi
+
 Hammer Mode:
 == Çekiç Modu:
 
@@ -4778,12 +4715,6 @@ Hide kill and finish messages in Zen mode
 Hide kill/finish messages
 == Öldürme/bitirme mesajlarını gizle
 
-Hide lyrics on pause
-== Duraklatıldığında şarkı sözlerini gizle
-
-Hide lyrics when no system media
-== Sistem medya durumu yokken şarkı sözlerini gizle
-
 Hide map progress
 == Harita ilerlemesini gizle
 
@@ -4864,15 +4795,6 @@ Hide weapon fire effects in Zen Mode
 
 Hide weapon muzzle flashes
 == Silah namlu flaşlarını gizle
-
-Hide when no lyrics found (instead of showing hint)
-== Şarkı sözü bulunamadığında gizle (bildirim göstermek yerine)
-
-Hide when paused
-== Duraklatıldığında gizle
-
-Hide without media state
-== Medya durumu olmadığında gizle
 
 High Detail
 == Yüksek Detay
@@ -4957,6 +4879,9 @@ Hook Collisions
 
 Hook collisions
 == Kanca çarpışma çizgileri
+
+Hook interaction
+== Kanca etkileşimi
 
 Hook line tip
 == Kanca çizgisi ucu
@@ -5087,12 +5012,6 @@ If chat score exceeds this value, the player is muted for sv_spam_mute_duration 
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
 == Lazerler vurulduğunda size çarpıp sizi sekme kaynağına çekiyorsa (tüm yeni haritalar için 0), veya lazerler size çarpamayıp başkalarını atıcıya çekiyorsa.
 
-Ignore cache providers
-== Önbellek sağlayıcılarını yoksay
-
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
-== Lyrics providers that ignore cache during search
-
 Ignore clan tag when searching friends
 == Arkadaş ararken klan etiketini yoksay
 
@@ -5103,7 +5022,7 @@ Ignore voice distance attenuation
 == Ses mesafesi zayıflamasını yoksay
 
 Ignored legacy Dynamic Island edge margin
-== Ignored legacy Dynamic Island edge margin
+== Eski Dinamik Ada kenar boşluğu yok sayıldı
 
 Import from clipboard
 == Panodan içe aktar
@@ -5125,12 +5044,6 @@ In-game crosshair scale percent (50=half, 200=double)
 
 Inactive color
 == Etkin olmayan renk
-
-Inactive line font size (px)
-== Inactive lyrics line font size px
-
-Inactive line opacity
-== Etkin olmayan satır opaklığı
 
 Include clan when saving/loading config preset
 == Yapılandırma ön ayarını kaydederken/yüklerken klanı dahil et
@@ -5258,12 +5171,6 @@ Input overlay mouse scale (percent)
 Input overlay opacity (percent)
 == Giriş Katmanı Opaklığı (Yüzde)
 
-Input overlay X position (percent)
-== Giriş Katmanı X Konumu (Yüzde)
-
-Input overlay Y position (percent)
-== Giriş Katmanı Y Konumu (Yüzde)
-
 Input smoothing
 == Giriş yumuşatma
 
@@ -5348,9 +5255,6 @@ Invalid Y coordinate.
 Invert camera drift direction
 == Kamera Sürüklenme Yönünü Ters Çevir
 
-Invite %s to the locked team
-== %s oyuncusunu kilitli takıma davet et
-
 Invite a person to a locked team
 == Bir kişiyi kilitli bir takıma davet et
 
@@ -5399,9 +5303,6 @@ Join QQ group
 Join red
 == Kırmızıya katıl
 
-Join team %s
-== %s takımına katıl
-
 Join the team of the specified player
 == Belirtilen oyuncunun takımına katıl
 
@@ -5443,9 +5344,6 @@ k = Resend loss
 
 Kaomoji
 == Kaomoji
-
-Karaoke edge softness
-== Karaoke kenar yumuşaklığı
 
 Keep hook when teleporting
 == Işınlanırken kancayı koru
@@ -5570,6 +5468,9 @@ Large text for friend join (use %s for friend name)
 Laser
 == Lazer
 
+Laser / shotgun interaction
+== Lazer / pompalı etkileşimi
+
 Laser colors
 == Lazer renkleri
 
@@ -5672,38 +5573,14 @@ Limit information in spectator mode
 Limiter threshold (percent)
 == Sınırlayıcı eşiği (yüzde)
 
-Line scroll duration
-== Satır kaydırma süresi
-
-Line spacing
-== Satır aralığı
-
-Line switch scroll duration (ms)
-== Line switch scroll duration ms
-
 Line width
 == Çizgi genişliği
 
 Linear
 == Doğrusal
 
-Lines
-== Satırlar
-
 Lines %d - %d (%s)
 == Satırlar %d - %d (%s)
-
-Lines above active
-== Aktif satırın üstündeki satırlar
-
-Lines above active line
-== Lines shown above active line
-
-Lines below active
-== Aktif satırın altındaki satırlar
-
-Lines below active line
-== Lines shown below active line
 
 List all commands that are available in practice mode
 == Pratik modunda mevcut olan tüm komutları listele
@@ -5779,9 +5656,6 @@ Load
 
 Load drawings from a given csv file (defaults to map name)
 == Verilen bir csv dosyasından çizimleri yükle (varsayılan harita adı)
-
-Load save %s
-== %s kaydını yükle
 
 Load sound files in thread
 == Ses dosyalarını iş parçacığında yükle
@@ -5861,21 +5735,6 @@ Local
 Local + Dummy
 == Yerel + Dummy
 
-Local ESLRC file
-== Yerel ESLRC dosyası
-
-Local LRC file
-== Yerel LRC dosyası
-
-Local media folders
-== Yerel medya klasörleri
-
-Local media library directories (separate by |)
-== Şarkı sözü yerel medya kütüphanesi dizini (birden çok dizin | ile ayrılır)
-
-Local music file
-== Yerel müzik dosyası
-
 Local only
 == Yalnızca yerel
 
@@ -5897,9 +5756,6 @@ Local test mode, no server needed
 Local Time
 == Yerel Saat
 
-Local TTML file
-== Yerel TTML dosyası
-
 Local-only
 == Yalnızca yerel
 
@@ -5908,9 +5764,6 @@ Lock delay
 
 Lock team
 == Takımı kilitle
-
-Lock the team so other players cannot join directly
-== Diğer oyuncular doğrudan katılamasın diye takımı kilitle
 
 Locked
 == Kilitli
@@ -5933,86 +5786,11 @@ Lose weapons when teleporting (useful for race maps)
 Low to high
 == Düşükten yükseğe
 
-LRCLIB API base URL (mirror)
-== LRCLIB API base URL (can be changed to a mirror)
-
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-== Lyrics auto-search source order and enabled list
-
-Lyric background color
-== Lyrics background color
-
-Lyric background opacity
-== Şarkı sözü arka plan şeffaflığı
-
-Lyric fade in/out time
-== Şarkı sözü belirme ve kaybolma süresi
-
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-== Şarkı sözü HTTP proxy'si (örn. http://127.0.0.1:7890)
-
-Lyric HTTP request timeout (ms)
-== Lyrics HTTP request timeout ms
-
-Lyric HUD edge margin (px)
-== Lyrics HUD edge margin px
-
-Lyric outline color
-== Lyrics outline color
-
-Lyric outline opacity
-== Şarkı sözü kontur şeffaflığı
-
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-== Şarkı sözü arama stratejisi (0=kaynak sırasına göre, 1=eşzamanlı en iyi eşleşme)
-
-Lyric snap to Dynamic Island threshold
-== Şarkı sözlerini dinamik adaya yapıştırma eşiği
-
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== Şarkı sözü veri kaynağı (0=otomatik en iyi eşleşme, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Yerel Müzik Dosyası, 8=Yerel LRC, 9=Yerel ESLRC, 10=Yerel TTML)
-
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== Şarkı sözü kaynağına özel eşleşme eşiği (boş=genel eşik; örn. QQ=60|LrcLib=70)
-
 Lyrics
 == Şarkı sözleri
 
-Lyrics cache expiration days (0=forever)
-== Şarkı sözü önbellek son kullanma günü (0=kalıcı)
-
-Lyrics fuzzy match score threshold
-== Şarkı sözleri bulanık eşleşme puan eşiği
-
-Lyrics HTTP timeout
-== Şarkı sözleri HTTP zaman aşımı
-
-Lyrics line spacing (px)
-== Lyrics line spacing px
-
-Lyrics search type
-== Şarkı sözleri arama türü
-
-Lyrics source
-== Şarkı sözleri kaynağı
-
-Lyrics source order
-== Şarkı sözleri kaynak sırası
-
-Lyrics translation/transliteration color
-== Şarkı sözü çeviri/transliterasyon rengi
-
-Lyrics: empty track
-== Şarkı sözleri: boş parça
-
-Lyrics: no lyrics found
-== Şarkı sözleri: şarkı sözü bulunamadı
-
-Lyrics: no media playing
-== Şarkı sözleri: oynatılan medya yok
-
-Lyrics: searching...
-== Şarkı sözleri: aranıyor...
+Lyrics sources and display
+== Şarkı sözü kaynakları ve görüntüleme
 
 Main Asset
 == Ana Varlık
@@ -6070,9 +5848,6 @@ Manual
 
 Manual concurrency: %d
 == Manuel eşzamanlılık: %d
-
-Manual lyric timeline offset (ms, step 500ms)
-== Şarkı sözü manuel zaman çizelgesi kayması ms (çalışma zamanında 500ms adımlarla)
 
 Manual scope
 == Manuel kapsam
@@ -6170,12 +5945,6 @@ Mark the end of a demo cut
 Markers
 == İşaretçiler
 
-Marquee for long lyrics
-== Şarkı sözü çok uzunsa kayan yazı kullan
-
-Marquee speed
-== Şarkı sözü kayan yazı hızı
-
 Master server URL to register
 == Kaydedilecek ana sunucu URL'si
 
@@ -6184,9 +5953,6 @@ Match %d of %d
 
 Match ghost by map version instead of map name
 == Ghost'u harita adı yerine harita sürümüyle eşle
-
-Match score threshold
-== Eşleşme puanı eşiği
 
 Matched with callable peer
 == Aranabilir eşle eşleşti
@@ -6406,9 +6172,6 @@ Minimum delay allowed between invitations.
 
 Minimum dynamic camera cursor distance
 == Minimum dinamik kamera imleç mesafesi
-
-Minimum inactive line opacity (%)
-== Inactive lyrics line minimum opacity percent
 
 Minimum match chars
 == Minimum eşleşme karakteri
@@ -6752,6 +6515,12 @@ Negative stability buffer (for Gores)
 Net
 == Net
 
+Netease hook heartbeat timeout (milliseconds)
+== Netease Hook heartbeat zaman aşımı (milisaniye)
+
+Netease hook helper path (empty=beside QmClient)
+== Netease Hook yardımcı yolu (boş = QmClient'ın yanında)
+
 Netlimit: exponential moving average alpha
 == Netlimit: üstel hareketli ortalama alfa
 
@@ -6802,12 +6571,6 @@ News
 
 Next
 == Sonraki
-
-Next line color
-== Sonraki satır rengi
-
-Next line lyric color
-== Sonraki şarkı sözü satırı rengi
 
 Next page in console
 == Konsolda sonraki sayfa
@@ -7202,6 +6965,9 @@ Open color picker
 Open DDNet Wiki
 == DDNet Wiki'yi aç
 
+Open editor
+== Düzenleyiciyi aç
+
 Open emote selector
 == İfade seçiciyi aç
 
@@ -7243,6 +7009,9 @@ Open the folder containing demo files
 
 Open the folder containing screenshots
 == Ekran görüntülerini içeren klasörü aç
+
+Open the input overlay editor
+== Giriş kaplaması düzenleyicisini aç
 
 Open the saves file
 == Kayıtlı oyun dosyasını aç
@@ -7298,9 +7067,6 @@ Optional authentication key for the DNSBL provider
 Other
 == Diğer
 
-Other lines font size
-== Diğer satırların yazı tipi boyutu
-
 Other players' hook line width
 == Diğer oyuncuların kanca çizgisi genişliği
 
@@ -7315,9 +7081,6 @@ Outgoing language
 
 Outgoing translation target language code
 == Giden çeviri hedef dil kodu
-
-Outline color
-== Anahat rengi
 
 Outline global opacity
 == Kontur genel opaklığı
@@ -7345,9 +7108,6 @@ Output switch
 
 Output voice debug log
 == Ses Hata Ayıklama Günlüğünü Çıktıla
-
-Overall lyrics opacity (%)
-== Lyrics overall opacity percent
 
 Overlay entities
 == Varlıkları göster
@@ -7490,9 +7250,6 @@ Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
 == İsme göre bireysel ses seviyesi (isim=yüzde)
 
-Per-word highlight (karaoke)
-== Kelime bazında vurgulama (karaoke)
-
 Performance debug log threshold (ms)
 == Performans hata ayıklama günlüğü eşiği (ms)
 
@@ -7588,9 +7345,6 @@ Play/pause the current demo
 
 Playback volume
 == Oynatma sesi
-
-Played word color
-== Oynatılan kelime rengi
 
 Player
 == Oyuncu
@@ -8000,11 +7754,11 @@ Progress bar height
 Progress bar width
 == İlerleme çubuğu genişliği
 
+Projectile / explosion range
+== Mermi / patlama menzili
+
 Protect names and skins while streaming
 == Yayın yaparken isimleri ve skinleri koru
-
-Provider thresholds
-== Sağlayıcı eşikleri
 
 PTT release delay (ms)
 == PTT bırakma gecikmesi (ms)
@@ -8128,24 +7882,6 @@ QQ group: 1076765929 (click to copy)
 
 Quads are used for background decoration
 == Dörtgenler arka plan dekorasyonu için kullanılır
-
-Query current map info
-== Geçerli harita bilgisini sorgula
-
-Query map info for %s
-== %s haritasının bilgisini sorgula
-
-Query points for %s
-== %s oyuncusunun puanını sorgula
-
-Query rank for %s
-== %s oyuncusunun sıralamasını sorgula
-
-Query server setting: %s
-== Sunucu ayarını sorgula: %s
-
-Query team rank for %s
-== %s oyuncusunun takım sıralamasını sorgula
 
 Queue is empty
 == Sıra boş
@@ -8630,12 +8366,6 @@ Reply
 Reply to messages from muted players
 == Sessize alınmış oyunculardan gelen mesajlara yanıt ver
 
-Reply to the last whisper target
-== Son fısıltı hedefine yanıt ver
-
-Reply to the last whisper target: %s
-== Son fısıltı hedefine yanıt ver: %s
-
 Reply with dummy
 == Dummy ile yanıtla
 
@@ -8669,12 +8399,6 @@ Report service URL
 Reports are not available on Axiom servers
 == Axiom sunucularında rapor kullanılamaz
 
-Request a position swap
-== Konum takası iste
-
-Request to swap positions with %s
-== %s ile konum takası iste
-
 Request to swap your tee with another team member
 == Tee'ni başka bir takım arkadaşıyla takas etmeyi iste
 
@@ -8695,9 +8419,6 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == Kurtarma/Donma: %d/%d
-
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-== Kurtarma: otomatik mod donmadan çıkarır; manuel mod inişte bir kurtarma noktası kaydeder ve donduğunda ışınlar
 
 Reset
 == Sıfırla
@@ -8996,12 +8717,6 @@ Save team with code r.
 Save the best demo of each race
 == Her yarışın en iyi demosunu kaydet
 
-Save the current team
-== Geçerli takımı kaydet
-
-Save the team as %s
-== Takımı %s olarak kaydet
-
 Save unsent chat draft
 == Gönderilmemiş sohbet taslağını kaydet
 
@@ -9118,12 +8833,6 @@ Screenshots
 
 Screenshots directory
 == Ekran görüntüleri dizini
-
-Scroll long lines
-== Uzun satırları kaydır
-
-Scroll speed
-== Kaydırma hızı
 
 Search
 == Ara
@@ -9271,9 +8980,6 @@ Sends a command to the antibot
 
 Separate with commas
 == Virgülle ayır
-
-Sequential
-== Sıralı
 
 Server
 == Sunucu
@@ -9602,8 +9308,8 @@ Show coordinates above players
 Show country flags in nameplates
 == İsim levhalarında ülke bayraklarını göster
 
-Show current and next lyric lines on HUD
-== HUD'da mevcut ve sonraki şarkı sözü satırlarını göster
+Show current Netease lyric in Media Island
+== Güncel Netease şarkı sözünü Media Island'da göster
 
 Show daily message to client
 == İstemciye günlük mesajı göster
@@ -9679,9 +9385,6 @@ Show enemy reason
 
 Show entities
 == Varlıkları göster
-
-Show existing saves
-== Mevcut kayıtları göster
 
 Show eye wheel and expressions
 == Göz tekerleği ve ifadeleri göster
@@ -9787,9 +9490,6 @@ Show important server prompts and Echo messages as popups
 
 Show important server prompts as notifications
 == Önemli sunucu uyarılarını bildirim olarak göster
-
-Show in Dynamic Island
-== Dynamic Island içinde göster
 
 Show in-game FPS
 == Oyunda FPS göster
@@ -9916,12 +9616,6 @@ Show logs of the last i seconds
 
 Show lyrics inside Dynamic Island
 == Show lyrics in Dynamic Island
-
-Show lyrics translation (if available)
-== Show lyrics translation when available
-
-Show lyrics transliteration (if available)
-== Show lyrics transliteration when available
 
 Show map details
 == Harita detaylarını göster
@@ -10139,9 +9833,6 @@ Show server help and usage messages
 Show server prompts and Echo messages as popups
 == Show server prompts and Echo messages as popups
 
-Show server settings
-== Sunucu ayarlarını göster
-
 Show settings card borders
 == Ayar kartı kenarlıklarını göster
 
@@ -10241,9 +9932,6 @@ Show tiles layers from BG map
 Show toast
 == Toast'ı göster
 
-Show translation
-== Çeviriyi göster
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Kendi oyuncunu etkileyen ayar parametrelerini göster (0=Kapalı, 1=Değişenleri göster, 2=Tümünü göster)
 
@@ -10291,9 +9979,6 @@ Show X
 
 Show Y
 == Y'yi göster
-
-Show your current team
-== Geçerli takımını göster
 
 Show zzz emoji next to afk players
 == AFK oyuncuların yanında zzz emojisini göster
@@ -10535,9 +10220,6 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 == Sistem Medya Kontrolü
 
-Snap threshold
-== Yakalama eşiği
-
 Snapshot Age
 == Anlık görüntü yaşı
 
@@ -10561,6 +10243,12 @@ Snapshot tick gap
 
 Social
 == Sosyal
+
+SodaMusic hook heartbeat timeout (milliseconds)
+== SodaMusic Hook heartbeat zaman aşımı (milisaniye)
+
+SodaMusic hook helper path (empty=beside QmClient)
+== SodaMusic Hook yardımcı yolu (boş = QmClient'ın yanında)
 
 Solid
 == Düz
@@ -11000,15 +10688,6 @@ System media control
 System media controls
 == Sistem medya kontrolleri
 
-System media lyric font size
-== Sistem medya şarkı sözü yazı tipi boyutu
-
-System media lyrics display lines
-== Sistem medya şarkı sözü görüntüleme satır sayısı
-
-System media lyrics time offset (milliseconds)
-== Sistem medya şarkı sözü zaman kayması (ms)
-
 System message
 == Sistem mesajı
 
@@ -11159,8 +10838,14 @@ Tee 0.7
 Tee appearance
 == Tee görünümü
 
-Tee hitbox
-== Tee hitbox'ı
+Tee collision (Tee to Tee)
+== Tee çarpışması (Tee ile Tee)
+
+Tee death probe
+== Tee ölüm algısı
+
+Tee freeze probe (Tee to Freeze)
+== Tee dondurma algısı (Tee ile Freeze)
 
 Tee hitbox color
 == Tee hitbox rengi
@@ -11492,9 +11177,6 @@ Time limit
 Time limit: %d min
 == Süre sınırı: %d dk
 
-Time offset
-== Zaman kayması
-
 Time to wait before changing team: %s
 == Takım değiştirmeden önce beklenecek süre: %s
 
@@ -11725,9 +11407,6 @@ Translation button active color
 
 Translation button cancel color
 == Çeviri düğmesi kapalı rengi
-
-Translation color
-== Çeviri rengi
 
 Translation color alpha migration completed flag
 == Çeviri renkleri alfa taşıma tamamlama işareti
@@ -11981,9 +11660,6 @@ Unknown status
 Unlock a team
 == Bir takımın kilidini aç
 
-Unlock the team
-== Takımın kilidini aç
-
 Unmute
 == Sessize almayı kaldır
 
@@ -12001,9 +11677,6 @@ Unmute player with list index
 
 Unmute:
 == Sessizi Kaldır:
-
-Unplayed word color
-== Oynatılmamış kelime rengi
 
 Unpredictable ghost opacity (0-100)
 == Tahmin edilemez hayalet opaklığı (0-100)
@@ -12056,14 +11729,8 @@ URL for downloading maps (must start with https://)
 URL for downloading skins
 == Skin indirmek için URL
 
-Usage
-== Kullanım
-
 Usage: %s %s
 == Kullanım: %s %s
-
-Usage: /%s %s
-== Kullanım: /%s %s
 
 Use 12 hour clock
 == 12 saatlik saat kullan
@@ -12407,6 +12074,12 @@ Vote yes/no
 Voting
 == Oylama
 
+Vulkan API
+== Vulkan API'si
+
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+== Vulkan API sürümü: 11=1.1 uyumluluk, 14=katı 1.4 modu
+
 Wait for current vote to end before calling a new one.
 == Yeni bir oylama çağırmadan önce mevcut oylamanın bitmesini bekleyin.
 
@@ -12481,9 +12154,6 @@ Weapon
 
 Weapon animation
 == Silah animasyonu
-
-Weapon interaction range
-== Silah etkileşim menzili
 
 Weapon range color
 == Silah menzil rengi
@@ -12644,15 +12314,6 @@ Whisper option color
 Whisper something to someone (private message)
 == Birine bir şey fısılda (özel mesaj)
 
-Whisper to %s
-== %s kişisine fısılda
-
-Whisper to %s: %s
-== %s kişisine fısılda: %s
-
-Whisper: /w player message
-== Fısıltı: /w oyuncu mesaj
-
 White
 == Beyaz
 
@@ -12703,9 +12364,6 @@ Word Filter
 
 Word filter action: 0=replace matching words, 1=hide entire message
 == Kelime filtresi eylemi: 0=eşleşen kelimeleri değiştir, 1=tüm mesajı gizle
-
-Word highlight soft edge width (px)
-== Karaoke highlight soft edge width px
 
 Write local console contents to a text file
 == Yerel konsol içeriğini bir metin dosyasına yaz
@@ -13019,9 +12677,6 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Zaman aşımı kodunuz ayarlandı. 0.7 istemcileri zaman aşımında teelerini geri alamaz; ancak bir 0.6 istemcisi teenizi alabilir
 
-yourself
-== kendiniz
-
 z = Zoom
 == z = Yakınlaştırma
 
@@ -13114,6 +12769,26 @@ Inactive
 [Auto camera]
 Unavailable for this player
 == Bu oyuncu için kullanılamaz
+
+[Config help]
+%s (default: "%s", max length: %d)
+== %s (varsayılan: "%s", maksimum uzunluk: %d)
+
+[Config help]
+%s (default: $%0*X)
+== %s (varsayılan: $%0*X)
+
+[Config help]
+%s (default: %d)
+== %s (varsayılan: %d)
+
+[Config help]
+%s (default: %d, min: %d)
+== %s (varsayılan: %d, minimum: %d)
+
+[Config help]
+%s (default: %d, min: %d, max: %d)
+== %s (varsayılan: %d, minimum: %d, maksimum: %d)
 
 [data_version.h]
 You may have installed only DDNet.exe. Please use the full QmClient folder.

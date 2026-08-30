@@ -23,6 +23,92 @@ constexpr float QmHudMediaIslandScaled(float Value)
 	return Value * QmHudMediaIslandDesignScale;
 }
 
+struct SHudMediaIslandExpansionState
+{
+	bool m_Expanded = false;
+	bool m_LyricsActive = false;
+	int64_t m_ExpandUntilTick = 0;
+	bool m_StartCapsuleMorph = false;
+};
+
+inline SHudMediaIslandExpansionState QmHudMediaIslandUpdateExpansion(
+	SHudMediaIslandExpansionState State,
+	bool HasMedia,
+	bool LyricsActive,
+	bool TrackChanged,
+	int64_t Now,
+	int64_t AutoCollapseTicks)
+{
+	State.m_StartCapsuleMorph = false;
+	if(LyricsActive)
+	{
+		if(!State.m_Expanded)
+		{
+			State.m_Expanded = true;
+			State.m_StartCapsuleMorph = true;
+		}
+		State.m_LyricsActive = true;
+		State.m_ExpandUntilTick = 0;
+		return State;
+	}
+
+	if(State.m_LyricsActive)
+	{
+		State.m_LyricsActive = false;
+		if(State.m_Expanded && HasMedia && AutoCollapseTicks > 0)
+			State.m_ExpandUntilTick = Now + AutoCollapseTicks;
+	}
+	if(TrackChanged && HasMedia)
+	{
+		if(!State.m_Expanded)
+		{
+			State.m_Expanded = true;
+			State.m_StartCapsuleMorph = true;
+		}
+		State.m_ExpandUntilTick = Now + std::max<int64_t>(0, AutoCollapseTicks);
+	}
+	if(State.m_Expanded && State.m_ExpandUntilTick > 0 && Now >= State.m_ExpandUntilTick)
+	{
+		State.m_Expanded = false;
+		State.m_ExpandUntilTick = 0;
+		State.m_StartCapsuleMorph = true;
+	}
+	return State;
+}
+
+// 歌词会让底部行保持可见，但歌名/歌手仍按独立的截止时间收起。
+inline bool QmHudMediaIslandShouldShowTrackDetails(int64_t Now, int64_t DetailsUntilTick)
+{
+	return DetailsUntilTick > 0 && Now < DetailsUntilTick;
+}
+
+inline bool QmHudMediaIslandShouldResetMarquee(const char *pPrevious, const char *pCurrent)
+{
+	return str_comp(pPrevious != nullptr ? pPrevious : "", pCurrent != nullptr ? pCurrent : "") != 0;
+}
+
+inline float QmHudMediaIslandMarqueeOffset(float TextWidth, float ViewportWidth, float ElapsedSeconds, float Speed = 32.0f)
+{
+	const float Distance = std::max(0.0f, TextWidth - ViewportWidth);
+	if(Distance <= 0.0f || Speed <= 0.0f || ElapsedSeconds <= 0.0f)
+		return 0.0f;
+	constexpr float StartPauseSeconds = 1.2f;
+	constexpr float EndPauseSeconds = 1.0f;
+	const float TravelSeconds = Distance / Speed;
+	const float CycleSeconds = StartPauseSeconds + TravelSeconds + EndPauseSeconds + TravelSeconds;
+	float Time = std::fmod(ElapsedSeconds, CycleSeconds);
+	if(Time <= StartPauseSeconds)
+		return 0.0f;
+	Time -= StartPauseSeconds;
+	if(Time <= TravelSeconds)
+		return std::clamp(Time * Speed, 0.0f, Distance);
+	Time -= TravelSeconds;
+	if(Time <= EndPauseSeconds)
+		return Distance;
+	Time -= EndPauseSeconds;
+	return std::clamp(Distance - Time * Speed, 0.0f, Distance);
+}
+
 struct SHudMediaIslandTrackInput
 {
 	const char *m_pTitle = "";
@@ -74,6 +160,15 @@ enum class EHudMediaIslandTrackUpdate
 	FIRST_IDENTITY,
 	TRACK_CHANGED,
 };
+
+inline bool QmHudMediaIslandShouldRevealTrackDetails(
+	EHudMediaIslandTrackUpdate Update,
+	bool HadMeaningfulIdentity,
+	bool HasMeaningfulIdentity)
+{
+	return Update == EHudMediaIslandTrackUpdate::TRACK_CHANGED ||
+	       (!HadMeaningfulIdentity && HasMeaningfulIdentity);
+}
 
 enum class EHudMediaIslandCountdownType
 {
@@ -624,9 +719,18 @@ struct SHudMediaIslandSdfCapsule
 	float m_SmoothUnion = 0.0f;
 };
 
-inline bool QmHudMediaIslandShouldPrepareBackdropBlur(int BackgroundOpacity)
+constexpr uint64_t QmHudMediaIslandBlurRefreshIntervalFrames = 3;
+
+inline bool QmHudMediaIslandShouldPrepareBackdropBlur(int BackgroundOpacity, bool GaussianBlurEnabled)
 {
-	return BackgroundOpacity < 100;
+	return GaussianBlurEnabled && BackgroundOpacity < 100;
+}
+
+inline bool QmHudMediaIslandShouldRefreshBackdropBlur(uint64_t CurrentFrame, uint64_t LastAttemptFrame, bool HasAttempt)
+{
+	if(!HasAttempt || CurrentFrame < LastAttemptFrame)
+		return true;
+	return CurrentFrame - LastAttemptFrame >= QmHudMediaIslandBlurRefreshIntervalFrames;
 }
 
 inline vec4 QmHudMediaIslandBackdropUv(const CUIRect &OuterRect, const CUIRect &ScreenRect)
@@ -809,14 +913,14 @@ inline float QmHudMediaIslandDesiredBottomWidth(
 	float MaxUnifiedWidth,
 	float HorizontalPadding)
 {
-	if(!HasUtilityContent && (!ShowLyrics || ShowTopRow))
+	if(!HasUtilityContent && !ShowLyrics)
 		return 0.0f;
 
 	const float ClampedMaxWidth = std::max(0.0f, MaxUnifiedWidth);
 	const float ClampedPadding = std::max(0.0f, HorizontalPadding);
 	const float MaxContentWidth = std::max(0.0f, ClampedMaxWidth - ClampedPadding * 2.0f);
 	float ContentWidth = HasUtilityContent ? std::max(0.0f, UtilityContentWidth) : 0.0f;
-	if(ShowLyrics && !ShowTopRow)
+	if(ShowLyrics)
 		ContentWidth = std::max(ContentWidth, std::max(0.0f, LyricsOnlyContentWidth));
 	ContentWidth = std::min(ContentWidth, MaxContentWidth);
 	return std::min(ClampedMaxWidth, ContentWidth + ClampedPadding * 2.0f);

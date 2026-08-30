@@ -104,6 +104,28 @@ TEST(NeteaseLyricState, BlocksOldBridgeIdentityAfterSmtcSongTransition)
 	EXPECT_FALSE(IsBridgeIdentityStillBlocked(0, 0, 100, 1));
 }
 
+TEST(NeteaseLyricState, BridgeAdvanceBeforeSmtcMetadataDoesNotBlockTheNewSong)
+{
+	EXPECT_EQ(DecideSmtcBridgeSync(100, 5, 200, 6), ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED);
+	EXPECT_EQ(DecideSmtcBridgeSync(100, 5, 100, 6), ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED);
+	EXPECT_EQ(DecideSmtcBridgeSync(0, 0, 200, 1), ESmtcBridgeSyncDecision::BRIDGE_ALREADY_ADVANCED);
+}
+
+TEST(NeteaseLyricState, SmtcAdvanceBeforeBridgeWaitsForTheOldIdentityToChange)
+{
+	EXPECT_EQ(DecideSmtcBridgeSync(100, 5, 100, 5), ESmtcBridgeSyncDecision::WAIT_FOR_BRIDGE_ADVANCE);
+	EXPECT_EQ(DecideSmtcBridgeSync(100, 0, 100, 9), ESmtcBridgeSyncDecision::WAIT_FOR_BRIDGE_ADVANCE);
+	EXPECT_EQ(DecideSmtcBridgeSync(100, 5, 0, 6), ESmtcBridgeSyncDecision::WAIT_FOR_BRIDGE_ADVANCE);
+}
+
+TEST(NeteaseLyricState, BridgeIdentityWaitHasAFiniteDeadline)
+{
+	EXPECT_TRUE(ShouldWaitForBridgeIdentity(100, 5, 100, 5, 1000, 4000, 3000));
+	EXPECT_FALSE(ShouldWaitForBridgeIdentity(100, 5, 100, 5, 1000, 4001, 3000));
+	EXPECT_FALSE(ShouldWaitForBridgeIdentity(100, 5, 200, 6, 1000, 1100, 3000));
+	EXPECT_FALSE(ShouldWaitForBridgeIdentity(100, 5, 100, 5, 1000, 999, 3000));
+}
+
 TEST(NeteaseLyricState, PausedLyricRetentionHasFiniteGraceWindow)
 {
 	EXPECT_TRUE(ShouldPreservePausedLyric(true, true, true, 1000, 2500, 1500));
@@ -111,6 +133,15 @@ TEST(NeteaseLyricState, PausedLyricRetentionHasFiniteGraceWindow)
 	EXPECT_FALSE(ShouldPreservePausedLyric(false, true, true, 1000, 1100, 1500));
 	EXPECT_FALSE(ShouldPreservePausedLyric(true, false, true, 1000, 1100, 1500));
 	EXPECT_FALSE(ShouldPreservePausedLyric(true, true, true, 1000, 900, 1500));
+}
+
+TEST(NeteaseLyricState, TemporaryBridgeReadFailurePreservesPlayingOrPausedState)
+{
+	EXPECT_TRUE(ShouldPreserveBridgeState(true, 1000, 2500, 1500));
+	EXPECT_FALSE(ShouldPreserveBridgeState(true, 1000, 2501, 1500));
+	EXPECT_FALSE(ShouldPreserveBridgeState(false, 1000, 1100, 1500));
+	EXPECT_FALSE(ShouldPreserveBridgeState(true, 0, 1100, 1500));
+	EXPECT_FALSE(ShouldPreserveBridgeState(true, 1000, 900, 1500));
 }
 
 TEST(NeteaseLyricState, PausedLyricSeekOnlyWhenPositionAnchorChanges)

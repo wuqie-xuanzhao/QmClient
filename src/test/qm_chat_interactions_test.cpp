@@ -459,7 +459,52 @@ TEST(QmChatInteractions, ClampBacklogLine)
 	EXPECT_EQ(CChat::ClampBacklogLine(20, 10, 4), 6);
 }
 
-TEST(QmChatCommandCompletion, RemovesCommandCompletionButKeepsPlayerNameCompletion)
+TEST(QmChatInteractions, HudTransformInversePreservesChatOrigin)
+{
+	const CUIRect DefaultRect = {0.0f, 50.0f, 400.0f, 250.0f};
+	const CUIRect TargetRect = {100.0f, 200.0f, 800.0f, 500.0f};
+	const vec2 LogicalPoint = {73.0f, 91.0f};
+	const float Scale = TargetRect.w / DefaultRect.w;
+	const vec2 TransformedPoint = {
+		TargetRect.x + (LogicalPoint.x - DefaultRect.x) * Scale,
+		TargetRect.y + (LogicalPoint.y - DefaultRect.y) * Scale};
+
+	const vec2 Result = CChat::InverseHudTransformPoint(TransformedPoint, DefaultRect, TargetRect);
+	EXPECT_NEAR(Result.x, LogicalPoint.x, 0.001f);
+	EXPECT_NEAR(Result.y, LogicalPoint.y, 0.001f);
+}
+
+TEST(QmChatInteractions, ChatLineHitStopsAtContentWidth)
+{
+	const CUIRect ContentRect = {5.0f, 90.0f, 120.0f, 15.0f};
+
+	EXPECT_TRUE(CChat::IsChatLineHit(ContentRect, vec2(100.0f, 95.0f)));
+	EXPECT_FALSE(CChat::IsChatLineHit(ContentRect, vec2(130.0f, 95.0f)));
+	EXPECT_FALSE(CChat::IsChatLineHit(ContentRect, vec2(100.0f, 106.0f)));
+}
+
+TEST(QmChatInteractions, ChatLineMenuUsesContentBoundsAndKeepsTargetHighlighted)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string OnRender = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const std::string OpenMenu = SourceFunctionBody(Source, "void CChat::OpenChatLineMenu(");
+
+	EXPECT_NE(Header.find("float m_ContentWidth"), std::string::npos);
+	EXPECT_NE(Header.find("int m_LineIndex = -1"), std::string::npos);
+	EXPECT_NE(OnRender.find("Line.m_ContentWidth"), std::string::npos);
+	EXPECT_NE(OnRender.find("const float RenderedContentWidth = Line.m_ContentWidth * RenderScale;"), std::string::npos);
+	EXPECT_NE(OnRender.find("const bool MouseInsideLine = IsChatLineHit(RenderedTextRect, MousePos);"), std::string::npos);
+	EXPECT_NE(OnRender.find("ChatLineMenuOpen && m_ChatLinePopupContext.m_LineIndex == LineIndex"), std::string::npos);
+	EXPECT_NE(OnRender.find("const ColorRGBA SelectionColor"), std::string::npos);
+	EXPECT_NE(OnRender.find("Graphics()->DrawRect(RenderedTextRect.x"), std::string::npos);
+	EXPECT_NE(OpenMenu.find("m_ChatLinePopupContext.m_LineIndex = GetLineIndex(&Line);"), std::string::npos);
+	EXPECT_NE(OpenMenu.find("UiMousePos.x, UiMousePos.y"), std::string::npos);
+	EXPECT_EQ(OpenMenu.find("ChatToUiScale"), std::string::npos);
+	EXPECT_NE(OnRender.find("OpenChatLineMenu(*pMenuLine, GetUiMousePos());"), std::string::npos);
+}
+
+TEST(QmChatCommandCompletion, KeepsDdnetTabCompletionWithoutQmExtensions)
 {
 	const std::string ChatHeader = ReadTestSourceFile("src/game/client/components/chat.h");
 	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
@@ -467,17 +512,28 @@ TEST(QmChatCommandCompletion, RemovesCommandCompletionButKeepsPlayerNameCompleti
 	const std::string BindChat = ReadTestSourceFile("src/game/client/components/tclient/bindchat.cpp");
 	const std::string CMake = ReadTestSourceFile("CMakeLists.txt");
 	const std::string OnInput = SourceFunctionBody(Chat, "bool CChat::OnInput(");
+	const std::string RegisterCommand = SourceFunctionBody(Chat, "void CChat::RegisterCommand(");
+	const size_t CompletionBufferGuard = OnInput.find("if(!m_CompletionUsed)");
+	const size_t PlayerCompletionGuard = OnInput.find("if(!m_CompletionUsed && m_aCompletionBuffer[0] != '/')");
 
 	EXPECT_EQ(ChatHeader.find("SSlashCommandSuggestion"), std::string::npos);
 	EXPECT_EQ(ChatHeader.find("BuildCommandUsagePreview"), std::string::npos);
-	EXPECT_EQ(ChatHeader.find("m_ServerCommandsNeedSorting"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("m_ServerCommandsNeedSorting"), std::string::npos);
 	EXPECT_EQ(Chat.find("RenderSlashCommandSuggestions"), std::string::npos);
 	EXPECT_EQ(Chat.find("BuildCommandUsagePreview"), std::string::npos);
 	EXPECT_EQ(Chat.find("Autocompletion hint"), std::string::npos);
-	EXPECT_EQ(OnInput.find("m_aCompletionBuffer[0] == '/'"), std::string::npos);
 	EXPECT_EQ(OnInput.find("ApplySelectedSlashCommandSuggestion"), std::string::npos);
-	EXPECT_NE(OnInput.find("Event.m_Key == KEY_TAB && m_Input.GetString()[0] == '/'"), std::string::npos);
+	EXPECT_EQ(OnInput.find("Event.m_Key == KEY_TAB && m_Input.GetString()[0] == '/'"), std::string::npos);
+	ASSERT_NE(CompletionBufferGuard, std::string::npos);
+	ASSERT_NE(PlayerCompletionGuard, std::string::npos);
+	EXPECT_LT(CompletionBufferGuard, PlayerCompletionGuard);
+	EXPECT_NE(OnInput.find("const bool ShiftPressed = Input()->ShiftIsPressed();"), std::string::npos);
+	EXPECT_NE(OnInput.find("if(m_aCompletionBuffer[0] == '/' && !m_vServerCommands.empty())"), std::string::npos);
+	EXPECT_NE(OnInput.find("str_startswith_nocase(Command.m_aName, pCommandStart)"), std::string::npos);
+	EXPECT_NE(OnInput.find("if(m_Input.GetString()[0] == '/' && (str_find(pCompletionString, \" \") || str_find(pCompletionString, \"\\\"\")))"), std::string::npos);
 	EXPECT_NE(OnInput.find("m_aPlayerCompletionList"), std::string::npos);
+	EXPECT_NE(RegisterCommand.find("m_ServerCommandsNeedSorting = true;"), std::string::npos);
+	EXPECT_NE(OnInput.find("std::sort(m_vServerCommands.begin(), m_vServerCommands.end());"), std::string::npos);
 	EXPECT_NE(ChatHeader.find("std::vector<CCommand> m_vServerCommands"), std::string::npos);
 	EXPECT_EQ(BindChatHeader.find("ChatDoAutocomplete"), std::string::npos);
 	EXPECT_EQ(BindChat.find("CBindChat::ChatDoAutocomplete"), std::string::npos);

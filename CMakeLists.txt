@@ -211,6 +211,34 @@ if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
   target_include_directories(qm-nmt-helper PRIVATE src)
   target_compile_definitions(qm-nmt-helper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
   target_link_libraries(qm-nmt-helper PRIVATE bcrypt winhttp ws2_32)
+
+  # 汽水音乐 Hook Helper:发现 SodaMusic.exe 主进程,激活 Node inspector(9229),
+  # 提取 sharedState 播放态(整首 KRC 歌词 + 逐字 + 翻译)。复用网易云 CDP 会话。
+  add_executable(qm-soda-helper
+    src/qm-soda-hook/qm_soda_helper.cpp
+    src/qm-soda-hook/qm_soda_probe.cpp
+    src/qm-soda-hook/qm_soda_probe.h
+    src/qm-soda-hook/qm_soda_protocol.cpp
+    src/qm-soda-hook/qm_soda_protocol.h
+    src/qm-soda-hook/qm_soda_watchdog.cpp
+    src/qm-soda-hook/qm_soda_watchdog.h
+    src/qm-soda-hook/qm_soda_writer.cpp
+    src/qm-soda-hook/qm_soda_writer.h
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
+    src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_krc.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_qrc.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+    src/engine/external/json-parser/json.c
+  )
+  set_target_properties(qm-soda-helper PROPERTIES OUTPUT_NAME "qm-soda-helper")
+  set_property(TARGET qm-soda-helper PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-soda-helper PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-soda-helper PROPERTY CXX_EXTENSIONS OFF)
+  set_property(TARGET qm-soda-helper PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  target_include_directories(qm-soda-helper PRIVATE src)
+  target_compile_definitions(qm-soda-helper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-soda-helper PRIVATE bcrypt winhttp ws2_32)
 endif()
 
 if(TARGET_OS STREQUAL "android")
@@ -603,6 +631,15 @@ if(TARGET_OS STREQUAL "android")
   find_package(Android)
 endif()
 find_package(ZLIB)
+# 汽水 Helper 与网易云 Helper 都在 find_package 之前定义,这里补链接 zlib。
+if(TARGET qm-soda-helper)
+  if(ZLIB_DEP)
+    target_sources(qm-soda-helper PRIVATE ${ZLIB_DEP})
+    target_include_directories(qm-soda-helper PRIVATE ${ZLIB_INCLUDE_DIRS})
+  elseif(ZLIB_LIBRARIES)
+    target_link_libraries(qm-soda-helper PRIVATE ${ZLIB_LIBRARIES})
+  endif()
+endif()
 find_package(Crypto)
 find_package(Curl)
 if(CLIENT AND VIDEORECORDER)
@@ -1627,13 +1664,11 @@ set(EXPECTED_DATA
   gui_icons.png
   gui_logo.png
   hud.png
-  "input overlay-Zac/mouse-no-movement.json"
-  "input overlay-Zac/mouse.json"
-  "input overlay-Zac/mouse.png"
-  "input overlay-Zac/wasd.json"
-  "input overlay-Zac/wasd.png"
-  "input overlay-Zac/参数.txt"
-  input_overlay.json
+  qmclient/InputOverlay/input_overlay.json
+  qmclient/InputOverlay/mouse.json
+  qmclient/InputOverlay/mouse.png
+  qmclient/InputOverlay/wasd.json
+  qmclient/InputOverlay/wasd.png
   languages/arabic.txt
   languages/azerbaijani.txt
   languages/belarusian.txt
@@ -1797,6 +1832,22 @@ set(EXPECTED_DATA
   menuimages/settings.png
   particles.png
   qmclient/builtinscripts/sayemoticon.chai
+  qmclient/chat_emojis/agree.png
+  qmclient/chat_emojis/angry.png
+  qmclient/chat_emojis/awkward.png
+  qmclient/chat_emojis/cute.png
+  qmclient/chat_emojis/dead.png
+  qmclient/chat_emojis/hehe.png
+  qmclient/chat_emojis/insult.png
+  qmclient/chat_emojis/kneel.png
+  qmclient/chat_emojis/love.png
+  qmclient/chat_emojis/no.png
+  qmclient/chat_emojis/oppose.png
+  qmclient/chat_emojis/question.png
+  qmclient/chat_emojis/shocked.png
+  qmclient/chat_emojis/smell.png
+  qmclient/chat_emojis/support.png
+  qmclient/chat_emojis/surrender.png
   qmclient/fonts/Cabin-Regular.ttf
   qmclient/fonts/FreeSansBold.ttf
   qmclient/fonts/GoogleSans-Regular.ttf
@@ -1807,6 +1858,7 @@ set(EXPECTED_DATA
   qmclient/fonts/Rubik-Regular.ttf
   qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
+  qmclient/input_overlay_editor.html
   race_flag.png
   shader/gaussian_blur.frag
   shader/gaussian_blur.vert
@@ -2106,7 +2158,7 @@ set(EXPECTED_DATA
   wordlist.txt
 )
 
-set_glob(DATA GLOB_RECURSE "cfg;chai;frag;json;map;md;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
+set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
 
 ########################################################################
 # COPY DATA AND SHARED LIBS
@@ -2923,6 +2975,7 @@ if(CLIENT)
     components/ghost.h
     components/hud.cpp
     components/hud.h
+    components/hud_frozen_tee_state.h
     components/hud_media_island_logic.h
     components/hud_editor.cpp
     components/hud_editor.h
@@ -2981,6 +3034,8 @@ if(CLIENT)
     components/qmclient/axiom_scores.h
     components/qmclient/axiom_scores_data.cpp
     components/qmclient/axiom_scores_data.h
+    components/qmclient/chat_emoji.cpp
+    components/qmclient/chat_emoji.h
     components/qmclient/collision_hitbox.cpp
     components/qmclient/collision_hitbox.h
     components/qmclient/colored_parts.h
@@ -2996,6 +3051,8 @@ if(CLIENT)
     components/qmclient/hud_notifications/hud_notifications.h
     components/qmclient/input_overlay.cpp
     components/qmclient/input_overlay.h
+    components/qmclient/input_overlay_format.cpp
+    components/qmclient/input_overlay_format.h
     components/qmclient/jelly_tee.cpp
     components/qmclient/jelly_tee.h
     components/qmclient/keyword_reply_rules.h
@@ -3005,6 +3062,18 @@ if(CLIENT)
     components/qmclient/monitoring/monitoring.cpp
     components/qmclient/monitoring/monitoring_device_perf.cpp
     components/qmclient/monitoring/monitoring.h
+    components/qmclient/music_lyrics/music_lyrics_integration.cpp
+    components/qmclient/music_lyrics/music_lyrics_integration.h
+    components/qmclient/music_lyrics/music_lyrics_krc.cpp
+    components/qmclient/music_lyrics/music_lyrics_krc.h
+    components/qmclient/music_lyrics/music_lyrics_model.h
+    components/qmclient/music_lyrics/music_lyrics_qrc.cpp
+    components/qmclient/music_lyrics/music_lyrics_qrc.h
+    components/qmclient/music_lyrics/qm_soda_hook_provider.cpp
+    components/qmclient/music_lyrics/qm_soda_hook_provider.h
+    components/qmclient/music_lyrics/qm_soda_lyric_file.cpp
+    components/qmclient/music_lyrics/qm_soda_lyric_file.h
+    ../../qm-soda-hook/qm_soda_protocol.cpp
     components/qmclient/netease/netease_integration.cpp
     components/qmclient/netease/netease_integration.h
     components/qmclient/netease/netease_lyric_parser.cpp
@@ -3442,6 +3511,12 @@ if(CLIENT)
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-bootstrap>" "$<TARGET_FILE_DIR:game-client>/$<TARGET_FILE_NAME:qm-nmt-bootstrap>"
       COMMENT "Copying Netease hook helper and bootstrap")
   endif()
+  if(TARGET qm-soda-helper)
+    add_dependencies(game-client qm-soda-helper)
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-soda-helper>" "$<TARGET_FILE_DIR:game-client>/qm-soda-helper.exe"
+      COMMENT "Copying SodaMusic hook helper")
+  endif()
   if(VULKAN)
     add_dependencies(game-client build_vulkan_shaders)
   endif()
@@ -3812,6 +3887,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     QmAnimTest.cpp
     QmIconAtlasTest.cpp
     QmLayoutTest.cpp
+    input_overlay_format_test.cpp
     QmUiTokensTest.cpp
     qm_card_order_model_test.cpp
     qm_card_registry_test.cpp
@@ -3860,6 +3936,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     prng_test.cpp
     qm_background_particles_test.cpp
     qm_axiom_scores_test.cpp
+    qm_chat_emoji_test.cpp
     qm_chat_interactions_test.cpp
     qm_hammer_hit_detection_test.cpp
     qm_hud_media_island_logic_test.cpp
@@ -3873,6 +3950,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     netease_shared_memory_test.cpp
     qm_netease_cdp_test.cpp
     qm_netease_hook_protocol_test.cpp
+    music_lyrics_krc_test.cpp
+    music_lyrics_qrc_test.cpp
     qm_modes_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
@@ -3957,6 +4036,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/axiom_scores_data.cpp
     src/test/ui_test_stubs.cpp
     src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_krc.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_qrc.cpp
     src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
     src/game/client/components/qmclient/netease/netease_lyric_state.cpp
     src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
@@ -3973,6 +4054,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/translate/translate_parse.cpp
     src/game/client/components/qmclient/voice/voice_capture_pipeline.cpp
     src/game/client/components/qmclient/voice/voice_utils.cpp
+    src/game/client/components/qmclient/input_overlay_format.cpp
+    src/game/client/components/qmclient/input_overlay_format.h
     src/game/client/frame_scheduler.cpp
     src/engine/client/blocklist_driver.cpp
     src/engine/client/blocklist_driver.h
@@ -4029,12 +4112,22 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   endif()
   if(QM_NMT_GTEST_MAIN_TARGET)
     add_executable(qm-nmt-tests EXCLUDE_FROM_ALL
+      src/test/music_lyrics_krc_test.cpp
+      src/test/music_lyrics_qrc_test.cpp
+      src/test/qm_soda_lyric_file_test.cpp
+      src/test/qm_soda_probe_test.cpp
+      src/test/qm_soda_protocol_test.cpp
       src/test/netease_lyric_parser_test.cpp
       src/test/netease_lyric_state_test.cpp
       src/test/netease_lyric_timeline_test.cpp
       src/test/netease_shared_memory_test.cpp
       src/test/qm_netease_cdp_test.cpp
       src/test/qm_netease_hook_protocol_test.cpp
+      src/qm-soda-hook/qm_soda_probe.cpp
+      src/qm-soda-hook/qm_soda_protocol.cpp
+      src/game/client/components/qmclient/music_lyrics/qm_soda_lyric_file.cpp
+      src/game/client/components/qmclient/music_lyrics/music_lyrics_krc.cpp
+      src/game/client/components/qmclient/music_lyrics/music_lyrics_qrc.cpp
       src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
       src/game/client/components/qmclient/netease/netease_lyric_state.cpp
       src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
@@ -4050,6 +4143,12 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     if(TARGET_OS STREQUAL "windows")
       target_compile_definitions(qm-nmt-tests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
       target_link_libraries(qm-nmt-tests PRIVATE bcrypt winhttp ws2_32)
+    endif()
+    if(ZLIB_DEP)
+      target_sources(qm-nmt-tests PRIVATE ${ZLIB_DEP})
+      target_include_directories(qm-nmt-tests PRIVATE ${ZLIB_INCLUDE_DIRS})
+    elseif(ZLIB_LIBRARIES)
+      target_link_libraries(qm-nmt-tests PRIVATE ${ZLIB_LIBRARIES})
     endif()
     list(APPEND TARGETS_OWN qm-nmt-tests)
     enable_testing()
@@ -4296,6 +4395,16 @@ endif()
 set(CPACK_TARGETS)
 if(TARGET game-client)
   list(APPEND CPACK_TARGETS game-client)
+  # 网易云注入运行时必须与客户端一起发布并保持同级。
+  foreach(qm_nmt_runtime_target qm-nmt-helper qm-nmt-hook64 qm-nmt-bootstrap)
+    if(TARGET ${qm_nmt_runtime_target})
+      list(APPEND CPACK_TARGETS ${qm_nmt_runtime_target})
+    endif()
+  endforeach()
+  # 汽水音乐 Hook Helper 与客户端同级发布。
+  if(TARGET qm-soda-helper)
+    list(APPEND CPACK_TARGETS qm-soda-helper)
+  endif()
 endif()
 if(TARGET qm-client-updater)
   list(APPEND CPACK_TARGETS qm-client-updater)

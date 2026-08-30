@@ -12,6 +12,7 @@
 #include <generated/protocol7.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/chat_emoji.h>
 #include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
 #include <game/client/lineinput.h>
 #include <game/client/render.h>
@@ -118,6 +119,8 @@ private:
 		int m_NameColor;
 		char m_aName[MAX_CLIENTS * (MAX_NAME_LENGTH + 1)];
 		char m_aText[MAX_LINE_LENGTH];
+		EQmChatEmoji m_ChatEmoji = EQmChatEmoji::NONE;
+		CUIRect m_ChatEmojiRect = {};
 		std::vector<SMergedAuthor> m_vMergedAuthors;
 		bool m_Friend;
 		bool m_Highlighted;
@@ -132,6 +135,8 @@ private:
 		std::shared_ptr<CManagedTeeRenderInfo> m_pManagedTeeRenderInfo;
 
 		float m_TextYOffset;
+		// 当前消息实际占用的水平宽度，用于鼠标命中和选中高亮。
+		float m_ContentWidth;
 		float m_CutOffProgress;
 		SPresentationState m_Presentation;
 
@@ -214,11 +219,14 @@ public:
 			str_copy(m_aHelpText, pHelpText);
 		}
 
+		bool operator<(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
+		bool operator<=(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) <= 0; }
 		bool operator==(const CCommand &Other) const { return str_comp(m_aName, Other.m_aName) == 0; }
 	};
 
 private:
 	std::vector<CCommand> m_vServerCommands;
+	bool m_ServerCommandsNeedSorting;
 
 	struct CHistoryEntry
 	{
@@ -336,6 +344,7 @@ private:
 		CChat *m_pChat = nullptr;
 		int m_ClientId = CLIENT_MSG;
 		int m_TeamNumber = 0;
+		int m_LineIndex = -1;
 		char m_aName[64] = "";
 		char m_aPlayerName[MAX_NAME_LENGTH] = "";
 		char m_aText[MAX_LINE_LENGTH] = "";
@@ -357,6 +366,20 @@ public:
 	int Sizeof() const override { return sizeof(*this); }
 
 	static constexpr float MESSAGE_TEE_PADDING_RIGHT = 0.5f;
+	// 将变换后的 HUD 坐标反算回聊天默认坐标空间。
+	static vec2 InverseHudTransformPoint(const vec2 &Point, const CUIRect &DefaultRect, const CUIRect &TargetRect)
+	{
+		if(DefaultRect.w <= 0.0f || TargetRect.w <= 0.0f)
+			return Point;
+		const float Scale = TargetRect.w / DefaultRect.w;
+		return {
+			DefaultRect.x + (Point.x - TargetRect.x) / Scale,
+			DefaultRect.y + (Point.y - TargetRect.y) / Scale};
+	}
+	static bool IsChatLineHit(const CUIRect &Rect, const vec2 &Point)
+	{
+		return Rect.w > 0.0f && Rect.h > 0.0f && Rect.Inside(Point);
+	}
 
 	static int ClampBacklogLine(int Line, int TotalLines, int VisibleLines)
 	{
@@ -495,6 +518,7 @@ public:
 
 	// 翻译按钮相关方法
 	vec2 GetChatMousePos() const;
+	vec2 GetUiMousePos() const;
 	void RenderTranslateButton(const CUIRect &ButtonRect);
 	void ToggleAutoTranslate();
 	void OpenLanguageMenu();
@@ -515,7 +539,7 @@ public:
 		return true;
 	}
 	static CUi::EPopupMenuFunctionResult PopupLanguageMenu(void *pContext, CUIRect View, bool Active);
-	void OpenChatLineMenu(const CLine &Line, vec2 ChatMousePos);
+	void OpenChatLineMenu(const CLine &Line, vec2 UiMousePos);
 	void CloseChatLineMenu();
 	static CUi::EPopupMenuFunctionResult PopupChatLineMenu(void *pContext, CUIRect View, bool Active);
 	void AddTextToBlockWords(const char *pText);

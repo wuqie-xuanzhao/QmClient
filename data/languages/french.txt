@@ -79,9 +79,6 @@
 %i seconds left
 == Il reste %i secondes
 
-%s (/%s %s)
-== %s (/%s %s)
-
 %s and %s have swapped
 == %s et %s ont échangé leurs places
 
@@ -263,9 +260,6 @@ A demo with this name already exists
 A folder with this name already exists
 == Un dossier avec ce nom existe déjà
 
-a player
-== un joueur
-
 A screenshot with this name already exists
 == Une capture d'écran avec ce nom existe déjà
 
@@ -292,18 +286,6 @@ Active color
 
 Active disconnect
 == Déconnexion active
-
-Active line font size
-== Taille de police de la ligne active
-
-Active line font size (px)
-== Active lyrics line font size px
-
-Active line scale
-== Échelle de la ligne active
-
-Active line scale (%)
-== Active lyrics line scale percent
 
 Active moderator mode disabled because you are afk.
 == Mode modérateur actif désactivé car vous êtes AFK.
@@ -677,9 +659,6 @@ Always show own player's hook collision line
 Always translate
 == Toujours traduire
 
-AMLL TTML DB API base URL (mirror)
-== AMLL TTML DB API base URL (can be changed to a mirror)
-
 Amount
 == Quantité
 
@@ -772,9 +751,6 @@ Appearance / Name Plate
 
 Append to log file instead of overwriting
 == Ajouter au fichier journal au lieu de l'écraser
-
-Apple Music media-user-token
-== Jeton utilisateur multimédia Apple Music
 
 Applied to %d same-family part(s).
 == Appliqué à %d partie(s) de la même famille.
@@ -989,9 +965,6 @@ Auto enable/disable IME on text focus
 Auto execute
 == Exécution automatique
 
-Auto fetch lyrics
-== Récupération automatique des paroles
-
 Auto fetch replay info on refresh
 == Récupérer automatiquement les informations de replay lors du rafraîchissement
 
@@ -1006,9 +979,6 @@ Auto greet friend text
 
 Auto greet friends entering map
 == Saluer automatiquement les amis qui entrent dans la carte
-
-Auto hot-reload after external saves
-== Rechargement automatique après sauvegarde externe
 
 Auto login Axiom server
 == Connexion automatique au serveur Axiom
@@ -1093,9 +1063,6 @@ Auto-fetch all players' skins for dummy rotation queue
 
 Auto-fetch all players' skins for rotation queue
 == Récupérer automatiquement les skins des joueurs de la carte entière et les utiliser comme file d’attente de rotation
-
-Auto-fetch lyrics on detecting new song
-== Auto fetch lyrics online when a new song is detected
 
 Auto-follow delay
 == Délai de suivi automatique
@@ -1337,9 +1304,6 @@ Background image in menu
 Background music volume
 == Volume de la musique de fond
 
-Background opacity
-== Opacité de l'arrière-plan
-
 Background stroke color
 == Couleur du trait d'arrière-plan
 
@@ -1414,9 +1378,6 @@ Best input prediction offset (0.01 tick)
 
 Best input smooth percentage
 == Pourcentage de lissage Best input
-
-Best match
-== Meilleure correspondance
 
 Better scoreboard
 == Tableau des scores amélioré
@@ -1573,9 +1534,6 @@ Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = Position du joueur
-
-Cache TTL
-== Durée de vie du cache
 
 Calculate unfinished maps for player in certain mode
 == Calculer les cartes non terminées pour un joueur dans un certain mode
@@ -1985,12 +1943,6 @@ Client prediction time is high
 Client uptime
 == Uptime client
 
-Clock drift hard cut threshold (ms)
-== Clock drift hard-snap threshold ms
-
-Clock drift hard-snap
-== Accrochage brusque de la dérive d'horloge
-
 Close
 == Fermer
 
@@ -2116,9 +2068,6 @@ Config Changes
 
 Config directory
 == Répertoire de configuration
-
-Config file: data/input_overlay.json
-== Fichier de configuration : data/input_overlay.json
 
 Config Files
 == Fichiers de configuration
@@ -2494,12 +2443,6 @@ Current cut is invalid or already added
 
 Current file
 == Fichier actuel
-
-Current line color
-== Couleur de la ligne actuelle
-
-Current line lyric color
-== Couleur de la ligne actuelle des paroles
 
 Current rescue mode: %s
 == Mode de sauvetage actuel : %s
@@ -3065,18 +3008,6 @@ Displays your ping to the current server
 Dissolve
 == Dissoudre
 
-Distance fade per line
-== Atténuation de l'opacité par ligne éloignée
-
-Distance scale falloff
-== Réduction d'échelle par distance
-
-Distant line opacity decay per line (%)
-== Lyrics opacity fade percent per distance line
-
-Distant line shrink per line (%)
-== Lyrics scale shrink percent per distance line
-
 Do not auto-show server info on entering map
 == Ne pas afficher automatiquement les informations du serveur à l'arrivée
 
@@ -3632,12 +3563,6 @@ Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 == Activer le mode de réflexion LLM (peut augmenter le temps de réponse)
 
-Enable local lyrics cache
-== Activer le cache local des paroles
-
-Enable lyric HUD overlay
-== Enable lyrics HUD overlay
-
 Enable lyrics
 == Activer les paroles
 
@@ -3655,6 +3580,15 @@ Enable mod weapon on %d: %s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
 == Activer le backend MySQL au lieu de SQLite (retour à sv_sqlite_file lorsqu'aucun serveur MySQL n'est accessible)
+
+Enable Netease lyric integration
+== Activer l'intégration des paroles Netease
+
+Enable Netease music Hook
+== Activer le Hook de Netease Music
+
+Enable Netease Music hook integration
+== Activer l'intégration Hook de Netease Music
 
 Enable new IME candidate bar
 == Activer la nouvelle barre de candidature IME
@@ -3728,6 +3662,12 @@ Enable skin switch animation
 Enable smooth cinematic camera while free spectating
 == Activer la caméra cinématique fluide en observation libre
 
+Enable SodaMusic Hook
+== Activer le Hook de SodaMusic
+
+Enable SodaMusic hook integration
+== Activer l'intégration Hook de SodaMusic
+
 Enable sound
 == Activer le son
 
@@ -3754,9 +3694,6 @@ Enable switch countdown
 
 Enable system media control
 == Activer le contrôle multimédia système
-
-Enable system media lyrics
-== Activer les paroles des médias système
 
 Enable system media transport control integration
 == Activer l'intégration des contrôles de transport multimédia système
@@ -3808,9 +3745,6 @@ Enable warlist
 
 Enable word filter list
 == Activer la liste de filtrage de mots
-
-Enable word-by-word highlighting
-== Enable karaoke word highlighting
 
 Enable Zen Mode
 == Activer le mode Zen (Zen Mode)
@@ -4000,9 +3934,6 @@ f = Frame rate
 
 Fade and slide
 == Fondu et glissement
-
-Fade duration
-== Durée de fondu
 
 Fade in
 == Fondu
@@ -4297,6 +4228,9 @@ Freeze border color
 
 Freeze Collision Border Color
 == Couleur de la bordure de collision du gel
+
+Freeze laser collision volume
+== Volume de collision du laser Freeze
 
 Freeze Laser Inner Color
 == Couleur intérieure du laser gelé
@@ -4661,6 +4595,9 @@ Gun
 Hammer
 == Marteau
 
+Hammer interaction
+== Interaction du marteau
+
 Hammer Mode:
 == Mode marteau :
 
@@ -4778,12 +4715,6 @@ Hide kill and finish messages in Zen mode
 Hide kill/finish messages
 == Cacher les messages de mise à mort/fin
 
-Hide lyrics on pause
-== Masquer les paroles en pause
-
-Hide lyrics when no system media
-== Masquer les paroles en l'absence de statut média système
-
 Hide map progress
 == Cacher la progression de la carte
 
@@ -4864,15 +4795,6 @@ Hide weapon fire effects in Zen Mode
 
 Hide weapon muzzle flashes
 == Cacher les flashs de bouche d'arme
-
-Hide when no lyrics found (instead of showing hint)
-== Masquer quand aucune parole n'est trouvée (au lieu d'afficher une notification)
-
-Hide when paused
-== Masquer en pause
-
-Hide without media state
-== Masquer sans état du média
 
 High Detail
 == Haut détail
@@ -4957,6 +4879,9 @@ Hook Collisions
 
 Hook collisions
 == Collisions de crochet
+
+Hook interaction
+== Interaction du crochet
 
 Hook line tip
 == Pointe de la ligne de crochet
@@ -5087,12 +5012,6 @@ If chat score exceeds this value, the player is muted for sv_spam_mute_duration 
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
 == Si les lasers peuvent vous toucher lorsqu'ils sont tirés et vous attirer vers l'origine du rebond (0 pour toutes les nouvelles cartes), ou les lasers ne peuvent pas vous toucher et attirent les autres vers le tireur.
 
-Ignore cache providers
-== Ignorer les fournisseurs de cache
-
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
-== Lyrics providers that ignore cache during search
-
 Ignore clan tag when searching friends
 == Ignorer le tag de clan lors de la recherche d'amis
 
@@ -5103,7 +5022,7 @@ Ignore voice distance attenuation
 == Ignorer l'atténuation de la distance vocale
 
 Ignored legacy Dynamic Island edge margin
-== Ignored legacy Dynamic Island edge margin
+== La marge de bord héritée du Dynamic Island est ignorée
 
 Import from clipboard
 == Importer depuis le presse-papiers
@@ -5125,12 +5044,6 @@ In-game crosshair scale percent (50=half, 200=double)
 
 Inactive color
 == Couleur inactive
-
-Inactive line font size (px)
-== Inactive lyrics line font size px
-
-Inactive line opacity
-== Opacité des lignes inactives
 
 Include clan when saving/loading config preset
 == Inclure le clan lors de la sauvegarde/chargement du préréglage de configuration
@@ -5258,12 +5171,6 @@ Input overlay mouse scale (percent)
 Input overlay opacity (percent)
 == Opacité de la superposition d'entrée (pourcentage)
 
-Input overlay X position (percent)
-== Position X de la superposition d'entrée (pourcentage)
-
-Input overlay Y position (percent)
-== Position Y de la superposition d'entrée (pourcentage)
-
 Input smoothing
 == Lissage d'entrée
 
@@ -5348,9 +5255,6 @@ Invalid Y coordinate.
 Invert camera drift direction
 == Inverser la direction de dérive de la caméra
 
-Invite %s to the locked team
-== Inviter %s dans l’équipe verrouillée
-
 Invite a person to a locked team
 == Inviter une personne dans une équipe verrouillée
 
@@ -5399,9 +5303,6 @@ Join QQ group
 Join red
 == Rejoindre rouge
 
-Join team %s
-== Rejoindre l’équipe %s
-
 Join the team of the specified player
 == Rejoindre l'équipe du joueur spécifié
 
@@ -5443,9 +5344,6 @@ k = Resend loss
 
 Kaomoji
 == Kaomoji
-
-Karaoke edge softness
-== Douceur des bords du karaoké mot par mot
 
 Keep hook when teleporting
 == Garder le crochet lors de la téléportation
@@ -5570,6 +5468,9 @@ Large text for friend join (use %s for friend name)
 Laser
 == Laser
 
+Laser / shotgun interaction
+== Interaction du laser / fusil à pompe
+
 Laser colors
 == Couleurs du laser
 
@@ -5672,38 +5573,14 @@ Limit information in spectator mode
 Limiter threshold (percent)
 == Seuil du limiteur (pourcentage)
 
-Line scroll duration
-== Durée de défilement des lignes
-
-Line spacing
-== Espacement des lignes
-
-Line switch scroll duration (ms)
-== Line switch scroll duration ms
-
 Line width
 == Largeur de ligne
 
 Linear
 == Linéaire
 
-Lines
-== Lignes
-
 Lines %d - %d (%s)
 == Lignes %d - %d (%s)
-
-Lines above active
-== Lignes au-dessus de l'active
-
-Lines above active line
-== Lines shown above active line
-
-Lines below active
-== Lignes en dessous de l'active
-
-Lines below active line
-== Lines shown below active line
 
 List all commands that are available in practice mode
 == Lister toutes les commandes disponibles en mode entraînement
@@ -5779,9 +5656,6 @@ Load
 
 Load drawings from a given csv file (defaults to map name)
 == Charger les dessins depuis un fichier csv donné (par défaut le nom de la carte)
-
-Load save %s
-== Charger la sauvegarde %s
 
 Load sound files in thread
 == Charger les fichiers sonores dans un thread
@@ -5861,21 +5735,6 @@ Local
 Local + Dummy
 == Local + Dummy
 
-Local ESLRC file
-== Fichier ESLRC local
-
-Local LRC file
-== Fichier LRC local
-
-Local media folders
-== Dossiers médias locaux
-
-Local media library directories (separate by |)
-== Répertoire de la bibliothèque musicale locale pour les paroles (plusieurs répertoires séparés par |)
-
-Local music file
-== Fichier musical local
-
 Local only
 == Local uniquement
 
@@ -5897,9 +5756,6 @@ Local test mode, no server needed
 Local Time
 == Heure locale
 
-Local TTML file
-== Fichier TTML local
-
 Local-only
 == Local uniquement
 
@@ -5908,9 +5764,6 @@ Lock delay
 
 Lock team
 == Verrouiller l'équipe
-
-Lock the team so other players cannot join directly
-== Verrouiller l’équipe pour empêcher les autres joueurs de la rejoindre directement
 
 Locked
 == Verrouillé
@@ -5933,86 +5786,11 @@ Lose weapons when teleporting (useful for race maps)
 Low to high
 == Faible à élevé
 
-LRCLIB API base URL (mirror)
-== LRCLIB API base URL (can be changed to a mirror)
-
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-== Lyrics auto-search source order and enabled list
-
-Lyric background color
-== Lyrics background color
-
-Lyric background opacity
-== Opacité du fond des paroles
-
-Lyric fade in/out time
-== Durée du fondu d'entrée et de sortie des paroles
-
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-== Proxy HTTP pour les paroles (ex. http://127.0.0.1:7890)
-
-Lyric HTTP request timeout (ms)
-== Lyrics HTTP request timeout ms
-
-Lyric HUD edge margin (px)
-== Lyrics HUD edge margin px
-
-Lyric outline color
-== Lyrics outline color
-
-Lyric outline opacity
-== Opacité du contour des paroles
-
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-== Stratégie de recherche de paroles (0=par ordre de source, 1=meilleure correspondance concurrente)
-
-Lyric snap to Dynamic Island threshold
-== Seuil d'ancrage des paroles au Dynamic Island
-
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== Source de données des paroles (0=meilleure correspondance automatique, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Fichier musical local, 8=LRC local, 9=ESLRC local, 10=TTML local)
-
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== Seuil de correspondance indépendant par source de paroles (vide=seuil global ; ex. QQ=60|LrcLib=70)
-
 Lyrics
 == Paroles
 
-Lyrics cache expiration days (0=forever)
-== Expiration du cache des paroles en jours (0=permanent)
-
-Lyrics fuzzy match score threshold
-== Seuil de score de correspondance floue des paroles
-
-Lyrics HTTP timeout
-== Délai d'expiration HTTP des paroles
-
-Lyrics line spacing (px)
-== Lyrics line spacing px
-
-Lyrics search type
-== Type de recherche de paroles
-
-Lyrics source
-== Source des paroles
-
-Lyrics source order
-== Ordre des sources de paroles
-
-Lyrics translation/transliteration color
-== Couleur de la traduction/translittération des paroles
-
-Lyrics: empty track
-== Paroles : piste vide
-
-Lyrics: no lyrics found
-== Paroles : aucune parole trouvée
-
-Lyrics: no media playing
-== Paroles : aucun média en cours de lecture
-
-Lyrics: searching...
-== Paroles : recherche en cours...
+Lyrics sources and display
+== Sources de paroles et affichage
 
 Main Asset
 == Élément principal
@@ -6070,9 +5848,6 @@ Manual
 
 Manual concurrency: %d
 == Concurrence manuelle : %d
-
-Manual lyric timeline offset (ms, step 500ms)
-== Décalage manuel de la chronologie des paroles en ms (par pas de 500 ms en cours d'exécution)
 
 Manual scope
 == Portée manuelle
@@ -6170,12 +5945,6 @@ Mark the end of a demo cut
 Markers
 == Marqueurs
 
-Marquee for long lyrics
-== Défilement horizontal des paroles trop longues
-
-Marquee speed
-== Vitesse du défilement
-
 Master server URL to register
 == URL du serveur maître pour l'enregistrement
 
@@ -6184,9 +5953,6 @@ Match %d of %d
 
 Match ghost by map version instead of map name
 == Associer le fantôme par version de carte plutôt que par nom de carte
-
-Match score threshold
-== Seuil de score de correspondance
 
 Matched with callable peer
 == Correspondance avec un pair appelable trouvée
@@ -6406,9 +6172,6 @@ Minimum delay allowed between invitations.
 
 Minimum dynamic camera cursor distance
 == Distance minimale du curseur de la caméra dynamique
-
-Minimum inactive line opacity (%)
-== Inactive lyrics line minimum opacity percent
 
 Minimum match chars
 == Nombre minimum de caractères correspondants
@@ -6752,6 +6515,12 @@ Negative stability buffer (for Gores)
 Net
 == Net
 
+Netease hook heartbeat timeout (milliseconds)
+== Délai d'expiration du heartbeat de Netease Hook (millisecondes)
+
+Netease hook helper path (empty=beside QmClient)
+== Chemin de l'assistant Netease Hook (vide = à côté de QmClient)
+
 Netlimit: exponential moving average alpha
 == Netlimit : alpha de la moyenne mobile exponentielle
 
@@ -6802,12 +6571,6 @@ News
 
 Next
 == Suivant
-
-Next line color
-== Couleur de la ligne suivante
-
-Next line lyric color
-== Couleur de la ligne suivante des paroles
 
 Next page in console
 == Page suivante dans la console
@@ -7202,6 +6965,9 @@ Open color picker
 Open DDNet Wiki
 == Ouvrir le Wiki DDNet
 
+Open editor
+== Ouvrir l'éditeur
+
 Open emote selector
 == Ouvrir le sélecteur d'émoticônes
 
@@ -7243,6 +7009,9 @@ Open the folder containing demo files
 
 Open the folder containing screenshots
 == Ouvrir le dossier contenant les captures d'écran
+
+Open the input overlay editor
+== Ouvrir l'éditeur de superposition d'entrée
 
 Open the saves file
 == Ouvrir le fichier de sauvegardes
@@ -7298,9 +7067,6 @@ Optional authentication key for the DNSBL provider
 Other
 == Autre
 
-Other lines font size
-== Taille de police des autres lignes
-
 Other players' hook line width
 == Largeur de la ligne de crochet des autres joueurs
 
@@ -7315,9 +7081,6 @@ Outgoing language
 
 Outgoing translation target language code
 == Code de la langue cible pour la traduction sortante
-
-Outline color
-== Couleur du contour
 
 Outline global opacity
 == Opacité globale des contours
@@ -7345,9 +7108,6 @@ Output switch
 
 Output voice debug log
 == Afficher les journaux de débogage vocal
-
-Overall lyrics opacity (%)
-== Lyrics overall opacity percent
 
 Overlay entities
 == Superposer les entités
@@ -7490,9 +7250,6 @@ Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
 == Volume individuel par nom (nom=pourcentage)
 
-Per-word highlight (karaoke)
-== Surbrillance mot par mot (karaoké)
-
 Performance debug log threshold (ms)
 == Seuil du journal de débogage des performances (ms)
 
@@ -7588,9 +7345,6 @@ Play/pause the current demo
 
 Playback volume
 == Volume de lecture
-
-Played word color
-== Couleur des mots joués
 
 Player
 == Joueur
@@ -8000,11 +7754,11 @@ Progress bar height
 Progress bar width
 == Largeur de la barre de progression
 
+Projectile / explosion range
+== Portée du projectile / explosion
+
 Protect names and skins while streaming
 == Protéger les noms et skins pendant le streaming
-
-Provider thresholds
-== Seuils des fournisseurs
 
 PTT release delay (ms)
 == Délai de relâchement PTT (ms)
@@ -8128,24 +7882,6 @@ QQ group: 1076765929 (click to copy)
 
 Quads are used for background decoration
 == Les quads sont utilisés pour la décoration de fond
-
-Query current map info
-== Consulter les informations de la carte actuelle
-
-Query map info for %s
-== Consulter les informations de la carte %s
-
-Query points for %s
-== Consulter les points de %s
-
-Query rank for %s
-== Consulter le rang de %s
-
-Query server setting: %s
-== Consulter le réglage serveur : %s
-
-Query team rank for %s
-== Consulter le rang de l’équipe de %s
 
 Queue is empty
 == La file est vide
@@ -8630,12 +8366,6 @@ Reply
 Reply to messages from muted players
 == Répondre aux messages des joueurs muets
 
-Reply to the last whisper target
-== Répondre au dernier destinataire de chuchotement
-
-Reply to the last whisper target: %s
-== Répondre au dernier destinataire du chuchotement : %s
-
 Reply with dummy
 == Répondre avec le dummy
 
@@ -8669,12 +8399,6 @@ Report service URL
 Reports are not available on Axiom servers
 == Les signalements ne sont pas disponibles sur les serveurs Axiom
 
-Request a position swap
-== Demander un échange de position
-
-Request to swap positions with %s
-== Demander un échange de position avec %s
-
 Request to swap your tee with another team member
 == Demander à échanger votre tee avec un autre membre de l'équipe
 
@@ -8695,9 +8419,6 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == Sauvetage/Gel : %d/%d
-
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-== Sauvetage : le mode automatique téléporte hors du gel ; le mode manuel enregistre un point de sauvetage à l'atterrissage et téléporte en cas de gel
 
 Reset
 == Réinitialiser
@@ -8996,12 +8717,6 @@ Save team with code r.
 Save the best demo of each race
 == Sauvegarder la meilleure démo de chaque course
 
-Save the current team
-== Sauvegarder l’équipe actuelle
-
-Save the team as %s
-== Sauvegarder l’équipe sous %s
-
 Save unsent chat draft
 == Sauvegarder le brouillon de chat non envoyé
 
@@ -9118,12 +8833,6 @@ Screenshots
 
 Screenshots directory
 == Répertoire des captures d'écran
-
-Scroll long lines
-== Faire défiler les longues lignes
-
-Scroll speed
-== Vitesse de défilement
 
 Search
 == Rechercher
@@ -9271,9 +8980,6 @@ Sends a command to the antibot
 
 Separate with commas
 == Séparez par des virgules
-
-Sequential
-== Séquentiel
 
 Server
 == Serveur
@@ -9602,8 +9308,8 @@ Show coordinates above players
 Show country flags in nameplates
 == Afficher les drapeaux de pays dans les plaques nominatives
 
-Show current and next lyric lines on HUD
-== Afficher les lignes de paroles actuelle et suivante sur le HUD
+Show current Netease lyric in Media Island
+== Afficher les paroles Netease actuelles dans Media Island
 
 Show daily message to client
 == Afficher le message quotidien au client
@@ -9679,9 +9385,6 @@ Show enemy reason
 
 Show entities
 == Afficher les entités
-
-Show existing saves
-== Afficher les sauvegardes existantes
 
 Show eye wheel and expressions
 == Afficher la roue des yeux et les expressions
@@ -9787,9 +9490,6 @@ Show important server prompts and Echo messages as popups
 
 Show important server prompts as notifications
 == Afficher les messages serveur importants comme notifications
-
-Show in Dynamic Island
-== Afficher dans Dynamic Island
 
 Show in-game FPS
 == Afficher les FPS en jeu
@@ -9916,12 +9616,6 @@ Show logs of the last i seconds
 
 Show lyrics inside Dynamic Island
 == Show lyrics in Dynamic Island
-
-Show lyrics translation (if available)
-== Show lyrics translation when available
-
-Show lyrics transliteration (if available)
-== Show lyrics transliteration when available
 
 Show map details
 == Afficher les détails de la carte
@@ -10139,9 +9833,6 @@ Show server help and usage messages
 Show server prompts and Echo messages as popups
 == Show server prompts and Echo messages as popups
 
-Show server settings
-== Afficher les paramètres du serveur
-
 Show settings card borders
 == Afficher les bordures des cartes de paramètres
 
@@ -10241,9 +9932,6 @@ Show tiles layers from BG map
 Show toast
 == Afficher le toast
 
-Show translation
-== Afficher la traduction
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == Afficher les paramètres de réglage affectant son propre joueur (0 = Désactivé, 1 = Afficher modifiés, 2 = Afficher tout)
 
@@ -10291,9 +9979,6 @@ Show X
 
 Show Y
 == Afficher Y
-
-Show your current team
-== Afficher votre équipe actuelle
 
 Show zzz emoji next to afk players
 == Afficher l'emoji zzz à côté des joueurs AFK
@@ -10535,9 +10220,6 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 == SMTC
 
-Snap threshold
-== Seuil d'aimantation
-
 Snapshot Age
 == Âge du snapshot
 
@@ -10561,6 +10243,12 @@ Snapshot tick gap
 
 Social
 == Social
+
+SodaMusic hook heartbeat timeout (milliseconds)
+== Délai d'expiration du heartbeat de SodaMusic Hook (millisecondes)
+
+SodaMusic hook helper path (empty=beside QmClient)
+== Chemin de l'assistant SodaMusic Hook (vide = à côté de QmClient)
 
 Solid
 == Plein
@@ -11000,15 +10688,6 @@ System media control
 System media controls
 == Contrôles média système
 
-System media lyric font size
-== Taille de la police des paroles des médias système
-
-System media lyrics display lines
-== Nombre de lignes affichées pour les paroles des médias système
-
-System media lyrics time offset (milliseconds)
-== Décalage temporel des paroles des médias système (ms)
-
 System message
 == Message système
 
@@ -11159,8 +10838,14 @@ Tee 0.7
 Tee appearance
 == Apparence du Tee
 
-Tee hitbox
-== Hitbox du Tee
+Tee collision (Tee to Tee)
+== Collision des Tee (Tee contre Tee)
+
+Tee death probe
+== Détection de mort du Tee
+
+Tee freeze probe (Tee to Freeze)
+== Détection du gel du Tee (Tee contre Freeze)
 
 Tee hitbox color
 == Couleur de la hitbox du Tee
@@ -11492,9 +11177,6 @@ Time limit
 Time limit: %d min
 == Limite de temps : %d min
 
-Time offset
-== Décalage temporel
-
 Time to wait before changing team: %s
 == Temps d'attente avant de changer d'équipe : %s
 
@@ -11725,9 +11407,6 @@ Translation button active color
 
 Translation button cancel color
 == Couleur du bouton de traduction lorsqu’il est annulé
-
-Translation color
-== Couleur de la traduction
 
 Translation color alpha migration completed flag
 == Indicateur de migration alpha des couleurs de traduction terminée
@@ -11981,9 +11660,6 @@ Unknown status
 Unlock a team
 == Déverrouiller une équipe
 
-Unlock the team
-== Déverrouiller l’équipe
-
 Unmute
 == Démuter
 
@@ -12001,9 +11677,6 @@ Unmute player with list index
 
 Unmute:
 == Démasquer :
-
-Unplayed word color
-== Couleur des mots non joués
 
 Unpredictable ghost opacity (0-100)
 == Opacité du fantôme imprévisible (0-100)
@@ -12056,14 +11729,8 @@ URL for downloading maps (must start with https://)
 URL for downloading skins
 == URL pour télécharger les skins
 
-Usage
-== Utilisation
-
 Usage: %s %s
 == Utilisation : %s %s
-
-Usage: /%s %s
-== Utilisation : /%s %s
 
 Use 12 hour clock
 == Utiliser le format 12 heures
@@ -12407,6 +12074,12 @@ Vote yes/no
 Voting
 == Vote
 
+Vulkan API
+== API Vulkan
+
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+== Version de l'API Vulkan : 11=compatibilité 1.1, 14=mode strict 1.4
+
 Wait for current vote to end before calling a new one.
 == Attendez la fin du vote actuel avant d'en lancer un nouveau.
 
@@ -12481,9 +12154,6 @@ Weapon
 
 Weapon animation
 == Animation d'arme
-
-Weapon interaction range
-== Portée d'interaction des armes
 
 Weapon range color
 == Couleur de la portée des armes
@@ -12644,15 +12314,6 @@ Whisper option color
 Whisper something to someone (private message)
 == Chuchoter quelque chose à quelqu'un (message privé)
 
-Whisper to %s
-== Chuchoter à %s
-
-Whisper to %s: %s
-== Chuchoter à %s : %s
-
-Whisper: /w player message
-== Chuchotement : /w joueur message
-
 White
 == Blanc
 
@@ -12703,9 +12364,6 @@ Word Filter
 
 Word filter action: 0=replace matching words, 1=hide entire message
 == Action du filtre de mots : 0=remplacer les mots correspondants, 1=masquer tout le message
-
-Word highlight soft edge width (px)
-== Karaoke highlight soft edge width px
 
 Write local console contents to a text file
 == Écrire le contenu de la console locale dans un fichier texte
@@ -13019,9 +12677,6 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Votre code de timeout a été défini. Les clients 0.7 ne peuvent pas récupérer leur tee en cas de timeout ; cependant, un client 0.6 peut réclamer votre tee
 
-yourself
-== vous-même
-
 z = Zoom
 == z = Zoom | Référence chinois simplifié : z = 缩放
 
@@ -13114,6 +12769,26 @@ Inactive
 [Auto camera]
 Unavailable for this player
 == Indisponible pour ce joueur
+
+[Config help]
+%s (default: "%s", max length: %d)
+== %s (par défaut : « %s », longueur maximale : %d)
+
+[Config help]
+%s (default: $%0*X)
+== %s (par défaut : $%0*X)
+
+[Config help]
+%s (default: %d)
+== %s (par défaut : %d)
+
+[Config help]
+%s (default: %d, min: %d)
+== %s (par défaut : %d, minimum : %d)
+
+[Config help]
+%s (default: %d, min: %d, max: %d)
+== %s (par défaut : %d, minimum : %d, maximum : %d)
 
 [data_version.h]
 You may have installed only DDNet.exe. Please use the full QmClient folder.

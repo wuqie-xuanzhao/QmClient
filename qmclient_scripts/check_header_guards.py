@@ -37,6 +37,10 @@ GUARD_OVERRIDES = {
     "src/qm-nmt-hook/qm_netease_cdp.h": "QM_NMT_HOOK_QM_NETEASE_CDP_H",
     "src/qm-nmt-hook/qm_netease_cdp_client.h": "QM_NMT_HOOK_QM_NETEASE_CDP_CLIENT_H",
     "src/qm-nmt-hook/qm_netease_frontend_bridge.h": "QM_NMT_HOOK_QM_NETEASE_FRONTEND_BRIDGE_H",
+    "src/qm-soda-hook/qm_soda_probe.h": "QM_SODA_HOOK_QM_SODA_PROBE_H",
+    "src/qm-soda-hook/qm_soda_protocol.h": "QM_SODA_HOOK_QM_SODA_PROTOCOL_H",
+    "src/qm-soda-hook/qm_soda_watchdog.h": "QM_SODA_HOOK_QM_SODA_WATCHDOG_H",
+    "src/qm-soda-hook/qm_soda_writer.h": "QM_SODA_HOOK_QM_SODA_WRITER_H",
 }
 
 QMCLIENT_DIRS = [

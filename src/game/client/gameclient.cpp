@@ -580,6 +580,7 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_QmClient, "qmclient");
 	AddComponent(&m_QmAxiomAutoLogin, "axiom_auto_login");
 	AddComponent(&m_QmAxiomScores, "axiom_scores");
+	AddComponent(&m_QmChatEmoji, "chat_emoji");
 	AddComponent(&m_QmMonitoring, "monitoring");
 	AddComponent(&m_QmWeaponTrajectory, "weapon_trajectory");
 	AddComponent(&m_TClient, "tclient");
@@ -587,6 +588,7 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_Voice, "voice");
 	AddComponent(&m_SystemMediaControls, "system_media_controls");
 	AddComponent(&m_NeteaseIntegration, "netease_integration");
+	AddComponent(&m_MusicLyricsIntegration, "music_lyrics_integration");
 	AddComponent(&m_Players, "players");
 	AddComponent(&m_MovingTilesBackground, "moving_tiles_background");
 	AddComponent(&m_MapLayersForeground, "map_layers_foreground");
@@ -1140,6 +1142,7 @@ void CGameClient::OnUpdate()
 
 	RecordDemoHudState(false);
 	RecordDemoInputState(false);
+	RecordDemoGamepadState(false);
 	RecordDemoInputWheelEvent();
 }
 
@@ -1281,6 +1284,44 @@ void CGameClient::RecordDemoInputState(bool Force)
 	Msg.AddRaw(aKeyStates, sizeof(aKeyStates));
 	Msg.AddInt(round_truncate(AimPos.x));
 	Msg.AddInt(round_truncate(AimPos.y));
+	Client()->SendMsgActive(&Msg, MSGFLAG_RECORD | MSGFLAG_NOSEND);
+}
+
+void CGameClient::RecordDemoGamepadState(bool Force)
+{
+	bool ActiveRecording = Force;
+	for(int i = 0; i < RECORDER_MAX && !ActiveRecording; ++i)
+		ActiveRecording = DemoRecorder(i)->IsRecording();
+	if(!ActiveRecording || Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	const int Tick = Client()->GameTick(g_Config.m_ClDummy);
+	if(!Force && Tick == m_LastDemoGamepadRecordTick)
+		return;
+	m_LastDemoGamepadRecordTick = Tick;
+
+	IInput::IJoystick *pJoystick = Input()->GetActiveJoystick();
+	const bool Valid = pJoystick != nullptr;
+	uint32_t Buttons = 0;
+	float aAxes[6] = {};
+	int PlayerIndex = 0;
+	if(Valid)
+	{
+		for(int Button = 0; Button < NUM_JOYSTICK_BUTTONS; ++Button)
+			if(Input()->KeyIsPressed(KEY_JOYSTICK_BUTTON_0 + Button))
+				Buttons |= 1U << Button;
+		for(int Axis = 0; Axis < 6 && Axis < pJoystick->GetNumAxes(); ++Axis)
+			aAxes[Axis] = std::clamp(pJoystick->GetAxisValue(Axis), -1.0f, 1.0f);
+		PlayerIndex = std::clamp(pJoystick->GetIndex(), 0, 2);
+	}
+
+	CMsgPacker Msg(NETMSG_QM_DEMO_GAMEPAD_STATE, false);
+	Msg.AddInt(Valid ? 1 : 0);
+	Msg.AddInt(static_cast<int>(Buttons & 0xffffU));
+	Msg.AddInt(static_cast<int>((Buttons >> 16) & 0xffffU));
+	for(float Axis : aAxes)
+		Msg.AddInt(round_to_int(Axis * 32767.0f));
+	Msg.AddInt(PlayerIndex);
 	Client()->SendMsgActive(&Msg, MSGFLAG_RECORD | MSGFLAG_NOSEND);
 }
 
@@ -1485,6 +1526,7 @@ void CGameClient::OnReset()
 	ResetDemoPlaybackState();
 	m_LastDemoHudRecordTick = -1;
 	m_LastDemoInputRecordTick = -1;
+	m_LastDemoGamepadRecordTick = -1;
 	m_LastDemoPlaybackStateTick = -1;
 
 	m_EditorMovementDelay = 5;
@@ -2697,6 +2739,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		if(pMsg->m_Victim < 0 || pMsg->m_Victim >= MAX_CLIENTS)
 			return;
+		QmHudMarkTeeDead(m_aClients[pMsg->m_Victim].m_HudFrozenTeeState, Client()->GameTick(Conn), Client()->PredGameTick(Conn));
 
 		// reset character prediction
 		if(!(m_GameWorld.m_WorldConfig.m_IsFNG && pMsg->m_Weapon == WEAPON_LASER))
@@ -2737,6 +2780,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 	else if(MsgId == NETMSGTYPE_SV_KILLMSGTEAM)
 	{
 		CNetMsg_Sv_KillMsgTeam *pMsg = (CNetMsg_Sv_KillMsgTeam *)pRawMsg;
+		const int GameTick = Client()->GameTick(Conn);
+		const int PredictedGameTick = Client()->PredGameTick(Conn);
 
 		// reset prediction
 		std::vector<std::pair<int, int>> vStrongWeakSorted;
@@ -2744,6 +2789,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		{
 			if(m_Teams.Team(i) == pMsg->m_Team)
 			{
+				if(m_aClients[i].m_Active)
+					QmHudMarkTeeDead(m_aClients[i].m_HudFrozenTeeState, GameTick, PredictedGameTick);
 				if(CCharacter *pChar = m_GameWorld.GetCharacterById(i))
 				{
 					pChar->ResetPrediction();
@@ -2876,6 +2923,29 @@ bool CGameClient::OnDemoPlaybackMessage(int MsgId, CUnpacker *pUnpacker)
 		return true;
 	}
 
+	if(MsgId == NETMSG_QM_DEMO_GAMEPAD_STATE)
+	{
+		const int Valid = pUnpacker->GetInt();
+		const int ButtonsLow = pUnpacker->GetInt();
+		const int ButtonsHigh = pUnpacker->GetInt();
+		float aAxes[6];
+		for(float &Axis : aAxes)
+			Axis = pUnpacker->GetInt() / 32767.0f;
+		const int PlayerIndex = pUnpacker->GetInt();
+		if(!pUnpacker->Error())
+		{
+			const bool ValidGamepad = Valid != 0;
+			m_DemoInputPlaybackState.m_GamepadValid = ValidGamepad;
+			// Valid == 0 时归一化为全释放、轴居中、玩家 0，避免伪造或异常数据带进回放。
+			m_DemoInputPlaybackState.m_GamepadButtons = ValidGamepad ? (static_cast<uint32_t>(ButtonsLow & 0xffff) | (static_cast<uint32_t>(ButtonsHigh & 0xffff) << 16)) : 0;
+			for(int i = 0; i < 6; ++i)
+				m_DemoInputPlaybackState.m_aGamepadAxes[i] = ValidGamepad ? std::clamp(aAxes[i], -1.0f, 1.0f) : 0.0f;
+			m_DemoInputPlaybackState.m_GamepadPlayerIndex = ValidGamepad ? std::clamp(PlayerIndex, 0, 2) : 0;
+			m_DemoInputPlaybackState.m_Valid = true;
+		}
+		return true;
+	}
+
 	return false;
 }
 
@@ -2885,6 +2955,8 @@ void CGameClient::ResetDemoPlaybackState()
 	m_DemoInputPlaybackState = {};
 	m_HammerHitTracker.Reset();
 	m_vPendingHammerHitEvents.clear();
+	for(auto &Client : m_aClients)
+		Client.m_HudFrozenTeeState = {};
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -3613,6 +3685,7 @@ void CGameClient::OnNewSnapshot()
 					pClient->m_DeepFrozen = pCharacterData->m_FreezeEnd == -1;
 					pClient->m_LiveFrozen = (pCharacterData->m_Flags & CHARACTERFLAG_MOVEMENTS_DISABLED) != 0;
 					pClient->m_IsInFreeze = (pCharacterData->m_Flags & CHARACTERFLAG_IN_FREEZE) != 0;
+					QmHudObserveTeeCharacterSnapshot(pClient->m_HudFrozenTeeState, true, Client()->GameTick(g_Config.m_ClDummy));
 
 					// Telegun
 					pClient->m_HasTelegunGrenade = pCharacterData->m_Flags & CHARACTERFLAG_TELEGUN_GRENADE;
@@ -3990,6 +4063,7 @@ void CGameClient::OnNewSnapshot()
 			Client()->SendMsgActive(&Msg, MSGFLAG_RECORD | MSGFLAG_NOSEND);
 			RecordDemoHudState(true);
 			RecordDemoInputState(true);
+			RecordDemoGamepadState(true);
 		}
 
 		for(int i = 0; i < 2; i++)
@@ -5711,6 +5785,7 @@ void CGameClient::CClientData::Reset()
 	m_DeepFrozen = false;
 	m_LiveFrozen = false;
 	m_IsInFreeze = false;
+	m_HudFrozenTeeState = {};
 
 	m_Predicted.Reset();
 	m_PrevPredicted.Reset();

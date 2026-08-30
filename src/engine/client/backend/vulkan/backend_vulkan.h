@@ -34,6 +34,11 @@ constexpr SVulkanVersion ClampVulkanVersionToSupportedRange(const SVulkanVersion
 	return MinVulkanVersion(Version, gs_BackendVulkanMaximumVersion);
 }
 
+constexpr SVulkanVersion ResolveConfiguredVulkanApiVersion(int ConfigValue)
+{
+	return ConfigValue == 14 ? gs_BackendVulkanMaximumVersion : gs_BackendVulkanMinimumVersion;
+}
+
 CCommandProcessorFragment_GLBase *CreateVulkanCommandProcessorFragment();
 
 #endif

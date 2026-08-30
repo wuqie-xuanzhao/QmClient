@@ -3,6 +3,7 @@
 
 #include <engine/graphics.h>
 
+#include <game/client/components/hud_frozen_tee_state.h>
 #include <game/client/components/hud_media_island_logic.h>
 #include <game/client/components/tclient/pet.h>
 
@@ -55,6 +56,82 @@ namespace
 	{
 		return QmHudMediaIslandUpdateTrackSnapshots(Current, Outgoing, HasIdentity, TransitionActive, NeedsNodeReset, StartTick, Now, Input);
 	}
+}
+
+TEST(QmHudFrozenTeeState, ConfirmedDeathSuppressesStaleTimedAndDeepFreeze)
+{
+	SHudFrozenTeeState State;
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
+
+	QmHudMarkTeeDead(State, 100, 105);
+
+	EXPECT_TRUE(State.m_DeathOverride);
+	EXPECT_EQ(State.m_DeathBarrierTick, 105);
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, -1, true));
+}
+
+TEST(QmHudFrozenTeeState, BufferedPreDeathCharacterCannotRemoveDeathOverride)
+{
+	SHudFrozenTeeState State;
+	QmHudMarkTeeDead(State, 100, 105);
+
+	QmHudObserveTeeCharacterSnapshot(State, true, 104);
+	EXPECT_TRUE(State.m_DeathOverride);
+	QmHudObserveTeeCharacterSnapshot(State, true, 105);
+	EXPECT_TRUE(State.m_DeathOverride);
+}
+
+TEST(QmHudFrozenTeeState, NetworkClippingDoesNotPretendTheTeeRespawned)
+{
+	SHudFrozenTeeState AliveState;
+	QmHudObserveTeeCharacterSnapshot(AliveState, false, 200);
+	EXPECT_TRUE(QmHudTeeIsFrozen(AliveState, 250, false));
+
+	SHudFrozenTeeState DeadState;
+	QmHudMarkTeeDead(DeadState, 100, 105);
+	QmHudObserveTeeCharacterSnapshot(DeadState, false, 200);
+	EXPECT_TRUE(DeadState.m_DeathOverride);
+	EXPECT_FALSE(QmHudTeeIsFrozen(DeadState, 250, false));
+}
+
+TEST(QmHudFrozenTeeState, FreshRespawnUsesTheNewFreezeState)
+{
+	SHudFrozenTeeState State;
+	QmHudMarkTeeDead(State, 100, 105);
+
+	QmHudObserveTeeCharacterSnapshot(State, true, 106);
+
+	EXPECT_FALSE(State.m_DeathOverride);
+	EXPECT_EQ(State.m_DeathBarrierTick, -1);
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, 0, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
+}
+
+TEST(QmHudFrozenTeeSource, TracksConfirmedKillsWithoutTreatingDeathEffectsAsKills)
+{
+	const std::string CMakeSource = ReadTestSourceFile("CMakeLists.txt");
+	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const std::string GameClientHeader = ReadTestSourceFile("src/game/client/gameclient.h");
+	const std::string HudSource = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string OnMessageBody = FunctionBody(GameClientSource, "void CGameClient::OnMessage(");
+	const std::string ProcessEventsBody = FunctionBody(GameClientSource, "void CGameClient::ProcessEvents()");
+	const std::string ResetDemoPlaybackStateBody = FunctionBody(GameClientSource, "void CGameClient::ResetDemoPlaybackState()");
+	const std::string OnNewSnapshotBody = FunctionBody(GameClientSource, "void CGameClient::OnNewSnapshot()");
+	const std::string FrozenTeamInfoBody = FunctionBody(HudSource, "SHudFrozenTeamInfo BuildHudFrozenTeamInfo(");
+	const std::string RenderTextInfoBody = FunctionBody(HudSource, "void CHud::RenderTextInfo()");
+
+	EXPECT_NE(CMakeSource.find("components/hud_frozen_tee_state.h"), std::string::npos);
+	EXPECT_NE(GameClientHeader.find("SHudFrozenTeeState m_HudFrozenTeeState"), std::string::npos);
+	EXPECT_NE(OnMessageBody.find("QmHudMarkTeeDead(m_aClients[pMsg->m_Victim].m_HudFrozenTeeState"), std::string::npos);
+	EXPECT_NE(OnMessageBody.find("QmHudMarkTeeDead(m_aClients[i].m_HudFrozenTeeState"), std::string::npos);
+	EXPECT_EQ(ProcessEventsBody.find("QmHudMarkTeeDead"), std::string::npos);
+	EXPECT_NE(ResetDemoPlaybackStateBody.find("Client.m_HudFrozenTeeState = {}"), std::string::npos);
+	EXPECT_NE(OnNewSnapshotBody.find("QmHudObserveTeeCharacterSnapshot"), std::string::npos);
+	EXPECT_NE(FrozenTeamInfoBody.find("QmHudTeeIsFrozen"), std::string::npos);
+	EXPECT_NE(RenderTextInfoBody.find("QmHudTeeIsFrozen"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandSource, RemovedTuningSatelliteDoesNotRemain)
@@ -160,6 +237,15 @@ TEST(QmHudMediaIslandLogic, FirstMediaStateDoesNotStartTrackTransition)
 	EXPECT_FALSE(NeedsNodeReset);
 	EXPECT_STREQ(Current.m_aTitle, "Song A");
 	EXPECT_FALSE(Outgoing.HasMeaningfulIdentity());
+}
+
+TEST(QmHudMediaIslandLogic, FirstOrLateMetadataStartsTheTrackDetailsDeadline)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::FIRST_IDENTITY, false, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::NONE, false, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::NONE, true, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::FIRST_IDENTITY, false, false));
+	EXPECT_TRUE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::TRACK_CHANGED, true, true));
 }
 
 TEST(QmHudMediaIslandLogic, TrackChangeCopiesCurrentSnapshotToOutgoing)
@@ -478,10 +564,10 @@ TEST(QmHudMediaIslandSatellite, MultipleItemsKeepThreePixelEdgeGap)
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSatelliteWidth(3, 16.0f, 3.0f), 54.0f);
 }
 
-TEST(QmHudMediaIslandLayout, LyricsNeverWidenAnExistingTopRow)
+TEST(QmHudMediaIslandLayout, ActiveLyricsKeepAFixedViewportWithAnExistingTopRow)
 {
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 72.0f, 300.0f, 10.0f), 0.0f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 500.0f, 300.0f, 10.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 72.0f, 300.0f, 10.0f), 92.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 500.0f, 300.0f, 10.0f), 300.0f);
 }
 
 TEST(QmHudMediaIslandLayout, LyricsOnlyUsesFixedTitleAreaWidth)
@@ -492,8 +578,75 @@ TEST(QmHudMediaIslandLayout, LyricsOnlyUsesFixedTitleAreaWidth)
 
 TEST(QmHudMediaIslandLayout, UtilityBottomContentStillControlsRequestedWidth)
 {
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, true, 45.0f, 72.0f, 300.0f, 10.0f), 65.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, true, 45.0f, 72.0f, 300.0f, 10.0f), 92.0f);
 	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(false, false, true, 45.0f, 72.0f, 300.0f, 10.0f), 65.0f);
+}
+
+TEST(QmHudMediaIslandLyrics, ActiveLyricsKeepTheIslandExpandedWithoutRepeatedMorphs)
+{
+	SHudMediaIslandExpansionState State;
+	State = QmHudMediaIslandUpdateExpansion(State, true, true, false, 1000, 3000);
+	EXPECT_TRUE(State.m_Expanded);
+	EXPECT_TRUE(State.m_LyricsActive);
+	EXPECT_EQ(State.m_ExpandUntilTick, 0);
+	EXPECT_TRUE(State.m_StartCapsuleMorph);
+
+	State.m_StartCapsuleMorph = false;
+	State = QmHudMediaIslandUpdateExpansion(State, true, true, false, 100000, 3000);
+	EXPECT_TRUE(State.m_Expanded);
+	EXPECT_EQ(State.m_ExpandUntilTick, 0);
+	EXPECT_FALSE(State.m_StartCapsuleMorph);
+}
+
+TEST(QmHudMediaIslandLyrics, TrackDetailsUseAnIndependentThreeSecondDeadline)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldShowTrackDetails(1000, 4000));
+	EXPECT_FALSE(QmHudMediaIslandShouldShowTrackDetails(4000, 4000));
+	EXPECT_FALSE(QmHudMediaIslandShouldShowTrackDetails(5000, 0));
+}
+
+TEST(QmHudMediaIslandLyrics, LosingLyricsRestoresTheNormalAutoCollapseDeadline)
+{
+	SHudMediaIslandExpansionState State;
+	State.m_Expanded = true;
+	State.m_LyricsActive = true;
+	State = QmHudMediaIslandUpdateExpansion(State, true, false, false, 1000, 3000);
+	EXPECT_TRUE(State.m_Expanded);
+	EXPECT_EQ(State.m_ExpandUntilTick, 4000);
+	EXPECT_FALSE(State.m_StartCapsuleMorph);
+
+	State = QmHudMediaIslandUpdateExpansion(State, true, false, false, 4000, 3000);
+	EXPECT_FALSE(State.m_Expanded);
+	EXPECT_EQ(State.m_ExpandUntilTick, 0);
+	EXPECT_TRUE(State.m_StartCapsuleMorph);
+}
+
+TEST(QmHudMediaIslandLyrics, ShortLyricsNeverScroll)
+{
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(80.0f, 100.0f, 0.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(100.0f, 100.0f, 500.0f), 0.0f);
+}
+
+TEST(QmHudMediaIslandLyrics, LongLyricsPauseTravelAndReturnWithinTheViewport)
+{
+	constexpr float TextWidth = 200.0f;
+	constexpr float ViewportWidth = 100.0f;
+	constexpr float Speed = 50.0f;
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 0.0f, Speed), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 1.2f, Speed), 0.0f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 2.2f, Speed), 50.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 3.2f, Speed), 100.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 4.2f, Speed), 100.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 5.2f, Speed), 50.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 6.2f, Speed), 0.0f, 0.001f);
+}
+
+TEST(QmHudMediaIslandLyrics, NewLineResetsTheMarqueeAtItsStartingPause)
+{
+	EXPECT_FALSE(QmHudMediaIslandShouldResetMarquee("same", "same"));
+	EXPECT_TRUE(QmHudMediaIslandShouldResetMarquee("first", "second"));
+	EXPECT_TRUE(QmHudMediaIslandShouldResetMarquee(nullptr, "line"));
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(200.0f, 100.0f, 0.0f), 0.0f);
 }
 
 TEST(QmHudMediaIslandLayout, FirstIncomingSwapReplacesCheckpointAndLyricsRemainLast)
@@ -931,10 +1084,23 @@ TEST(QmHudMediaIslandSdfBounds, OuterRectKeepsEveryLiquidEdgeInsideTheQuad)
 
 TEST(QmHudMediaIslandBackdrop, TransparentOpacityIncludesPureBlurAndSkipsOpaqueBackground)
 {
-	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(0));
-	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(1));
-	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(99));
-	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(100));
+	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(0, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(1, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(99, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(100, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(0, false));
+	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(99, false));
+}
+
+TEST(QmHudMediaIslandBackdrop, RefreshesBlurOnlyAfterTheShortFrameAttemptInterval)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(10, 0, false));
+	// 失败尝试也要进入短暂冷却，避免后端持续失败时每帧重试。
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(11, 10, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(10, 10, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(12, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(13, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(9, 10, true));
 }
 
 TEST(QmHudMediaIslandBackdrop, MapsTheAnimatedOuterRectToTheCapturedScreenTexture)
@@ -1208,7 +1374,7 @@ TEST(QmHudMediaIslandSource, MovesClockAndFrozenCountIntoStackAndReplacesClockSl
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
-	const std::string VisibleBody = FunctionBody(Source, "bool CHud::HasVisibleMediaIsland() const");
+	const std::string VisibleBody = FunctionBody(Source, "void CHud::EnsureMediaIslandFrameCache() const");
 
 	EXPECT_NE(RenderBody.find("const bool ShowInfoStack = ShowLocalTime || ShowFrozenSummary;"), std::string::npos);
 	EXPECT_NE(RenderBody.find("constexpr float InfoStackGap = QmHudMediaIslandScaled(0.8f);"), std::string::npos);
@@ -1222,6 +1388,23 @@ TEST(QmHudMediaIslandSource, MovesClockAndFrozenCountIntoStackAndReplacesClockSl
 	EXPECT_NE(VisibleBody.find("BuildHudFrozenSummaryText"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("ShowFrozenSummaryInBottomRow"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("%s CP%d"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, DisablesNeteaseOnlyWorkWhenTheHookIsOff)
+{
+	const std::string HudSource = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string HudCacheBody = FunctionBody(HudSource, "void CHud::EnsureMediaIslandFrameCache() const");
+	const std::string VisibleBody = FunctionBody(HudSource, "bool CHud::HasVisibleMediaIsland() const");
+	const std::string AvoidanceBody = FunctionBody(HudSource, "float CHud::GetTopIslandAvoidanceRight() const");
+	const std::string IntegrationSource = ReadTestSourceFile("src/game/client/components/qmclient/netease/netease_integration.cpp");
+	const std::string IntegrationBody = FunctionBody(IntegrationSource, "void CNeteaseIntegration::OnUpdate()");
+
+	EXPECT_NE(HudCacheBody.find("if(g_Config.m_QmNeteaseHookEnable != 0)"), std::string::npos);
+	EXPECT_NE(VisibleBody.find("if(g_Config.m_QmHudIslandUseOriginalStyle)"), std::string::npos);
+	EXPECT_NE(AvoidanceBody.find("if(g_Config.m_QmHudIslandUseOriginalStyle)"), std::string::npos);
+	EXPECT_NE(IntegrationBody.find("if(!g_Config.m_QmNeteaseHookEnable)"), std::string::npos);
+	EXPECT_NE(IntegrationBody.find("ClearForStaleMedia();"), std::string::npos);
+	EXPECT_NE(FunctionBody(HudSource, "float CHud::RenderLegacyMediaInfoAt(float AnchorX, float CenterY)").find("EnsureMediaIslandFrameCache();"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
@@ -1255,7 +1438,8 @@ TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 	EXPECT_NE(RenderBody.find("TimerCapsule.m_Alpha * EntranceContentAlpha"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandDesiredBottomWidth("), std::string::npos);
 	EXPECT_EQ(RenderBody.find("TextBoundingBox(BottomFontSize, aLyricsIslandBuf)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("RenderMediaIslandLine(LyricsRect, BottomFontSize, VisibleBottomAlpha)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandMarqueeOffset("), std::string::npos);
+	EXPECT_NE(RenderBody.find("EnableMappedClip("), std::string::npos);
 	EXPECT_NE(RenderBody.find("0.42f * EntranceContentAlpha"), std::string::npos);
 	EXPECT_NE(RenderBody.find("SdfItem.m_ContentScale = Item.m_ContentScale * EntranceContentAlpha"), std::string::npos);
 	EXPECT_NE(RenderBody.find("SatelliteIconSize * Item.m_ContentScale * EntranceContentAlpha"), std::string::npos);
@@ -1438,6 +1622,7 @@ TEST(QmHudMediaIslandSource, BackgroundBlurUsesTheAnimatedCombinedSdfIncludingAt
 	const std::string PrepareBlur = FunctionBody(Source, "bool CHud::PrepareMediaIslandBlur()");
 	const std::string OnRelease = FunctionBody(Source, "void CHud::OnRelease()");
 	const std::string OnRender = FunctionBody(Source, "void CHud::OnRender()");
+	const std::string ResetContainers = FunctionBody(Source, "void CHud::ResetHudContainers()");
 	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
 	ASSERT_NE(IslandBegin, std::string::npos);
 	const size_t IslandEnd = Source.find("float CHud::RenderLegacyMediaInfoAt", IslandBegin);
@@ -1452,10 +1637,13 @@ TEST(QmHudMediaIslandSource, BackgroundBlurUsesTheAnimatedCombinedSdfIncludingAt
 	EXPECT_NE(PrepareBlur.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
 	EXPECT_NE(PrepareBlur.find("CaptureBackbufferToRenderTarget"), std::string::npos);
 	EXPECT_NE(PrepareBlur.find("GaussianBlurRenderTarget"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("m_QmGaussianBlur"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("QmHudMediaIslandShouldRefreshBackdropBlur"), std::string::npos);
 	EXPECT_EQ(PrepareBlur.find("m_QmBetterScoreboard"), std::string::npos);
 	EXPECT_NE(OnRelease.find("DestroyMediaIslandBlurTargets"), std::string::npos);
 	EXPECT_NE(OnRender.find("g_Config.m_QmHudIslandUseOriginalStyle"), std::string::npos);
 	EXPECT_NE(OnRender.find("DestroyMediaIslandBlurTargets"), std::string::npos);
+	EXPECT_NE(ResetContainers.find("m_MediaIslandBlurReady = false"), std::string::npos);
 	EXPECT_NE(IslandBody.find("DrawMediaIslandGeometryFallback"), std::string::npos);
 
 	EXPECT_NE(IslandBody.find("PrepareMediaIslandBlur()"), std::string::npos);

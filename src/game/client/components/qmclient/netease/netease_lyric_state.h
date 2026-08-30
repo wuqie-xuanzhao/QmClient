@@ -33,9 +33,21 @@ namespace NeteaseLyrics
 	ELyricSongDecision DecideLyricSongReport(uint64_t CurrentSongId, bool HasCurrentSong, uint64_t ReportSongId, uint64_t LastProgressTick, uint64_t NowTick, uint64_t ProgressFreshMs);
 	bool IsMeaningfulMediaIdentityChange(std::string_view PreviousTitle, std::string_view PreviousArtist, std::string_view CurrentTitle, std::string_view CurrentArtist);
 	bool IsBridgeIdentityStillBlocked(uint64_t BlockedSongId, uint64_t BlockedGeneration, uint64_t CandidateSongId, uint64_t CandidateGeneration);
+	enum class ESmtcBridgeSyncDecision
+	{
+		WAIT_FOR_BRIDGE_ADVANCE,
+		BRIDGE_ALREADY_ADVANCED,
+	};
+	// 比较 SMTC 切换前已经对齐的 Bridge 身份和当前候选身份。只有
+	// 候选明确前进到新 songId/generation 时才解除切换等待。
+	ESmtcBridgeSyncDecision DecideSmtcBridgeSync(uint64_t BaselineSongId, uint64_t BaselineGeneration, uint64_t CandidateSongId, uint64_t CandidateGeneration);
+	bool ShouldWaitForBridgeIdentity(uint64_t BaselineSongId, uint64_t BaselineGeneration, uint64_t CandidateSongId, uint64_t CandidateGeneration, uint64_t WaitStartTick, uint64_t NowTick, uint64_t MaxWaitMs);
 	// Bridge 暂时不可读时，暂停中的当前句只保留一个有限窗口；超过窗口
 	// 必须清理，避免 Helper 崩溃后无限显示旧歌词。
 	bool ShouldPreservePausedLyric(bool Paused, bool HasSong, bool LyricValid, uint64_t LastBridgeTick, uint64_t NowTick, uint64_t GraceMs);
+	// Bridge 读取失败时，播放和暂停都保留一个有限窗口，避免单次共享内存
+	// 抖动造成歌词闪烁。
+	bool ShouldPreserveBridgeState(bool HasLyricState, uint64_t LastBridgeTick, uint64_t NowTick, uint64_t GraceMs);
 	// 暂停时只有进度锚点真正改变才允许新快照替换当前句；普通 heartbeat
 	// 不应把暂停时已经选中的句子重新清掉或推进。
 	bool HasPausedLyricSeek(bool Paused, bool PositionValid, bool PositionAnchored, int64_t PositionMs, bool LastPositionValid, int64_t LastPositionMs);
@@ -86,14 +98,18 @@ namespace QmNetease
 	using NeteaseLyrics::CanReplaceSource;
 	using NeteaseLyrics::CLyricState;
 	using NeteaseLyrics::DecideLyricSongReport;
+	using NeteaseLyrics::DecideSmtcBridgeSync;
 	using NeteaseLyrics::ELyricSongDecision;
+	using NeteaseLyrics::ESmtcBridgeSyncDecision;
 	using NeteaseLyrics::ESource;
 	using NeteaseLyrics::HasPausedLyricSeek;
 	using NeteaseLyrics::IsBridgeIdentityStillBlocked;
 	using NeteaseLyrics::IsMeaningfulMediaIdentityChange;
 	using NeteaseLyrics::SCurrentState;
+	using NeteaseLyrics::ShouldPreserveBridgeState;
 	using NeteaseLyrics::ShouldPreserveConnectedLyric;
 	using NeteaseLyrics::ShouldPreservePausedLyric;
+	using NeteaseLyrics::ShouldWaitForBridgeIdentity;
 	using NeteaseLyrics::SourcePriority;
 }
 

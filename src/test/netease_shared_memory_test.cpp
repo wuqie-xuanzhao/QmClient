@@ -1,4 +1,5 @@
 #include <game/client/components/qmclient/netease/netease_shared_memory.h>
+#include <game/client/components/system_media_controls.h>
 
 #include <gtest/gtest.h>
 
@@ -58,6 +59,18 @@ TEST(NeteaseSharedMemory, ValidatesVersionAndStaleTimestamp)
 	EXPECT_TRUE(QmNeteaseHook::IsStaleV5(Block.m_Snapshot, 2000, 100));
 }
 
+TEST(NeteaseSharedMemory, AcceptsActiveLyricTimelineFlag)
+{
+	auto Block = ValidBlock();
+	Block.m_Snapshot.m_Flags = QmNeteaseHook::V5_FLAG_HAS_SONG | QmNeteaseHook::V5_FLAG_LYRIC_TIMELINE_VALID;
+	Block.m_Snapshot.m_aCurrentLyric[0] = '\0';
+	Block.m_Snapshot.m_LineStartMs = -1;
+	Block.m_Snapshot.m_LineEndMs = -1;
+	QmNeteaseHook::FinalizeSnapshotV5(&Block.m_Snapshot);
+	EXPECT_EQ(Block.m_Snapshot.m_Flags, QmNeteaseHook::V5_FLAG_HAS_SONG | QmNeteaseHook::V5_FLAG_LYRIC_TIMELINE_VALID);
+	EXPECT_TRUE(QmNeteaseHook::ValidateSnapshotV5(Block.m_Snapshot));
+}
+
 TEST(NeteaseSharedMemory, RejectsReservedLegacyApiSource)
 {
 	auto Block = ValidBlock();
@@ -97,4 +110,20 @@ TEST(NeteaseSharedMemory, Utf8CopyNeverLeavesPartialCodepoint)
 	const size_t Copied = QmNeteaseHook::CopyUtf8Truncated(aBuffer, sizeof(aBuffer), "中文😀", 10);
 	EXPECT_EQ(Copied, std::strlen("中文"));
 	EXPECT_STREQ(aBuffer, "中文");
+}
+
+TEST(NeteaseSharedMemory, HookRefreshCadenceHasABoundedRetryInterval)
+{
+	EXPECT_TRUE(SystemMediaControls::ShouldRefreshNeteaseHookSnapshot(0, 0, false));
+	EXPECT_FALSE(SystemMediaControls::ShouldRefreshNeteaseHookSnapshot(1, 0, true));
+	EXPECT_FALSE(SystemMediaControls::ShouldRefreshNeteaseHookSnapshot(2, 0, true));
+	EXPECT_TRUE(SystemMediaControls::ShouldRefreshNeteaseHookSnapshot(3, 0, true));
+	EXPECT_TRUE(SystemMediaControls::ShouldRefreshNeteaseHookSnapshot(9, 10, true));
+}
+
+TEST(NeteaseSharedMemory, SmtcSourceChangesForceImmediateMetadataRefresh)
+{
+	EXPECT_TRUE(SystemMediaControls::MediaSourceChanged("cloudmusic.exe", "chrome.exe"));
+	EXPECT_TRUE(SystemMediaControls::MediaSourceChanged("", "cloudmusic.exe"));
+	EXPECT_FALSE(SystemMediaControls::MediaSourceChanged("cloudmusic.exe", "cloudmusic.exe"));
 }

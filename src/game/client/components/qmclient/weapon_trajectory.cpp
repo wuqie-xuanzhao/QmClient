@@ -46,6 +46,9 @@ void CQmWeaponTrajectory::Render(
 	const float TrajectoryAlpha = std::clamp(g_Config.m_QmWeaponTrajectoryAlpha / 100.0f, 0.0f, 1.0f);
 	if(TrajectoryAlpha <= 0.0f)
 		return;
+	m_vPoints.clear();
+	m_vLineSegments.clear();
+	m_vLineQuadSegments.clear();
 	const float TrajectoryHalfWidth = 0.5f + (float)(std::clamp(g_Config.m_QmWeaponTrajectoryWidth, 1, 10) - 1) * 0.3f;
 	ColorRGBA TrajectoryColor = QmWeaponTrajectoryBaseColor(
 		Weapon,
@@ -151,7 +154,6 @@ void CQmWeaponTrajectory::Render(
 	};
 
 	bool HasValidHit = false;
-	std::vector<IGraphics::CLineItem> vLineSegments;
 
 	if(Weapon == WEAPON_GUN || Weapon == WEAPON_GRENADE)
 	{
@@ -161,8 +163,7 @@ void CQmWeaponTrajectory::Render(
 		const float Lifetime = Weapon == WEAPON_GUN ? pTuning->m_GunLifetime : pTuning->m_GrenadeLifetime * 10.0f;
 
 		constexpr int PointCount = 180;
-		std::vector<vec2> vPoints;
-		vPoints.reserve(PointCount);
+		m_vPoints.reserve(PointCount);
 		vec2 LandingPos = StartPos;
 
 		vec2 PrevPos = StartPos;
@@ -179,25 +180,25 @@ void CQmWeaponTrajectory::Render(
 				vec2 TeeHitPos;
 				if(FindBlockingTee(PrevPos, SegmentEnd, true, TeeHitPos))
 				{
-					vPoints.push_back(TeeHitPos);
+					m_vPoints.push_back(TeeHitPos);
 					LandingPos = TeeHitPos;
 					HasValidHit = true;
 					break;
 				}
 				if(CollidesWithWorld)
 				{
-					vPoints.push_back(ColPos);
+					m_vPoints.push_back(ColPos);
 					LandingPos = ColPos;
 					HasValidHit = IsValidTeleGunWallHit(ColPos, BeforePos, Pos);
 					break;
 				}
 			}
-			vPoints.push_back(Pos);
+			m_vPoints.push_back(Pos);
 			LandingPos = Pos;
 			PrevPos = Pos;
 		}
 
-		if(vPoints.empty())
+		if(m_vPoints.empty())
 			return;
 
 		if(!QmWeaponTrajectoryUsesLineStyle(Weapon))
@@ -206,9 +207,9 @@ void CQmWeaponTrajectory::Render(
 			const float StartSize = 2.5f + TrajectoryHalfWidth * 1.5f;
 			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
-			for(size_t i = 0; i < vPoints.size(); ++i)
+			for(size_t i = 0; i < m_vPoints.size(); ++i)
 			{
-				const float T = vPoints.size() > 1 ? (float)i / (float)(vPoints.size() - 1) : 0.0f;
+				const float T = m_vPoints.size() > 1 ? (float)i / (float)(m_vPoints.size() - 1) : 0.0f;
 				const float Fade = 1.0f - T;
 				if(Fade <= 0.0f)
 					continue;
@@ -219,7 +220,7 @@ void CQmWeaponTrajectory::Render(
 				ColorRGBA Color = BaseColor;
 				Color.a = TrajectoryAlpha * Fade;
 				Graphics()->SetColor(Color);
-				Graphics()->DrawCircle(vPoints[i].x, vPoints[i].y, Size, 12);
+				Graphics()->DrawCircle(m_vPoints[i].x, m_vPoints[i].y, Size, 12);
 			}
 			Graphics()->QuadsEnd();
 
@@ -247,11 +248,11 @@ void CQmWeaponTrajectory::Render(
 			return;
 		}
 
-		vLineSegments.reserve(vPoints.size() - 1);
-		for(size_t i = 1; i < vPoints.size(); ++i)
+		m_vLineSegments.reserve(m_vPoints.size() - 1);
+		for(size_t i = 1; i < m_vPoints.size(); ++i)
 		{
-			if(distance(vPoints[i - 1], vPoints[i]) >= 0.0001f)
-				vLineSegments.emplace_back(vPoints[i - 1], vPoints[i]);
+			if(distance(m_vPoints[i - 1], m_vPoints[i]) >= 0.0001f)
+				m_vLineSegments.emplace_back(m_vPoints[i - 1], m_vPoints[i]);
 		}
 	}
 	else
@@ -260,7 +261,7 @@ void CQmWeaponTrajectory::Render(
 		if(GameClient()->m_GameWorld.m_WorldConfig.m_IsFNG && Energy < 10.0f)
 			Energy = 800.0f;
 
-		vLineSegments.reserve(pTuning->m_LaserBounceNum + 2);
+		m_vLineSegments.reserve(pTuning->m_LaserBounceNum + 2);
 
 		vec2 From = Position;
 		vec2 Dir = Direction;
@@ -279,17 +280,17 @@ void CQmWeaponTrajectory::Render(
 				Bounces == 0 || g_Config.m_SvOldLaser || !GameClient()->m_GameWorld.m_WorldConfig.m_IsDDRace;
 			if(FindBlockingTee(From, SegmentEnd, IgnoreShooter, TeeHitPos))
 			{
-				vLineSegments.emplace_back(From, TeeHitPos);
+				m_vLineSegments.emplace_back(From, TeeHitPos);
 				HasValidHit = true;
 				break;
 			}
 			if(!Res)
 			{
-				vLineSegments.emplace_back(From, To);
+				m_vLineSegments.emplace_back(From, To);
 				break;
 			}
 
-			vLineSegments.emplace_back(From, SegmentEnd);
+			m_vLineSegments.emplace_back(From, SegmentEnd);
 
 			vec2 TempPos = SegmentEnd;
 			vec2 TempDir = Dir * 4.0f;
@@ -342,15 +343,14 @@ void CQmWeaponTrajectory::Render(
 	if(HasValidHit)
 		TrajectoryColor = QmInvertWeaponTrajectoryColor(TrajectoryColor);
 
-	if(vLineSegments.empty())
+	if(m_vLineSegments.empty())
 		return;
 
 	Graphics()->TextureClear();
 	if(g_Config.m_QmWeaponTrajectoryWidth > 1)
 	{
-		std::vector<IGraphics::CFreeformItem> vLineQuadSegments;
-		vLineQuadSegments.reserve(vLineSegments.size());
-		for(const IGraphics::CLineItem &LineSegment : vLineSegments)
+		m_vLineQuadSegments.reserve(m_vLineSegments.size());
+		for(const IGraphics::CLineItem &LineSegment : m_vLineSegments)
 		{
 			const vec2 FromPos(LineSegment.m_X0, LineSegment.m_Y0);
 			const vec2 ToPos(LineSegment.m_X1, LineSegment.m_Y1);
@@ -358,26 +358,26 @@ void CQmWeaponTrajectory::Render(
 			if(length(Delta) < 0.0001f)
 				continue;
 			const vec2 Perp = normalize(vec2(-Delta.y, Delta.x));
-			vLineQuadSegments.emplace_back(
+			m_vLineQuadSegments.emplace_back(
 				ToPos + Perp * -TrajectoryHalfWidth,
 				ToPos + Perp * TrajectoryHalfWidth,
 				FromPos + Perp * -TrajectoryHalfWidth,
 				FromPos + Perp * TrajectoryHalfWidth);
 		}
 
-		if(vLineQuadSegments.empty())
+		if(m_vLineQuadSegments.empty())
 			return;
 
 		Graphics()->QuadsBegin();
 		Graphics()->SetColor(TrajectoryColor);
-		Graphics()->QuadsDrawFreeform(vLineQuadSegments.data(), vLineQuadSegments.size());
+		Graphics()->QuadsDrawFreeform(m_vLineQuadSegments.data(), m_vLineQuadSegments.size());
 		Graphics()->QuadsEnd();
 	}
 	else
 	{
 		Graphics()->LinesBegin();
 		Graphics()->SetColor(TrajectoryColor);
-		Graphics()->LinesDraw(vLineSegments.data(), vLineSegments.size());
+		Graphics()->LinesDraw(m_vLineSegments.data(), m_vLineSegments.size());
 		Graphics()->LinesEnd();
 	}
 }

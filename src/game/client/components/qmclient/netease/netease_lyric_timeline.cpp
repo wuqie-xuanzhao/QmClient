@@ -5,6 +5,27 @@
 
 namespace NeteaseLyrics
 {
+	bool AreTimelinesEquivalent(const STimeline &Left, const STimeline &Right)
+	{
+		if(Left.m_HasTiming != Right.m_HasTiming || Left.m_vLines.size() != Right.m_vLines.size())
+			return false;
+		for(size_t Index = 0; Index < Left.m_vLines.size(); ++Index)
+		{
+			const SLine &LeftLine = Left.m_vLines[Index];
+			const SLine &RightLine = Right.m_vLines[Index];
+			if(LeftLine.m_StartMs != RightLine.m_StartMs || LeftLine.m_EndMs != RightLine.m_EndMs || LeftLine.m_Text != RightLine.m_Text || LeftLine.m_vWords.size() != RightLine.m_vWords.size())
+				return false;
+			for(size_t WordIndex = 0; WordIndex < LeftLine.m_vWords.size(); ++WordIndex)
+			{
+				const SWord &LeftWord = LeftLine.m_vWords[WordIndex];
+				const SWord &RightWord = RightLine.m_vWords[WordIndex];
+				if(LeftWord.m_StartMs != RightWord.m_StartMs || LeftWord.m_EndMs != RightWord.m_EndMs || LeftWord.m_Text != RightWord.m_Text)
+					return false;
+			}
+		}
+		return true;
+	}
+
 	SSelectedLine SelectCurrentLine(const STimeline &Timeline, int64_t PositionMs)
 	{
 		SSelectedLine Result;

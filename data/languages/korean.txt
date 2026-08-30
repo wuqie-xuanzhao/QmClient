@@ -79,9 +79,6 @@
 %i seconds left
 == %i 초 남음
 
-%s (/%s %s)
-== %s (/%s %s)
-
 %s and %s have swapped
 == %s와 %s가 교환했습니다
 
@@ -263,9 +260,6 @@ A demo with this name already exists
 A folder with this name already exists
 == 이 이름의 폴더가 이미 존재합니다.
 
-a player
-== 한 명의 플레이어
-
 A screenshot with this name already exists
 == 이 이름의 스크린샷이 이미 존재합니다.
 
@@ -292,18 +286,6 @@ Active color
 
 Active disconnect
 == 능동적 연결 끊기
-
-Active line font size
-== 활성 줄 글꼴 크기
-
-Active line font size (px)
-== 활성 행 글꼴 크기 px
-
-Active line scale
-== 활성 줄 배율
-
-Active line scale (%)
-== 활성 라인 배율 (%)
 
 Active moderator mode disabled because you are afk.
 == 자리 비움 상태이므로 능동적 관리자 모드가 비활성화되었습니다.
@@ -677,9 +659,6 @@ Always show own player's hook collision line
 Always translate
 == 항상 번역
 
-AMLL TTML DB API base URL (mirror)
-== AMLL TTML DB API 기본 주소 (미러로 변경 가능)
-
 Amount
 == 양
 
@@ -772,9 +751,6 @@ Appearance / Name Plate
 
 Append to log file instead of overwriting
 == 덮어쓰기 대신 로그 파일에 추가
-
-Apple Music media-user-token
-== Apple Music 미디어 사용자 토큰
 
 Applied to %d same-family part(s).
 == 동일 계열 부품 %d개에 적용되었습니다.
@@ -989,9 +965,6 @@ Auto enable/disable IME on text focus
 Auto execute
 == 자동 실행
 
-Auto fetch lyrics
-== 가사 자동 가져오기
-
 Auto fetch replay info on refresh
 == 새로고침 시 리플레이 정보 자동 가져오기
 
@@ -1006,9 +979,6 @@ Auto greet friend text
 
 Auto greet friends entering map
 == 맵에 입장하는 친구에게 자동 인사
-
-Auto hot-reload after external saves
-== 외부 저장 후 자동 핫 리로드
 
 Auto login Axiom server
 == Axiom 서버 자동 로그인
@@ -1093,9 +1063,6 @@ Auto-fetch all players' skins for dummy rotation queue
 
 Auto-fetch all players' skins for rotation queue
 == 맵 전체 플레이어 스킨을 자동으로 가져와 순환 대기열로 사용
-
-Auto-fetch lyrics on detecting new song
-== 새 노래 감지 시 자동으로 가사 가져오기
 
 Auto-follow delay
 == 자동 따라가기 지연
@@ -1337,9 +1304,6 @@ Background image in menu
 Background music volume
 == 배경 음악 볼륨
 
-Background opacity
-== 배경 불투명도
-
 Background stroke color
 == 배경 스트로크 색상
 
@@ -1414,9 +1378,6 @@ Best input prediction offset (0.01 tick)
 
 Best input smooth percentage
 == Best input 평활화 비율
-
-Best match
-== 최적 일치
 
 Better scoreboard
 == 더 나은 점수판
@@ -1573,9 +1534,6 @@ Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = 플레이어 위치
-
-Cache TTL
-== 캐시 TTL
 
 Calculate unfinished maps for player in certain mode
 == 특정 모드에서 플레이어의 미완료 맵 계산
@@ -1985,12 +1943,6 @@ Client prediction time is high
 Client uptime
 == 클라이언트 가동 시간
 
-Clock drift hard cut threshold (ms)
-== 클록 드리프트 하드 컷 임계값 ms
-
-Clock drift hard-snap
-== 시계 드리프트 하드 스냅
-
 Close
 == 닫기
 
@@ -2116,9 +2068,6 @@ Config Changes
 
 Config directory
 == 설정 디렉토리
-
-Config file: data/input_overlay.json
-== 설정 파일: data/input_overlay.json
 
 Config Files
 == 설정 파일
@@ -2494,12 +2443,6 @@ Current cut is invalid or already added
 
 Current file
 == 현재 파일
-
-Current line color
-== 현재 선 색상
-
-Current line lyric color
-== 가사 현재 줄 색상
 
 Current rescue mode: %s
 == 현재 구조 모드: %s
@@ -3065,18 +3008,6 @@ Displays your ping to the current server
 Dissolve
 == 용해
 
-Distance fade per line
-== 줄당 거리 페이드
-
-Distance scale falloff
-== 거리 비례 축소
-
-Distant line opacity decay per line (%)
-== 먼 라인 불투명도 감소율 (라인당 %)
-
-Distant line shrink per line (%)
-== 먼 라인 축소율 (라인당 %)
-
 Do not auto-show server info on entering map
 == 입장 시 서버 정보를 자동으로 표시하지 않음
 
@@ -3632,12 +3563,6 @@ Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 == LLM 사고 모드 활성화 (응답 시간이 늘어날 수 있음)
 
-Enable local lyrics cache
-== 로컬 가사 캐시 활성화
-
-Enable lyric HUD overlay
-== 가사 HUD 오버레이 활성화
-
 Enable lyrics
 == 가사 활성화
 
@@ -3655,6 +3580,15 @@ Enable mod weapon on %d: %s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
 == SQLite 대신 MySQL 백엔드 활성화 (MySQL 서버에 연결할 수 없을 때 sv_sqlite_file 으로 폴백)
+
+Enable Netease lyric integration
+== Netease 가사 통합 활성화
+
+Enable Netease music Hook
+== Netease Music Hook 활성화
+
+Enable Netease Music hook integration
+== Netease Music Hook 통합 활성화
 
 Enable new IME candidate bar
 == 새 IME 후보 창 활성화
@@ -3728,6 +3662,12 @@ Enable skin switch animation
 Enable smooth cinematic camera while free spectating
 == 자유 관전 중 부드러운 시네마틱 카메라 활성화
 
+Enable SodaMusic Hook
+== SodaMusic Hook 활성화
+
+Enable SodaMusic hook integration
+== SodaMusic Hook 통합 활성화
+
 Enable sound
 == 소리 활성화
 
@@ -3754,9 +3694,6 @@ Enable switch countdown
 
 Enable system media control
 == 시스템 미디어 제어 활성화
-
-Enable system media lyrics
-== 시스템 미디어 가사 활성화
 
 Enable system media transport control integration
 == 시스템 미디어 전송 제어 통합 활성화
@@ -3808,9 +3745,6 @@ Enable warlist
 
 Enable word filter list
 == 단어 필터 목록 활성화
-
-Enable word-by-word highlighting
-== 단어별 강조 표시 활성화
 
 Enable Zen Mode
 == 젠 모드(Zen Mode) 활성화
@@ -4000,9 +3934,6 @@ f = Frame rate
 
 Fade and slide
 == 페이드 및 슬라이드
-
-Fade duration
-== 페이드 지속 시간
 
 Fade in
 == 페이드 인
@@ -4297,6 +4228,9 @@ Freeze border color
 
 Freeze Collision Border Color
 == 얼음 충돌 테두리 색상
+
+Freeze laser collision volume
+== 프리즈 레이저 충돌 범위
 
 Freeze Laser Inner Color
 == 프리즈 레이저 내부 색상
@@ -4661,6 +4595,9 @@ Gun
 Hammer
 == 망치
 
+Hammer interaction
+== 망치 상호작용
+
 Hammer Mode:
 == 망치 모드:
 
@@ -4778,12 +4715,6 @@ Hide kill and finish messages in Zen mode
 Hide kill/finish messages
 == 사망/완료 메시지 숨기기
 
-Hide lyrics on pause
-== 일시정지 시 가사 숨기기
-
-Hide lyrics when no system media
-== 시스템 미디어 상태 없을 때 가사 숨기기
-
 Hide map progress
 == 맵 진행도 숨기기
 
@@ -4864,15 +4795,6 @@ Hide weapon fire effects in Zen Mode
 
 Hide weapon muzzle flashes
 == 무기 총구 섬광 숨기기
-
-Hide when no lyrics found (instead of showing hint)
-== 가사를 찾을 수 없을 때 숨기기（알림 표시 대신）
-
-Hide when paused
-== 일시정지 시 숨기기
-
-Hide without media state
-== 미디어 상태 없을 때 숨기기
 
 High Detail
 == 높은 상세도
@@ -4957,6 +4879,9 @@ Hook Collisions
 
 Hook collisions
 == 갈고리 충돌
+
+Hook interaction
+== 후크 상호작용
 
 Hook line tip
 == 갈고리선 끝
@@ -5087,12 +5012,6 @@ If chat score exceeds this value, the player is muted for sv_spam_mute_duration 
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
 == 레이저를 쏘면 맞을 수 있고 바운스 원점으로 끌어당기는 경우(모든 새 맵은 0), 또는 레이저를 쏘면 맞지 않고 다른 사람을 발사자에게 끌어당기는 경우입니다.
 
-Ignore cache providers
-== 캐시 제공자 무시
-
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
-== 가사 검색 시 캐시를 무시할 소스 목록 (|로 구분, 예: QQ|Kugou)
-
 Ignore clan tag when searching friends
 == 친구 검색 시 클랜 태그 무시
 
@@ -5103,7 +5022,7 @@ Ignore voice distance attenuation
 == 음성 거리 감쇠 무시
 
 Ignored legacy Dynamic Island edge margin
-== Ignored legacy Dynamic Island edge margin
+== 기존 다이내믹 아일랜드 가장자리 여백은 무시됨
 
 Import from clipboard
 == 클립보드에서 가져오기
@@ -5125,12 +5044,6 @@ In-game crosshair scale percent (50=half, 200=double)
 
 Inactive color
 == 비활성 색상
-
-Inactive line font size (px)
-== 비활성 행 글꼴 크기 px
-
-Inactive line opacity
-== 비활성 줄 불투명도
 
 Include clan when saving/loading config preset
 == 설정 프리셋 저장/불러오기 시 클랜 포함
@@ -5258,12 +5171,6 @@ Input overlay mouse scale (percent)
 Input overlay opacity (percent)
 == 입력 오버레이 불투명도 (백분율)
 
-Input overlay X position (percent)
-== 입력 오버레이 X 위치 (백분율)
-
-Input overlay Y position (percent)
-== 입력 오버레이 Y 위치 (백분율)
-
 Input smoothing
 == 입력 평활화
 
@@ -5348,9 +5255,6 @@ Invalid Y coordinate.
 Invert camera drift direction
 == 카메라 드리프트 방향 반전
 
-Invite %s to the locked team
-== 잠긴 팀에 %s 초대
-
 Invite a person to a locked team
 == 잠긴 팀에 사람 초대
 
@@ -5399,9 +5303,6 @@ Join QQ group
 Join red
 == 레드팀 참가
 
-Join team %s
-== 팀 %s에 가입
-
 Join the team of the specified player
 == 지정된 플레이어의 팀에 가입
 
@@ -5443,9 +5344,6 @@ k = Resend loss
 
 Kaomoji
 == 카오모지
-
-Karaoke edge softness
-== 가사 글자별 강조 가장자리 부드러움
 
 Keep hook when teleporting
 == 순간이동 시 갈고리 유지
@@ -5570,6 +5468,9 @@ Large text for friend join (use %s for friend name)
 Laser
 == 레이저
 
+Laser / shotgun interaction
+== 레이저 / 샷건 상호작용
+
 Laser colors
 == 레이저 색상
 
@@ -5672,38 +5573,14 @@ Limit information in spectator mode
 Limiter threshold (percent)
 == 리미터 임계값 (백분율)
 
-Line scroll duration
-== 줄 전환 스크롤 시간
-
-Line spacing
-== 줄 간격
-
-Line switch scroll duration (ms)
-== 행 전환 스크롤 시간 ms
-
 Line width
 == 선 두께
 
 Linear
 == 선형
 
-Lines
-== 줄 수
-
 Lines %d - %d (%s)
 == %d행 - %d행 (%s)
-
-Lines above active
-== 현재 줄 위 줄 수
-
-Lines above active line
-== 활성 라인 위 줄 수
-
-Lines below active
-== 현재 줄 아래 줄 수
-
-Lines below active line
-== 활성 라인 아래 줄 수
 
 List all commands that are available in practice mode
 == 연습 모드에서 사용 가능한 모든 명령을 나열합니다
@@ -5779,9 +5656,6 @@ Load
 
 Load drawings from a given csv file (defaults to map name)
 == 지정된 CSV 파일에서 그림 불러오기 (기본값은 맵 이름)
-
-Load save %s
-== 저장 %s 불러오기
 
 Load sound files in thread
 == 스레드에서 사운드 파일 로드
@@ -5861,21 +5735,6 @@ Local
 Local + Dummy
 == 로컬 + 더미
 
-Local ESLRC file
-== 로컬 ESLRC 파일
-
-Local LRC file
-== 로컬 LRC 파일
-
-Local media folders
-== 로컬 미디어 폴더
-
-Local media library directories (separate by |)
-== 가사 로컬 미디어 라이브러리 디렉토리 (여러 디렉토리는 |로 구분)
-
-Local music file
-== 로컬 음악 파일
-
 Local only
 == 로컬 전용
 
@@ -5897,9 +5756,6 @@ Local test mode, no server needed
 Local Time
 == 로컬 시간
 
-Local TTML file
-== 로컬 TTML 파일
-
 Local-only
 == 로컬 전용
 
@@ -5908,9 +5764,6 @@ Lock delay
 
 Lock team
 == 팀 잠금
-
-Lock the team so other players cannot join directly
-== 다른 플레이어가 직접 가입할 수 없도록 팀 잠그기
 
 Locked
 == 잠김
@@ -5933,86 +5786,11 @@ Lose weapons when teleporting (useful for race maps)
 Low to high
 == 낮음에서 높음으로
 
-LRCLIB API base URL (mirror)
-== LRCLIB API 기본 주소 (미러로 변경 가능)
-
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 가사 자동 검색 소스 순서/활성화 목록 (비우면 기본값; |로 구분, 예: QQ|Kugou|Netease|LrcLib)
-
-Lyric background color
-== 가사 배경색
-
-Lyric background opacity
-== 가사 배경 투명도
-
-Lyric fade in/out time
-== 가사 페이드 인/아웃 시간
-
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-== 가사 HTTP 프록시（예: http://127.0.0.1:7890）
-
-Lyric HTTP request timeout (ms)
-== 가사 HTTP 요청 타임아웃 ms
-
-Lyric HUD edge margin (px)
-== 가사 HUD 가장자리 여백 px
-
-Lyric outline color
-== 가사 외곽선 색상
-
-Lyric outline opacity
-== 가사 외곽선 투명도
-
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-== 가사 검색 전략 (0=소스 순서대로, 1=동시 최적 매칭)
-
-Lyric snap to Dynamic Island threshold
-== 가사 다이나믹 아일랜드 부착 임계값
-
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 가사 데이터 소스 (0=자동 최적 매칭, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== 가사 소스별 매칭 임계값 (비우면 전역 임계값 사용; 예: QQ=60|LrcLib=70)
-
 Lyrics
 == 가사
 
-Lyrics cache expiration days (0=forever)
-== 가사 캐시 만료 일수 (0=영구)
-
-Lyrics fuzzy match score threshold
-== 가사 퍼지 매치 점수 임계값
-
-Lyrics HTTP timeout
-== 가사 HTTP 타임아웃
-
-Lyrics line spacing (px)
-== 가사 줄 간격 px
-
-Lyrics search type
-== 가사 검색 전략
-
-Lyrics source
-== 가사 소스
-
-Lyrics source order
-== 가사 소스 순서
-
-Lyrics translation/transliteration color
-== 가사 번역/음역 색상
-
-Lyrics: empty track
-== 가사: 빈 트랙
-
-Lyrics: no lyrics found
-== 가사: 가사를 찾을 수 없음
-
-Lyrics: no media playing
-== 가사: 재생 중인 미디어 없음
-
-Lyrics: searching...
-== 가사: 검색 중...
+Lyrics sources and display
+== 가사 소스 및 표시
 
 Main Asset
 == 메인 에셋
@@ -6070,9 +5848,6 @@ Manual
 
 Manual concurrency: %d
 == 수동 동시 실행 수: %d
-
-Manual lyric timeline offset (ms, step 500ms)
-== 가사 수동 타임라인 오프셋 ms (실행 중 500ms 단계로 조정)
 
 Manual scope
 == 수동 범위
@@ -6170,12 +5945,6 @@ Mark the end of a demo cut
 Markers
 == 마커
 
-Marquee for long lyrics
-== 가사가 너무 길 때 마키
-
-Marquee speed
-== 가사 마키 속도
-
 Master server URL to register
 == 등록할 마스터 서버 URL
 
@@ -6184,9 +5953,6 @@ Match %d of %d
 
 Match ghost by map version instead of map name
 == 맵 이름 대신 맵 버전으로 고스트 일치
-
-Match score threshold
-== 일치 점수 임계값
 
 Matched with callable peer
 == 통화 가능 피어와 매칭됨
@@ -6406,9 +6172,6 @@ Minimum delay allowed between invitations.
 
 Minimum dynamic camera cursor distance
 == 최소 동적 카메라 커서 거리
-
-Minimum inactive line opacity (%)
-== 비활성 라인 최소 불투명도 (%)
 
 Minimum match chars
 == 최소 일치 문자 수
@@ -6752,6 +6515,12 @@ Negative stability buffer (for Gores)
 Net
 == 순 킬
 
+Netease hook heartbeat timeout (milliseconds)
+== Netease Hook 하트비트 시간 초과(밀리초)
+
+Netease hook helper path (empty=beside QmClient)
+== Netease Hook 도우미 경로(비워 두면 QmClient과 같은 디렉터리)
+
 Netlimit: exponential moving average alpha
 == Netlimit: 지수 이동 평균 알파
 
@@ -6802,12 +6571,6 @@ News
 
 Next
 == 다음
-
-Next line color
-== 다음 줄 색상
-
-Next line lyric color
-== 가사 다음 줄 색상
 
 Next page in console
 == 콘솔 다음 페이지
@@ -7202,6 +6965,9 @@ Open color picker
 Open DDNet Wiki
 == DDNet Wiki 열기
 
+Open editor
+== 편집기 열기
+
 Open emote selector
 == 이모트 선택기 열기
 
@@ -7243,6 +7009,9 @@ Open the folder containing demo files
 
 Open the folder containing screenshots
 == 스크린샷이 있는 폴더 열기
+
+Open the input overlay editor
+== 입력 오버레이 편집기 열기
 
 Open the saves file
 == 저장 파일 열기
@@ -7298,9 +7067,6 @@ Optional authentication key for the DNSBL provider
 Other
 == 기타
 
-Other lines font size
-== 다른 줄 글꼴 크기
-
 Other players' hook line width
 == 다른 플레이어의 갈고리 선 너비
 
@@ -7315,9 +7081,6 @@ Outgoing language
 
 Outgoing translation target language code
 == 발신 번역 대상 언어 코드
-
-Outline color
-== 외곽선 색상
 
 Outline global opacity
 == 외곽선 전체 불투명도
@@ -7345,9 +7108,6 @@ Output switch
 
 Output voice debug log
 == 음성 디버그 로그 출력
-
-Overall lyrics opacity (%)
-== 가사 전체 불투명도 (%)
 
 Overlay entities
 == 엔티티 오버레이
@@ -7490,9 +7250,6 @@ Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
 == 이름별 개별 볼륨 (name=percent)
 
-Per-word highlight (karaoke)
-== 글자별 강조 (가라오케)
-
 Performance debug log threshold (ms)
 == 성능 디버그 로그 임계값 (ms)
 
@@ -7588,9 +7345,6 @@ Play/pause the current demo
 
 Playback volume
 == 재생 볼륨
-
-Played word color
-== 재생된 글자 색상
 
 Player
 == 플레이어
@@ -8000,11 +7754,11 @@ Progress bar height
 Progress bar width
 == 진행 표시줄 너비
 
+Projectile / explosion range
+== 투사체 / 폭발 범위
+
 Protect names and skins while streaming
 == 스트리밍 중 이름과 스킨 보호
-
-Provider thresholds
-== 제공자 임계값
 
 PTT release delay (ms)
 == PTT 해제 지연 (밀리초)
@@ -8128,24 +7882,6 @@ QQ group: 1076765929 (click to copy)
 
 Quads are used for background decoration
 == 배경 장식에 사용되는 쿼드 표시
-
-Query current map info
-== 현재 맵 정보 조회
-
-Query map info for %s
-== %s 맵 정보 조회
-
-Query points for %s
-== %s의 점수 조회
-
-Query rank for %s
-== %s의 순위 조회
-
-Query server setting: %s
-== 서버 설정 조회: %s
-
-Query team rank for %s
-== %s의 팀 순위 조회
 
 Queue is empty
 == 대기열이 비어 있습니다
@@ -8630,12 +8366,6 @@ Reply
 Reply to messages from muted players
 == 음소거된 플레이어의 메시지에 답장
 
-Reply to the last whisper target
-== 마지막 귓속말 대상에게 답장
-
-Reply to the last whisper target: %s
-== 마지막 귓속말 대상에게 답장: %s
-
 Reply with dummy
 == 더미로 답장
 
@@ -8669,12 +8399,6 @@ Report service URL
 Reports are not available on Axiom servers
 == Axiom 서버에서는 신고 기능을 사용할 수 없습니다
 
-Request a position swap
-== 위치 교환 요청
-
-Request to swap positions with %s
-== %s 님과 위치 교환 요청
-
 Request to swap your tee with another team member
 == 다른 팀원과 티를 교체하도록 요청
 
@@ -8695,9 +8419,6 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 구조/얼음: %d/%d
-
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-== 구조: 자동 모드는 프리즈에서 텔레포트; 수동 모드는 착지 시 구조 지점을 기록하고 프리즈 시 텔레포트
 
 Reset
 == 초기화
@@ -8996,12 +8717,6 @@ Save team with code r.
 Save the best demo of each race
 == 각 레이스의 최고 데모 저장
 
-Save the current team
-== 현재 팀 저장
-
-Save the team as %s
-== 팀을 %s(으)로 저장
-
 Save unsent chat draft
 == 전송되지 않은 채팅 초안 저장
 
@@ -9118,12 +8833,6 @@ Screenshots
 
 Screenshots directory
 == 스크린샷 디렉터리
-
-Scroll long lines
-== 긴 줄 스크롤
-
-Scroll speed
-== 스크롤 속도
 
 Search
 == 검색
@@ -9271,9 +8980,6 @@ Sends a command to the antibot
 
 Separate with commas
 == 쉼표로 구분
-
-Sequential
-== 순차적
 
 Server
 == 서버
@@ -9602,8 +9308,8 @@ Show coordinates above players
 Show country flags in nameplates
 == 이름표에 국가 국기 표시
 
-Show current and next lyric lines on HUD
-== HUD에 현재 및 다음 가사 줄 표시
+Show current Netease lyric in Media Island
+== 현재 Netease 가사를 미디어 아일랜드에 표시
 
 Show daily message to client
 == 클라이언트에게 일일 메시지 표시
@@ -9679,9 +9385,6 @@ Show enemy reason
 
 Show entities
 == 엔티티 표시
-
-Show existing saves
-== 저장된 팀 목록 보기
 
 Show eye wheel and expressions
 == 눈 휠과 표정 표시
@@ -9787,9 +9490,6 @@ Show important server prompts and Echo messages as popups
 
 Show important server prompts as notifications
 == 중요한 서버 프롬프트를 알림으로 표시
-
-Show in Dynamic Island
-== Dynamic Island에 표시
 
 Show in-game FPS
 == 게임 내 FPS 표시
@@ -9916,12 +9616,6 @@ Show logs of the last i seconds
 
 Show lyrics inside Dynamic Island
 == 다이나믹 아일랜드에 가사 표시
-
-Show lyrics translation (if available)
-== 가사 번역 표시 (있는 경우)
-
-Show lyrics transliteration (if available)
-== 가사 음역 표시 (있는 경우)
 
 Show map details
 == 맵 세부 정보 표시
@@ -10139,9 +9833,6 @@ Show server help and usage messages
 Show server prompts and Echo messages as popups
 == Show server prompts and Echo messages as popups
 
-Show server settings
-== 서버 설정 보기
-
 Show settings card borders
 == 설정 카드 테두리 표시
 
@@ -10241,9 +9932,6 @@ Show tiles layers from BG map
 Show toast
 == 토스트 메시지 표시
 
-Show translation
-== 번역 표시
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 자신의 플레이어에 영향을 미치는 튜닝 파라미터 표시 (0 = 끄기, 1 = 변경된 것만 표시, 2 = 모두 표시)
 
@@ -10291,9 +9979,6 @@ Show X
 
 Show Y
 == Y 표시
-
-Show your current team
-== 현재 팀 보기
 
 Show zzz emoji next to afk players
 == 자리 비움 플레이어 옆에 zzz 이모지 표시
@@ -10535,9 +10220,6 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 == SMTC
 
-Snap threshold
-== 스냅 임계값
-
 Snapshot Age
 == 스냅샷 경과 시간
 
@@ -10561,6 +10243,12 @@ Snapshot tick gap
 
 Social
 == 소셜
+
+SodaMusic hook heartbeat timeout (milliseconds)
+== SodaMusic Hook 하트비트 시간 초과(밀리초)
+
+SodaMusic hook helper path (empty=beside QmClient)
+== SodaMusic Hook 도우미 경로(비워 두면 QmClient과 같은 디렉터리)
 
 Solid
 == 단색
@@ -11000,15 +10688,6 @@ System media control
 System media controls
 == 시스템 미디어 컨트롤
 
-System media lyric font size
-== 시스템 미디어 가사 글꼴 크기
-
-System media lyrics display lines
-== 시스템 미디어 가사 표시 줄 수
-
-System media lyrics time offset (milliseconds)
-== 시스템 미디어 가사 시간 오프셋 (밀리초)
-
 System message
 == 시스템 메시지
 
@@ -11159,8 +10838,14 @@ Tee 0.7
 Tee appearance
 == Tee 외형
 
-Tee hitbox
-== 티 히트박스
+Tee collision (Tee to Tee)
+== Tee 충돌(Tee 대 Tee)
+
+Tee death probe
+== Tee 데스 탐지
+
+Tee freeze probe (Tee to Freeze)
+== Tee 프리즈 탐지(Tee 대 Freeze)
 
 Tee hitbox color
 == 티 히트박스 색상
@@ -11492,9 +11177,6 @@ Time limit
 Time limit: %d min
 == 시간 제한: %d 분
 
-Time offset
-== 시간 오프셋
-
 Time to wait before changing team: %s
 == 팀 변경까지 대기 시간: %s
 
@@ -11725,9 +11407,6 @@ Translation button active color
 
 Translation button cancel color
 == 번역 버튼 취소 시 색상
-
-Translation color
-== 번역 색상
 
 Translation color alpha migration completed flag
 == 번역 색상 알파 마이그레이션 완료 플래그
@@ -11981,9 +11660,6 @@ Unknown status
 Unlock a team
 == 팀 잠금 해제
 
-Unlock the team
-== 팀 잠금 해제
-
 Unmute
 == 음소거 해제
 
@@ -12001,9 +11677,6 @@ Unmute player with list index
 
 Unmute:
 == 음소거 해제：
-
-Unplayed word color
-== 재생되지 않은 단어 색상
 
 Unpredictable ghost opacity (0-100)
 == 예측 불가능한 유령 불투명도 (0-100)
@@ -12056,14 +11729,8 @@ URL for downloading maps (must start with https://)
 URL for downloading skins
 == 스킨 다운로드 URL
 
-Usage
-== 사용법
-
 Usage: %s %s
 == 사용법: %s %s
-
-Usage: /%s %s
-== 사용법: /%s %s
 
 Use 12 hour clock
 == 12시간제 사용
@@ -12407,6 +12074,12 @@ Vote yes/no
 Voting
 == 투표
 
+Vulkan API
+== Vulkan API 버전
+
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+== Vulkan API 버전: 11=1.1 호환 모드, 14=1.4 엄격 모드
+
 Wait for current vote to end before calling a new one.
 == 새 투표를 요청하기 전에 현재 투표가 끝날 때까지 기다리세요.
 
@@ -12481,9 +12154,6 @@ Weapon
 
 Weapon animation
 == 무기 애니메이션
-
-Weapon interaction range
-== 무기 상호작용 범위
 
 Weapon range color
 == 무기 범위 색상
@@ -12644,15 +12314,6 @@ Whisper option color
 Whisper something to someone (private message)
 == 누군가에게 귓속말 보내기 (개인 메시지)
 
-Whisper to %s
-== %s 님에게 귓속말
-
-Whisper to %s: %s
-== %s 님에게 귓속말: %s
-
-Whisper: /w player message
-== 귓속말: /w 플레이어 메시지
-
 White
 == 흰색
 
@@ -12703,9 +12364,6 @@ Word Filter
 
 Word filter action: 0=replace matching words, 1=hide entire message
 == 단어 필터 동작: 0=일치하는 단어 교체, 1=메시지 전체 숨기기
-
-Word highlight soft edge width (px)
-== 글자별 가장자리 부드러운 전환 폭 px
 
 Write local console contents to a text file
 == 로컬 콘솔 내용을 텍스트 파일로 저장
@@ -13019,9 +12677,6 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 타임아웃 코드가 설정되었습니다. 0.7 클라이언트는 타임아웃 시 티를 되찾을 수 없지만, 0.6 클라이언트는 당신의 티를 차지할 수 있습니다
 
-yourself
-== 자신
-
 z = Zoom
 == z = 확대/축소
 
@@ -13114,6 +12769,26 @@ Inactive
 [Auto camera]
 Unavailable for this player
 == 이 플레이어에게 사용할 수 없음
+
+[Config help]
+%s (default: "%s", max length: %d)
+== %s (기본값: "%s", 최대 길이: %d)
+
+[Config help]
+%s (default: $%0*X)
+== %s (기본값: $%0*X)
+
+[Config help]
+%s (default: %d)
+== %s (기본값: %d)
+
+[Config help]
+%s (default: %d, min: %d)
+== %s (기본값: %d, 최솟값: %d)
+
+[Config help]
+%s (default: %d, min: %d, max: %d)
+== %s (기본값: %d, 최솟값: %d, 최댓값: %d)
 
 [data_version.h]
 You may have installed only DDNet.exe. Please use the full QmClient folder.

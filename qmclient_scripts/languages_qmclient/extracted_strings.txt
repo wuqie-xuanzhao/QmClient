@@ -25,7 +25,6 @@
 %i minutes left
 %i second left
 %i seconds left
-%s (/%s %s)
 %s and %s have swapped
 %s canceled the swap with %s
 %s canceled the swap with you
@@ -86,7 +85,6 @@ _ or ' ' = blank spacer
 a = View angle
 A demo with this name already exists
 A folder with this name already exists
-a player
 A screenshot with this name already exists
 A Tee
 A vote is currently active.
@@ -96,10 +94,6 @@ Activate all
 Activate tee history writing full game data to disk (warning: uses lots of disk space)
 Active color
 Active disconnect
-Active line font size
-Active line font size (px)
-Active line scale
-Active line scale (%)
 Active moderator mode disabled because you are afk.
 Active moderator mode disabled for you.
 Active moderator mode enabled for you.
@@ -224,7 +218,6 @@ Always show nameplates regardless of distance
 Always show other players' hook collision lines
 Always show own player's hook collision line
 Always translate
-AMLL TTML DB API base URL (mirror)
 Amount
 And pick one randomly
 Angle
@@ -256,7 +249,6 @@ Appearance / Info Messages
 Appearance / Laser
 Appearance / Name Plate
 Append to log file instead of overwriting
-Apple Music media-user-token
 Applied to %d same-family part(s).
 Apply
 Apply a preset first
@@ -328,13 +320,11 @@ Auto disable when time expires
 Auto enable in Gores mode
 Auto enable/disable IME on text focus
 Auto execute
-Auto fetch lyrics
 Auto fetch replay info on refresh
 Auto gain control for mic (AGC, experimental)
 Auto greet friend on map join
 Auto greet friend text
 Auto greet friends entering map
-Auto hot-reload after external saves
 Auto login Axiom server
 Auto manage IME while typing
 Auto map vote
@@ -363,7 +353,6 @@ Auto-create CSV on game end
 Auto-disable speedrun timer when time runs out
 Auto-fetch all players' skins for dummy rotation queue
 Auto-fetch all players' skins for rotation queue
-Auto-fetch lyrics on detecting new song
 Auto-follow delay
 Auto-follow friend server switch delay (seconds)
 Auto-lock after joining lockable team
@@ -444,7 +433,6 @@ Background Draw
 Background draw
 Background image in menu
 Background music volume
-Background opacity
 Background stroke color
 Background stroke width
 Balance master, music, and game volume
@@ -470,7 +458,6 @@ Best input interpolation mode (1=linear 2=cubic 3=smooth)
 Best input others
 Best input prediction offset (0.01 tick)
 Best input smooth percentage
-Best match
 Better scoreboard
 Bind address for client/server
 Bind chat, team chat, and history actions
@@ -523,7 +510,6 @@ Buttons with this behavior cycle between executing one of two or more specified 
 Buttons with this behavior execute console commands like regular key binds.
 Buttons with this behavior execute some predefined actions.
 c = Player position
-Cache TTL
 Calculate unfinished maps for player in certain mode
 Call vote
 Camera
@@ -660,8 +646,6 @@ Client message text gradient color
 Client performance pressure is high
 Client prediction time is high
 Client uptime
-Clock drift hard cut threshold (ms)
-Clock drift hard-snap
 Close
 Close the demo player
 Close window after changing settings
@@ -704,7 +688,6 @@ Concurrent requests when refreshing server browser
 Config
 Config Changes
 Config directory
-Config file: data/input_overlay.json
 Config Files
 Config Filters
 Config version. Helps new client fix old config errors.
@@ -830,8 +813,6 @@ Current aspect ratio:
 Current aspect ratio: Show default
 Current cut is invalid or already added
 Current file
-Current line color
-Current line lyric color
 Current rescue mode: %s
 Current status
 Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
@@ -1020,10 +1001,6 @@ Displays your frames per second
 Displays your local time
 Displays your ping to the current server
 Dissolve
-Distance fade per line
-Distance scale falloff
-Distant line opacity decay per line (%)
-Distant line shrink per line (%)
 Do not auto-show server info on entering map
 Do not predict other players when frozen
 Do not set this variable, instead create a ddnet-serverlist-urls.cfg next to settings_ddnet.cfg to specify all possible serverlist URLs
@@ -1209,14 +1186,15 @@ Enable keyboard shortcuts in replay player
 Enable keyword reply
 Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
-Enable local lyrics cache
-Enable lyric HUD overlay
 Enable lyrics
 Enable macOS graphics diagnostics and Instruments signposts
 Enable main thread and render stage performance debug logging
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 Enable mod weapon on %d: %s
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
+Enable Netease lyric integration
+Enable Netease music Hook
+Enable Netease Music hook integration
 Enable new IME candidate bar
 Enable new settings page UI
 Enable Pie Menu
@@ -1241,6 +1219,8 @@ Enable Sixup connection.
 Enable skin queue rotation
 Enable skin switch animation
 Enable smooth cinematic camera while free spectating
+Enable SodaMusic Hook
+Enable SodaMusic hook integration
 Enable sound
 Enable sound when rendering video
 Enable spectator cursor (if available)
@@ -1250,7 +1230,6 @@ Enable status bar
 Enable stereo positioning
 Enable switch countdown
 Enable system media control
-Enable system media lyrics
 Enable system media transport control integration
 Enable team chat message sound
 Enable team chat sound
@@ -1268,7 +1247,6 @@ Enable voice chat
 Enable voice filtering (highpass/compressor/limiter)
 Enable warlist
 Enable word filter list
-Enable word-by-word highlighting
 Enable Zen Mode
 Enable Zen mode
 Enable/disable infinite hook.
@@ -1332,7 +1310,6 @@ External console password. Must be set to enable economy.
 Extras
 f = Frame rate
 Fade and slide
-Fade duration
 Fade in
 Fade only
 Fade opacity along trail length
@@ -1431,6 +1408,7 @@ Freeze
 Freeze bar opacity (0 invisible, 100 fully visible)
 Freeze border color
 Freeze Collision Border Color
+Freeze laser collision volume
 Freeze Laser Inner Color
 Freeze laser inner color
 Freeze Laser Outline Color
@@ -1552,6 +1530,7 @@ GUI cursor assets
 Guide line color
 Gun
 Hammer
+Hammer interaction
 Hammer Mode:
 Hammer skin steal
 Hammer: %s
@@ -1591,8 +1570,6 @@ Hide jump effects
 Hide jump effects in Zen Mode
 Hide kill and finish messages in Zen mode
 Hide kill/finish messages
-Hide lyrics on pause
-Hide lyrics when no system media
 Hide map progress
 Hide map progress bar in Zen mode
 Hide nameplates
@@ -1620,9 +1597,6 @@ Hide typing emoji during input
 Hide UI for focused gameplay
 Hide weapon fire effects in Zen Mode
 Hide weapon muzzle flashes
-Hide when no lyrics found (instead of showing hint)
-Hide when paused
-Hide without media state
 High Detail
 High process priority
 High to low
@@ -1651,6 +1625,7 @@ Hook collision line length follows cursor distance
 Hook collision line opacity
 Hook Collisions
 Hook collisions
+Hook interaction
 Hook line tip
 Hook Strength
 Hook strength scope
@@ -1694,8 +1669,6 @@ If 1, auto record only once on connect; if 0, auto record restarts after game en
 If 1, current driver is in blocking error state.
 If chat score exceeds this value, the player is muted for sv_spam_mute_duration seconds
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
-Ignore cache providers
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
 Ignore clan tag when searching friends
 Ignore keyboard modifier mask
 Ignore voice distance attenuation
@@ -1707,8 +1680,6 @@ In memory of me
 In-game controller sensitivity
 In-game crosshair scale percent (50=half, 200=double)
 Inactive color
-Inactive line font size (px)
-Inactive line opacity
 Include clan when saving/loading config preset
 Include color when saving/loading config preset
 Include country flag when saving/loading config preset
@@ -1751,8 +1722,6 @@ Input overlay display
 Input overlay keyboard scale (percent)
 Input overlay mouse scale (percent)
 Input overlay opacity (percent)
-Input overlay X position (percent)
-Input overlay Y position (percent)
 Input smoothing
 Input switch
 Insane
@@ -1781,7 +1750,6 @@ Invalid translation backend
 Invalid X coordinate.
 Invalid Y coordinate.
 Invert camera drift direction
-Invite %s to the locked team
 Invite a person to a locked team
 Invites are disabled
 It's recommended that you check the settings to adjust them to your liking before joining a server.
@@ -1798,7 +1766,6 @@ Join blue
 Join game
 Join QQ group
 Join red
-Join team %s
 Join the team of the specified player
 Join Tutorial Server
 Join, version, rules, and help messages stay in chat instead of popups
@@ -1813,7 +1780,6 @@ Jump hint text (use \n for newline)
 Jump hint vertical position (% of screen height)
 k = Resend loss
 Kaomoji
-Karaoke edge softness
 Keep hook when teleporting
 Keep unsent message on chat close
 Keep vote window open after voting
@@ -1855,6 +1821,7 @@ Large text announcement for friend joining
 Large text content
 Large text for friend join (use %s for friend name)
 Laser
+Laser / shotgun interaction
 Laser colors
 Laser effect enhancement
 Laser glow intensity (0-100)
@@ -1889,17 +1856,9 @@ LibreTranslate API Key
 LibreTranslate endpoint
 Limit information in spectator mode
 Limiter threshold (percent)
-Line scroll duration
-Line spacing
-Line switch scroll duration (ms)
 Line width
 Linear
-Lines
 Lines %d - %d (%s)
-Lines above active
-Lines above active line
-Lines below active
-Lines below active line
 List all commands that are available in practice mode
 List all commands which are accessible for given access level
 List all commands which are accessible for users
@@ -1925,7 +1884,6 @@ LLM translation concurrency (0=auto)
 LLM translation default concurrency (smart adjustment)
 Load
 Load drawings from a given csv file (defaults to map name)
-Load save %s
 Load sound files in thread
 Load with code r. /load to check your existing saves
 Load, save, overwrite, or delete profiles
@@ -1952,11 +1910,6 @@ Loading sound files
 Loading…
 Local
 Local + Dummy
-Local ESLRC file
-Local LRC file
-Local media folders
-Local media library directories (separate by |)
-Local music file
 Local only
 Local particle effects
 Local particles: show particles behind own Tee (e.g. freeze snow)
@@ -1964,11 +1917,9 @@ Local saves
 Local test mode
 Local test mode, no server needed
 Local Time
-Local TTML file
 Local-only
 Lock delay
 Lock team
-Lock the team so other players cannot join directly
 Locked
 Log output filename
 Log the network
@@ -1976,33 +1927,8 @@ Logout of econ
 Logout of rcon
 Lose weapons when teleporting (useful for race maps)
 Low to high
-LRCLIB API base URL (mirror)
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-Lyric background color
-Lyric background opacity
-Lyric fade in/out time
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-Lyric HTTP request timeout (ms)
-Lyric HUD edge margin (px)
-Lyric outline color
-Lyric outline opacity
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-Lyric snap to Dynamic Island threshold
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
 Lyrics
-Lyrics cache expiration days (0=forever)
-Lyrics fuzzy match score threshold
-Lyrics HTTP timeout
-Lyrics line spacing (px)
-Lyrics search type
-Lyrics source
-Lyrics source order
-Lyrics translation/transliteration color
-Lyrics: empty track
-Lyrics: no lyrics found
-Lyrics: no media playing
-Lyrics: searching...
+Lyrics sources and display
 Main Asset
 Main menu
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
@@ -2022,7 +1948,6 @@ Manage hostile-list chat shortcuts
 Manage kaomoji chat shortcuts
 Manual
 Manual concurrency: %d
-Manual lyric timeline offset (ms, step 500ms)
 Manual scope
 Manual source file
 Manual target
@@ -2055,12 +1980,9 @@ Mark the beginning of a demo cut
 Mark the end of a cut (right click to reset)
 Mark the end of a demo cut
 Markers
-Marquee for long lyrics
-Marquee speed
 Master server URL to register
 Match %d of %d
 Match ghost by map version instead of map name
-Match score threshold
 Matched with callable peer
 Max attempts for remote console authentication
 Max CSVs
@@ -2134,7 +2056,6 @@ Minimum cursor distance
 Minimum delay allowed between /spec.
 Minimum delay allowed between invitations.
 Minimum dynamic camera cursor distance
-Minimum inactive line opacity (%)
 Minimum match chars
 Minimum players required to initiate a kick vote
 Minimum rcon auth level to use reserved slots. 4 = rcon auth disabled.
@@ -2249,6 +2170,8 @@ Native scale (1.0)
 Need to have started the map to swap with a player.
 Negative stability buffer (for Gores)
 Net
+Netease hook heartbeat timeout (milliseconds)
+Netease hook helper path (empty=beside QmClient)
 Netlimit: exponential moving average alpha
 Netlimit: maximum traffic allowed per client (kb/s)
 Netversion
@@ -2266,8 +2189,6 @@ New random timeout code
 New UI
 News
 Next
-Next line color
-Next line lyric color
 Next page in console
 Next weapon
 Nickname
@@ -2399,6 +2320,7 @@ Open a matching settings card directly
 Open bindwheel selector
 Open color picker
 Open DDNet Wiki
+Open editor
 Open emote selector
 Open map editor
 Open modal
@@ -2413,6 +2335,7 @@ Open the directory to add custom skins
 Open the directory to add custom themes
 Open the folder containing demo files
 Open the folder containing screenshots
+Open the input overlay editor
 Open the saves file
 Open the selected folder
 Open the selected screenshot
@@ -2431,13 +2354,11 @@ Optimistic prediction along stable direction
 Option color
 Optional authentication key for the DNSBL provider
 Other
-Other lines font size
 Other players' hook line width
 Others
 Others only
 Outgoing language
 Outgoing translation target language code
-Outline color
 Outline global opacity
 Outline opacity
 Output device
@@ -2447,7 +2368,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 Output switch
 Output voice debug log
-Overall lyrics opacity (%)
 Overlay entities
 Overlay game tiles with opacity percentage
 Override
@@ -2495,7 +2415,6 @@ Pause voice when window unfocused
 Pause/unpause game
 Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
-Per-word highlight (karaoke)
 Performance debug log threshold (ms)
 Performance points
 Personal best:
@@ -2528,7 +2447,6 @@ Play time
 Play/Pause
 Play/pause the current demo
 Playback volume
-Played word color
 Player
 Player already invited
 Player body color
@@ -2665,8 +2583,8 @@ Profiles file
 Progress bar color
 Progress bar height
 Progress bar width
+Projectile / explosion range
 Protect names and skins while streaming
-Provider thresholds
 PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 Pulse
@@ -2708,12 +2626,6 @@ QmUi animation intensity: 0=Off, 1=Reduced, 2=Full
 QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform
 QQ group: 1076765929 (click to copy)
 Quads are used for background decoration
-Query current map info
-Query map info for %s
-Query points for %s
-Query rank for %s
-Query server setting: %s
-Query team rank for %s
 Queue is empty
 Queue preset: %s
 Quick action menu for players
@@ -2875,8 +2787,6 @@ Replay
 Replay feature is disabled!
 Reply
 Reply to messages from muted players
-Reply to the last whisper target
-Reply to the last whisper target: %s
 Reply with dummy
 Report
 Report request canceled
@@ -2888,8 +2798,6 @@ Report service App ID
 Report service signing key
 Report service URL
 Reports are not available on Axiom servers
-Request a position swap
-Request to swap positions with %s
 Request to swap your tee with another team member
 Requesting to join the game
 Require KCP-capable client to upgrade session (keep off during grayscale for fallback)
@@ -2897,7 +2805,6 @@ Rescue is not enabled on this server and you're not in a team with /practice tur
 Rescue mode switched to %s
 Rescue to a nearby air tile
 Rescue/Freeze: %d/%d
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
 Reset
 Reset a config to its default value
 Reset All
@@ -2997,8 +2904,6 @@ Save settings file on exit
 Save skin
 Save team with code r.
 Save the best demo of each race
-Save the current team
-Save the team as %s
 Save unsent chat draft
 Save-function is disabled on this server
 Save/Load Clan
@@ -3038,8 +2943,6 @@ Screen resolution width (only fullscreen)
 Screenshot
 Screenshots
 Screenshots directory
-Scroll long lines
-Scroll speed
 Search
 Search and navigate settings
 Search donor asset
@@ -3089,7 +2992,6 @@ Sending locally, suggest the other party unmute or confirm they can receive
 Sending, waiting for peer echo
 Sends a command to the antibot
 Separate with commas
-Sequential
 Server
 Server address to filter
 Server address:
@@ -3199,7 +3101,7 @@ Show configurable outlines around map tiles
 Show Coordinates
 Show coordinates above players
 Show country flags in nameplates
-Show current and next lyric lines on HUD
+Show current Netease lyric in Media Island
 Show daily message to client
 Show Danger Tiles in Hitbox Mode
 Show DDNet config variables
@@ -3225,7 +3127,6 @@ Show enemy color in spectator menu
 Show enemy group players
 Show enemy reason
 Show entities
-Show existing saves
 Show eye wheel and expressions
 Show feat-003 shared UI primitives dogfood page (takes over QmClient settings page, for visual verification of 11 primitives + spring/easing animations)
 Show filtered words in console
@@ -3261,7 +3162,6 @@ Show important messages when rendering video
 Show important server prompts
 Show important server prompts and Echo messages as popups
 Show important server prompts as notifications
-Show in Dynamic Island
 Show in-game FPS
 Show in-game HUD
 Show in-game HUD (checkpoint time diff)
@@ -3304,8 +3204,6 @@ Show local time always
 Show local time seconds
 Show logs of the last i seconds
 Show lyrics inside Dynamic Island
-Show lyrics translation (if available)
-Show lyrics transliteration (if available)
 Show map details
 Show map progress bar (beta)
 Show map progress test point route
@@ -3378,7 +3276,6 @@ Show seconds on clock
 Show server chat messages
 Show server help and usage messages
 Show server prompts and Echo messages as popups
-Show server settings
 Show settings card borders
 Show short server names in browser
 Show skin date and author
@@ -3412,7 +3309,6 @@ Show the screen center line
 Show the server rules
 Show tiles layers from BG map
 Show toast
-Show translation
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 Show unfreeze/deep unfreeze tile outlines
 Show unknown server messages
@@ -3429,7 +3325,6 @@ Show whether you have finished a DDNet map (transmits your player name to info.d
 Show Workshop Assets
 Show X
 Show Y
-Show your current team
 Show zzz emoji next to afk players
 Showing players from other teams is disabled
 Showing the checkpoint times for '%s' with a race time of %s
@@ -3510,7 +3405,6 @@ Smooth scroll animation duration in menu/editor (ms, 0=off)
 Smooth zoom animation time in editor (in ms, 0=off)
 Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
-Snap threshold
 Snapshot Age
 Snapshot age
 Snapshot Latency
@@ -3519,6 +3413,8 @@ Snapshot rate
 Snapshot rate / parts
 Snapshot tick gap
 Social
+SodaMusic hook heartbeat timeout (milliseconds)
+SodaMusic hook helper path (empty=beside QmClient)
 Solid
 Solid tile outline opacity
 Solo
@@ -3665,9 +3561,6 @@ System
 System default
 System media control
 System media controls
-System media lyric font size
-System media lyrics display lines
-System media lyrics time offset (milliseconds)
 System message
 System message color
 System message text gradient color
@@ -3718,7 +3611,9 @@ Teams are not available on this server; if the team is locked, any team member d
 Tee
 Tee 0.7
 Tee appearance
-Tee hitbox
+Tee collision (Tee to Tee)
+Tee death probe
+Tee freeze probe (Tee to Freeze)
 Tee hitbox color
 Tee icon size in frozen Tee HUD (default 15)
 Tee size
@@ -3829,7 +3724,6 @@ Time in seconds before economy authentication timeout.
 Time interval (seconds) between chat messages.
 Time limit
 Time limit: %d min
-Time offset
 Time to wait before changing team: %s
 Time to wait before handling inactive players (in minutes)
 Timeout code to use for dummy
@@ -3907,7 +3801,6 @@ Translation backend (llm/tencentcloud/libretranslate/ftapi)
 Translation backend invalid, sending original
 Translation button active color
 Translation button cancel color
-Translation color
 Translation color alpha migration completed flag
 Translation menu background color
 Translation menu normal color
@@ -3992,14 +3885,12 @@ Unknown emote. Use /emote to see available emotes.
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 Unlock a team
-Unlock the team
 Unmute
 Unmute emoticons
 Unmute player with client ID
 Unmute player with IP address
 Unmute player with list index
 Unmute:
-Unplayed word color
 Unpredictable ghost opacity (0-100)
 Unpredictable shadow tee transparency (0 invisible, 100 fully visible)
 Unpredicted ghost opacity
@@ -4017,9 +3908,7 @@ Uploading map data to GPU
 URL for downloading community skins
 URL for downloading maps (must start with https://)
 URL for downloading skins
-Usage
 Usage: %s %s
-Usage: /%s %s
 Use 12 hour clock
 Use 12-hour clock for local time
 Use a fixed prediction margin while frozen
@@ -4134,6 +4023,8 @@ Vote started automatically
 Vote yes
 Vote yes/no
 Voting
+Vulkan API
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
 Wait for current vote to end before calling a new one.
 Wait time before a player can rejoin after being voted to spectators (in minutes)
 Wait time before triggering auto vote
@@ -4159,7 +4050,6 @@ Weak network test: server receive random packet loss percentage
 Weak network test: server receive simulated RTT (ms, half for one-way delay)
 Weapon
 Weapon animation
-Weapon interaction range
 Weapon range color
 Weapon reload animation probability
 Weapon switch animation
@@ -4213,9 +4103,6 @@ Which message to display on zone leave; use 0 for normal area
 Whisper
 Whisper option color
 Whisper something to someone (private message)
-Whisper to %s
-Whisper to %s: %s
-Whisper: /w player message
 White
 Why are you slowmo replaying to read this?
 Width
@@ -4233,7 +4120,6 @@ Windowed borderless
 Windowed fullscreen
 Word Filter
 Word filter action: 0=replace matching words, 1=hide entire message
-Word highlight soft edge width (px)
 Write local console contents to a text file
 Write performance debug logs to dedicated file
 Write remote console contents to a text file
@@ -4338,7 +4224,6 @@ Your team is currently saving
 Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
 Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
-yourself
 z = Zoom
 Zen Mode
 Zen mode key
@@ -4367,6 +4252,11 @@ Zoom to current mouse target
 [Auto camera]	Enabled
 [Auto camera]	Inactive
 [Auto camera]	Unavailable for this player
+[Config help]	%s (default: "%s", max length: %d)
+[Config help]	%s (default: $%0*X)
+[Config help]	%s (default: %d)
+[Config help]	%s (default: %d, min: %d)
+[Config help]	%s (default: %d, min: %d, max: %d)
 [data_version.h]	You may have installed only DDNet.exe. Please use the full QmClient folder.
 [data_version.h]	You may have replaced only DDNet.exe and skipped QmClient.zip.\nPlease install the full QmClient package.
 [Demo details]	map not included

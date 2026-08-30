@@ -13,11 +13,25 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <thread>
 
 namespace SystemMediaControls
 {
 	constexpr uint32_t ALBUM_ART_MAX_DIMENSION = 256;
+	constexpr uint64_t NETEASE_HOOK_REFRESH_INTERVAL_FRAMES = 3;
+
+	inline bool ShouldRefreshNeteaseHookSnapshot(uint64_t CurrentFrame, uint64_t LastReadFrame, bool HasReadFrame)
+	{
+		if(!HasReadFrame || CurrentFrame < LastReadFrame)
+			return true;
+		return CurrentFrame - LastReadFrame >= NETEASE_HOOK_REFRESH_INTERVAL_FRAMES;
+	}
+
+	inline bool MediaSourceChanged(const char *pPrevious, const char *pCurrent)
+	{
+		return std::string_view(pPrevious != nullptr ? pPrevious : "") != std::string_view(pCurrent != nullptr ? pCurrent : "");
+	}
 
 	inline bool AnyMediaSourceEnabled(bool SmtcEnabled, bool NeteaseHookEnabled)
 	{
@@ -141,6 +155,8 @@ private:
 	std::string m_LastNeteaseHookHelperPath;
 	QmNeteaseHook::SSnapshotV5 m_NeteaseSnapshot{};
 	bool m_HasNeteaseSnapshot = false;
+	uint64_t m_LastNeteaseHookReadFrame = 0;
+	bool m_NeteaseHookReadFrameInitialized = false;
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	std::unique_ptr<SWinrt> m_pWinrt;
 	std::unique_ptr<SShared> m_pShared;

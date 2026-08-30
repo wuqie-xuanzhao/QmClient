@@ -7,7 +7,11 @@ from pathlib import Path
 from unittest import mock
 import tempfile
 
-from qmclient_scripts.languages_qmclient import i18n_store, normalize_simplified_chinese
+from qmclient_scripts.languages_qmclient import (
+    i18n_store,
+    normalize_simplified_chinese,
+    source_keys,
+)
 
 
 class I18nTomlTest(unittest.TestCase):
@@ -269,6 +273,44 @@ japanese = "適用"
                 Path("src/engine/shared/config_variables.h")
             ),
             "menus",
+        )
+
+    def test_all_config_help_has_simplified_chinese_translation(self):
+        config_paths = tuple(
+            source_keys.PROJECT_ROOT / relative_path
+            for relative_path in source_keys.CONFIG_MACRO_HELP_HEADERS
+        )
+        records = source_keys.collect_source_key_records(
+            paths=config_paths,
+            extra_strings=set(),
+        )
+        identities = tuple(sorted({record.identity() for record in records}))
+
+        missing = i18n_store.missing_translations_for(
+            i18n_store.load_language_store(),
+            identities,
+            "simplified_chinese",
+        )
+
+        self.assertEqual(missing, [])
+
+    def test_f1_rebuilds_localized_config_help_from_config_metadata(self):
+        console_source = (
+            source_keys.PROJECT_ROOT
+            / "src/game/client/components/console.cpp"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("BuildLocalizedConfigHelpText", console_source)
+        self.assertIn("ConfigManager()->PossibleConfigVariables", console_source)
+        self.assertIn("pVar->m_pHelpLocalizeKey", console_source)
+        self.assertIn('Localize(pCommandHelp)', console_source)
+        self.assertIn(
+            'Localize("%s (default: %d, min: %d, max: %d)", "Config help")',
+            console_source,
+        )
+        self.assertIn(
+            'Localize("%s (default: \\"%s\\", max length: %d)", "Config help")',
+            console_source,
         )
 
     def test_language_map_for_flattens_selected_language(self):
