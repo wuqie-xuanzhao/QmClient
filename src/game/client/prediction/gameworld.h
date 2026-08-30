@@ -123,6 +123,7 @@ public:
 
 		int m_ExtraInfo;
 		bool m_Handled = false;
+		bool m_ServerConfirmed = false;
 
 		CPredictedEvent(int EventId, vec2 Pos, int Id, int Tick, int ExtraInfo = -1) :
 			m_EventId(EventId), m_Pos(vec2((int)Pos.x, (int)Pos.y)), m_Id(Id), m_Tick(Tick), m_ExtraInfo(ExtraInfo)
@@ -165,11 +166,12 @@ inline bool QmCheckPredictedHammerHitHandled(std::vector<CGameWorld::CPredictedE
 	auto Closest = vPredictedEvents.end();
 	int ClosestTickDifference = MaxTickDifference + 1;
 	float ClosestDistanceSquared = 0.0f;
-	bool AmbiguousClosest = false;
 	for(auto It = vPredictedEvents.begin(); It != vPredictedEvents.end(); ++It)
 	{
-		if(!It->m_Handled || It->m_EventId != NETEVENTTYPE_HAMMERHIT || CheckEvent.m_EventId != NETEVENTTYPE_HAMMERHIT ||
+		if(It->m_EventId != NETEVENTTYPE_HAMMERHIT || CheckEvent.m_EventId != NETEVENTTYPE_HAMMERHIT ||
 			(CheckEvent.m_Id >= 0 && It->m_Id != CheckEvent.m_Id) || It->m_Tick > CheckEvent.m_Tick || CheckEvent.m_Tick - It->m_Tick > MaxTickDifference || It->m_ExtraInfo != CheckEvent.m_ExtraInfo)
+			continue;
+		if(It->m_ServerConfirmed && CheckEvent.m_Tick - It->m_Tick > 1)
 			continue;
 		const float DistanceSquared = length_squared(It->m_Pos - CheckEvent.m_Pos);
 		if(DistanceSquared > MaxPositionCorrectionSquared)
@@ -180,25 +182,105 @@ inline bool QmCheckPredictedHammerHitHandled(std::vector<CGameWorld::CPredictedE
 			Closest = It;
 			ClosestTickDifference = TickDifference;
 			ClosestDistanceSquared = DistanceSquared;
-			AmbiguousClosest = false;
 		}
-		else if(TickDifference == ClosestTickDifference && DistanceSquared == ClosestDistanceSquared)
-			AmbiguousClosest = true;
 	}
-	if(Closest == vPredictedEvents.end() || AmbiguousClosest)
+	if(Closest == vPredictedEvents.end())
 		return false;
-	vPredictedEvents.erase(Closest);
+	if(Closest->m_ServerConfirmed)
+		return true;
+	// 保留短期确认屏障，防止同一 snapshot 的重复锤击事件再次播放粒子。
+	Closest->m_ServerConfirmed = true;
+	if(Closest->m_Handled)
+	{
+		Closest->m_Tick = CheckEvent.m_Tick;
+		Closest->m_Pos = CheckEvent.m_Pos;
+	}
 	return true;
+}
+
+inline bool QmPredictedEventPositionsMatch(int EventId, vec2 ExistingPos, vec2 ConfirmedPos)
+{
+	constexpr float SoundMaxPositionCorrection = 96.0f;
+	constexpr float ExplosionMaxPositionCorrection = 64.0f;
+	constexpr float DamageIndicatorMaxPositionCorrection = 32.0f;
+	float MaxPositionCorrection = 0.0f;
+	if(EventId == NETEVENTTYPE_SOUNDWORLD)
+		MaxPositionCorrection = SoundMaxPositionCorrection;
+	else if(EventId == NETEVENTTYPE_EXPLOSION)
+		MaxPositionCorrection = ExplosionMaxPositionCorrection;
+	else if(EventId == NETEVENTTYPE_DAMAGEIND)
+		MaxPositionCorrection = DamageIndicatorMaxPositionCorrection;
+
+	const float DistanceSquared = length_squared(ExistingPos - ConfirmedPos);
+	return MaxPositionCorrection == 0.0f ? DistanceSquared == 0.0f : DistanceSquared <= MaxPositionCorrection * MaxPositionCorrection;
 }
 
 inline bool QmPredictedEventMatchesForCreation(const CGameWorld::CPredictedEvent &Existing, const CGameWorld::CPredictedEvent &NewEvent)
 {
-	if(Existing.m_EventId != NewEvent.m_EventId || Existing.m_ExtraInfo != NewEvent.m_ExtraInfo || Existing.m_Id != NewEvent.m_Id || Existing.m_Tick != NewEvent.m_Tick)
+	if(Existing.m_EventId != NewEvent.m_EventId || Existing.m_ExtraInfo != NewEvent.m_ExtraInfo)
 		return false;
 
 	// 声音事件由实体和 tick 标识。预测重放同一 tick 时位置可能被校正，
-	// 但不能因此再次排队同一份声音。
-	return NewEvent.m_EventId == NETEVENTTYPE_SOUNDWORLD || Existing.m_Pos == NewEvent.m_Pos;
+	// 但不能因此再次排队同一份声音。其他效果仍需用位置区分同 tick 内
+	// 可能同时发生的多个独立事件（例如散弹爆炸）。
+	if(Existing.m_Id == NewEvent.m_Id && Existing.m_Tick == NewEvent.m_Tick)
+		return NewEvent.m_EventId == NETEVENTTYPE_SOUNDWORLD || Existing.m_Pos == NewEvent.m_Pos;
+
+	// 服务端事件可能先于本地预测抵达。把这种已播放的无 Id 确认事件
+	// 作为短期屏障，避免稍后的预测再次播放同一效果。
+	if(!Existing.m_ServerConfirmed || NewEvent.m_Id < 0 || (Existing.m_Id >= 0 && Existing.m_Id != NewEvent.m_Id) || NewEvent.m_Tick < Existing.m_Tick || NewEvent.m_Tick - Existing.m_Tick > 1)
+		return false;
+	return QmPredictedEventPositionsMatch(NewEvent.m_EventId, Existing.m_Pos, NewEvent.m_Pos);
+}
+
+inline bool QmCheckPredictedEventHandled(std::vector<CGameWorld::CPredictedEvent> &vPredictedEvents, const CGameWorld::CPredictedEvent &CheckEvent)
+{
+	constexpr int MaxTickDifference = 3 * SERVER_TICK_SPEED;
+	auto Closest = vPredictedEvents.end();
+	int ClosestTickDifference = MaxTickDifference + 1;
+	float ClosestDistanceSquared = 0.0f;
+	for(auto It = vPredictedEvents.begin(); It != vPredictedEvents.end(); ++It)
+	{
+		if(It->m_EventId != CheckEvent.m_EventId || It->m_Tick > CheckEvent.m_Tick || CheckEvent.m_Tick - It->m_Tick > MaxTickDifference || It->m_ExtraInfo != CheckEvent.m_ExtraInfo)
+			continue;
+		if(!QmPredictedEventPositionsMatch(CheckEvent.m_EventId, It->m_Pos, CheckEvent.m_Pos))
+			continue;
+
+		const float DistanceSquared = length_squared(It->m_Pos - CheckEvent.m_Pos);
+		const int TickDifference = CheckEvent.m_Tick - It->m_Tick;
+		if(It->m_ServerConfirmed && TickDifference > 1)
+			continue;
+		// 无 Id 的确认事件只作为服务端先到的短期屏障，不能在数秒内
+		// 把同位置的合法连续开火/爆炸误判成重复事件。
+		if(It->m_Id < 0 && TickDifference > 1)
+			continue;
+		// Position is the strongest identity available for snapshot events. Prefer
+		// the spatially closest candidate before using recency as a tie-breaker;
+		// otherwise a newer but distant event can consume the confirmation and
+		// leave the actual predicted effect to play again later.
+		if(Closest == vPredictedEvents.end() || DistanceSquared < ClosestDistanceSquared ||
+			(DistanceSquared == ClosestDistanceSquared && TickDifference < ClosestTickDifference))
+		{
+			Closest = It;
+			ClosestTickDifference = TickDifference;
+			ClosestDistanceSquared = DistanceSquared;
+		}
+	}
+
+	if(Closest == vPredictedEvents.end())
+		return false;
+	if(Closest->m_ServerConfirmed)
+		return true;
+	// 保留一个短期确认屏障，防止同一 snapshot 中的重复服务端事件再次播放。
+	// 声音等无实体 Id 的事件只在当前/下一 tick 内屏蔽。
+	Closest->m_ServerConfirmed = true;
+	if(Closest->m_Handled)
+	{
+		Closest->m_Id = -1;
+		Closest->m_Tick = CheckEvent.m_Tick;
+		Closest->m_Pos = CheckEvent.m_Pos;
+	}
+	return true;
 }
 
 class CCharOrder

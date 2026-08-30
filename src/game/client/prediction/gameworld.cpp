@@ -648,6 +648,7 @@ void CGameWorld::CopyWorldClean(CGameWorld *pFrom)
 	m_pMapBugs = pFrom->m_pMapBugs;
 	m_Teams = pFrom->m_Teams;
 	m_Core.m_vSwitchers = pFrom->m_Core.m_vSwitchers;
+	m_PredictedEvents = pFrom->m_PredictedEvents;
 	// delete the previous entities
 	Clear();
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -857,31 +858,16 @@ void CGameWorld::CreatePredictedEvent(const CPredictedEvent &NewEvent)
 	}
 	else if(NewEvent.m_EventId == NETEVENTTYPE_SOUNDWORLD && !It->m_Handled)
 	{
-		// 预测校正位置时保留同一声音身份，同时更新空间化播放位置。
+		// 预测校正位置时保留同一声音身份，同时更新尚未播放事件的
+		// 空间化位置。已播放事件保留原位置，确保服务器确认仍能匹配。
 		It->m_Pos = NewEvent.m_Pos;
 	}
 }
 
 bool CGameWorld::CheckPredictedEventHandled(const CPredictedEvent &CheckEvent)
 {
-	// events could be delayed by ping, so don't check for exact tick match
-	// also received events don't have Id
-	auto It = std::find_if(
-		m_PredictedEvents.begin(),
-		m_PredictedEvents.end(),
-		[CheckEvent](const CPredictedEvent &Event) {
-			return Event.m_Handled == true && Event.m_EventId == CheckEvent.m_EventId &&
-			       Event.m_Pos == CheckEvent.m_Pos && Event.m_Tick <= CheckEvent.m_Tick && Event.m_ExtraInfo == CheckEvent.m_ExtraInfo;
-		});
-
-	if(It == m_PredictedEvents.end())
-	{
-		return false;
-	}
-
-	// remove the event after it has been confirmed played
-	m_PredictedEvents.erase(It);
-	return true;
+	// 网络确认事件没有实体 Id，只能在有限 tick 窗口内按类型、附加信息和位置匹配。
+	return QmCheckPredictedEventHandled(m_PredictedEvents, CheckEvent);
 }
 
 bool CGameWorld::CheckPredictedHammerHitHandled(const CPredictedEvent &CheckEvent)
@@ -915,11 +901,20 @@ void CGameWorld::CreatePredictedHammerHitEvent(vec2 Pos, int Id, int TargetId)
 		m_PredictedEvents.begin(),
 		m_PredictedEvents.end(),
 		[Event](const CPredictedEvent &Existing) {
-			return Existing.m_EventId == Event.m_EventId && Existing.m_Id == Event.m_Id &&
-			       Existing.m_Tick == Event.m_Tick && Existing.m_ExtraInfo == Event.m_ExtraInfo;
+			return (Existing.m_EventId == Event.m_EventId && Existing.m_Id == Event.m_Id &&
+				       Existing.m_Tick == Event.m_Tick && Existing.m_ExtraInfo == Event.m_ExtraInfo) ||
+			       (Existing.m_EventId == Event.m_EventId && Existing.m_Handled && Existing.m_Id == Event.m_Id &&
+				       Existing.m_ExtraInfo == Event.m_ExtraInfo && Event.m_Tick >= Existing.m_Tick &&
+				       Event.m_Tick - Existing.m_Tick <= 1 && QmPredictedEventPositionsMatch(Event.m_EventId, Existing.m_Pos, Event.m_Pos));
 		});
 	if(It != m_PredictedEvents.end())
+	{
+		// 命中身份由攻击者、目标和 tick 决定；仅在粒子尚未播放时
+		// 更新预测校正位置，已播放事件保留原位置以便服务器确认匹配。
+		if(!It->m_Handled)
+			It->m_Pos = Event.m_Pos;
 		return;
+	}
 	CreatePredictedEvent(Event);
 }
 

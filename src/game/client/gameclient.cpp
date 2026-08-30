@@ -1585,6 +1585,7 @@ void CGameClient::OnReset()
 
 	m_PredictedDummyId = -1;
 	m_IsDummySwapping = false;
+	std::fill(std::begin(m_aLastProcessedEventTick), std::end(m_aLastProcessedEventTick), -1);
 	m_CharOrder.Reset();
 	std::fill(std::begin(m_aSwitchStateTeam), std::end(m_aSwitchStateTeam), -1);
 
@@ -3064,6 +3065,20 @@ void CGameClient::ProcessEvents()
 	if(m_SuppressEvents)
 		return;
 
+	// Dummy 切换会重新载入当前快照。相同连接、相同 tick 的事件已经消费过，
+	// 不能因为重新载入快照再次播放声音或创建粒子。
+	const int EventDummy = g_Config.m_ClDummy;
+	const int EventTick = Client()->GameTick(EventDummy);
+	if(m_aLastProcessedEventTick[EventDummy] == EventTick)
+		return;
+	m_aLastProcessedEventTick[EventDummy] = EventTick;
+	auto RememberConfirmedEvent = [this, EventTick](int EventId, vec2 Pos, int ExtraInfo = -1) {
+		CGameWorld::CPredictedEvent Event(EventId, Pos, -1, EventTick, ExtraInfo);
+		Event.m_Handled = true;
+		Event.m_ServerConfirmed = true;
+		m_PredictedWorld.m_PredictedEvents.push_back(Event);
+	};
+
 	int SnapType = IClient::SNAP_CURRENT;
 	int Num = Client()->SnapNumItems(SnapType);
 	for(int Index = 0; Index < Num; Index++)
@@ -3093,6 +3108,7 @@ void CGameClient::ProcessEvents()
 			{
 				const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));
 				m_Effects.Explosion(ExplosionPos, ExplosionAlpha);
+				RememberConfirmedEvent(Item.m_Type, ExplosionPos);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
@@ -3152,6 +3168,7 @@ void CGameClient::ProcessEvents()
 			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, SoundPos, -1, Client()->GameTick(g_Config.m_ClDummy), pEvent->m_SoundId)))
 			{
 				m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, SoundPos);
+				RememberConfirmedEvent(Item.m_Type, SoundPos, pEvent->m_SoundId);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_MAPSOUNDWORLD)
@@ -3167,6 +3184,13 @@ void CGameClient::ProcessEvents()
 
 void CGameClient::FinalizeHammerHitEvents()
 {
+	auto RememberConfirmedEvent = [this](vec2 Pos, int AttackerId, int TargetId, int SnapshotTick) {
+		CGameWorld::CPredictedEvent Event(NETEVENTTYPE_HAMMERHIT, Pos, AttackerId, SnapshotTick, TargetId);
+		Event.m_Handled = true;
+		Event.m_ServerConfirmed = true;
+		m_PredictedWorld.m_PredictedEvents.push_back(Event);
+	};
+
 	for(const SPendingHammerHitEvent &Event : m_vPendingHammerHitEvents)
 	{
 		const SQmHammerHitMatch Match = QmInferHammerHit(this, Event.m_Pos, Event.m_SnapshotTick);
@@ -3194,6 +3218,8 @@ void CGameClient::FinalizeHammerHitEvents()
 		{
 			const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);
 			m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);
+			if(Match.m_AttackerId >= 0 && Match.m_TargetId >= 0)
+				RememberConfirmedEvent(Event.m_Pos, Match.m_AttackerId, Match.m_TargetId, Event.m_SnapshotTick);
 		}
 	}
 	m_vPendingHammerHitEvents.clear();
@@ -4849,7 +4875,7 @@ void CGameClient::OnPredict()
 			vec2 Pos = pLocalChar->Core()->m_Pos;
 			int Events = pLocalChar->Core()->m_TriggeredEvents;
 
-			if(g_Config.m_ClPredict && m_PredictedWorld.m_WorldConfig.m_PredictEvents && !m_SuppressEvents)
+			if(g_Config.m_ClPredict && m_PredictedWorld.m_WorldConfig.m_PredictEvents && !m_SuppressEvents && !Client()->IsSixup())
 				if(Events & COREEVENT_AIR_JUMP)
 				{
 					m_aLastPredictedAirJumpTick[Dummy] = Tick;
@@ -4877,7 +4903,7 @@ void CGameClient::OnPredict()
 			m_aLastNewPredictedTick[!Dummy] = Tick;
 			vec2 Pos = pDummyChar->Core()->m_Pos;
 			int Events = pDummyChar->Core()->m_TriggeredEvents;
-			if(g_Config.m_ClPredict && m_PredictedWorld.m_WorldConfig.m_PredictEvents && !m_SuppressEvents)
+			if(g_Config.m_ClPredict && m_PredictedWorld.m_WorldConfig.m_PredictEvents && !m_SuppressEvents && !Client()->IsSixup())
 				if(Events & COREEVENT_AIR_JUMP)
 				{
 					m_aLastPredictedAirJumpTick[!Dummy] = Tick;
@@ -4885,7 +4911,8 @@ void CGameClient::OnPredict()
 				}
 		}
 
-		HandlePredictedEvents(Tick);
+		if(Tick <= FinalTickRegular)
+			HandlePredictedEvents(Tick);
 	}
 
 	if(FastInputTicks > 0)
@@ -4930,7 +4957,9 @@ void CGameClient::OnPredict()
 			}
 		}
 
-		HandlePredictedEvents(m_ExtraPredictedWorld.m_GameTick);
+		// Extra 世界只用于反卡位置校正，不应再次消费正式预测世界的可见事件。
+		// 正式预测循环已经按真实 tick 处理过事件；额外推进产生的事件直接丢弃。
+		m_ExtraPredictedWorld.m_PredictedEvents.clear();
 	}
 
 	// detect mispredictions of other players and make corrections smoother when possible

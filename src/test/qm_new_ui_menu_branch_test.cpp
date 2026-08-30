@@ -94,6 +94,93 @@ TEST(QmPredictedEvents, SoundIdentityIgnoresPredictionPositionCorrection)
 	EXPECT_FALSE(QmPredictedEventMatchesForCreation(Existing, OtherEntity));
 }
 
+TEST(QmPredictedEvents, ParticleIdentityKeepsPositionCorrectionDistinct)
+{
+	const CGameWorld::CPredictedEvent Explosion(NETEVENTTYPE_EXPLOSION, vec2(100.0f, 100.0f), 7, 500);
+	const CGameWorld::CPredictedEvent CorrectedExplosion(NETEVENTTYPE_EXPLOSION, vec2(140.0f, 100.0f), 7, 500);
+	const CGameWorld::CPredictedEvent NoIdExplosion(NETEVENTTYPE_EXPLOSION, vec2(100.0f, 100.0f), -1, 500);
+	const CGameWorld::CPredictedEvent OtherPosition(NETEVENTTYPE_EXPLOSION, vec2(140.0f, 100.0f), -1, 500);
+
+	EXPECT_FALSE(QmPredictedEventMatchesForCreation(Explosion, CorrectedExplosion));
+	EXPECT_FALSE(QmPredictedEventMatchesForCreation(NoIdExplosion, OtherPosition));
+}
+
+TEST(QmPredictedEvents, ServerConfirmationUsesEventSpecificPositionTolerance)
+{
+	EXPECT_TRUE(QmPredictedEventPositionsMatch(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), vec2(160.0f, 100.0f)));
+	EXPECT_FALSE(QmPredictedEventPositionsMatch(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), vec2(197.0f, 100.0f)));
+	EXPECT_TRUE(QmPredictedEventPositionsMatch(NETEVENTTYPE_EXPLOSION, vec2(100.0f, 100.0f), vec2(164.0f, 100.0f)));
+	EXPECT_FALSE(QmPredictedEventPositionsMatch(NETEVENTTYPE_EXPLOSION, vec2(100.0f, 100.0f), vec2(165.0f, 100.0f)));
+	EXPECT_FALSE(QmPredictedEventPositionsMatch(NETEVENTTYPE_DAMAGEIND, vec2(100.0f, 100.0f), vec2(133.0f, 100.0f)));
+	EXPECT_FALSE(QmPredictedEventPositionsMatch(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), vec2(101.0f, 100.0f)));
+}
+
+TEST(QmPredictedEvents, ServerConfirmationConsumesClosestRecentEventOneToOne)
+{
+	std::vector<CGameWorld::CPredictedEvent> vPredictedEvents;
+	CGameWorld::CPredictedEvent Event(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), 3, 500, SOUND_GUN_FIRE);
+	Event.m_Handled = true;
+	vPredictedEvents.push_back(Event);
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(160.0f, 100.0f), -1, 501, SOUND_GUN_FIRE)));
+	ASSERT_EQ(vPredictedEvents.size(), 1u);
+	EXPECT_TRUE(vPredictedEvents.front().m_ServerConfirmed);
+	EXPECT_FALSE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(104.0f, 100.0f), -1, 502, SOUND_GUN_FIRE)));
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(160.0f, 100.0f), -1, 501, SOUND_GUN_FIRE)));
+
+	CGameWorld::CPredictedEvent Stale(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), 3, 500, SOUND_GUN_FIRE);
+	Stale.m_Handled = true;
+	vPredictedEvents.push_back(Stale);
+	EXPECT_FALSE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), -1, 500 + 3 * SERVER_TICK_SPEED + 1, SOUND_GUN_FIRE)));
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
+
+	CGameWorld::CPredictedEvent SamePosition(NETEVENTTYPE_SOUNDWORLD, vec2(200.0f, 100.0f), 3, 700, SOUND_GUN_FIRE);
+	SamePosition.m_Handled = true;
+	CGameWorld::CPredictedEvent Duplicate(NETEVENTTYPE_SOUNDWORLD, vec2(200.0f, 100.0f), 4, 700, SOUND_GUN_FIRE);
+	Duplicate.m_Handled = true;
+	vPredictedEvents = {SamePosition, Duplicate};
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(200.0f, 100.0f), -1, 701, SOUND_GUN_FIRE)));
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(200.0f, 100.0f), -1, 701, SOUND_GUN_FIRE)));
+	EXPECT_TRUE(vPredictedEvents.front().m_ServerConfirmed);
+
+	CGameWorld::CPredictedEvent NearOlder(NETEVENTTYPE_EXPLOSION, vec2(300.0f, 100.0f), -1, 700);
+	NearOlder.m_Handled = true;
+	CGameWorld::CPredictedEvent FarNewer(NETEVENTTYPE_EXPLOSION, vec2(350.0f, 100.0f), -1, 701);
+	FarNewer.m_Handled = true;
+	vPredictedEvents = {FarNewer, NearOlder};
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_EXPLOSION, vec2(302.0f, 100.0f), -1, 702)));
+	ASSERT_EQ(vPredictedEvents.size(), 2u);
+	EXPECT_EQ(vPredictedEvents.front().m_Tick, 702);
+}
+
+TEST(QmPredictedEvents, ServerFirstConfirmationBlocksImmediatePredictionReplay)
+{
+	CGameWorld::CPredictedEvent Confirmed(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), -1, 500, SOUND_GUN_FIRE);
+	Confirmed.m_Handled = true;
+	Confirmed.m_ServerConfirmed = true;
+	EXPECT_TRUE(QmPredictedEventMatchesForCreation(Confirmed, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(108.0f, 100.0f), 3, 501, SOUND_GUN_FIRE)));
+	EXPECT_FALSE(QmPredictedEventMatchesForCreation(Confirmed, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(108.0f, 100.0f), 3, 502, SOUND_GUN_FIRE)));
+}
+
+TEST(QmPredictedEvents, ServerFirstConfirmationMarksPendingPredictionWithoutConsumingIt)
+{
+	std::vector<CGameWorld::CPredictedEvent> vPredictedEvents;
+	CGameWorld::CPredictedEvent Pending(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), 3, 500, SOUND_GUN_FIRE);
+	vPredictedEvents.push_back(Pending);
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(104.0f, 100.0f), -1, 500, SOUND_GUN_FIRE)));
+	ASSERT_EQ(vPredictedEvents.size(), 1u);
+	EXPECT_FALSE(vPredictedEvents.front().m_Handled);
+	EXPECT_TRUE(vPredictedEvents.front().m_ServerConfirmed);
+
+	std::vector<CGameWorld::CPredictedEvent> PendingHammer;
+	CGameWorld::CPredictedEvent Hammer(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 500, 4);
+	PendingHammer.push_back(Hammer);
+	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(PendingHammer, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(104.0f, 100.0f), 3, 500, 4)));
+	ASSERT_EQ(PendingHammer.size(), 1u);
+	EXPECT_FALSE(PendingHammer.front().m_Handled);
+	EXPECT_TRUE(PendingHammer.front().m_ServerConfirmed);
+}
+
 namespace
 {
 
@@ -1830,7 +1917,9 @@ TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOn
 	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(124.0f, 100.0f), 4, 102, 4)));
 	EXPECT_EQ(vPredictedEvents.size(), 1u);
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(132.0f, 100.0f), 3, 102, 4)));
-	EXPECT_TRUE(vPredictedEvents.empty());
+	ASSERT_EQ(vPredictedEvents.size(), 1u);
+	EXPECT_TRUE(vPredictedEvents.front().m_ServerConfirmed);
+	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(132.0f, 100.0f), 3, 102, 4)));
 
 	CGameWorld::CPredictedEvent First(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 100, 4);
 	CGameWorld::CPredictedEvent Second(NETEVENTTYPE_HAMMERHIT, vec2(130.0f, 100.0f), 3, 100, 5);
@@ -1838,9 +1927,9 @@ TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOn
 	Second.m_Handled = true;
 	vPredictedEvents = {First, Second};
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(101.0f, 100.0f), 3, 102, 4)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(131.0f, 100.0f), 3, 102, 5)));
-	EXPECT_TRUE(vPredictedEvents.empty());
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
 
 	CGameWorld::CPredictedEvent TargetA(NETEVENTTYPE_HAMMERHIT, vec2(200.0f, 100.0f), 3, 200, 4);
 	CGameWorld::CPredictedEvent TargetB(NETEVENTTYPE_HAMMERHIT, vec2(202.0f, 100.0f), 3, 200, 5);
@@ -1848,7 +1937,7 @@ TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOn
 	TargetB.m_Handled = true;
 	vPredictedEvents = {TargetA, TargetB};
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(201.0f, 100.0f), 3, 202, 5)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
 	EXPECT_EQ(vPredictedEvents.front().m_ExtraInfo, 4);
 	vPredictedEvents.clear();
 
@@ -1880,6 +1969,7 @@ TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOn
 	Boundary.m_Handled = true;
 	vPredictedEvents.push_back(Boundary);
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(432.0f, 100.0f), 3, 402, 4)));
+	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(432.0f, 100.0f), 3, 402, 4)));
 
 	CGameWorld::CPredictedEvent Earlier(NETEVENTTYPE_HAMMERHIT, vec2(500.0f, 100.0f), 3, 500, 4);
 	CGameWorld::CPredictedEvent Later(NETEVENTTYPE_HAMMERHIT, vec2(520.0f, 100.0f), 3, 516, 4);
@@ -1887,8 +1977,14 @@ TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOn
 	Later.m_Handled = true;
 	vPredictedEvents = {Earlier, Later};
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(501.0f, 100.0f), 3, 517, 4)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
-	EXPECT_EQ(vPredictedEvents.front().m_Tick, 500);
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
+	EXPECT_EQ(vPredictedEvents.back().m_Tick, 517);
+	vPredictedEvents.clear();
+	CGameWorld::CPredictedEvent Single(NETEVENTTYPE_HAMMERHIT, vec2(550.0f, 100.0f), 3, 600, 4);
+	Single.m_Handled = true;
+	vPredictedEvents.push_back(Single);
+	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(550.0f, 100.0f), 3, 601, 4)));
+	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(550.0f, 100.0f), 3, 603, 4)));
 }
 
 TEST(QmNewUiMenuBranches, HammerHitConsumersUseDeferredServerEvidenceOnly)
