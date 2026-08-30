@@ -16,6 +16,16 @@
 
 class IJob;
 
+struct SQmClientLocalModeStats
+{
+	std::string m_GameMode;
+	std::string m_CommunityId;
+	bool m_IsAxiom = false;
+	int m_Maps = 0;
+	int64_t m_Score = 0;
+	int64_t m_PlaytimeSeconds = 0;
+};
+
 class CQmClient : public CComponent
 {
 	std::shared_ptr<IHttpRequest> m_pQmClientAuthTokenTask = nullptr;
@@ -63,12 +73,20 @@ class CQmClient : public CComponent
 	int m_QmClientOnlineUserCount = 0;
 	int m_QmClientOnlineDummyCount = 0;
 	int m_QmDdnetTotalFinishes = -1;
+	int64_t m_QmDdnetPoints = -1;
+	int64_t m_QmDdnetPointsTotal = -1;
+	mutable bool m_QmStatisticsFileExists = false;
 	int m_QmClientPendingVoicePresencePlayers = 0;
 	bool m_QmClientDistributionSuccessLatched = false;
 	bool m_QmClientShutdownReported = false;
 	bool m_QmClientAwaitingRecoveryStop = false;
 	bool m_QmClientStartupSent = false;
 	std::vector<SQmClientServerDistribution> m_vQmClientServerDistribution;
+	std::vector<SQmClientLocalModeStats> m_vQmClientLocalModeStats;
+	std::string m_QmClientActiveLocalMode;
+	std::string m_QmClientActiveLocalCommunityId;
+	bool m_QmClientActiveLocalIsAxiom = false;
+	int64_t m_QmClientLocalModeLastTimestamp = 0;
 
 	void InitQmClientLifecycle();
 	void UpdateQmClientLifecycleAndServerTime();
@@ -105,6 +123,11 @@ class CQmClient : public CComponent
 	void UpdateQmDdnetPlayerStats();
 	void FetchQmDdnetPlayerStats(const char *pPlayerName);
 	void FinishQmDdnetPlayerStats();
+	void LoadQmClientLocalModeStats();
+	void UpdateQmClientLocalModePlaytime();
+	void AccumulateQmClientLocalModePlaytime(int64_t Now);
+	void EndQmClientLocalModePlaytime();
+	void RefreshQmDdnetPlayerStats();
 
 public:
 	int Sizeof() const override { return sizeof(*this); }
@@ -123,7 +146,14 @@ public:
 	int QmClientOnlineUserCount() const { return m_QmClientOnlineUserCount; }
 	int QmClientOnlineDummyCount() const { return m_QmClientOnlineDummyCount; }
 	int QmDdnetTotalFinishes() const { return m_QmDdnetTotalFinishes; }
+	int64_t QmDdnetPoints() const { return m_QmDdnetPoints; }
+	int64_t QmDdnetPointsTotal() const { return m_QmDdnetPointsTotal; }
+	const char *QmDdnetPlayerName() const { return m_aQmDdnetPlayerName; }
 	const char *QmDdnetFavoritePartner() const { return m_aQmDdnetFavoritePartner; }
+	const std::vector<SQmClientLocalModeStats> &QmClientLocalModeStats() const { return m_vQmClientLocalModeStats; }
+	void SaveQmClientStatistics() const;
+	void RecordQmClientLocalMapFinish(const char *pGameMode, int Score);
+	void RefreshQmClientStatistics();
 };
 
 #endif

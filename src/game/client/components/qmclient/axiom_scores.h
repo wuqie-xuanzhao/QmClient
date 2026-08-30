@@ -13,6 +13,8 @@
 #include <memory>
 #include <string>
 
+class CJsonFileWriter;
+
 class IQmAxiomHttpRequest
 {
 public:
@@ -115,7 +117,10 @@ public:
 	void OnStateChange(int NewState, int OldState) override;
 
 	void EnsureQueried(const char *pPlayerName);
+	void Refresh(const char *pPlayerName);
 	const SQmAxiomPlayerResult *GetResult(const char *pPlayerName) const;
+	void LoadPersistentCache(const json_value *pRoot);
+	void WritePersistentCache(CJsonFileWriter &Writer) const;
 };
 
 #endif

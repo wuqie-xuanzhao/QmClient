@@ -2916,6 +2916,24 @@ void CGameClient::OnEnterGame()
 
 void CGameClient::OnGameOver()
 {
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && m_Snap.m_pLocalInfo != nullptr && m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
+	{
+		if((Client()->IsSixup() && m_Snap.m_pLocalInfo->m_Score != protocol7::FinishTime::NOT_FINISHED) || (!Client()->IsSixup() && m_Snap.m_pLocalInfo->m_Score != FinishTime::NOT_FINISHED_TIMESCORE))
+		{
+			const CServerInfo &ServerInfo = Client()->ServerInfo();
+			int Score = m_Snap.m_pLocalInfo->m_Score;
+			const bool IsSixupRace = Client()->IsSixup() && m_Snap.m_pGameInfoObj != nullptr && (m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE) != 0;
+			if(m_GameInfo.m_TimeScore || IsSixupRace)
+			{
+				const int64_t FinishSeconds = Client()->IsSixup() ? maximum<int64_t>(1, Score / 1000) : maximum<int64_t>(1, -static_cast<int64_t>(Score));
+				Score = -static_cast<int>(std::min<int64_t>(FinishSeconds, std::numeric_limits<int>::max()));
+				const char *pGameType = ServerInfo.m_aGameType;
+				if(pGameType[0] == '\0')
+					pGameType = m_GameInfo.m_aGameType;
+				m_QmClient.RecordQmClientLocalMapFinish(pGameType, Score);
+			}
+		}
+	}
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && g_Config.m_ClEditor == 0)
 		Client()->AutoScreenshot_Start();
 }
@@ -3435,6 +3453,7 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 	bool GotSwitchStateTeam = false;
 	bool HasUnsetDDNetFinishTimes = false;
 	bool HasTrueMillisecondFinishTimes = false;
+	bool GameOverStarted = false;
 	m_aSwitchStateTeam[g_Config.m_ClDummy] = -1;
 
 	for(auto &Client : m_aClients)
@@ -3666,7 +3685,7 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 				const bool CurrentTickGameOver = (m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER) != 0;
 				const bool CurrentTickGamePaused = (m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_PAUSED) != 0;
 				if(!m_GameOver && CurrentTickGameOver)
-					OnGameOver();
+					GameOverStarted = true;
 				else if(m_GameOver && !CurrentTickGameOver)
 					OnStartGame();
 				// Handle case that a new round is started (RoundStartTick changed)
@@ -3785,6 +3804,8 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 			}
 		}
 	}
+	if(GameOverStarted)
+		OnGameOver();
 
 	if(!FoundGameInfoEx)
 	{

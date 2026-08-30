@@ -40,6 +40,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cinttypes>
 #include <cmath>
 #include <limits>
 #include <mutex>
@@ -115,6 +116,17 @@ static constexpr const char *DDNET_PLAYER_STATS_URL = "https://ddnet.org/players
 static constexpr int QMCLIENT_DDNET_PLAYER_SYNC_INTERVAL_SECONDS = 120;
 static constexpr int QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS = 10;
 static constexpr const char *QMCLIENT_FREEZE_WAKEUP_TEXT = "快醒醒!";
+static constexpr const char *QMCLIENT_LOCAL_MODE_STATS_FILE = "qmclient/statistics.json";
+
+static bool ParseStrictInt64(const char *pText, int64_t &Out)
+{
+	if(!pText || pText[0] == '\0')
+		return false;
+	Out = str_toint64_base(pText);
+	char aCanonical[64];
+	str_format(aCanonical, sizeof(aCanonical), "%" PRId64, Out);
+	return str_comp(aCanonical, pText) == 0;
+}
 
 [[maybe_unused]] static bool TextContainsAny(const char *pText, const std::initializer_list<const char *> &Tokens)
 {
@@ -239,6 +251,8 @@ namespace
 			bool m_Parsed = false;
 			std::string m_FavoritePartner;
 			int m_TotalFinishes = -1;
+			int64_t m_Points = -1;
+			int64_t m_PointsTotal = -1;
 		};
 
 	private:
@@ -255,6 +269,17 @@ namespace
 				json_value *pRoot = m_pTask->ResultJson();
 				if(pRoot && pRoot->type == json_object)
 				{
+					const json_value *pPoints = JsonObjectField(pRoot, "points");
+					if(pPoints != &json_value_none && pPoints->type == json_object)
+					{
+						const json_value *pCurrent = JsonObjectField(pPoints, "points");
+						const json_value *pTotal = JsonObjectField(pPoints, "total");
+						if(pCurrent != &json_value_none && pCurrent->type == json_integer && pCurrent->u.integer >= 0)
+							Result.m_Points = pCurrent->u.integer;
+						if(pTotal != &json_value_none && pTotal->type == json_integer && pTotal->u.integer >= 0)
+							Result.m_PointsTotal = pTotal->u.integer;
+					}
+
 					const json_value *pFavoritePartners = JsonObjectField(pRoot, "favorite_partners");
 					if(pFavoritePartners->type == json_array)
 					{
@@ -721,11 +746,338 @@ static bool IsValidQmClientPlaytimeId(const char *pClientId)
 void CQmClient::OnInit()
 {
 	InitQmClientLifecycle();
+	LoadQmClientLocalModeStats();
+	if(!m_QmStatisticsFileExists)
+		SaveQmClientStatistics();
 	InitQmDeveloperAuthentication();
+}
+
+void CQmClient::LoadQmClientLocalModeStats()
+{
+	m_vQmClientLocalModeStats.clear();
+	m_QmStatisticsFileExists = false;
+	char *pJson = Storage()->ReadFileStr(QMCLIENT_LOCAL_MODE_STATS_FILE, IStorage::TYPE_SAVE);
+	if(!pJson)
+		return;
+	json_value *pRoot = JsonParse(pJson, str_length(pJson));
+	free(pJson);
+	if(!pRoot || pRoot->type != json_object)
+	{
+		if(pRoot)
+			json_value_free(pRoot);
+		return;
+	}
+	const json_value *pLocal = JsonObjectField(pRoot, "local");
+	const json_value *pRemote = JsonObjectField(pRoot, "remote");
+	if(pLocal->type != json_object || pRemote->type != json_object)
+	{
+		json_value_free(pRoot);
+		return;
+	}
+	m_QmStatisticsFileExists = true;
+	const json_value *pModes = JsonObjectField(pLocal, "modes");
+	if(pModes && pModes->type == json_array)
+	{
+		for(int Index = 0; Index < json_array_length(pModes); ++Index)
+		{
+			const json_value *pMode = json_array_get(pModes, Index);
+			if(!pMode || pMode->type != json_object)
+				continue;
+			const json_value *pName = JsonObjectField(pMode, "mode");
+			const json_value *pCommunity = JsonObjectField(pMode, "community_id");
+			const json_value *pAxiom = JsonObjectField(pMode, "axiom");
+			const json_value *pMaps = JsonObjectField(pMode, "maps");
+			const json_value *pScore = JsonObjectField(pMode, "score");
+			const json_value *pPlaytime = JsonObjectField(pMode, "playtime_seconds");
+			if(!pName || pName->type != json_string || !pMaps || pMaps->type != json_integer || !pScore)
+				continue;
+			const char *pModeName = json_string_get(pName);
+			int64_t Maps = pMaps->u.integer;
+			int64_t Score = 0;
+			if(!pModeName || pModeName[0] == '\0' || static_cast<size_t>(str_length(pModeName)) > 128 || !str_utf8_check(pModeName) || Maps < 0 || Maps > std::numeric_limits<int>::max())
+				continue;
+			if(pScore->type == json_integer)
+				Score = pScore->u.integer;
+			else if(pScore->type == json_string)
+			{
+				const char *pScoreText = json_string_get(pScore);
+				if(!ParseStrictInt64(pScoreText, Score))
+					continue;
+			}
+			else
+				continue;
+			SQmClientLocalModeStats Stats;
+			Stats.m_GameMode = pModeName;
+			if(pCommunity != &json_value_none && pCommunity->type == json_string && json_string_get(pCommunity) && static_cast<size_t>(str_length(json_string_get(pCommunity))) <= 128 && str_utf8_check(json_string_get(pCommunity)))
+				Stats.m_CommunityId = json_string_get(pCommunity);
+			Stats.m_IsAxiom = pAxiom->type == json_boolean && json_boolean_get(pAxiom);
+			Stats.m_Maps = (int)Maps;
+			Stats.m_Score = Score;
+			if(pPlaytime)
+			{
+				if(pPlaytime->type == json_integer && pPlaytime->u.integer >= 0)
+					Stats.m_PlaytimeSeconds = pPlaytime->u.integer;
+				else if(pPlaytime->type == json_string)
+				{
+					const char *pPlaytimeText = json_string_get(pPlaytime);
+					int64_t ParsedPlaytime = 0;
+					if(ParseStrictInt64(pPlaytimeText, ParsedPlaytime) && ParsedPlaytime >= 0)
+						Stats.m_PlaytimeSeconds = ParsedPlaytime;
+				}
+			}
+			m_vQmClientLocalModeStats.push_back(std::move(Stats));
+		}
+	}
+	const json_value *pQmClient = JsonObjectField(pRemote, "qmclient");
+	const json_value *pOpenSeconds = JsonObjectField(pQmClient, "open_seconds");
+	if(pOpenSeconds->type == json_integer && pOpenSeconds->u.integer >= 0)
+		m_QmClientServerPlaytimeSeconds = pOpenSeconds->u.integer;
+	else if(pOpenSeconds->type == json_string)
+	{
+		int64_t OpenSeconds = 0;
+		if(ParseStrictInt64(json_string_get(pOpenSeconds), OpenSeconds) && OpenSeconds >= 0)
+			m_QmClientServerPlaytimeSeconds = OpenSeconds;
+	}
+	const json_value *pDdnet = JsonObjectField(pRemote, "ddnet");
+	const json_value *pPlayerName = JsonObjectField(pDdnet, "player_name");
+	if(pPlayerName->type == json_string && json_string_get(pPlayerName) && str_utf8_check(json_string_get(pPlayerName)))
+		str_copy(m_aQmDdnetPlayerName, json_string_get(pPlayerName), sizeof(m_aQmDdnetPlayerName));
+	const json_value *pFavoritePartner = JsonObjectField(pDdnet, "favorite_partner");
+	if(pFavoritePartner->type == json_string && json_string_get(pFavoritePartner) && str_utf8_check(json_string_get(pFavoritePartner)))
+		str_copy(m_aQmDdnetFavoritePartner, json_string_get(pFavoritePartner), sizeof(m_aQmDdnetFavoritePartner));
+	const json_value *pPoints = JsonObjectField(pDdnet, "points");
+	const json_value *pPointsTotal = JsonObjectField(pDdnet, "points_total");
+	const json_value *pFinishes = JsonObjectField(pDdnet, "finishes");
+	if(pPoints->type == json_integer)
+		m_QmDdnetPoints = pPoints->u.integer;
+	else if(pPoints->type == json_string)
+	{
+		int64_t Points = 0;
+		if(ParseStrictInt64(json_string_get(pPoints), Points))
+			m_QmDdnetPoints = Points;
+	}
+	if(pPointsTotal->type == json_integer)
+		m_QmDdnetPointsTotal = pPointsTotal->u.integer;
+	else if(pPointsTotal->type == json_string)
+	{
+		int64_t PointsTotal = 0;
+		if(ParseStrictInt64(json_string_get(pPointsTotal), PointsTotal))
+			m_QmDdnetPointsTotal = PointsTotal;
+	}
+	if(pFinishes->type == json_integer && pFinishes->u.integer >= 0 && pFinishes->u.integer <= std::numeric_limits<int>::max())
+		m_QmDdnetTotalFinishes = (int)pFinishes->u.integer;
+	else if(pFinishes->type == json_string)
+	{
+		int64_t Finishes = 0;
+		if(ParseStrictInt64(json_string_get(pFinishes), Finishes) && Finishes >= 0 && Finishes <= std::numeric_limits<int>::max())
+			m_QmDdnetTotalFinishes = (int)Finishes;
+	}
+	if(GameClient() != nullptr)
+		GameClient()->m_QmAxiomScores.LoadPersistentCache(pRoot);
+	json_value_free(pRoot);
+}
+
+void CQmClient::SaveQmClientStatistics() const
+{
+	Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
+	char aTempFilename[IO_MAX_PATH_LENGTH];
+	IStorage::FormatTmpPath(aTempFilename, sizeof(aTempFilename), QMCLIENT_LOCAL_MODE_STATS_FILE);
+	IOHANDLE File = Storage()->OpenFile(aTempFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return;
+	{
+		CJsonFileWriter Writer(File);
+		Writer.BeginObject();
+		Writer.WriteAttribute("local");
+		Writer.BeginObject();
+		Writer.WriteAttribute("modes");
+		Writer.BeginArray();
+		for(const SQmClientLocalModeStats &Stats : m_vQmClientLocalModeStats)
+		{
+			Writer.BeginObject();
+			Writer.WriteAttribute("mode");
+			Writer.WriteStrValue(Stats.m_GameMode.c_str());
+			if(!Stats.m_CommunityId.empty())
+			{
+				Writer.WriteAttribute("community_id");
+				Writer.WriteStrValue(Stats.m_CommunityId.c_str());
+			}
+			if(Stats.m_IsAxiom)
+			{
+				Writer.WriteAttribute("axiom");
+				Writer.WriteBoolValue(true);
+			}
+			Writer.WriteAttribute("maps");
+			Writer.WriteIntValue(Stats.m_Maps);
+			Writer.WriteAttribute("score");
+			char aScore[64];
+			str_format(aScore, sizeof(aScore), "%" PRId64, Stats.m_Score);
+			Writer.WriteStrValue(aScore);
+			Writer.WriteAttribute("playtime_seconds");
+			char aPlaytime[64];
+			str_format(aPlaytime, sizeof(aPlaytime), "%" PRId64, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
+			Writer.WriteStrValue(aPlaytime);
+			Writer.EndObject();
+		}
+		Writer.EndArray();
+		Writer.EndObject();
+		Writer.WriteAttribute("remote");
+		Writer.BeginObject();
+		Writer.WriteAttribute("qmclient");
+		Writer.BeginObject();
+		if(m_QmClientServerPlaytimeSeconds >= 0)
+		{
+			Writer.WriteAttribute("open_seconds");
+			char aOpenSeconds[64];
+			str_format(aOpenSeconds, sizeof(aOpenSeconds), "%" PRId64, m_QmClientServerPlaytimeSeconds);
+			Writer.WriteStrValue(aOpenSeconds);
+		}
+		Writer.EndObject();
+		Writer.WriteAttribute("ddnet");
+		Writer.BeginObject();
+		if(m_aQmDdnetPlayerName[0] != '\0')
+		{
+			Writer.WriteAttribute("player_name");
+			Writer.WriteStrValue(m_aQmDdnetPlayerName);
+		}
+		if(m_aQmDdnetFavoritePartner[0] != '\0')
+		{
+			Writer.WriteAttribute("favorite_partner");
+			Writer.WriteStrValue(m_aQmDdnetFavoritePartner);
+		}
+		if(m_QmDdnetPoints >= 0)
+		{
+			Writer.WriteAttribute("points");
+			char aPoints[64];
+			str_format(aPoints, sizeof(aPoints), "%" PRId64, m_QmDdnetPoints);
+			Writer.WriteStrValue(aPoints);
+		}
+		if(m_QmDdnetPointsTotal >= 0)
+		{
+			Writer.WriteAttribute("points_total");
+			char aPointsTotal[64];
+			str_format(aPointsTotal, sizeof(aPointsTotal), "%" PRId64, m_QmDdnetPointsTotal);
+			Writer.WriteStrValue(aPointsTotal);
+		}
+		if(m_QmDdnetTotalFinishes >= 0)
+		{
+			Writer.WriteAttribute("finishes");
+			Writer.WriteIntValue(m_QmDdnetTotalFinishes);
+		}
+		Writer.EndObject();
+		if(GameClient() != nullptr)
+			GameClient()->m_QmAxiomScores.WritePersistentCache(Writer);
+		else
+		{
+			Writer.WriteAttribute("axiom");
+			Writer.BeginObject();
+			Writer.WriteAttribute("players");
+			Writer.BeginArray();
+			Writer.EndArray();
+			Writer.EndObject();
+		}
+		Writer.EndObject();
+		Writer.EndObject();
+	}
+	char aBackupFilename[2 * IO_MAX_PATH_LENGTH];
+	const bool Saved = IStorage::ReplaceFileSafely(Storage(), aTempFilename, QMCLIENT_LOCAL_MODE_STATS_FILE, aBackupFilename, sizeof(aBackupFilename));
+	if(!Saved)
+		Storage()->RemoveFile(aTempFilename, IStorage::TYPE_SAVE);
+	else
+		m_QmStatisticsFileExists = true;
+}
+
+void CQmClient::RecordQmClientLocalMapFinish(const char *pGameMode, int Score)
+{
+	if(!pGameMode || pGameMode[0] == '\0' || static_cast<size_t>(str_length(pGameMode)) > 128 || !str_utf8_check(pGameMode))
+		return;
+	const bool IsAxiom = Client()->State() == IClient::STATE_ONLINE && GameClient() != nullptr && GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
+	const std::string CommunityId = Client()->State() == IClient::STATE_ONLINE ? Client()->ServerInfo().m_aCommunityId : "";
+	if(CommunityId.size() > 128 || !str_utf8_check(CommunityId.c_str()))
+		return;
+	AccumulateQmClientLocalModePlaytime(time_timestamp());
+	for(SQmClientLocalModeStats &Stats : m_vQmClientLocalModeStats)
+	{
+		if(Stats.m_GameMode == pGameMode && Stats.m_CommunityId == CommunityId && Stats.m_IsAxiom == IsAxiom)
+		{
+			++Stats.m_Maps;
+			Stats.m_Score += Score;
+			return;
+		}
+	}
+	SQmClientLocalModeStats Stats;
+	Stats.m_GameMode = pGameMode;
+	Stats.m_CommunityId = CommunityId;
+	Stats.m_IsAxiom = IsAxiom;
+	Stats.m_Maps = 1;
+	Stats.m_Score = Score;
+	m_vQmClientLocalModeStats.push_back(std::move(Stats));
+}
+
+void CQmClient::AccumulateQmClientLocalModePlaytime(int64_t Now)
+{
+	if(m_QmClientActiveLocalMode.empty())
+		return;
+	if(m_QmClientLocalModeLastTimestamp <= 0)
+	{
+		m_QmClientLocalModeLastTimestamp = Now;
+		return;
+	}
+	const int64_t Delta = Now - m_QmClientLocalModeLastTimestamp;
+	m_QmClientLocalModeLastTimestamp = Now;
+	if(Delta <= 0 || Delta > 24 * 60 * 60)
+		return;
+	for(SQmClientLocalModeStats &Stats : m_vQmClientLocalModeStats)
+	{
+		if(Stats.m_GameMode == m_QmClientActiveLocalMode && Stats.m_CommunityId == m_QmClientActiveLocalCommunityId && Stats.m_IsAxiom == m_QmClientActiveLocalIsAxiom)
+		{
+			Stats.m_PlaytimeSeconds += Delta;
+			return;
+		}
+	}
+	SQmClientLocalModeStats Stats;
+	Stats.m_GameMode = m_QmClientActiveLocalMode;
+	Stats.m_CommunityId = m_QmClientActiveLocalCommunityId;
+	Stats.m_IsAxiom = m_QmClientActiveLocalIsAxiom;
+	Stats.m_PlaytimeSeconds = Delta;
+	m_vQmClientLocalModeStats.push_back(std::move(Stats));
+}
+
+void CQmClient::UpdateQmClientLocalModePlaytime()
+{
+	const int64_t Now = time_timestamp();
+	const bool Online = Client()->State() == IClient::STATE_ONLINE;
+	const char *pMode = Online ? Client()->ServerInfo().m_aGameType : "";
+	const std::string CommunityId = Online ? Client()->ServerInfo().m_aCommunityId : "";
+	const bool IsAxiom = Online && GameClient() != nullptr && GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
+	if(m_QmClientActiveLocalMode != pMode || m_QmClientActiveLocalCommunityId != CommunityId || m_QmClientActiveLocalIsAxiom != IsAxiom)
+	{
+		AccumulateQmClientLocalModePlaytime(Now);
+		m_QmClientActiveLocalMode = pMode;
+		m_QmClientActiveLocalCommunityId = CommunityId;
+		m_QmClientActiveLocalIsAxiom = IsAxiom;
+		m_QmClientLocalModeLastTimestamp = pMode[0] != '\0' ? Now : 0;
+		return;
+	}
+	AccumulateQmClientLocalModePlaytime(Now);
+}
+
+void CQmClient::EndQmClientLocalModePlaytime()
+{
+	if(!m_QmClientActiveLocalMode.empty())
+	{
+		AccumulateQmClientLocalModePlaytime(time_timestamp());
+		m_QmClientActiveLocalMode.clear();
+		m_QmClientActiveLocalCommunityId.clear();
+		m_QmClientActiveLocalIsAxiom = false;
+		m_QmClientLocalModeLastTimestamp = 0;
+	}
 }
 
 void CQmClient::OnShutdown()
 {
+	EndQmClientLocalModePlaytime();
+	SaveQmClientStatistics();
 	if(!m_QmClientShutdownReported)
 	{
 		m_QmClientShutdownReported = true;
@@ -757,14 +1109,31 @@ void CQmClient::OnShutdown()
 
 void CQmClient::OnUpdate()
 {
+	UpdateQmClientLocalModePlaytime();
 	UpdateQmClientRecognition();
 	UpdateQmDeveloperPresence();
 	UpdateQmClientLifecycleAndServerTime();
 	UpdateQmDdnetPlayerStats();
+
+	// Axiom 分数在后台按缓存 TTL 查询，统计页面只负责展示，不应成为唯一触发点。
+	bool HasAxiomGoresStats = false;
+	for(const SQmClientLocalModeStats &Stats : m_vQmClientLocalModeStats)
+	{
+		if(Stats.m_IsAxiom && str_find_nocase(Stats.m_GameMode.c_str(), "gores") != nullptr)
+		{
+			HasAxiomGoresStats = true;
+			break;
+		}
+	}
+	if((HasAxiomGoresStats || (GameClient() != nullptr && GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity())) && m_aQmDdnetPlayerName[0] != '\0')
+		GameClient()->m_QmAxiomScores.EnsureQueried(m_aQmDdnetPlayerName);
 }
 
 void CQmClient::OnStateChange(int NewState, int OldState)
 {
+	if(NewState != IClient::STATE_ONLINE && OldState == IClient::STATE_ONLINE)
+		EndQmClientLocalModePlaytime();
+
 	if((NewState == IClient::STATE_QUITTING || NewState == IClient::STATE_RESTARTING) && !m_QmClientShutdownReported)
 	{
 		m_QmClientShutdownReported = true;
@@ -1169,6 +1538,8 @@ void CQmClient::UpdateQmDdnetPlayerStats()
 			m_QmDdnetTotalFinishes = -1;
 			m_QmDdnetPlayerLastSync = 0;
 			m_QmDdnetPlayerNextRetry = 0;
+			m_QmDdnetPoints = -1;
+			m_QmDdnetPointsTotal = -1;
 		}
 		return;
 	}
@@ -1185,6 +1556,8 @@ void CQmClient::UpdateQmDdnetPlayerStats()
 		str_copy(m_aQmDdnetPlayerName, pConfiguredName, sizeof(m_aQmDdnetPlayerName));
 		m_aQmDdnetFavoritePartner[0] = '\0';
 		m_QmDdnetTotalFinishes = -1;
+		m_QmDdnetPoints = -1;
+		m_QmDdnetPointsTotal = -1;
 		m_QmDdnetPlayerLastSync = 0;
 		m_QmDdnetPlayerNextRetry = 0;
 	}
@@ -1247,6 +1620,8 @@ void CQmClient::FinishQmDdnetPlayerStats()
 			m_QmDdnetPlayerNextRetry = 0;
 			str_copy(m_aQmDdnetFavoritePartner, Result.m_FavoritePartner.c_str(), sizeof(m_aQmDdnetFavoritePartner));
 			m_QmDdnetTotalFinishes = Result.m_TotalFinishes;
+			m_QmDdnetPoints = Result.m_Points;
+			m_QmDdnetPointsTotal = Result.m_PointsTotal;
 		}
 		else
 		{
@@ -1270,6 +1645,28 @@ void CQmClient::FinishQmDdnetPlayerStats()
 	m_pQmDdnetPlayerParseJob = std::make_shared<CQmDdnetPlayerStatsParseJob>(m_pQmDdnetPlayerTask);
 	Engine()->AddJob(m_pQmDdnetPlayerParseJob);
 	m_pQmDdnetPlayerTask = nullptr;
+}
+
+void CQmClient::RefreshQmDdnetPlayerStats()
+{
+	if(m_pQmDdnetPlayerTask)
+	{
+		m_pQmDdnetPlayerTask->Abort();
+		m_pQmDdnetPlayerTask = nullptr;
+	}
+	m_pQmDdnetPlayerParseJob = nullptr;
+	m_QmDdnetPlayerLastSync = 0;
+	m_QmDdnetPlayerNextRetry = 0;
+	if(m_aQmDdnetPlayerName[0] != '\0')
+		FetchQmDdnetPlayerStats(m_aQmDdnetPlayerName);
+}
+
+void CQmClient::RefreshQmClientStatistics()
+{
+	RefreshQmDdnetPlayerStats();
+	if(GameClient() != nullptr && m_aQmDdnetPlayerName[0] != '\0')
+		GameClient()->m_QmAxiomScores.Refresh(m_aQmDdnetPlayerName);
+	SaveQmClientStatistics();
 }
 
 void CQmClient::InitQmClientLifecycle()

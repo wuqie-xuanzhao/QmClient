@@ -5,8 +5,11 @@
 
 #include <engine/client.h>
 #include <engine/http.h>
+#include <engine/shared/json.h>
+#include <engine/shared/jsonwriter.h>
 
 #include <algorithm>
+#include <limits>
 #include <utility>
 
 namespace
@@ -17,9 +20,50 @@ namespace
 	constexpr int64_t AXIOM_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 	constexpr size_t AXIOM_MAX_CACHE_ENTRIES = 64;
 	constexpr size_t AXIOM_MAX_QUERY_NAME_BYTES = 256;
+	constexpr size_t AXIOM_MAX_DIFFICULTY_NAME_BYTES = 192;
 	constexpr int AXIOM_CONNECT_TIMEOUT_MS = 5000;
 	constexpr int AXIOM_SEARCH_TIMEOUT_MS = 10000;
 	constexpr int AXIOM_INFO_TIMEOUT_MS = 45000;
+
+	const json_value *JsonField(const json_value *pObject, const char *pName)
+	{
+		if(!pObject || pObject->type != json_object)
+			return &json_value_none;
+		return json_object_get(pObject, pName);
+	}
+
+	bool ReadInt64(const json_value *pObject, const char *pName, int64_t &Out)
+	{
+		const json_value *pValue = JsonField(pObject, pName);
+		if(pValue->type == json_integer)
+		{
+			Out = pValue->u.integer;
+			return true;
+		}
+		if(pValue->type != json_string)
+			return false;
+		const char *pText = json_string_get(pValue);
+		if(!pText || pText[0] == '\0')
+			return false;
+		Out = str_toint64_base(pText);
+		char aCanonical[64];
+		str_format(aCanonical, sizeof(aCanonical), "%lld", (long long)Out);
+		return str_comp(aCanonical, pText) == 0;
+	}
+
+	void WriteInt64(CJsonFileWriter &Writer, const char *pName, int64_t Value)
+	{
+		char aValue[64];
+		str_format(aValue, sizeof(aValue), "%lld", (long long)Value);
+		Writer.WriteAttribute(pName);
+		Writer.WriteStrValue(aValue);
+	}
+
+	void WriteOptionalInt64(CJsonFileWriter &Writer, const char *pName, const std::optional<int64_t> &Value)
+	{
+		if(Value)
+			WriteInt64(Writer, pName, *Value);
+	}
 
 	EQmAxiomScoreStatus ParseStatus(EQmAxiomParseResult Result)
 	{
@@ -65,6 +109,182 @@ namespace
 		}
 		void Abort() override { m_pRequest->Abort(); }
 	};
+}
+
+void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
+{
+	if(!pRoot || pRoot->type != json_object)
+		return;
+	const json_value *pRemote = JsonField(pRoot, "remote");
+	const json_value *pAxiom = JsonField(pRemote, "axiom");
+	const json_value *pPlayers = JsonField(pAxiom, "players");
+	if(pPlayers->type != json_array || pPlayers->u.array.length > AXIOM_MAX_CACHE_ENTRIES)
+		return;
+	for(unsigned PlayerIndex = 0; PlayerIndex < pPlayers->u.array.length; ++PlayerIndex)
+	{
+		const json_value *pPlayer = pPlayers->u.array.values[PlayerIndex];
+		const json_value *pName = JsonField(pPlayer, "name");
+		int64_t UserId = 0;
+		if(pName->type != json_string || !json_string_get(pName) || json_string_get(pName)[0] == '\0' || static_cast<size_t>(str_length(json_string_get(pName))) > AXIOM_MAX_QUERY_NAME_BYTES || !str_utf8_check(json_string_get(pName)) || !ReadInt64(pPlayer, "user_id", UserId) || UserId <= 0)
+			continue;
+		SCacheEntry Entry;
+		Entry.m_Result.m_SearchStatus = EQmAxiomScoreStatus::READY;
+		Entry.m_Result.m_Match.m_UserId = UserId;
+		const json_value *pPlayerName = JsonField(pPlayer, "player_name");
+		const json_value *pDummyName = JsonField(pPlayer, "dummy_name");
+		if(pPlayerName->type == json_string && json_string_get(pPlayerName) && static_cast<size_t>(str_length(json_string_get(pPlayerName))) <= AXIOM_MAX_QUERY_NAME_BYTES && str_utf8_check(json_string_get(pPlayerName)))
+			Entry.m_Result.m_Match.m_PlayerName = json_string_get(pPlayerName);
+		if(pDummyName->type == json_string && json_string_get(pDummyName) && static_cast<size_t>(str_length(json_string_get(pDummyName))) <= AXIOM_MAX_QUERY_NAME_BYTES && str_utf8_check(json_string_get(pDummyName)))
+			Entry.m_Result.m_Match.m_DummyName = json_string_get(pDummyName);
+		const json_value *pModes = JsonField(pPlayer, "modes");
+		if(pModes->type != json_array)
+			continue;
+		bool HasMode = false;
+		for(unsigned ModeIndex = 0; ModeIndex < pModes->u.array.length; ++ModeIndex)
+		{
+			const json_value *pMode = pModes->u.array.values[ModeIndex];
+			const json_value *pModeName = JsonField(pMode, "mode");
+			if(pModeName->type != json_string || !json_string_get(pModeName))
+				continue;
+			EQmAxiomMode Mode;
+			if(str_comp_nocase(json_string_get(pModeName), "AXRace") == 0)
+				Mode = EQmAxiomMode::AXRACE;
+			else if(str_comp_nocase(json_string_get(pModeName), "Gores") == 0)
+				Mode = EQmAxiomMode::GORES;
+			else
+				continue;
+			const int Index = Mode == EQmAxiomMode::AXRACE ? 1 : 0;
+			SQmAxiomModeScore &Score = Entry.m_Result.m_aModes[Index].m_Score;
+			int64_t Value = 0;
+			if(!ReadInt64(pMode, "points", Value))
+				continue;
+			Score.m_Points = Value;
+			ReadInt64(pMode, "total_play_time", Score.m_TotalPlayTime);
+			ReadInt64(pMode, "total_maps_completed", Score.m_TotalMapsCompleted);
+			ReadInt64(pMode, "performance_points", Score.m_PerformancePoints);
+			ReadInt64(pMode, "mileage", Score.m_Mileage);
+			Value = 0;
+			ReadInt64(pMode, "global_rank", Value);
+			if(Value > 0)
+				Score.m_GlobalRank = Value;
+			Value = 0;
+			ReadInt64(pMode, "team_rank", Value);
+			if(Value > 0)
+				Score.m_TeamRank = Value;
+			Score.m_PlayerName = Entry.m_Result.m_Match.m_PlayerName;
+			const json_value *pDifficulties = JsonField(pMode, "difficulties");
+			if(pDifficulties->type == json_array && pDifficulties->u.array.length <= 128)
+			{
+				bool ValidDifficulties = true;
+				for(unsigned DifficultyIndex = 0; DifficultyIndex < pDifficulties->u.array.length; ++DifficultyIndex)
+				{
+					const json_value *pDifficulty = pDifficulties->u.array.values[DifficultyIndex];
+					const json_value *pDifficultyName = JsonField(pDifficulty, "name");
+					SQmAxiomDifficultyStats Difficulty;
+					int64_t DifficultyValue = 0;
+					if(pDifficultyName->type != json_string || !json_string_get(pDifficultyName) || json_string_get(pDifficultyName)[0] == '\0' || static_cast<size_t>(str_length(json_string_get(pDifficultyName))) > AXIOM_MAX_DIFFICULTY_NAME_BYTES || !str_utf8_check(json_string_get(pDifficultyName)) || !ReadInt64(pDifficulty, "points", Difficulty.m_Points) || !ReadInt64(pDifficulty, "completed_maps", Difficulty.m_CompletedMaps) || !ReadInt64(pDifficulty, "remaining_maps", Difficulty.m_RemainingMaps))
+					{
+						ValidDifficulties = false;
+						break;
+					}
+					Difficulty.m_Name = json_string_get(pDifficultyName);
+					DifficultyValue = 0;
+					if(ReadInt64(pDifficulty, "global_rank", DifficultyValue) && DifficultyValue > 0)
+						Difficulty.m_GlobalRank = DifficultyValue;
+					DifficultyValue = 0;
+					if(ReadInt64(pDifficulty, "team_rank", DifficultyValue) && DifficultyValue > 0)
+						Difficulty.m_TeamRank = DifficultyValue;
+					DifficultyValue = 0;
+					if(ReadInt64(pDifficulty, "total_points", DifficultyValue) && DifficultyValue >= 0)
+						Difficulty.m_TotalPoints = DifficultyValue;
+					DifficultyValue = 0;
+					if(ReadInt64(pDifficulty, "total_maps", DifficultyValue) && DifficultyValue >= 0)
+						Difficulty.m_TotalMaps = DifficultyValue;
+					Score.m_vDifficulties.push_back(std::move(Difficulty));
+				}
+				if(!ValidDifficulties)
+					Score.m_vDifficulties.clear();
+			}
+			Entry.m_Result.m_aModes[Index].m_Status = EQmAxiomScoreStatus::READY;
+			HasMode = true;
+		}
+		if(!HasMode)
+			continue;
+		const int64_t Now = CurrentTick();
+		Entry.m_LastAccessTick = Now;
+		// Persisted data remains visible, but is refreshed in the background on startup.
+		Entry.m_LastSearchSuccessTick = 0;
+		for(int Index = 0; Index < 2; ++Index)
+			Entry.m_aLastModeSuccessTick[Index] = 0;
+		m_Cache[json_string_get(pName)] = std::move(Entry);
+	}
+}
+
+void CQmAxiomScores::WritePersistentCache(CJsonFileWriter &Writer) const
+{
+	Writer.WriteAttribute("axiom");
+	Writer.BeginObject();
+	Writer.WriteAttribute("players");
+	Writer.BeginArray();
+	for(const auto &[Name, Entry] : m_Cache)
+	{
+		if(Entry.m_Result.m_SearchStatus != EQmAxiomScoreStatus::READY || Entry.m_Result.m_Match.m_UserId <= 0)
+			continue;
+		bool HasReadyMode = false;
+		for(const SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
+			HasReadyMode |= ModeResult.m_Status == EQmAxiomScoreStatus::READY;
+		if(!HasReadyMode)
+			continue;
+		Writer.BeginObject();
+		Writer.WriteAttribute("name");
+		Writer.WriteStrValue(Name.c_str());
+		WriteInt64(Writer, "user_id", Entry.m_Result.m_Match.m_UserId);
+		Writer.WriteAttribute("player_name");
+		Writer.WriteStrValue(Entry.m_Result.m_Match.m_PlayerName.c_str());
+		Writer.WriteAttribute("dummy_name");
+		Writer.WriteStrValue(Entry.m_Result.m_Match.m_DummyName.c_str());
+		Writer.WriteAttribute("modes");
+		Writer.BeginArray();
+		for(int Index = 0; Index < 2; ++Index)
+		{
+			const SQmAxiomModeResult &ModeResult = Entry.m_Result.m_aModes[Index];
+			if(ModeResult.m_Status != EQmAxiomScoreStatus::READY)
+				continue;
+			const SQmAxiomModeScore &Score = ModeResult.m_Score;
+			Writer.BeginObject();
+			Writer.WriteAttribute("mode");
+			Writer.WriteStrValue(QmAxiomModeName(ModeFromIndex(Index)));
+			WriteInt64(Writer, "points", Score.m_Points);
+			WriteOptionalInt64(Writer, "global_rank", Score.m_GlobalRank);
+			WriteOptionalInt64(Writer, "team_rank", Score.m_TeamRank);
+			WriteInt64(Writer, "total_play_time", Score.m_TotalPlayTime);
+			WriteInt64(Writer, "total_maps_completed", Score.m_TotalMapsCompleted);
+			WriteInt64(Writer, "performance_points", Score.m_PerformancePoints);
+			WriteInt64(Writer, "mileage", Score.m_Mileage);
+			Writer.WriteAttribute("difficulties");
+			Writer.BeginArray();
+			for(const SQmAxiomDifficultyStats &Difficulty : Score.m_vDifficulties)
+			{
+				Writer.BeginObject();
+				Writer.WriteAttribute("name");
+				Writer.WriteStrValue(Difficulty.m_Name.c_str());
+				WriteInt64(Writer, "points", Difficulty.m_Points);
+				WriteOptionalInt64(Writer, "global_rank", Difficulty.m_GlobalRank);
+				WriteOptionalInt64(Writer, "team_rank", Difficulty.m_TeamRank);
+				WriteInt64(Writer, "completed_maps", Difficulty.m_CompletedMaps);
+				WriteInt64(Writer, "remaining_maps", Difficulty.m_RemainingMaps);
+				WriteOptionalInt64(Writer, "total_points", Difficulty.m_TotalPoints);
+				WriteOptionalInt64(Writer, "total_maps", Difficulty.m_TotalMaps);
+				Writer.EndObject();
+			}
+			Writer.EndArray();
+			Writer.EndObject();
+		}
+		Writer.EndArray();
+		Writer.EndObject();
+	}
+	Writer.EndArray();
+	Writer.EndObject();
 }
 
 const SQmAxiomModeResult &SQmAxiomPlayerResult::Mode(EQmAxiomMode Mode) const
@@ -329,7 +549,7 @@ void CQmAxiomScores::FinishActiveQueryIfIdle()
 
 void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 {
-	if(!pPlayerName || pPlayerName[0] == '\0' || str_length(pPlayerName) > AXIOM_MAX_QUERY_NAME_BYTES || !str_utf8_check(pPlayerName))
+	if(!pPlayerName || pPlayerName[0] == '\0' || static_cast<size_t>(str_length(pPlayerName)) > AXIOM_MAX_QUERY_NAME_BYTES || !str_utf8_check(pPlayerName))
 		return;
 
 	const int64_t Now = CurrentTick();
@@ -380,6 +600,21 @@ void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 			StartModeRequest(pPlayerName, Entry, ModeFromIndex(Index));
 	}
 	FinishActiveQueryIfIdle();
+}
+
+void CQmAxiomScores::Refresh(const char *pPlayerName)
+{
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return;
+	const auto It = m_Cache.find(pPlayerName);
+	if(It != m_Cache.end())
+	{
+		It->second.m_LastSearchSuccessTick = 0;
+		It->second.m_LastSearchFailureTick = 0;
+		It->second.m_aLastModeSuccessTick.fill(0);
+		It->second.m_aLastModeFailureTick.fill(0);
+	}
+	EnsureQueried(pPlayerName);
 }
 
 const SQmAxiomPlayerResult *CQmAxiomScores::GetResult(const char *pPlayerName) const

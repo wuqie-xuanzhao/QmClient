@@ -10529,3 +10529,22 @@ TEST(QmMonitoringHelpers, EntitiesBackgroundExplicitlyDrawsConfiguredColor)
 	EXPECT_LT(Render.find("RenderBackgroundColor();"), Render.find("if(!m_Loaded)"));
 	EXPECT_LT(RenderCustom.find("RenderBackgroundColor();"), RenderCustom.find("if(!m_Loaded)"));
 }
+
+TEST(QmStatisticsPersistence, UsesSingleUnversionedStatisticsDocument)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
+	const std::string SaveFunction = ExtractSourceFunctionBody(Source, "void CQmClient::SaveQmClientStatistics() const");
+	const std::string LoadFunction = ExtractSourceFunctionBody(Source, "void CQmClient::LoadQmClientLocalModeStats()");
+	ASSERT_FALSE(SaveFunction.empty());
+	ASSERT_FALSE(LoadFunction.empty());
+
+	EXPECT_NE(SaveFunction.find("WriteAttribute(\"local\")"), std::string::npos);
+	EXPECT_NE(SaveFunction.find("WriteAttribute(\"remote\")"), std::string::npos);
+	EXPECT_EQ(SaveFunction.find("WriteAttribute(\"version\")"), std::string::npos);
+	EXPECT_EQ(SaveFunction.find("WriteAttribute(\"ddstats_import\")"), std::string::npos);
+	EXPECT_NE(LoadFunction.find("JsonObjectField(pRoot, \"local\")"), std::string::npos);
+	EXPECT_EQ(LoadFunction.find("JsonObjectField(pRoot, \"local_modes\")"), std::string::npos);
+	EXPECT_NE(Source.find("if(!m_QmStatisticsFileExists)"), std::string::npos);
+	EXPECT_NE(Source.find("RefreshQmClientStatistics()"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/menus.cpp").find("Sync remote stats"), std::string::npos);
+}
