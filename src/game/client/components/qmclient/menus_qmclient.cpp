@@ -1361,7 +1361,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (SponsorImageVisible ? 1u : 0u);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
 	const auto BuildDefinitions = [this, BodySize, LineHeight, LineSpacing, TipSize, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
-		vCards.reserve(2);
+		vCards.reserve(3);
 
 		SSettingsCardDefinition Community;
 		Community.m_Spec = {"deck:qmclient-contributors-community", Localize("QmClient Community"), Localize("Official community links")};
@@ -1527,6 +1527,86 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 		};
 		vCards.push_back(std::move(Sponsors));
+
+		SSettingsCardDefinition DdnetCredits;
+		DdnetCredits.m_Spec = {"deck:qmclient-contributors-ddnet", Localize("DDNet"), Localize("Credits")};
+		static const char *const s_apDdnetContributors[] = {
+			"eeeee", "HMH", "east", "CookieMichal", "Learath2", "Savander", "laxa", "Tobii", "BeaR", "Wohoo", "nuborn", "timakro",
+			"Shiki", "trml", "Soreu", "hi_leute_gll", "Lady Saavik", "Chairn", "heinrich5991", "swick", "oy", "necropotame", "Ryozuki",
+			"Redix", "d3fault", "marcelherd", "BannZay", "ACTom", "SiuFuWong", "PathosEthosLogos", "TsFreddie", "Jupeyy", "noby",
+			"ChillerDragon", "ZombieToad", "weez15", "z6zzz", "Piepow", "QingGo", "RafaelFF", "sctt", "jao", "daverck", "fokkonaut",
+			"Bojidar", "FallenKN", "ardadem", "archimede67", "sirius1242", "Aerll", "trafilaw", "Zwelf", "Patiga", "Konsti", "ElXreno",
+			"MikiGamer", "Fireball", "Banana090", "axblk", "yangfl", "Kaffeine", "Zodiac", "c0d3d3v", "GiuCcc", "Ravie", "Robyt3",
+			"simpygirl", "Tater", "Cellegen", "srdante", "Nouaa", "Voxel", "luk51", "Vy0x2", "Avolicious", "louis", "Marmare314",
+			"hus3h", "ArijanJ", "tarunsamanta2k20", "Possseidon", "+KZ", "Teero", "furo", "dobrykafe", "Moiman", "JSaurusRex",
+			"Steinchen", "ewancg", "gerdoe-jr", "melon", "KebsCS", "bencie", "DynamoFox", "MilkeeyCat", "iMilchshake", "SchrodingerZhu",
+			"catseyenebulous", "Rei-Tw", "Matodor", "Emilcha", "art0007i", "SollyBunny", "0xfaulty", "AssassinTee", "Pioooooo",
+			"ASKLL-STAR", "K1nop1c0", "Bamcane", "qxdFox", "ZerolAcqua", "swarfeya", "Scrumplex", "12944qwerty", "Pointer31",
+			"ProfSapphire", "0xpixty", "GlimmeR", "horoni"};
+		const auto BuildDdnetContributorLines = [this, TipSize](float MaxLineWidth) {
+			static std::vector<std::string> Lines;
+			static float s_CachedMaxLineWidth = -1.0f;
+			static uint64_t s_CachedTextGeneration = UINT64_MAX;
+			if(std::abs(s_CachedMaxLineWidth - MaxLineWidth) <= 0.01f && s_CachedTextGeneration == m_MenuTextPoolGeneration)
+				return std::cref(Lines);
+
+			Lines.clear();
+			Lines.emplace_back();
+			const char *pSeparator = ", ";
+			const float SeparatorWidth = TextRender()->TextWidth(TipSize, pSeparator);
+			float LineWidth = 0.0f;
+			for(const char *pName : s_apDdnetContributors)
+			{
+				const float NameWidth = TextRender()->TextWidth(TipSize, pName);
+				if(Lines.back().empty())
+				{
+					Lines.back() = pName;
+					LineWidth = NameWidth;
+				}
+				else if(LineWidth + SeparatorWidth + NameWidth > MaxLineWidth)
+				{
+					Lines.emplace_back(pName);
+					LineWidth = NameWidth;
+				}
+				else
+				{
+					Lines.back().append(pSeparator);
+					Lines.back().append(pName);
+					LineWidth += SeparatorWidth + NameWidth;
+				}
+			}
+			s_CachedMaxLineWidth = MaxLineWidth;
+			s_CachedTextGeneration = m_MenuTextPoolGeneration;
+			return std::cref(Lines);
+		};
+		DdnetCredits.m_Measure = [LineHeight, LineSpacing, BuildDdnetContributorLines](float ContentWidth) {
+			return ResolveSettingsRowsHeight(2 + (int)BuildDdnetContributorLines(ContentWidth).get().size(), LineHeight, LineSpacing);
+		};
+		DdnetCredits.m_Render = [this, LineHeight, LineSpacing, TipSize, ReadOnly, BuildDdnetContributorLines](CUIRect Content) {
+			CUIRect Row;
+			static CButtonContainer s_DdnetStaffButton;
+			static CButtonContainer s_DdnetReleasesButton;
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, &s_DdnetStaffButton, "qmclient-ddnet-staff", "DDNet staff", 0, &Row))
+				Client()->ViewLink("https://ddnet.org/staff");
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			if(!ReadOnly && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, QMCLIENT_SETTINGS_TAB_CONTRIBUTORS, &s_DdnetReleasesButton, "qmclient-ddnet-releases", "DDNet releases", 0, &Row))
+				Client()->ViewLink("https://ddnet.org/releases/");
+			Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+			const std::vector<std::string> &ContributorLines = BuildDdnetContributorLines(Content.w).get();
+			for(size_t Index = 0; Index < ContributorLines.size(); ++Index)
+			{
+				Content.HSplitTop(LineHeight, &Row, &Content);
+				Ui()->DoLabel(&Row, ContributorLines[Index].c_str(), TipSize, TEXTALIGN_ML);
+				if(Index + 1 < ContributorLines.size())
+					Content.HSplitTop(LineSpacing, nullptr, &Content);
+			}
+		};
+		vCards.push_back(std::move(DdnetCredits));
 	};
 
 	const SQmScrollRequest ScrollRequest{EQmScrollProfile::SETTINGS_OUTER};

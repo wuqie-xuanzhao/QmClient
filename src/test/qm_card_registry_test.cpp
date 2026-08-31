@@ -44,14 +44,19 @@ TEST(QmCardRegistry, P6QmClientContributorsCards)
 {
 	const auto *pCommunity = qm_card_registry::FindByStableId("deck:qmclient-contributors-community");
 	const auto *pSponsors = qm_card_registry::FindByStableId("deck:qmclient-contributors-sponsors");
+	const auto *pDdnet = qm_card_registry::FindByStableId("deck:qmclient-contributors-ddnet");
 	ASSERT_NE(pCommunity, nullptr);
 	ASSERT_NE(pSponsors, nullptr);
+	ASSERT_NE(pDdnet, nullptr);
 	EXPECT_STREQ(pCommunity->m_pDefaultTab, "qmclient-contributors");
 	EXPECT_STREQ(pSponsors->m_pDefaultTab, "qmclient-contributors");
 	EXPECT_EQ(pCommunity->m_DefaultColumn, qm_card_registry::ECardColumn::Left);
 	EXPECT_EQ(pSponsors->m_DefaultColumn, qm_card_registry::ECardColumn::Right);
 	EXPECT_EQ(pCommunity->m_DefaultOrder, 0);
 	EXPECT_EQ(pSponsors->m_DefaultOrder, 0);
+	EXPECT_STREQ(pDdnet->m_pDefaultTab, "qmclient-contributors");
+	EXPECT_EQ(pDdnet->m_DefaultColumn, qm_card_registry::ECardColumn::Full);
+	EXPECT_EQ(pDdnet->m_DefaultOrder, 0);
 }
 
 TEST(QmCardRegistry, BindWheelUsesTwoColumnsByDefault)

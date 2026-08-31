@@ -725,10 +725,12 @@ void CMenus::LoadSettingsCardOrderModel()
 		const std::vector<const char *> vContributorIds = {
 			"deck:qmclient-contributors-community",
 			"deck:qmclient-contributors-sponsors",
+			"deck:qmclient-contributors-ddnet",
 		};
 		const bool ContributorsStillOldDefault =
 			IsAtOldDefault("deck:qmclient-contributors-community", "qmclient-contributors", 0, 0) &&
 			IsAtOldDefault("deck:qmclient-contributors-sponsors", "qmclient-contributors", 0, 1) &&
+			IsAtOldDefault("deck:qmclient-contributors-ddnet", "qmclient-contributors", 0, 0) &&
 			qm_card_order::TabContainsOnlyStableIds(Candidate, "qmclient-contributors", vContributorIds);
 		if(ContributorsStillOldDefault)
 		{

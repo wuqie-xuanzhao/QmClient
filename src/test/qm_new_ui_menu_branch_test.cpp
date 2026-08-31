@@ -354,6 +354,7 @@ TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
 	EXPECT_NE(Body.find("CardDeck.RenderCached("), std::string::npos);
 	EXPECT_NE(Body.find("deck:qmclient-contributors-community"), std::string::npos);
 	EXPECT_NE(Body.find("deck:qmclient-contributors-sponsors"), std::string::npos);
+	EXPECT_NE(Body.find("deck:qmclient-contributors-ddnet"), std::string::npos);
 	EXPECT_NE(Body.find("QmResolveScrollPolicy("), std::string::npos);
 	EXPECT_NE(Body.find("if(!ReadOnly)\n\t\t\t\t{"), std::string::npos);
 	EXPECT_NE(Body.find("ResolveSettingsRowsHeight((int)BuildSponsorLines(ContentWidth).get().size(), LineHeight, LineSpacing)"), std::string::npos);
