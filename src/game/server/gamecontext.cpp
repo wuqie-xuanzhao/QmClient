@@ -1584,19 +1584,6 @@ void CGameContext::OnClientPredictedEarlyInput(int ClientId, const void *pInput)
 	}
 }
 
-const CVoteOptionServer *CGameContext::GetVoteOption(int Index) const
-{
-	const CVoteOptionServer *pCurrent;
-	for(pCurrent = m_pVoteOptionFirst;
-		Index > 0 && pCurrent;
-		Index--, pCurrent = pCurrent->m_pNext)
-		;
-
-	if(Index > 0)
-		return nullptr;
-	return pCurrent;
-}
-
 void CGameContext::ProgressVoteOptions(int ClientId)
 {
 	CPlayer *pPl = m_apPlayers[ClientId];
@@ -1636,8 +1623,11 @@ void CGameContext::ProgressVoteOptions(int ClientId)
 	OptionMsg.m_pDescription13 = "";
 	OptionMsg.m_pDescription14 = "";
 
-	// get current vote option by index
-	const CVoteOptionServer *pCurrent = GetVoteOption(pPl->m_SendVoteIndex);
+	const CVoteOptionServer *pCurrent;
+	if(pPl->m_SendVoteIndex == 0)
+		pCurrent = m_pVoteOptionFirst;
+	else
+		pCurrent = pPl->m_pLastSentVoteOption == nullptr ? nullptr : pPl->m_pLastSentVoteOption->m_pNext;
 
 	while(CurIndex < NumVotesToSend && pCurrent != nullptr)
 	{
@@ -1660,6 +1650,7 @@ void CGameContext::ProgressVoteOptions(int ClientId)
 		case 14: OptionMsg.m_pDescription14 = pCurrent->m_aDescription; break;
 		}
 
+		pPl->m_pLastSentVoteOption = pCurrent;
 		CurIndex++;
 		pCurrent = pCurrent->m_pNext;
 	}
@@ -3030,6 +3021,7 @@ void CGameContext::OnStartInfoNetMessage(const CNetMsg_Cl_StartInfo *pMsg, int C
 
 	// begin sending vote options
 	pPlayer->m_SendVoteIndex = 0;
+	pPlayer->m_pLastSentVoteOption = nullptr;
 
 	// send tuning parameters to client
 	SendTuningParams(ClientId, pPlayer->m_TuneZone);
@@ -3556,7 +3548,10 @@ void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
 	for(auto &pPlayer : pSelf->m_apPlayers)
 	{
 		if(pPlayer)
+		{
 			pPlayer->m_SendVoteIndex = 0;
+			pPlayer->m_pLastSentVoteOption = nullptr;
+		}
 	}
 
 	// TODO: improve this
@@ -3683,7 +3678,10 @@ void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData)
 	for(auto &pPlayer : pSelf->m_apPlayers)
 	{
 		if(pPlayer)
+		{
 			pPlayer->m_SendVoteIndex = 0;
+			pPlayer->m_pLastSentVoteOption = nullptr;
+		}
 	}
 }
 

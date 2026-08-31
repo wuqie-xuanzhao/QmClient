@@ -20,6 +20,7 @@
 class CCharacter;
 class CGameContext;
 class IServer;
+struct CVoteOptionServer;
 struct CNetObj_PlayerInput;
 struct CScorePlayerResult;
 
@@ -106,6 +107,8 @@ public:
 	int m_LastInvited;
 
 	int m_SendVoteIndex;
+	// 最后发送的投票项；仅在 m_SendVoteIndex 大于零时读取。列表发送完成后追加的投票项从此处继续发送。
+	const CVoteOptionServer *m_pLastSentVoteOption;
 
 	CTeeInfo m_TeeInfos;
 	void InvalidateClientInfo() { m_ClientInfoValid = false; }
