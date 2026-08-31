@@ -953,6 +953,7 @@ bool CSkins::PrepareSkinData(const char *pName, CSkinLoadData &Data)
 		Data.m_BloodColor = ColorRGBA(NormalizedColor.x, NormalizedColor.y, NormalizedColor.z);
 	}
 
+	Data.m_Metrics.Reset();
 	Data.m_Metrics.m_Body.m_Width = Plan.m_Body.m_Width;
 	Data.m_Metrics.m_Body.m_Height = Plan.m_Body.m_Height;
 	Data.m_Metrics.m_Body.m_OffsetX = Plan.m_Body.m_OffsetX;

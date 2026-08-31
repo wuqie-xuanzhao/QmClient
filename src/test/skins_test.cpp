@@ -1664,6 +1664,44 @@ TEST(Skins, SkinDataPreparationBuildsMergedMetricsWithoutGraphics)
 	Image.Free();
 }
 
+TEST(Skins, MetricsResetRestoresExtrema)
+{
+	CSkin::CSkinMetrics Metrics;
+	Metrics.m_Body.m_Width = 80;
+	Metrics.m_Body.m_Height = 70;
+	Metrics.m_Body.m_OffsetX = 5;
+	Metrics.m_Body.m_OffsetY = 4;
+	Metrics.m_Body.m_MaxWidth = 96;
+	Metrics.m_Body.m_MaxHeight = 88;
+
+	Metrics.Reset();
+	Metrics.m_Body.m_Width = 20;
+	Metrics.m_Body.m_Height = 18;
+	Metrics.m_Body.m_OffsetX = 12;
+	Metrics.m_Body.m_OffsetY = 11;
+	Metrics.m_Body.m_MaxWidth = 32;
+	Metrics.m_Body.m_MaxHeight = 30;
+
+	EXPECT_EQ((int)Metrics.m_Body.m_Width, 20);
+	EXPECT_EQ((int)Metrics.m_Body.m_Height, 18);
+	EXPECT_EQ((int)Metrics.m_Body.m_OffsetX, 12);
+	EXPECT_EQ((int)Metrics.m_Body.m_OffsetY, 11);
+	EXPECT_EQ((int)Metrics.m_Body.m_MaxWidth, 32);
+	EXPECT_EQ((int)Metrics.m_Body.m_MaxHeight, 30);
+}
+
+TEST(Skins, PrepareSkinDataResetsMetricsBeforeWritingPlan)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const std::string PrepareSkinData = FunctionBody(Source, "bool CSkins::PrepareSkinData(const char *pName, CSkinLoadData &Data)");
+	const size_t ResetPos = PrepareSkinData.find("Data.m_Metrics.Reset();");
+	const size_t FirstWritePos = PrepareSkinData.find("Data.m_Metrics.m_Body.m_Width = Plan.m_Body.m_Width;");
+
+	ASSERT_NE(ResetPos, std::string::npos);
+	ASSERT_NE(FirstWritePos, std::string::npos);
+	EXPECT_LT(ResetPos, FirstWritePos);
+}
+
 TEST(Skins, SkinDataPreparationUsesOutlineMetricsWhenFillIsEmpty)
 {
 	CImageInfo Image = MakeTestSkinImage(64, 32);
