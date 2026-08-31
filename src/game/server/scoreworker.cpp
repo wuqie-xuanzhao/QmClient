@@ -1741,8 +1741,14 @@ bool CScoreWorker::SaveTeam(IDbConnection *pSqlServer, const ISqlData *pGameData
 	char aSaveId[UUID_MAXSTRSIZE];
 	FormatUuid(pResult->m_SaveId, aSaveId, UUID_MAXSTRSIZE);
 
-	char *pSaveState = pResult->m_SavedTeam.GetString();
-	char aBuf[65536];
+	const char *pSaveState = pResult->m_SavedTeam.GetString();
+	if(!pSaveState)
+	{
+		pResult->m_Status = CScoreSaveResult::SAVE_FAILED;
+		str_copy(pResult->m_aMessage, "你的队伍太大，无法保存", sizeof(pResult->m_aMessage));
+		return true;
+	}
+	char aBuf[MAX_SAVE_STRING_LENGTH];
 
 	dbg_msg("score/dbg", "code=%s failure=%d", pData->m_aCode, (int)w);
 	bool UseGeneratedCode = pData->m_aCode[0] == '\0' || w != Write::NORMAL;
@@ -1866,7 +1872,7 @@ bool CScoreWorker::LoadTeam(IDbConnection *pSqlServer, const ISqlData *pGameData
 		}
 	}
 
-	char aSaveString[65536];
+	char aSaveString[MAX_SAVE_STRING_LENGTH];
 	pSqlServer->GetString(1, aSaveString, sizeof(aSaveString));
 	int Num = pResult->m_SavedTeam.FromString(aSaveString);
 

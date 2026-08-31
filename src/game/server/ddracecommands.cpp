@@ -604,6 +604,12 @@ void CGameContext::ConDrySave(IConsole::IResult *pResult, void *pUserData)
 	ESaveResult Result = SavedTeam.Save(pSelf, Team, true);
 	if(CSaveTeam::HandleSaveError(Result, pResult->m_ClientId, pSelf))
 		return;
+	const char *pSaveState = SavedTeam.GetString();
+	if(!pSaveState)
+	{
+		pSelf->SendChatTarget(pResult->m_ClientId, "你的队伍太大，无法保存");
+		return;
+	}
 
 	char aTimestamp[32];
 	str_timestamp(aTimestamp, sizeof(aTimestamp));
@@ -613,8 +619,7 @@ void CGameContext::ConDrySave(IConsole::IResult *pResult, void *pUserData)
 	if(!File)
 		return;
 
-	int Len = str_length(SavedTeam.GetString());
-	io_write(File, SavedTeam.GetString(), Len);
+	io_write(File, pSaveState, str_length(pSaveState));
 	io_close(File);
 }
 
