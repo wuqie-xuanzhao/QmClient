@@ -17,6 +17,7 @@
 #include <game/client/laser_data.h>
 #include <game/client/pickup_data.h>
 #include <game/client/projectile_data.h>
+#include <game/collision.h>
 #include <game/mapbugs.h>
 #include <game/mapitems.h>
 
@@ -515,13 +516,15 @@ void CGameWorld::NetObjAdd(int ObjId, int ObjType, const void *pObjData, const C
 		CEntity *pEnt = new CPickup(NetPickup);
 		InsertEntity(pEnt, true);
 	}
-	else if((ObjType == NETOBJTYPE_LASER || ObjType == NETOBJTYPE_DDNETLASER) && m_WorldConfig.m_PredictWeapons)
+	else if(ObjType == NETOBJTYPE_LASER || ObjType == NETOBJTYPE_DDNETLASER)
 	{
 		CLaserData Data = ExtractLaserInfo(ObjType, pObjData, this, pDataEx);
 		if(!IsLocalTeam(Data.m_Owner) || !Data.m_Predict)
 		{
 			return;
 		}
+		if(!(Data.m_Type == LASERTYPE_DOOR ? m_WorldConfig.m_PredictTiles : m_WorldConfig.m_PredictWeapons))
+			return;
 
 		if(Data.m_Type == LASERTYPE_RIFLE || Data.m_Type == LASERTYPE_SHOTGUN || Data.m_Type < 0)
 		{
@@ -581,7 +584,6 @@ void CGameWorld::NetObjAdd(int ObjId, int ObjType, const void *pObjData, const C
 				return;
 			}
 			CDoor *pEnt = new CDoor(NetDoor);
-			pEnt->ResetCollision();
 			InsertEntity(pEnt);
 		}
 		else if(Data.m_Type == LASERTYPE_PLASMA)
@@ -598,6 +600,23 @@ void CGameWorld::NetObjAdd(int ObjId, int ObjType, const void *pObjData, const C
 			InsertEntity(pEnt);
 		}
 	}
+}
+
+void CGameWorld::ResetDoorCollision()
+{
+	// 移除旧实体后重建门碰撞，使重叠门按服务端地图实体的创建顺序生效。
+	std::vector<CDoor *> vpDoors;
+	for(CEntity *pEnt = FindFirst(ENTTYPE_DOOR); pEnt; pEnt = pEnt->TypeNext())
+		vpDoors.push_back(static_cast<CDoor *>(pEnt));
+	std::stable_sort(vpDoors.begin(), vpDoors.end(), [this](const CDoor *pLeft, const CDoor *pRight) {
+		const int LeftIndex = Collision()->GetPureMapIndex(pLeft->m_Pos);
+		const int RightIndex = Collision()->GetPureMapIndex(pRight->m_Pos);
+		if(LeftIndex != RightIndex)
+			return LeftIndex < RightIndex;
+		return (pLeft->m_Number > 0) < (pRight->m_Number > 0);
+	});
+	for(CDoor *pDoor : vpDoors)
+		pDoor->ResetCollision();
 }
 
 void CGameWorld::NetObjEnd()
@@ -617,6 +636,7 @@ void CGameWorld::NetObjEnd()
 						pHookedChar->m_MarkedForDestroy = false;
 					}
 	RemoveEntities();
+	ResetDoorCollision();
 
 	// Update character IDs and pointers
 	for(int i = 0; i < MAX_CLIENTS; i++)
