@@ -409,6 +409,93 @@ TEST_P(TeamScore, RankUpdates)
 			"---------------------------------"});
 }
 
+struct BigTeamScore : public Score
+{
+	void SetUp() override
+	{
+		str_copy(g_Config.m_SvSqlServerName, "USA", sizeof(g_Config.m_SvSqlServerName));
+
+		CSqlTeamScoreData TeamScoreData;
+		str_copy(TeamScoreData.m_aMap, "Kobra 3", sizeof(TeamScoreData.m_aMap));
+		str_copy(TeamScoreData.m_aGameUuid, "8d300ecf-5873-4297-bee5-95668fdff320", sizeof(TeamScoreData.m_aGameUuid));
+		TeamScoreData.m_Size = MAX_CLIENTS;
+		TeamScoreData.m_Time = 100.0f;
+		str_copy(TeamScoreData.m_aTimestamp, "2021-11-24 19:24:08", sizeof(TeamScoreData.m_aTimestamp));
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			str_format(TeamScoreData.m_aaNames[i], sizeof(TeamScoreData.m_aaNames[i]), "playertee12_%03d", i);
+			ASSERT_EQ(str_length(TeamScoreData.m_aaNames[i]), MAX_NAME_LENGTH - 1);
+		}
+		ASSERT_TRUE(CScoreWorker::SaveTeamScore(m_pConn, &TeamScoreData, Write::NORMAL, m_aError, sizeof(m_aError))) << m_aError;
+
+		CSqlScoreData ScoreData(std::make_shared<CScorePlayerResult>());
+		str_copy(ScoreData.m_aMap, "Kobra 3", sizeof(ScoreData.m_aMap));
+		str_copy(ScoreData.m_aGameUuid, "8d300ecf-5873-4297-bee5-95668fdff320", sizeof(ScoreData.m_aGameUuid));
+		ScoreData.m_Time = 100.0f;
+		str_copy(ScoreData.m_aTimestamp, "2021-11-24 19:24:08", sizeof(ScoreData.m_aTimestamp));
+		for(int i = 0; i < NUM_CHECKPOINTS; i++)
+			ScoreData.m_aCurrentTimeCp[i] = 0;
+		str_copy(ScoreData.m_aRequestingPlayer, TeamScoreData.m_aaNames[0], sizeof(ScoreData.m_aRequestingPlayer));
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			str_copy(ScoreData.m_aName, TeamScoreData.m_aaNames[i], sizeof(ScoreData.m_aName));
+			ScoreData.m_ClientId = i;
+			ASSERT_TRUE(CScoreWorker::SaveScore(m_pConn, &ScoreData, Write::NORMAL, m_aError, sizeof(m_aError))) << m_aError;
+		}
+
+		str_copy(m_PlayerRequest.m_aMap, "Kobra 3", sizeof(m_PlayerRequest.m_aMap));
+		str_copy(m_PlayerRequest.m_aRequestingPlayer, TeamScoreData.m_aaNames[0], sizeof(m_PlayerRequest.m_aRequestingPlayer));
+		str_copy(m_PlayerRequest.m_aName, TeamScoreData.m_aaNames[0], sizeof(m_PlayerRequest.m_aName));
+		str_copy(m_PlayerRequest.m_aServer, "USA", sizeof(m_PlayerRequest.m_aServer));
+		m_PlayerRequest.m_Offset = 0;
+	}
+
+	void ExpectMessagesFitIntoChat()
+	{
+		for(const auto &aMessage : m_pPlayerResult->m_Data.m_aaMessages)
+			EXPECT_LT(str_length(aMessage), MAX_CHAT_LENGTH) << aMessage;
+	}
+};
+
+TEST_P(BigTeamScore, TeamRankShortensNames)
+{
+	ASSERT_TRUE(CScoreWorker::ShowTeamRank(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
+	ExpectMessagesFitIntoChat();
+	EXPECT_THAT(m_pPlayerResult->m_Data.m_aaMessages[0], testing::HasSubstr("，还有 "));
+}
+
+TEST_P(BigTeamScore, TeamTop5ShortensNames)
+{
+	g_Config.m_SvRegionalRankings = false;
+	ASSERT_TRUE(CScoreWorker::ShowTeamTop5(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
+	ExpectMessagesFitIntoChat();
+	EXPECT_THAT(m_pPlayerResult->m_Data.m_aaMessages[1], testing::HasSubstr("，还有 "));
+}
+
+TEST_P(BigTeamScore, PlayerTeamTop5ShortensNames)
+{
+	ASSERT_TRUE(CScoreWorker::ShowPlayerTeamTop5(m_pConn, &m_PlayerRequest, m_aError, sizeof(m_aError))) << m_aError;
+	ExpectMessagesFitIntoChat();
+	EXPECT_THAT(m_pPlayerResult->m_Data.m_aaMessages[1], testing::HasSubstr("，还有 "));
+}
+
+TEST(ScoreWorker, TeamrankCountsUnstoredNames)
+{
+	CTeamrank Teamrank;
+	Teamrank.m_NumNames = MAX_CLIENTS;
+	Teamrank.m_TotalNames = MAX_CLIENTS + 1;
+	std::vector<std::string> vNames(MAX_CLIENTS, "a");
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		str_copy(Teamrank.m_aaNames[i], vNames[i].c_str(), sizeof(Teamrank.m_aaNames[i]));
+
+	EXPECT_FALSE(Teamrank.SamePlayers(&vNames));
+
+	char aNames[MAX_CHAT_LENGTH];
+	Teamrank.FormatNames(aNames, sizeof(aNames));
+	EXPECT_LT(str_length(aNames), MAX_CHAT_LENGTH);
+	EXPECT_THAT(aNames, testing::HasSubstr("，还有 49 人"));
+}
+
 struct MapInfo : public Score
 {
 	MapInfo()
@@ -747,6 +834,7 @@ auto g_TestValues{
 
 INSTANTIATE(SingleScore);
 INSTANTIATE(TeamScore);
+INSTANTIATE(BigTeamScore);
 INSTANTIATE(MapInfo);
 INSTANTIATE(MapVote);
 INSTANTIATE(Points);
