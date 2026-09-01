@@ -1089,19 +1089,12 @@ void CGameClient::OnUpdate()
 	}
 
 	// handle touch events
-	const std::vector<IInput::CTouchFingerState> &vTouchFingerStates = Input()->TouchFingerStates();
-	bool TouchHandled = false;
+	std::vector<IInput::CTouchFingerState> vTouchFingerStates = Input()->TouchFingerStates();
 	for(auto &pComponent : m_vpInput)
 	{
-		if(TouchHandled)
-		{
-			// Also update inactive components so they can handle touch fingers being released.
-			pComponent->OnTouchState({});
-		}
-		else if(pComponent->OnTouchState(vTouchFingerStates))
+		if(pComponent->OnTouchState(vTouchFingerStates))
 		{
 			Input()->ClearTouchDeltas();
-			TouchHandled = true;
 		}
 	}
 
@@ -2629,7 +2622,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 
 	if(Dummy)
 	{
-		if(MsgId == NETMSGTYPE_SV_CHAT && m_aLocalIds[0] >= 0 && m_aLocalIds[1] >= 0)
+		if(MsgId == NETMSGTYPE_SV_READYTOENTER)
+		{
+			// reload 后分身连接也必须完成进入游戏握手。
+			Client()->EnterGame(Conn);
+		}
+		else if(MsgId == NETMSGTYPE_SV_CHAT && m_aLocalIds[0] >= 0 && m_aLocalIds[1] >= 0)
 		{
 			CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 
@@ -3112,6 +3110,7 @@ void CGameClient::ProcessEvents()
 			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, DamageIndPos, -1, Client()->GameTick(g_Config.m_ClDummy), pEvent->m_Angle)))
 			{
 				m_Effects.DamageIndicator(vec2(pEvent->m_X, pEvent->m_Y), direction(pEvent->m_Angle / 256.0f), Alpha);
+				RememberConfirmedEvent(Item.m_Type, DamageIndPos, pEvent->m_Angle);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
@@ -4281,6 +4280,8 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 				else
 				{
 					const int LastPredictedAirJumpTick = m_aLastPredictedAirJumpTick[PredictedLocalDummy];
+					// 这里只保存最近一次预测 tick；若它已经越过当前服务端快照，
+					// 无法证明该快照中的空跳已被预测覆盖，保留快照兜底。
 					UseSnapshotAirJump = LastPredictedAirJumpTick <= PrevGameTick || LastPredictedAirJumpTick > CurGameTick;
 				}
 			}

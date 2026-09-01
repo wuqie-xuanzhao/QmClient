@@ -108,3 +108,35 @@ TEST(DDNet199Sync, UsesLocalTuningForUnpredictedHookCollision)
 	EXPECT_NE(Players.find("PlayerCore.m_Tuning.m_HookLength"), std::string::npos);
 	EXPECT_NE(Players.find("PlayerCore.m_Tuning.m_HookFireSpeed"), std::string::npos);
 }
+
+TEST(DDNet20TouchDismiss, ComponentsCanConsumeTouchFingersInInputOrder)
+{
+	const std::string Component = ReadTestSourceFile("src/game/client/component.h");
+	const std::string GameClient = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const std::string TouchControls = ReadTestSourceFile("src/game/client/components/touch_controls.cpp");
+
+	EXPECT_NE(Component.find("std::vector<IInput::CTouchFingerState> &vTouchFingerStates"), std::string::npos);
+	EXPECT_NE(GameClient.find("std::vector<IInput::CTouchFingerState> vTouchFingerStates = Input()->TouchFingerStates();"), std::string::npos);
+	EXPECT_NE(TouchControls.find("vTouchFingerStates.clear();"), std::string::npos);
+}
+
+TEST(DDNet20TouchDismiss, MotdDismissesOnlyNewTouchesOutsideItsRect)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/motd.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/motd.cpp");
+
+	EXPECT_NE(Header.find("std::optional<CUIRect> m_TouchRect"), std::string::npos);
+	EXPECT_NE(Header.find("std::optional<IInput::CTouchFinger> m_DismissTouchFinger"), std::string::npos);
+	EXPECT_NE(Source.find("State.m_PressTime > m_ShownSince && !m_TouchRect->Inside(State.m_Position)"), std::string::npos);
+	EXPECT_NE(Source.find("m_DismissTouchFinger = DismissFinger->m_Finger"), std::string::npos);
+}
+
+TEST(DDNet20TouchDismiss, ImportantAlertsExposeTouchDismissalAfterMinimumDuration)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/important_alert.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/important_alert.cpp");
+
+	EXPECT_NE(Header.find("std::optional<CUIRect> m_DismissTouchRect"), std::string::npos);
+	EXPECT_NE(Source.find("SecondsActive() < MINIMUM_ACTIVE_SECONDS"), std::string::npos);
+	EXPECT_NE(Source.find("m_DismissTouchRect->Inside(State.m_Position)"), std::string::npos);
+}
