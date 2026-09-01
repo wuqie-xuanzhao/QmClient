@@ -1,3 +1,6 @@
 null:json.c
 pointer-overflow:json.c
+shift-base:bits.c
+shift-base:unpack.c
+shift-base:words.c
 null:ikcp.c
