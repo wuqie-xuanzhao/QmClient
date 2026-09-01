@@ -83,7 +83,7 @@ namespace
 		RenderAxiomLabel(pUi, ScrollRegion, Row, pModeName, 12.0f, TEXTALIGN_ML);
 		Column.HSplitTop(3.0f, nullptr, &Column);
 
-		if(ModeResult.m_Status != EQmAxiomScoreStatus::READY)
+		if(!ModeResult.m_HasData)
 		{
 			Column.HSplitTop(28.0f, &Row, &Column);
 			RenderAxiomLabel(pUi, ScrollRegion, Row, AxiomScoreStatusText(ModeResult.m_Status), 9.0f, TEXTALIGN_ML);
@@ -2445,7 +2445,8 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 		Content.y += ScrollOffset.y;
 
 		const SQmAxiomPlayerResult *pResult = pScoreboard->GameClient()->m_QmAxiomScores.GetResult(pPopupContext->m_aAxiomPlayerName);
-		if(pResult == nullptr || pResult->m_SearchStatus != EQmAxiomScoreStatus::READY)
+		const bool HasModeData = pResult != nullptr && (pResult->Mode(EQmAxiomMode::GORES).m_HasData || pResult->Mode(EQmAxiomMode::AXRACE).m_HasData);
+		if(pResult == nullptr || (pResult->m_SearchStatus != EQmAxiomScoreStatus::READY && !HasModeData))
 		{
 			CUIRect Status;
 			Content.HSplitTop(30.0f, &Status, &Content);

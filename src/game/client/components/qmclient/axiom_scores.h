@@ -70,7 +70,6 @@ class CQmAxiomScores : public CComponent
 		int64_t m_LastSearchFailureTick = 0;
 		std::array<int64_t, 2> m_aLastModeSuccessTick{};
 		std::array<int64_t, 2> m_aLastModeFailureTick{};
-		int64_t m_LastAccessTick = 0;
 	};
 
 	struct SRequestSlot
@@ -86,6 +85,7 @@ class CQmAxiomScores : public CComponent
 	std::string m_ActivePlayerName;
 	uint64_t m_Generation = 0;
 	IQmAxiomHttp *m_pHttpOverride = nullptr;
+	bool m_PersistentCacheDirty = false;
 
 	static int ModeIndex(EQmAxiomMode Mode);
 	static EQmAxiomMode ModeFromIndex(int Index);
@@ -94,7 +94,6 @@ class CQmAxiomScores : public CComponent
 
 	void AbortActiveRequests(bool ResetFetchingStates);
 	void BeginActiveQuery(const char *pPlayerName);
-	void EvictCacheEntryIfNeeded();
 	void StartSearchRequest(const char *pPlayerName, SCacheEntry &Entry);
 	void StartModeRequest(const char *pPlayerName, SCacheEntry &Entry, EQmAxiomMode Mode);
 	void ProcessSearchRequest();
@@ -122,6 +121,8 @@ public:
 	const SQmAxiomPlayerResult *GetResult(const char *pPlayerName) const;
 	void LoadPersistentCache(const json_value *pRoot);
 	void WritePersistentCache(CJsonFileWriter &Writer) const;
+	bool PersistentCacheDirty() const { return m_PersistentCacheDirty; }
+	void ClearPersistentCacheDirty() { m_PersistentCacheDirty = false; }
 };
 
 #endif

@@ -10533,7 +10533,7 @@ TEST(QmMonitoringHelpers, EntitiesBackgroundExplicitlyDrawsConfiguredColor)
 TEST(QmStatisticsPersistence, UsesSingleUnversionedStatisticsDocument)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
-	const std::string SaveFunction = ExtractSourceFunctionBody(Source, "void CQmClient::SaveQmClientStatistics() const");
+	const std::string SaveFunction = ExtractSourceFunctionBody(Source, "bool CQmClient::SaveQmClientStatistics() const");
 	const std::string LoadFunction = ExtractSourceFunctionBody(Source, "void CQmClient::LoadQmClientLocalModeStats()");
 	ASSERT_FALSE(SaveFunction.empty());
 	ASSERT_FALSE(LoadFunction.empty());
@@ -10547,4 +10547,79 @@ TEST(QmStatisticsPersistence, UsesSingleUnversionedStatisticsDocument)
 	EXPECT_NE(Source.find("if(!m_QmStatisticsFileExists)"), std::string::npos);
 	EXPECT_NE(Source.find("RefreshQmClientStatistics()"), std::string::npos);
 	EXPECT_NE(ReadRepoFile("src/game/client/components/menus.cpp").find("Sync remote stats"), std::string::npos);
+	EXPECT_NE(Source.find("Writer.Finish()"), std::string::npos);
+	EXPECT_NE(Source.find("m_QmDdnetPlayerState"), std::string::npos);
+	EXPECT_NE(Source.find("m_QmStatisticsFileInvalid"), std::string::npos);
+	EXPECT_NE(Source.find("refusing to overwrite invalid statistics file"), std::string::npos);
+	EXPECT_NE(Source.find("pValue->u.dbl >= static_cast<double>(std::numeric_limits<int64_t>::max())"), std::string::npos);
+}
+
+TEST(QmStatisticsPersistence, KeepsCachedAxiomDataVisibleDuringRefresh)
+{
+	const std::string Scoreboard = ReadRepoFile("src/game/client/components/scoreboard.cpp");
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
+
+	EXPECT_NE(Scoreboard.find("const bool HasModeData = pResult != nullptr"), std::string::npos);
+	EXPECT_NE(Scoreboard.find("!HasModeData"), std::string::npos);
+	EXPECT_NE(Scoreboard.find("if(!ModeResult.m_HasData)"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Score earned\"), aScoreText"), std::string::npos);
+	EXPECT_NE(QmClient.find("if(!m_pQmDdnetPlayerParseJob->Done())"), std::string::npos);
+	EXPECT_NE(QmClient.find("bool ValidPoints = false"), std::string::npos);
+	EXPECT_NE(QmClient.find("if(ValidPoints && pTypes->type == json_object)"), std::string::npos);
+}
+
+TEST(QmStatisticsPersistence, KeepsRemoteIdStatsSeparateFromLocalInGameTime)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
+	const std::string Header = ReadRepoFile("src/game/client/components/qmclient/qmclient.h");
+	const std::string State = ReadRepoFile("src/game/client/components/qmclient/ddnet_player_stats_state.h");
+	const std::string Save = ExtractSourceFunctionBody(QmClient, "bool CQmClient::SaveQmClientStatistics() const");
+	const std::string Load = ExtractSourceFunctionBody(QmClient, "void CQmClient::LoadQmClientLocalModeStats()");
+	const std::string Select = ExtractSourceFunctionBody(QmClient, "void CQmClient::SelectQmDdnetPlayerStats(const char *pFallbackPlayerName)");
+	const std::string RecordFinish = ExtractSourceFunctionBody(QmClient, "void CQmClient::RecordQmClientLocalMapFinish(const char *pGameMode, int Score)");
+	const std::string Update = ExtractSourceFunctionBody(QmClient, "void CQmClient::UpdateQmDdnetPlayerStats()");
+	const std::string OnUpdate = ExtractSourceFunctionBody(QmClient, "void CQmClient::OnUpdate()");
+
+	EXPECT_NE(Header.find("struct SQmClientDdnetPlayerStats"), std::string::npos);
+	EXPECT_NE(Header.find("m_QmDdnetPrimaryPlayerName"), std::string::npos);
+	EXPECT_EQ(Header.find("m_QmClientActiveLocalPlayerName"), std::string::npos);
+	EXPECT_NE(Save.find("Writer.WriteAttribute(\"primary_player_name\")"), std::string::npos);
+	EXPECT_NE(Load.find("JsonObjectField(pRemote, \"primary_player_name\")"), std::string::npos);
+	EXPECT_EQ(Save.find("Writer.WriteAttribute(\"player_name\")"), std::string::npos);
+	EXPECT_EQ(Load.find("JsonObjectField(pMode, \"player_name\")"), std::string::npos);
+	EXPECT_NE(Select.find("m_QmDdnetPrimaryPlayerName"), std::string::npos);
+	EXPECT_EQ(Select.find("SPlayerUsage"), std::string::npos);
+	EXPECT_EQ(RecordFinish.find("g_Config.m_PlayerName"), std::string::npos);
+	EXPECT_NE(QmClient.find("StoreQmDdnetPlayerStats(ParsePlayerName.c_str()"), std::string::npos);
+	EXPECT_NE(QmClient.find("void CQmClient::UseCurrentQmDdnetPlayerName()"), std::string::npos);
+	EXPECT_NE(ReadRepoFile("src/game/client/components/menus.cpp").find("Use current name"), std::string::npos);
+	EXPECT_NE(State.find("if(!CurrentPlayer)\n\t\t\treturn true;"), std::string::npos);
+	EXPECT_NE(Update.find("SelectQmDdnetPlayerStats(g_Config.m_PlayerName);"), std::string::npos);
+	EXPECT_NE(Update.find("FetchQmDdnetPlayerStats(m_QmDdnetPlayerState.PlayerName().c_str());"), std::string::npos);
+	EXPECT_NE(OnUpdate.find("SaveQmClientStatistics()"), std::string::npos);
+}
+
+TEST(QmStatisticsPersistence, PersistsCompletedRemoteQueriesOutsideManualRefresh)
+{
+	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
+	const std::string OnUpdate = ExtractSourceFunctionBody(QmClient, "void CQmClient::OnUpdate()");
+	ASSERT_FALSE(OnUpdate.empty());
+
+	EXPECT_NE(QmClient.find("StoreQmDdnetPlayerStats(ParsePlayerName.c_str()"), std::string::npos);
+	EXPECT_NE(QmClient.find("SaveQmClientStatistics();"), std::string::npos);
+	EXPECT_NE(OnUpdate.find("PersistentCacheDirty()"), std::string::npos);
+	EXPECT_NE(OnUpdate.find("ClearPersistentCacheDirty()"), std::string::npos);
+	EXPECT_NE(OnUpdate.find("!m_QmStatisticsFileInvalid"), std::string::npos);
+	EXPECT_NE(OnUpdate.find("m_QmStatisticsNextSaveRetryTick"), std::string::npos);
+}
+
+TEST(QmStatisticsPersistence, StatisticsModePanelFitsSingleColumnDetails)
+{
+	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
+	const std::string Statistics = ExtractSourceFunctionBody(Menus, "void CMenus::RenderStatistics(CUIRect MainView)");
+	ASSERT_FALSE(Statistics.empty());
+
+	EXPECT_NE(Statistics.find("const float ModeRowHeight = ModeColumns == 1 ? 78.0f : 68.0f;"), std::string::npos);
+	EXPECT_NE(Statistics.find("std::clamp(72.0f + ModeRows * ModeRowHeight, 220.0f, 520.0f)"), std::string::npos);
 }

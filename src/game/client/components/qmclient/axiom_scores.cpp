@@ -18,7 +18,6 @@ namespace
 	constexpr int64_t AXIOM_SEARCH_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 	constexpr int64_t AXIOM_FAILURE_RETRY_MS = 30 * 1000;
 	constexpr int64_t AXIOM_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
-	constexpr size_t AXIOM_MAX_CACHE_ENTRIES = 64;
 	constexpr size_t AXIOM_MAX_QUERY_NAME_BYTES = 256;
 	constexpr size_t AXIOM_MAX_DIFFICULTY_NAME_BYTES = 192;
 	constexpr int AXIOM_CONNECT_TIMEOUT_MS = 5000;
@@ -123,7 +122,7 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 	const json_value *pRemote = JsonField(pRoot, "remote");
 	const json_value *pAxiom = JsonField(pRemote, "axiom");
 	const json_value *pPlayers = JsonField(pAxiom, "players");
-	if(pPlayers->type != json_array || pPlayers->u.array.length > AXIOM_MAX_CACHE_ENTRIES)
+	if(pPlayers->type != json_array)
 		return;
 	for(unsigned PlayerIndex = 0; PlayerIndex < pPlayers->u.array.length; ++PlayerIndex)
 	{
@@ -216,8 +215,6 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 		}
 		if(!HasMode)
 			continue;
-		const int64_t Now = CurrentTick();
-		Entry.m_LastAccessTick = Now;
 		// Persisted data remains visible, but is refreshed in the background on startup.
 		Entry.m_LastSearchSuccessTick = 0;
 		for(int Index = 0; Index < 2; ++Index)
@@ -381,24 +378,14 @@ void CQmAxiomScores::BeginActiveQuery(const char *pPlayerName)
 	m_ActivePlayerName = pPlayerName;
 }
 
-void CQmAxiomScores::EvictCacheEntryIfNeeded()
-{
-	if(m_Cache.size() < AXIOM_MAX_CACHE_ENTRIES)
-		return;
-	auto Oldest = m_Cache.end();
-	for(auto It = m_Cache.begin(); It != m_Cache.end(); ++It)
-	{
-		if(It->first == m_ActivePlayerName)
-			continue;
-		if(Oldest == m_Cache.end() || It->second.m_LastAccessTick < Oldest->second.m_LastAccessTick)
-			Oldest = It;
-	}
-	if(Oldest != m_Cache.end())
-		m_Cache.erase(Oldest);
-}
-
 void CQmAxiomScores::StartSearchRequest(const char *pPlayerName, SCacheEntry &Entry)
 {
+	if(m_SearchRequest.m_pRequest)
+	{
+		m_SearchRequest.m_pRequest->Abort();
+		m_SearchRequest.m_pRequest.reset();
+		m_SearchRequest.m_PlayerName.clear();
+	}
 	Entry.m_Result.m_SearchStatus = EQmAxiomScoreStatus::FETCHING;
 
 	const std::string Url = QmBuildAxiomSearchUrl(pPlayerName);
@@ -434,6 +421,12 @@ void CQmAxiomScores::StartModeRequest(const char *pPlayerName, SCacheEntry &Entr
 	}
 
 	SRequestSlot &Slot = m_aModeRequests[Index];
+	if(Slot.m_pRequest)
+	{
+		Slot.m_pRequest->Abort();
+		Slot.m_pRequest.reset();
+		Slot.m_PlayerName.clear();
+	}
 	const std::string Url = QmBuildAxiomInfoUrl(Entry.m_Result.m_Match.m_UserId, Mode);
 	Slot.m_pRequest = StartRequest(Url.c_str(), AXIOM_INFO_TIMEOUT_MS);
 	if(!Slot.m_pRequest)
@@ -486,6 +479,7 @@ void CQmAxiomScores::ProcessSearchRequest()
 	Entry.m_Result.m_Match = std::move(Match);
 	if(MatchChanged)
 	{
+		m_PersistentCacheDirty = true;
 		for(SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
 			ModeResult = {};
 	}
@@ -541,6 +535,7 @@ void CQmAxiomScores::ProcessModeRequests()
 		ModeResult.m_HasData = true;
 		Entry.m_aLastModeSuccessTick[Index] = Now;
 		Entry.m_aLastModeFailureTick[Index] = 0;
+		m_PersistentCacheDirty = true;
 	}
 }
 
@@ -564,13 +559,8 @@ void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 	const int64_t Now = CurrentTick();
 	auto CacheIt = m_Cache.find(pPlayerName);
 	if(CacheIt == m_Cache.end())
-	{
-		EvictCacheEntryIfNeeded();
 		CacheIt = m_Cache.emplace(pPlayerName, SCacheEntry{}).first;
-	}
 	SCacheEntry &Entry = CacheIt->second;
-	Entry.m_LastAccessTick = Now;
-
 	const bool SearchFresh = Entry.m_Result.m_SearchStatus == EQmAxiomScoreStatus::READY && IsWithinWindow(Entry.m_LastSearchSuccessTick, Now, AXIOM_SEARCH_CACHE_TTL_MS);
 	if(!SearchFresh)
 	{
@@ -615,6 +605,8 @@ void CQmAxiomScores::Refresh(const char *pPlayerName)
 {
 	if(!pPlayerName || pPlayerName[0] == '\0')
 		return;
+	// 强制刷新必须先取消当前玩家的搜索和模式请求，避免新搜索完成后覆盖仍在运行的旧请求槽。
+	AbortActiveRequests(true);
 	const auto It = m_Cache.find(pPlayerName);
 	if(It != m_Cache.end())
 	{

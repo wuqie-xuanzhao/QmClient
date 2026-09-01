@@ -60,6 +60,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <cmath>
+#include <limits>
 #include <unordered_map>
 #include <vector>
 
@@ -89,6 +90,16 @@ namespace
 
 		const int64_t Days = Hours / 24;
 		str_format(pBuf, BufSize, "%" PRId64 "d %" PRId64 "h %" PRId64 "m %" PRId64 "s", Days, Hours % 24, Minutes, RemainingSeconds);
+	}
+
+	template<typename T>
+	T SaturatingAdd(T Left, T Right)
+	{
+		if(Right > 0 && Left > std::numeric_limits<T>::max() - Right)
+			return std::numeric_limits<T>::max();
+		if(Right < 0 && Left < std::numeric_limits<T>::min() - Right)
+			return std::numeric_limits<T>::min();
+		return Left + Right;
 	}
 
 	bool IsStatsDDraceMode(const std::string &Mode)
@@ -2870,9 +2881,9 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			continue;
 		}
 		const size_t Index = static_cast<size_t>(It - vModeStats.begin());
-		It->m_Maps += Stats.m_Maps;
-		It->m_Score += Stats.m_Score;
-		It->m_PlaytimeSeconds += Stats.m_PlaytimeSeconds;
+		It->m_Maps = SaturatingAdd(It->m_Maps, Stats.m_Maps);
+		It->m_Score = SaturatingAdd(It->m_Score, Stats.m_Score);
+		It->m_PlaytimeSeconds = SaturatingAdd(It->m_PlaytimeSeconds, Stats.m_PlaytimeSeconds);
 		const int64_t CandidatePlaytime = std::max<int64_t>(0, Stats.m_PlaytimeSeconds);
 		const int CandidateMaps = std::max(0, Stats.m_Maps);
 		if(CandidatePlaytime > vDominantPlaytimes[Index] || (CandidatePlaytime == vDominantPlaytimes[Index] && CandidateMaps > vDominantMaps[Index]))
@@ -2914,8 +2925,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		{
 			if(Selected[Index])
 				continue;
-			Other.m_Maps += maximum(0, vSortedModeStats[Index].m_Maps);
-			Other.m_PlaytimeSeconds += maximum<int64_t>(0, vSortedModeStats[Index].m_PlaytimeSeconds);
+			Other.m_Maps = SaturatingAdd(Other.m_Maps, maximum(0, vSortedModeStats[Index].m_Maps));
+			Other.m_PlaytimeSeconds = SaturatingAdd(Other.m_PlaytimeSeconds, maximum<int64_t>(0, vSortedModeStats[Index].m_PlaytimeSeconds));
 		}
 		vDisplayModeStats.push_back(std::move(Other));
 	}
@@ -2967,7 +2978,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 
 	int64_t ServerPlaytimeSeconds = 0;
 	for(const SQmClientLocalModeStats &Stats : GameClient()->m_QmClient.QmClientLocalModeStats())
-		ServerPlaytimeSeconds += std::max<int64_t>(0, Stats.m_PlaytimeSeconds);
+		ServerPlaytimeSeconds = SaturatingAdd(ServerPlaytimeSeconds, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
 
 	char aClientOpenTime[64];
 	char aServerPlaytime[64];
@@ -3082,23 +3093,43 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	CUIRect ModePanel, ModeRest;
 	const int ModeColumns = Content.w >= 620.0f ? 2 : 1;
 	const int ModeRows = (static_cast<int>(vDisplayModeStats.size()) + ModeColumns - 1) / ModeColumns;
-	const float ModePanelHeight = std::clamp(72.0f + ModeRows * 68.0f, 220.0f, 390.0f);
+	const float ModeRowHeight = ModeColumns == 1 ? 78.0f : 68.0f;
+	const float ModePanelHeight = std::clamp(72.0f + ModeRows * ModeRowHeight, 220.0f, 520.0f);
 	Content.HSplitTop(ModePanelHeight, &ModePanel, &ModeRest);
 	ModePanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.23f), IGraphics::CORNER_ALL, 8.0f);
 	CUIRect ModeTitle, ModeBody;
 	ModePanel.Margin(10.0f, &ModePanel);
-	ModePanel.HSplitTop(20.0f, &ModeTitle, &ModeBody);
+	const bool NarrowModeActions = ModePanel.w < 500.0f;
+	ModePanel.HSplitTop(NarrowModeActions ? 68.0f : 44.0f, &ModeTitle, &ModeBody);
 	static bool s_ShowTotalHours = false;
 	CUIRect ModeTitleLabel, ModeTitleActions;
-	ModeTitle.VSplitRight(220.0f, &ModeTitleLabel, &ModeTitleActions);
+	ModeTitle.HSplitTop(20.0f, &ModeTitleLabel, &ModeTitleActions);
 	Ui()->DoLabel(&ModeTitleLabel, Localize("Local game mode statistics"), 14.0f, TEXTALIGN_ML);
-	CUIRect RefreshButton, ModeTitleButton;
-	ModeTitleActions.VSplitLeft(96.0f, &RefreshButton, &ModeTitleActions);
-	ModeTitleActions.VSplitLeft(8.0f, nullptr, &ModeTitleActions);
-	ModeTitleButton = ModeTitleActions;
+	ModeTitleActions.HSplitTop(2.0f, nullptr, &ModeTitleActions);
+	CUIRect RefreshButton, UseCurrentNameButton, ModeTitleButton;
+	if(NarrowModeActions)
+	{
+		CUIRect FirstActionRow;
+		ModeTitleActions.HSplitTop(22.0f, &FirstActionRow, &ModeTitleActions);
+		FirstActionRow.VSplitMid(&RefreshButton, &UseCurrentNameButton, 8.0f);
+		ModeTitleActions.HSplitTop(2.0f, nullptr, &ModeTitleActions);
+		ModeTitleButton = ModeTitleActions;
+	}
+	else
+	{
+		const float ButtonWidth = (ModeTitleActions.w - 16.0f) / 3.0f;
+		ModeTitleActions.VSplitLeft(ButtonWidth, &RefreshButton, &ModeTitleActions);
+		ModeTitleActions.VSplitLeft(8.0f, nullptr, &ModeTitleActions);
+		ModeTitleActions.VSplitLeft(ButtonWidth, &UseCurrentNameButton, &ModeTitleActions);
+		ModeTitleActions.VSplitLeft(8.0f, nullptr, &ModeTitleActions);
+		ModeTitleButton = ModeTitleActions;
+	}
 	static CButtonContainer s_StatisticsRefreshButton;
 	if(DoButton_Menu(&s_StatisticsRefreshButton, Localize("Sync remote stats"), 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
 		GameClient()->m_QmClient.RefreshQmClientStatistics();
+	static CButtonContainer s_StatisticsUseCurrentNameButton;
+	if(DoButton_Menu(&s_StatisticsUseCurrentNameButton, Localize("Use current name"), 0, &UseCurrentNameButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
+		GameClient()->m_QmClient.UseCurrentQmDdnetPlayerName();
 	static CButtonContainer s_TotalHoursButton;
 	if(DoButton_Menu(&s_TotalHoursButton, Localize("Total hours"), s_ShowTotalHours, &ModeTitleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
 		s_ShowTotalHours = !s_ShowTotalHours;
@@ -3150,7 +3181,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		char aScoreText[128];
 		FormatModeScore(Stats, aScoreText, sizeof(aScoreText));
 		if(aScoreText[0])
-			str_format(pBuf, BufSize, "%s: %s\n%s: %d\n%s\n%s: %s", Localize("Game mode"), pModeName, Localize("Maps finished"), Stats.m_Maps, aScoreText, Localize("Total play time"), pDuration);
+			str_format(pBuf, BufSize, "%s: %s\n%s: %d\n%s: %s\n%s: %s", Localize("Game mode"), pModeName, Localize("Maps finished"), Stats.m_Maps, Localize("Score earned"), aScoreText, Localize("Total play time"), pDuration);
 		else
 			str_format(pBuf, BufSize, "%s: %s\n%s: %d\n%s: %s", Localize("Game mode"), pModeName, Localize("Maps finished"), Stats.m_Maps, Localize("Total play time"), pDuration);
 	};
