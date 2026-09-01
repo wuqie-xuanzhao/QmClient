@@ -1,9 +1,27 @@
 cmake_minimum_required(VERSION 3.12...3.27.4)
 
-set(DEFAULT_MACOS_DEPLOYMENT_TARGET "11.0")
-set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version")
-if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 11.0)
-  message(WARNING "Building for macOS < 11.0 is not supported")
+# In-source builds can leave generated files in the source tree and contaminate
+# later out-of-source builds.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR
+    "In-source builds are not supported. Configure an out-of-source build, for example:\n"
+    "  cmake -B build -G Ninja\n"
+    "  cmake --build build")
+endif()
+
+set(IS_IOS FALSE)
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+  set(IS_IOS TRUE)
+elseif(DEFINED CMAKE_OSX_SYSROOT AND CMAKE_OSX_SYSROOT MATCHES "iphoneos|iphonesimulator")
+  set(IS_IOS TRUE)
+endif()
+
+if(NOT IS_IOS)
+  set(DEFAULT_MACOS_DEPLOYMENT_TARGET "11.0")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "${DEFAULT_MACOS_DEPLOYMENT_TARGET}" CACHE STRING "Minimum macOS deployment version")
+  if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 11.0)
+    message(WARNING "Building for macOS < 11.0 is not supported")
+  endif()
 endif()
 
 file(STRINGS src/game/version.h VERSION_LINE
@@ -85,7 +103,9 @@ else()
   endif()
 endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(IS_IOS)
+  set(TARGET_OS "ios")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(TARGET_OS "windows")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(TARGET_OS "linux")
@@ -162,6 +182,11 @@ option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG so
 if(TARGET_OS STREQUAL "android")
   set(DISCORD OFF)
   set(STEAM OFF)
+elseif(TARGET_OS STREQUAL "ios")
+  set(DISCORD OFF)
+  set(STEAM OFF)
+  set(VULKAN OFF)
+  set(METAL OFF)
 endif()
 
 if(TARGET_OS STREQUAL "emscripten")
@@ -217,6 +242,8 @@ endif()
 
 set(SERVER_EXECUTABLE DDNet-Server CACHE STRING "Name of the built server executable")
 set(CLIENT_EXECUTABLE DDNet CACHE STRING "Name of the build client executable")
+set(IOS_BUNDLE_IDENTIFIER "org.qmclient.client" CACHE STRING "iOS bundle identifier")
+option(IOS_USE_ASSET_CATALOG "Compile the iOS app icon asset catalog" ON)
 
 ########################################################################
 # Compiler flags
@@ -491,6 +518,13 @@ if(FAT)
   set(LIB_DIR "${TARGET_OS}/libfat")
 elseif(TARGET_OS STREQUAL "emscripten")
   set(LIB_DIR "webasm/libwasm")
+elseif(TARGET_OS STREQUAL "ios")
+  set(LIB_DIR "ios")
+  if(CMAKE_OSX_SYSROOT MATCHES "iphonesimulator")
+    set(IOS_XCFRAMEWORK_SLICE "ios-arm64_x86_64-simulator")
+  else()
+    set(IOS_XCFRAMEWORK_SLICE "ios-arm64")
+  endif()
 elseif(TARGET_CPU_ARCHITECTURE STREQUAL "arm" OR TARGET_CPU_ARCHITECTURE STREQUAL "arm64")
   set(LIB_DIR "${TARGET_OS}/lib${TARGET_CPU_ARCHITECTURE}")
 else()
@@ -505,7 +539,11 @@ function(set_extra_dirs_lib VARIABLE NAME)
   else()
     set(TYPE PATHS)
   endif()
-  if(TARGET_BITS AND TARGET_OS)
+  if(TARGET_OS STREQUAL "ios")
+    file(GLOB DIR "${PROJECT_SOURCE_DIR}/ddnet-libs/${NAME}/${LIB_DIR}/*.xcframework/${IOS_XCFRAMEWORK_SLICE}")
+    set("${TYPE}_${VARIABLE}_LIBDIR" "${DIR}" PARENT_SCOPE)
+    set("EXTRA_${VARIABLE}_LIBDIR" "${DIR}" PARENT_SCOPE)
+  elseif(TARGET_BITS AND TARGET_OS)
     set(DIR "ddnet-libs/${NAME}/${LIB_DIR}")
     set("${TYPE}_${VARIABLE}_LIBDIR" "${DIR}" PARENT_SCOPE)
     set("EXTRA_${VARIABLE}_LIBDIR" "${DIR}" PARENT_SCOPE)
@@ -526,7 +564,7 @@ function(set_extra_dirs_include VARIABLE NAME LIBRARY)
 endfunction()
 
 if(CMAKE_CROSSCOMPILING)
-  if(TARGET_OS STREQUAL "android" OR TARGET_OS STREQUAL "emscripten")
+  if(TARGET_OS STREQUAL "android" OR TARGET_OS STREQUAL "emscripten" OR TARGET_OS STREQUAL "ios")
     # be more aggressive with android toolchain
     set(CROSSCOMPILING_NO_CMAKE_SYSTEM_PATH NO_CMAKE_SYSTEM_PATH NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
   else()
@@ -567,7 +605,7 @@ find_package(Freetype)
 if(DOWNLOAD_GTEST)
   find_package(Git)
 endif()
-if(NOT(TARGET_OS STREQUAL "android"))
+if(NOT(TARGET_OS STREQUAL "android" OR TARGET_OS STREQUAL "ios"))
   find_package(GLEW)
 endif()
 find_package(GTest)
@@ -655,7 +693,7 @@ endif()
 
 message(STATUS "******** ${CMAKE_PROJECT_NAME} ********")
 set(TARGET "Target OS: ${TARGET_OS} ${CMAKE_SYSTEM_PROCESSOR}")
-if(TARGET_OS STREQUAL "mac")
+if(TARGET_OS STREQUAL "mac" OR TARGET_OS STREQUAL "ios")
   set(TARGET "${TARGET} (SDK: ${CMAKE_OSX_SYSROOT}, architectures: ${CMAKE_OSX_ARCHITECTURES})")
 endif()
 message(STATUS ${TARGET})
@@ -818,6 +856,26 @@ elseif(TARGET_OS STREQUAL "mac")
   )
   set(PLATFORM_CLIENT_LIBS ${COCOA} ${OPENGL} ${USERNOTIFICATIONS})
   set(PLATFORM_LIBS ${CARBON} ${SECURITY})
+elseif(TARGET_OS STREQUAL "ios")
+  find_library(AUDIOTOOLBOX AudioToolbox)
+  find_library(AVFOUNDATION AVFoundation)
+  find_library(COREBLUETOOTH CoreBluetooth)
+  find_library(COREFOUNDATION CoreFoundation)
+  find_library(COREGRAPHICS CoreGraphics)
+  find_library(COREHAPTICS CoreHaptics)
+  find_library(COREMOTION CoreMotion)
+  find_library(FOUNDATION Foundation)
+  find_library(GAMECONTROLLER GameController)
+  find_library(IOS_METAL Metal)
+  find_library(OPENGLES OpenGLES)
+  find_library(QUARTZCORE QuartzCore)
+  find_library(SECURITY Security)
+  find_library(SYSTEMCONFIGURATION SystemConfiguration)
+  find_library(UIKIT UIKit)
+  set(PLATFORM_CLIENT src/ios/ios_main.cpp)
+  set(PLATFORM_CLIENT_LIBS ${AUDIOTOOLBOX} ${AVFOUNDATION} ${COREBLUETOOTH} ${COREFOUNDATION} ${COREGRAPHICS} ${COREHAPTICS} ${COREMOTION} ${FOUNDATION} ${GAMECONTROLLER} ${IOS_METAL} ${OPENGLES} ${QUARTZCORE} ${SECURITY} ${SYSTEMCONFIGURATION} ${UIKIT})
+  set(PLATFORM_LIBS)
+  set(PLATFORM_CLIENT_INCLUDE_DIRS)
 elseif(TARGET_OS STREQUAL "haiku")
     set(PLATFORM_CLIENT)
     find_package(OpenGL)
@@ -1017,6 +1075,14 @@ else()
   set(CARGO_TEST ${CMAKE_COMMAND} -E env ${CARGO_TEST_ENV} ${RUST_CARGO} test --locked)
 
 endif()
+if(TARGET_OS STREQUAL "ios")
+  if(NOT DEFINED CMAKE_RUST_COMPILER_TARGET)
+    message(SEND_ERROR "iOS builds require CMAKE_RUST_COMPILER_TARGET")
+  endif()
+  list(APPEND CARGO_BUILD --target ${CMAKE_RUST_COMPILER_TARGET})
+  list(APPEND CARGO_TEST --target ${CMAKE_RUST_COMPILER_TARGET})
+  set(CARGO_BUILD_DIR "${CMAKE_RUST_COMPILER_TARGET}/")
+endif()
 if(MSVC)
   list(INSERT CARGO_BUILD 0 ${CMAKE_COMMAND} -E env $<$<CONFIG:Debug>:CFLAGS=/MTd> $<$<CONFIG:Debug>:CXXFLAGS=/MTd>)
   list(INSERT CARGO_TEST 0 ${CMAKE_COMMAND} -E env RUSTFLAGS=-Ctarget-feature=+crt-static)
@@ -1036,6 +1102,8 @@ if(NOT CMAKE_OSX_ARCHITECTURES AND (DEFINED CMAKE_RUST_COMPILER_TARGET OR RUST_N
 endif()
 set(CARGO_BUILD_DIR_DEBUG "${CARGO_BUILD_DIR}debug")
 set(CARGO_BUILD_DIR_RELEASE "${CARGO_BUILD_DIR}release")
+set(CARGO_BUILD_DIR_RELWITHDEBINFO "${CARGO_BUILD_DIR}relwithdebinfo")
+set(CARGO_BUILD_DIR_MINSIZEREL "${CARGO_BUILD_DIR}minsizerel")
 
 # We can't check this directly; it is a cmake property, not a variable
 get_cmake_property(MULTI_CONFIG_BUILD GENERATOR_IS_MULTI_CONFIG)
@@ -1043,19 +1111,46 @@ if(MULTI_CONFIG_BUILD)
   if(CMAKE_VERSION VERSION_LESS 3.20)
     message(SEND_ERROR "Multi-config generators only supported from CMake 3.20 and up")
   else()
-    set(CARGO_BUILD_DIR "${CARGO_BUILD_DIR}$<$<CONFIG:Debug>:debug>$<$<NOT:$<CONFIG:Debug>>:release>")
+    set(CARGO_BUILD_DIR "${CARGO_BUILD_DIR}$<IF:$<CONFIG:Debug>,debug,$<IF:$<CONFIG:RelWithDebInfo>,relwithdebinfo,$<IF:$<CONFIG:MinSizeRel>,minsizerel,release>>>")
+    list(APPEND CARGO_BUILD
+      $<$<CONFIG:RelWithDebInfo>:--profile>
+      $<$<CONFIG:RelWithDebInfo>:relwithdebinfo>
+      $<$<CONFIG:MinSizeRel>:--profile>
+      $<$<CONFIG:MinSizeRel>:minsizerel>
+      $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>>:--release>)
   endif()
 else()
   if(CMAKE_BUILD_TYPE STREQUAL Debug)
     set(CARGO_BUILD_DIR "${CARGO_BUILD_DIR_DEBUG}")
+  elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+    set(CARGO_BUILD_DIR "${CARGO_BUILD_DIR_RELWITHDEBINFO}")
+    list(APPEND CARGO_BUILD --profile relwithdebinfo)
+  elseif(CMAKE_BUILD_TYPE STREQUAL MinSizeRel)
+    set(CARGO_BUILD_DIR "${CARGO_BUILD_DIR_MINSIZEREL}")
+    list(APPEND CARGO_BUILD --profile minsizerel)
   else()
     set(CARGO_BUILD_DIR "${CARGO_BUILD_DIR_RELEASE}")
+    list(APPEND CARGO_BUILD --release)
   endif()
 endif()
-list(APPEND CARGO_BUILD $<$<NOT:$<CONFIG:Debug>>:--release>)
-list(APPEND CARGO_TEST $<$<NOT:$<CONFIG:Debug>>:--release>)
+if(MULTI_CONFIG_BUILD)
+  list(APPEND CARGO_TEST
+    $<$<CONFIG:RelWithDebInfo>:--profile>
+    $<$<CONFIG:RelWithDebInfo>:relwithdebinfo>
+    $<$<CONFIG:MinSizeRel>:--profile>
+    $<$<CONFIG:MinSizeRel>:minsizerel>
+    $<$<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>>:--release>)
+else()
+  if(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+    list(APPEND CARGO_TEST --profile relwithdebinfo)
+  elseif(CMAKE_BUILD_TYPE STREQUAL MinSizeRel)
+    list(APPEND CARGO_TEST --profile minsizerel)
+  elseif(NOT CMAKE_BUILD_TYPE STREQUAL Debug)
+    list(APPEND CARGO_TEST --release)
+  endif()
+endif()
 
-if(CMAKE_OSX_ARCHITECTURES)
+if(CMAKE_OSX_ARCHITECTURES AND TARGET_OS STREQUAL "mac")
   set(RUST_OSX_ARCHITECTURES)
   foreach(arch ${CMAKE_OSX_ARCHITECTURES})
     if(${arch} STREQUAL arm64)
@@ -1080,7 +1175,7 @@ set(RUST_TARGETS engine_shared)
 if(TARGET_OS STREQUAL "windows")
   list(APPEND RUST_TARGETS qm_update)
 endif()
-if(NOT CMAKE_OSX_ARCHITECTURES)
+if(NOT CMAKE_OSX_ARCHITECTURES OR TARGET_OS STREQUAL "ios")
   set(RUST_OUTPUTS)
   foreach(rust_target ${RUST_TARGETS})
     if(rust_target STREQUAL "qm_update")
@@ -1094,6 +1189,8 @@ if(NOT CMAKE_OSX_ARCHITECTURES)
     set_target_properties(rust_${rust_target} PROPERTIES
       IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_RELEASE}/${LIBRARY_NAME}"
       IMPORTED_LOCATION_DEBUG "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_DEBUG}/${LIBRARY_NAME}"
+      IMPORTED_LOCATION_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_RELWITHDEBINFO}/${LIBRARY_NAME}"
+      IMPORTED_LOCATION_MINSIZEREL "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_MINSIZEREL}/${LIBRARY_NAME}"
     )
     list(APPEND RUST_OUTPUTS "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR}/${LIBRARY_NAME}")
   endforeach()
@@ -1115,6 +1212,8 @@ else()
     set_target_properties(rust_${rust_target} PROPERTIES
       IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_RELEASE}/${LIBRARY_NAME}"
       IMPORTED_LOCATION_DEBUG "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_DEBUG}/${LIBRARY_NAME}"
+      IMPORTED_LOCATION_RELWITHDEBINFO "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_RELWITHDEBINFO}/${LIBRARY_NAME}"
+      IMPORTED_LOCATION_MINSIZEREL "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR_MINSIZEREL}/${LIBRARY_NAME}"
     )
     add_custom_target(rust_${rust_target}_target DEPENDS "${PROJECT_BINARY_DIR}/${CARGO_BUILD_DIR}/${LIBRARY_NAME}")
     add_dependencies(rust_${rust_target} rust_${rust_target}_target)
@@ -2660,6 +2759,9 @@ add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_EXTERNAL} ${ENGINE_IN
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 add_dependencies(engine-shared generate_protocol)
 add_dependencies(game-shared generate_protocol)
+if(TARGET_OS STREQUAL "ios")
+  add_dependencies(game-shared generate_content_types)
+endif()
 list(APPEND TARGETS_OWN engine-gfx engine-shared game-shared)
 
 if(DISCORD AND NOT DISCORD_DYNAMIC)
@@ -3409,6 +3511,18 @@ if(CLIENT)
       $<TARGET_OBJECTS:game-shared>
       $<TARGET_OBJECTS:rust-bridge-shared>
     )
+  elseif(TARGET_OS STREQUAL "ios")
+    add_executable(game-client MACOSX_BUNDLE
+      ${CLIENT_SRC}
+      ${CLIENT_ICON}
+      ${CLIENT_VERSIONINFO}
+      ${CLIENT_MANIFEST}
+      ${DEPS_CLIENT}
+      $<TARGET_OBJECTS:engine-gfx>
+      $<TARGET_OBJECTS:engine-shared>
+      $<TARGET_OBJECTS:game-shared>
+      $<TARGET_OBJECTS:rust-bridge-shared>
+    )
   else()
     add_executable(game-client WIN32
       ${CLIENT_SRC}
@@ -3433,6 +3547,26 @@ if(CLIENT)
       PROPERTY OUTPUT_NAME ${CLIENT_EXECUTABLE}
   )
   target_link_libraries(game-client game-client-common)
+  if(TARGET_OS STREQUAL "ios")
+    set(IOS_INFO_PLIST "${PROJECT_BINARY_DIR}/ios-Info.plist")
+    configure_file("${PROJECT_SOURCE_DIR}/scripts/ios/files/Info.plist.in" "${IOS_INFO_PLIST}")
+    set_target_properties(game-client PROPERTIES
+      MACOSX_BUNDLE_INFO_PLIST "${IOS_INFO_PLIST}"
+      MACOSX_BUNDLE_GUI_IDENTIFIER "${IOS_BUNDLE_IDENTIFIER}"
+      XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${IOS_BUNDLE_IDENTIFIER}"
+      XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+    )
+    if(IOS_USE_ASSET_CATALOG)
+      target_sources(game-client PRIVATE "${PROJECT_SOURCE_DIR}/scripts/ios/files/Assets.xcassets")
+      set_source_files_properties("${PROJECT_SOURCE_DIR}/scripts/ios/files/Assets.xcassets" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+      set_target_properties(game-client PROPERTIES XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon")
+    endif()
+    target_link_options(game-client PRIVATE "-ObjC")
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/data $<TARGET_BUNDLE_DIR:game-client>/data
+      COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/storage.cfg $<TARGET_BUNDLE_DIR:game-client>/storage.cfg
+    )
+  endif()
   if(STEAMAPI_RUNTIME_FILE)
     add_custom_command(TARGET game-client POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${STEAMAPI_RUNTIME_FILE}" "$<TARGET_FILE_DIR:game-client>/${STEAMAPI_RUNTIME_FILE_NAME}"
@@ -3815,6 +3949,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     chunk_header_test.cpp
     color_test.cpp
     compression_test.cpp
+    console_test.cpp
     csv_test.cpp
     datafile_test.cpp
     dbg_test.cpp
@@ -3830,6 +3965,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     http_shutdown_lifecycle_test.cpp
     image_test.cpp
     io_test.cpp
+    ios_runtime_test.cpp
     jobs_test.cpp
     json_test.cpp
     jsonwriter_test.cpp
@@ -4054,7 +4190,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   add_custom_target(run_tests
     DEPENDS run_cxx_tests
   )
-  if(NOT MSVC OR (NOT CMAKE_CONFIGURATION_TYPES AND CMAKE_BUILD_TYPE STREQUAL Release))
+  if(NOT MSVC OR CMAKE_BUILD_TYPE STREQUAL Release OR CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo OR CMAKE_BUILD_TYPE STREQUAL MinSizeRel)
     # On MSVC, Rust tests only work in the release mode because we link our C++
     # code with the debug C standard library (/MTd) but Rust only supports
     # linking to the release C standard library (/MT).
@@ -4067,46 +4203,48 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   endif()
 endif()
 
-add_library(rust_test STATIC EXCLUDE_FROM_ALL
-  $<TARGET_OBJECTS:engine-gfx>
-  $<TARGET_OBJECTS:engine-shared>
-  $<TARGET_OBJECTS:game-shared>
-  $<TARGET_OBJECTS:rust-bridge-shared>
-  ${DEPS}
-)
-# 避免在链接 doctest 时与 Rust 自带的 librust_test.a 冲突。
-set_target_properties(rust_test PROPERTIES OUTPUT_NAME ddnet_rust_test)
+if(NOT TARGET_OS STREQUAL "ios")
+  add_library(rust_test STATIC EXCLUDE_FROM_ALL
+    $<TARGET_OBJECTS:engine-gfx>
+    $<TARGET_OBJECTS:engine-shared>
+    $<TARGET_OBJECTS:game-shared>
+    $<TARGET_OBJECTS:rust-bridge-shared>
+    ${DEPS}
+  )
+  # 避免在链接 doctest 时与 Rust 自带的 librust_test.a 冲突。
+  set_target_properties(rust_test PROPERTIES OUTPUT_NAME ddnet_rust_test)
 
-list(APPEND TARGETS_OWN rust_test)
-list(APPEND TARGETS_LINK rust_test)
+  list(APPEND TARGETS_OWN rust_test)
+  list(APPEND TARGETS_LINK rust_test)
 
-set(RUST_TEST_LIBS ${WebP_LIBRARIES} ${LIBS} $<TARGET_FILE:rust_test>)
-list(REMOVE_ITEM RUST_TEST_LIBS "rust_engine_shared")
-list(REMOVE_ITEM RUST_TEST_LIBS "-pthread")
-if(MSVC)
-  set(RUST_TEST_LIB_ALIAS_DIR "${PROJECT_BINARY_DIR}/rust_test_lib_aliases")
-  file(MAKE_DIRECTORY "${RUST_TEST_LIB_ALIAS_DIR}")
-  foreach(WebPLib ${WebP_LIBRARIES})
-    get_filename_component(WebPLibName "${WebPLib}" NAME)
-    if(WebPLibName MATCHES "^lib(.+)\\.lib$")
-      set(WebPLibAlias "${RUST_TEST_LIB_ALIAS_DIR}/${CMAKE_MATCH_1}.lib")
-      configure_file("${WebPLib}" "${WebPLibAlias}" COPYONLY)
-      list(REMOVE_ITEM RUST_TEST_LIBS "${WebPLib}")
-      list(APPEND RUST_TEST_LIBS "${WebPLibAlias}")
-    endif()
-  endforeach()
+  set(RUST_TEST_LIBS ${WebP_LIBRARIES} ${LIBS} $<TARGET_FILE:rust_test>)
+  list(REMOVE_ITEM RUST_TEST_LIBS "rust_engine_shared")
+  list(REMOVE_ITEM RUST_TEST_LIBS "-pthread")
+  if(MSVC)
+    set(RUST_TEST_LIB_ALIAS_DIR "${PROJECT_BINARY_DIR}/rust_test_lib_aliases")
+    file(MAKE_DIRECTORY "${RUST_TEST_LIB_ALIAS_DIR}")
+    foreach(WebPLib ${WebP_LIBRARIES})
+      get_filename_component(WebPLibName "${WebPLib}" NAME)
+      if(WebPLibName MATCHES "^lib(.+)\\.lib$")
+        set(WebPLibAlias "${RUST_TEST_LIB_ALIAS_DIR}/${CMAKE_MATCH_1}.lib")
+        configure_file("${WebPLib}" "${WebPLibAlias}" COPYONLY)
+        list(REMOVE_ITEM RUST_TEST_LIBS "${WebPLib}")
+        list(APPEND RUST_TEST_LIBS "${WebPLibAlias}")
+      endif()
+    endforeach()
+  endif()
+  list(JOIN RUST_TEST_LIBS "\n" RUST_TEST_LIBS_FILE_CONTENT)
+  file(GENERATE
+    OUTPUT "${PROJECT_BINARY_DIR}/rust_test_libraries.txt"
+    CONTENT "${RUST_TEST_LIBS_FILE_CONTENT}\n"
+  )
+  add_custom_target(run_rust_tests
+    COMMAND ${CARGO_TEST}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    USES_TERMINAL
+    DEPENDS rust_test
+  )
 endif()
-list(JOIN RUST_TEST_LIBS "\n" RUST_TEST_LIBS_FILE_CONTENT)
-file(GENERATE
-  OUTPUT "${PROJECT_BINARY_DIR}/rust_test_libraries.txt"
-  CONTENT "${RUST_TEST_LIBS_FILE_CONTENT}\n"
-)
-add_custom_target(run_rust_tests
-  COMMAND ${CARGO_TEST}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  USES_TERMINAL
-  DEPENDS rust_test
-)
 
 ########################################################################
 # INSTALLATION
@@ -4528,6 +4666,7 @@ if(CLIENT AND DMGBUILD_FOUND)
 
     # SERVER
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/data/maps ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/Resources/data/maps
+    COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/data/autoexec_server.cfg ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/Resources/data/
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/other/icons/${SERVER_EXECUTABLE}.icns ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/Resources/
     COMMAND ${CMAKE_COMMAND} -E copy bundle/server/Info.plist ${PROJECT_SOURCE_DIR}/other/bundle/server/PkgInfo ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:game-server> $<TARGET_FILE:game-server-launcher> ${DMG_TMPDIR}/${SERVER_EXECUTABLE}.app/Contents/MacOS/

@@ -17,8 +17,9 @@
 #include <string>
 #include <vector>
 
-#if defined(CONF_PLATFORM_MACOS)
-#include <objc/objc-runtime.h>
+#if defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
+#include <objc/message.h>
+#include <objc/runtime.h>
 
 class CAutoreleasePool
 {

@@ -692,6 +692,17 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 int net_udp_recv(NETSOCKET sock, NETADDR *addr, unsigned char **data);
 
 /**
+ * 检查 UDP socket 是否已被系统关闭。
+ *
+ * @ingroup Network-UDP
+ *
+ * @param sock 要检查的 socket。
+ *
+ * @return 当 socket 已不可继续使用、必须重建时返回 `true`。
+ */
+bool net_udp_is_broken(NETSOCKET sock);
+
+/**
  * Closes an UDP socket.
  *
  * @ingroup Network-UDP

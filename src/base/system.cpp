@@ -52,12 +52,12 @@ static constexpr unsigned char LOOPBACKADDR_IPV6[16] = {0, 0, 0, 0, 0, 0, 0, 0, 
 #define _task_user_
 
 #include <Carbon/Carbon.h>
-#include <CoreFoundation/CoreFoundation.h>
 #include <mach/mach_time.h>
 
 #if defined(__MAC_10_10) && __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_10
 #include <pthread/qos.h>
 #endif
+
 #endif
 
 #elif defined(CONF_FAMILY_WINDOWS)
@@ -76,6 +76,10 @@ static constexpr unsigned char LOOPBACKADDR_IPV6[16] = {0, 0, 0, 0, 0, 0, 0, 0, 
 #include <cfenv>
 #else
 #error NOT IMPLEMENTED
+#endif
+
+#if defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
+#include <CoreFoundation/CoreFoundation.h>
 #endif
 
 #if defined(CONF_PLATFORM_SOLARIS)
@@ -111,10 +115,11 @@ struct NETSOCKET_INTERNAL
 	int ipv6sock;
 	int web_ipv4sock;
 	int web_ipv6sock;
+	bool broken;
 
 	NETSOCKET_BUFFER buffer;
 };
-static NETSOCKET_INTERNAL invalid_socket = {NETTYPE_INVALID, -1, -1, -1, -1};
+static NETSOCKET_INTERNAL invalid_socket = {NETTYPE_INVALID, -1, -1, -1, -1, false};
 
 struct NETQOS_INTERNAL
 {
@@ -1568,6 +1573,22 @@ void net_qos_remove_socket(NETQOS qos)
 	free(qos);
 }
 
+#if defined(CONF_PLATFORM_IOS)
+static void priv_net_udp_send_failed(NETSOCKET sock, const NETADDR *addr)
+{
+	// iOS 会在应用挂起时关闭 UDP socket，恢复后必须重建。
+	if(sock->broken || net_errno() != EPIPE)
+	{
+		return;
+	}
+
+	sock->broken = true;
+	char aAddr[NETADDR_MAXSTRSIZE];
+	net_addr_str(addr, aAddr, sizeof(aAddr), true);
+	log_error("net", "Socket was closed by the operating system, sending to %s failed (%s)", aAddr, net_error_message().c_str());
+}
+#endif
+
 int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size)
 {
 	int d = -1;
@@ -1592,6 +1613,12 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			}
 
 			d = sendto(sock->ipv4sock, (const char *)data, size, 0, (sockaddr *)&sa, sizeof(sa));
+#if defined(CONF_PLATFORM_IOS)
+			if(d < 0)
+			{
+				priv_net_udp_send_failed(sock, addr);
+			}
+#endif
 			AnySuccess |= d >= 0;
 			if(d >= 0)
 				SuccessfulResult = d;
@@ -1646,6 +1673,12 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			}
 
 			d = sendto(sock->ipv6sock, (const char *)data, size, 0, (sockaddr *)&sa, sizeof(sa));
+#if defined(CONF_PLATFORM_IOS)
+			if(d < 0)
+			{
+				priv_net_udp_send_failed(sock, addr);
+			}
+#endif
 			AnySuccess |= d >= 0;
 			if(d >= 0)
 				SuccessfulResult = d;
@@ -1842,6 +1875,11 @@ int net_udp_recv(NETSOCKET sock, NETADDR *addr, unsigned char **data)
 #endif
 
 	return bytes < 0 ? -1 : 0;
+}
+
+bool net_udp_is_broken(NETSOCKET sock)
+{
+	return sock->broken;
 }
 
 void net_udp_close(NETSOCKET sock)
@@ -2521,7 +2559,7 @@ void os_locale_str(char *locale, size_t length)
 	const std::optional<std::string> buffer = windows_wide_to_utf8(wide_buffer);
 	dbg_assert(buffer.has_value(), "GetUserDefaultLocaleName returned invalid UTF-16");
 	str_copy(locale, buffer.value().c_str(), length);
-#elif defined(CONF_PLATFORM_MACOS)
+#elif defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
 	CFLocaleRef locale_ref = CFLocaleCopyCurrent();
 	CFStringRef locale_identifier_ref = static_cast<CFStringRef>(CFLocaleGetValue(locale_ref, kCFLocaleIdentifier));
 

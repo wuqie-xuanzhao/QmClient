@@ -70,6 +70,8 @@
 
 #if defined(CONF_PLATFORM_ANDROID)
 #include <android/android_main.h>
+#elif defined(CONF_PLATFORM_IOS)
+#include <ios/ios_main.h>
 #endif
 
 #include "SDL.h"
@@ -81,7 +83,9 @@ namespace
 #undef main
 #endif
 
+#include <algorithm>
 #include <chrono>
+#include <iterator>
 #include <limits>
 #include <stack>
 #include <string>
@@ -1437,6 +1441,9 @@ void CClient::DummyDisconnect(const char *pReason)
 	m_DummyConnecting = false;
 	m_DummyReconnectOnReload = false;
 	m_DummyDeactivateOnReconnect = false;
+#if defined(CONF_PLATFORM_IOS)
+	m_DummyReconnectOnResume = false;
+#endif
 	GameClient()->OnDummyDisconnect();
 }
 
@@ -1685,7 +1692,7 @@ void CClient::Quit()
 		SetState(IClient::STATE_QUITTING);
 }
 
-void CClient::ResetSocket()
+bool CClient::ResetSocket()
 {
 	NETADDR BindAddr;
 	if(g_Config.m_Bindaddr[0] == '\0')
@@ -1695,16 +1702,63 @@ void CClient::ResetSocket()
 	else if(net_host_lookup(g_Config.m_Bindaddr, &BindAddr, NETTYPE_ALL) != 0)
 	{
 		log_error("client", "The configured bindaddr '%s' cannot be resolved.", g_Config.m_Bindaddr);
-		return;
+		return false;
 	}
 	BindAddr.type = NETTYPE_ALL;
+	bool Success = true;
 	for(size_t Conn = 0; Conn < std::size(m_aNetClient); Conn++)
 	{
 		char aError[256];
 		if(!InitNetworkClientImpl(BindAddr, Conn, aError, sizeof(aError)))
+		{
+			Success = false;
 			log_error("client", "%s", aError);
+		}
+	}
+	return Success;
+}
+
+#if defined(CONF_PLATFORM_IOS)
+void CClient::RecreateBrokenSockets()
+{
+	if(std::none_of(std::begin(m_aNetClient), std::end(m_aNetClient), [](const CNetClient &NetClient) { return NetClient.SocketIsBroken(); }))
+	{
+		return;
+	}
+
+	// iOS 在应用挂起期间关闭 UDP socket，恢复后仅在明确检测到 EPIPE 时重建。
+	log_info("client", "network sockets were closed by the system, recreating them");
+
+	char aConnectAddress[sizeof(m_aConnectAddressStr)];
+	str_copy(aConnectAddress, m_aConnectAddressStr);
+	const bool Reconnect = State() != IClient::STATE_OFFLINE && State() < IClient::STATE_QUITTING;
+	const bool ReconnectDummy = Reconnect && m_DummyConnected;
+	const bool DeactivateDummy = g_Config.m_ClDummy == 0;
+
+	Disconnect();
+	for(CNetClient &NetClient : m_aNetClient)
+		NetClient.Close();
+	if(!ResetSocket())
+	{
+		log_error("client", "network socket recreation failed");
+		return;
+	}
+	// 重建后的 socket 不包含旧实例加载的 STUN server。
+	LoadDDNetInfo();
+
+	if(Reconnect)
+	{
+		Connect(aConnectAddress);
+		if(ReconnectDummy)
+		{
+			// 等主连接就绪后再连接分身，沿用既有 dummy 建连流程。
+			m_DummyReconnectOnResume = true;
+			m_DummyDeactivateOnReconnect = DeactivateDummy;
+		}
 	}
 }
+#endif
+
 const char *CClient::PlayerName() const
 {
 	if(g_Config.m_PlayerName[0])
@@ -2539,6 +2593,13 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket, int Conn, bool Dummy)
 				m_DummySendConnInfo = true;
 				m_DummyReconnectOnReload = false;
 			}
+#if defined(CONF_PLATFORM_IOS)
+			else if(m_DummyReconnectOnResume)
+			{
+				m_DummyReconnectOnResume = false;
+				DummyConnect();
+			}
+#endif
 		}
 		else if(Conn == CONN_DUMMY && Msg == NETMSG_CON_READY)
 		{
@@ -3390,6 +3451,10 @@ int CClient::ConnectNetTypes() const
 
 void CClient::PumpNetwork()
 {
+#if defined(CONF_PLATFORM_IOS)
+	RecreateBrokenSockets();
+#endif
+
 	for(int Conn = 0; Conn < NUM_CONNS; ++Conn)
 	{
 		m_aNetClient[Conn].SetLowLatency(g_Config.m_QmNetQos && (Conn == CONN_MAIN || Conn == CONN_DUMMY));
@@ -3749,7 +3814,7 @@ void CClient::Update()
 			m_DummyDeactivateOnReconnect = false;
 			g_Config.m_ClDummy = 0;
 		}
-		else if(!m_DummyConnected && m_DummyDeactivateOnReconnect)
+		else if(!m_DummyConnected && !m_DummyConnecting && m_DummyDeactivateOnReconnect)
 		{
 			m_DummyDeactivateOnReconnect = false;
 		}
@@ -5953,14 +6018,19 @@ extern "C" int TWMain(int argc, const char **argv)
 static int gs_AndroidStarted = false;
 extern "C" [[gnu::visibility("default")]] int SDL_main(int argc, char *argv[]);
 int SDL_main(int argc, char *argv2[])
+#elif defined(CONF_PLATFORM_IOS)
+extern "C" int SDL_main(int argc, char *argv[]);
+int SDL_main(int argc, char *argv2[])
 #else
 int main(int argc, const char **argv)
 #endif
 {
 	const int64_t MainStart = time_get();
 
-#if defined(CONF_PLATFORM_ANDROID)
+#if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
 	const char **argv = const_cast<const char **>(argv2);
+#endif
+#if defined(CONF_PLATFORM_ANDROID)
 	// Android might not unload the library from memory, causing globals like gs_AndroidStarted
 	// not to be initialized correctly when starting the app again.
 	if(gs_AndroidStarted)
@@ -6013,6 +6083,14 @@ int main(int argc, const char **argv)
 	{
 		log_error("android", "%s", pAndroidInitError);
 		ShowMessageBoxWithoutGraphics({.m_pTitle = "Android Error", .m_pMessage = pAndroidInitError});
+		std::exit(0);
+	}
+#elif defined(CONF_PLATFORM_IOS)
+	const char *pIosInitError = InitIos();
+	if(pIosInitError != nullptr)
+	{
+		log_error("ios", "%s", pIosInitError);
+		ShowMessageBoxWithoutGraphics({.m_pTitle = "iOS Error", .m_pMessage = pIosInitError});
 		std::exit(0);
 	}
 #endif
@@ -6452,6 +6530,9 @@ int main(int argc, const char **argv)
 	// Force landscape screen orientation.
 	SDL_SetHint("SDL_IOS_ORIENTATIONS", "LandscapeLeft LandscapeRight");
 #endif
+#if defined(CONF_PLATFORM_IOS)
+	SDL_SetHint("SDL_IOS_ORIENTATIONS", "LandscapeLeft LandscapeRight");
+#endif
 
 	// init SDL
 	if(SDL_Init(0) < 0)
@@ -6782,7 +6863,7 @@ int CClient::UdpConnectivity(int NetType)
 
 static bool ViewLinkImpl(const char *pLink)
 {
-#if defined(CONF_PLATFORM_ANDROID)
+#if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
 	if(SDL_OpenURL(pLink) == 0)
 	{
 		return true;
@@ -6832,7 +6913,11 @@ bool CClient::ViewFile(const char *pFilename)
 	}
 
 	char aFileLink[IO_MAX_PATH_LENGTH];
+#if defined(CONF_PLATFORM_IOS)
+	str_format(aFileLink, sizeof(aFileLink), "shareddocuments://%s%s", aWorkingDir, pFilename);
+#else
 	str_format(aFileLink, sizeof(aFileLink), "file://%s%s", aWorkingDir, pFilename);
+#endif
 	return ViewLinkImpl(aFileLink);
 #endif
 }

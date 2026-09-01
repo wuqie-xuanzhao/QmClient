@@ -944,7 +944,7 @@ int CInput::Update()
 				}
 				break;
 			case SDL_WINDOWEVENT_MINIMIZED:
-#if defined(CONF_PLATFORM_ANDROID) // Save the config when minimized on Android.
+#if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
 				m_pConfigManager->Save();
 #endif
 				Graphics()->WindowDestroyNtf(Event.window.windowID);
@@ -961,6 +961,12 @@ int CInput::Update()
 				break;
 			}
 			break;
+
+#if defined(CONF_PLATFORM_IOS)
+		case SDL_APP_WILLENTERBACKGROUND:
+			m_pConfigManager->Save();
+			break;
+#endif
 
 		// other messages
 		case SDL_QUIT:
