@@ -58,6 +58,7 @@ namespace
 		virtual ~CChooseMaster();
 
 		bool GetBestUrl(const char **pBestUrl) const;
+		void Shutdown();
 		void Reset();
 		bool IsRefreshing() const { return m_pJob && !m_pJob->Done(); }
 		void Refresh();
@@ -122,10 +123,7 @@ namespace
 
 	CChooseMaster::~CChooseMaster()
 	{
-		if(m_pJob)
-		{
-			m_pJob->Abort();
-		}
+		dbg_assert(m_pJob == nullptr, "Choose master job was not cleared");
 	}
 
 	int CChooseMaster::GetBestIndex() const
@@ -151,6 +149,15 @@ namespace
 		}
 		*ppBestUrl = m_pData->m_aaUrls[Index];
 		return false;
+	}
+
+	void CChooseMaster::Shutdown()
+	{
+		if(m_pJob)
+		{
+			m_pJob->Abort();
+			m_pJob = nullptr;
+		}
 	}
 
 	void CChooseMaster::Reset()
@@ -223,10 +230,14 @@ namespace
 			pHead->LogProgress(HTTPLOG::FAILURE);
 			{
 				const CLockScope LockScope(m_Lock);
+				if(State() == IJob::STATE_ABORTED)
+				{
+					return;
+				}
 				m_pHead = pHead;
+				m_pParent->m_pHttp->Run(pHead);
 			}
 
-			m_pParent->m_pHttp->Run(pHead);
 			pHead->Wait();
 			if(pHead->State() == EHttpState::ABORTED || State() == IJob::STATE_ABORTED)
 			{
@@ -244,10 +255,14 @@ namespace
 			pGet->LogProgress(HTTPLOG::FAILURE);
 			{
 				const CLockScope LockScope(m_Lock);
+				if(State() == IJob::STATE_ABORTED)
+				{
+					return;
+				}
 				m_pGet = pGet;
+				m_pParent->m_pHttp->Run(pGet);
 			}
 
-			m_pParent->m_pHttp->Run(pGet);
 			pGet->Wait();
 
 			auto Time = std::chrono::duration_cast<std::chrono::milliseconds>(time_get_nanoseconds() - StartTime);
@@ -311,6 +326,7 @@ namespace
 	public:
 		CServerBrowserHttp(IEngine *pEngine, IHttp *pHttp, const char **ppUrls, int NumUrls, int PreviousBestIndex);
 		~CServerBrowserHttp() override;
+		void Shutdown() override;
 		void Update() override;
 		bool IsRefreshing() const override { return m_State != STATE_DONE && m_State != STATE_NO_MASTER; }
 		bool IsError() const override { return m_State == STATE_NO_MASTER; }
@@ -356,10 +372,17 @@ namespace
 
 	CServerBrowserHttp::~CServerBrowserHttp()
 	{
+		dbg_assert(m_pGetServers == nullptr, "Server browser load job was not cleared");
+	}
+
+	void CServerBrowserHttp::Shutdown()
+	{
 		if(m_pGetServers != nullptr)
 		{
 			m_pGetServers->Abort();
+			m_pGetServers = nullptr;
 		}
+		m_pChooseMaster->Shutdown();
 	}
 
 	void CServerBrowserHttp::Update()

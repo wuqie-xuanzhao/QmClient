@@ -3827,6 +3827,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     graphics_backend_contract_test.cpp
     hash_test.cpp
     huffman_test.cpp
+    http_shutdown_lifecycle_test.cpp
     image_test.cpp
     io_test.cpp
     jobs_test.cpp

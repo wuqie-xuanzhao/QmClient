@@ -87,6 +87,14 @@ CServerBrowser::~CServerBrowser()
 	m_pPingCache = nullptr;
 }
 
+void CServerBrowser::Shutdown()
+{
+	if(m_pHttp != nullptr)
+	{
+		m_pHttp->Shutdown();
+	}
+}
+
 void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVersion)
 {
 	m_pNetClient = pClient;

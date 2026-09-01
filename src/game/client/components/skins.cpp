@@ -545,10 +545,7 @@ CSkins::CSkinContainer::CSkinContainer(CSkins *pSkins, const char *pName, EType 
 
 CSkins::CSkinContainer::~CSkinContainer()
 {
-	if(m_pLoadJob)
-	{
-		m_pLoadJob->Abort();
-	}
+	dbg_assert(m_pLoadJob == nullptr, "Skin container load job was not cleared");
 	m_SettingsPendingUploadData.m_Info.Free();
 	m_SettingsPendingUploadData.m_InfoGrayscale.Free();
 }
@@ -1283,16 +1280,26 @@ void CSkins::OnInit()
 void CSkins::OnShutdown()
 {
 	if(m_pSkinDirectoryScanJob)
+	{
 		m_pSkinDirectoryScanJob->Abort();
+		m_pSkinDirectoryScanJob = nullptr;
+	}
 	if(m_pSkinListPlanJob)
+	{
 		m_pSkinListPlanJob->Abort();
+		m_pSkinListPlanJob = nullptr;
+	}
 	if(m_pOfficialSkinIndexRequest)
+	{
 		m_pOfficialSkinIndexRequest->Abort();
+		m_pOfficialSkinIndexRequest = nullptr;
+	}
 	for(auto &[_, pSkinContainer] : m_Skins)
 	{
 		if(pSkinContainer->m_pLoadJob)
 		{
 			pSkinContainer->m_pLoadJob->Abort();
+			pSkinContainer->m_pLoadJob = nullptr;
 		}
 	}
 	m_Skins.clear();
