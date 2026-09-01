@@ -132,6 +132,9 @@ class TestRunner:
 		self.valgrind_memcheck = valgrind_memcheck
 		if self.valgrind_memcheck:
 			self.timeout_multiplier *= 20
+		# conn_timeout is measured by the engine's wall clock, so scale it with
+		# the integration-test timeout multiplier as well.
+		self.conn_timeout = min(1000, round(100 * self.timeout_multiplier))
 
 	def run_test(self, test):
 		tmp_dir = tempfile.mkdtemp(prefix=f"integration_{test.name}_", dir=self.dir)
@@ -223,7 +226,6 @@ add_path {relpath(self.runner.data_dir, tmp_dir)}
 				"--gen-suppressions=all",
 				# pylint: disable=consider-using-f-string
 				"--suppressions={}".format(relpath(os.path.join(runner.repo_dir, "memcheck.supp"), self.tmp_dir)),
-				"--track-origins=yes",
 			]
 		self.name = name
 		self.num_clients = 0
@@ -489,6 +491,8 @@ class Client(Runnable):
 				test_env.ddnet,
 				f"cl_input_fifo {self.fifo_name}",
 				"gfx_fullscreen 0",
+				"cl_save_settings 0",
+				f"conn_timeout {test_env.runner.conn_timeout}",
 			]
 			+ extra_args,
 		)
@@ -521,6 +525,7 @@ class Server(Runnable):
 				test_env.ddnet_server,
 				f"sv_input_fifo {self.fifo_name}",
 				"sv_register 0",
+				f"conn_timeout {test_env.runner.conn_timeout}",
 			]
 			+ extra_args,
 		)
