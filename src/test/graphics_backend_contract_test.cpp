@@ -15,6 +15,24 @@ TEST(GraphicsBackendContract, NamesAreStable)
 	EXPECT_STREQ(graphics_backend::BackendName(BACKEND_TYPE_METAL), "Metal");
 }
 
+TEST(GraphicsBackendContract, ForcedViewportUsesTopLeftCoordinatesAcrossBackends)
+{
+	EXPECT_EQ(graphics_viewport::OpenGLViewportY(1920, 0, 1536), 384);
+	EXPECT_EQ(graphics_viewport::OpenGLViewportY(0, 0, 1536), 0);
+
+	const vec2 Position = graphics_viewport::MapTouchPosition({0.75f, 0.5f}, {1920.0f, 1080.0f}, {1350.0f, 1080.0f});
+	EXPECT_NEAR(Position.x, 1.0f, 0.0001f);
+	EXPECT_NEAR(Position.y, 0.5f, 0.0001f);
+
+	const vec2 ClampedPosition = graphics_viewport::MapTouchPosition({1.0f, 1.0f}, {1920.0f, 1080.0f}, {1350.0f, 1080.0f});
+	EXPECT_EQ(ClampedPosition.x, 1.0f);
+	EXPECT_EQ(ClampedPosition.y, 1.0f);
+
+	const vec2 Delta = graphics_viewport::MapTouchDelta({0.1f, -0.2f}, {1920.0f, 1080.0f}, {1350.0f, 1080.0f});
+	EXPECT_NEAR(Delta.x, 0.142222f, 0.0001f);
+	EXPECT_NEAR(Delta.y, -0.2f, 0.0001f);
+}
+
 TEST(GraphicsBackendContract, ParsesKnownNamesAndRejectsUnknownNames)
 {
 	EXPECT_EQ(graphics_backend::ParseBackendName("opengl", BACKEND_TYPE_VULKAN), BACKEND_TYPE_OPENGL);

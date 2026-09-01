@@ -581,10 +581,20 @@ void CInput::HandleTouchDownEvent(const SDL_TouchFingerEvent &Event)
 	CTouchFingerState TouchFingerState;
 	TouchFingerState.m_Finger.m_DeviceId = Event.touchId;
 	TouchFingerState.m_Finger.m_FingerId = Event.fingerId;
-	TouchFingerState.m_Position = vec2(Event.x, Event.y);
-	TouchFingerState.m_Delta = vec2(Event.dx, Event.dy);
+	TouchFingerState.m_Position = TouchPositionToViewport(vec2(Event.x, Event.y));
+	TouchFingerState.m_Delta = TouchDeltaToViewport(vec2(Event.dx, Event.dy));
 	TouchFingerState.m_PressTime = time_get_nanoseconds();
 	m_vTouchFingerStates.emplace_back(TouchFingerState);
+}
+
+vec2 CInput::TouchPositionToViewport(vec2 Position) const
+{
+	return graphics_viewport::MapTouchPosition(Position, Graphics()->DrawableSize(), Graphics()->ScreenSize());
+}
+
+vec2 CInput::TouchDeltaToViewport(vec2 Delta) const
+{
+	return graphics_viewport::MapTouchDelta(Delta, Graphics()->DrawableSize(), Graphics()->ScreenSize());
 }
 
 void CInput::HandleTouchUpEvent(const SDL_TouchFingerEvent &Event)
@@ -605,8 +615,8 @@ void CInput::HandleTouchMotionEvent(const SDL_TouchFingerEvent &Event)
 	});
 	if(FoundState != m_vTouchFingerStates.end())
 	{
-		FoundState->m_Position = vec2(Event.x, Event.y);
-		FoundState->m_Delta += vec2(Event.dx, Event.dy);
+		FoundState->m_Position = TouchPositionToViewport(vec2(Event.x, Event.y));
+		FoundState->m_Delta += TouchDeltaToViewport(vec2(Event.dx, Event.dy));
 	}
 }
 

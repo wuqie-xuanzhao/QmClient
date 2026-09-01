@@ -52,6 +52,9 @@ protected:
 	};
 	std::vector<CTexture> m_vTextures;
 	std::atomic<uint64_t> *m_pTextureMemoryUsage;
+	// OpenGL viewport 原点在 drawable 左下角，记录转换后的实际原点。
+	int m_ViewportX = 0;
+	int m_ViewportY = 0;
 
 	struct SOpenGLRenderTarget
 	{

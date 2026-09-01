@@ -234,6 +234,8 @@ CGraphics_Threaded::CGraphics_Threaded()
 
 	m_ScreenWidth = -1;
 	m_ScreenHeight = -1;
+	m_DrawableWidth = -1;
+	m_DrawableHeight = -1;
 	m_ScreenRefreshRate = -1;
 
 	m_Rotation = 0;
@@ -3618,6 +3620,8 @@ int CGraphics_Threaded::IssueInit()
 	}
 
 	const int Result = m_pBackend->Init("DDNet Client", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, &g_Config.m_GfxScreenRefreshRate, &g_Config.m_GfxFsaaSamples, Flags, &m_DesktopSize.x, &m_DesktopSize.y, &m_ScreenWidth, &m_ScreenHeight, m_pStorage);
+	m_DrawableWidth = m_ScreenWidth;
+	m_DrawableHeight = m_ScreenHeight;
 	AddBackEndWarningIfExists();
 	if(Result == 0)
 	{
@@ -3702,6 +3706,8 @@ void CGraphics_Threaded::UpdateViewport(int X, int Y, int W, int H, bool ByResiz
 	Cmd.m_Y = Y;
 	Cmd.m_Width = W;
 	Cmd.m_Height = H;
+	Cmd.m_DrawableWidth = m_DrawableWidth;
+	Cmd.m_DrawableHeight = m_DrawableHeight;
 	Cmd.m_ByResize = ByResize;
 	AddCmd(Cmd);
 }
@@ -4257,6 +4263,8 @@ void CGraphics_Threaded::GotResized(int w, int h, int RefreshRate)
 	auto PrevCanvasWidth = m_ScreenWidth;
 	auto PrevCanvasHeight = m_ScreenHeight;
 	m_pBackend->GetViewportSize(m_ScreenWidth, m_ScreenHeight);
+	m_DrawableWidth = m_ScreenWidth;
+	m_DrawableHeight = m_ScreenHeight;
 
 	AdjustViewport(false);
 

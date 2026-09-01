@@ -25,6 +25,31 @@
 #define GRAPHICS_TYPE_UNSIGNED_INT 0x1405
 #define GRAPHICS_TYPE_FLOAT 0x1406
 
+namespace graphics_viewport
+{
+	inline int OpenGLViewportY(int DrawableHeight, int Y, int Height)
+	{
+		const int EffectiveDrawableHeight = DrawableHeight > 0 ? DrawableHeight : Height;
+		return EffectiveDrawableHeight - Y - Height;
+	}
+
+	inline vec2 MapTouchPosition(vec2 Position, vec2 DrawableSize, vec2 ScreenSize)
+	{
+		if(DrawableSize.x <= 0.0f || DrawableSize.y <= 0.0f || ScreenSize.x <= 0.0f || ScreenSize.y <= 0.0f)
+			return Position;
+		const vec2 Scaled = Position * DrawableSize / ScreenSize;
+		return vec2(std::clamp(Scaled.x, 0.0f, 1.0f), std::clamp(Scaled.y, 0.0f, 1.0f));
+	}
+
+	inline vec2 MapTouchDelta(vec2 Delta, vec2 DrawableSize, vec2 ScreenSize)
+	{
+		if(DrawableSize.x <= 0.0f || DrawableSize.y <= 0.0f || ScreenSize.x <= 0.0f || ScreenSize.y <= 0.0f)
+			return Delta;
+		const vec2 Scaled = Delta * DrawableSize / ScreenSize;
+		return vec2(std::clamp(Scaled.x, -1.0f, 1.0f), std::clamp(Scaled.y, -1.0f, 1.0f));
+	}
+}
+
 struct SBufferContainerInfo
 {
 	int m_Stride;
@@ -303,6 +328,8 @@ class IGraphics : public IInterface
 protected:
 	int m_ScreenWidth;
 	int m_ScreenHeight;
+	int m_DrawableWidth;
+	int m_DrawableHeight;
 	int m_ScreenRefreshRate;
 	float m_ScreenHiDPIScale;
 	float m_GameScreenAspectOverride = 0.0f;
@@ -484,6 +511,8 @@ public:
 	float ScreenHiDPIScale() const { return m_ScreenHiDPIScale; }
 	int WindowWidth() const { return m_ScreenWidth / m_ScreenHiDPIScale; }
 	int WindowHeight() const { return m_ScreenHeight / m_ScreenHiDPIScale; }
+	// 整张 drawable 的尺寸；强制 viewport 可能只覆盖其中一部分。
+	vec2 DrawableSize() const { return vec2(m_DrawableWidth, m_DrawableHeight); }
 
 	virtual void WarnPngliteIncompatibleImages(bool Warn) = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;

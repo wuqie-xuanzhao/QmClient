@@ -9187,13 +9187,11 @@ public:
 				m_ForceSingleThreadedRender = true;
 				m_HasDynamicViewport = true;
 
-				// convert viewport from OGL to vulkan
+				// viewport 与 Vulkan 都以 drawable 左上角为原点。
 				const int32_t ViewportWidth = std::max<int32_t>(1, pCommand->m_Width);
 				const int32_t ViewportHeight = std::max<int32_t>(1, pCommand->m_Height);
-				int32_t ViewportY = (int32_t)Viewport.height - ((int32_t)pCommand->m_Y + ViewportHeight);
-				uint32_t ViewportH = (uint32_t)ViewportHeight;
-				m_DynamicViewportOffset = {(int32_t)pCommand->m_X, ViewportY};
-				m_DynamicViewportSize = {(uint32_t)ViewportWidth, ViewportH};
+				m_DynamicViewportOffset = {(int32_t)pCommand->m_X, (int32_t)pCommand->m_Y};
+				m_DynamicViewportSize = {(uint32_t)ViewportWidth, (uint32_t)ViewportHeight};
 			}
 			else
 			{

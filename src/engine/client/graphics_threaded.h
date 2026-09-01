@@ -620,11 +620,15 @@ public:
 		SCommand_Update_Viewport() :
 			SCommand(CMD_UPDATE_VIEWPORT) {}
 
-		int m_X;
-		int m_Y;
-		int m_Width;
-		int m_Height;
-		bool m_ByResize; // resized by an resize event.. a hint to make clear that the viewport update can be deferred if wanted
+		// viewport 矩形以 drawable 左上角为原点。
+		int m_X = 0;
+		int m_Y = 0;
+		int m_Width = 0;
+		int m_Height = 0;
+		// viewport 可能小于整张 drawable，需要保留 drawable 尺寸给后端。
+		int m_DrawableWidth = 0;
+		int m_DrawableHeight = 0;
+		bool m_ByResize = false; // resized by an resize event.. a hint to make clear that the viewport update can be deferred if wanted
 	};
 
 	struct SCommand_Texture_Create : public SCommand
