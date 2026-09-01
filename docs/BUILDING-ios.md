@@ -1,8 +1,9 @@
 # Building QmClient for iOS
 
 This document covers the iOS dependency build and the current SDL/OpenGL ES
-client target. The implementation is present in the working tree but is not yet
-committed. Native Metal currently remains a macOS-only backend; iOS does not
+client target. The P3A/P3B implementation is committed in `1eafa9ed3` and
+`e5325e77b`.
+Native Metal currently remains a macOS-only backend; iOS does not
 enable `METAL` or reuse the macOS metallib.
 
 The iOS runtime acceptance record is maintained in
