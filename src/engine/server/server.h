@@ -170,6 +170,9 @@ public:
 		int m_AuthTries;
 		bool m_AuthHidden;
 		int m_NextMapChunk;
+		int m_NumMapChunks;
+		int m_PreInputsTick;
+		int m_NumPreInputs;
 		int m_Flags;
 		bool m_ShowIps;
 		bool m_DebugDummy;
@@ -394,6 +397,7 @@ public:
 	void UpdateClientMaplistEntries(int ClientId);
 
 	bool CheckReservedSlotAuth(int ClientId, const char *pPassword);
+	bool TakePreInputBudget(int ClientId);
 	void ProcessClientPacket(CNetChunk *pPacket);
 
 	class CCache
@@ -430,8 +434,7 @@ public:
 	void CacheServerInfoSixup(CCache *pCache, bool SendClients, int MaxConsideredClients);
 	void SendServerInfo(const NETADDR *pAddr, int Token, int Type, bool SendClients);
 	void GetServerInfoSixup(CPacker *pPacker, bool SendClients);
-	bool RateLimitServerInfoConnless();
-	void SendServerInfoConnless(const NETADDR *pAddr, int Token, int Type);
+	std::optional<bool> RateLimitServerInfoConnless();
 	void UpdateRegisterServerInfo();
 	void UpdateServerInfo(bool Resend);
 

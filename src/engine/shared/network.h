@@ -350,6 +350,8 @@ private:
 	int64_t m_LastUpdateTime;
 	int64_t m_LastRecvTime;
 	int64_t m_LastSendTime;
+	int64_t m_LastResendTime;
+	bool m_ResendRequested;
 	int m_LastRttMs = -1;
 
 	char m_aErrorString[256];
@@ -388,6 +390,7 @@ private:
 	void SendControlWithToken7(int ControlMsg, SECURITY_TOKEN ResponseToken);
 	void ResendChunk(CNetChunkResend *pResend);
 	void Resend();
+	void AnswerResendRequest(int64_t Now);
 
 public:
 	bool m_TimeoutProtected;
@@ -514,6 +517,8 @@ private:
 	NETADDR m_Addr;
 	CNetConnection *m_pConnection;
 	int m_CurrentChunk;
+	// offset of the next chunk header in m_Data.m_aChunkData
+	int m_CurrentOffset;
 	int m_ClientId;
 	CNetPacketConstruct m_Data;
 };
@@ -566,6 +571,7 @@ class CNetServer
 	int64_t m_BudgetStart = 0;
 	int m_NumPreConnDecompress = 0;
 	int m_NumBanReplies = 0;
+	int m_NumVanConnReplies = 0;
 
 	CSpamConn m_aSpamConns[NET_CONNLIMIT_IPS] = {};
 
@@ -800,6 +806,7 @@ public:
 
 	// error and state
 	int NetType() const { return net_socket_type(m_Socket); }
+	bool SocketIsBroken() const { return m_Socket != nullptr && net_udp_is_broken(m_Socket); }
 	int State() const;
 	const NETADDR *ServerAddress() const { return m_Connection.PeerAddress(); }
 	void ConnectAddresses(const NETADDR **ppAddrs, int *pNumAddrs) const { m_Connection.ConnectAddresses(ppAddrs, pNumAddrs); }

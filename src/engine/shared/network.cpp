@@ -42,6 +42,7 @@ void CPacketChunkUnpacker::FeedPacket(const NETADDR &Addr, const CNetPacketConst
 	m_pConnection = pConnection;
 	m_ClientId = ClientId;
 	m_CurrentChunk = 0;
+	m_CurrentOffset = 0;
 	m_Data = Packet;
 	dbg_assert((m_Data.m_Flags & (NET_PACKETFLAG_CONNLESS | NET_PACKETFLAG_CONTROL)) == 0 && m_Data.m_DataSize > 0 && m_Data.m_NumChunks > 0,
 		"Invalid packet for chunk unpacker: flags=%d size=%d chunks=%d", m_Data.m_Flags, m_Data.m_DataSize, m_Data.m_NumChunks);
@@ -64,50 +65,31 @@ bool CPacketChunkUnpacker::UnpackNextChunk(CNetChunk *pChunk)
 			return false;
 		}
 
-		const int HeaderSplit = m_pConnection->m_Sixup ? 6 : 4;
-		auto HasBytes = [pEnd](const unsigned char *pData, int Size) {
-			return Size >= 0 && pData <= pEnd && pEnd - pData >= Size;
-		};
-		auto UnpackChunkHeader = [HasBytes, HeaderSplit](unsigned char *&pData, CNetChunkHeader &Header) {
-			if(!HasBytes(pData, 2))
-			{
-				return false;
-			}
-			const bool Vital = ((pData[0] >> 6) & NET_CHUNKFLAG_VITAL) != 0;
-			if(Vital && !HasBytes(pData, 3))
-			{
-				return false;
-			}
-			pData = Header.Unpack(pData, HeaderSplit);
-			return true;
-		};
-
-		unsigned char *pData = m_Data.m_aChunkData;
-		for(int i = 0; i < m_CurrentChunk; i++)
+		// the chunk header is two bytes, three for vital chunks
+		if(m_CurrentOffset + 2 > m_Data.m_DataSize)
 		{
-			CNetChunkHeader SkippedHeader;
-			if(!UnpackChunkHeader(pData, SkippedHeader) || !HasBytes(pData, SkippedHeader.m_Size))
-			{
-				m_Valid = false;
-				return false;
-			}
-			pData += SkippedHeader.m_Size;
+			m_Valid = false;
+			return false;
+		}
+		const bool Vital = ((m_Data.m_aChunkData[m_CurrentOffset] >> 6) & NET_CHUNKFLAG_VITAL) != 0;
+		if(Vital && m_CurrentOffset + 3 > m_Data.m_DataSize)
+		{
+			m_Valid = false;
+			return false;
 		}
 
 		// unpack the header
+		const int HeaderSplit = m_pConnection->m_Sixup ? 6 : 4;
 		CNetChunkHeader Header;
-		if(!UnpackChunkHeader(pData, Header))
-		{
-			m_Valid = false;
-			return false;
-		}
+		unsigned char *pData = Header.Unpack(&m_Data.m_aChunkData[m_CurrentOffset], HeaderSplit);
 		m_CurrentChunk++;
 
-		if(!HasBytes(pData, Header.m_Size))
+		if(Header.m_Size < 0 || pData > pEnd || pEnd - pData < Header.m_Size)
 		{
 			m_Valid = false;
 			return false;
 		}
+		m_CurrentOffset = (int)(pData + Header.m_Size - m_Data.m_aChunkData);
 
 		// handle sequence stuff
 		if((Header.m_Flags & NET_CHUNKFLAG_VITAL) != 0)

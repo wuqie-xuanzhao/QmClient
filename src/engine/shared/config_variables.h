@@ -26,12 +26,16 @@ MACRO_CONFIG_INT(ClAntiPingGunfire, cl_antiping_gunfire, 1, 0, 1, CFGFLAG_CLIENT
 MACRO_CONFIG_INT(ClAntiPingPreInput, cl_antiping_preinput, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use pre-input to predict other players for more accurate input prediction")
 MACRO_CONFIG_INT(ClPredictionMargin, cl_prediction_margin, 10, 1, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Prediction boundary (ms, increases latency but reduces ping jitter)")
 MACRO_CONFIG_INT(ClSubTickAiming, cl_sub_tick_aiming, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Send aim data with sub-tick precision")
-#if defined(CONF_PLATFORM_ANDROID)
+#if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
 MACRO_CONFIG_INT(ClTouchControls, cl_touch_controls, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable in-game touch controls")
 #else
 MACRO_CONFIG_INT(ClTouchControls, cl_touch_controls, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable in-game touch controls")
 #endif
+#if defined(CONF_PLATFORM_IOS)
+MACRO_CONFIG_INT(ClBackButton, cl_back_button, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show draggable virtual back button")
+#else
 MACRO_CONFIG_INT(ClBackButton, cl_back_button, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show draggable virtual back button")
+#endif
 MACRO_CONFIG_INT(ClBackButtonX, cl_back_button_x, 5000, 0, 1000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Relative X position of the draggable back button")
 MACRO_CONFIG_INT(ClBackButtonY, cl_back_button_y, 5000, 0, 1000000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Relative Y position of the draggable back button")
 
@@ -498,6 +502,7 @@ MACRO_CONFIG_INT(SvMaxClients, sv_max_clients, SERVER_MAX_CLIENTS, 1, SERVER_MAX
 MACRO_CONFIG_INT(SvMaxClientsPerIp, sv_max_clients_per_ip, 4, 1, SERVER_MAX_CLIENTS, CFGFLAG_SERVER, "Maximum clients per IP")
 MACRO_CONFIG_INT(SvHighBandwidth, sv_high_bandwidth, 0, 0, 1, CFGFLAG_SERVER, "Use high bandwidth mode (doubles server bandwidth, LAN only)")
 MACRO_CONFIG_INT(SvPreInput, sv_preinput, 1, 0, 1, CFGFLAG_SERVER, "Send client input to others before correct input (increases server bandwidth)")
+MACRO_CONFIG_INT(SvMaxPreInputsPerTick, sv_max_preinputs_per_tick, 8, 0, 1000, CFGFLAG_SERVER, "Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)")
 MACRO_CONFIG_STR(SvRegister, sv_register, 16, "1", CFGFLAG_SERVER, "Register server with master server for public list, accepts comma-separated protocols e.g. 'ipv4,ipv6'")
 MACRO_CONFIG_STR(SvRegisterExtra, sv_register_extra, 256, "", CFGFLAG_SERVER, "Additional headers for register endpoint, comma-separated \"header:value\" pairs")
 MACRO_CONFIG_STR(SvRegisterUrl, sv_register_url, 128, "https://master1.ddnet.org/ddnet/15/register", CFGFLAG_SERVER, "Master server URL to register")
@@ -527,7 +532,9 @@ MACRO_CONFIG_INT(SvRconVote, sv_rcon_vote, 0, 0, 1, CFGFLAG_SERVER, "Only allow 
 MACRO_CONFIG_INT(SvPlayerDemoRecord, sv_player_demo_record, 0, 0, 1, CFGFLAG_SERVER, "Auto-record replay when player sets a new personal best time.")
 MACRO_CONFIG_INT(SvDemoChat, sv_demo_chat, 0, 0, 1, CFGFLAG_SERVER, "Record chat replays.")
 MACRO_CONFIG_INT(SvServerInfoPerSecond, sv_server_info_per_second, 50, 0, 10000, CFGFLAG_SERVER, "Max number of full server info responses sent per second (0 = unlimited).")
+MACRO_CONFIG_INT(SvServerInfoRepliesPerSecond, sv_server_info_replies_per_second, 500, 0, 1000000, CFGFLAG_SERVER, "Maximum number of server info responses of any size sent per second (0 = unlimited).")
 MACRO_CONFIG_INT(SvVanConnPerSecond, sv_van_conn_per_second, 10, 0, 10000, CFGFLAG_SERVER, "Anti-spoof specific rate limit (0 = unlimited).")
+MACRO_CONFIG_INT(SvVanConnRepliesPerSecond, sv_van_conn_replies_per_second, 200, 0, 1000000, CFGFLAG_SERVER, "Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).")
 MACRO_CONFIG_INT(SvMaxPacketsPerRecv, sv_max_packets_per_recv, 2048, 0, 1000000, CFGFLAG_SERVER, "Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).")
 MACRO_CONFIG_INT(SvPreConnDecompressPerSecond, sv_preconn_decompress_per_second, 800, 0, 1000000, CFGFLAG_SERVER, "Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).")
 MACRO_CONFIG_INT(SvBanRepliesPerSecond, sv_ban_replies_per_second, 200, 0, 1000000, CFGFLAG_SERVER, "Maximum banned addresses sent their ban message per second (0 = unlimited).")
@@ -672,6 +679,7 @@ MACRO_CONFIG_COL(ClMessageFriendHeartColor, cl_message_friend_heart_color, 65408
 
 MACRO_CONFIG_INT(ConnTimeout, conn_timeout, 100, 5, 1000, CFGFLAG_SAVE | CFGFLAG_CLIENT | CFGFLAG_SERVER, "Network timeout")
 MACRO_CONFIG_INT(ConnTimeoutProtection, conn_timeout_protection, 1000, 5, 10000, CFGFLAG_SERVER, "Network timeout protection")
+MACRO_CONFIG_INT(ConnResendRequestsPerSecond, conn_resend_requests_per_second, 10, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SERVER, "Maximum number of resend requests answered per second (0 for no limit)")
 MACRO_CONFIG_INT(ClShowIds, cl_show_ids, 0, 0, 1, CFGFLAG_SAVE | CFGFLAG_CLIENT, "Show client ID in scoreboard, chat and spectator menu")
 MACRO_CONFIG_INT(ClAutoRaceRecord, cl_auto_race_record, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Save replay of best time per game")
 MACRO_CONFIG_INT(ClReplays, cl_replays, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable/disable replays")
@@ -815,7 +823,7 @@ MACRO_CONFIG_STR(Gfx3DTextureAnalysisVersion, gfx_3d_texture_analysis_version, 1
 MACRO_CONFIG_STR(GfxGpuName, gfx_gpu_name, 256, "auto", CFGFLAG_SAVE | CFGFLAG_CLIENT, "GPU name, chosen by backend (if supported)")
 #if defined(CONF_PLATFORM_ANDROID)
 MACRO_CONFIG_STR(GfxBackend, gfx_backend, 256, "GLES", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Backend to use (e.g. OpenGL or Vulkan)")
-#elif defined(CONF_PLATFORM_EMSCRIPTEN)
+#elif defined(CONF_PLATFORM_EMSCRIPTEN) || defined(CONF_PLATFORM_IOS)
 MACRO_CONFIG_STR(GfxBackend, gfx_backend, 256, "GLES", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Backend to use (e.g. OpenGL or Vulkan)")
 #elif !defined(CONF_ARCH_IA32) && !defined(CONF_PLATFORM_MACOS)
 MACRO_CONFIG_STR(GfxBackend, gfx_backend, 256, "Vulkan", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Backend to use (e.g. OpenGL or Vulkan)")

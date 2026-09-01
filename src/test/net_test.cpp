@@ -30,6 +30,21 @@ namespace
 		EXPECT_EQ(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IP, IP_TOS"), std::string::npos);
 	}
 
+	TEST(Net, VanillaAntispoofBoundsPreconnectionChunk)
+	{
+		const std::string Source = ReadTestSourceFile("src/engine/shared/network_server.cpp");
+		const size_t Start = Source.find("else if(!IsCtrl && g_Config.m_SvVanillaAntiSpoof");
+		ASSERT_NE(Start, std::string::npos);
+		const size_t End = Source.find("void CNetServer::OnConnCtrlMsg", Start);
+		ASSERT_NE(End, std::string::npos);
+		const std::string Handler = Source.substr(Start, End - Start);
+
+		EXPECT_NE(Handler.find("if(Packet.m_DataSize < 2)"), std::string::npos);
+		EXPECT_NE(Handler.find("const int Remaining"), std::string::npos);
+		EXPECT_NE(Handler.find("std::min(Header.m_Size, Remaining)"), std::string::npos);
+	}
+
+
 	void InitNetBase()
 	{
 		static bool s_Initialized = false;

@@ -25,3 +25,40 @@ TEST(Network, UnpackOversizedUncompressedPacket)
 	CNetPacketConstruct Packet;
 	EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData) + 1, &Packet), -1);
 }
+
+TEST(Network, UnpackChunks)
+{
+	constexpr int NumChunks = 3;
+	const int aSizes[NumChunks] = {1, 100, 7};
+
+	CNetPacketConstruct Packet = {};
+	Packet.m_NumChunks = NumChunks;
+	unsigned char *pData = Packet.m_aChunkData;
+	for(int i = 0; i < NumChunks; i++)
+	{
+		CNetChunkHeader Header;
+		Header.m_Flags = 0;
+		Header.m_Size = aSizes[i];
+		Header.m_Sequence = 0;
+		pData = Header.Pack(pData);
+		memset(pData, i, aSizes[i]);
+		pData += aSizes[i];
+	}
+	Packet.m_DataSize = (int)(pData - Packet.m_aChunkData);
+
+	CNetConnection Connection;
+	Connection.m_Sixup = false;
+
+	CPacketChunkUnpacker Unpacker;
+	Unpacker.FeedPacket(NETADDR{}, Packet, &Connection, 0);
+	for(int i = 0; i < NumChunks; i++)
+	{
+		CNetChunk Chunk;
+		ASSERT_TRUE(Unpacker.UnpackNextChunk(&Chunk));
+		EXPECT_EQ(Chunk.m_DataSize, aSizes[i]);
+		for(int j = 0; j < Chunk.m_DataSize; j++)
+			EXPECT_EQ(((const unsigned char *)Chunk.m_pData)[j], i);
+	}
+	CNetChunk Chunk;
+	EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
+}

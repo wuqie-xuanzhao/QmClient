@@ -228,6 +228,9 @@ void CServer::CClient::Reset()
 	m_SnapRate = CClient::SNAPRATE_INIT;
 	m_Score = -1;
 	m_NextMapChunk = 0;
+	m_NumMapChunks = 0;
+	m_PreInputsTick = -1;
+	m_NumPreInputs = 0;
 	m_Flags = 0;
 	m_RedirectDropTime = 0;
 	m_KcpCapable = false;
@@ -1516,6 +1519,7 @@ void CServer::SendMap(int ClientId)
 	}
 
 	m_aClients[ClientId].m_NextMapChunk = 0;
+	m_aClients[ClientId].m_NumMapChunks = 0;
 }
 
 void CServer::SendMapData(int ClientId, int Chunk)
@@ -1528,6 +1532,12 @@ void CServer::SendMapData(int ClientId, int Chunk)
 	// drop faulty map data requests
 	if(Chunk < 0 || Offset > m_aCurrentMapSize[MapType])
 		return;
+
+	CClient &Client = m_aClients[ClientId];
+	const unsigned int NumChunks = (m_aCurrentMapSize[MapType] + ChunkSize - 1) / ChunkSize;
+	if(Client.m_NumMapChunks >= (int)(2 * NumChunks))
+		return;
+	Client.m_NumMapChunks++;
 
 	if(Offset + ChunkSize >= m_aCurrentMapSize[MapType])
 	{
@@ -1785,6 +1795,21 @@ bool CServer::CheckReservedSlotAuth(int ClientId, const char *pPassword)
 	}
 
 	return false;
+}
+
+bool CServer::TakePreInputBudget(int ClientId)
+{
+	CClient &Client = m_aClients[ClientId];
+	if(Client.m_PreInputsTick != Tick())
+	{
+		Client.m_PreInputsTick = Tick();
+		Client.m_NumPreInputs = 0;
+	}
+	if(Config()->m_SvMaxPreInputsPerTick != 0 &&
+		Client.m_NumPreInputs >= Config()->m_SvMaxPreInputsPerTick)
+		return false;
+	Client.m_NumPreInputs++;
+	return true;
 }
 
 void CServer::ProcessClientPacket(CNetChunk *pPacket)
@@ -2192,7 +2217,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 
 			if(g_Config.m_SvPreInput &&
-				IntendedTick <= Tick() + 4 * TickSpeed() + 1)
+				IntendedTick <= Tick() + 4 * TickSpeed() + 1 &&
+				TakePreInputBudget(ClientId))
 			{
 				// send preinputs of ClientId to valid clients
 				bool aPreInputClients[MAX_CLIENTS] = {};
@@ -2437,31 +2463,19 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
-bool CServer::RateLimitServerInfoConnless()
+std::optional<bool> CServer::RateLimitServerInfoConnless()
 {
-	bool SendClients = true;
-	if(Config()->m_SvServerInfoPerSecond)
+	const int64_t Now = time_get();
+	if(Now > m_ServerInfoFirstRequest + time_freq())
 	{
-		SendClients = m_ServerInfoNumRequests <= Config()->m_SvServerInfoPerSecond;
-		const int64_t Now = Tick();
-
-		if(Now <= m_ServerInfoFirstRequest + TickSpeed())
-		{
-			m_ServerInfoNumRequests++;
-		}
-		else
-		{
-			m_ServerInfoNumRequests = 1;
-			m_ServerInfoFirstRequest = Now;
-		}
+		m_ServerInfoFirstRequest = Now;
+		m_ServerInfoNumRequests = 0;
 	}
-
-	return SendClients;
-}
-
-void CServer::SendServerInfoConnless(const NETADDR *pAddr, int Token, int Type)
-{
-	SendServerInfo(pAddr, Token, Type, RateLimitServerInfoConnless());
+	m_ServerInfoNumRequests++;
+	if(Config()->m_SvServerInfoRepliesPerSecond != 0 &&
+		m_ServerInfoNumRequests > Config()->m_SvServerInfoRepliesPerSecond)
+		return std::nullopt;
+	return Config()->m_SvServerInfoPerSecond == 0 || m_ServerInfoNumRequests <= Config()->m_SvServerInfoPerSecond;
 }
 
 static inline int GetCacheIndex(int Type, bool SendClient)
@@ -2739,10 +2753,27 @@ void CServer::CacheServerInfoSixup(CCache *pCache, bool SendClients, int MaxCons
 		}
 	}
 
+	// 0.7 protocol only supports up to LEGACY_MAX_CLIENTS clients.
+	if(ClientCount >= LEGACY_MAX_CLIENTS)
+	{
+		const int MaxIncludedClients = ClientCountAll < m_NetServer.MaxClients() ? LEGACY_MAX_CLIENTS - 1 : LEGACY_MAX_CLIENTS;
+		PlayerCount = 0;
+		ClientCount = 0;
+		for(int i = 0; i < MaxConsideredClients && ClientCount < MaxIncludedClients; i++)
+		{
+			if(m_aClients[i].IncludedInServerInfo())
+			{
+				if(GameServer()->IsClientPlayer(i))
+					PlayerCount++;
+				ClientCount++;
+			}
+		}
+	}
+
 	char aVersion[32];
 	str_format(aVersion, sizeof(aVersion), "0.7↔%s", GameServer()->Version());
 	Packer.AddString(aVersion, 32);
-	if(!SendClients || ClientCountAll == ClientCount)
+	if(!SendClients || (m_NetServer.MaxClients() <= LEGACY_MAX_CLIENTS && ClientCountAll == ClientCount))
 	{
 		Packer.AddString(Config()->m_SvName, 64);
 	}
@@ -2767,16 +2798,18 @@ void CServer::CacheServerInfoSixup(CCache *pCache, bool SendClients, int MaxCons
 	int MaxClients = m_NetServer.MaxClients();
 	Packer.AddInt(Config()->m_SvSkillLevel); // server skill level
 	Packer.AddInt(PlayerCount); // num players
-	Packer.AddInt(maximum(MaxClients - maximum(Config()->m_SvSpectatorSlots, Config()->m_SvReservedSlots), PlayerCount)); // max players
+	Packer.AddInt(std::min<int>(LEGACY_MAX_CLIENTS, maximum(MaxClients - maximum(Config()->m_SvSpectatorSlots, Config()->m_SvReservedSlots), PlayerCount))); // max players
 	Packer.AddInt(ClientCount); // num clients
-	Packer.AddInt(maximum(MaxClients - Config()->m_SvReservedSlots, ClientCount)); // max clients
+	Packer.AddInt(std::min<int>(LEGACY_MAX_CLIENTS, maximum(MaxClients - Config()->m_SvReservedSlots, ClientCount))); // max clients
 
 	if(SendClients)
 	{
-		for(int i = 0; i < MaxConsideredClients; i++)
+		int ClientsIncluded = 0;
+		for(int i = 0; i < MaxConsideredClients && ClientsIncluded < ClientCount; i++)
 		{
 			if(m_aClients[i].IncludedInServerInfo())
 			{
+				ClientsIncluded++;
 				Packer.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
 				Packer.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
 				Packer.AddInt(m_aClients[i].m_Country); // client country (ISO 3166-1 numeric)
@@ -3165,14 +3198,20 @@ void CServer::PumpNetwork()
 					Packer.Reset();
 					Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 					Packer.AddInt(SrvBrwsToken);
-					GetServerInfoSixup(&Packer, RateLimitServerInfoConnless());
+					const std::optional<bool> SendClients = RateLimitServerInfoConnless();
+					if(!SendClients.has_value())
+						continue;
+					GetServerInfoSixup(&Packer, SendClients.value());
 					CNetBase::SendPacketConnlessWithToken7(m_NetServer.Socket(), &Packet.m_Address, Packer.Data(), Packer.Size(), ResponseToken, m_NetServer.GetToken(Packet.m_Address));
 				}
 				else if(Type != -1)
 				{
 					int Token = ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)];
 					Token |= ExtraToken << 8;
-					SendServerInfoConnless(&Packet.m_Address, Token, Type);
+					const std::optional<bool> SendClients = RateLimitServerInfoConnless();
+					if(!SendClients.has_value())
+						continue;
+					SendServerInfo(&Packet.m_Address, Token, Type, SendClients.value());
 				}
 			}
 		}
