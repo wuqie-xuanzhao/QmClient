@@ -3681,6 +3681,12 @@ void CGraphics_Threaded::SetGameScreenAspectOverride(float Aspect)
 
 void CGraphics_Threaded::AdjustViewport(bool SendViewportChangeToBackend)
 {
+	int InsetLeft = 0;
+	int InsetRight = 0;
+	m_pBackend->GetDisplayCutoutInsets(InsetLeft, InsetRight);
+	m_ViewportX = InsetLeft;
+	m_ScreenWidth = m_DrawableWidth - InsetLeft - InsetRight;
+
 	// adjust the viewport to only allow certain aspect ratios
 	// keep this in sync with backend_vulkan GetSwapImageSize's check
 	if(m_ScreenHeight > 4 * m_ScreenWidth / 5 && g_GraphicsForcedAspect)
@@ -3690,7 +3696,7 @@ void CGraphics_Threaded::AdjustViewport(bool SendViewportChangeToBackend)
 
 		if(SendViewportChangeToBackend)
 		{
-			UpdateViewport(0, 0, m_ScreenWidth, m_ScreenHeight, true);
+			UpdateViewport(m_ViewportX, 0, m_ScreenWidth, m_ScreenHeight, true);
 		}
 	}
 	else
@@ -4265,7 +4271,7 @@ void CGraphics_Threaded::GotResized(int w, int h, int RefreshRate)
 			PropChangedListener();
 	}
 
-	UpdateViewport(0, 0, m_ScreenWidth, m_ScreenHeight, true);
+	UpdateViewport(m_ViewportX, 0, m_ScreenWidth, m_ScreenHeight, true);
 
 	// kick the command buffer and wait
 	KickCommandBuffer();
@@ -4394,6 +4400,14 @@ void CGraphics_Threaded::TakeCustomScreenshot(const char *pFilename)
 
 void CGraphics_Threaded::Swap()
 {
+#if defined(CONF_PLATFORM_IOS)
+	int InsetLeft = 0;
+	int InsetRight = 0;
+	m_pBackend->GetDisplayCutoutInsets(InsetLeft, InsetRight);
+	if(InsetLeft != m_ViewportX || m_DrawableWidth - InsetLeft - InsetRight != m_ScreenWidth)
+		GotResized(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight, -1);
+#endif
+
 #if defined(CONF_PLATFORM_MACOS)
 	const bool PreviousMacosDiagnostics = m_MacosGraphicsDiagnosticsEnabled;
 	const bool MacosDiagnostics = MacosGraphicsDiagnosticsEnabled();

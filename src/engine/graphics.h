@@ -33,11 +33,11 @@ namespace graphics_viewport
 		return EffectiveDrawableHeight - Y - Height;
 	}
 
-	inline vec2 MapTouchPosition(vec2 Position, vec2 DrawableSize, vec2 ScreenSize)
+	inline vec2 MapTouchPosition(vec2 Position, vec2 DrawableSize, vec2 ScreenSize, float ViewportX = 0.0f)
 	{
 		if(DrawableSize.x <= 0.0f || DrawableSize.y <= 0.0f || ScreenSize.x <= 0.0f || ScreenSize.y <= 0.0f)
 			return Position;
-		const vec2 Scaled = Position * DrawableSize / ScreenSize;
+		const vec2 Scaled = (Position * DrawableSize - vec2(ViewportX, 0.0f)) / ScreenSize;
 		return vec2(std::clamp(Scaled.x, 0.0f, 1.0f), std::clamp(Scaled.y, 0.0f, 1.0f));
 	}
 
@@ -328,6 +328,7 @@ class IGraphics : public IInterface
 protected:
 	int m_ScreenWidth;
 	int m_ScreenHeight;
+	int m_ViewportX = 0;
 	int m_DrawableWidth;
 	int m_DrawableHeight;
 	int m_ScreenRefreshRate;
@@ -513,6 +514,7 @@ public:
 	int WindowHeight() const { return m_ScreenHeight / m_ScreenHiDPIScale; }
 	// 整张 drawable 的尺寸；强制 viewport 可能只覆盖其中一部分。
 	vec2 DrawableSize() const { return vec2(m_DrawableWidth, m_DrawableHeight); }
+	int ViewportX() const { return m_ViewportX; }
 
 	virtual void WarnPngliteIncompatibleImages(bool Warn) = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;

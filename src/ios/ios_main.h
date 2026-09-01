@@ -7,6 +7,10 @@
 #error "This header should only be included when compiling for iOS"
 #endif
 
+struct SDL_Window;
+
+void IosDisplayCutoutInsets(SDL_Window *pWindow, int *pLeft, int *pRight);
+
 const char *InitIos();
 
 #endif

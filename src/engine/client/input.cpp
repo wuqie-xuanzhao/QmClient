@@ -639,7 +639,7 @@ void CInput::HandleTouchDownEvent(const SDL_TouchFingerEvent &Event)
 
 vec2 CInput::TouchPositionToViewport(vec2 Position) const
 {
-	return graphics_viewport::MapTouchPosition(Position, Graphics()->DrawableSize(), Graphics()->ScreenSize());
+	return graphics_viewport::MapTouchPosition(Position, Graphics()->DrawableSize(), Graphics()->ScreenSize(), Graphics()->ViewportX());
 }
 
 vec2 CInput::TouchDeltaToViewport(vec2 Delta) const
