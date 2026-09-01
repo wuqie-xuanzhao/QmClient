@@ -60,6 +60,7 @@
 - `qmclient_scripts/export_settings_commands_table.py`
 - `qmclient_scripts/generate_release_notes.py`
 - `qmclient_scripts/update_ddnet_map_categories.py`：从 `ddnet/ddnet-maps` 的 `types/*/maps/*.map` 生成聊天地图补全使用的官方分类表
+- `qmclient_scripts/generate_upstream_manifest.py`：根据 `git cherry` 生成版本化上游同步台账；只记录精确 patch 等价，不替代人工分类
 
 ### 4. 其他专用脚本
 

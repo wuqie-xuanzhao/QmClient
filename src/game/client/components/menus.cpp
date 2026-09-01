@@ -3427,6 +3427,11 @@ void CMenus::OnInit()
 		m_ShowStart = false;
 	}
 	m_MenuPage = g_Config.m_UiPage;
+	if((m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) || m_MenuPage == PAGE_FAVORITE_MAPS)
+	{
+		m_BrowserRefreshPending = true;
+		m_BrowserRefreshPendingForce = true;
+	}
 
 	m_RefreshButton.Init(Ui(), -1);
 	m_ConnectButton.Init(Ui(), -1);
@@ -3450,6 +3455,7 @@ void CMenus::OnInit()
 	Console()->Chain("ui_page", ConchainUiPageUpdate, this);
 
 	Console()->Chain("snd_enable", ConchainUpdateMusicState, this);
+	Console()->Chain("snd_game", ConchainUpdateMusicState, this);
 	Console()->Chain("snd_enable_music", ConchainUpdateMusicState, this);
 	Console()->Chain("cl_background_entities", ConchainBackgroundEntities, this);
 
@@ -3547,6 +3553,8 @@ void CMenus::UpdateMusicState()
 		GameClient()->m_Sounds.Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 	else if(!ShouldPlay && GameClient()->m_Sounds.IsPlaying(SOUND_MENU))
 		GameClient()->m_Sounds.Stop(SOUND_MENU);
+	if(!g_Config.m_SndEnable || !g_Config.m_SndGame)
+		GameClient()->m_MapSounds.StopAll();
 }
 
 void CMenus::PopupMessage(const char *pTitle, const char *pMessage, const char *pButtonLabel, int NextPopup, FPopupButtonCallback pfnButtonCallback)
@@ -3605,31 +3613,42 @@ bool CMenus::CanDisplayWarning() const
 
 void CMenus::Render()
 {
-	CUiScopedGaussianBlur GaussianBlurScope(Ui());
+	const int MenuOpenFrame = m_MenuOpenFrame++;
+	// 菜单首帧先显示界面，避免首次创建模糊 render target、捕获 backbuffer
+	// 和执行 blur pass 阻塞 ESC 打开路径；下一帧再恢复完整的半透明模糊效果。
+	CUiScopedGaussianBlur GaussianBlurScope(Ui(), MenuOpenFrame == 0 ? 0.0f : 1.0f);
 	CPerfTimer RenderTimer;
 	m_MenuUiPerfScrollActive = false;
 	Ui()->MapScreen();
 	Ui()->SetMouseSlow(false);
 
-	static int s_Frame = 0;
-	if(s_Frame == 0)
+	if(MenuOpenFrame == 0)
 	{
-		RefreshBrowserTab(true);
-		s_Frame++;
+		// 首个菜单帧优先提交可见界面；服务器列表刷新可能触发排序和缓存
+		// 更新，延后一帧避免按 ESC 打开菜单时首帧被同步工作阻塞。
 	}
-	else if(s_Frame == 1)
+	else if(MenuOpenFrame >= 2)
 	{
-		UpdateMusicState();
-		s_Frame++;
+		const bool BrowserPageVisible =
+			Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK &&
+			((m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) || m_MenuPage == PAGE_FAVORITE_MAPS);
+		if(m_BrowserRefreshPending && BrowserPageVisible)
+		{
+			RefreshBrowserTab(m_BrowserRefreshPendingForce);
+			m_BrowserRefreshPending = false;
+			m_BrowserRefreshPendingForce = false;
+		}
+		if(MenuOpenFrame == 2)
+			UpdateMusicState();
 	}
-	else
-	{
-		m_CommunityIcons.Update();
-	}
+
+	// 图标下载/加载 job 需要在菜单保持激活期间每帧推进；首帧仍只跳过
+	// 浏览器缓存整理，不能把异步图标队列限制为一次更新。
+	m_CommunityIcons.Update();
 
 	// Initially add DDNet as favorite community and select its tab.
 	// This must be delayed until the DDNet info is available.
-	if(m_CreateDefaultFavoriteCommunities &&
+	if(MenuOpenFrame > 0 && m_CreateDefaultFavoriteCommunities &&
 		ServerBrowser()->DDNetInfoAvailable())
 	{
 		m_CreateDefaultFavoriteCommunities = false;
@@ -3765,7 +3784,7 @@ void CMenus::Render()
 				ScrollInputActive,
 				m_SettingsPageSwitchActive || TransitionActive,
 				m_SettingsScrollActive);
-			if(CanPrewarmSettings)
+			if(CanPrewarmSettings && MenuOpenFrame > 0)
 				PrewarmVisibleSettingsResources(MainView);
 			if(m_MenuPage == PAGE_NEWS)
 			{
@@ -3870,7 +3889,7 @@ void CMenus::Render()
 				ScrollInputActive,
 				m_SettingsPageSwitchActive || TransitionActive,
 				m_SettingsScrollActive);
-			if(CanPrewarmSettings)
+			if(CanPrewarmSettings && MenuOpenFrame > 0)
 				PrewarmVisibleSettingsResources(MainView);
 			if(m_GamePage == PAGE_GAME)
 			{
@@ -5258,6 +5277,19 @@ void CMenus::SetActive(bool Active)
 {
 	if(Active != m_MenuActive)
 	{
+		if(Active)
+		{
+			m_MenuOpenFrame = 0;
+			if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK &&
+				((m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_FAVORITE_COMMUNITY_5) || m_MenuPage == PAGE_FAVORITE_MAPS))
+			{
+				m_BrowserRefreshPending = true;
+				// 打开在线菜单时复用已有列表；只有列表类型变化时
+				// RefreshBrowserTab(false) 才会同步切换，避免每次按 ESC
+				// 都触发清理、HTTP 状态刷新和排序。
+				m_BrowserRefreshPendingForce = false;
+			}
+		}
 		Ui()->SetHotItem(nullptr);
 		Ui()->SetActiveItem(nullptr);
 		MarkMenuInteraction();
@@ -7578,7 +7610,13 @@ void CMenus::SetMenuPage(int NewPage)
 		}
 		if(OldPage != NewPage || ForceRefresh)
 		{
-			RefreshBrowserTab(ForceRefresh);
+			if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK && m_MenuOpenFrame < 2)
+			{
+				m_BrowserRefreshPending = true;
+				m_BrowserRefreshPendingForce = m_BrowserRefreshPendingForce || ForceRefresh;
+			}
+			else
+				RefreshBrowserTab(ForceRefresh);
 		}
 	}
 	if(OldPage != NewPage && NewPage == PAGE_SETTINGS)
@@ -7645,6 +7683,11 @@ void CMenus::SetGamePage(int NewPage)
 
 void CMenus::RefreshBrowserTab(bool Force)
 {
+	// A direct refresh consumes any deferred refresh request. Without clearing
+	// this state, a page switch during the first two menu frames can refresh
+	// immediately and then refresh again on the deferred frame.
+	m_BrowserRefreshPending = false;
+	m_BrowserRefreshPendingForce = false;
 	CPerfTimer Timer;
 	if(g_Config.m_UiPage == PAGE_INTERNET)
 	{

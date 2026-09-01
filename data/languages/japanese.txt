@@ -2507,8 +2507,8 @@ Current rescue mode: %s
 Current status
 == 現在のステータス
 
-Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== 現在時刻: %s\n- 稼働時間とプレイ時間は公式 JSON データから計算されます\n- 同上\n- 同上上\n
+Current time: %s
+== 現在時刻: %s
 
 Current: Ranks
 == 現在：ランク
@@ -2651,6 +2651,9 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet クライアントを再起動してアップデートを完了する必要があります！
 
+DDNet finish totals come from official player data.
+== DDNetのクリア合計は公式プレイヤーデータに基づきます。
+
 DDNet Memory
 == DDNet メモリ
 
@@ -2666,6 +2669,9 @@ ddnet-saves.txt is empty
 ddnet-saves.txt not found
 == ddnet-saves.txt が見つかりません
 
+DDNet.org map stats
+== DDNet.org マップ統計
+
 DDNet/total CPU
 == DDNet / 合計 CPU
 
@@ -2674,6 +2680,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork は協力型オンラインゲームで、あなたとあなたのグループの Tee がマップのゴールに到達することを目指します。初心者は最も簡単なマップがある Novice サーバーから始めるべきです。自分に近いサーバーを選ぶために ping を考慮してください。
+
+ddstats.tw ID stats
+== ddstats.tw ID統計
 
 Deactivate
 == 無効化
@@ -4196,6 +4205,9 @@ Finish name
 Finish Name:
 == フィニッシュネーム:
 
+Finish time
+== 完了時間
+
 Finished
 == 完了
 
@@ -4426,6 +4438,9 @@ Game graphics assets not from Teeworlds
 
 Game info
 == ゲーム情報
+
+Game mode
+== ゲームモード
 
 Game over
 == ゲームオーバー
@@ -5708,6 +5723,9 @@ Lines below active
 Lines below active line
 == アクティブ行の下に表示する行数
 
+Links below open external ID and map statistics.
+== 下のリンクから外部ID統計とマップ統計を開けます。
+
 List all commands that are available in practice mode
 == プラクティスモードで使用可能なすべてのコマンドを一覧表示
 
@@ -5867,6 +5885,9 @@ Local + Dummy
 Local ESLRC file
 == ローカル ESLRC ファイル
 
+Local game mode statistics
+== ローカルゲームモード統計
+
 Local LRC file
 == ローカル LRC ファイル
 
@@ -5875,6 +5896,9 @@ Local media folders
 
 Local media library directories (separate by |)
 == 歌詞ローカルメディアライブラリディレクトリ（複数ディレクトリは | で区切る）
+
+Local mode statistics are stored on this client.
+== ローカルのゲームモード統計はこのクライアントに保存されます。
 
 Local music file
 == ローカル音楽ファイル
@@ -6151,6 +6175,9 @@ Map type:
 
 Maps
 == マップ
+
+Maps finished
+== クリアしたマップ
 
 Margin when notification is docked
 == 通知バーが端に寄ったときの余白
@@ -7303,6 +7330,9 @@ Other
 
 Other lines font size
 == 他の行のフォントサイズ
+
+Other modes
+== その他のモード
 
 Other players' hook line width
 == 他のプレイヤーのフックラインの幅
@@ -9058,6 +9088,9 @@ Scanning current server...
 
 Score
 == スコア
+
+Score earned
+== 獲得スコア
 
 Score limit
 == スコア制限
@@ -11665,6 +11698,12 @@ Total
 
 Total friends
 == フレンド総数
+
+Total hours
+== 時間単位で表示
+
+Total play time
+== 合計プレイ時間
 
 Total: %d save(s)
 == 合計: %d 個のセーブ

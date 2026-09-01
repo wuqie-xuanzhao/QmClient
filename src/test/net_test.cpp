@@ -44,7 +44,6 @@ namespace
 		EXPECT_NE(Handler.find("std::min(Header.m_Size, Remaining)"), std::string::npos);
 	}
 
-
 	void InitNetBase()
 	{
 		static bool s_Initialized = false;

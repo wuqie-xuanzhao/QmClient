@@ -605,21 +605,23 @@ void CFastPractice::CaptureAnchorsFromSnapshot()
 	m_DummyAnchor = {};
 	m_HasDummyAnchor = false;
 
-	const auto &&Capture = [&](int ClientId, SAnchorData &Anchor) {
-		if(ClientId < 0 || ClientId >= MAX_CLIENTS || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-			return;
-
-		Anchor.m_Valid = true;
-		Anchor.m_ClientId = ClientId;
-		Anchor.m_Char = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
-		Anchor.m_HasDDNet = GameClient()->m_Snap.m_aCharacters[ClientId].m_HasExtendedData;
-		if(Anchor.m_HasDDNet)
-			Anchor.m_DDNet = GameClient()->m_Snap.m_aCharacters[ClientId].m_ExtendedData;
-	};
-
-	Capture(m_EnableLocalClientId, m_MainAnchor);
-	Capture(m_EnableDummyClientId, m_DummyAnchor);
+	CaptureAnchorFromSnapshot(m_EnableLocalClientId, m_MainAnchor);
+	CaptureAnchorFromSnapshot(m_EnableDummyClientId, m_DummyAnchor);
 	m_HasDummyAnchor = m_DummyAnchor.m_Valid;
+}
+
+void CFastPractice::CaptureAnchorFromSnapshot(int ClientId, SAnchorData &Anchor)
+{
+	Anchor = {};
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+		return;
+
+	Anchor.m_Valid = true;
+	Anchor.m_ClientId = ClientId;
+	Anchor.m_Char = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
+	Anchor.m_HasDDNet = GameClient()->m_Snap.m_aCharacters[ClientId].m_HasExtendedData;
+	if(Anchor.m_HasDDNet)
+		Anchor.m_DDNet = GameClient()->m_Snap.m_aCharacters[ClientId].m_ExtendedData;
 }
 
 bool CFastPractice::ApplyAnchorToCharacter(CGameWorld &World, const SAnchorData &Anchor) const
@@ -845,6 +847,10 @@ void CFastPractice::CaptureServerLockedInputs()
 		if(Input.m_TargetX == 0 && Input.m_TargetY == 0)
 			Input.m_TargetX = 1;
 
+		// 快速练习期间不能继续推动服务器角色；保留瞄准，释放移动和动作边沿。
+		Input.m_Direction = 0;
+		Input.m_Jump = 0;
+		Input.m_Hook = 0;
 		SuppressActionInput(Input, ReleasedFireState(Input.m_Fire));
 		m_aServerLockedInputs[Slot] = Input;
 		m_aHasServerLockedInputs[Slot] = true;
@@ -955,14 +961,15 @@ bool CFastPractice::TryAttachDummyFromSnapshot()
 		return false;
 	}
 
-	CaptureAnchorsFromSnapshot();
+	// 主角色锚点属于整个练习会话；延迟接入 dummy 不能把复位点改成当前快照。
+	CaptureAnchorFromSnapshot(m_EnableDummyClientId, m_DummyAnchor);
+	m_HasDummyAnchor = m_DummyAnchor.m_Valid;
 	if(!m_MainAnchor.m_Valid || !m_HasDummyAnchor)
 	{
 		m_EnableDummyClientId = -1;
 		m_RequireDummy = false;
 		m_PracticeWorldInitialized = false;
 		InitPracticeWorld();
-		CaptureAnchorsFromSnapshot();
 		return false;
 	}
 
@@ -1118,13 +1125,13 @@ void CFastPractice::ResetPracticeToAnchor()
 	if(!m_Enabled)
 		return;
 
-	if(!InitPracticeWorld())
+	if(!m_MainAnchor.m_Valid || (m_RequireDummy && !m_HasDummyAnchor))
 	{
 		Disable();
 		return;
 	}
-	CaptureAnchorsFromSnapshot();
-	if(!m_MainAnchor.m_Valid || (m_RequireDummy && !m_HasDummyAnchor))
+
+	if(!InitPracticeWorld())
 	{
 		Disable();
 		return;
@@ -1198,92 +1205,12 @@ void CFastPractice::PrepareInputForSend(int *pData, int Size, bool Dummy)
 		return;
 	}
 
-	if(GameClient()->m_Snap.m_SpecInfo.m_Active || (GameClient()->m_Snap.m_pLocalInfo && GameClient()->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS))
-		return;
-
 	// Keep the real server stream locked to the exact input state that was
 	// active when fast practice was opened. Practice inputs must not move it.
 	if(Slot >= 0 && Slot < NUM_DUMMIES && m_aHasServerLockedInputs[Slot])
 		*pInput = m_aServerLockedInputs[Slot];
 	else
 		NeutralizeInput(*pInput);
-}
-
-int CFastPractice::WeaponFireSound(int Weapon)
-{
-	switch(Weapon)
-	{
-	case WEAPON_GUN: return SOUND_GUN_FIRE;
-	case WEAPON_SHOTGUN: return SOUND_SHOTGUN_FIRE;
-	case WEAPON_GRENADE: return SOUND_GRENADE_FIRE;
-	case WEAPON_HAMMER: return SOUND_HAMMER_FIRE;
-	case WEAPON_LASER: return SOUND_LASER_FIRE;
-	case WEAPON_NINJA: return SOUND_NINJA_FIRE;
-	default: return -1;
-	}
-}
-
-void CFastPractice::TrackFireSound(int ClientId, CCharacter *pChar)
-{
-	if(!pChar || ClientId < 0 || ClientId >= MAX_CLIENTS)
-		return;
-
-	const int AttackTick = pChar->GetAttackTick();
-	if(AttackTick <= m_aLastAttackTick[ClientId])
-		return;
-
-	if(g_Config.m_Debug)
-		dbg_msg("fast_practice", "attack event client=%d weapon=%d attack_tick=%d prev_attack_tick=%d",
-			ClientId, pChar->GetActiveWeapon(), AttackTick, m_aLastAttackTick[ClientId]);
-
-	m_aLastAttackTick[ClientId] = AttackTick;
-
-	if(!GameClient()->m_SuppressEvents && pChar->GetActiveWeapon() == WEAPON_HAMMER)
-		MaybePlayHammerHitEffect(pChar);
-
-	if(!g_Config.m_SndGame || GameClient()->m_SuppressEvents)
-		return;
-
-	const int SoundId = WeaponFireSound(pChar->GetActiveWeapon());
-	if(SoundId < 0)
-		return;
-
-	GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SoundId, 1.0f, pChar->Core()->m_Pos);
-}
-
-void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)
-{
-	if(!pChar || pChar->GetActiveWeapon() != WEAPON_HAMMER)
-		return;
-	if(pChar->Core()->m_HammerHitDisabled)
-		return;
-
-	vec2 Dir = vec2((float)pChar->LatestInput()->m_TargetX, (float)pChar->LatestInput()->m_TargetY);
-	if(length(Dir) < 0.001f)
-		Dir = vec2((float)std::max(1, pChar->Core()->m_Direction), 0.0f);
-	else
-		Dir = normalize(Dir);
-
-	const vec2 StartPos = pChar->Core()->m_Pos;
-	const vec2 EndPos = StartPos + Dir * pChar->GetProximityRadius() * 1.5f;
-
-	CEntity *apEnts[MAX_CLIENTS];
-	const int Num = GameClient()->m_PredictedWorld.FindEntities(StartPos, pChar->GetProximityRadius() * 2.0f, apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
-	for(int i = 0; i < Num; ++i)
-	{
-		auto *pTarget = static_cast<CCharacter *>(apEnts[i]);
-		if(!pTarget || pTarget == pChar || !pChar->CanCollide(pTarget->GetCid()))
-			continue;
-
-		vec2 ClosestPoint;
-		if(!closest_point_on_line(StartPos, EndPos, pTarget->m_Pos, ClosestPoint))
-			continue;
-		if(distance(pTarget->m_Pos, ClosestPoint) > pChar->GetProximityRadius())
-			continue;
-
-		GameClient()->m_Effects.HammerHit(ClosestPoint, 1.0f, 1.0f);
-		break;
-	}
 }
 
 void CFastPractice::TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, const vec2 &BeforePos)
@@ -1652,10 +1579,15 @@ bool CFastPractice::OverridePredict()
 
 			if(IsTrackedProjectileExplosive(TrackedProj))
 			{
-				if(!GameClient()->m_SuppressEvents)
-					GameClient()->m_Effects.Explosion(ImpactPos, 1.0f);
-				if(g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
-					GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_GRENADE_EXPLODE, 1.0f, ImpactPos);
+				// DDNet 预测世界会为爆炸创建标准预测事件，由统一消费路径播放。
+				// 非 DDNet 世界没有该事件，保留练习模式原有的即时反馈。
+				if(!GameClient()->m_PredictedWorld.m_WorldConfig.m_IsDDRace)
+				{
+					if(!GameClient()->m_SuppressEvents)
+						GameClient()->m_Effects.Explosion(ImpactPos, 1.0f);
+					if(g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
+						GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_GRENADE_EXPLODE, 1.0f, ImpactPos);
+				}
 			}
 			else
 			{
@@ -1663,9 +1595,10 @@ bool CFastPractice::OverridePredict()
 			}
 		}
 
-		TrackFireSound(LocalClientId, pLocalChar);
-		if(pDummyChar)
-			TrackFireSound(DummyClientId, pDummyChar);
+		// 快速练习接管预测循环，当前 tick 产生的事件必须在这里统一消费，
+		// 这样开火声音和锤击反馈才能与普通预测共用同一份确认去重表。
+		if(!GameClient()->m_SuppressEvents)
+			GameClient()->HandlePredictedEvents(Tick);
 
 		if(Tick == FinalTickSelf)
 		{
@@ -2555,15 +2488,6 @@ bool CFastPractice::ExecutePracticeCommand(int Team, int LocalClientId, CCharact
 	if(Cmd == "tp" || Cmd == "teleport" || Cmd == "tc" || Cmd == "telecursor")
 	{
 		vec2 Target = GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy];
-		if(Cmd == "tc" || Cmd == "telecursor")
-		{
-			Target = PracticeTeleCursorTarget(
-				pChar->Core()->m_Pos,
-				vec2(pChar->Core()->m_Input.m_TargetX, pChar->Core()->m_Input.m_TargetY),
-				GameClient()->m_Camera.m_Zoom,
-				GameClient()->m_Camera.Deadzone(),
-				GameClient()->m_Camera.FollowFactor());
-		}
 		if(vArgs.size() > 1)
 		{
 			const int TargetId = FindClientByName(vArgs[1].c_str());

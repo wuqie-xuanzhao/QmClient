@@ -1935,6 +1935,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 
 		const MTLPixelFormat PixelFormat = Format == EMetalTextureFormat::R8 ? MTLPixelFormatR8Unorm : MTLPixelFormatRGBA8Unorm;
+		// 创建即上传且无 mipmap 的纹理（UI 图标、旗帜、头像等）在统一内存设备上
+		// 使用 Shared 存储，首次上传走 CPU 直写（replaceRegion）：不打断活跃的
+		// render encoder、无需 staging buffer、内容即时可见。有 mipmap 或动态
+		// 更新的纹理保持 Private + blit（成本低且不改变既有语义）。
+		const bool UseSharedStorage = pData != nullptr && [m_Device hasUnifiedMemory] &&
+			(!Wants2D || Layout.m_MipLevels <= 1) && (!Wants2DArray || ArrayLayout.m_MipLevels <= 1);
 		id<MTLTexture> pTexture = nil;
 		if(Wants2D)
 		{
@@ -1945,7 +1951,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			pDescriptor.height = Height;
 			pDescriptor.mipmapLevelCount = Layout.m_MipLevels;
 			pDescriptor.usage = MTLTextureUsageShaderRead;
-			pDescriptor.storageMode = MTLStorageModePrivate;
+			pDescriptor.storageMode = UseSharedStorage ? MTLStorageModeShared : MTLStorageModePrivate;
 			pTexture = [m_Device newTextureWithDescriptor:pDescriptor];
 	#if !__has_feature(objc_arc)
 			[pDescriptor release];
@@ -1964,7 +1970,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			pArrayDescriptor.arrayLength = METAL_TEXTURE_ARRAY_LAYERS;
 			pArrayDescriptor.mipmapLevelCount = 1;
 			pArrayDescriptor.usage = MTLTextureUsageShaderRead;
-			pArrayDescriptor.storageMode = MTLStorageModePrivate;
+			pArrayDescriptor.storageMode = UseSharedStorage ? MTLStorageModeShared : MTLStorageModePrivate;
 			pTextureArray = [m_Device newTextureWithDescriptor:pArrayDescriptor];
 	#if !__has_feature(objc_arc)
 			[pArrayDescriptor release];
@@ -2591,6 +2597,19 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Width == 0 || Height == 0 || Width > std::numeric_limits<size_t>::max() / BytesPerPixel)
 			return false;
 		const size_t RowBytes = Width * BytesPerPixel;
+		if(Height > std::numeric_limits<size_t>::max() / RowBytes)
+			return false;
+		const size_t TightBytes = RowBytes * Height;
+		// Shared 纹理由 CPU 直接写入，源数据本身是紧凑行布局，不需要为
+		// replaceRegion 额外构造 256 字节对齐的 staging 副本。
+		if(Texture.m_Texture.storageMode == MTLStorageModeShared)
+		{
+			[Texture.m_Texture replaceRegion:MTLRegionMake2D((NSUInteger)X, (NSUInteger)Y, (NSUInteger)Width, (NSUInteger)Height) mipmapLevel:0 withBytes:pData bytesPerRow:RowBytes];
+			if(m_MetalPerfEnabled)
+				m_MetalPerfUploadBytes += TightBytes;
+			return true;
+		}
+
 		const size_t AlignedRowBytes = (RowBytes + 255) & ~size_t(255);
 		if(AlignedRowBytes < RowBytes || Height > std::numeric_limits<size_t>::max() / AlignedRowBytes)
 			return false;
@@ -2648,6 +2667,20 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(Width > std::numeric_limits<size_t>::max() / BytesPerPixel)
 			return false;
 		const size_t RowBytes = Width * BytesPerPixel;
+		if(Height > std::numeric_limits<size_t>::max() / RowBytes)
+			return false;
+		const size_t TightSliceBytes = RowBytes * Height;
+		if(LayerCount > std::numeric_limits<size_t>::max() / TightSliceBytes)
+			return false;
+		if(Texture.m_TextureArray.storageMode == MTLStorageModeShared)
+		{
+			for(size_t Layer = 0; Layer < LayerCount; ++Layer)
+				[Texture.m_TextureArray replaceRegion:MTLRegionMake2D(0, 0, (NSUInteger)Width, (NSUInteger)Height) mipmapLevel:0 slice:(NSUInteger)(LayerStart + Layer) withBytes:pData + Layer * TightSliceBytes bytesPerRow:RowBytes bytesPerImage:TightSliceBytes];
+			if(m_MetalPerfEnabled)
+				m_MetalPerfUploadBytes += TightSliceBytes * LayerCount;
+			return true;
+		}
+
 		const size_t AlignedRowBytes = (RowBytes + 255) & ~size_t(255);
 		if(AlignedRowBytes < RowBytes || Height > std::numeric_limits<size_t>::max() / AlignedRowBytes)
 			return false;
@@ -3700,13 +3733,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		if(EffectivePresent && RefreshRate > 0 && !m_VSync && !VideoCaptureActive())
 		{
 			const std::chrono::nanoseconds Now = time_get_nanoseconds();
-			if(m_NextPresentTimeNs.count() == 0)
-				m_NextPresentTimeNs = Now;
-			// 在目标呈现时刻前约 1ms 调用 present，让 afterMinimumDuration 把
-			// 呈现精确落在锚点上。调用时刻锚定到固定节奏，避免相对 vsync 相位
-			// 漂移造成每帧显示内容的新旧波动（快速移动时的速度感不均）。
-			const std::chrono::nanoseconds PresentLead = std::chrono::milliseconds(1);
-			if(Now < m_NextPresentTimeNs - PresentLead)
+			const std::chrono::nanoseconds PresentInterval = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0 / RefreshRate));
+			// 距上次成功 present 不足刷新周期时跳过本帧 present。逻辑帧照常
+			// 渲染提交，不被 nextDrawable 阻塞，呈现由 pacing 锚点精确化。
+			if(m_LastPresentTimeNs.count() != 0 && Now - m_LastPresentTimeNs < PresentInterval)
 			{
 				EffectivePresent = false;
 				ThrottledPresent = true;
@@ -3761,10 +3791,11 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			{
 				// present pacing：把呈现时刻锚定到固定节奏序列，使每帧显示间隔
 				// 精确等于刷新周期、帧内容年龄恒定，消除快速移动时的速度感波动。
-				const std::chrono::nanoseconds Now = time_get_nanoseconds();
-				const double Duration = std::max(0.0, std::chrono::duration<double>(m_NextPresentTimeNs - Now).count());
-				[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable afterMinimumDuration:Duration];
 				const std::chrono::nanoseconds PresentInterval = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0 / RefreshRate));
+				if(m_NextPresentTimeNs.count() == 0 || m_NextPresentTimeNs < m_LastPresentTimeNs)
+					m_NextPresentTimeNs = m_LastPresentTimeNs;
+				const double Duration = std::max(0.0, std::chrono::duration<double>(m_NextPresentTimeNs - m_LastPresentTimeNs).count());
+				[m_CurrentCommandBuffer presentDrawable:m_CurrentDrawable afterMinimumDuration:Duration];
 				m_NextPresentTimeNs += PresentInterval;
 			}
 			else

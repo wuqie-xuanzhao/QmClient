@@ -752,27 +752,40 @@ TEST(QmChatInteractions, BacklogLineToScrollbarValue)
 	EXPECT_FLOAT_EQ(CChat::BacklogLineToScrollbarValue(20, 12), 0.0f);
 }
 
-TEST(QmFastPracticeCommands, TeleCursorTargetMatchesPracticeCursorWorldConversion)
-{
-	const vec2 CharacterPos(100.0f, 200.0f);
-	const vec2 Target(400.0f, 0.0f);
-	const vec2 Result = CFastPractice::PracticeTeleCursorTarget(CharacterPos, Target, 2.0f, 100, 50);
-
-	EXPECT_FLOAT_EQ(Result.x, 750.0f);
-	EXPECT_FLOAT_EQ(Result.y, 200.0f);
-}
-
 TEST(QmFastPracticeCommands, TeleportDefaultsToAimingOrSpectatingPosition)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
 	const size_t CommandBlock = Source.find("if(Cmd == \"tp\" || Cmd == \"teleport\" || Cmd == \"tc\" || Cmd == \"telecursor\")");
 	ASSERT_NE(CommandBlock, std::string::npos);
-	const size_t TelecursorBranch = Source.find("if(Cmd == \"tc\" || Cmd == \"telecursor\")", CommandBlock);
-	ASSERT_NE(TelecursorBranch, std::string::npos);
-	const std::string DefaultTargetBlock = Source.substr(CommandBlock, TelecursorBranch - CommandBlock);
+	const size_t TargetLine = Source.find("vec2 Target = GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy];", CommandBlock);
+	ASSERT_NE(TargetLine, std::string::npos);
+	EXPECT_LT(CommandBlock, TargetLine);
+	EXPECT_EQ(Source.find("PracticeTeleCursorTarget", CommandBlock), std::string::npos);
+}
 
-	EXPECT_NE(DefaultTargetBlock.find("vec2 Target = GameClient()->m_Controls.m_aTargetPos[g_Config.m_ClDummy];"), std::string::npos);
-	EXPECT_EQ(DefaultTargetBlock.find("PracticeTeleCursorTarget"), std::string::npos);
+TEST(QmFastPracticeCommands, ResetUsesEnableAnchorAndServerInputIsNeutral)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string ResetBody = SourceFunctionBody(Source, "void CFastPractice::ResetPracticeToAnchor()");
+	ASSERT_NE(ResetBody.find("m_MainAnchor.m_Valid"), std::string::npos);
+	EXPECT_EQ(ResetBody.find("CaptureAnchorsFromSnapshot"), std::string::npos);
+
+	const std::string LockBody = SourceFunctionBody(Source, "void CFastPractice::CaptureServerLockedInputs()");
+	EXPECT_NE(LockBody.find("Input.m_Direction = 0;"), std::string::npos);
+	EXPECT_NE(LockBody.find("Input.m_Jump = 0;"), std::string::npos);
+	EXPECT_NE(LockBody.find("Input.m_Hook = 0;"), std::string::npos);
+}
+
+TEST(QmFastPracticeCommands, LateDummyAttachKeepsSessionAnchorAndSpectatorInputLocked)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
+	const std::string AttachBody = SourceFunctionBody(Source, "bool CFastPractice::TryAttachDummyFromSnapshot()");
+	const std::string SendBody = SourceFunctionBody(Source, "void CFastPractice::PrepareInputForSend(");
+
+	EXPECT_NE(AttachBody.find("CaptureAnchorFromSnapshot(m_EnableDummyClientId, m_DummyAnchor)"), std::string::npos);
+	EXPECT_EQ(AttachBody.find("CaptureAnchorsFromSnapshot()"), std::string::npos);
+	EXPECT_NE(SendBody.find("m_aHasServerLockedInputs[Slot]"), std::string::npos);
+	EXPECT_EQ(SendBody.find("m_Snap.m_SpecInfo.m_Active"), std::string::npos);
 }
 
 TEST(QmFastPracticeCommands, SpectatorCommandKeepsPracticeStateOnSnapshotMiss)

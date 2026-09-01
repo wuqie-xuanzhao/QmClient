@@ -72,6 +72,7 @@
 /times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
 0 - Disabled, 1-9999 minutes
 1 star
+128 player id <-> 64 player id map update rate
 2 stars
 3 stars
 3D Background
@@ -834,7 +835,7 @@ Current line color
 Current line lyric color
 Current rescue mode: %s
 Current status
-Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
+Current time: %s
 Current: Ranks
 Current: Score
 Current: Time
@@ -882,24 +883,27 @@ DDmaX Pro
 DDNet
 DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
+DDNet finish totals come from official player data.
 DDNet Memory
 DDNet memory
 DDNet points
 ddnet-saves.txt is empty
 ddnet-saves.txt not found
+DDNet.org map stats
 DDNet/total CPU
 DDRace HUD
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
+ddstats.tw ID stats
 Deactivate
 Deactivate all
 Death opacity
 Death tile outline color
 Death tile outline width
 Deaths
-Debug Curl.
 Debug graph
 Debug graph panel opacity (percent)
 Debug group clipping.
+Debug HTTP
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 Debug mode.
 Debug performance graph panel
@@ -1474,6 +1478,7 @@ Game
 Game assets
 Game graphics assets not from Teeworlds
 Game info
+Game mode
 Game over
 Game paused
 Game sound volume
@@ -1543,6 +1548,7 @@ Graphics
 Graphics backend
 Graphics card
 Graphics display
+Graphics Error
 Graphics library major version (0 = auto-detect)
 Graphics library minor version (0 = auto-detect)
 Graphics library patch version
@@ -1901,6 +1907,7 @@ Lines above active
 Lines above active line
 Lines below active
 Lines below active line
+Links below open external ID and map statistics.
 List all commands that are available in practice mode
 List all commands which are accessible for given access level
 List all commands which are accessible for users
@@ -1954,9 +1961,11 @@ Loading…
 Local
 Local + Dummy
 Local ESLRC file
+Local game mode statistics
 Local LRC file
 Local media folders
 Local media library directories (separate by |)
+Local mode statistics are stored on this client.
 Local music file
 Local only
 Local particle effects
@@ -2049,6 +2058,7 @@ Map sound volume
 Map to use on server
 Map type:
 Maps
+Maps finished
 Margin when notification is docked
 Mark demo
 Mark the beginning of a cut (right click to reset)
@@ -2078,7 +2088,9 @@ Max stroke entries to keep
 Max visible notifications
 maximum
 Maximum auto-saves retained per map name (0=unlimited)
+Maximum banned addresses sent their ban message per second (0 = unlimited).
 Maximum clients per IP
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 Maximum cursor distance
 Maximum dynamic camera cursor distance
 Maximum framerate for entity layer video background
@@ -2089,7 +2101,12 @@ Maximum number of auto-screenshots (0 = unlimited)
 Maximum number of automatic replays (0 = unlimited)
 Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+Maximum number of resend requests answered per second (0 for no limit)
+Maximum number of server info responses of any size sent per second (0 = unlimited).
 Maximum number of skins loaded simultaneously
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 Maximum players participating in a vote (0 = unlimited)
 Maximum reduction
 Maximum rows
@@ -2158,7 +2175,6 @@ Moderate
 Moderator alert
 Modified
 Modules snap to screen edges, center lines and other HUD modules while dragging
-More aggressive prediction of other players' movement (only with cl_antiping 1)
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 MOTD
 Motion and focus feedback
@@ -2433,6 +2449,7 @@ Option color
 Optional authentication key for the DNSBL provider
 Other
 Other lines font size
+Other modes
 Other players' hook line width
 Others
 Others only
@@ -2489,6 +2506,9 @@ Password for Axiom alt account auto-login
 Password for Axiom main account auto-login
 Password incorrect
 Password required to use reserved slots.
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+Path to client certificate for the MySQL/MariaDB SSL connection
+Path to client key for the MySQL/MariaDB SSL connection
 Pause
 Pause the current demo
 Pause video rendering when demo playback is paused
@@ -2608,6 +2628,7 @@ Predict events (sounds, particles)
 Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 and cl_antiping_weapons 1)
 Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))
 Predict grenade trajectory (only with cl_antiping 1)
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 Predict weapon projectiles (only with cl_antiping 1)
 Predicted ghost opacity
 Prediction
@@ -3018,6 +3039,7 @@ Scale uncertainty duration by ping (100=1.0x)
 Scanning current server
 Scanning current server...
 Score
+Score earned
 Score limit
 Scoreboard
 Scoreboard cursor
@@ -3662,6 +3684,7 @@ Switched to
 Switching
 Switching back to default input
 Switching back to default output
+Sync remote stats
 Sync Workshop Assets
 System
 System default
@@ -3773,6 +3796,7 @@ The extra menu with the given number is activated.
 The force pause timer is now over, you can exit with /spec
 The format of texture %s is not RGBA which will cause visual bugs.
 The FPS at which the recorder should record replay.
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 The name "default" is reserved.
 The selected button is not visible. Do you want to deselect it or edit its visibility?
 The selected button is overlapping with other buttons.
@@ -3887,6 +3911,8 @@ Too many translation tasks
 Toolbox page
 Total
 Total friends
+Total hours
+Total play time
 Total: %d save(s)
 Traditional
 Trail alpha
@@ -4015,7 +4041,6 @@ Update failed. Please try again
 Update notice
 Update or add a specific war group
 Update Rate
-Update rate for mapping 64 player IDs to vanilla IDs
 Uploading map data to GPU
 URL for downloading community skins
 URL for downloading maps (must start with https://)
@@ -4031,6 +4056,7 @@ Use alternative world tick calculation making hooks behave as if all players hav
 Use colored skins for frozen tees
 Use compact list view for config variables
 Use current map as background
+Use current name
 Use custom skins instead of the ninja tee
 Use default flags on scoreboard
 Use default input
@@ -4194,7 +4220,7 @@ Whether dummy copies your movement
 Whether dummy fires (requires cl_dummy_control 1)
 Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
-Whether non-voting players count as 'no' (0) or ignored (1)
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 Whether players can hammer/grenade/laser each other.
 Whether players can invite other players to team.
 Whether players can pause their character.
@@ -5328,6 +5354,12 @@ Zoom to current mouse target
 [Editor command value error]	Invalid
 [Editor coordinate label]	X
 [Editor coordinate label]	Y
+[Editor curve type abbreviation]	B
+[Editor curve type abbreviation]	F
+[Editor curve type abbreviation]	L
+[Editor curve type abbreviation]	M
+[Editor curve type abbreviation]	N
+[Editor curve type abbreviation]	S
 [Editor envelope alpha channel]	A
 [Editor envelope blue channel]	B
 [Editor envelope channel]	X

@@ -1279,6 +1279,7 @@ private:
 	int m_PredictedDummyId;
 
 	int m_IsDummySwapping;
+	int m_aLastProcessedEventTick[NUM_DUMMIES] = {-1, -1};
 	bool m_RequestPredictionRefreshAfterConfigChange = false;
 	int m_LastStreamerHideSkins = -1;
 	int m_LastStreamerFriendsIgnoreClan = -1;

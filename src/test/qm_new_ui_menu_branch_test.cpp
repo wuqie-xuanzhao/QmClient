@@ -124,7 +124,7 @@ TEST(QmPredictedEvents, ServerConfirmationConsumesClosestRecentEventOneToOne)
 	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(160.0f, 100.0f), -1, 501, SOUND_GUN_FIRE)));
 	ASSERT_EQ(vPredictedEvents.size(), 1u);
 	EXPECT_TRUE(vPredictedEvents.front().m_ServerConfirmed);
-	EXPECT_FALSE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(104.0f, 100.0f), -1, 502, SOUND_GUN_FIRE)));
+	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(104.0f, 100.0f), -1, 502, SOUND_GUN_FIRE)));
 	EXPECT_TRUE(QmCheckPredictedEventHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_SOUNDWORLD, vec2(160.0f, 100.0f), -1, 501, SOUND_GUN_FIRE)));
 
 	CGameWorld::CPredictedEvent Stale(NETEVENTTYPE_SOUNDWORLD, vec2(100.0f, 100.0f), 3, 500, SOUND_GUN_FIRE);
@@ -264,6 +264,18 @@ namespace
 	}
 
 } // namespace
+
+TEST(QmNewUiMenuBranches, AirJumpSnapshotSkipsSixupNonLocalPlayers)
+{
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string SnapshotHandling = FunctionBody(Source, "void CGameClient::OnNewSnapshot(bool DummySwapped)");
+	const std::string PredictionHandling = FunctionBody(Source, "void CGameClient::OnPredict()");
+
+	EXPECT_NE(SnapshotHandling.find("if(Client()->IsSixup() && !IsLocalPlayer)"), std::string::npos);
+	EXPECT_NE(SnapshotHandling.find("UseSnapshotAirJump = LastPredictedAirJumpTick <= PrevGameTick || LastPredictedAirJumpTick > CurGameTick;"), std::string::npos);
+	EXPECT_NE(PredictionHandling.find("if(Events & COREEVENT_AIR_JUMP)"), std::string::npos);
+	EXPECT_NE(PredictionHandling.find("!m_SuppressEvents && !Client()->IsSixup()"), std::string::npos);
+}
 
 TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 {
@@ -976,6 +988,54 @@ TEST(QmNewUiMenuBranches, StartMenuEntryKeepsLegacyStartPageWithQmNewUi)
 	EXPECT_NE(StartMenuBlock.find("m_MenusStart.RenderStartMenu(Screen);"), std::string::npos);
 	EXPECT_EQ(StartMenuBlock.find("m_MenusStart.RenderStartMenuV2(Screen);"), std::string::npos);
 	EXPECT_EQ(StartMenuBlock.find("g_Config.m_QmNewUi"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, MenuDefersGaussianBlurPreparationOnFirstOpenFrame)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string Render = FunctionBody(Source, "void CMenus::Render()");
+
+	EXPECT_NE(Render.find("const int MenuOpenFrame = m_MenuOpenFrame++;"), std::string::npos);
+	EXPECT_NE(Render.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), MenuOpenFrame == 0 ? 0.0f : 1.0f);"), std::string::npos);
+	EXPECT_NE(Render.find("if(CanPrewarmSettings && MenuOpenFrame > 0)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, BrowserSkipsCommunityCacheWorkOnFirstOpenFrame)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
+	const std::string Render = FunctionBody(Source, "void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)");
+
+	EXPECT_NE(Render.find("if(m_MenuOpenFrame > 0)"), std::string::npos);
+	EXPECT_NE(Render.find("UpdateCommunityCache(false);"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, CommunityIconsKeepUpdatingAfterFirstMenuFrame)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string Render = FunctionBody(Source, "void CMenus::Render()");
+
+	EXPECT_NE(Render.find("m_CommunityIcons.Update();"), std::string::npos);
+	EXPECT_NE(Render.find("图标下载/加载 job 需要在菜单保持激活期间每帧推进"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, ReplayedSnapshotTickDoesNotReplayEvents)
+{
+	const std::string Header = ReadTextFile("src/game/client/gameclient.h");
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string ProcessEvents = FunctionBody(Source, "void CGameClient::ProcessEvents()");
+
+	EXPECT_NE(Header.find("m_aLastProcessedEventTick[NUM_DUMMIES] = {-1, -1};"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("if(m_aLastProcessedEventTick[EventDummy] == EventTick)"), std::string::npos);
+	EXPECT_NE(ProcessEvents.find("m_aLastProcessedEventTick[EventDummy] = EventTick;"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, DirectBrowserRefreshConsumesDeferredRequest)
+{
+	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
+	const std::string Refresh = FunctionBody(Source, "void CMenus::RefreshBrowserTab(bool Force)");
+
+	EXPECT_NE(Refresh.find("m_BrowserRefreshPending = false;"), std::string::npos);
+	EXPECT_NE(Refresh.find("m_BrowserRefreshPendingForce = false;"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, SettingsShellKeepsExplicitQmNewUiContainerBranch)
@@ -1888,6 +1948,26 @@ TEST(QmNewUiMenuBranches, HammerPredictionDeduplicatesSameTargetAndTick)
 	EXPECT_NE(CreateHammerEvent.find("Existing.m_ExtraInfo == Event.m_ExtraInfo"), std::string::npos);
 }
 
+TEST(QmNewUiMenuBranches, ExtraPredictionWorldDoesNotReplayVisibleEffects)
+{
+	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string OnPredictBody = FunctionBody(Source, "void CGameClient::OnPredict()");
+
+	EXPECT_NE(OnPredictBody.find("m_ExtraPredictedWorld.m_PredictedEvents.clear();"), std::string::npos);
+	EXPECT_EQ(OnPredictBody.find("HandlePredictedEvents(m_ExtraPredictedWorld.m_GameTick)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, FastInputKeepsPredictedEventStateOnRegularWorldRestore)
+{
+	const std::string GameWorldSource = ReadTextFile("src/game/client/prediction/gameworld.cpp");
+	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
+	const std::string CopyWorldClean = FunctionBody(GameWorldSource, "void CGameWorld::CopyWorldClean(");
+	const std::string OnPredict = FunctionBody(GameClientSource, "void CGameClient::OnPredict()");
+
+	EXPECT_NE(CopyWorldClean.find("m_PredictedEvents = pFrom->m_PredictedEvents;"), std::string::npos);
+	EXPECT_NE(OnPredict.find("if(Tick <= FinalTickRegular)\n\t\t\tHandlePredictedEvents(Tick);"), std::string::npos);
+}
+
 TEST(QmNewUiMenuBranches, HammerSkinSwapUsesTheActiveProtocolSkinFormat)
 {
 	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
@@ -1949,7 +2029,14 @@ TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOn
 	EXPECT_EQ(vPredictedEvents.size(), 1u);
 	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 100 + SERVER_TICK_SPEED + 1, 4)));
 	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(132.0f, 100.0f), 3, 102, 4)));
-	EXPECT_TRUE(vPredictedEvents.empty());
+	EXPECT_EQ(vPredictedEvents.size(), 1u);
+
+	CGameWorld::CPredictedEvent Future(NETEVENTTYPE_HAMMERHIT, vec2(600.0f, 100.0f), 3, 110, 4);
+	Future.m_Handled = true;
+	vPredictedEvents.push_back(Future);
+	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(600.0f, 100.0f), 3, 102, 4)));
+	EXPECT_EQ(vPredictedEvents.size(), 2u);
+	vPredictedEvents.clear();
 
 	vPredictedEvents.clear();
 	CGameWorld::CPredictedEvent UnknownOwner(NETEVENTTYPE_HAMMERHIT, vec2(200.0f, 100.0f), 7, 200, 8);
@@ -2007,14 +2094,16 @@ TEST(QmNewUiMenuBranches, HammerHitConsumersUseDeferredServerEvidenceOnly)
 	EXPECT_EQ(GameClientSource.find("ConfirmPredictedEvent"), std::string::npos);
 	EXPECT_EQ(GameClientSource.find("MatchPredictedEvent"), std::string::npos);
 	EXPECT_EQ(InferHammerHit.find("m_PredictedWorld"), std::string::npos);
-	EXPECT_NE(InferHammerHit.find("QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_IsDDRace16)"), std::string::npos);
+	EXPECT_NE(InferHammerHit.find("QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_NumDDRaceTeams)"), std::string::npos);
 	EXPECT_NE(FinalizeHammerHitEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
 	EXPECT_NE(FinalizeHammerHitEvents.find("QmIsHammerWakeupTransition("), std::string::npos);
 	EXPECT_NE(FinalizeHammerHitEvents.find("HandleConfirmedHammerHit(Hit);"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("const bool Online = Client()->State() == IClient::STATE_ONLINE;"), std::string::npos);
 	EXPECT_NE(GameClientSource.find("if(Online)\n\t\tHandleHammerSkinSwap(Hit);"), std::string::npos);
-	EXPECT_NE(FastPracticeSource.find("void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)"), std::string::npos);
-	EXPECT_NE(FastPracticeSource.find("closest_point_on_line(StartPos, EndPos"), std::string::npos);
+	EXPECT_EQ(FastPracticeSource.find("void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)"), std::string::npos);
+	EXPECT_NE(FastPracticeSource.find("GameClient()->HandlePredictedEvents(Tick);"), std::string::npos);
+	EXPECT_EQ(FastPracticeSource.find("m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SoundId"), std::string::npos);
+	EXPECT_NE(FastPracticeSource.find("if(!GameClient()->m_PredictedWorld.m_WorldConfig.m_IsDDRace)"), std::string::npos);
 	EXPECT_EQ(FastPracticeSource.find("HammerHitTracker"), std::string::npos);
 	EXPECT_NE(TClientSource.find("FindTargetHitsAtTick("), std::string::npos);
 	EXPECT_NE(TClientSource.find("if(!Hit.m_TargetWoke)"), std::string::npos);
@@ -2197,7 +2286,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurUsesSharedUiBackdropWithTransparentFallbac
 	EXPECT_EQ(MenuButtonDraw.find("RenderGaussianBlur(*pRect, BackgroundColor.a)"), std::string::npos);
 	EXPECT_NE(RectDraw.find("DrawRectBackdrop(Corners, Rounding)"), std::string::npos);
 	EXPECT_NE(RectDraw4.find("DrawRectBackdrop(Corners, Rounding)"), std::string::npos);
-	EXPECT_NE(MenuRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
+	EXPECT_NE(MenuRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), MenuOpenFrame == 0 ? 0.0f : 1.0f);"), std::string::npos);
 	EXPECT_NE(LoadingRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
 	EXPECT_NE(ScoreboardSource.find("const float GaussianBlurAlpha = WantActive ? 1.0f : m_AnimContentAlpha;"), std::string::npos);
 	EXPECT_NE(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), GaussianBlurAlpha);"), std::string::npos);
@@ -2209,6 +2298,21 @@ TEST(QmNewUiMenuBranches, GaussianBlurUsesSharedUiBackdropWithTransparentFallbac
 
 	// Existing translucent surfaces remain the unsupported-backend fallback.
 	EXPECT_NE(ScoreboardSource.find("Scoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal)"), std::string::npos);
+}
+
+TEST(QmNewUiMenuBranches, EnvelopeScaleHotkeyGuardsModalInput)
+{
+	const std::string Source = ReadTextFile("src/game/editor/envelope_editor.cpp");
+	const std::string Render = FunctionBody(Source, "void CEnvelopeEditor::Render(CUIRect View)");
+
+	const size_t ScaleOperation = Render.find("m_Operation == EEnvelopeEditorOp::OP_NONE");
+	ASSERT_NE(ScaleOperation, std::string::npos);
+	const size_t ScaleBody = Render.find("m_Operation = EEnvelopeEditorOp::OP_SCALE;", ScaleOperation);
+	ASSERT_NE(ScaleBody, std::string::npos);
+	const std::string ScaleGuard = Render.substr(ScaleOperation, ScaleBody - ScaleOperation);
+	EXPECT_NE(ScaleGuard.find("Editor()->m_Dialog == DIALOG_NONE"), std::string::npos);
+	EXPECT_NE(ScaleGuard.find("!Ui()->IsPopupOpen()"), std::string::npos);
+	EXPECT_NE(ScaleGuard.find("CLineInput::GetActiveInput() == nullptr"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GaussianBlurCoversRequestedHudAndVoteBackgroundsOnly)
@@ -2819,6 +2923,7 @@ TEST(QmNewUiMenuBranches, QmClientAxiomAutoLoginLivesInQmClientComponent)
 	EXPECT_NE(DummyDisconnectBody.find("GameClient()->OnDummyManualDisconnect();"), std::string::npos);
 	EXPECT_NE(DummyDisconnectBody.find("DummyDisconnect(nullptr);"), std::string::npos);
 	EXPECT_NE(Source.find("bool CQmAxiomAutoLogin::IsAxiomCommunity() const"), std::string::npos);
+	EXPECT_NE(Source.find("Client()->ServerInfo().m_aCommunityId"), std::string::npos);
 	EXPECT_NE(Header.find("QMCLIENT_AXIOM_AUTO_LOGIN_SLOW_RETRY_SECONDS"), std::string::npos);
 	EXPECT_NE(Header.find("SQmAxiomAutoLoginState m_AutoLoginState;"), std::string::npos);
 	EXPECT_NE(Header.find("m_SlowRetryMode"), std::string::npos);
@@ -5757,19 +5862,4 @@ TEST(QmNewUiMenuBranches, RetinaNameplatesPreferPhysicalPixelAlignment)
 	const std::string Source = ReadTextFile("src/game/client/components/nameplates.cpp");
 	EXPECT_NE(Source.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
 	EXPECT_NE(Source.find("QmNameplateUsesPhysicalPixelAlignment(This.Graphics()->ScreenHiDPIScale(), true)"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, EnvelopeScaleHotkeyGuardsModalInput)
-{
-	const std::string Source = ReadTextFile("src/game/editor/envelope_editor.cpp");
-	const std::string Render = FunctionBody(Source, "void CEnvelopeEditor::Render(CUIRect View)");
-
-	const size_t ScaleOperation = Render.find("m_Operation == EEnvelopeEditorOp::OP_NONE");
-	ASSERT_NE(ScaleOperation, std::string::npos);
-	const size_t ScaleBody = Render.find("m_Operation = EEnvelopeEditorOp::OP_SCALE;", ScaleOperation);
-	ASSERT_NE(ScaleBody, std::string::npos);
-	const std::string ScaleGuard = Render.substr(ScaleOperation, ScaleBody - ScaleOperation);
-	EXPECT_NE(ScaleGuard.find("Editor()->m_Dialog == DIALOG_NONE"), std::string::npos);
-	EXPECT_NE(ScaleGuard.find("!Ui()->IsPopupOpen()"), std::string::npos);
-	EXPECT_NE(ScaleGuard.find("CLineInput::GetActiveInput() == nullptr"), std::string::npos);
 }

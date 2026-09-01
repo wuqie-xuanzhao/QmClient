@@ -4054,7 +4054,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 {
 	CUiBackgroundAlphaScaleScope BackgroundAlphaScaleScope(Ui(), g_Config.m_QmMapBrowserOpacity / 100.0f);
 
-	UpdateCommunityCache(false);
+	// 首次打开菜单时先复用现有 community 选择结果。缓存哈希、过滤器重建
+	// 和列表刷新放到下一帧，避免 ESC 首帧同步执行后台元数据整理。
+	if(m_MenuOpenFrame > 0)
+		UpdateCommunityCache(false);
 
 	switch(g_Config.m_UiPage)
 	{

@@ -2507,8 +2507,8 @@ Current rescue mode: %s
 Current status
 == 当前状态
 
-Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== 当前时间：%s\n- 启动时长与游玩时长来自官方 JSON\n- 同上\n- 同上\n
+Current time: %s
+== 当前时间：%s
 
 Current: Ranks
 == 当前：查分
@@ -8326,9 +8326,6 @@ Reduced: uses shorter transitions and disables presentation animations
 
 Refresh
 == 刷新
-
-Sync remote stats
-== 同步远程统计
 
 Refresh interval
 == 刷新间隔

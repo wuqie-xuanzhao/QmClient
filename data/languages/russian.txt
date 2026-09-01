@@ -2507,8 +2507,8 @@ Current rescue mode: %s
 Current status
 == Текущий статус
 
-Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== Текущее время: %s\n- Время работы и игры рассчитывается по официальным JSON-данным\n- То же, что выше\n- То же, что выше выше\n
+Current time: %s
+== Текущее время: %s
 
 Current: Ranks
 == Текущее: Ранги
@@ -2651,6 +2651,9 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == Для завершения обновления необходимо перезапустить клиент DDNet!
 
+DDNet finish totals come from official player data.
+== Общее число прохождений DDNet взято из официальных данных игроков.
+
 DDNet Memory
 == Память DDNet
 
@@ -2666,6 +2669,9 @@ ddnet-saves.txt is empty
 ddnet-saves.txt not found
 == ddnet-saves.txt не найден
 
+DDNet.org map stats
+== Статистика карт на DDNet.org
+
 DDNet/total CPU
 == DDNet/общий CPU
 
@@ -2674,6 +2680,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork — это кооперативная онлайн-игра, где ваша цель и цель вашей группы ти — достичь финиша карты. Новичкам стоит начинать на серверах Novice, где находятся самые простые карты. Учитывайте пинг при выборе ближайшего к вам сервера.
+
+ddstats.tw ID stats
+== Статистика ID на ddstats.tw
 
 Deactivate
 == Отключить
@@ -4196,6 +4205,9 @@ Finish name
 Finish Name:
 == Имя на финише:
 
+Finish time
+== Время прохождения
+
 Finished
 == Завершённые
 
@@ -4426,6 +4438,9 @@ Game graphics assets not from Teeworlds
 
 Game info
 == Информация об игре
+
+Game mode
+== Игровой режим
 
 Game over
 == Игра окончена
@@ -5708,6 +5723,9 @@ Lines below active
 Lines below active line
 == Строк ниже активной строки
 
+Links below open external ID and map statistics.
+== Ссылки ниже открывают внешнюю статистику ID и прохождений карт.
+
 List all commands that are available in practice mode
 == Список всех команд, доступных в режиме практики
 
@@ -5867,6 +5885,9 @@ Local + Dummy
 Local ESLRC file
 == Локальный файл ESLRC
 
+Local game mode statistics
+== Статистика локальных игровых режимов
+
 Local LRC file
 == Локальный файл LRC
 
@@ -5875,6 +5896,9 @@ Local media folders
 
 Local media library directories (separate by |)
 == Каталог локальной медиатеки для текстов песен (несколько каталогов через |)
+
+Local mode statistics are stored on this client.
+== Статистика локальных игровых режимов хранится в этом клиенте.
 
 Local music file
 == Локальный музыкальный файл
@@ -6151,6 +6175,9 @@ Map type:
 
 Maps
 == Карты
+
+Maps finished
+== Пройдено карт
 
 Margin when notification is docked
 == Отступ при прилегании панели уведомлений к краю
@@ -7303,6 +7330,9 @@ Other
 
 Other lines font size
 == Размер шрифта остальных строк
+
+Other modes
+== Другие режимы
 
 Other players' hook line width
 == Ширина линии крюка других игроков
@@ -9058,6 +9088,9 @@ Scanning current server...
 
 Score
 == Очки
+
+Score earned
+== Набрано очков
 
 Score limit
 == Лимит очков
@@ -11665,6 +11698,12 @@ Total
 
 Total friends
 == Всего друзей
+
+Total hours
+== Показывать в часах
+
+Total play time
+== Общее время игры
 
 Total: %d save(s)
 == Всего: %d сохранений

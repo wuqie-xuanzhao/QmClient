@@ -2507,8 +2507,8 @@ Current rescue mode: %s
 Current status
 == Estado actual
 
-Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== Hora actual: %s\n- El tiempo activo y de juego se calculan con datos JSON oficiales\n- Igual que arriba\n- Igual que más arriba\n
+Current time: %s
+== Hora actual: %s
 
 Current: Ranks
 == Actual: Rankings
@@ -2651,6 +2651,9 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == ¡El cliente de DDNet necesita reiniciarse para completar la actualización!
 
+DDNet finish totals come from official player data.
+== Los totales de completado de DDNet proceden de datos oficiales de jugadores.
+
 DDNet Memory
 == Memoria de DDNet
 
@@ -2666,6 +2669,9 @@ ddnet-saves.txt is empty
 ddnet-saves.txt not found
 == ddnet-saves.txt no encontrado
 
+DDNet.org map stats
+== Estadísticas de mapas de DDNet.org
+
 DDNet/total CPU
 == DDNet/CPU total
 
@@ -2674,6 +2680,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork es un juego cooperativo en línea donde el objetivo es que tú y tu grupo de tees lleguéis a la línea de meta del mapa. Como novato, deberías empezar en servidores Novice, que albergan los mapas más fáciles. Considera el ping para elegir un servidor cercano a ti.
+
+ddstats.tw ID stats
+== Estadísticas del ID en ddstats.tw
 
 Deactivate
 == Desactivar
@@ -4196,6 +4205,9 @@ Finish name
 Finish Name:
 == Nombre de Meta:
 
+Finish time
+== Tiempo de finalización
+
 Finished
 == Completado
 
@@ -4426,6 +4438,9 @@ Game graphics assets not from Teeworlds
 
 Game info
 == Información del juego
+
+Game mode
+== Modo de juego
 
 Game over
 == Juego terminado
@@ -5708,6 +5723,9 @@ Lines below active
 Lines below active line
 == Lines shown below active line
 
+Links below open external ID and map statistics.
+== Los enlaces siguientes abren las estadísticas externas del ID y de mapas.
+
 List all commands that are available in practice mode
 == Listar todos los comandos disponibles en modo práctica
 
@@ -5867,6 +5885,9 @@ Local + Dummy
 Local ESLRC file
 == Archivo ESLRC local
 
+Local game mode statistics
+== Estadísticas de modos de juego locales
+
 Local LRC file
 == Archivo LRC local
 
@@ -5875,6 +5896,9 @@ Local media folders
 
 Local media library directories (separate by |)
 == Directorio de biblioteca multimedia local de Letra (varios directorios separados por |)
+
+Local mode statistics are stored on this client.
+== Las estadísticas de los modos locales se guardan en este cliente.
 
 Local music file
 == Archivo de música local
@@ -6151,6 +6175,9 @@ Map type:
 
 Maps
 == Mapas
+
+Maps finished
+== Mapas completados
 
 Margin when notification is docked
 == Margen de reserva al ajustar la barra de notificaciones al borde
@@ -7303,6 +7330,9 @@ Other
 
 Other lines font size
 == Tamaño de fuente de otras líneas
+
+Other modes
+== Otros modos
 
 Other players' hook line width
 == Ancho de línea de gancho de otros jugadores
@@ -9058,6 +9088,9 @@ Scanning current server...
 
 Score
 == Puntuación
+
+Score earned
+== Puntuación obtenida
 
 Score limit
 == Límite de puntuación
@@ -11665,6 +11698,12 @@ Total
 
 Total friends
 == Amigos totales
+
+Total hours
+== Mostrar en horas
+
+Total play time
+== Tiempo total de juego
 
 Total: %d save(s)
 == Total: %d guardado(s)

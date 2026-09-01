@@ -2507,8 +2507,8 @@ Current rescue mode: %s
 Current status
 == 현재 상태
 
-Current time: %s\n- Uptime and playtime are calculated from official JSON data\n- Same as above\n- Same as above above\n
-== 현재 시간: %s\n- 가동 시간과 플레이 시간은 공식 JSON 데이터를 기반으로 계산됩니다\n- 위와 동일\n- 위와 동일\n
+Current time: %s
+== 현재 시간: %s
 
 Current: Ranks
 == 현재: 순위
@@ -2651,6 +2651,9 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet 클라이언트를 다시 시작해야 업데이트가 완료됩니다!
 
+DDNet finish totals come from official player data.
+== DDNet 클리어 합계는 공식 플레이어 데이터를 기반으로 합니다.
+
 DDNet Memory
 == DDNet 메모리
 
@@ -2666,6 +2669,9 @@ ddnet-saves.txt is empty
 ddnet-saves.txt not found
 == ddnet-saves.txt 를 찾을 수 없습니다
 
+DDNet.org map stats
+== DDNet.org 맵 통계
+
 DDNet/total CPU
 == DDNet / 전체 CPU
 
@@ -2674,6 +2680,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork는 협동 온라인 게임으로, 당신과 당신의 티 그룹이 맵의 결승선에 도달하는 것이 목표입니다. 초보자라면 가장 쉬운 맵을 제공하는 Novice 서버에서 시작해야 합니다. 핑을 고려하여 가까운 서버를 선택하세요.
+
+ddstats.tw ID stats
+== ddstats.tw ID 통계
 
 Deactivate
 == 비활성화
@@ -4196,6 +4205,9 @@ Finish name
 Finish Name:
 == 결승선 이름:
 
+Finish time
+== 완료 시간
+
 Finished
 == 완료됨
 
@@ -4426,6 +4438,9 @@ Game graphics assets not from Teeworlds
 
 Game info
 == 게임 정보
+
+Game mode
+== 게임 모드
 
 Game over
 == 게임 오버
@@ -5708,6 +5723,9 @@ Lines below active
 Lines below active line
 == 활성 라인 아래 줄 수
 
+Links below open external ID and map statistics.
+== 아래 링크에서 외부 ID 통계와 맵 통계를 엽니다.
+
 List all commands that are available in practice mode
 == 연습 모드에서 사용 가능한 모든 명령을 나열합니다
 
@@ -5867,6 +5885,9 @@ Local + Dummy
 Local ESLRC file
 == 로컬 ESLRC 파일
 
+Local game mode statistics
+== 로컬 게임 모드 통계
+
 Local LRC file
 == 로컬 LRC 파일
 
@@ -5875,6 +5896,9 @@ Local media folders
 
 Local media library directories (separate by |)
 == 가사 로컬 미디어 라이브러리 디렉토리 (여러 디렉토리는 |로 구분)
+
+Local mode statistics are stored on this client.
+== 로컬 게임 모드 통계는 이 클라이언트에 저장됩니다.
 
 Local music file
 == 로컬 음악 파일
@@ -6151,6 +6175,9 @@ Map type:
 
 Maps
 == 맵
+
+Maps finished
+== 완료한 맵
 
 Margin when notification is docked
 == 알림바가 가장자리에 붙을 때 여백
@@ -7303,6 +7330,9 @@ Other
 
 Other lines font size
 == 다른 줄 글꼴 크기
+
+Other modes
+== 기타 모드
 
 Other players' hook line width
 == 다른 플레이어의 갈고리 선 너비
@@ -9058,6 +9088,9 @@ Scanning current server...
 
 Score
 == 점수
+
+Score earned
+== 획득 점수
 
 Score limit
 == 점수 제한
@@ -11665,6 +11698,12 @@ Total
 
 Total friends
 == 전체 친구 수
+
+Total hours
+== 시간 단위로 표시
+
+Total play time
+== 총 플레이 시간
 
 Total: %d save(s)
 == 총계：%d 개 저장됨

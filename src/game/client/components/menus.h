@@ -1290,6 +1290,9 @@ protected:
 	int m_Popup;
 	bool m_ShowStart;
 	bool m_MenuActive;
+	int m_MenuOpenFrame = 0;
+	bool m_BrowserRefreshPending = false;
+	bool m_BrowserRefreshPendingForce = false;
 
 	bool m_DummyNamePlatePreview = false;
 
