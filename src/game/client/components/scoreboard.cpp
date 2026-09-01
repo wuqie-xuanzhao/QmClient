@@ -1379,7 +1379,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	int &CurrentDDTeamSize = State.m_CurrentDDTeamSize;
 
 	char aBuf[64];
-	int MaxTeamSize = Config()->m_SvMaxTeamSize;
+	int MaxTeamSize = GameClient()->MaxTeamSize();
 	const CAnimState *pIdleState = CAnimState::GetIdle();
 	const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
 	const char *pLocalClan = LocalClientId >= 0 ? GameClient()->m_aClients[LocalClientId].m_aClan : "";
