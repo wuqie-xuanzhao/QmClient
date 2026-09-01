@@ -74,7 +74,7 @@ namespace
 			bool Error = false;
 			bool WarnedForBadAddress = false;
 			Error = Error || !m_pLoadStmt;
-			Error = Error || (m_pLoadStmt && SQLITE_HANDLE_ERROR(sqlite3_reset(m_pLoadStmt.get())) != SQLITE_OK);
+			Error = Error || SQLITE_HANDLE_ERROR(sqlite3_reset(m_pLoadStmt.get())) != SQLITE_OK;
 			while(!Error)
 			{
 				const int StepResult = sqlite3_step(m_pLoadStmt.get());
