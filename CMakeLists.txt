@@ -3822,6 +3822,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     editor_test.cpp
     fs_test.cpp
     gameworld_test.cpp
+    gameinfo_ex_test.cpp
     git_revision_test.cpp
     graphics_backend_contract_test.cpp
     hash_test.cpp
