@@ -22,6 +22,9 @@
 #include <engine/shared/websockets.h>
 #endif
 
+static constexpr unsigned char LOOPBACKADDR_IPV4[16] = {127, 0, 0, 1};
+static constexpr unsigned char LOOPBACKADDR_IPV6[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
+
 #if defined(CONF_FAMILY_UNIX)
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -958,20 +961,23 @@ static int net_host_lookup_fallback(const char *hostname, NETADDR *addr, int typ
 	{
 		if(types == NETTYPE_IPV4)
 		{
-			dbg_assert(net_addr_from_str(addr, "127.0.0.1") == 0, "unreachable");
+			addr->type = NETTYPE_IPV4;
+			mem_copy(addr->ip, LOOPBACKADDR_IPV4, sizeof(LOOPBACKADDR_IPV4));
 			addr->port = port;
 			return 0;
 		}
 		else if(types == NETTYPE_IPV6)
 		{
-			dbg_assert(net_addr_from_str(addr, "[::1]") == 0, "unreachable");
+			addr->type = NETTYPE_IPV6;
+			mem_copy(addr->ip, LOOPBACKADDR_IPV6, sizeof(LOOPBACKADDR_IPV6));
 			addr->port = port;
 			return 0;
 		}
 		else
 		{
 			// TODO: return both IPv4 and IPv6 address
-			dbg_assert(net_addr_from_str(addr, "127.0.0.1") == 0, "unreachable");
+			addr->type = NETTYPE_IPV4;
+			mem_copy(addr->ip, LOOPBACKADDR_IPV4, sizeof(LOOPBACKADDR_IPV4));
 			addr->port = port;
 			return 0;
 		}
@@ -1149,15 +1155,15 @@ int net_addr_from_url(NETADDR *addr, const char *string, char *host_buf, size_t 
 
 bool net_addr_is_local(const NETADDR *addr)
 {
-	char addr_str[NETADDR_MAXSTRSIZE];
-	net_addr_str(addr, addr_str, sizeof(addr_str), true);
-
-	if(addr->ip[0] == 127 || addr->ip[0] == 10 || (addr->ip[0] == 192 && addr->ip[1] == 168) || (addr->ip[0] == 172 && (addr->ip[1] >= 16 && addr->ip[1] <= 31)))
-		return true;
-
-	if(str_startswith(addr_str, "[fe80:") || str_startswith(addr_str, "[::1"))
-		return true;
-
+	if((addr->type & (NETTYPE_IPV4 | NETTYPE_WEBSOCKET_IPV4)) != 0)
+		return addr->ip[0] == 127 || addr->ip[0] == 10 ||
+		       (addr->ip[0] == 192 && addr->ip[1] == 168) ||
+		       (addr->ip[0] == 172 && addr->ip[1] >= 16 && addr->ip[1] <= 31);
+	if((addr->type & (NETTYPE_IPV6 | NETTYPE_WEBSOCKET_IPV6)) != 0)
+		return (addr->ip[0] == 0xfe && addr->ip[1] >= 0x80 && addr->ip[1] <= 0xbf) ||
+		       (addr->ip[0] >= 0xfc && addr->ip[0] <= 0xfd) ||
+		       mem_comp(addr->ip, LOOPBACKADDR_IPV6, sizeof(LOOPBACKADDR_IPV6)) == 0;
+	dbg_assert_failed("unknown NETADDR type %d", addr->type);
 	return false;
 }
 
