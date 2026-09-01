@@ -62,3 +62,39 @@ TEST(Network, UnpackChunks)
 	CNetChunk Chunk;
 	EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
 }
+
+TEST(Network, UnpackChunksRejectsTruncatedHeadersAndPayloads)
+{
+	CNetConnection Connection;
+	Connection.m_Sixup = false;
+
+	const auto CheckInvalid = [&Connection](const unsigned char *pData, int DataSize, int NumChunks) {
+		CNetPacketConstruct Packet = {};
+		Packet.m_NumChunks = NumChunks;
+		Packet.m_DataSize = DataSize;
+		mem_copy(Packet.m_aChunkData, pData, DataSize);
+
+		CPacketChunkUnpacker Unpacker;
+		Unpacker.FeedPacket(NETADDR{}, Packet, &Connection, 0);
+		CNetChunk Chunk;
+		EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
+		EXPECT_FALSE(Unpacker.UnpackNextChunk(&Chunk));
+	};
+
+	// A non-vital header needs two bytes.
+	const unsigned char aTruncatedHeader[] = {0};
+	CheckInvalid(aTruncatedHeader, sizeof(aTruncatedHeader), 1);
+
+	// A vital header needs its third sequence byte as well.
+	const unsigned char aTruncatedVitalHeader[] = {NET_CHUNKFLAG_VITAL << 6, 0};
+	CheckInvalid(aTruncatedVitalHeader, sizeof(aTruncatedVitalHeader), 1);
+
+	// The header is complete, but its payload extends past the packet.
+	CNetChunkHeader Header;
+	Header.m_Flags = 0;
+	Header.m_Size = 4;
+	Header.m_Sequence = 0;
+	unsigned char aOversizedPayload[NET_MAX_CHUNKHEADERSIZE] = {};
+	unsigned char *pEnd = Header.Pack(aOversizedPayload);
+	CheckInvalid(aOversizedPayload, (int)(pEnd - aOversizedPayload), 1);
+}
