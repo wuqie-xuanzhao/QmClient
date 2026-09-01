@@ -5758,3 +5758,18 @@ TEST(QmNewUiMenuBranches, RetinaNameplatesPreferPhysicalPixelAlignment)
 	EXPECT_NE(Source.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
 	EXPECT_NE(Source.find("QmNameplateUsesPhysicalPixelAlignment(This.Graphics()->ScreenHiDPIScale(), true)"), std::string::npos);
 }
+
+TEST(QmNewUiMenuBranches, EnvelopeScaleHotkeyGuardsModalInput)
+{
+	const std::string Source = ReadTextFile("src/game/editor/envelope_editor.cpp");
+	const std::string Render = FunctionBody(Source, "void CEnvelopeEditor::Render(CUIRect View)");
+
+	const size_t ScaleOperation = Render.find("m_Operation == EEnvelopeEditorOp::OP_NONE");
+	ASSERT_NE(ScaleOperation, std::string::npos);
+	const size_t ScaleBody = Render.find("m_Operation = EEnvelopeEditorOp::OP_SCALE;", ScaleOperation);
+	ASSERT_NE(ScaleBody, std::string::npos);
+	const std::string ScaleGuard = Render.substr(ScaleOperation, ScaleBody - ScaleOperation);
+	EXPECT_NE(ScaleGuard.find("Editor()->m_Dialog == DIALOG_NONE"), std::string::npos);
+	EXPECT_NE(ScaleGuard.find("!Ui()->IsPopupOpen()"), std::string::npos);
+	EXPECT_NE(ScaleGuard.find("CLineInput::GetActiveInput() == nullptr"), std::string::npos);
+}
