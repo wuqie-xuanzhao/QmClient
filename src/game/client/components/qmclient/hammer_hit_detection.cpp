@@ -94,7 +94,12 @@ namespace
 
 bool QmIsHammerSuperTeam(int DDTeam, bool IsDDRace16)
 {
-	return DDTeam == (IsDDRace16 ? VANILLA_TEAM_SUPER : TEAM_SUPER);
+	return QmIsHammerSuperTeam(DDTeam, IsDDRace16 ? VANILLA_MAX_CLIENTS + 1 : NUM_DDRACE_TEAMS);
+}
+
+bool QmIsHammerSuperTeam(int DDTeam, int NumDDRaceTeams)
+{
+	return DDTeam == QmNormalizeNumDDRaceTeams(NumDDRaceTeams) - 1;
 }
 
 bool QmIsHammerWakeupTransition(int PrevFreezeEnd, int CurFreezeEnd, int EventTick)

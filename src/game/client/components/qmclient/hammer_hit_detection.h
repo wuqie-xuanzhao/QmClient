@@ -59,6 +59,7 @@ struct SQmHammerHitRecord
 };
 
 bool QmIsHammerSuperTeam(int DDTeam, bool IsDDRace16);
+bool QmIsHammerSuperTeam(int DDTeam, int NumDDRaceTeams);
 bool QmIsHammerWakeupTransition(int PrevFreezeEnd, int CurFreezeEnd, int EventTick);
 
 SQmHammerHitMatch QmMatchHammerHitEvent(

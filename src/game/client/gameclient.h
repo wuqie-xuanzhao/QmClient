@@ -176,7 +176,10 @@ public:
 	bool m_PredictEvents;
 	char m_aGameType[16];
 
-	bool m_Supports128Teams;
+	// 服务器未广播时为零。
+	int m_MinTeamSize;
+	int m_MaxTeamSize;
+	int m_NumDDRaceTeams;
 };
 
 class CSnapEntities
@@ -967,6 +970,8 @@ public:
 	int CurrentRaceTime() const;
 
 	bool IsTeamPlay() const;
+	int MinTeamSize() const;
+	int MaxTeamSize() const;
 	bool IsWorldPaused() const;
 	bool IsDemoPlaybackPaused() const;
 	float GetAnimationPlaybackSpeed() const;

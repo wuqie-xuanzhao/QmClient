@@ -367,7 +367,7 @@ namespace
 			const bool HammerHitEnabled = (CharacterFlags & CHARACTERFLAG_HAMMER_HIT_DISABLED) == 0;
 			const int DDTeam = pGameClient->m_Teams.Team(ClientId);
 			const bool Solo = (CharacterFlags & CHARACTERFLAG_SOLO) != 0;
-			const bool Super = (CharacterFlags & CHARACTERFLAG_SUPER) != 0 || QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_IsDDRace16);
+			const bool Super = (CharacterFlags & CHARACTERFLAG_SUPER) != 0 || QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_NumDDRaceTeams);
 			QmAddHammerAttackSample(aAttackSamples, NumAttackSamples, std::size(aAttackSamples), ClientId, pCurrent, pPrevious, HammerHitEnabled, DDTeam, Solo, Super);
 			if((pCurrent == nullptr && pPrevious == nullptr) || NumTargetSamples >= MAX_CLIENTS)
 				continue;
@@ -2183,6 +2183,18 @@ bool CGameClient::IsTeamPlay() const
 	       (m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_TEAMS) != 0;
 }
 
+int CGameClient::MinTeamSize() const
+{
+	// 旧服务器只有在地图设置包含该值时才会广播。
+	return m_GameInfo.m_MinTeamSize != 0 ? m_GameInfo.m_MinTeamSize : Config()->m_SvMinTeamSize;
+}
+
+int CGameClient::MaxTeamSize() const
+{
+	// 旧服务器只有在地图设置包含该值时才会广播。
+	return m_GameInfo.m_MaxTeamSize != 0 ? m_GameInfo.m_MaxTeamSize : Config()->m_SvMaxTeamSize;
+}
+
 bool CGameClient::IsWorldPaused() const
 {
 	return m_Snap.m_pGameInfoObj &&
@@ -2684,8 +2696,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 			}
 		}
 
-		if(i <= 16)
+		if(i <= VANILLA_MAX_CLIENTS)
+		{
 			m_Teams.m_IsDDRace16 = true;
+			m_Teams.m_NumDDRaceTeams = VANILLA_MAX_CLIENTS + 1;
+		}
 
 		m_Ghost.m_AllowRestart = true;
 		m_RaceDemo.m_AllowRestart = true;
@@ -3331,7 +3346,9 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	Info.m_NoSkinChangeForFrozen = false;
 	Info.m_DDRaceTeam = false;
 	Info.m_PredictEvents = Vanilla;
-	Info.m_Supports128Teams = false;
+	Info.m_MinTeamSize = 0;
+	Info.m_MaxTeamSize = 0;
+	Info.m_NumDDRaceTeams = LEGACY_MAX_CLIENTS + 1;
 
 	if(Version >= 0)
 	{
@@ -3401,8 +3418,23 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	}
 	if(Version >= 12)
 	{
-		Info.m_Supports128Teams = Flags2 & GAMEINFOFLAG2_SUPPORTS_128_TEAMS;
+		// SecureUnpackObj 通常会用默认值填充旧对象；这里仍按实际收到的大小读取，
+		// 以保护直接调用方和畸形快照。
+		if(InfoExSize >= (int)(4 * sizeof(int)))
+			Info.m_MinTeamSize = pInfoEx->m_MinTeamSize;
+		if(InfoExSize >= (int)(5 * sizeof(int)))
+			Info.m_MaxTeamSize = pInfoEx->m_MaxTeamSize;
+		if(InfoExSize >= (int)(6 * sizeof(int)))
+			Info.m_NumDDRaceTeams = pInfoEx->m_NumDDRaceTeams;
+
+		// 版本 12 被最终 schema 复用；旧版 12 和过渡版 13 未提供队伍数时为零。
+		if(Info.m_NumDDRaceTeams == 0)
+		{
+			constexpr int LEGACY_SUPPORTS_128_TEAMS = 1 << 11;
+			Info.m_NumDDRaceTeams = (Flags2 & LEGACY_SUPPORTS_128_TEAMS) ? NUM_DDRACE_TEAMS : LEGACY_MAX_CLIENTS + 1;
+		}
 	}
+	Info.m_NumDDRaceTeams = QmNormalizeNumDDRaceTeams(Info.m_NumDDRaceTeams);
 	// TClient
 	str_copy(Info.m_aGameType, pFallbackServerInfo->m_aGameType);
 
@@ -3839,7 +3871,10 @@ void CGameClient::OnNewSnapshot(bool DummySwapped)
 	}
 
 	// Sv_TeamsState can arrive before the first snapshot, so derive this here instead of in the message handler
-	m_Teams.m_IsDDRace64 = !m_GameInfo.m_Supports128Teams;
+	if(m_Teams.m_IsDDRace16)
+		m_Teams.m_NumDDRaceTeams = VANILLA_MAX_CLIENTS + 1;
+	else if(m_GameInfo.m_NumDDRaceTeams > 0)
+		m_Teams.m_NumDDRaceTeams = m_GameInfo.m_NumDDRaceTeams;
 
 	for(CClientData &Client : m_aClients)
 	{

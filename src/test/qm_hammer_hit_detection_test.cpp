@@ -140,6 +140,10 @@ TEST(QmHammerHitDetection, SupportsCurrentAndLegacySuperTeams)
 	EXPECT_FALSE(QmIsHammerSuperTeam(VANILLA_TEAM_SUPER, false));
 	EXPECT_TRUE(QmIsHammerSuperTeam(VANILLA_TEAM_SUPER, true));
 	EXPECT_FALSE(QmIsHammerSuperTeam(TEAM_SUPER, true));
+	EXPECT_TRUE(QmIsHammerSuperTeam(VANILLA_TEAM_SUPER, VANILLA_MAX_CLIENTS + 1));
+	EXPECT_TRUE(QmIsHammerSuperTeam(LEGACY_TEAM_SUPER, LEGACY_MAX_CLIENTS + 1));
+	EXPECT_TRUE(QmIsHammerSuperTeam(TEAM_SUPER, NUM_DDRACE_TEAMS));
+	EXPECT_FALSE(QmIsHammerSuperTeam(TEAM_SUPER, 0));
 
 	SQmHammerAttackSample SuperAttack = Attack(1, 100, vec2(0.0f, 0.0f), vec2(1.0f, 0.0f), TEAM_SUPER);
 	SuperAttack.m_Super = true;

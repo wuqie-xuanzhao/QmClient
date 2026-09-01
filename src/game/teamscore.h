@@ -13,6 +13,13 @@ enum
 	VANILLA_TEAM_SUPER = VANILLA_MAX_CLIENTS
 };
 
+inline int QmNormalizeNumDDRaceTeams(int NumDDRaceTeams)
+{
+	if(NumDDRaceTeams < VANILLA_MAX_CLIENTS + 1 || NumDDRaceTeams > NUM_DDRACE_TEAMS)
+		return LEGACY_MAX_CLIENTS + 1;
+	return NumDDRaceTeams;
+}
+
 // do not change the values of the following enum
 enum
 {
@@ -28,12 +35,16 @@ class CTeamsCore
 	bool m_aIsSolo[MAX_CLIENTS];
 
 public:
+	// Legacy 0.6 team-state packets identify the 16-player schema by length.
 	bool m_IsDDRace16;
-	bool m_IsDDRace64;
+	int m_NumDDRaceTeams;
 
 	CTeamsCore();
 
-	int TeamSuper() const { return m_IsDDRace16 ? VANILLA_TEAM_SUPER : (m_IsDDRace64 ? LEGACY_TEAM_SUPER : TEAM_SUPER); }
+	int TeamSuper() const
+	{
+		return QmNormalizeNumDDRaceTeams(m_NumDDRaceTeams) - 1;
+	}
 
 	bool SameTeam(int ClientId1, int ClientId2) const;
 
