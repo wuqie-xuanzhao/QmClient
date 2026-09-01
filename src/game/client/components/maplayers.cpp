@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "maplayers.h"
 
+#include <engine/map.h>
+
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
@@ -33,19 +35,21 @@ CCamera *CMapLayers::GetCurCamera()
 void CMapLayers::OnMapLoad()
 {
 	m_MapLoaded = false;
-	FRenderUploadCallback FRenderCallback = [&](const char *pTitle, const char *pMessage, int IncreaseCounter) { GameClient()->m_Menus.RenderLoading(pTitle, pMessage, IncreaseCounter); };
-	auto FRenderCallbackOptional = std::make_optional<FRenderUploadCallback>(FRenderCallback);
+	char aCaption[64 + MAX_MAP_LENGTH];
+	str_format(aCaption, sizeof(aCaption), "%s: %s", Localize("Loading map"), Client()->GetCurrentMap());
 
-	const char *pLoadingTitle = Localize("Loading map");
-	const char *pLoadingMessage = Localize("Uploading map data to GPU");
-	GameClient()->m_Menus.RenderLoading(pLoadingTitle, pLoadingMessage, 0);
+	FCallbackMapRendererInit ProgressBarCallback = [&](int Completed, int Total) {
+		GameClient()->m_Menus.RenderLoadingDirect(aCaption, Localize("Initializing layers"), Total > 0 ? std::make_optional(Completed / (float)Total) : std::nullopt);
+	};
+
+	GameClient()->m_Menus.RenderLoadingDirect(aCaption, Localize("Initializing layers"), 0.0f);
 
 	// can't do that in CMapLayers::OnInit, because some of this interfaces are not available yet
 	m_MapRenderer.OnInit(Graphics(), TextRender(), RenderMap());
 
 	m_EnvEvaluator = CEnvelopeState(m_pLayers->Map(), m_OnlineOnly);
 	m_EnvEvaluator.OnInterfacesInit(GameClient());
-	m_MapRenderer.Load(m_Type, m_pLayers, m_pImages, &m_EnvEvaluator, FRenderCallbackOptional);
+	m_MapRenderer.Load(m_Type, m_pLayers, m_pImages, &m_EnvEvaluator, std::make_optional(ProgressBarCallback));
 	m_MapLoaded = true;
 }
 

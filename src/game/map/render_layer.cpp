@@ -203,12 +203,11 @@ bool CRenderLayerTile::CTileLayerVisuals::Init(unsigned int Width, unsigned int 
 CRenderLayer::CRenderLayer(int GroupId, int LayerId, int Flags) :
 	m_GroupId(GroupId), m_LayerId(LayerId), m_Flags(Flags) {}
 
-void CRenderLayer::OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages, std::optional<FRenderUploadCallback> &FRenderUploadCallbackOptional)
+void CRenderLayer::OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages)
 {
 	CRenderComponent::OnInit(pGraphics, pTextRender, pRenderMap);
 	m_pMap = pMap;
 	m_pMapImages = pMapImages;
-	m_RenderUploadCallback = FRenderUploadCallbackOptional;
 	m_pEnvelopeManager = pEnvelopeManager;
 }
 
@@ -218,14 +217,6 @@ void CRenderLayer::UseTexture(IGraphics::CTextureHandle TextureHandle)
 		Graphics()->TextureSet(TextureHandle);
 	else
 		Graphics()->TextureClear();
-}
-
-void CRenderLayer::RenderLoading() const
-{
-	const char *pLoadingTitle = Localize("Loading map");
-	const char *pLoadingMessage = Localize("Uploading map data to GPU");
-	if(m_RenderUploadCallback.has_value())
-		(*m_RenderUploadCallback)(pLoadingTitle, pLoadingMessage, 0);
 }
 
 bool CRenderLayer::IsVisibleInClipRegion(const std::optional<CClipRegion> &ClipRegion) const
@@ -250,6 +241,10 @@ bool CRenderLayer::IsVisibleInClipRegion(const std::optional<CClipRegion> &ClipR
 
 CRenderLayerGroup::CRenderLayerGroup(int GroupId, CMapItemGroup *pGroup) :
 	CRenderLayer(GroupId, 0, 0), m_pGroup(pGroup) {}
+
+void CRenderLayerGroup::Init()
+{
+}
 
 bool CRenderLayerGroup::DoRender(const CRenderLayerParams &Params)
 {
@@ -863,12 +858,10 @@ void CRenderLayerTile::UploadTileData(std::optional<CTileLayerVisuals> &VisualsO
 		!CheckedAddSize(TileTexCoordsDataSize, TileDataSize, UploadDataSize))
 	{
 		log_error("map/render", "Tile layer upload data size overflow.");
-		RenderLoading();
 		return;
 	}
 	if(UploadDataSize == 0)
 	{
-		RenderLoading();
 		return;
 	}
 
@@ -876,7 +869,6 @@ void CRenderLayerTile::UploadTileData(std::optional<CTileLayerVisuals> &VisualsO
 	if(pUploadData == nullptr)
 	{
 		log_error("map/render", "Failed to allocate tile layer upload data.");
-		RenderLoading();
 		return;
 	}
 
@@ -940,8 +932,6 @@ void CRenderLayerTile::UploadTileData(std::optional<CTileLayerVisuals> &VisualsO
 	Visuals.m_BufferContainerIndex = Graphics()->CreateBufferContainer(&ContainerInfo);
 	// and finally inform the backend how many indices are required
 	Graphics()->IndicesNumRequiredNotify(vTmpTiles.size() * 6);
-
-	RenderLoading();
 }
 
 void CRenderLayerTile::Unload()
@@ -968,9 +958,9 @@ void *CRenderLayerTile::GetRawData() const
 	return m_pMap->GetData(GetDataIndex());
 }
 
-void CRenderLayerTile::OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages, std::optional<FRenderUploadCallback> &FRenderUploadCallbackOptional)
+void CRenderLayerTile::OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages)
 {
-	CRenderLayer::OnInit(pGraphics, pTextRender, pRenderMap, pEnvelopeManager, pMap, pMapImages, FRenderUploadCallbackOptional);
+	CRenderLayer::OnInit(pGraphics, pTextRender, pRenderMap, pEnvelopeManager, pMap, pMapImages);
 	InitTileData();
 
 	// set clip region
@@ -1128,9 +1118,9 @@ void CRenderLayerQuads::RenderQuadLayer(float Alpha, const CRenderLayerParams &P
 	}
 }
 
-void CRenderLayerQuads::OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages, std::optional<FRenderUploadCallback> &FRenderUploadCallbackOptional)
+void CRenderLayerQuads::OnInit(IGraphics *pGraphics, ITextRender *pTextRender, CRenderMap *pRenderMap, std::shared_ptr<CEnvelopeManager> &pEnvelopeManager, IMap *pMap, IMapImages *pMapImages)
 {
-	CRenderLayer::OnInit(pGraphics, pTextRender, pRenderMap, pEnvelopeManager, pMap, pMapImages, FRenderUploadCallbackOptional);
+	CRenderLayer::OnInit(pGraphics, pTextRender, pRenderMap, pEnvelopeManager, pMap, pMapImages);
 	int DataSize = m_pMap->GetDataSize(m_pLayerQuads->m_Data);
 	if(m_pLayerQuads->m_NumQuads > 0 && DataSize / (int)sizeof(CQuad) >= m_pLayerQuads->m_NumQuads)
 		m_pQuads = (CQuad *)m_pMap->GetDataSwapped(m_pLayerQuads->m_Data);
@@ -1281,7 +1271,6 @@ void CRenderLayerQuads::Init()
 	if(Textured ? !CheckedDataSize(vTmpQuadsTextured.size(), sizeof(CTmpQuadTextured), UploadDataSize) : !CheckedDataSize(vTmpQuads.size(), sizeof(CTmpQuad), UploadDataSize))
 	{
 		log_error("map/render", "Quad layer upload data size overflow.");
-		RenderLoading();
 		return;
 	}
 
@@ -1327,7 +1316,6 @@ void CRenderLayerQuads::Init()
 		// and finally inform the backend how many indices are required
 		Graphics()->IndicesNumRequiredNotify(m_pLayerQuads->m_NumQuads * 6);
 	}
-	RenderLoading();
 }
 
 void CRenderLayerQuads::Unload()

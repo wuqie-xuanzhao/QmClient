@@ -2174,7 +2174,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurUsesSharedUiBackdropWithTransparentFallbac
 	const std::string RectDraw = FunctionBody(UiRectSource, "void CUIRect::Draw(");
 	const std::string RectDraw4 = FunctionBody(UiRectSource, "void CUIRect::Draw4(");
 	const std::string MenuRender = FunctionBody(MenusSource, "void CMenus::Render()");
-	const std::string LoadingRender = FunctionBody(MenusSource, "void CMenus::RenderLoading(");
+	const std::string LoadingRender = FunctionBody(MenusSource, "void CMenus::RenderLoadingDirect(");
 
 	EXPECT_NE(UiHeader.find("CUiScopedGaussianBlur(CUi *pUi, float Alpha = 1.0f)"), std::string::npos);
 	EXPECT_NE(UiHeader.find("GaussianBlurScopeAlpha() const"), std::string::npos);

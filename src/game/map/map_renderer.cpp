@@ -4,6 +4,8 @@
 
 #include <game/map/envelope_manager.h>
 
+#include <algorithm>
+
 const int LAYER_DEFAULT_TILESET = -1;
 
 void CMapRenderer::Clear()
@@ -13,18 +15,37 @@ void CMapRenderer::Clear()
 	m_vpRenderLayers.clear();
 }
 
-void CMapRenderer::Load(ERenderType Type, CLayers *pLayers, IMapImages *pMapImages, const IEnvelopeEval *pEnvelopeEval, std::optional<FRenderUploadCallback> RenderCallbackOptional)
+void CMapRenderer::Load(ERenderType Type, CLayers *pLayers, IMapImages *pMapImages, const IEnvelopeEval *pEnvelopeEval, std::optional<FCallbackMapRendererInit> CallbackMapRendererInitOptional)
 {
 	Clear();
 
 	std::shared_ptr<CEnvelopeManager> pEnvelopeManager = std::make_shared<CEnvelopeManager>(pEnvelopeEval, pLayers->Map());
+	int TotalWork = 0;
+	bool CountPassedGameLayer = false;
+	for(int GroupId = 0; GroupId < pLayers->NumGroups(); ++GroupId)
+	{
+		CMapItemGroup *pGroup = pLayers->GetGroup(GroupId);
+		for(int LayerId = 0; LayerId < pGroup->m_NumLayers; ++LayerId)
+		{
+			const int LayerType = GetLayerType(pLayers->GetLayer(pGroup->m_StartLayer + LayerId));
+			CountPassedGameLayer |= LayerType == LAYER_GAME;
+			if((Type == ERenderType::RENDERTYPE_BACKGROUND || Type == ERenderType::RENDERTYPE_BACKGROUND_FORCE) && CountPassedGameLayer)
+				break;
+			if(Type == ERenderType::RENDERTYPE_FOREGROUND && !CountPassedGameLayer)
+				continue;
+			++TotalWork;
+		}
+		if((Type == ERenderType::RENDERTYPE_BACKGROUND || Type == ERenderType::RENDERTYPE_BACKGROUND_FORCE) && CountPassedGameLayer)
+			break;
+	}
+	int CompletedWork = 0;
 	bool PassedGameLayer = false;
 
 	for(int GroupId = 0; GroupId < pLayers->NumGroups(); GroupId++)
 	{
 		CMapItemGroup *pGroup = pLayers->GetGroup(GroupId);
 		std::unique_ptr<CRenderLayer> pRenderLayerGroup = std::make_unique<CRenderLayerGroup>(GroupId, pGroup);
-		pRenderLayerGroup->OnInit(Graphics(), TextRender(), RenderMap(), pEnvelopeManager, pLayers->Map(), pMapImages, RenderCallbackOptional);
+		pRenderLayerGroup->OnInit(Graphics(), TextRender(), RenderMap(), pEnvelopeManager, pLayers->Map(), pMapImages);
 		if(!pRenderLayerGroup->IsValid())
 		{
 			log_error("map_renderer", "error group was null, group number = %d, total groups = %d", GroupId, pLayers->NumGroups());
@@ -128,15 +149,19 @@ void CMapRenderer::Load(ERenderType Type, CLayers *pLayers, IMapImages *pMapImag
 			// just ignore invalid layers from rendering
 			if(pRenderLayer)
 			{
-				pRenderLayer->OnInit(Graphics(), TextRender(), RenderMap(), pEnvelopeManager, pLayers->Map(), pMapImages, RenderCallbackOptional);
+				pRenderLayer->OnInit(Graphics(), TextRender(), RenderMap(), pEnvelopeManager, pLayers->Map(), pMapImages);
 				if(pRenderLayer->IsValid())
 				{
 					pRenderLayer->Init();
 					m_vpRenderLayers.push_back(std::move(pRenderLayer));
 				}
 			}
+			if(CallbackMapRendererInitOptional.has_value())
+				(*CallbackMapRendererInitOptional)(++CompletedWork, TotalWork);
 		}
 	}
+	if(CallbackMapRendererInitOptional.has_value() && TotalWork == 0)
+		(*CallbackMapRendererInitOptional)(1, 1);
 }
 
 void CMapRenderer::Render(const CRenderLayerParams &Params)
