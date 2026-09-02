@@ -23,6 +23,11 @@ namespace
 	constexpr float EPSILON = QmHudEditor::EPSILON;
 	constexpr float HUD_EDITOR_EDGE_ANCHOR_DISTANCE = QmHudEditor::SNAP_DISTANCE;
 
+	float HudEditorEdgeSnapDistance(EHudEditorElement Element)
+	{
+		return Element == EHudEditorElement::MediaIsland ? QmHudEditor::MEDIA_ISLAND_EDGE_SNAP_DISTANCE : HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+	}
+
 	float Clamp01(float Value)
 	{
 		return std::clamp(Value, 0.0f, 1.0f);
@@ -406,14 +411,15 @@ bool CHudEditor::ComputeTransformPlacement(EHudEditorElement Element, const CUIR
 	Scope.m_ScreenX1 = ScreenX1;
 	Scope.m_ScreenY1 = ScreenY1;
 	Scope.m_EdgeMargin = EdgeMargin;
-	Scope.m_AnchoredLeft = std::fabs(Scope.m_VisibleRect.x - EffScreenX0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	Scope.m_AnchoredRight = std::fabs(Scope.m_VisibleRect.x + Scope.m_VisibleRect.w - (EffScreenX0 + EffScreenW)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	Scope.m_AnchoredTop = std::fabs(Scope.m_VisibleRect.y - EffScreenY0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	Scope.m_AnchoredBottom = std::fabs(Scope.m_VisibleRect.y + Scope.m_VisibleRect.h - (EffScreenY0 + EffScreenH)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	const bool TouchesScreenLeft = std::fabs(Scope.m_VisibleRect.x - ScreenX0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	const bool TouchesScreenRight = std::fabs(Scope.m_VisibleRect.x + Scope.m_VisibleRect.w - ScreenX1) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	const bool TouchesScreenTop = std::fabs(Scope.m_VisibleRect.y - ScreenY0) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-	const bool TouchesScreenBottom = std::fabs(Scope.m_VisibleRect.y + Scope.m_VisibleRect.h - ScreenY1) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+	const float EdgeAnchorDistance = HudEditorEdgeSnapDistance(Element);
+	Scope.m_AnchoredLeft = std::fabs(Scope.m_VisibleRect.x - EffScreenX0) <= EdgeAnchorDistance;
+	Scope.m_AnchoredRight = std::fabs(Scope.m_VisibleRect.x + Scope.m_VisibleRect.w - (EffScreenX0 + EffScreenW)) <= EdgeAnchorDistance;
+	Scope.m_AnchoredTop = std::fabs(Scope.m_VisibleRect.y - EffScreenY0) <= EdgeAnchorDistance;
+	Scope.m_AnchoredBottom = std::fabs(Scope.m_VisibleRect.y + Scope.m_VisibleRect.h - (EffScreenY0 + EffScreenH)) <= EdgeAnchorDistance;
+	const bool TouchesScreenLeft = std::fabs(Scope.m_VisibleRect.x - ScreenX0) <= EdgeAnchorDistance;
+	const bool TouchesScreenRight = std::fabs(Scope.m_VisibleRect.x + Scope.m_VisibleRect.w - ScreenX1) <= EdgeAnchorDistance;
+	const bool TouchesScreenTop = std::fabs(Scope.m_VisibleRect.y - ScreenY0) <= EdgeAnchorDistance;
+	const bool TouchesScreenBottom = std::fabs(Scope.m_VisibleRect.y + Scope.m_VisibleRect.h - ScreenY1) <= EdgeAnchorDistance;
 	if(TouchesScreenLeft)
 		Scope.m_Corners &= ~IGraphics::CORNER_L;
 	if(TouchesScreenRight)
@@ -822,18 +828,19 @@ void CHudEditor::OnRender()
 			const float SafeScreenY = pUiScreen->y + SafeTop;
 			const float SafeScreenW = maximum(QmHudEditor::EPSILON, pUiScreen->w - SafeLeft - SafeRight);
 			const float SafeScreenH = maximum(QmHudEditor::EPSILON, pUiScreen->h - SafeTop - SafeBottom);
-			const QmHudEditor::SSnapAxisResult SnapX = QmHudEditor::SnapAxisToGuidesEx(Ui()->MouseX() - m_DragGrabOffset.x, Width, SafeScreenX, SafeScreenW, References.m_aXReferences.data(), References.m_XCount);
-			const QmHudEditor::SSnapAxisResult SnapY = QmHudEditor::SnapAxisToGuidesEx(Ui()->MouseY() - m_DragGrabOffset.y, Height, SafeScreenY, SafeScreenH, References.m_aYReferences.data(), References.m_YCount);
+			const float ScreenEdgeSnapDistance = HudEditorEdgeSnapDistance(Visible.m_Element);
+			const QmHudEditor::SSnapAxisResult SnapX = QmHudEditor::SnapAxisToGuidesEx(Ui()->MouseX() - m_DragGrabOffset.x, Width, SafeScreenX, SafeScreenW, References.m_aXReferences.data(), References.m_XCount, ScreenEdgeSnapDistance);
+			const QmHudEditor::SSnapAxisResult SnapY = QmHudEditor::SnapAxisToGuidesEx(Ui()->MouseY() - m_DragGrabOffset.y, Height, SafeScreenY, SafeScreenH, References.m_aYReferences.data(), References.m_YCount, ScreenEdgeSnapDistance);
 			const float X = SnapX.m_Position;
 			const float Y = SnapY.m_Position;
 			ShowDragGuideX = SnapX.m_HasGuide;
 			ShowDragGuideY = SnapY.m_HasGuide;
 			DragGuideX = SnapX.m_GuidePosition;
 			DragGuideY = SnapY.m_GuidePosition;
-			const bool SnapLeft = std::fabs(X - (pUiScreen->x + SafeLeft)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-			const bool SnapRight = std::fabs(X + Width - (pUiScreen->x + pUiScreen->w - SafeRight)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-			const bool SnapTop = std::fabs(Y - (pUiScreen->y + SafeTop)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
-			const bool SnapBottom = std::fabs(Y + Height - (pUiScreen->y + pUiScreen->h - SafeBottom)) <= HUD_EDITOR_EDGE_ANCHOR_DISTANCE;
+			const bool SnapLeft = std::fabs(X - (pUiScreen->x + SafeLeft)) <= ScreenEdgeSnapDistance;
+			const bool SnapRight = std::fabs(X + Width - (pUiScreen->x + pUiScreen->w - SafeRight)) <= ScreenEdgeSnapDistance;
+			const bool SnapTop = std::fabs(Y - (pUiScreen->y + SafeTop)) <= ScreenEdgeSnapDistance;
+			const bool SnapBottom = std::fabs(Y + Height - (pUiScreen->y + pUiScreen->h - SafeBottom)) <= ScreenEdgeSnapDistance;
 			State.m_PosXPermille = SnapLeft ? 0 : (SnapRight ? POSITION_SCALE : std::clamp(round_to_int((X - Visible.m_StateOffsetX * Scale - pUiScreen->x) / pUiScreen->w * POSITION_SCALE), 0, POSITION_SCALE));
 			State.m_PosYPermille = SnapTop ? 0 : (SnapBottom ? POSITION_SCALE : std::clamp(round_to_int((Y - Visible.m_StateOffsetY * Scale - pUiScreen->y) / pUiScreen->h * POSITION_SCALE), 0, POSITION_SCALE));
 			m_DirtyLayout = true;

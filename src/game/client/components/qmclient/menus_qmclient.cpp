@@ -36,6 +36,7 @@
 #include <game/client/components/countryflags.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/qmclient/input_overlay.h>
 #include <game/client/components/qmclient/keyword_reply_rules.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/translate/translate_ui_settings.h>
@@ -894,9 +895,15 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 		return;
 
 	RenderCheckbox(&g_Config.m_QmHitboxShowMap, "Map danger border", Localize("Map danger border"), &g_Config.m_QmHitboxShowMap);
-	RenderCheckbox(&g_Config.m_QmHitboxShowTees, "Tee hitbox", Localize("Tee hitbox"), &g_Config.m_QmHitboxShowTees);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTeeCollision, "Tee collision (Tee to Tee)", Localize("Tee collision (Tee to Tee)"), &g_Config.m_QmHitboxShowTeeCollision);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTeeFreeze, "Tee freeze probe (Tee to Freeze)", Localize("Tee freeze probe (Tee to Freeze)"), &g_Config.m_QmHitboxShowTeeFreeze);
+	RenderCheckbox(&g_Config.m_QmHitboxShowTeeDeath, "Tee death probe", Localize("Tee death probe"), &g_Config.m_QmHitboxShowTeeDeath);
 	RenderCheckbox(&g_Config.m_QmHitboxShowPickups, "Pickup range", Localize("Pickup range"), &g_Config.m_QmHitboxShowPickups);
-	RenderCheckbox(&g_Config.m_QmHitboxShowWeapons, "Weapon interaction range", Localize("Weapon interaction range"), &g_Config.m_QmHitboxShowWeapons);
+	RenderCheckbox(&g_Config.m_QmHitboxShowHammer, "Hammer interaction", Localize("Hammer interaction"), &g_Config.m_QmHitboxShowHammer);
+	RenderCheckbox(&g_Config.m_QmHitboxShowProjectiles, "Projectile / explosion range", Localize("Projectile / explosion range"), &g_Config.m_QmHitboxShowProjectiles);
+	RenderCheckbox(&g_Config.m_QmHitboxShowLasers, "Laser / shotgun interaction", Localize("Laser / shotgun interaction"), &g_Config.m_QmHitboxShowLasers);
+	RenderCheckbox(&g_Config.m_QmHitboxShowFreezeLasers, "Freeze laser collision volume", Localize("Freeze laser collision volume"), &g_Config.m_QmHitboxShowFreezeLasers);
+	RenderCheckbox(&g_Config.m_QmHitboxShowHook, "Hook interaction", Localize("Hook interaction"), &g_Config.m_QmHitboxShowHook);
 
 	CUIRect Row, LabelColumn, ControlColumn;
 	Content.HSplitTop(LineHeight, &Row, &Content);
@@ -931,11 +938,27 @@ void CMenus::RenderQmVisualCollisionHitboxContent(CUIRect &Content, float LineHe
 void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly)
 {
 	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, "Weapon switch animation", Localize("Weapon switch animation"), &g_Config.m_QmWeaponSwitchAnim);
+	RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim, "Play a flip animation while reloading weapons", Localize("Play a flip animation while reloading weapons"), &g_Config.m_QmWeaponReloadAnim);
 	Content.HSplitTop(ContentGap, nullptr, &Content);
-	if(!g_Config.m_QmWeaponSwitchAnim)
-		return;
 
 	CUIRect Row, LabelColumn, ControlColumn;
+	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int Min, int Max, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+
+	if(g_Config.m_QmWeaponReloadAnim)
+	{
+		static int s_QmWeaponReloadAnimProbabilityInputId;
+		RenderValue("qmclient-weapon-reload-animation-probability", "Weapon reload animation probability", &s_QmWeaponReloadAnimProbabilityInputId, &g_Config.m_QmWeaponReloadAnimProbability, 0, 100, "%");
+	}
+
+	if(!g_Config.m_QmWeaponSwitchAnim && !g_Config.m_QmWeaponReloadAnim)
+		return;
+
 	Content.HSplitTop(LineHeight, &Row, &Content);
 	static std::vector<const char *> s_WeaponSwitchAnimScopeDropDownNames;
 	s_WeaponSwitchAnimScopeDropDownNames = {Localize("Self only"), Localize("Local"), Localize("All players")};
@@ -964,13 +987,9 @@ void CMenus::RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHe
 		g_Config.m_QmWeaponSwitchAnimScope = NewScope;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
-	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int Min, int Max, const char *pSuffix = "") {
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		RenderQmVisualLabel(pTextId, &LabelColumn, Localize(pText), BodySize);
-		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, Min, Max, pSuffix, PrewarmOnly);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	};
+	if(!g_Config.m_QmWeaponSwitchAnim)
+		return;
+
 	static int s_QmWeaponSwitchAnimDurationInputId;
 	static int s_QmWeaponSwitchAnimDistanceInputId;
 	static int s_QmWeaponSwitchAnimRotationInputId;
@@ -1410,7 +1429,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 			"临渊捕鱼", "?hook?", "放肆zero", "Q币", "洛天依", "spider", "贝塔塔塔", "见月", "咩子的银耳", "Cancer", "少女`",
 			"长亭寂寞独自愁", "fantuan", "无言鱼", "胖人老许", "夏日", "张宁我儿", "拌饭", "shengyan", "修勾在修沟", "taffy",
 			"杀意没爱意", "DYL", "小信", "哆啦梦", "菜菜羊", "吃了吗chilem", "你就是我的", "xiaopang", "星星🌙", "軽い猫",
-			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "迟渔"};
+			"oxyzo1", "笨蛋猫猫", "信息检索", "炭", "江江", "晚晚晚上好", "AAA乐土猫猫", "一個廢物", "黄花的忧伤", "丘卡", "迟渔", "潇洒的吗喽", "weijiu", "2284463973"};
 		const auto BuildSponsorLines = [this, TipSize](float MaxLineWidth) {
 			static std::vector<std::string> Lines;
 			static float s_CachedMaxLineWidth = -1.0f;
@@ -1879,6 +1898,10 @@ void CMenus::RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float Lin
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(g_Config.m_QmWeaponTrajectory == 0)
 		return;
+
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	RenderQmFunctionCheckbox(&g_Config.m_QmWeaponTrajectoryGun, "qmclient-weapon-trajectory-gun", Localize("Pistol guide line"), &g_Config.m_QmWeaponTrajectoryGun, &Row, PrewarmOnly);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
 
 	static CButtonContainer s_WeaponTrajectoryColorId;
 	DoLine_ColorPicker(&s_WeaponTrajectoryColorId, CurrentSettingsContentMetrics(), &Content, Localize("Guide line color"), &g_Config.m_QmWeaponTrajectoryColor, ColorRGBA(1.0f, 0.6f, 0.2f, 1.0f), false);
@@ -3290,23 +3313,16 @@ void CMenus::RenderQmHudInputOverlayContent(CUIRect &Content, const SSettingsCon
 	static int s_QmInputOverlayScaleInputId;
 	static int s_QmInputOverlayMouseScaleInputId;
 	static int s_QmInputOverlayOpacityInputId;
-	static int s_QmInputOverlayPosXInputId;
-	static int s_QmInputOverlayPosYInputId;
 	RenderValue("qmclient-input-overlay-keyboard-size", "Keyboard size", &s_QmInputOverlayScaleInputId, &g_Config.m_QmInputOverlayScale, 1, 200);
 	RenderValue("qmclient-input-overlay-mouse-size", "Mouse size", &s_QmInputOverlayMouseScaleInputId, &g_Config.m_QmInputOverlayMouseScale, 1, 200);
 	RenderValue("qmclient-input-overlay-opacity", "Opacity", &s_QmInputOverlayOpacityInputId, &g_Config.m_QmInputOverlayOpacity, 0, 100);
-	RenderValue("qmclient-input-overlay-horizontal-position", "Horizontal position", &s_QmInputOverlayPosXInputId, &g_Config.m_QmInputOverlayPosX, 0, 100);
-	RenderValue("qmclient-input-overlay-vertical-position", "Vertical position", &s_QmInputOverlayPosYInputId, &g_Config.m_QmInputOverlayPosY, 0, 100);
 
-	Content.HSplitTop(Metrics.m_SmallSize, &Row, &Content);
-	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-	RenderQmHudLabel("qmclient-input-overlay-config-file", &Row, Localize("Config file: data/input_overlay.json"), Metrics.m_SmallSize);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-	Content.HSplitTop(Metrics.m_SmallSize, &Row, &Content);
-	TextRender()->TextColor(ColorRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-	RenderQmHudLabel("qmclient-input-overlay-auto-hot-reload", &Row, Localize("Auto hot-reload after external saves"), Metrics.m_SmallSize);
-	TextRender()->TextColor(TextRender()->DefaultTextColor());
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+	RenderQmHudLabel("qmclient-input-overlay-editor", &LabelColumn, Localize("Editor"), BodySize);
+	static CButtonContainer s_InputOverlayEditorButton;
+	if(!PrewarmOnly && DoButton_Menu(&s_InputOverlayEditorButton, Localize("Open editor"), 0, &ControlColumn))
+		GameClient()->m_InputOverlay.OpenEditor();
 }
 
 void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool Expanded, bool PrewarmOnly)
@@ -3332,36 +3348,11 @@ void CMenus::RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight,
 	RenderValue("qmclient-dummy-window-zoom", "Dummy window zoom", &s_QmDummyMiniViewZoomInputId, &g_Config.m_QmDummyMiniViewZoom, 10, 300);
 }
 
-void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool OriginalStyle, bool PrewarmOnly)
+void CMenus::RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float LineSpacing, bool OriginalStyle)
 {
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandUseOriginalStyle, "Use original style", Localize("Use original style"), &g_Config.m_QmHudIslandUseOriginalStyle);
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTeam, "Show team", Localize("Show team"), &g_Config.m_QmHudIslandShowTeam);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTuneZoneEffects, "Show Tune Zone effects", Localize("Show Tune Zone effects"), &g_Config.m_QmHudIslandShowTuneZoneEffects);
 
-	CUIRect Row, LabelColumn, ControlColumn;
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	RenderQmHudLabel("qmclient-dynamic-island-tune-zone-icon-legend", &LabelColumn, Localize("Tune Zone effect icon legend"), BodySize);
-	CUIRect GravityLegend, ElasticityLegend;
-	ControlColumn.VSplitMid(&GravityLegend, &ElasticityLegend, LineSpacing);
-	auto RenderTuneLegend = [this, PrewarmOnly, BodySize](CUIRect Legend, EQmIcon Icon, const char *pText) {
-		CUIRect IconRect, TextRect;
-		Legend.VSplitLeft(Legend.h, &IconRect, &TextRect);
-		TextRect.VSplitLeft(2.0f, nullptr, &TextRect);
-		if(!PrewarmOnly)
-			GameClient()->QmIconManager()->RenderIcon(Icon, IconRect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.9f));
-		RenderQmHudLabel(pText, &TextRect, Localize(pText), BodySize * 0.85f);
-	};
-	RenderTuneLegend(GravityLegend, EQmIcon::TUNE_GRAVITY, "Gravity");
-	RenderTuneLegend(ElasticityLegend, EQmIcon::TUNE_ELASTICITY, "Elasticity");
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-	RenderQmHudLabel("qmclient-dynamic-island-edge-margin", &LabelColumn, Localize("Edge margin"), BodySize);
-	static int s_QmHudIslandEdgeMarginInputId;
-	RenderQmSettingsSliderWithValueInput(&s_QmHudIslandEdgeMarginInputId, ControlColumn, &g_Config.m_QmHudIslandEdgeMargin, 0, 64, "px", PrewarmOnly);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	if(OriginalStyle)
 		return;
 
@@ -3394,6 +3385,17 @@ void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineH
 	if(DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &s_SmtcNext, "qmclient-smtc-next", Localize("Next"), 0, &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
 		GameClient()->m_SystemMediaControls.Next();
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
+}
+
+void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
+{
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, "Enable Netease music Hook", Localize("Enable Netease music Hook"), &g_Config.m_QmNeteaseHookEnable);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, "Enable SodaMusic Hook", Localize("Enable SodaMusic Hook"), &g_Config.m_QmSodaHookEnable);
+	// 两个 Hook 互斥:同一时间只能有一个歌词来源,避免优先级歧义。
+	if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
+		g_Config.m_QmSodaHookEnable = 0;
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmLyrics);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, "Show lyrics inside Dynamic Island", Localize("Show lyrics inside Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland);
 }
 
 void CMenus::RenderQmHudNotificationsBasicContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)
@@ -4354,328 +4356,6 @@ void CMenus::RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsCon
 	}
 }
 
-void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)
-{
-	const float LineHeight = Metrics.m_LineHeight;
-	const float BodySize = Metrics.m_BodySize;
-	const float LineSpacing = Metrics.m_LineSpacing;
-	// 预览尺寸必须与本帧 Deck 测量使用同一份快照。滑条的新值在下一帧
-	// 进入 revision，并由高度动画统一推动后续卡片。
-	const int PreviewFontSizeForLayout = g_Config.m_QmSmtcLyricsFontSize;
-	const int PreviewLineCountForLayout = std::clamp(g_Config.m_QmSmtcLyricsLines, 1, 2);
-	CUIRect Row, LabelCol, ControlCol;
-	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
-		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
-		if(Changed)
-			*pValue ^= 1;
-		return Changed;
-	};
-	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {
-		RenderQmHudLabel(pTextId, pRect, pText, FontSize);
-	};
-	auto RenderSliderWithValueInput = [this, PrewarmOnly](const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-		RenderQmSettingsSliderWithValueInput(pId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
-	};
-	if(!PrewarmOnly)
-		MarkQmNewFeatureRead("qm_lyrics_phase1");
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmSmtcLyricsEnable, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmSmtcLyricsEnable, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsMarquee, "Scroll long lines", Localize("Scroll long lines"), &g_Config.m_QmLyricsMarquee, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoHideNoSmtc, "Hide without media state", Localize("Hide without media state"), &g_Config.m_QmLyricsAutoHideNoSmtc, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	auto RenderLyricsSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		CUIRect LabelColValue, ControlColValue;
-		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
-		DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, BodySize);
-		RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	};
-
-	static int s_QmSmtcLyricsOffsetInputId;
-	RenderLyricsSlider(&s_QmSmtcLyricsOffsetInputId, "qmclient-lyrics-time-offset", Localize("Time offset"), &g_Config.m_QmSmtcLyricsOffsetMs, -10000, 10000, "ms");
-	static int s_QmSmtcLyricsLinesInputId;
-	RenderLyricsSlider(&s_QmSmtcLyricsLinesInputId, "qmclient-lyrics-lines", Localize("Lines"), &g_Config.m_QmSmtcLyricsLines, 1, 2);
-	static int s_QmSmtcLyricsFontSizeInputId;
-	RenderLyricsSlider(&s_QmSmtcLyricsFontSizeInputId, "qmclient-lyrics-font-size", Localize("Font size"), &g_Config.m_QmSmtcLyricsFontSize, 4, 16);
-	static int s_QmLyricsBgOpacityInputId;
-	RenderLyricsSlider(&s_QmLyricsBgOpacityInputId, "qmclient-lyrics-background-opacity", Localize("Background opacity"), &g_Config.m_QmLyricsBgOpacity, 0, 100, "%");
-	static int s_QmLyricsOutlineOpacityInputId;
-	RenderLyricsSlider(&s_QmLyricsOutlineOpacityInputId, "qmclient-lyrics-outline-opacity", Localize("Outline opacity"), &g_Config.m_QmLyricsOutlineOpacity, 0, 100, "%");
-	static int s_QmLyricsFadeDurationInputId;
-	RenderLyricsSlider(&s_QmLyricsFadeDurationInputId, "qmclient-lyrics-fade-duration", Localize("Fade duration"), &g_Config.m_QmLyricsFadeDurationMs, 0, 2000, "ms");
-	static int s_QmLyricsMarqueeSpeedInputId;
-	RenderLyricsSlider(&s_QmLyricsMarqueeSpeedInputId, "qmclient-lyrics-scroll-speed", Localize("Scroll speed"), &g_Config.m_QmLyricsMarqueeSpeed, 1, 24);
-	static int s_QmLyricsSnapThresholdInputId;
-	RenderLyricsSlider(&s_QmLyricsSnapThresholdInputId, "qmclient-lyrics-snap-threshold", Localize("Snap threshold"), &g_Config.m_QmLyricsSnapThreshold, 0, 40);
-
-	static CButtonContainer s_LyricsCurrentColorId;
-	DoLine_ColorPicker(&s_LyricsCurrentColorId, Metrics, &Content, Localize("Current line color"), &g_Config.m_QmLyricsColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
-	static CButtonContainer s_LyricsNextColorId;
-	DoLine_ColorPicker(&s_LyricsNextColorId, Metrics, &Content, Localize("Next line color"), &g_Config.m_QmLyricsNextColor, ColorRGBA(1.0f, 1.0f, 1.0f, 0.54f), false, nullptr, true);
-	static CButtonContainer s_LyricsBgColorId;
-	DoLine_ColorPicker(&s_LyricsBgColorId, Metrics, &Content, Localize("Background color"), &g_Config.m_QmLyricsBgColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
-	static CButtonContainer s_LyricsOutlineColorId;
-	DoLine_ColorPicker(&s_LyricsOutlineColorId, Metrics, &Content, Localize("Outline color"), &g_Config.m_QmLyricsOutlineColor, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f), false, nullptr, true);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsAutoFetch, "Auto fetch lyrics", Localize("Auto fetch lyrics"), &g_Config.m_QmLyricsAutoFetch, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsInMediaIsland, "Show in Dynamic Island", Localize("Show in Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsKaraoke, "Per-word highlight (karaoke)", Localize("Per-word highlight (karaoke)"), &g_Config.m_QmLyricsKaraoke, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsHideWhenPaused, "Hide when paused", Localize("Hide when paused"), &g_Config.m_QmLyricsHideWhenPaused, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	DoQmSettingsCheckboxAuto(&g_Config.m_QmLyricsShowTranslation, "Show translation", Localize("Show translation"), &g_Config.m_QmLyricsShowTranslation, &Row, LineHeight);
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	{
-		CUIRect LabelColValue, ControlColValue;
-		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
-		DoQmSettingsLabel("qmclient-lyrics-source", &LabelColValue, Localize("Lyrics source"), BodySize);
-		const char *apLyricsSourceNames[] = {
-			Localize("Auto"),
-			"LRCLIB",
-			"Kugou",
-			"QQ",
-			"Netease",
-			"AMLL TTML DB",
-			"Apple Music",
-			Localize("Local music file"),
-			Localize("Local LRC file"),
-			Localize("Local ESLRC file"),
-			Localize("Local TTML file"),
-		};
-		static CUi::SDropDownState s_QmLyricsSourceDropDownState;
-		static CScrollRegion s_QmLyricsSourceDropDownScrollRegion;
-		s_QmLyricsSourceDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_QmLyricsSourceDropDownScrollRegion;
-		const int SourceSelectedNew = DoSettingsDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSource, 0, 10), apLyricsSourceNames, std::size(apLyricsSourceNames), s_QmLyricsSourceDropDownState);
-		if(SourceSelectedNew != g_Config.m_QmLyricsSource)
-			g_Config.m_QmLyricsSource = SourceSelectedNew;
-	}
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	{
-		CUIRect LabelColValue, ControlColValue;
-		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
-		DoQmSettingsLabel("qmclient-lyrics-search-type", &LabelColValue, Localize("Lyrics search type"), BodySize);
-		const char *apLyricsSearchTypeNames[] = {
-			Localize("Sequential"),
-			Localize("Best match"),
-		};
-		static CUi::SDropDownState s_QmLyricsSearchTypeDropDownState;
-		const int SearchTypeSelectedNew = DoSettingsDropDown(&ControlColValue, std::clamp(g_Config.m_QmLyricsSearchType, 0, 1), apLyricsSearchTypeNames, std::size(apLyricsSearchTypeNames), s_QmLyricsSearchTypeDropDownState);
-		if(SearchTypeSelectedNew != g_Config.m_QmLyricsSearchType)
-			g_Config.m_QmLyricsSearchType = SearchTypeSelectedNew;
-	}
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-
-	auto RenderLyricSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		CUIRect LabelColValue, ControlColValue;
-		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
-		DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, BodySize);
-		RenderSliderWithValueInput(pId, ControlColValue, pValue, MinValue, MaxValue, pSuffix);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	};
-	auto RenderLyricHalfSecondOffsetSlider = [&](const void *pId, const char *pTextId, const char *pLabel, int *pValue) {
-		const int OriginalValue = *pValue;
-		const int AbsOffset = std::abs(*pValue);
-		const int SnappedAbs = ((AbsOffset + 250) / 500) * 500;
-		int StepValue = std::clamp((*pValue < 0 ? -SnappedAbs : SnappedAbs) / 500, -60, 60);
-		RenderLyricSlider(pId, pTextId, pLabel, &StepValue, -60, 60, "x0.5s");
-		if(PrewarmOnly || Ui()->RenderOnly())
-			*pValue = OriginalValue;
-		else
-			*pValue = StepValue * 500;
-	};
-	IUiContext QmClientLyricsTextInputCtx;
-	QmClientLyricsTextInputCtx.m_pUi = Ui();
-	QmClientLyricsTextInputCtx.m_pAnim = PrewarmOnly || Ui()->RenderOnly() ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();
-	QmClientLyricsTextInputCtx.m_pTree = PrewarmOnly || Ui()->RenderOnly() ? nullptr : &GameClient()->UiRuntimeV2()->Tree();
-	QmClientLyricsTextInputCtx.m_ScopeHash = MakeUiScopeHash("settings_qmclient_lyrics_text_inputs");
-	QmClientLyricsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
-	auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		CUIRect LabelColValue, ControlColValue;
-		Row.VSplitLeft(LabelWidth, &LabelColValue, &ControlColValue);
-		DoQmSettingsLabel(pTextId, &LabelColValue, pLabel, BodySize);
-		if(!PrewarmOnly && !Ui()->RenderOnly() && !pLineInput->IsActive() && str_comp(pLineInput->GetString(), pValue) != 0)
-			pLineInput->Set(pValue);
-		if(!PrewarmOnly && !Ui()->RenderOnly())
-			pLineInput->SetEmptyText(pEmptyText);
-		if(ui_widget::InputField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, BodySize))
-			str_copy(pValue, pLineInput->GetString(), ValueSize);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	};
-
-	static CLineInput s_QmLyricsSourceOrder(g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder));
-	RenderLyricTextInput(&s_QmLyricsSourceOrder, "qmclient-lyrics-source-order", Localize("Lyrics source order"), g_Config.m_QmLyricsSourceOrder, sizeof(g_Config.m_QmLyricsSourceOrder), "QQ|Kugou|Netease|LrcLib|AmllTtmlDb|LocalMusicFile|LocalLrcFile|LocalEslrcFile|LocalTtmlFile|AppleMusic");
-	static CLineInput s_QmLyricsProviderThresholds(g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds));
-	RenderLyricTextInput(&s_QmLyricsProviderThresholds, "qmclient-lyrics-provider-thresholds", Localize("Provider thresholds"), g_Config.m_QmLyricsProviderThresholds, sizeof(g_Config.m_QmLyricsProviderThresholds), "QQ=60|LrcLib=70");
-	static CLineInput s_QmLyricsIgnoreCacheProviders(g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders));
-	RenderLyricTextInput(&s_QmLyricsIgnoreCacheProviders, "qmclient-lyrics-ignore-cache-providers", Localize("Ignore cache providers"), g_Config.m_QmLyricsIgnoreCacheProviders, sizeof(g_Config.m_QmLyricsIgnoreCacheProviders), "QQ|Kugou");
-	static CLineInput s_QmLyricsAppleMusicMediaUserToken(g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken));
-	RenderLyricTextInput(&s_QmLyricsAppleMusicMediaUserToken, "qmclient-lyrics-apple-music-token", Localize("Apple Music media-user-token"), g_Config.m_QmLyricsAppleMusicMediaUserToken, sizeof(g_Config.m_QmLyricsAppleMusicMediaUserToken), "media-user-token");
-	static CLineInput s_QmLyricsLocalMediaFolders(g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders));
-	RenderLyricTextInput(&s_QmLyricsLocalMediaFolders, "qmclient-lyrics-local-media-folders", Localize("Local media folders"), g_Config.m_QmLyricsLocalMediaFolders, sizeof(g_Config.m_QmLyricsLocalMediaFolders), "D:/Music|E:/Music");
-
-	static int s_QmLyricsLinesAbove;
-	RenderLyricSlider(&s_QmLyricsLinesAbove, "qmclient-lyrics-lines-above", Localize("Lines above active"), &g_Config.m_QmLyricsLinesAbove, 0, 6);
-	static int s_QmLyricsLinesBelow;
-	RenderLyricSlider(&s_QmLyricsLinesBelow, "qmclient-lyrics-lines-below", Localize("Lines below active"), &g_Config.m_QmLyricsLinesBelow, 0, 6);
-	static int s_QmLyricsFontSize;
-	RenderLyricSlider(&s_QmLyricsFontSize, "qmclient-lyrics-font-size", Localize("Active line font size"), &g_Config.m_QmLyricsFontSize, 8, 48);
-	static int s_QmLyricsFontSizeOther;
-	RenderLyricSlider(&s_QmLyricsFontSizeOther, "qmclient-lyrics-font-size-other", Localize("Other lines font size"), &g_Config.m_QmLyricsFontSizeOther, 6, 40);
-	static int s_QmLyricsLineSpacing;
-	RenderLyricSlider(&s_QmLyricsLineSpacing, "qmclient-lyrics-line-spacing", Localize("Line spacing"), &g_Config.m_QmLyricsLineSpacing, 0, 40, "px");
-	static int s_QmLyricsOpacity;
-	RenderLyricSlider(&s_QmLyricsOpacity, "qmclient-lyrics-opacity", Localize("Opacity"), &g_Config.m_QmLyricsOpacity, 0, 100, "%");
-	static int s_QmLyricsInactiveOpacity;
-	RenderLyricSlider(&s_QmLyricsInactiveOpacity, "qmclient-lyrics-inactive-opacity", Localize("Inactive line opacity"), &g_Config.m_QmLyricsInactiveOpacity, 0, 100, "%");
-	static int s_QmLyricsScaleActive;
-	RenderLyricSlider(&s_QmLyricsScaleActive, "qmclient-lyrics-scale-active", Localize("Active line scale"), &g_Config.m_QmLyricsScaleActive, 100, 200, "%");
-	static int s_QmLyricsScaleFalloff;
-	RenderLyricSlider(&s_QmLyricsScaleFalloff, "qmclient-lyrics-scale-falloff", Localize("Distance scale falloff"), &g_Config.m_QmLyricsScaleFalloff, 0, 20, "%");
-	static int s_QmLyricsFadePerLine;
-	RenderLyricSlider(&s_QmLyricsFadePerLine, "qmclient-lyrics-fade-per-line", Localize("Distance fade per line"), &g_Config.m_QmLyricsFadePerLine, 0, 40, "%");
-	static int s_QmLyricsHighlightEdgeSoft;
-	RenderLyricSlider(&s_QmLyricsHighlightEdgeSoft, "qmclient-lyrics-highlight-edge-soft", Localize("Karaoke edge softness"), &g_Config.m_QmLyricsHighlightEdgeSoft, 0, 32, "px");
-	static int s_QmLyricsScrollMs;
-	RenderLyricSlider(&s_QmLyricsScrollMs, "qmclient-lyrics-scroll-ms", Localize("Line scroll duration"), &g_Config.m_QmLyricsScrollMs, 0, 1000, "ms");
-	static int s_QmLyricsMatchThreshold;
-	RenderLyricSlider(&s_QmLyricsMatchThreshold, "qmclient-lyrics-match-threshold", Localize("Match score threshold"), &g_Config.m_QmLyricsMatchThreshold, 0, 100);
-	static int s_QmLyricsOffsetMs;
-	RenderLyricHalfSecondOffsetSlider(&s_QmLyricsOffsetMs, "qmclient-lyrics-offset-ms", Localize("Time offset"), &g_Config.m_QmLyricsOffsetMs);
-	static int s_QmLyricsDriftCorrectMs;
-	RenderLyricSlider(&s_QmLyricsDriftCorrectMs, "qmclient-lyrics-drift-correct-ms", Localize("Clock drift hard-snap"), &g_Config.m_QmLyricsDriftCorrectMs, 100, 5000, "ms");
-	static int s_QmLyricsEdgeMargin;
-	RenderLyricSlider(&s_QmLyricsEdgeMargin, "qmclient-lyrics-edge-margin", Localize("Edge margin"), &g_Config.m_QmLyricsEdgeMargin, 0, 64, "px");
-	static int s_QmLyricsHttpTimeoutMs;
-	RenderLyricSlider(&s_QmLyricsHttpTimeoutMs, "qmclient-lyrics-http-timeout-ms", Localize("Lyrics HTTP timeout"), &g_Config.m_QmLyricsHttpTimeoutMs, 500, 30000, "ms");
-	static int s_QmLyricsCacheTtlDays;
-	RenderLyricSlider(&s_QmLyricsCacheTtlDays, "qmclient-lyrics-cache-ttl-days", Localize("Cache TTL"), &g_Config.m_QmLyricsCacheTtlDays, 0, 3650, " d");
-
-	static CButtonContainer s_LyricsColorPlayedId;
-	DoLine_ColorPicker(&s_LyricsColorPlayedId, CurrentSettingsContentMetrics(), &Content, Localize("Played word color"), &g_Config.m_QmLyricsColorPlayed, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, true);
-	static CButtonContainer s_LyricsColorUnplayedId;
-	DoLine_ColorPicker(&s_LyricsColorUnplayedId, CurrentSettingsContentMetrics(), &Content, Localize("Unplayed word color"), &g_Config.m_QmLyricsColorUnplayed, ColorRGBA(0.8f, 0.8f, 0.8f, 1.0f), false, nullptr, true);
-	static CButtonContainer s_LyricsColorTranslationId;
-	DoLine_ColorPicker(&s_LyricsColorTranslationId, CurrentSettingsContentMetrics(), &Content, Localize("Translation color"), &g_Config.m_QmLyricsColorTranslation, ColorRGBA(0.55f, 0.55f, 0.55f, 1.0f), false, nullptr, true);
-	CUIRect Preview;
-	const float PreviewFont = (float)PreviewFontSizeForLayout;
-	const float PreviewPaddingX = 10.0f;
-	const float PreviewPaddingY = 7.0f;
-	const float PreviewLineGap = 5.0f;
-	const float PreviewLineStep = PreviewFont + PreviewLineGap;
-	const int PreviewLineCount = PreviewLineCountForLayout;
-	const float PreviewHeight = ResolveQmHudLyricsPreviewHeight(PreviewFontSizeForLayout, PreviewLineCount);
-	Content.HSplitTop(PreviewHeight, &Preview, &Content);
-	if(!PrewarmOnly && !Ui()->RenderOnly())
-	{
-		ColorRGBA PreviewBg = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsBgColor, true));
-		PreviewBg.a = std::clamp(g_Config.m_QmLyricsBgOpacity / 100.0f, 0.0f, 1.0f);
-		DrawRoundedSurface(Ui(), Preview, PreviewBg, ColorRGBA(), 5.0f);
-		const unsigned int PrevFlags = TextRender()->GetRenderFlags();
-		const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
-		const ColorRGBA PrevOutlineColor = TextRender()->GetTextOutlineColor();
-		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
-		ColorRGBA PreviewOutline = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsOutlineColor, true));
-		PreviewOutline.a = std::clamp(g_Config.m_QmLyricsOutlineOpacity / 100.0f, 0.0f, 1.0f);
-		TextRender()->TextOutlineColor(PreviewOutline);
-
-		static constexpr std::array<const char *, 3> s_apLyricsPreviewLines = {
-			"Stop and stare",
-			"I think I'm moving but I go nowhere",
-			"Yeah I know that everyone gets scared"};
-		static constexpr int64_t s_LyricsPreviewLineDurationMs = 2400;
-		static constexpr int64_t s_LyricsPreviewDurationMs = s_LyricsPreviewLineDurationMs * (int64_t)s_apLyricsPreviewLines.size();
-		const int64_t NowTick = time_get();
-		const int64_t NowMs = (NowTick / time_freq()) * 1000 + (NowTick % time_freq()) * 1000 / time_freq();
-		int64_t PreviewPositionMs = (NowMs + g_Config.m_QmSmtcLyricsOffsetMs) % s_LyricsPreviewDurationMs;
-		if(PreviewPositionMs < 0)
-			PreviewPositionMs += s_LyricsPreviewDurationMs;
-		const int PreviewCurrentLine = (int)(PreviewPositionMs / s_LyricsPreviewLineDurationMs);
-		const int64_t PreviewLineElapsedMs = PreviewPositionMs % s_LyricsPreviewLineDurationMs;
-		const int64_t PreviewTransitionMs = std::clamp<int64_t>(g_Config.m_QmLyricsFadeDurationMs, 0, s_LyricsPreviewLineDurationMs - 1);
-		float PreviewScroll = 0.0f;
-		if(PreviewTransitionMs > 0 && PreviewLineElapsedMs >= s_LyricsPreviewLineDurationMs - PreviewTransitionMs)
-		{
-			const float Progress = (float)(PreviewLineElapsedMs - (s_LyricsPreviewLineDurationMs - PreviewTransitionMs)) / (float)PreviewTransitionMs;
-			const float SmoothProgress = Progress * Progress * (3.0f - 2.0f * Progress);
-			PreviewScroll = PreviewLineStep * SmoothProgress;
-		}
-
-		CUIRect PreviewClip = Preview;
-		PreviewClip.Margin(1.0f, &PreviewClip);
-		Ui()->ClipEnable(&PreviewClip);
-
-		const float PreviewX = Preview.x + PreviewPaddingX;
-		const float PreviewY = Preview.y + PreviewPaddingY - PreviewScroll;
-		const float PreviewTextWidth = std::max(1.0f, Preview.w - PreviewPaddingX * 2.0f);
-		const int RenderLineCount = std::min<int>(PreviewLineCount + 1, (int)s_apLyricsPreviewLines.size());
-		const int PreviewScrollSeed = g_Config.m_QmLyricsMarqueeSpeed > 0 ? (int)(PreviewPositionMs / maximum(1, 1000 / g_Config.m_QmLyricsMarqueeSpeed)) : 0;
-		auto RenderPreviewLine = [&](const char *pText, float Y, const ColorRGBA &Color) {
-			const char *pRenderText = pText;
-			char aMarqueeText[256];
-			if(g_Config.m_QmLyricsMarquee && pText[0] != '\0' && TextRender()->TextWidth(PreviewFont, pText) > PreviewTextWidth)
-			{
-				const int TextLen = str_length(pText);
-				size_t TextBytes = 0;
-				size_t TextCount = 0;
-				str_utf8_stats(pText, (size_t)TextLen + 1, (size_t)TextLen + 1, &TextBytes, &TextCount);
-				(void)TextBytes;
-				const int OffsetChars = TextCount > 0 ? PreviewScrollSeed % (int)TextCount : 0;
-				int Offset = 0;
-				for(int i = 0; i < OffsetChars; ++i)
-					Offset = str_utf8_forward(pText, Offset);
-				str_format(aMarqueeText, sizeof(aMarqueeText), "%s   %s", pText + Offset, pText);
-				pRenderText = aMarqueeText;
-			}
-			TextRender()->TextColor(Color);
-			CTextCursor Cursor;
-			Cursor.m_FontSize = PreviewFont;
-			Cursor.m_LineWidth = PreviewTextWidth;
-			Cursor.m_Flags = TEXTFLAG_RENDER | TEXTFLAG_ELLIPSIS_AT_END;
-			Cursor.SetPosition(vec2(PreviewX, Y));
-			TextRender()->TextEx(&Cursor, pRenderText);
-		};
-
-		ColorRGBA PreviewCurrentColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsColor, true));
-		ColorRGBA PreviewNextColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmLyricsNextColor, true));
-		for(int i = 0; i < RenderLineCount; ++i)
-		{
-			const int LineIndex = (PreviewCurrentLine + i) % (int)s_apLyricsPreviewLines.size();
-			RenderPreviewLine(s_apLyricsPreviewLines[LineIndex], PreviewY + PreviewLineStep * i, i == 0 ? PreviewCurrentColor : PreviewNextColor);
-		}
-
-		Ui()->ClipDisable();
-		TextRender()->TextColor(PrevTextColor);
-		TextRender()->TextOutlineColor(PrevOutlineColor);
-		TextRender()->SetRenderFlags(PrevFlags);
-	}
-}
-
 void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 {
 	using namespace qm_module;
@@ -4731,7 +4411,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::Voice: return ResolveQmHudVoiceHeight(Metrics, g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return ResolveQmHudDynamicIslandHeight(Metrics, DynamicIslandOriginalStyle, ContentWidth);
 		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
-		case EQmModuleId::Lyrics: return ResolveQmHudLyricsHeight(Metrics, g_Config.m_QmSmtcLyricsFontSize, g_Config.m_QmSmtcLyricsLines);
+		case EQmModuleId::Lyrics: return Rows(4.0f);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return Rows(1.0f);
 		}
@@ -4751,9 +4431,9 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 			return Revision;
 		}
 		case EQmModuleId::Voice: return ResolveQmHudVoiceRevision(g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
-		case EQmModuleId::DynamicIsland: return (DynamicIslandOriginalStyle ? 1u : 0u) | (g_Config.m_QmHudIslandShowTuneZoneEffects ? 2u : 0u);
+		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? 1u : 0u;
 		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? 1u : 0u;
-		case EQmModuleId::Lyrics: return (uint64_t)std::clamp(g_Config.m_QmSmtcLyricsFontSize, 0, 255) | ((uint64_t)std::clamp(g_Config.m_QmSmtcLyricsLines, 0, 3) << 8);
+		case EQmModuleId::Lyrics: return 0u;
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DRevision(g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return 0u;
 		}
@@ -4776,11 +4456,9 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				return HandleQmHudCheckboxInput(Content, Metrics.m_LineHeight, Metrics.m_LineSpacing, &g_Config.m_QmInputOverlay, &g_Config.m_QmInputOverlay);
 			};
 		case EQmModuleId::DynamicIsland:
-			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {
+			return [this, Metrics, LineHeight, LineSpacing](CUIRect Content) {
 				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandUseOriginalStyle, &g_Config.m_QmHudIslandUseOriginalStyle);
 				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTeam, &g_Config.m_QmHudIslandShowTeam) || Changed;
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmHudIslandShowTuneZoneEffects, &g_Config.m_QmHudIslandShowTuneZoneEffects) || Changed;
-				ConsumeQmHudRow(Content); // edge margin
 				if(!g_Config.m_QmHudIslandUseOriginalStyle)
 				{
 					const SSettingsColorRowLayout ColorLayout = ResolveSettingsColorRowLayout(Content, Metrics, false);
@@ -4866,7 +4544,19 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 			};
 		case EQmModuleId::SystemMediaControls:
 			return [this, LineHeight, LineSpacing](CUIRect Content) {
-				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, &g_Config.m_QmSmtcEnable);
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, &g_Config.m_QmSmtcEnable);
+				return Changed;
+			};
+		case EQmModuleId::Lyrics:
+			return [this, LineHeight, LineSpacing](CUIRect Content) {
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, &g_Config.m_QmNeteaseHookEnable);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, &g_Config.m_QmSodaHookEnable) || Changed;
+				// 互斥:同一时间只能有一个歌词来源。
+				if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
+					g_Config.m_QmSodaHookEnable = 0;
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, &g_Config.m_QmLyrics) || Changed;
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, &g_Config.m_QmLyricsInMediaIsland) || Changed;
+				return Changed;
 			};
 		case EQmModuleId::Background3D:
 			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow, ConsumeQmHudHeight](CUIRect Content) {
@@ -4936,9 +4626,9 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				RenderQmHudNotificationsAdvancedContent(Content, Metrics, LabelWidth, ReadOnly);
 		});
 		AddCard(EQmModuleId::Voice, "qm:voice", "Voice", "Voice chat settings and diagnostics", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudVoiceContent(Content, Metrics, LabelWidth, ReadOnly); });
-		AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, DynamicIslandOriginalStyle, ReadOnly](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, DynamicIslandOriginalStyle, ReadOnly); });
+		AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, LineSpacing, DynamicIslandOriginalStyle](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, LineSpacing, DynamicIslandOriginalStyle); });
 		AddCard(EQmModuleId::SystemMediaControls, "qm:system_media_controls", "SMTC", "System media control", [this, LineHeight, BodySize, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudSystemMediaControlsContent(Content, LineHeight, BodySize, LineSpacing, ReadOnly); });
-		AddCard(EQmModuleId::Lyrics, "qm:lyrics", "Lyrics", "Show current and next lyric lines on HUD", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudLyricsContent(Content, Metrics, LabelWidth, ReadOnly); });
+		AddCard(EQmModuleId::Lyrics, "qm:lyrics", "Lyrics", "Lyrics sources and display", [this, LineHeight, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudLyricsContent(Content, LineHeight, LineSpacing, ReadOnly); });
 		AddCard(EQmModuleId::Background3D, "qm:background_3d", "3D Background", "Configure background 3D particle effects", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudBackground3DContent(Content, Metrics, LabelWidth, ReadOnly); });
 	};
 	uint64_t CardLayoutRevision = 0;
@@ -5064,7 +4754,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
 		case EQmModuleId::MiniFeatures: return Rows(19.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;
-		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 4.0f;
+		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 5.0f;
 		case EQmModuleId::FriendNotify:
 			return Row() * (5.0f + (g_Config.m_QmFriendOnlineAutoRefresh ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterBroadcast ? 1.0f : 0.0f) + (g_Config.m_QmFriendEnterAutoGreet ? 1.0f : 0.0f));
 		case EQmModuleId::BlockWords: return Row() * (g_Config.m_QmBlockWordsAction == 0 ? 7.0f : 4.0f) + CalcQiaFenInputHeight(TextRender(), g_Config.m_QmBlockWordsList, std::max(1.0f, ContentWidth - LabelWidth), BodySize, std::clamp(2.0f * UiScale, 1.0f, 2.0f), LineHeight);
@@ -5253,7 +4943,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		case EQmModuleId::FocusMode:
 			return ResolveQmVisualFocusModeHeight(Metrics);
 		case EQmModuleId::WeaponAnimation:
-			return g_Config.m_QmWeaponSwitchAnim ? Rows(6.0f) + Metrics.m_LineSpacing : Rows(1.0f) + Metrics.m_LineSpacing;
+			return ResolveQmVisualWeaponAnimationHeight(Metrics, g_Config.m_QmWeaponSwitchAnim != 0, g_Config.m_QmWeaponReloadAnim != 0);
 		case EQmModuleId::Streamer: return Rows(3.0f);
 		case EQmModuleId::EntityOverlay: return Rows(9.0f);
 		case EQmModuleId::CollisionHitbox:
@@ -5271,8 +4961,21 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 			       (g_Config.m_QmDynamicFov ? 2u : 0u) |
 			       (g_Config.m_QmAspectPreset == 6 ? 4u : 0u);
 		case EQmModuleId::SkinTransition: return g_Config.m_QmSkinChangeTransition ? 1u : 0u;
-		case EQmModuleId::WeaponAnimation: return g_Config.m_QmWeaponSwitchAnim ? 1u : 0u;
-		case EQmModuleId::CollisionHitbox: return (g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox) ? 1u : 0u;
+		case EQmModuleId::WeaponAnimation:
+			return (g_Config.m_QmWeaponSwitchAnim ? 1u : 0u) |
+			       (g_Config.m_QmWeaponReloadAnim ? 2u : 0u);
+		case EQmModuleId::CollisionHitbox:
+			return (g_Config.m_QmHitboxMode || g_Config.m_QmShowCollisionHitbox ? 1u : 0u) |
+			       (g_Config.m_QmHitboxShowMap ? 1u << 1 : 0u) |
+			       (g_Config.m_QmHitboxShowTeeCollision ? 1u << 2 : 0u) |
+			       (g_Config.m_QmHitboxShowTeeFreeze ? 1u << 3 : 0u) |
+			       (g_Config.m_QmHitboxShowTeeDeath ? 1u << 4 : 0u) |
+			       (g_Config.m_QmHitboxShowPickups ? 1u << 5 : 0u) |
+			       (g_Config.m_QmHitboxShowHammer ? 1u << 6 : 0u) |
+			       (g_Config.m_QmHitboxShowProjectiles ? 1u << 7 : 0u) |
+			       (g_Config.m_QmHitboxShowLasers ? 1u << 8 : 0u) |
+			       (g_Config.m_QmHitboxShowFreezeLasers ? 1u << 9 : 0u) |
+			       (g_Config.m_QmHitboxShowHook ? 1u << 10 : 0u);
 		default: return 0u;
 		}
 	};
@@ -5322,7 +5025,9 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 			};
 		case EQmModuleId::WeaponAnimation:
 			return [this, LineHeight, LineSpacing](CUIRect Content) {
-				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, &g_Config.m_QmWeaponSwitchAnim);
+				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponSwitchAnim, &g_Config.m_QmWeaponSwitchAnim);
+				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim, &g_Config.m_QmWeaponReloadAnim) || Changed;
+				return Changed;
 			};
 		case EQmModuleId::CollisionHitbox:
 			return [this, LineHeight](CUIRect Content) {

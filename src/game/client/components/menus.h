@@ -117,7 +117,7 @@ public:
 	int DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator = nullptr, const ColorRGBA *pDefaultColor = nullptr, const ColorRGBA *pActiveColor = nullptr, const ColorRGBA *pHoverColor = nullptr, float EdgeRounding = 10.0f, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr, float FontSize = -1.0f);
 	// feat-004: modern menu tab. No lift / height-grow; default hover/active
 	// states are tinted by ui_color via the v2 anim runtime.
-	int DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners = IGraphics::CORNER_T, const ColorRGBA *pCustomDefault = nullptr, const ColorRGBA *pCustomActive = nullptr, const ColorRGBA *pCustomHover = nullptr, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr);
+	int DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners = IGraphics::CORNER_T, const ColorRGBA *pCustomDefault = nullptr, const ColorRGBA *pCustomActive = nullptr, const ColorRGBA *pCustomHover = nullptr, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr, float ContentScale = 1.0f);
 	ColorRGBA MenuPanelColor(float AlphaScale = 1.0f) const;
 	ColorRGBA MenuPanelElevatedColor(float AlphaScale = 1.0f) const;
 	ColorRGBA BrowserPanelColor(float AlphaScale = 1.0f) const;
@@ -2831,15 +2831,15 @@ private:
 	void RenderQmHudDebugGraphContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudInputOverlayContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudDummyMiniViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool Expanded, bool PrewarmOnly);
-	void RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool OriginalStyle, bool PrewarmOnly);
+	void RenderQmHudDynamicIslandContent(CUIRect &Content, float LineHeight, float LineSpacing, bool OriginalStyle);
 	void RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly);
+	void RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly);
 	void RenderQmHudNotificationsBasicContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudNotificationsAdvancedContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudPlayerStatsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudCoordsContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
-	void RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 

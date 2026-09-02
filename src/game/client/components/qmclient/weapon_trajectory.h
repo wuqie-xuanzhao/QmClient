@@ -4,10 +4,14 @@
 
 #include <base/color.h>
 
+#include <engine/graphics.h>
+
 #include <generated/protocol.h>
 
 #include <game/client/component.h>
 #include <game/mapitems.h>
+
+#include <vector>
 
 inline ColorRGBA QmWeaponTrajectoryBaseColor(
 	int Weapon,
@@ -37,6 +41,13 @@ inline ColorRGBA QmInvertWeaponTrajectoryColor(const ColorRGBA &Color)
 inline bool QmWeaponTrajectoryUsesLineStyle(int Weapon)
 {
 	return Weapon == WEAPON_GUN || Weapon == WEAPON_SHOTGUN || Weapon == WEAPON_LASER;
+}
+
+inline bool QmWeaponTrajectoryEnabledForWeapon(int Weapon, bool PistolGuideEnabled)
+{
+	if(Weapon == WEAPON_GUN)
+		return PistolGuideEnabled;
+	return Weapon == WEAPON_GRENADE || Weapon == WEAPON_SHOTGUN || Weapon == WEAPON_LASER;
 }
 
 inline bool QmWeaponTrajectoryCanHitOtherPlayers(
@@ -103,6 +114,10 @@ inline bool QmWeaponTrajectoryIsTeleGunWall(int Weapon, int FrontTileIndex, int 
 
 class CQmWeaponTrajectory : public CComponent
 {
+	std::vector<vec2> m_vPoints;
+	std::vector<IGraphics::CLineItem> m_vLineSegments;
+	std::vector<IGraphics::CFreeformItem> m_vLineQuadSegments;
+
 public:
 	int Sizeof() const override { return sizeof(*this); }
 	void Render(const CNetObj_Character *pPrevChar, const CNetObj_Character *pPlayerChar, int ClientId);

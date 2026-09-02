@@ -182,6 +182,8 @@ TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
 	EXPECT_NE(PopupSource.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
 	EXPECT_NE(PopupSource.find("const float CandidateDrawAlpha = Alpha * CandidateAlpha;"), std::string::npos);
 	EXPECT_NE(PopupSource.find("WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha)"), std::string::npos);
+	EXPECT_NE(PopupSource.find("TargetPresentation.m_Radius = PanelHeight * 0.5f;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("PanelHeight * 0.36f"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("(void)PresentationAlpha;"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("(void)CandidateAlpha;"), std::string::npos);
 	EXPECT_NE(PopupSource.find("IME_CONTENT_TIME_SCALE = 0.40f"), std::string::npos);

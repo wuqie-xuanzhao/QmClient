@@ -1,8 +1,24 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
+#include "test.h"
+
+#include <engine/shared/config.h>
+
 #include <game/client/components/qmclient/weapon_animation.h>
 #include <game/client/components/qmclient/weapon_trajectory.h>
 
 #include <gtest/gtest.h>
+
+TEST(QmWeaponTrajectorySource, ReusesRenderScratchBuffers)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/qmclient/weapon_trajectory.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/qmclient/weapon_trajectory.cpp");
+
+	EXPECT_NE(Header.find("m_vPoints"), std::string::npos);
+	EXPECT_NE(Header.find("m_vLineSegments"), std::string::npos);
+	EXPECT_NE(Header.find("m_vLineQuadSegments"), std::string::npos);
+	EXPECT_EQ(Source.find("std::vector<vec2> vPoints"), std::string::npos);
+	EXPECT_EQ(Source.find("std::vector<IGraphics::CLineItem> vLineSegments"), std::string::npos);
+}
 
 TEST(QmWeaponReloadAnimation, UsesFlipOnlyForShotgunGrenadeAndLaser)
 {
@@ -123,6 +139,17 @@ TEST(QmWeaponTrajectory, UsesLaserLineStyleForGun)
 	EXPECT_TRUE(QmWeaponTrajectoryUsesLineStyle(WEAPON_SHOTGUN));
 	EXPECT_TRUE(QmWeaponTrajectoryUsesLineStyle(WEAPON_LASER));
 	EXPECT_FALSE(QmWeaponTrajectoryUsesLineStyle(WEAPON_GRENADE));
+}
+
+TEST(QmWeaponTrajectory, PistolGuideToggleOnlyAffectsGun)
+{
+	EXPECT_EQ(DefaultConfig::QmWeaponTrajectoryGun, 1);
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_GUN, true));
+	EXPECT_FALSE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_GUN, false));
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_GRENADE, false));
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_SHOTGUN, false));
+	EXPECT_TRUE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_LASER, false));
+	EXPECT_FALSE(QmWeaponTrajectoryEnabledForWeapon(WEAPON_HAMMER, true));
 }
 
 TEST(QmWeaponTrajectory, RespectsWeaponSpecificPlayerHitDisables)

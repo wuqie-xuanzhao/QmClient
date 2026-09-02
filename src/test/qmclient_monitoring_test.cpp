@@ -2391,7 +2391,7 @@ TEST(QmMonitoringHelpers, SettingsStableTextRegistryCoversVisibleWrappers)
 	EXPECT_NE(Menus.find("RenderMenubar(TabBar, IClient::STATE_ONLINE);"), std::string::npos);
 	EXPECT_NE(Menus.find("RenderServerInfo(ContentView);"), std::string::npos);
 	EXPECT_EQ(Menus.find("AddIngameTab("), std::string::npos);
-	EXPECT_NE(Menus.find("return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement);"), std::string::npos);
+	EXPECT_NE(Menus.find("return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement, ContentScale);"), std::string::npos);
 	EXPECT_EQ(Menus.find("DoMenuTabV2(&s_ServerInfoButton, Localize(\"Server info\")"), std::string::npos);
 	EXPECT_NE(Ingame.find("DoIngameMenuTitleLabel(PAGE_SERVER_INFO, \"ingame-server-info-title\""), std::string::npos);
 	EXPECT_NE(Ingame.find("DoIngameMenuTitleLabel(PAGE_SERVER_INFO, \"ingame-game-info-title\""), std::string::npos);
@@ -4543,7 +4543,7 @@ TEST(QmMonitoringHelpers, IngameServerInfoCardTitlesHaveImmediateFallback)
 TEST(QmMonitoringHelpers, IngameMenuTabsHaveImmediateTextFallback)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)");
 	ASSERT_FALSE(Body.empty());
 
 	// Screenshot regression: the Ghost / Call vote ingame tabs are critical
@@ -4776,7 +4776,7 @@ TEST(QmMonitoringHelpers, IngameImmediateTextFallbackIsCountedForSchedulerCovera
 {
 	const std::string Header = ReadRepoFile("src/game/client/components/menus.h");
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)");
 	const std::string ButtonBody = ExtractSourceFunctionBody(Source, "int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)");
 	const std::string LabelBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
 	const std::string TitleBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
@@ -4873,7 +4873,7 @@ TEST(QmMonitoringHelpers, IngameCriticalTextFallbacksAreLimited)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/menus.cpp");
 	const std::string StreamedBody = ExtractSourceFunctionBody(Source, "void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor, bool Render)");
-	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)");
+	const std::string TabBody = ExtractSourceFunctionBody(Source, "int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)");
 	const std::string TitleBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
 	const std::string LabelBody = ExtractSourceFunctionBody(Source, "void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps)");
 	ASSERT_FALSE(StreamedBody.empty());
@@ -6950,48 +6950,14 @@ TEST(QmMonitoringHelpers, QmClientVoiceTextInputsUseSharedQmTextField)
 	EXPECT_EQ(Body.find("Ui()->DoEditBox(&s_VoiceServer, &ControlCol, LgBodySize"), std::string::npos);
 }
 
-TEST(QmMonitoringHelpers, QmClientLyricsTextInputsUseSharedQmTextField)
+TEST(QmMonitoringHelpers, NeteaseLyricsSettingsAreIntegratedWithSystemMediaControls)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmHudLyricsContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderQmHudSystemMediaControlsContent");
 	ASSERT_FALSE(Body.empty());
-
-	const size_t CtxPos = Body.find("IUiContext QmClientLyricsTextInputCtx;");
-	const size_t UiPos = Body.find("QmClientLyricsTextInputCtx.m_pUi = Ui();", CtxPos);
-	const size_t AnimPos = Body.find("QmClientLyricsTextInputCtx.m_pAnim = PrewarmOnly || Ui()->RenderOnly() ? nullptr : &GameClient()->UiRuntimeV2()->AnimRuntime();", UiPos);
-	const size_t TreePos = Body.find("QmClientLyricsTextInputCtx.m_pTree = PrewarmOnly || Ui()->RenderOnly() ? nullptr : &GameClient()->UiRuntimeV2()->Tree();", AnimPos);
-	const size_t ScopePos = Body.find("QmClientLyricsTextInputCtx.m_ScopeHash = MakeUiScopeHash(\"settings_qmclient_lyrics_text_inputs\");", TreePos);
-	const size_t FrameDtPos = Body.find("QmClientLyricsTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();", ScopePos);
-	EXPECT_NE(CtxPos, std::string::npos);
-	EXPECT_NE(UiPos, std::string::npos);
-	EXPECT_NE(AnimPos, std::string::npos);
-	EXPECT_NE(TreePos, std::string::npos);
-	EXPECT_NE(ScopePos, std::string::npos);
-	EXPECT_NE(FrameDtPos, std::string::npos);
-	EXPECT_LT(CtxPos, UiPos);
-	EXPECT_LT(UiPos, AnimPos);
-	EXPECT_LT(AnimPos, TreePos);
-	EXPECT_LT(TreePos, ScopePos);
-	EXPECT_LT(ScopePos, FrameDtPos);
-
-	const size_t LambdaPos = Body.find("auto RenderLyricTextInput = [&](CLineInput *pLineInput, const char *pTextId, const char *pLabel, char *pValue, size_t ValueSize, const char *pEmptyText) {", FrameDtPos);
-	const size_t EmptyTextPos = Body.find("pLineInput->SetEmptyText(pEmptyText);", LambdaPos);
-	const size_t TextFieldPos = Body.find("if(ui_widget::InputField(QmClientLyricsTextInputCtx, pLineInput, ControlColValue, pEmptyText, BodySize))", EmptyTextPos);
-	const size_t WriteBackPos = Body.find("str_copy(pValue, pLineInput->GetString(), ValueSize);", TextFieldPos);
-	EXPECT_NE(LambdaPos, std::string::npos);
-	EXPECT_NE(EmptyTextPos, std::string::npos);
-	EXPECT_NE(TextFieldPos, std::string::npos);
-	EXPECT_NE(WriteBackPos, std::string::npos);
-	EXPECT_LT(LambdaPos, EmptyTextPos);
-	EXPECT_LT(EmptyTextPos, TextFieldPos);
-	EXPECT_LT(TextFieldPos, WriteBackPos);
-
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsSourceOrder"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsProviderThresholds"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsIgnoreCacheProviders"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsAppleMusicMediaUserToken"), std::string::npos);
-	EXPECT_NE(Body.find("RenderLyricTextInput(&s_QmLyricsLocalMediaFolders"), std::string::npos);
-	EXPECT_EQ(Body.find("Ui()->DoEditBox(pLineInput, &ControlColValue, LgBodySize"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_QmLyrics"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_QmLyricsInMediaIsland"), std::string::npos);
+	EXPECT_EQ(Source.find("RenderQmHudLyricsContent"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, SettingsRenderOnlyTraversalHasNoInputAnimationDeviceOrConfigSideEffects)
@@ -7654,6 +7620,28 @@ TEST(QmMonitoringHelpers, QmClientContentOwnersPreserveInteractiveContracts)
 	EXPECT_NE(HudDeck.find("RenderQmHudNotificationsAdvancedContent"), std::string::npos);
 }
 
+TEST(QmMonitoringHelpers, TimeoutDisconnectReconnectAdvertisesDDNetVersionBeforeSystemInfo)
+{
+	const std::string Source = ReadRepoFile("src/engine/client/client.cpp");
+	const std::string SendInfoBody = ExtractSourceFunctionBody(Source, "void CClient::SendInfo(int Conn)");
+	ASSERT_FALSE(SendInfoBody.empty());
+
+	const size_t LegacyVersion = SendInfoBody.find("CMsgPacker MsgLegacyVersion(NETMSGTYPE_CL_ISDDNETLEGACY, false);");
+	const size_t TClientInfo = SendInfoBody.find("SendTClientInfo(Conn);");
+	const size_t ClientVersion = SendInfoBody.find("CMsgPacker MsgVer(NETMSG_CLIENTVER, true);");
+	const size_t SystemInfo = SendInfoBody.find("CMsgPacker Msg(NETMSG_INFO, true);");
+	ASSERT_NE(LegacyVersion, std::string::npos);
+	ASSERT_NE(TClientInfo, std::string::npos);
+	ASSERT_NE(ClientVersion, std::string::npos);
+	ASSERT_NE(SystemInfo, std::string::npos);
+
+	EXPECT_LT(LegacyVersion, TClientInfo);
+	EXPECT_LT(LegacyVersion, ClientVersion);
+	EXPECT_LT(LegacyVersion, SystemInfo);
+	EXPECT_NE(SendInfoBody.find("MsgLegacyVersion.AddInt(GameClient()->DDNetVersion());"), std::string::npos);
+	EXPECT_NE(SendInfoBody.find("SendMsg(Conn, &MsgLegacyVersion, MSGFLAG_VITAL);"), std::string::npos);
+}
+
 TEST(QmMonitoringHelpers, QmClientDeckMeasureRevisionsDoNotPreMeasureContent)
 {
 	const std::string Source = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -7698,11 +7686,13 @@ TEST(QmMonitoringHelpers, QmClientDeckMeasureRevisionsDoNotPreMeasureContent)
 	}
 	EXPECT_EQ(FunctionDeck.find("QmKeywordReplyRules::DecodeFromConfig", FunctionDeckMeasure + 1), std::string::npos);
 
-	for(const char *pState : {"DummyMiniViewExpanded", "g_Config.m_QmPlayerStatsMapProgress", "g_Config.m_QmSpeedrunTimer", "g_Config.m_QmInputOverlay", "g_Config.m_QmHudNotificationsShowAdvanced", "g_Config.m_QmHudNotificationsUseCategoryFilters", "g_Config.m_QmVoiceEnable", "g_Config.m_QmVoiceShowAdvanced", "DynamicIslandOriginalStyle", "g_Config.m_QmSmtcEnable", "g_Config.m_Qm3DParticles"})
+	for(const char *pState : {"DummyMiniViewExpanded", "g_Config.m_QmPlayerStatsMapProgress", "g_Config.m_QmSpeedrunTimer", "g_Config.m_QmInputOverlay", "g_Config.m_QmHudNotificationsShowAdvanced", "g_Config.m_QmHudNotificationsUseCategoryFilters", "g_Config.m_QmVoiceEnable", "g_Config.m_QmVoiceShowAdvanced", "DynamicIslandOriginalStyle", "g_Config.m_QmSmtcEnable", "g_Config.m_QmNeteaseHookEnable", "g_Config.m_Qm3DParticles"})
 		EXPECT_NE(HudDeck.find(pState), std::string::npos) << pState;
 	for(const char *pState : {"g_Config.m_TcFreezeChatEnabled", "g_Config.m_TcFreezeChatEmoticon", "g_Config.m_QmAxiomAutoLogin", "g_Config.m_QmGores", "g_Config.m_QmGoresAutoEnable", "g_Config.m_QmWeaponTrajectory", "g_Config.m_QmFriendOnlineAutoRefresh", "g_Config.m_QmFriendEnterBroadcast", "g_Config.m_QmFriendEnterAutoGreet", "s_BlockWordsLayoutRevision", "g_Config.m_QmTranslateBackend", "g_Config.m_QmTranslateLlmEnableThinking", "g_Config.m_QmTranslateLlmProvider", "s_KeywordRulesLayoutRevision", "g_Config.m_QmPieMenuEnabled", "s_FavoriteMapsLayoutRevision", "g_Config.m_QmAutoTeamLock"})
 		EXPECT_NE(FunctionDeck.find(pState), std::string::npos) << pState;
 	for(const char *pState : {"g_Config.m_QmChatBubble", "g_Config.m_QmCameraDrift", "g_Config.m_QmDynamicFov", "g_Config.m_QmAspectPreset", "g_Config.m_QmSkinChangeTransition", "g_Config.m_QmWeaponSwitchAnim", "g_Config.m_QmHitboxMode", "g_Config.m_QmShowCollisionHitbox"})
+		EXPECT_NE(VisualDeck.find(pState), std::string::npos) << pState;
+	for(const char *pState : {"g_Config.m_QmHitboxShowMap", "g_Config.m_QmHitboxShowTeeCollision", "g_Config.m_QmHitboxShowTeeFreeze", "g_Config.m_QmHitboxShowTeeDeath", "g_Config.m_QmHitboxShowHammer", "g_Config.m_QmHitboxShowProjectiles", "g_Config.m_QmHitboxShowLasers", "g_Config.m_QmHitboxShowFreezeLasers", "g_Config.m_QmHitboxShowHook"})
 		EXPECT_NE(VisualDeck.find(pState), std::string::npos) << pState;
 
 	EXPECT_NE(BlockWords.find("str_copy(s_aBlockWordsLayoutConfigCache"), std::string::npos);
@@ -8946,6 +8936,20 @@ TEST(QmMonitoringHelpers, ServerBrowserStatusInputsUseSharedQmFields)
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_FilterInput, &QuickSearch"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_ExcludeInput, &QuickExclude"), std::string::npos);
 	EXPECT_EQ(Body.find("Ui()->DoClearableEditBox(&s_ServerAddressInput, &ServerAddrEditBox"), std::string::npos);
+}
+
+TEST(QmMonitoringHelpers, ServerBrowserStatusInputsShareHorizontalBounds)
+{
+	const std::string Source = ReadRepoFile("src/game/client/components/menus_browser.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated)");
+	ASSERT_FALSE(Body.empty());
+
+	EXPECT_NE(Body.find("const float SearchExcludeAddrInputOffset = SearchExcludeAddrStrMax + 5.0f + ExcludeIconWidth + 5.0f;"), std::string::npos);
+	EXPECT_NE(Body.find("QuickSearch.VSplitLeft(SearchExcludeAddrStrMax, &SearchLabel, nullptr);"), std::string::npos);
+	EXPECT_NE(Body.find("QuickSearch.VSplitLeft(SearchExcludeAddrInputOffset, nullptr, &QuickSearch);"), std::string::npos);
+	EXPECT_NE(Body.find("QuickExclude.VSplitLeft(ExcludeIconWidth + 5.0f, nullptr, &ExcludeLabel);"), std::string::npos);
+	EXPECT_NE(Body.find("QuickExclude.VSplitLeft(SearchExcludeAddrInputOffset, nullptr, &QuickExclude);"), std::string::npos);
+	EXPECT_NE(Body.find("ServerAddr.VSplitLeft(SearchExcludeAddrInputOffset, &ServerAddrLabel, &ServerAddrEditBox);"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, ServerBrowserFiltersTextInputsUseSharedQmTextField)

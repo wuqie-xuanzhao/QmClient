@@ -3,8 +3,8 @@
 
 #include <engine/graphics.h>
 
+#include <game/client/components/hud_frozen_tee_state.h>
 #include <game/client/components/hud_media_island_logic.h>
-#include <game/client/components/qmclient/tune_zone_effects.h>
 #include <game/client/components/tclient/pet.h>
 
 #include <gtest/gtest.h>
@@ -58,168 +58,102 @@ namespace
 	}
 }
 
-TEST(QmTuneZoneEffects, MapsEveryEffectiveTuningParameterToItsCategory)
+TEST(QmHudFrozenTeeState, ConfirmedDeathSuppressesStaleTimedAndDeepFreeze)
 {
-	using ECategory = EQmTuneZoneEffectCategory;
-	static_assert(sizeof(CTuningParams) == sizeof(int) * 47);
-	constexpr std::array<ECategory, 47> aExpectedCategories = {
-		ECategory::MOVEMENT,
-		ECategory::MOVEMENT,
-		ECategory::MOVEMENT,
-		ECategory::JUMP,
-		ECategory::JUMP,
-		ECategory::MOVEMENT,
-		ECategory::MOVEMENT,
-		ECategory::MOVEMENT,
-		ECategory::HOOK,
-		ECategory::HOOK,
-		ECategory::HOOK,
-		ECategory::HOOK,
-		ECategory::GRAVITY,
-		ECategory::VELRAMP,
-		ECategory::VELRAMP,
-		ECategory::VELRAMP,
-		ECategory::GUN_JETPACK,
-		ECategory::GUN_JETPACK,
-		ECategory::GUN_JETPACK,
-		ECategory::SHOTGUN,
-		ECategory::SHOTGUN,
-		ECategory::UNUSED,
-		ECategory::UNUSED,
-		ECategory::GRENADE_EXPLOSION,
-		ECategory::GRENADE_EXPLOSION,
-		ECategory::GRENADE_EXPLOSION,
-		ECategory::LASER,
-		ECategory::LASER,
-		ECategory::LASER,
-		ECategory::LASER,
-		ECategory::UNUSED,
-		ECategory::COLLISION,
-		ECategory::COLLISION,
-		ECategory::GUN_JETPACK,
-		ECategory::SHOTGUN,
-		ECategory::GRENADE_EXPLOSION,
-		ECategory::HAMMER,
-		ECategory::HOOK,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::WEAPON_FIRE_RATE,
-		ECategory::ELASTICITY,
-		ECategory::ELASTICITY,
-	};
+	SHudFrozenTeeState State;
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
 
-	const CTuningParams ZoneZero;
-	for(int Parameter = 0; Parameter < CTuningParams::Num(); ++Parameter)
-	{
-		CTuningParams Zone = ZoneZero;
-		float Value = 0.0f;
-		ASSERT_TRUE(Zone.Get(Parameter, &Value));
-		ASSERT_TRUE(Zone.Set(Parameter, Value + 1.0f));
+	QmHudMarkTeeDead(State, 100, 105);
 
-		const SQmTuneZoneEffectSummary Summary = BuildQmTuneZoneEffectSummary(ZoneZero, Zone);
-		if(aExpectedCategories[Parameter] == ECategory::UNUSED)
-		{
-			EXPECT_EQ(Summary.m_Count, 0) << CTuningParams::Name(Parameter);
-		}
-		else
-		{
-			ASSERT_EQ(Summary.m_Count, 1) << CTuningParams::Name(Parameter);
-			EXPECT_EQ(Summary.m_aCategories[0], aExpectedCategories[Parameter]) << CTuningParams::Name(Parameter);
-		}
-	}
+	EXPECT_TRUE(State.m_DeathOverride);
+	EXPECT_EQ(State.m_DeathBarrierTick, 105);
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, -1, true));
 }
 
-TEST(QmTuneZoneEffects, DeduplicatesCategoriesAndUsesFixedPriority)
+TEST(QmHudFrozenTeeState, BufferedPreDeathCharacterCannotRemoveDeathOverride)
 {
-	CTuningParams ZoneZero;
-	CTuningParams Zone = ZoneZero;
-	Zone.m_Gravity = 0.75f;
-	Zone.m_GroundControlSpeed = 12.0f;
-	Zone.m_AirFriction = 0.80f;
-	Zone.m_GroundJumpImpulse = 15.0f;
-	Zone.m_HookLength = 420.0f;
-	Zone.m_PlayerCollision = 0;
-	Zone.m_JetpackStrength = 500.0f;
-	Zone.m_ShotgunStrength = 12.0f;
-	Zone.m_ExplosionStrength = 8.0f;
-	Zone.m_LaserReach = 900.0f;
-	Zone.m_HammerStrength = 2.0f;
-	Zone.m_GunFireDelay = 100;
-	Zone.m_VelrampStart = 600.0f;
-	Zone.m_GroundElasticityX = 0.5f;
+	SHudFrozenTeeState State;
+	QmHudMarkTeeDead(State, 100, 105);
 
-	const SQmTuneZoneEffectSummary Summary = BuildQmTuneZoneEffectSummary(ZoneZero, Zone);
-	const std::array<EQmTuneZoneEffectCategory, 13> aExpected = {
-		EQmTuneZoneEffectCategory::GRAVITY,
-		EQmTuneZoneEffectCategory::MOVEMENT,
-		EQmTuneZoneEffectCategory::JUMP,
-		EQmTuneZoneEffectCategory::HOOK,
-		EQmTuneZoneEffectCategory::COLLISION,
-		EQmTuneZoneEffectCategory::GUN_JETPACK,
-		EQmTuneZoneEffectCategory::SHOTGUN,
-		EQmTuneZoneEffectCategory::GRENADE_EXPLOSION,
-		EQmTuneZoneEffectCategory::LASER,
-		EQmTuneZoneEffectCategory::HAMMER,
-		EQmTuneZoneEffectCategory::WEAPON_FIRE_RATE,
-		EQmTuneZoneEffectCategory::VELRAMP,
-		EQmTuneZoneEffectCategory::ELASTICITY,
-	};
-
-	ASSERT_EQ(Summary.m_Count, (int)aExpected.size());
-	EXPECT_EQ(Summary.m_aCategories, aExpected);
-	EXPECT_EQ(Summary.VisibleCategoryCount(), 7);
-	EXPECT_EQ(Summary.HiddenCategoryCount(), 6);
-	EXPECT_EQ(Summary.DisplaySlotCount(), 8);
+	QmHudObserveTeeCharacterSnapshot(State, true, 104);
+	EXPECT_TRUE(State.m_DeathOverride);
+	QmHudObserveTeeCharacterSnapshot(State, true, 105);
+	EXPECT_TRUE(State.m_DeathOverride);
 }
 
-TEST(QmTuneZoneEffects, IdenticalZoneHasNoSatelliteSlots)
+TEST(QmHudFrozenTeeState, NetworkClippingDoesNotPretendTheTeeRespawned)
 {
-	const CTuningParams ZoneZero;
-	const SQmTuneZoneEffectSummary Summary = BuildQmTuneZoneEffectSummary(ZoneZero, ZoneZero);
+	SHudFrozenTeeState AliveState;
+	QmHudObserveTeeCharacterSnapshot(AliveState, false, 200);
+	EXPECT_TRUE(QmHudTeeIsFrozen(AliveState, 250, false));
 
-	EXPECT_FALSE(Summary.HasEffects());
-	EXPECT_EQ(Summary.VisibleCategoryCount(), 0);
-	EXPECT_EQ(Summary.HiddenCategoryCount(), 0);
-	EXPECT_EQ(Summary.DisplaySlotCount(), 0);
+	SHudFrozenTeeState DeadState;
+	QmHudMarkTeeDead(DeadState, 100, 105);
+	QmHudObserveTeeCharacterSnapshot(DeadState, false, 200);
+	EXPECT_TRUE(DeadState.m_DeathOverride);
+	EXPECT_FALSE(QmHudTeeIsFrozen(DeadState, 250, false));
 }
 
-TEST(QmTuneZoneEffects, SatelliteWidthGrowsWithVisibleSlotsAndOverflowSlot)
+TEST(QmHudFrozenTeeState, FreshRespawnUsesTheNewFreezeState)
 {
-	SQmTuneZoneEffectSummary Summary;
-	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 0.0f);
+	SHudFrozenTeeState State;
+	QmHudMarkTeeDead(State, 100, 105);
 
-	Summary.m_Count = 1;
-	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 16.0f);
+	QmHudObserveTeeCharacterSnapshot(State, true, 106);
 
-	Summary.m_Count = 7;
-	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 60.0f);
-
-	Summary.m_Count = 13;
-	EXPECT_FLOAT_EQ(QmTuneZoneEffectSatelliteWidth(Summary, 16.0f, 6.0f, 2.0f, 3.0f), 68.0f);
+	EXPECT_FALSE(State.m_DeathOverride);
+	EXPECT_EQ(State.m_DeathBarrierTick, -1);
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, 0, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
 }
 
-TEST(QmTuneZoneEffectsSource, HudUsesCurrentNonzeroZoneAndReusesExistingSatellite)
+TEST(QmHudFrozenTeeSource, TracksConfirmedKillsWithoutTreatingDeathEffectsAsKills)
+{
+	const std::string CMakeSource = ReadTestSourceFile("CMakeLists.txt");
+	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
+	const std::string GameClientHeader = ReadTestSourceFile("src/game/client/gameclient.h");
+	const std::string HudSource = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string OnMessageBody = FunctionBody(GameClientSource, "void CGameClient::OnMessage(");
+	const std::string ProcessEventsBody = FunctionBody(GameClientSource, "void CGameClient::ProcessEvents()");
+	const std::string ResetDemoPlaybackStateBody = FunctionBody(GameClientSource, "void CGameClient::ResetDemoPlaybackState()");
+	const std::string OnNewSnapshotBody = FunctionBody(GameClientSource, "void CGameClient::OnNewSnapshot()");
+	const std::string FrozenTeamInfoBody = FunctionBody(HudSource, "SHudFrozenTeamInfo BuildHudFrozenTeamInfo(");
+	const std::string RenderTextInfoBody = FunctionBody(HudSource, "void CHud::RenderTextInfo()");
+
+	EXPECT_NE(CMakeSource.find("components/hud_frozen_tee_state.h"), std::string::npos);
+	EXPECT_NE(GameClientHeader.find("SHudFrozenTeeState m_HudFrozenTeeState"), std::string::npos);
+	EXPECT_NE(OnMessageBody.find("QmHudMarkTeeDead(m_aClients[pMsg->m_Victim].m_HudFrozenTeeState"), std::string::npos);
+	EXPECT_NE(OnMessageBody.find("QmHudMarkTeeDead(m_aClients[i].m_HudFrozenTeeState"), std::string::npos);
+	EXPECT_EQ(ProcessEventsBody.find("QmHudMarkTeeDead"), std::string::npos);
+	EXPECT_NE(ResetDemoPlaybackStateBody.find("Client.m_HudFrozenTeeState = {}"), std::string::npos);
+	EXPECT_NE(OnNewSnapshotBody.find("QmHudObserveTeeCharacterSnapshot"), std::string::npos);
+	EXPECT_NE(FrozenTeamInfoBody.find("QmHudTeeIsFrozen"), std::string::npos);
+	EXPECT_NE(RenderTextInfoBody.find("QmHudTeeIsFrozen"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, RemovedTuningSatelliteDoesNotRemain)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
+	const std::string CountdownLogic = ReadTestSourceFile("src/game/client/components/hud_media_island_logic.h");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string IconHeader = ReadTestSourceFile("src/game/client/qm_icon_manager.h");
+	const std::string IconSource = ReadTestSourceFile("src/game/client/qm_icon_manager.cpp");
 
-	EXPECT_NE(Source.find("TuneZone <= 0 || TuneZone >= NUM_TUNEZONES"), std::string::npos);
-	EXPECT_NE(Source.find("BuildQmTuneZoneEffectSummary(*GameClient.GetTuning(0), *GameClient.GetTuning(TuneZone))"), std::string::npos);
-	EXPECT_NE(Source.find("EHudMediaIslandCountdownType::TUNE_ZONE"), std::string::npos);
-	EXPECT_NE(Source.find("Item.m_TuneZoneSummary"), std::string::npos);
-	EXPECT_NE(Source.find("SdfItem.m_Radii = Item.m_Radii * EntranceContentAlpha"), std::string::npos);
-	EXPECT_EQ(Source.find("QmHudMediaIslandLeftBlobCapsule"), std::string::npos);
-	EXPECT_EQ(Header.find("m_TuneZoneLiquidProgress"), std::string::npos);
-	EXPECT_NE(Source.find("str_format(aOverflowBuf, sizeof(aOverflowBuf), \"+%d\", HiddenCategoryCount)"), std::string::npos);
-	EXPECT_NE(Config.find("QmHudIslandShowTuneZoneEffects, qm_hud_island_show_tune_zone_effects, 1"), std::string::npos);
+	EXPECT_EQ(Source.find("TuneZoneEffect"), std::string::npos);
+	EXPECT_EQ(Header.find("TuneZoneEffect"), std::string::npos);
+	EXPECT_EQ(CountdownLogic.find("TUNE_ZONE"), std::string::npos);
+	EXPECT_EQ(Menus.find("qmclient-dynamic-island-tune-zone-icon-legend"), std::string::npos);
+	EXPECT_EQ(Config.find("QmHudIslandShowTuneZoneEffects"), std::string::npos);
+	EXPECT_EQ(IconHeader.find("TUNE_GRAVITY"), std::string::npos);
+	EXPECT_EQ(IconSource.find("tune-gravity"), std::string::npos);
 }
 
-TEST(QmTuneZoneEffectsSource, DynamicIslandUsesCompactSharedSpacing)
+TEST(QmHudMediaIslandSource, DynamicIslandUsesCompactSharedSpacing)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 
@@ -227,6 +161,37 @@ TEST(QmTuneZoneEffectsSource, DynamicIslandUsesCompactSharedSpacing)
 	EXPECT_NE(Source.find("QmHudMediaIslandScaled(3.0f)"), std::string::npos);
 	EXPECT_NE(Source.find("QmHudMediaIslandScaled(7.0f)"), std::string::npos);
 	EXPECT_NE(Source.find("QmHudMediaIslandScaled(5.0f)"), std::string::npos);
+}
+
+TEST(QmHudDummyMiniViewSource, VulkanUsesOffscreenTargetForEveryVendor)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
+	const std::string VulkanSource = ReadTestSourceFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	const std::string RectBody = FunctionBody(Source, "bool CHud::GetDummyMiniMapRect(");
+	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderDummyMiniMap(");
+	const std::string ReleaseBody = FunctionBody(Source, "void CHud::OnRelease(");
+
+	ASSERT_FALSE(RectBody.empty());
+	ASSERT_FALSE(RenderBody.empty());
+	ASSERT_FALSE(ReleaseBody.empty());
+	EXPECT_EQ(Source.find("IsVulkanAmdBackend"), std::string::npos);
+	EXPECT_EQ(Source.find("known driver crash"), std::string::npos);
+	EXPECT_NE(Source.find("bool IsVulkanBackend(IGraphics *pGraphics)"), std::string::npos);
+	EXPECT_NE(Source.find("GetDetectedContextVersion"), std::string::npos);
+	EXPECT_NE(Header.find("m_DummyMiniViewRenderTarget"), std::string::npos);
+	EXPECT_NE(Header.find("DestroyDummyMiniViewRenderTarget"), std::string::npos);
+	EXPECT_EQ(RectBody.find("Vulkan"), std::string::npos);
+	EXPECT_NE(RenderBody.find("IsVulkanBackend(Graphics())"), std::string::npos);
+	EXPECT_NE(RenderBody.find("Graphics()->BeginRenderTarget(m_DummyMiniViewRenderTarget"), std::string::npos);
+	EXPECT_NE(RenderBody.find("Graphics()->EndRenderTarget()"), std::string::npos);
+	EXPECT_NE(RenderBody.find("Graphics()->DrawRenderTarget(m_DummyMiniViewRenderTarget"), std::string::npos);
+	EXPECT_NE(RenderBody.find("DrawParams.m_V0 = 0.0f;"), std::string::npos);
+	EXPECT_NE(RenderBody.find("DrawParams.m_V1 = 1.0f;"), std::string::npos);
+	EXPECT_NE(ReleaseBody.find("DestroyDummyMiniViewRenderTarget"), std::string::npos);
+	EXPECT_EQ(VulkanSource.find("VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("MultiSamplingColorAttachment.storeOp = HasMultiSamplingTargets ? VK_ATTACHMENT_STORE_OP_STORE"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("LoadAttachments ? VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL : InitialLayout"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandLayout, ScalesTheCompleteDesignToEightyPercent)
@@ -255,15 +220,6 @@ TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundTopAnchoredHorizontalMidl
 		0.0001f);
 }
 
-TEST(QmTuneZoneEffectsSource, SettingsExposeIconLegend)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-
-	EXPECT_NE(Source.find("Tune Zone effect icon legend"), std::string::npos);
-	EXPECT_NE(Source.find("EQmIcon::TUNE_GRAVITY"), std::string::npos);
-	EXPECT_NE(Source.find("EQmIcon::TUNE_ELASTICITY"), std::string::npos);
-}
-
 TEST(QmHudMediaIslandLogic, FirstMediaStateDoesNotStartTrackTransition)
 {
 	SHudMediaIslandTrackSnapshot Current;
@@ -281,6 +237,15 @@ TEST(QmHudMediaIslandLogic, FirstMediaStateDoesNotStartTrackTransition)
 	EXPECT_FALSE(NeedsNodeReset);
 	EXPECT_STREQ(Current.m_aTitle, "Song A");
 	EXPECT_FALSE(Outgoing.HasMeaningfulIdentity());
+}
+
+TEST(QmHudMediaIslandLogic, FirstOrLateMetadataStartsTheTrackDetailsDeadline)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::FIRST_IDENTITY, false, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::NONE, false, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::NONE, true, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::FIRST_IDENTITY, false, false));
+	EXPECT_TRUE(QmHudMediaIslandShouldRevealTrackDetails(EHudMediaIslandTrackUpdate::TRACK_CHANGED, true, true));
 }
 
 TEST(QmHudMediaIslandLogic, TrackChangeCopiesCurrentSnapshotToOutgoing)
@@ -599,10 +564,10 @@ TEST(QmHudMediaIslandSatellite, MultipleItemsKeepThreePixelEdgeGap)
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSatelliteWidth(3, 16.0f, 3.0f), 54.0f);
 }
 
-TEST(QmHudMediaIslandLayout, LyricsNeverWidenAnExistingTopRow)
+TEST(QmHudMediaIslandLayout, ActiveLyricsKeepAFixedViewportWithAnExistingTopRow)
 {
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 72.0f, 300.0f, 10.0f), 0.0f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 500.0f, 300.0f, 10.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 72.0f, 300.0f, 10.0f), 92.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, false, 0.0f, 500.0f, 300.0f, 10.0f), 300.0f);
 }
 
 TEST(QmHudMediaIslandLayout, LyricsOnlyUsesFixedTitleAreaWidth)
@@ -613,8 +578,75 @@ TEST(QmHudMediaIslandLayout, LyricsOnlyUsesFixedTitleAreaWidth)
 
 TEST(QmHudMediaIslandLayout, UtilityBottomContentStillControlsRequestedWidth)
 {
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, true, 45.0f, 72.0f, 300.0f, 10.0f), 65.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(true, true, true, 45.0f, 72.0f, 300.0f, 10.0f), 92.0f);
 	EXPECT_FLOAT_EQ(QmHudMediaIslandDesiredBottomWidth(false, false, true, 45.0f, 72.0f, 300.0f, 10.0f), 65.0f);
+}
+
+TEST(QmHudMediaIslandLyrics, ActiveLyricsKeepTheIslandExpandedWithoutRepeatedMorphs)
+{
+	SHudMediaIslandExpansionState State;
+	State = QmHudMediaIslandUpdateExpansion(State, true, true, false, 1000, 3000);
+	EXPECT_TRUE(State.m_Expanded);
+	EXPECT_TRUE(State.m_LyricsActive);
+	EXPECT_EQ(State.m_ExpandUntilTick, 0);
+	EXPECT_TRUE(State.m_StartCapsuleMorph);
+
+	State.m_StartCapsuleMorph = false;
+	State = QmHudMediaIslandUpdateExpansion(State, true, true, false, 100000, 3000);
+	EXPECT_TRUE(State.m_Expanded);
+	EXPECT_EQ(State.m_ExpandUntilTick, 0);
+	EXPECT_FALSE(State.m_StartCapsuleMorph);
+}
+
+TEST(QmHudMediaIslandLyrics, TrackDetailsUseAnIndependentThreeSecondDeadline)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldShowTrackDetails(1000, 4000));
+	EXPECT_FALSE(QmHudMediaIslandShouldShowTrackDetails(4000, 4000));
+	EXPECT_FALSE(QmHudMediaIslandShouldShowTrackDetails(5000, 0));
+}
+
+TEST(QmHudMediaIslandLyrics, LosingLyricsRestoresTheNormalAutoCollapseDeadline)
+{
+	SHudMediaIslandExpansionState State;
+	State.m_Expanded = true;
+	State.m_LyricsActive = true;
+	State = QmHudMediaIslandUpdateExpansion(State, true, false, false, 1000, 3000);
+	EXPECT_TRUE(State.m_Expanded);
+	EXPECT_EQ(State.m_ExpandUntilTick, 4000);
+	EXPECT_FALSE(State.m_StartCapsuleMorph);
+
+	State = QmHudMediaIslandUpdateExpansion(State, true, false, false, 4000, 3000);
+	EXPECT_FALSE(State.m_Expanded);
+	EXPECT_EQ(State.m_ExpandUntilTick, 0);
+	EXPECT_TRUE(State.m_StartCapsuleMorph);
+}
+
+TEST(QmHudMediaIslandLyrics, ShortLyricsNeverScroll)
+{
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(80.0f, 100.0f, 0.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(100.0f, 100.0f, 500.0f), 0.0f);
+}
+
+TEST(QmHudMediaIslandLyrics, LongLyricsPauseTravelAndReturnWithinTheViewport)
+{
+	constexpr float TextWidth = 200.0f;
+	constexpr float ViewportWidth = 100.0f;
+	constexpr float Speed = 50.0f;
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 0.0f, Speed), 0.0f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 1.2f, Speed), 0.0f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 2.2f, Speed), 50.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 3.2f, Speed), 100.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 4.2f, Speed), 100.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 5.2f, Speed), 50.0f, 0.001f);
+	EXPECT_NEAR(QmHudMediaIslandMarqueeOffset(TextWidth, ViewportWidth, 6.2f, Speed), 0.0f, 0.001f);
+}
+
+TEST(QmHudMediaIslandLyrics, NewLineResetsTheMarqueeAtItsStartingPause)
+{
+	EXPECT_FALSE(QmHudMediaIslandShouldResetMarquee("same", "same"));
+	EXPECT_TRUE(QmHudMediaIslandShouldResetMarquee("first", "second"));
+	EXPECT_TRUE(QmHudMediaIslandShouldResetMarquee(nullptr, "line"));
+	EXPECT_FLOAT_EQ(QmHudMediaIslandMarqueeOffset(200.0f, 100.0f, 0.0f), 0.0f);
 }
 
 TEST(QmHudMediaIslandLayout, FirstIncomingSwapReplacesCheckpointAndLyricsRemainLast)
@@ -1052,10 +1084,23 @@ TEST(QmHudMediaIslandSdfBounds, OuterRectKeepsEveryLiquidEdgeInsideTheQuad)
 
 TEST(QmHudMediaIslandBackdrop, TransparentOpacityIncludesPureBlurAndSkipsOpaqueBackground)
 {
-	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(0));
-	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(1));
-	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(99));
-	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(100));
+	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(0, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(1, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldPrepareBackdropBlur(99, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(100, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(0, false));
+	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(99, false));
+}
+
+TEST(QmHudMediaIslandBackdrop, RefreshesBlurOnlyAfterTheShortFrameAttemptInterval)
+{
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(10, 0, false));
+	// 失败尝试也要进入短暂冷却，避免后端持续失败时每帧重试。
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(11, 10, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(10, 10, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(12, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(13, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(9, 10, true));
 }
 
 TEST(QmHudMediaIslandBackdrop, MapsTheAnimatedOuterRectToTheCapturedScreenTexture)
@@ -1329,7 +1374,7 @@ TEST(QmHudMediaIslandSource, MovesClockAndFrozenCountIntoStackAndReplacesClockSl
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
 	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
-	const std::string VisibleBody = FunctionBody(Source, "bool CHud::HasVisibleMediaIsland() const");
+	const std::string VisibleBody = FunctionBody(Source, "void CHud::EnsureMediaIslandFrameCache() const");
 
 	EXPECT_NE(RenderBody.find("const bool ShowInfoStack = ShowLocalTime || ShowFrozenSummary;"), std::string::npos);
 	EXPECT_NE(RenderBody.find("constexpr float InfoStackGap = QmHudMediaIslandScaled(0.8f);"), std::string::npos);
@@ -1343,6 +1388,23 @@ TEST(QmHudMediaIslandSource, MovesClockAndFrozenCountIntoStackAndReplacesClockSl
 	EXPECT_NE(VisibleBody.find("BuildHudFrozenSummaryText"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("ShowFrozenSummaryInBottomRow"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("%s CP%d"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, DisablesNeteaseOnlyWorkWhenTheHookIsOff)
+{
+	const std::string HudSource = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string HudCacheBody = FunctionBody(HudSource, "void CHud::EnsureMediaIslandFrameCache() const");
+	const std::string VisibleBody = FunctionBody(HudSource, "bool CHud::HasVisibleMediaIsland() const");
+	const std::string AvoidanceBody = FunctionBody(HudSource, "float CHud::GetTopIslandAvoidanceRight() const");
+	const std::string IntegrationSource = ReadTestSourceFile("src/game/client/components/qmclient/netease/netease_integration.cpp");
+	const std::string IntegrationBody = FunctionBody(IntegrationSource, "void CNeteaseIntegration::OnUpdate()");
+
+	EXPECT_NE(HudCacheBody.find("if(g_Config.m_QmNeteaseHookEnable != 0)"), std::string::npos);
+	EXPECT_NE(VisibleBody.find("if(g_Config.m_QmHudIslandUseOriginalStyle)"), std::string::npos);
+	EXPECT_NE(AvoidanceBody.find("if(g_Config.m_QmHudIslandUseOriginalStyle)"), std::string::npos);
+	EXPECT_NE(IntegrationBody.find("if(!g_Config.m_QmNeteaseHookEnable)"), std::string::npos);
+	EXPECT_NE(IntegrationBody.find("ClearForStaleMedia();"), std::string::npos);
+	EXPECT_NE(FunctionBody(HudSource, "float CHud::RenderLegacyMediaInfoAt(float AnchorX, float CenterY)").find("EnsureMediaIslandFrameCache();"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
@@ -1376,7 +1438,8 @@ TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 	EXPECT_NE(RenderBody.find("TimerCapsule.m_Alpha * EntranceContentAlpha"), std::string::npos);
 	EXPECT_NE(RenderBody.find("QmHudMediaIslandDesiredBottomWidth("), std::string::npos);
 	EXPECT_EQ(RenderBody.find("TextBoundingBox(BottomFontSize, aLyricsIslandBuf)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("RenderMediaIslandLine(LyricsRect, BottomFontSize, VisibleBottomAlpha)"), std::string::npos);
+	EXPECT_NE(RenderBody.find("QmHudMediaIslandMarqueeOffset("), std::string::npos);
+	EXPECT_NE(RenderBody.find("EnableMappedClip("), std::string::npos);
 	EXPECT_NE(RenderBody.find("0.42f * EntranceContentAlpha"), std::string::npos);
 	EXPECT_NE(RenderBody.find("SdfItem.m_ContentScale = Item.m_ContentScale * EntranceContentAlpha"), std::string::npos);
 	EXPECT_NE(RenderBody.find("SatelliteIconSize * Item.m_ContentScale * EntranceContentAlpha"), std::string::npos);
@@ -1384,7 +1447,11 @@ TEST(QmHudMediaIslandSource, RenderPathKeepsStableNodesAndEditorRect)
 	EXPECT_EQ(RenderBody.find("EUiAnimInterruptPolicy::QUEUE"), std::string::npos);
 	EXPECT_EQ(RenderBody.find("m_CoverRotation"), std::string::npos);
 	EXPECT_NE(RenderBody.find("m_MediaIslandLastVisibleRect = HudEditorScope.m_VisibleRect;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("BeginTransform(EHudEditorElement::MediaIsland, EditorTransformRect, EditorVisibleRect"), std::string::npos);
+	EXPECT_NE(RenderBody.find("BeginTransform(EHudEditorElement::MediaIsland, EditorTransformRect, EditorVisibleRect);"), std::string::npos);
+	EXPECT_EQ(RenderBody.find("QmHudIslandEdgeMargin"), std::string::npos);
+	const std::string HudEditorSource = ReadTestSourceFile("src/game/client/components/hud_editor.cpp");
+	EXPECT_NE(HudEditorSource.find("Element == EHudEditorElement::MediaIsland ? QmHudEditor::MEDIA_ISLAND_EDGE_SNAP_DISTANCE : HUD_EDITOR_EDGE_ANCHOR_DISTANCE"), std::string::npos);
+	EXPECT_NE(HudEditorSource.find("const float ScreenEdgeSnapDistance = HudEditorEdgeSnapDistance(Visible.m_Element);"), std::string::npos);
 }
 
 TEST(QmHudMediaIslandSource, IslandRendersBeforeCheckpointAndFinishEffects)
@@ -1555,6 +1622,7 @@ TEST(QmHudMediaIslandSource, BackgroundBlurUsesTheAnimatedCombinedSdfIncludingAt
 	const std::string PrepareBlur = FunctionBody(Source, "bool CHud::PrepareMediaIslandBlur()");
 	const std::string OnRelease = FunctionBody(Source, "void CHud::OnRelease()");
 	const std::string OnRender = FunctionBody(Source, "void CHud::OnRender()");
+	const std::string ResetContainers = FunctionBody(Source, "void CHud::ResetHudContainers()");
 	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
 	ASSERT_NE(IslandBegin, std::string::npos);
 	const size_t IslandEnd = Source.find("float CHud::RenderLegacyMediaInfoAt", IslandBegin);
@@ -1569,10 +1637,13 @@ TEST(QmHudMediaIslandSource, BackgroundBlurUsesTheAnimatedCombinedSdfIncludingAt
 	EXPECT_NE(PrepareBlur.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
 	EXPECT_NE(PrepareBlur.find("CaptureBackbufferToRenderTarget"), std::string::npos);
 	EXPECT_NE(PrepareBlur.find("GaussianBlurRenderTarget"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("m_QmGaussianBlur"), std::string::npos);
+	EXPECT_NE(PrepareBlur.find("QmHudMediaIslandShouldRefreshBackdropBlur"), std::string::npos);
 	EXPECT_EQ(PrepareBlur.find("m_QmBetterScoreboard"), std::string::npos);
 	EXPECT_NE(OnRelease.find("DestroyMediaIslandBlurTargets"), std::string::npos);
 	EXPECT_NE(OnRender.find("g_Config.m_QmHudIslandUseOriginalStyle"), std::string::npos);
 	EXPECT_NE(OnRender.find("DestroyMediaIslandBlurTargets"), std::string::npos);
+	EXPECT_NE(ResetContainers.find("m_MediaIslandBlurReady = false"), std::string::npos);
 	EXPECT_NE(IslandBody.find("DrawMediaIslandGeometryFallback"), std::string::npos);
 
 	EXPECT_NE(IslandBody.find("PrepareMediaIslandBlur()"), std::string::npos);

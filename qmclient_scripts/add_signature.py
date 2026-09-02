@@ -93,7 +93,6 @@ def main():
         "src/game/client/ui_scrollregion.*",
         # src/game/client/components/
         "src/game/client/components/binds_deepfly_mode.*",
-        "src/game/client/components/chat_completion.*",
         "src/game/client/components/hud_media_island_logic.*",
         "src/game/client/components/message_gradient.*",
         "src/game/client/components/pie_menu.*",

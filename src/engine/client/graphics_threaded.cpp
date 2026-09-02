@@ -3822,26 +3822,6 @@ int CGraphics_Threaded::InitWindow()
 			return FinishSuccessfulInit();
 	}
 
-	const bool VulkanFallbackAttempted = VulkanRequested && g_Config.m_GfxGLMajor == gs_BackendVulkanFallbackVersion.m_Major &&
-					     g_Config.m_GfxGLMinor == gs_BackendVulkanFallbackVersion.m_Minor && g_Config.m_GfxGLPatch == gs_BackendVulkanFallbackVersion.m_Patch;
-	if(VulkanRequested && !VulkanFallbackAttempted)
-	{
-		g_Config.m_GfxGLMajor = gs_BackendVulkanFallbackVersion.m_Major;
-		g_Config.m_GfxGLMinor = gs_BackendVulkanFallbackVersion.m_Minor;
-		g_Config.m_GfxGLPatch = gs_BackendVulkanFallbackVersion.m_Patch;
-		log_warn("gfx", "Failed to initialize Vulkan at the automatically selected API level. Trying Vulkan 1.1 instead.");
-		ErrorCode = IssueInit();
-		if(ErrorCode == 0)
-			return FinishSuccessfulInit();
-	}
-
-	if(VulkanForcedByEnvironment)
-	{
-		RestoreForcedVulkanConfig();
-		log_error("gfx", "Failed to initialize forced Vulkan. Not falling back to another backend.");
-		return ErrorCode;
-	}
-
 	if(VulkanRequested)
 	{
 		str_copy(g_Config.m_GfxBackend, "OpenGL");

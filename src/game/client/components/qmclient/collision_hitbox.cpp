@@ -244,6 +244,24 @@ void CCollisionHitbox::DrawBoxOutline(vec2 Center, float Radius, ColorRGBA Color
 	Graphics()->LinesDraw(aLines, 4);
 }
 
+void CCollisionHitbox::DrawCapsuleOutline(vec2 From, vec2 To, float Radius, ColorRGBA Color, int ArcSegments)
+{
+	if(Color.a <= 0.0f)
+		return;
+
+	const auto vSegments = BuildHitboxCapsuleOutline(From, To, Radius, ArcSegments);
+	if(vSegments.empty())
+		return;
+
+	std::vector<IGraphics::CLineItem> vLines;
+	vLines.reserve(vSegments.size());
+	for(const auto &Segment : vSegments)
+		vLines.emplace_back(Segment.m_From, Segment.m_To);
+
+	Graphics()->SetColor(Color);
+	Graphics()->LinesDraw(vLines.data(), vLines.size());
+}
+
 bool CCollisionHitbox::GetProjectileRenderPosition(const CProjectileData &Projectile, vec2 &Position, vec2 &PreviousPosition) const
 {
 	const int Weapon = std::clamp(Projectile.m_Type, 0, NUM_WEAPONS - 1);
@@ -459,6 +477,13 @@ void CCollisionHitbox::RenderTeeHitboxes()
 	if(Alpha <= 0.0f)
 		return;
 
+	const bool Legacy = LegacyModeEnabled();
+	const bool ShowTeeCollision = Legacy || g_Config.m_QmHitboxShowTeeCollision;
+	const bool ShowTeeFreeze = Legacy || g_Config.m_QmHitboxShowTeeFreeze;
+	const bool ShowTeeDeath = Legacy || g_Config.m_QmHitboxShowTeeDeath;
+	if(!ShowTeeCollision && !ShowTeeFreeze && !ShowTeeDeath)
+		return;
+
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
 
@@ -493,31 +518,37 @@ void CCollisionHitbox::RenderTeeHitboxes()
 			continue;
 
 		vec2 Position = Player.m_RenderPos;
-		if(HitboxModeEnabled())
+		if(ShowTeeCollision && HitboxModeEnabled())
 			DrawCircleOutline(Position, CCharacterCore::PhysicalSize(), TeeColor(ClientId, PlayerAlpha), 36);
 
-		// Freeze: center sample (tile-based)
-		const int Index = Collision()->GetPureMapIndex(Position);
-		const int Tile = Collision()->GetTileIndex(Index);
-		const int FrontTile = Collision()->GetFrontTileIndex(Index);
-		const int SwitchTile = Collision()->GetSwitchType(Index);
-		const bool FreezeHit = IsFreezeTile(Tile) || IsFreezeTile(FrontTile) || IsFreezeTile(SwitchTile);
-		const float FreezeAlpha = FreezeHit ? PlayerAlpha : PlayerAlpha * 0.35f;
-		DrawCross(Position, PointSize, FreezeColor(FreezeAlpha));
-
-		// Death: 4-point samples (collision-based)
-		const vec2 DeathOffsets[4] = {
-			{SampleOffset, SampleOffset},
-			{SampleOffset, -SampleOffset},
-			{-SampleOffset, SampleOffset},
-			{-SampleOffset, -SampleOffset}};
-		for(const vec2 &Offset : DeathOffsets)
+		if(ShowTeeFreeze)
 		{
-			const vec2 SamplePos = Position + Offset;
-			const bool DeathHit = Collision()->GetCollisionAt(SamplePos.x, SamplePos.y) == TILE_DEATH ||
-					      Collision()->GetFrontCollisionAt(SamplePos.x, SamplePos.y) == TILE_DEATH;
-			const float DeathAlpha = DeathHit ? PlayerAlpha : PlayerAlpha * 0.35f;
-			DrawCross(SamplePos, PointSize, ColorRGBA(0.0f, 0.0f, 0.0f, DeathAlpha));
+			// Freeze: center sample (tile-based)
+			const int Index = Collision()->GetPureMapIndex(Position);
+			const int Tile = Collision()->GetTileIndex(Index);
+			const int FrontTile = Collision()->GetFrontTileIndex(Index);
+			const int SwitchTile = Collision()->GetSwitchType(Index);
+			const bool FreezeHit = IsFreezeTile(Tile) || IsFreezeTile(FrontTile) || IsFreezeTile(SwitchTile);
+			const float FreezeAlpha = FreezeHit ? PlayerAlpha : PlayerAlpha * 0.35f;
+			DrawCross(Position, PointSize, FreezeColor(FreezeAlpha));
+		}
+
+		if(ShowTeeDeath)
+		{
+			// Death: 4-point samples (collision-based)
+			const vec2 DeathOffsets[4] = {
+				{SampleOffset, SampleOffset},
+				{SampleOffset, -SampleOffset},
+				{-SampleOffset, SampleOffset},
+				{-SampleOffset, -SampleOffset}};
+			for(const vec2 &Offset : DeathOffsets)
+			{
+				const vec2 SamplePos = Position + Offset;
+				const bool DeathHit = Collision()->GetCollisionAt(SamplePos.x, SamplePos.y) == TILE_DEATH ||
+						      Collision()->GetFrontCollisionAt(SamplePos.x, SamplePos.y) == TILE_DEATH;
+				const float DeathAlpha = DeathHit ? PlayerAlpha : PlayerAlpha * 0.35f;
+				DrawCross(SamplePos, PointSize, ColorRGBA(0.0f, 0.0f, 0.0f, DeathAlpha));
+			}
 		}
 	}
 
@@ -668,6 +699,18 @@ void CCollisionHitbox::RenderProjectileHitboxes()
 void CCollisionHitbox::RenderLaserHitboxes()
 {
 	const float Alpha = HitboxAlpha();
+	if(Alpha <= 0.0f)
+		return;
+
+	const auto &aSwitchers = GameClient()->Switchers();
+	const int SwitcherTeam = std::clamp(GameClient()->SwitchStateTeam(), 0, NUM_DDRACE_TEAMS - 1);
+	const bool IsSuper = GameClient()->IsLocalCharSuper();
+	const auto IsFreezeLaser = [](const CLaserData &Data) {
+		return Data.m_Type == LASERTYPE_FREEZE ||
+		       ((Data.m_Type == LASERTYPE_GUN || Data.m_Type == LASERTYPE_PLASMA) &&
+			       (Data.m_Subtype == LASERGUNTYPE_FREEZE || Data.m_Subtype == LASERGUNTYPE_EXPFREEZE));
+	};
+
 	for(const CSnapEntities &Ent : GameClient()->SnapEntities())
 	{
 		const IClient::CSnapItem Item = Ent.m_Item;
@@ -677,7 +720,15 @@ void CCollisionHitbox::RenderLaserHitboxes()
 		const CLaserData Data = ExtractLaserInfo(Item.m_Type, Item.m_pData, &GameClient()->m_GameWorld, Ent.m_pDataEx);
 		if(Data.m_ExtraInfo && Data.m_Owner >= 0 && !ShouldRenderClient(Data.m_Owner))
 			continue;
-		if(!IsLineOnScreen(Data.m_From, Data.m_To, 16.0f))
+
+		const bool FreezeLaser = IsFreezeLaser(Data);
+		if((FreezeLaser && !g_Config.m_QmHitboxShowFreezeLasers) || (!FreezeLaser && !g_Config.m_QmHitboxShowLasers))
+			continue;
+		if(Data.m_SwitchNumber > 0 && Data.m_SwitchNumber < (int)aSwitchers.size() && !IsSuper && !aSwitchers[Data.m_SwitchNumber].m_aStatus[SwitcherTeam])
+			continue;
+
+		const float ScreenMargin = FreezeLaser ? CCharacterCore::PhysicalSize() : 16.0f;
+		if(!IsLineOnScreen(Data.m_From, Data.m_To, ScreenMargin))
 			continue;
 
 		float LaserAlpha = Alpha;
@@ -689,12 +740,22 @@ void CCollisionHitbox::RenderLaserHitboxes()
 		if(LaserAlpha <= 0.0f)
 			continue;
 
-		const ColorRGBA LaserColor = WeaponColor(LaserAlpha);
+		const ColorRGBA LaserColor = FreezeLaser ? FreezeColor(LaserAlpha) : WeaponColor(LaserAlpha);
 		const IGraphics::CLineItem LaserLine(Data.m_From, Data.m_To);
 		Graphics()->SetColor(LaserColor);
 		Graphics()->LinesDraw(&LaserLine, 1);
-		DrawCircleOutline(Data.m_From, 5.0f, LaserColor.WithMultipliedAlpha(0.7f), 16);
-		DrawCircleOutline(Data.m_To, 7.0f, LaserColor, 20);
+		if(FreezeLaser)
+		{
+			// 冻结光束实际按角色半径命中，显示为沿光束扫掠的胶囊体积。
+			DrawCapsuleOutline(Data.m_From, Data.m_To, CCharacterCore::PhysicalSize(), LaserColor.WithMultipliedAlpha(0.85f), 16);
+			DrawCircleOutline(Data.m_From, 5.0f, LaserColor.WithMultipliedAlpha(0.7f), 16);
+			DrawCircleOutline(Data.m_To, 7.0f, LaserColor, 20);
+		}
+		else
+		{
+			DrawCircleOutline(Data.m_From, 5.0f, LaserColor.WithMultipliedAlpha(0.7f), 16);
+			DrawCircleOutline(Data.m_To, 7.0f, LaserColor, 20);
+		}
 	}
 }
 
@@ -749,15 +810,19 @@ void CCollisionHitbox::RenderHookHitboxes()
 void CCollisionHitbox::RenderWeaponHitboxes()
 {
 	const float Alpha = HitboxAlpha();
-	if(Alpha <= 0.0f)
+	if(Alpha <= 0.0f || (!g_Config.m_QmHitboxShowHammer && !g_Config.m_QmHitboxShowProjectiles && !g_Config.m_QmHitboxShowLasers && !g_Config.m_QmHitboxShowFreezeLasers && !g_Config.m_QmHitboxShowHook))
 		return;
 
 	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
-	RenderHammerHitboxes();
-	RenderProjectileHitboxes();
-	RenderLaserHitboxes();
-	RenderHookHitboxes();
+	if(g_Config.m_QmHitboxShowHammer)
+		RenderHammerHitboxes();
+	if(g_Config.m_QmHitboxShowProjectiles)
+		RenderProjectileHitboxes();
+	if(g_Config.m_QmHitboxShowLasers || g_Config.m_QmHitboxShowFreezeLasers)
+		RenderLaserHitboxes();
+	if(g_Config.m_QmHitboxShowHook)
+		RenderHookHitboxes();
 	Graphics()->LinesEnd();
 }
 
@@ -788,9 +853,9 @@ void CCollisionHitbox::OnRender()
 		RenderTileHitboxes();
 	}
 
-	if(LegacyMode || g_Config.m_QmHitboxShowTees)
+	if(LegacyMode || g_Config.m_QmHitboxShowTeeCollision || g_Config.m_QmHitboxShowTeeFreeze || g_Config.m_QmHitboxShowTeeDeath)
 	{
-		// 绘制Tee的碰撞体积
+		// 按 Tee↔Tee、Tee↔Freeze 和 Tee↔Death 语义分别绘制。
 		RenderTeeHitboxes();
 	}
 
@@ -800,9 +865,9 @@ void CCollisionHitbox::OnRender()
 		RenderPickupHitboxes();
 	}
 
-	if(HitboxMode && g_Config.m_QmHitboxShowWeapons)
+	if(HitboxMode && (g_Config.m_QmHitboxShowHammer || g_Config.m_QmHitboxShowProjectiles || g_Config.m_QmHitboxShowLasers || g_Config.m_QmHitboxShowFreezeLasers || g_Config.m_QmHitboxShowHook))
 	{
-		// 绘制武器交互范围
+		// 各类武器交互范围由独立开关控制。
 		RenderWeaponHitboxes();
 	}
 

@@ -2862,3 +2862,19 @@ brazilian_portuguese = "Seu apelido '%s' já está em uso (%d pontos). Você ain
 portuguese = "A tua alcunha '%s' já está a ser usada (%d pontos). Ainda queres usá-la?"
 turkish = "'%s' takma adınız zaten kullanılıyor (%d puan). Yine de kullanmak istiyor musunuz?"
 polish = "Twój pseudonim '%s' jest już używany (%d punktów). Czy nadal chcesz go używać?"
+
+[[message]]
+key = "Ignored legacy Dynamic Island edge margin"
+[message.translations]
+simplified_chinese = "已忽略旧版灵动岛边缘外边距"
+traditional_chinese = "已忽略舊版靈動島邊緣外邊距"
+japanese = "旧式ダイナミックアイランドの端の余白は無視されます"
+korean = "기존 다이내믹 아일랜드 가장자리 여백은 무시됨"
+russian = "Устаревший отступ от края Dynamic Island игнорируется"
+german = "Alter Randabstand der Dynamic Island wird ignoriert"
+spanish = "Se ignora el margen del borde heredado de la isla dinámica"
+french = "La marge de bord héritée du Dynamic Island est ignorée"
+brazilian_portuguese = "A margem de borda legada da Ilha Dinâmica é ignorada"
+portuguese = "A margem de borda legada da Ilha Dinâmica é ignorada"
+turkish = "Eski Dinamik Ada kenar boşluğu yok sayıldı"
+polish = "Zignorowano starszy margines krawędzi Dynamic Island"

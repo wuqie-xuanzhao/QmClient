@@ -1120,6 +1120,7 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	const float ExcludeIconWidth = TextRender()->TextWidth(16.0f, FONT_ICON_BAN);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	const float SearchExcludeAddrInputOffset = SearchExcludeAddrStrMax + 5.0f + ExcludeIconWidth + 5.0f;
 
 	CUIRect SearchInfoAndAddr, ServersAndConnect, ServersPlayersOnline, SearchAndInfo, ServerAddr, ConnectButtons;
 	StatusBox.VSplitRight(135.0f, &SearchInfoAndAddr, &ServersAndConnect);
@@ -1139,9 +1140,9 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 		char aBufSearch[64];
 		str_format(aBufSearch, sizeof(aBufSearch), "%s:", Localize("Search"));
 		CUIRect SearchLabel;
-		QuickSearch.VSplitLeft(SearchExcludeAddrStrMax, &SearchLabel, &QuickSearch);
+		QuickSearch.VSplitLeft(SearchExcludeAddrStrMax, &SearchLabel, nullptr);
+		QuickSearch.VSplitLeft(SearchExcludeAddrInputOffset, nullptr, &QuickSearch);
 		Ui()->DoLabel(&SearchLabel, aBufSearch, 14.0f, TEXTALIGN_ML);
-		QuickSearch.VSplitLeft(5.0f, nullptr, &QuickSearch);
 
 		static CLineInput s_FilterInput(g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString));
 		static char s_aTooltipText[64];
@@ -1168,14 +1169,13 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 		Ui()->DoLabel(&QuickExclude, FONT_ICON_BAN, 16.0f, TEXTALIGN_ML);
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		QuickExclude.VSplitLeft(ExcludeIconWidth, nullptr, &QuickExclude);
-		QuickExclude.VSplitLeft(5.0f, nullptr, &QuickExclude);
+		CUIRect ExcludeLabel;
+		QuickExclude.VSplitLeft(ExcludeIconWidth + 5.0f, nullptr, &ExcludeLabel);
+		QuickExclude.VSplitLeft(SearchExcludeAddrInputOffset, nullptr, &QuickExclude);
 
 		char aBufExclude[64];
 		str_format(aBufExclude, sizeof(aBufExclude), "%s:", Localize("Exclude"));
-		Ui()->DoLabel(&QuickExclude, aBufExclude, 14.0f, TEXTALIGN_ML);
-		QuickExclude.VSplitLeft(SearchExcludeAddrStrMax, nullptr, &QuickExclude);
-		QuickExclude.VSplitLeft(5.0f, nullptr, &QuickExclude);
+		Ui()->DoLabel(&ExcludeLabel, aBufExclude, 14.0f, TEXTALIGN_ML);
 
 		static CLineInput s_ExcludeInput(g_Config.m_BrExcludeString, sizeof(g_Config.m_BrExcludeString));
 		static char s_aTooltipText[64];
@@ -1218,7 +1218,7 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	{
 		CUIRect ServerAddrLabel, ServerAddrEditBox;
 		ServerAddr.Margin(2.0f, &ServerAddr);
-		ServerAddr.VSplitLeft(SearchExcludeAddrStrMax + 5.0f + ExcludeIconWidth + 5.0f, &ServerAddrLabel, &ServerAddrEditBox);
+		ServerAddr.VSplitLeft(SearchExcludeAddrInputOffset, &ServerAddrLabel, &ServerAddrEditBox);
 
 		Ui()->DoLabel(&ServerAddrLabel, Localize("Server address:"), 14.0f, TEXTALIGN_ML);
 		static CLineInput s_ServerAddressInput(g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress));
@@ -2443,7 +2443,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 						TooltipText.append(" ");
 						TooltipText.append(pNote);
 					}
-					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str());
+					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str(), 320.0f);
 				}
 				++FriendTooltipIndex;
 				const bool IsOffline = Friend.ServerInfo() == nullptr;

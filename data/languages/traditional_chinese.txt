@@ -79,9 +79,6 @@
 %i seconds left
 == 還剩下 %i 秒鐘
 
-%s (/%s %s)
-== %s（/%s %s）
-
 %s and %s have swapped
 == %s 與 %s 已完成交換
 
@@ -263,9 +260,6 @@ A demo with this name already exists
 A folder with this name already exists
 == 已有同名資料夾
 
-a player
-== 一名玩家
-
 A screenshot with this name already exists
 == 已有同名截圖
 
@@ -292,18 +286,6 @@ Active color
 
 Active disconnect
 == 主動斷開
-
-Active line font size
-== 當前行字號
-
-Active line font size (px)
-== 活動行字號 px
-
-Active line scale
-== 當前行縮放
-
-Active line scale (%)
-== 活動行縮放百分比
 
 Active moderator mode disabled because you are afk.
 == 由於你已掛機，主動管理員模式已關閉
@@ -677,9 +659,6 @@ Always show own player's hook collision line
 Always translate
 == 始終翻譯
 
-AMLL TTML DB API base URL (mirror)
-== AMLL TTML DB API 基地址（可改成鏡像）
-
 Amount
 == 預測量
 
@@ -772,9 +751,6 @@ Appearance / Name Plate
 
 Append to log file instead of overwriting
 == 追加到日誌文件而不是每次覆蓋
-
-Apple Music media-user-token
-== Apple Music 媒體用戶令牌
 
 Applied to %d same-family part(s).
 == 已應用到 %d 個同族部件。
@@ -989,9 +965,6 @@ Auto enable/disable IME on text focus
 Auto execute
 == 自動執行
 
-Auto fetch lyrics
-== 自動獲取歌詞
-
 Auto fetch replay info on refresh
 == 刷新時是否自動獲取回放信息
 
@@ -1006,9 +979,6 @@ Auto greet friend text
 
 Auto greet friends entering map
 == 自動問候進圖的好友
-
-Auto hot-reload after external saves
-== 外部儲存後自動熱重新載入
 
 Auto login Axiom server
 == 自動登錄 Axiom 伺服器
@@ -1093,9 +1063,6 @@ Auto-fetch all players' skins for dummy rotation queue
 
 Auto-fetch all players' skins for rotation queue
 == 自動獲取全圖玩家皮膚並作為輪換隊列
-
-Auto-fetch lyrics on detecting new song
-== 檢測新歌時自動聯網拉取歌詞
 
 Auto-follow delay
 == 自動跟隨延遲
@@ -1337,9 +1304,6 @@ Background image in menu
 Background music volume
 == 背景音樂音量
 
-Background opacity
-== 背景透明度
-
 Background stroke color
 == 背景描邊顏色
 
@@ -1414,9 +1378,6 @@ Best input prediction offset (0.01 tick)
 
 Best input smooth percentage
 == Best input 平滑百分比
-
-Best match
-== 最佳匹配
 
 Better scoreboard
 == 更好的計分板
@@ -1573,9 +1534,6 @@ Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = 玩家座標
-
-Cache TTL
-== 緩存有效期
 
 Calculate unfinished maps for player in certain mode
 == 計算玩家某個模式下的未完成圖
@@ -1985,12 +1943,6 @@ Client prediction time is high
 Client uptime
 == 客戶端啟動時間
 
-Clock drift hard cut threshold (ms)
-== 時鐘漂移硬切閾值 ms
-
-Clock drift hard-snap
-== 時鐘漂移硬切閾值
-
 Close
 == 關閉
 
@@ -2116,9 +2068,6 @@ Config Changes
 
 Config directory
 == 配置目錄（cfg）
-
-Config file: data/input_overlay.json
-== 配置文件：data/input_overlay.json
 
 Config Files
 == 配置文件
@@ -2494,12 +2443,6 @@ Current cut is invalid or already added
 
 Current file
 == 當前文件
-
-Current line color
-== 當前行顏色
-
-Current line lyric color
-== 歌詞當前行顏色
 
 Current rescue mode: %s
 == 當前救援模式：%s
@@ -3077,18 +3020,6 @@ Displays your ping to the current server
 Dissolve
 == 消散
 
-Distance fade per line
-== 遠離行透明度衰減
-
-Distance scale falloff
-== 遠離行縮小幅度
-
-Distant line opacity decay per line (%)
-== 遠離行每行透明度衰減 %
-
-Distant line shrink per line (%)
-== 遠離行每行縮小百分比
-
 Do not auto-show server info on entering map
 == 進圖時不自動顯示伺服器資訊
 
@@ -3383,9 +3314,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == 靈動島背景顏色
 
-Dynamic Island HUD editor edge margin px
-== 靈動島 HUD 編輯器貼邊外邊距 px
-
 Ease in out quad
 == 緩入緩出二次
 
@@ -3647,12 +3575,6 @@ Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 == 啟用 LLM 思考模式（可能增加響應時間）
 
-Enable local lyrics cache
-== 啟用本地歌詞快取
-
-Enable lyric HUD overlay
-== 啟用歌詞 HUD 疊加層
-
 Enable lyrics
 == 啟用歌詞
 
@@ -3670,6 +3592,15 @@ Enable mod weapon on %d: %s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
 == 啟用 MySQL 後端而不是 SQLite 後端（當沒有 MySQL 伺服器可訪問時，sv_sqlite_file 仍用作後備寫入伺服器）
+
+Enable Netease lyric integration
+== 啟用網易雲音樂歌詞整合
+
+Enable Netease music Hook
+== 啟用網易雲音樂 Hook
+
+Enable Netease Music hook integration
+== 啟用網易雲音樂 Hook 整合
 
 Enable new IME candidate bar
 == 啟用新版 IME 候選欄
@@ -3743,6 +3674,12 @@ Enable skin switch animation
 Enable smooth cinematic camera while free spectating
 == 自由觀戰時啟用平滑電影鏡頭
 
+Enable SodaMusic Hook
+== 啟用汽水音樂 Hook
+
+Enable SodaMusic hook integration
+== 啟用汽水音樂 Hook 整合
+
 Enable sound
 == 聲音啟用
 
@@ -3769,9 +3706,6 @@ Enable switch countdown
 
 Enable system media control
 == 啟用系統媒體控制
-
-Enable system media lyrics
-== 啟用系統媒體歌詞
 
 Enable system media transport control integration
 == 啟用系統媒體傳輸控制集成
@@ -3823,9 +3757,6 @@ Enable warlist
 
 Enable word filter list
 == 啟用屏蔽詞列表
-
-Enable word-by-word highlighting
-== 啟用歌詞逐字高亮
 
 Enable Zen Mode
 == 啟用禪模式（Zen Mode）
@@ -4015,9 +3946,6 @@ f = Frame rate
 
 Fade and slide
 == 淡入並滑入
-
-Fade duration
-== 淡入淡出時長
 
 Fade in
 == 淡入
@@ -4315,6 +4243,9 @@ Freeze border color
 
 Freeze Collision Border Color
 == 凍結碰撞邊框顏色
+
+Freeze laser collision volume
+== 凍結激光碰撞體積
 
 Freeze Laser Inner Color
 == 凍結雷射內色
@@ -4682,6 +4613,9 @@ Gun
 Hammer
 == 錘子
 
+Hammer interaction
+== 鎚子互動
+
 Hammer Mode:
 == 錘子模式：
 
@@ -4799,12 +4733,6 @@ Hide kill and finish messages in Zen mode
 Hide kill/finish messages
 == 隱藏死亡/完成消息
 
-Hide lyrics on pause
-== 暫停時隱藏歌詞
-
-Hide lyrics when no system media
-== 無系統媒體狀態時隱藏歌詞
-
 Hide map progress
 == 隱藏地圖進度
 
@@ -4885,15 +4813,6 @@ Hide weapon fire effects in Zen Mode
 
 Hide weapon muzzle flashes
 == 隱藏武器火焰
-
-Hide when no lyrics found (instead of showing hint)
-== 未找到歌詞時隱藏（而非顯示提示）
-
-Hide when paused
-== 暫停時隱藏
-
-Hide without media state
-== 無媒體狀態時隱藏
 
 High Detail
 == 顯示地圖細節
@@ -4978,6 +4897,9 @@ Hook Collisions
 
 Hook collisions
 == 鉤子輔助線
+
+Hook interaction
+== 鉤子互動
 
 Hook line tip
 == 輔助線提示
@@ -5108,12 +5030,6 @@ If chat score exceeds this value, the player is muted for sv_spam_mute_duration 
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
 == 如果你射擊它們，激光是否可以擊中你，並且它們將你拉向彈跳原點（所有新地圖為 0），或者如果你射擊它們，激光就不能擊中你，並且它們將其他人拉向射擊者
 
-Ignore cache providers
-== 忽略緩存來源
-
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
-== 歌詞搜索時忽略緩存的來源列表（用 | 分隔，如 QQ|Kugou）
-
 Ignore clan tag when searching friends
 == 搜索好友時忽略戰隊標籤
 
@@ -5122,6 +5038,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == 忽略語音距離衰減
+
+Ignored legacy Dynamic Island edge margin
+== 已忽略舊版靈動島邊緣外邊距
 
 Import from clipboard
 == 從剪貼板導入
@@ -5143,12 +5062,6 @@ In-game crosshair scale percent (50=half, 200=double)
 
 Inactive color
 == 按鍵未激活時顏色
-
-Inactive line font size (px)
-== 非活動行字號 px
-
-Inactive line opacity
-== 非當前行不透明度
 
 Include clan when saving/loading config preset
 == 保存/加載配置方案時包含戰隊
@@ -5276,12 +5189,6 @@ Input overlay mouse scale (percent)
 Input overlay opacity (percent)
 == 輸入疊加不透明度（百分比）
 
-Input overlay X position (percent)
-== 輸入疊加 X 位置（百分比）
-
-Input overlay Y position (percent)
-== 輸入疊加 Y 位置（百分比）
-
 Input smoothing
 == 輸入平滑
 
@@ -5366,9 +5273,6 @@ Invalid Y coordinate.
 Invert camera drift direction
 == 反轉相機漂移方向
 
-Invite %s to the locked team
-== 邀請 %s 加入鎖定隊伍
-
 Invite a person to a locked team
 == 邀請某人加入鎖定的隊伍
 
@@ -5417,9 +5321,6 @@ Join QQ group
 Join red
 == 加入紅隊
 
-Join team %s
-== 加入隊伍 %s
-
 Join the team of the specified player
 == 加入指定玩家的隊伍
 
@@ -5461,9 +5362,6 @@ k = Resend loss
 
 Kaomoji
 == 表情符號
-
-Karaoke edge softness
-== 逐字高亮邊緣柔化
 
 Keep hook when teleporting
 == 傳送時保持鉤子
@@ -5588,6 +5486,9 @@ Large text for friend join (use %s for friend name)
 Laser
 == 激光
 
+Laser / shotgun interaction
+== 激光 / 霰彈槍互動
+
 Laser colors
 == 雷射顏色
 
@@ -5690,41 +5591,14 @@ Limit information in spectator mode
 Limiter threshold (percent)
 == 限幅器閾值（百分比）
 
-Line scroll duration
-== 行切換滾動時長
-
-Line spacing
-== 行間距
-
-Line switch scroll duration (ms)
-== 行切換滾動時長 ms
-
 Line width
 == 線寬
 
 Linear
 == 線性
 
-Lines
-== 行數
-
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
-
-Lines above active
-== 當前行上方行數
-
-Lines above active line
-== 活動行上方顯示行數
-
-Lines below active
-== 當前行下方行數
-
-Lines below active line
-== 活動行下方顯示行數
-
-Links below open external ID and map statistics.
-== 下方連結開啟外部 ID 統計和過圖統計。
 
 List all commands that are available in practice mode
 == 列出練習模式下可用的所有命令
@@ -5800,9 +5674,6 @@ Load
 
 Load drawings from a given csv file (defaults to map name)
 == 從指定 CSV 文件加載繪圖（默認使用地圖名）
-
-Load save %s
-== 載入存檔 %s
 
 Load sound files in thread
 == 加載聲音文件線程
@@ -5882,27 +5753,6 @@ Local
 Local + Dummy
 == 本地 + 分身
 
-Local ESLRC file
-== 本地 ESLRC 文件
-
-Local game mode statistics
-== 本地遊戲模式統計
-
-Local LRC file
-== 本地 LRC 文件
-
-Local media folders
-== 本地媒體目錄
-
-Local media library directories (separate by |)
-== 歌詞本地媒體庫目錄（多個目錄用 | 分隔）
-
-Local mode statistics are stored on this client.
-== 本地遊戲模式統計保存在此客戶端。
-
-Local music file
-== 本地音樂文件
-
 Local only
 == 僅本地
 
@@ -5924,9 +5774,6 @@ Local test mode, no server needed
 Local Time
 == 本地時間
 
-Local TTML file
-== 本地 TTML 文件
-
 Local-only
 == 僅本地資源
 
@@ -5935,9 +5782,6 @@ Lock delay
 
 Lock team
 == 鎖定隊伍
-
-Lock the team so other players cannot join directly
-== 鎖定隊伍，其他玩家不能直接加入
 
 Locked
 == 鎖定
@@ -5960,86 +5804,11 @@ Lose weapons when teleporting (useful for race maps)
 Low to high
 == 由低到高
 
-LRCLIB API base URL (mirror)
-== LRCLIB API 基地址（可改成鏡像）
-
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 歌詞自動搜索來源順序/啟用列表（空=默認；用 | 分隔，如 QQ|Kugou|Netease|LrcLib）
-
-Lyric background color
-== 歌詞背景顏色
-
-Lyric background opacity
-== 歌詞背景透明度
-
-Lyric fade in/out time
-== 歌詞淡入淡出時間
-
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-== 歌詞 HTTP 代理（如 http://127.0.0.1:7890）
-
-Lyric HTTP request timeout (ms)
-== 歌詞 HTTP 請求超時 ms
-
-Lyric HUD edge margin (px)
-== 歌詞 HUD 貼邊外邊距 px
-
-Lyric outline color
-== 歌詞描邊顏色
-
-Lyric outline opacity
-== 歌詞描邊透明度
-
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-== 歌詞搜索策略（0=按來源順序，1=併發最佳匹配）
-
-Lyric snap to Dynamic Island threshold
-== 歌詞吸附靈動島閾值
-
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 歌詞數據源（0=自動最佳匹配，1=LRCLIB，2=Kugou，3=QQ，4=Netease，5=AMLL TTML DB，6=Apple Music，7=Local Music File，8=Local LRC，9=Local ESLRC，10=Local TTML）
-
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== 歌詞來源獨立匹配閾值（空=全局閾值；如 QQ=60|LrcLib=70）
-
 Lyrics
 == 歌詞
 
-Lyrics cache expiration days (0=forever)
-== 歌詞緩存過期天數（0=永久）
-
-Lyrics fuzzy match score threshold
-== 歌詞模糊匹配分數閾值
-
-Lyrics HTTP timeout
-== 歌詞 HTTP 超時
-
-Lyrics line spacing (px)
-== 歌詞行間距 px
-
-Lyrics search type
-== 歌詞搜索策略
-
-Lyrics source
-== 歌詞來源
-
-Lyrics source order
-== 歌詞來源順序
-
-Lyrics translation/transliteration color
-== 歌詞翻譯/音譯顏色
-
-Lyrics: empty track
-== 歌詞：歌詞為空
-
-Lyrics: no lyrics found
-== 歌詞：未找到歌詞
-
-Lyrics: no media playing
-== 歌詞：沒有正在播放的媒體
-
-Lyrics: searching...
-== 歌詞：正在搜索……
+Lyrics sources and display
+== 歌詞來源與顯示
 
 Main Asset
 == 主材質
@@ -6097,9 +5866,6 @@ Manual
 
 Manual concurrency: %d
 == 手動併發數：%d
-
-Manual lyric timeline offset (ms, step 500ms)
-== 歌詞手動時間軸偏移 ms（運行時按 500ms 步進）
 
 Manual scope
 == 手動範圍
@@ -6200,12 +5966,6 @@ Mark the end of a demo cut
 Markers
 == 標記
 
-Marquee for long lyrics
-== 歌詞超長時跑馬燈
-
-Marquee speed
-== 歌詞跑馬燈速度
-
 Master server URL to register
 == 要註冊的主伺服器 URL
 
@@ -6214,9 +5974,6 @@ Match %d of %d
 
 Match ghost by map version instead of map name
 == 按地圖版本而不是僅按地圖名稱匹配鬼魂
-
-Match score threshold
-== 匹配評分閾值
 
 Matched with callable peer
 == 已匹配到可通話對端
@@ -6436,9 +6193,6 @@ Minimum delay allowed between invitations.
 
 Minimum dynamic camera cursor distance
 == 最小動態相機光標距離
-
-Minimum inactive line opacity (%)
-== 非活動行最小不透明度 %
 
 Minimum match chars
 == 最少匹配字符數
@@ -6782,6 +6536,12 @@ Negative stability buffer (for Gores)
 Net
 == 淨擊殺
 
+Netease hook heartbeat timeout (milliseconds)
+== 網易雲音樂 Hook 心跳逾時時間（毫秒）
+
+Netease hook helper path (empty=beside QmClient)
+== 網易雲音樂 Hook 輔助程式路徑（留空則使用 QmClient 所在目錄中的程式）
+
 Netlimit: exponential moving average alpha
 == Netlimit：指數移動平均線的 Alpha
 
@@ -6832,12 +6592,6 @@ News
 
 Next
 == 下一個
-
-Next line color
-== 下一行顏色
-
-Next line lyric color
-== 歌詞下一行顏色
 
 Next page in console
 == 控制台下一頁
@@ -7232,6 +6986,9 @@ Open color picker
 Open DDNet Wiki
 == 開啟 DDNet Wiki
 
+Open editor
+== 開啟編輯器
+
 Open emote selector
 == 打開表情選擇器
 
@@ -7273,6 +7030,9 @@ Open the folder containing demo files
 
 Open the folder containing screenshots
 == 打開存放截圖的文件夾
+
+Open the input overlay editor
+== 開啟輸入覆蓋編輯器
 
 Open the saves file
 == 打開存檔密碼文件
@@ -7328,12 +7088,6 @@ Optional authentication key for the DNSBL provider
 Other
 == 其他
 
-Other lines font size
-== 其他行字號
-
-Other modes
-== 其他模式
-
 Other players' hook line width
 == 其他玩家的鉤子輔助線寬度
 
@@ -7348,9 +7102,6 @@ Outgoing language
 
 Outgoing translation target language code
 == 出站翻譯目標語言代碼
-
-Outline color
-== 描邊顏色
 
 Outline global opacity
 == 輪廓全局透明度
@@ -7378,9 +7129,6 @@ Output switch
 
 Output voice debug log
 == 輸出語音調試日誌
-
-Overall lyrics opacity (%)
-== 歌詞整體不透明度 %
 
 Overlay entities
 == 顯示實體層
@@ -7523,9 +7271,6 @@ Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
 == 按名字單獨音量（name=percent）
 
-Per-word highlight (karaoke)
-== 逐字高亮（卡拉 OK）
-
 Performance debug log threshold (ms)
 == 性能調試日誌閾值（毫秒）
 
@@ -7583,6 +7328,9 @@ Ping the current server
 Pistol
 == 手槍
 
+Pistol guide line
+== 手槍輔助線
+
 Plasma gun shots per second
 == 等離子槍每秒發射多少發子彈
 
@@ -7618,9 +7366,6 @@ Play/pause the current demo
 
 Playback volume
 == 播放音量
-
-Played word color
-== 已播放詞顏色
 
 Player
 == 玩家
@@ -8030,11 +7775,11 @@ Progress bar height
 Progress bar width
 == 進度條寬度
 
+Projectile / explosion range
+== 投射物 / 爆炸範圍
+
 Protect names and skins while streaming
 == 串流時保護名稱與外觀
-
-Provider thresholds
-== 來源匹配閾值
 
 PTT release delay (ms)
 == PTT 釋放延遲（毫秒）
@@ -8158,24 +7903,6 @@ QQ group: 1076765929 (click to copy)
 
 Quads are used for background decoration
 == 顯示用作背景裝飾的貼圖
-
-Query current map info
-== 查詢當前地圖信息
-
-Query map info for %s
-== 查詢地圖 %s 的信息
-
-Query points for %s
-== 查詢玩家 %s 的分數
-
-Query rank for %s
-== 查詢玩家 %s 的排名
-
-Query server setting: %s
-== 查詢伺服器設置：%s
-
-Query team rank for %s
-== 查詢玩家 %s 所在隊伍的排名
 
 Queue is empty
 == 隊列為空
@@ -8660,12 +8387,6 @@ Reply
 Reply to messages from muted players
 == 回覆靜音玩家的消息
 
-Reply to the last whisper target
-== 回覆上一個私聊對象
-
-Reply to the last whisper target: %s
-== 對上一個私聊對象說：%s
-
 Reply with dummy
 == 使用分身回覆
 
@@ -8699,12 +8420,6 @@ Report service URL
 Reports are not available on Axiom servers
 == Axiom 伺服器內不可使用舉報功能
 
-Request a position swap
-== 請求交換位置
-
-Request to swap positions with %s
-== 請求和 %s 交換位置
-
 Request to swap your tee with another team member
 == 請求與另一名隊友交換 Tee
 
@@ -8725,9 +8440,6 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 救援/凍結：%d/%d
-
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-== 救援：自動模式下傳送出凍結；手動模式下落地記錄救援點，凍結時傳送出去
 
 Reset
 == 重置
@@ -9026,12 +8738,6 @@ Save team with code r.
 Save the best demo of each race
 == 保存每場遊戲最佳記錄的回放
 
-Save the current team
-== 保存當前隊伍
-
-Save the team as %s
-== 將隊伍保存為 %s
-
 Save unsent chat draft
 == 保存未發送的聊天草稿
 
@@ -9151,12 +8857,6 @@ Screenshots
 
 Screenshots directory
 == 截圖目錄
-
-Scroll long lines
-== 滾動長歌詞
-
-Scroll speed
-== 滾動速度
 
 Search
 == 搜索
@@ -9304,9 +9004,6 @@ Sends a command to the antibot
 
 Separate with commas
 == 用 , 分隔
-
-Sequential
-== 按順序
 
 Server
 == 伺服器
@@ -9635,8 +9332,8 @@ Show coordinates above players
 Show country flags in nameplates
 == 在玩家暱稱旁顯示國旗
 
-Show current and next lyric lines on HUD
-== 在 HUD 上顯示當前和下一句歌詞
+Show current Netease lyric in Media Island
+== 在靈動島中顯示目前網易雲音樂歌詞
 
 Show daily message to client
 == 顯示給客戶端的每日消息
@@ -9712,9 +9409,6 @@ Show enemy reason
 
 Show entities
 == 實體層顯示開關
-
-Show existing saves
-== 查看已有存檔
 
 Show eye wheel and expressions
 == 顯示眼輪和表情
@@ -9820,9 +9514,6 @@ Show important server prompts and Echo messages as popups
 
 Show important server prompts as notifications
 == 重要伺服器提示改走通知欄
-
-Show in Dynamic Island
-== 顯示在靈動島內
 
 Show in-game FPS
 == 顯示遊戲內 FPS 
@@ -9949,12 +9640,6 @@ Show logs of the last i seconds
 
 Show lyrics inside Dynamic Island
 == 將歌詞顯示在靈動島內
-
-Show lyrics translation (if available)
-== 顯示歌詞翻譯（若有）
-
-Show lyrics transliteration (if available)
-== 顯示歌詞音譯（若有）
 
 Show map details
 == 顯示地圖細節
@@ -10172,9 +9857,6 @@ Show server help and usage messages
 Show server prompts and Echo messages as popups
 == Show server prompts and Echo messages as popups
 
-Show server settings
-== 查看伺服器設置列表
-
 Show settings card borders
 == 顯示設定卡片邊框
 
@@ -10274,15 +9956,6 @@ Show tiles layers from BG map
 Show toast
 == 顯示提示
 
-Show translation
-== 顯示翻譯
-
-Show Tune Zone effects
-== 顯示 Tune Zone 效果
-
-Show Tune Zone effects on HUD Dynamic Island
-== HUD 靈動島顯示 Tune Zone 效果
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 顯示影響自身玩家的調整參數信息（0 = 關閉，1 = 顯示已改變的，2 = 顯示全部）
 
@@ -10330,9 +10003,6 @@ Show X
 
 Show Y
 == 顯示 Y
-
-Show your current team
-== 查看自己所在隊伍
 
 Show zzz emoji next to afk players
 == 在掛機玩家旁顯示 zzz 表情
@@ -10574,9 +10244,6 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 == 系統媒體控制
 
-Snap threshold
-== 吸附閾值
-
 Snapshot Age
 == 快照年齡
 
@@ -10600,6 +10267,12 @@ Snapshot tick gap
 
 Social
 == 社交功能
+
+SodaMusic hook heartbeat timeout (milliseconds)
+== 汽水音樂 Hook 心跳逾時時間（毫秒）
+
+SodaMusic hook helper path (empty=beside QmClient)
+== 汽水音樂 Hook 輔助程式路徑（留空則使用 QmClient 所在目錄中的程式）
 
 Solid
 == 純色
@@ -11039,15 +10712,6 @@ System media control
 System media controls
 == 系統媒體控制
 
-System media lyric font size
-== 系統媒體歌詞字體大小
-
-System media lyrics display lines
-== 系統媒體歌詞顯示行數
-
-System media lyrics time offset (milliseconds)
-== 系統媒體歌詞時間偏移（毫秒）
-
 System message
 == 系統消息
 
@@ -11198,8 +10862,14 @@ Tee 0.7
 Tee appearance
 == Tee 外觀
 
-Tee hitbox
-== Tee 碰撞箱
+Tee collision (Tee to Tee)
+== Tee 碰撞（Tee 與 Tee）
+
+Tee death probe
+== Tee 死亡探針
+
+Tee freeze probe (Tee to Freeze)
+== Tee 凍結探針（Tee 與 Freeze）
 
 Tee hitbox color
 == Tee 碰撞箱顏色
@@ -11531,9 +11201,6 @@ Time limit
 Time limit: %d min
 == 規定時限：%d 分鐘
 
-Time offset
-== 時間偏移
-
 Time to wait before changing team: %s
 == 距離下次切換隊伍還需等待：%s
 
@@ -11771,9 +11438,6 @@ Translation button active color
 Translation button cancel color
 == 翻譯按鈕取消時的顏色
 
-Translation color
-== 翻譯顏色
-
 Translation color alpha migration completed flag
 == 翻譯顏色透明度遷移已完成標記
 
@@ -11842,9 +11506,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == 將變量調到指定值，或顯示當前值
-
-Tune Zone effect icon legend
-== Tune Zone 效果圖示說明
 
 Tutorial
 == 教學
@@ -12029,9 +11690,6 @@ Unknown status
 Unlock a team
 == 解鎖隊伍
 
-Unlock the team
-== 解鎖隊伍
-
 Unmute
 == 取消靜音
 
@@ -12049,9 +11707,6 @@ Unmute player with list index
 
 Unmute:
 == 取消禁言：
-
-Unplayed word color
-== 未播放詞顏色
 
 Unpredictable ghost opacity (0-100)
 == 不可預測幽靈透明度（0-100）
@@ -12104,14 +11759,8 @@ URL for downloading maps (must start with https://)
 URL for downloading skins
 == 用於下載皮膚的 URL
 
-Usage
-== 用法
-
 Usage: %s %s
 == 用法：%s %s
-
-Usage: /%s %s
-== 用法：/%s %s
 
 Use 12 hour clock
 == 使用 12 小時制
@@ -12455,6 +12104,12 @@ Vote yes/no
 Voting
 == 投票
 
+Vulkan API
+== Vulkan API 版本
+
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+== Vulkan API 版本：11=1.1 相容模式，14=1.4 嚴格模式
+
 Wait for current vote to end before calling a new one.
 == 請先等待當前投票結束，再發起新的投票
 
@@ -12529,9 +12184,6 @@ Weapon
 
 Weapon animation
 == 武器動畫
-
-Weapon interaction range
-== 武器交互範圍
 
 Weapon range color
 == 武器範圍顏色
@@ -12692,15 +12344,6 @@ Whisper option color
 Whisper something to someone (private message)
 == 向某人發送私聊消息
 
-Whisper to %s
-== 對 %s 說悄悄話
-
-Whisper to %s: %s
-== 對 %s 說悄悄話：%s
-
-Whisper: /w player message
-== 發送私聊：/w 玩家名 內容
-
 White
 == 白色
 
@@ -12751,9 +12394,6 @@ Word Filter
 
 Word filter action: 0=replace matching words, 1=hide entire message
 == 屏蔽詞操作：0=替換匹配詞，1=隱藏整條訊息
-
-Word highlight soft edge width (px)
-== 逐字邊緣軟過渡寬度 px
 
 Write local console contents to a text file
 == 將本地控制台內容寫入文本文件
@@ -13067,9 +12707,6 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 你的逾時保護碼已設置。0.7 客戶端逾時後無法取回自己的 tee，但 0.6 客戶端可以接管你的 tee
 
-yourself
-== 自己
-
 z = Zoom
 == z = 縮放
 
@@ -13162,6 +12799,26 @@ Inactive
 [Auto camera]
 Unavailable for this player
 == 此玩家不可用
+
+[Config help]
+%s (default: "%s", max length: %d)
+== %s（預設值：「%s」，最大長度：%d）
+
+[Config help]
+%s (default: $%0*X)
+== %s（預設值：$%0*X）
+
+[Config help]
+%s (default: %d)
+== %s（預設值：%d）
+
+[Config help]
+%s (default: %d, min: %d)
+== %s（預設值：%d，最小值：%d）
+
+[Config help]
+%s (default: %d, min: %d, max: %d)
+== %s（預設值：%d，最小值：%d，最大值：%d）
 
 [data_version.h]
 You may have installed only DDNet.exe. Please use the full QmClient folder.

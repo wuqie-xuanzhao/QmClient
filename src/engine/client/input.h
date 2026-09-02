@@ -101,7 +101,11 @@ private:
 	// quick access to input
 	bool m_aCurrentKeyStates[KEY_LAST];
 	bool m_aFrameKeyStates[KEY_LAST];
+	bool m_aGlobalKeyStates[KEY_LAST];
 	uint32_t m_InputCounter;
+	vec2 m_GlobalMousePos;
+	vec2 m_GlobalMouseDelta;
+	bool m_HasGlobalMousePos;
 	std::vector<CTouchFingerState> m_vTouchFingerStates;
 
 	void HandleJoystickAxisMotionEvent(const SDL_JoyAxisEvent &Event);
@@ -115,6 +119,7 @@ private:
 	void HandleTouchUpEvent(const SDL_TouchFingerEvent &Event);
 	void HandleTouchMotionEvent(const SDL_TouchFingerEvent &Event);
 	void HandleTextEditingEvent(const char *pText, int Start, int Length);
+	void UpdateGlobalInputState();
 
 	char m_aDropFile[IO_MAX_PATH_LENGTH];
 
@@ -135,6 +140,7 @@ public:
 	bool ShiftIsPressed() const override { return KeyIsPressed(KEY_LSHIFT) || KeyIsPressed(KEY_RSHIFT); }
 	bool AltIsPressed() const override { return KeyIsPressed(KEY_LALT) || KeyIsPressed(KEY_RALT); }
 	bool KeyIsPressed(int Key) const override;
+	bool GlobalKeyIsPressed(int Key) const override;
 	bool KeyPress(int Key) const override;
 	const char *KeyName(int Key) const override;
 	int FindKeyByName(const char *pKeyName) const override;
@@ -143,12 +149,19 @@ public:
 	CJoystick *GetJoystick(size_t Index) override { return &m_vJoysticks[Index]; }
 	CJoystick *GetActiveJoystick() override { return m_pActiveJoystick; }
 	void SetActiveJoystick(size_t Index) override;
+	bool GamepadButtonIsPressed(int Button) const override;
+	float GamepadAxisValue(int Axis) const override;
+	int GamepadPlayerIndex() const override;
 
 	bool MouseRelative(float *pX, float *pY) override;
 	void MouseModeAbsolute() override;
 	void MouseModeRelative() override;
 	vec2 NativeMousePos() const override;
 	bool NativeMousePressed(int Index) const override;
+	vec2 GlobalMousePos() const override;
+	bool GlobalMousePressed(int Index) const override;
+	vec2 GlobalMouseDelta() const override;
+	bool HasGlobalInput() const override { return true; }
 
 	const std::vector<CTouchFingerState> &TouchFingerStates() const override;
 	void ClearTouchDeltas() override;

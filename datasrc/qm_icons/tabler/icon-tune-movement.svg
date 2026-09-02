@@ -1,5 +1,0 @@
-<!-- QmClient hand-drawn Tune Zone movement icon: a tee body moving horizontally. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <circle cx="128" cy="128" r="30" fill="currentColor"/>
-  <path d="M90 116H54l24-24-16-16-52 52 52 52 16-16-24-24h36v-24Zm76 0h36l-24-24 16-16 52 52-52 52-16-16 24-24h-36v-24Z" fill="currentColor"/>
-</svg>

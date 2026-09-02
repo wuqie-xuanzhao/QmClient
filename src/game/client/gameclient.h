@@ -53,6 +53,7 @@
 #include "components/ghost.h"
 #include "components/hud.h"
 #include "components/hud_editor.h"
+#include "components/hud_frozen_tee_state.h"
 #include "components/important_alert.h"
 #include "components/infomessages.h"
 #include "components/items.h"
@@ -71,13 +72,15 @@
 #include "components/players.h"
 #include "components/qmclient/axiom_auto_login.h"
 #include "components/qmclient/axiom_scores.h"
+#include "components/qmclient/chat_emoji.h"
 #include "components/qmclient/collision_hitbox.h"
 #include "components/qmclient/data_version.h"
 #include "components/qmclient/hammer_hit_detection.h"
 #include "components/qmclient/hud_notifications/hud_notifications.h"
 #include "components/qmclient/input_overlay.h"
 #include "components/qmclient/monitoring/monitoring.h"
-#include "components/qmclient/qm_lyrics/qm_lyrics.h"
+#include "components/qmclient/music_lyrics/music_lyrics_integration.h"
+#include "components/qmclient/netease/netease_integration.h"
 #include "components/qmclient/qmclient.h"
 #include "components/qmclient/scripting.h"
 #include "components/qmclient/stutter_diagnostics.h"
@@ -216,6 +219,10 @@ public:
 		int m_TargetY = 0;
 		unsigned m_WheelMask = 0;
 		uint64_t m_WheelSequence = 0;
+		bool m_GamepadValid = false;
+		uint32_t m_GamepadButtons = 0;
+		float m_aGamepadAxes[6] = {};
+		int m_GamepadPlayerIndex = 0;
 	};
 
 	friend class CTClient;
@@ -248,7 +255,8 @@ public:
 	CSounds m_Sounds;
 	CEmoticon m_Emoticon;
 	CSystemMediaControls m_SystemMediaControls;
-	CQmLyrics m_QmLyrics;
+	CNeteaseIntegration m_NeteaseIntegration;
+	CMusicLyricsIntegration m_MusicLyricsIntegration;
 
 	CDamageInd m_DamageInd;
 	CTouchControls m_TouchControls;
@@ -287,6 +295,7 @@ public:
 	CQmClient m_QmClient;
 	CQmAxiomAutoLogin m_QmAxiomAutoLogin;
 	CQmAxiomScores m_QmAxiomScores;
+	CQmChatEmoji m_QmChatEmoji;
 	CQmMonitoring m_QmMonitoring;
 	CQmHudNotifications m_QmHudNotifications;
 	CQmWeaponTrajectory m_QmWeaponTrajectory;
@@ -396,6 +405,7 @@ private:
 	void RecordDemoHudState(bool Force);
 	void RecordDemoInputState(bool Force);
 	void RecordDemoInputWheelEvent() const;
+	void RecordDemoGamepadState(bool Force);
 	static int PackDemoHudState(int DummyResetOnSwitch, int DeepflyMode, bool DummyControl, bool DummyCopyMoves);
 	void UnpackDemoHudState(int PackedState);
 
@@ -450,6 +460,7 @@ private:
 	SDemoInputPlaybackState m_DemoInputPlaybackState;
 	int m_LastDemoHudRecordTick = -1;
 	int m_LastDemoInputRecordTick = -1;
+	int m_LastDemoGamepadRecordTick = -1;
 	int m_LastDemoPlaybackStateTick = -1;
 
 	void PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoadingCaption, const char *pLoadingMessage);
@@ -701,6 +712,7 @@ public:
 		bool m_DeepFrozen;
 		bool m_LiveFrozen;
 		bool m_IsInFreeze;
+		SHudFrozenTeeState m_HudFrozenTeeState;
 
 		CCharacterCore m_Predicted;
 		CCharacterCore m_PrevPredicted;

@@ -1436,7 +1436,6 @@ void CTClient::OnMessage(int MsgType, void *pRawMsg)
 		vServerCommands.erase(std::remove_if(vServerCommands.begin(), vServerCommands.end(), [](const CChat::CCommand &Command) { return Command == SpecId; }), vServerCommands.end());
 		if(Enable)
 			vServerCommands.push_back(SpecId);
-		GameClient()->m_Chat.m_ServerCommandsNeedSorting = true;
 	};
 	if(MsgType == NETMSGTYPE_SV_COMMANDINFO)
 	{

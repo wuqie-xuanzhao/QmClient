@@ -74,6 +74,8 @@ public:
 	 * @return `true` if key is currently pressed down, `false` otherwise.
 	 */
 	virtual bool KeyIsPressed(int Key) const = 0;
+	// 不受窗口焦点影响的显示查询。未提供平台级状态时退化到窗口输入。
+	virtual bool GlobalKeyIsPressed(int Key) const { return KeyIsPressed(Key); }
 	/**
 	 * Returns whether the given key was pressed down during input updates for current frame. This state is
 	 * cleared at the end of each frame by calling the @link Clear @endlink function.
@@ -109,10 +111,17 @@ public:
 	virtual IJoystick *GetJoystick(size_t Index) = 0;
 	virtual IJoystick *GetActiveJoystick() = 0;
 	virtual void SetActiveJoystick(size_t Index) = 0;
+	virtual bool GamepadButtonIsPressed(int Button) const { return false; }
+	virtual float GamepadAxisValue(int Axis) const { return 0.0f; }
+	virtual int GamepadPlayerIndex() const { return 0; }
 
 	// mouse
 	virtual vec2 NativeMousePos() const = 0;
 	virtual bool NativeMousePressed(int Index) const = 0;
+	virtual vec2 GlobalMousePos() const { return NativeMousePos(); }
+	virtual bool GlobalMousePressed(int Index) const { return NativeMousePressed(Index); }
+	virtual vec2 GlobalMouseDelta() const { return vec2(0.0f, 0.0f); }
+	virtual bool HasGlobalInput() const { return false; }
 	virtual void MouseModeRelative() = 0;
 	virtual void MouseModeAbsolute() = 0;
 	virtual bool MouseRelative(float *pX, float *pY) = 0;

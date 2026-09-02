@@ -184,7 +184,6 @@ def main() -> int:
                         "-coloringstrategy",
                         "inktrap",
                         "-guesswinding",
-                        "-yflip",
                         "-o",
                         str(field_path),
                     ],

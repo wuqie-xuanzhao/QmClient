@@ -446,9 +446,17 @@ inline float ResolveQmVisualSkinTransitionHeight(const SSettingsContentMetrics &
 	return 7.0f * StandardRow + Notes + (Enabled ? 5.0f * StandardRow : 0.0f);
 }
 
+inline float ResolveQmVisualWeaponAnimationHeight(const SSettingsContentMetrics &Metrics, const bool SwitchEnabled, const bool ReloadEnabled)
+{
+	// 两个独立开关始终可见；装填概率、共享范围和切枪参数按各自开关展开。
+	const int Rows = 2 + (ReloadEnabled ? 1 : 0) + (SwitchEnabled || ReloadEnabled ? 1 : 0) + (SwitchEnabled ? 4 : 0);
+	return Rows * Metrics.m_RowStep + Metrics.m_LineSpacing;
+}
+
 inline float ResolveQmVisualCollisionHitboxHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
 {
-	return (Enabled ? 10.0f : 1.0f) * Metrics.m_RowStep;
+	// 总开关、十个语义开关、玩家范围、三项颜色和透明度共十六行。
+	return (Enabled ? 16.0f : 1.0f) * Metrics.m_RowStep;
 }
 
 inline float ResolveQmVisualFocusModeHeight(const SSettingsContentMetrics &Metrics)
@@ -647,7 +655,8 @@ inline float ResolveQmHudInputOverlayHeight(const SSettingsContentMetrics &Metri
 {
 	if(!Enabled)
 		return Metrics.m_LineHeight;
-	return 5.0f * Metrics.m_RowStep + 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing) - Metrics.m_LineSpacing;
+	// 复选框、三个数值项和编辑器按钮共五行（水平/垂直位置已删除，由 HUD 编辑器接管）。
+	return 5.0f * Metrics.m_RowStep;
 }
 
 inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metrics, const bool Expanded)
@@ -658,7 +667,7 @@ inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metr
 
 inline float ResolveQmHudDynamicIslandHeight(const SSettingsContentMetrics &Metrics, const bool OriginalStyle, const float ContentWidth)
 {
-	float Height = 4.0f * Metrics.m_RowStep;
+	float Height = 2.0f * Metrics.m_RowStep;
 	if(!OriginalStyle)
 	{
 		const CUIRect ColorRowView{0.0f, 0.0f, std::max(0.0f, ContentWidth), 0.0f};
@@ -697,19 +706,6 @@ inline float ResolveQmHudVoiceHeight(const SSettingsContentMetrics &Metrics, con
 		Height += Metrics.m_LineSpacing * 0.5f;
 	}
 	return Height - Metrics.m_LineSpacing;
-}
-
-inline float ResolveQmHudLyricsPreviewHeight(const int FontSize, const int LineCount)
-{
-	constexpr float PreviewPaddingY = 7.0f;
-	constexpr float PreviewLineGap = 5.0f;
-	const int ClampedLines = std::clamp(LineCount, 1, 2);
-	return std::max(42.0f, PreviewPaddingY * 2.0f + std::max(0, FontSize) * ClampedLines + PreviewLineGap * (ClampedLines - 1));
-}
-
-inline float ResolveQmHudLyricsHeight(const SSettingsContentMetrics &Metrics, const int PreviewFontSize, const int PreviewLineCount)
-{
-	return 48.0f * Metrics.m_RowStep + ResolveQmHudLyricsPreviewHeight(PreviewFontSize, PreviewLineCount);
 }
 
 inline float ResolveQmHudBackground3DHeight(const SSettingsContentMetrics &Metrics, const float ContentWidth, const bool Enabled, const bool CustomColor, const bool Glow, const bool Trail, const bool Pulse, const bool Twinkle)

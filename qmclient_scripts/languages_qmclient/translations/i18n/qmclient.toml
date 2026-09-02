@@ -1842,7 +1842,7 @@ polish = "Auto-zapis dziennika czatu"
 [[message]]
 key = "Auto-save history count (0=disable)"
 [message.translations]
-simplified_chinese = "自动保存历史数量（0=禁用自动过图历史记录）"
+simplified_chinese = "自动保存历史记录数量（0=禁用）"
 traditional_chinese = "自動儲存歷史記錄數量（0=停用）"
 japanese = "自動保存履歴数（0=無効）"
 korean = "자동 저장 기록 개수 (0=비활성화)"
@@ -2418,7 +2418,7 @@ polish = "Procent kompensacji opóźnienia Best input"
 [[message]]
 key = "Best input interpolation mode (1=linear 2=cubic 3=smooth)"
 [message.translations]
-simplified_chinese = "Best input 插值模式（1=linear 2=cubic 3=smooth）"
+simplified_chinese = "Best input 插值模式（1=线性，2=三次，3=平滑）"
 traditional_chinese = "Best input 插值模式（1=linear 2=cubic 3=smooth）"
 japanese = "Best input 補間モード（1=linear 2=cubic 3=smooth）"
 korean = "Best input 보간 모드 (1=linear 2=cubic 3=smooth)"
@@ -3042,7 +3042,7 @@ polish = "Przezroczystość dymków czatu (0-100)"
 [[message]]
 key = "Chat fade smooth time (milliseconds)"
 [message.translations]
-simplified_chinese = "聊天消息淡出平滑时间（毫秒）"
+simplified_chinese = "聊天消息淡出过渡时长（毫秒）"
 traditional_chinese = "聊天消息淡出平滑時間（毫秒）"
 japanese = "チャットメッセージフェードアウトのスムーズ時間（ms）"
 korean = "채팅 메시지 페이드아웃 부드러운 시간 (밀리초)"
@@ -3458,7 +3458,7 @@ polish = "Twarde przyciąganie dryfu zegara"
 [[message]]
 key = "Collision Line Opacity"
 [message.translations]
-simplified_chinese = "碰撞体积线条透明度"
+simplified_chinese = "碰撞线不透明度"
 traditional_chinese = "碰撞體積線條透明度"
 japanese = "衝突ボリュームライン透明度"
 korean = "충돌체 선 투명도"
@@ -3954,7 +3954,7 @@ polish = "Nie można załadować kodu QR sponsora. Sprawdź dane Base64"
 [[message]]
 key = "CP border overlay alpha (0-100)"
 [message.translations]
-simplified_chinese = "CP 点边界的覆盖实体 alpha（0-100）"
+simplified_chinese = "检查点边框覆盖层的实体不透明度（0-100）"
 traditional_chinese = "CP 點邊界的覆蓋實體 alpha（0-100）"
 japanese = "CP 点境界のオーバーレイエンティティのアルファ（0-100）"
 korean = "CP 경계 오버레이 엔티티 알파 (0-100)"
@@ -4178,7 +4178,7 @@ polish = "Niestandardowy szablon promptu"
 [[message]]
 key = "Custom Provider API Key"
 [message.translations]
-simplified_chinese = "自定义 Provider API Key"
+simplified_chinese = "自定义提供商 API 密钥"
 traditional_chinese = "自定義 Provider API Key"
 japanese = "カスタム Provider API キー"
 korean = "사용자 정의 Provider API Key"
@@ -4194,7 +4194,7 @@ polish = "Niestandardowy klucz API dostawcy"
 [[message]]
 key = "Custom Provider endpoint"
 [message.translations]
-simplified_chinese = "自定义 Provider 端点"
+simplified_chinese = "自定义提供商端点"
 traditional_chinese = "自定義 Provider 端點"
 japanese = "カスタム Provider エンドポイント"
 korean = "사용자 정의 Provider 엔드포인트"
@@ -4210,7 +4210,7 @@ polish = "Niestandardowy punkt końcowy dostawcy"
 [[message]]
 key = "Custom Provider model name"
 [message.translations]
-simplified_chinese = "自定义 Provider 模型名称"
+simplified_chinese = "自定义提供商模型名称"
 traditional_chinese = "自定義 Provider 模型名稱"
 japanese = "カスタム Provider モデル名"
 korean = "사용자 정의 Provider 모델 이름"
@@ -4642,7 +4642,7 @@ polish = "Cel demo"
 [[message]]
 key = "Depth freeze tile overlay alpha (0-100)"
 [message.translations]
-simplified_chinese = "深度冻结图块的叠加实体 alpha (0-100)"
+simplified_chinese = "深度冻结图块覆盖层的实体不透明度（0-100）"
 traditional_chinese = "深度凍結圖塊疊加 Alpha (0-100)"
 japanese = "深層凍結タイルのオーバーレイアルファ (0-100)"
 korean = "심층 빙결 타일 오버레이 알파 (0-100)"
@@ -4658,7 +4658,7 @@ polish = "Alpha nakładki kafli głębokiego zamrożenia (0-100)"
 [[message]]
 key = "Depth unfreeze tile overlay alpha (0-100)"
 [message.translations]
-simplified_chinese = "深度解冻图块的叠加实体 alpha (0-100)"
+simplified_chinese = "深度解冻图块覆盖层的实体不透明度（0-100）"
 traditional_chinese = "深度解凍圖塊疊加 Alpha (0-100)"
 japanese = "深層解凍タイルのオーバーレイアルファ (0-100)"
 korean = "심층 빙결 해제 타일 오버레이 알파 (0-100)"
@@ -5218,7 +5218,7 @@ polish = "Intensywność dynamicznego FOV"
 [[message]]
 key = "Dynamic FOV intensity (0-200)"
 [message.translations]
-simplified_chinese = "动态视野强度（0 - 200）"
+simplified_chinese = "动态视场角强度（0-200）"
 traditional_chinese = "動態視野強度（0 - 200）"
 japanese = "動的視野の強度（0-200）"
 korean = "동적 시야 강도 (0 - 200)"
@@ -5250,7 +5250,7 @@ polish = "Gładkość dynamicznego FOV"
 [[message]]
 key = "Dynamic FOV smoothness (0=instant, 100=smoothest)"
 [message.translations]
-simplified_chinese = "动态视野平滑度（0 = 瞬时，100 = 最平滑）"
+simplified_chinese = "动态视场角平滑度（0=瞬时，100=最平滑）"
 traditional_chinese = "動態視野平滑度（0 = 瞬時，100 = 最平滑）"
 japanese = "動的視野の滑らかさ（0=瞬時、100=最も滑らか）"
 korean = "동적 시야 부드러움 (0=즉시, 100=가장 부드러움)"
@@ -8002,7 +8002,7 @@ polish = "Ukryj nazwy graczy w trybie Zen"
 [[message]]
 key = "Hide projectile effects in Zen Mode"
 [message.translations]
-simplified_chinese = "禅模式下隐藏炮击特效"
+simplified_chinese = "禅模式下隐藏投射物特效"
 traditional_chinese = "禪模式下隱藏炮擊特效"
 japanese = "禅モードで砲撃エフェクトを非表示"
 korean = "선 모드에서 포격 효과 숨기기"
@@ -8146,7 +8146,7 @@ polish = "Ukryj interfejs dla skupionej rozgrywki"
 [[message]]
 key = "Hide weapon fire effects in Zen Mode"
 [message.translations]
-simplified_chinese = "禅模式下隐藏武器火焰特效"
+simplified_chinese = "禅模式下隐藏武器开火特效"
 traditional_chinese = "禪模式下隱藏武器火焰特效"
 japanese = "禅モードで武器炎エフェクトを非表示"
 korean = "선 모드에서 무기 불꽃 효과 숨기기"
@@ -8306,7 +8306,7 @@ polish = "Globalna przezroczystość trybu hitboxów"
 [[message]]
 key = "Hitbox Mode Override"
 [message.translations]
-simplified_chinese = "碰撞箱模式总开关 (Hitbox mode)"
+simplified_chinese = "碰撞箱模式开关"
 traditional_chinese = "碰撞箱模式總開關 (Hitbox mode)"
 japanese = "ヒットボックスモードのメインスイッチ"
 korean = "히트박스 모드 전체 켜기/끄기 (Hitbox mode)"
@@ -9474,7 +9474,7 @@ polish = "Wzmocnienie lasera"
 [[message]]
 key = "Laser glow intensity (0-100)"
 [message.translations]
-simplified_chinese = "激光辉光强度 (0-100)"
+simplified_chinese = "激光辉光强度（0-100）"
 traditional_chinese = "激光輝光強度 (0-100)"
 japanese = "レーザーのグロー強度 (0-100)"
 korean = "레이저 광선 강도 (0-100)"
@@ -9490,7 +9490,7 @@ polish = "Intensywność poświaty lasera (0-100)"
 [[message]]
 key = "Laser Opacity (0=transparent, 100=opaque)"
 [message.translations]
-simplified_chinese = "激光半透明度 (0=完全透明，100=不透明)"
+simplified_chinese = "激光不透明度（0=完全透明，100=完全不透明）"
 traditional_chinese = "激光半透明度 (0=完全透明，100=不透明)"
 japanese = "レーザーの半透明度 (0=完全透明, 100=不透明)"
 korean = "레이저 반투명도 (0=완전 투명, 100=불투명)"
@@ -9570,7 +9570,7 @@ polish = "Rozmiar lasera"
 [[message]]
 key = "Laser Size/Thickness (percentage, 100=default)"
 [message.translations]
-simplified_chinese = "激光大小/粗细 (百分比，100=默认)"
+simplified_chinese = "激光大小/粗细（百分比，100=默认）"
 traditional_chinese = "激光大小/粗細 (百分比，100=默認)"
 japanese = "レーザーのサイズ/太さ (パーセント, 100=デフォルト)"
 korean = "레이저 크기/굵기 (백분율, 100=기본값)"
@@ -10146,7 +10146,7 @@ polish = "Lokalne efekty cząsteczkowe"
 [[message]]
 key = "Local particles: show particles behind own Tee (e.g. freeze snow)"
 [message.translations]
-simplified_chinese = "本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）"
+simplified_chinese = "本地粒子：显示自己 Tee 身后的粒子（例如冻结雪花）"
 traditional_chinese = "本地粒子：顯示自己 Tee 身後掉落的粒子（如凍結雪花）"
 japanese = "ローカルパーティクル：自分の Tee の後ろに落ちるパーティクル（凍結雪など）を表示"
 korean = "로컬 파티클: 자신의 Tee 뒤에 떨어지는 파티클 표시 (예: 얼음 결정)"
@@ -11458,7 +11458,7 @@ polish = "Kolor opcji wzmianki"
 [[message]]
 key = "Menu opacity (0-100)"
 [message.translations]
-simplified_chinese = "菜单不透明度 (Menu opacity 0-100)"
+simplified_chinese = "菜单不透明度（0-100）"
 traditional_chinese = "菜單不透明度 (Menu opacity 0-100)"
 japanese = "メニュー不透明度（Menu opacity 0-100）"
 korean = "메뉴 불투명도 (Menu opacity 0-100)"
@@ -11826,7 +11826,7 @@ polish = "Wyciszony"
 [[message]]
 key = "Name plate clan line X offset"
 [message.translations]
-simplified_chinese = "名字板战队行 X 偏移"
+simplified_chinese = "铭牌战队行 X 偏移"
 traditional_chinese = "名字板戰隊行 X 偏移"
 japanese = "ネームプレートクラン行 X オフセット"
 korean = "네임플레이트 클랜 행 X 오프셋"
@@ -11842,7 +11842,7 @@ polish = "Przesunięcie X wiersza klanu tabliczki z nazwą"
 [[message]]
 key = "Name plate clan line Y offset"
 [message.translations]
-simplified_chinese = "名字板战队行 Y 偏移"
+simplified_chinese = "铭牌战队行 Y 偏移"
 traditional_chinese = "名字板戰隊行 Y 偏移"
 japanese = "ネームプレートクラン行 Y オフセット"
 korean = "네임플레이트 클랜 행 Y 오프셋"
@@ -11858,7 +11858,7 @@ polish = "Przesunięcie Y wiersza klanu tabliczki z nazwą"
 [[message]]
 key = "Name plate coord line X offset"
 [message.translations]
-simplified_chinese = "名字板坐标行 X 偏移"
+simplified_chinese = "铭牌坐标行 X 偏移"
 traditional_chinese = "名字板座標行 X 偏移"
 japanese = "ネームプレート座標行 X オフセット"
 korean = "네임플레이트 좌표 행 X 오프셋"
@@ -11874,7 +11874,7 @@ polish = "Przesunięcie X wiersza współrzędnych tabliczki z nazwą"
 [[message]]
 key = "Name plate coord line Y offset"
 [message.translations]
-simplified_chinese = "名字板坐标行 Y 偏移"
+simplified_chinese = "铭牌坐标行 Y 偏移"
 traditional_chinese = "名字板座標行 Y 偏移"
 japanese = "ネームプレート座標行 Y オフセット"
 korean = "네임플레이트 좌표 행 Y 오프셋"
@@ -11890,7 +11890,7 @@ polish = "Przesunięcie Y wiersza współrzędnych tabliczki z nazwą"
 [[message]]
 key = "Name plate elements allow free X movement"
 [message.translations]
-simplified_chinese = "名字板元素允许 X 轴自由移动"
+simplified_chinese = "铭牌元素可沿 X 轴自由移动"
 traditional_chinese = "名字板元素允許 X 軸自由移動"
 japanese = "ネームプレート要素の X 軸自由移動を許可"
 korean = "네임플레이트 요소 X축 자유 이동 허용"
@@ -11906,7 +11906,7 @@ polish = "Element tabliczki z nazwą – zezwól na swobodny ruch w osi X"
 [[message]]
 key = "Name plate elements allow free Y movement"
 [message.translations]
-simplified_chinese = "名字板元素允许 Y 轴自由移动"
+simplified_chinese = "铭牌元素可沿 Y 轴自由移动"
 traditional_chinese = "名字板元素允許 Y 軸自由移動"
 japanese = "ネームプレート要素の Y 軸自由移動を許可"
 korean = "네임플레이트 요소 Y축 자유 이동 허용"
@@ -11922,7 +11922,7 @@ polish = "Element tabliczki z nazwą – zezwól na swobodny ruch w osi Y"
 [[message]]
 key = "Name plate elements freely movable within bounds"
 [message.translations]
-simplified_chinese = "名字板元素允许在框内自由移动"
+simplified_chinese = "铭牌元素可在边界内自由移动"
 traditional_chinese = "名字板元素允許在框內自由移動"
 japanese = "ネームプレート要素の枠内自由移動を許可"
 korean = "네임플레이트 요소 상자 내 자유 이동 허용"
@@ -11938,7 +11938,7 @@ polish = "Element tabliczki z nazwą – zezwól na swobodny ruch w ramce"
 [[message]]
 key = "Name plate key line X offset"
 [message.translations]
-simplified_chinese = "名字板按键行 X 偏移"
+simplified_chinese = "铭牌按键行 X 偏移"
 traditional_chinese = "名字板按鍵行 X 偏移"
 japanese = "ネームプレートキー行 X オフセット"
 korean = "네임플레이트 키 행 X 오프셋"
@@ -11954,7 +11954,7 @@ polish = "Przesunięcie X wiersza przycisków tabliczki z nazwą"
 [[message]]
 key = "Name plate key line Y offset"
 [message.translations]
-simplified_chinese = "名字板按键行 Y 偏移"
+simplified_chinese = "铭牌按键行 Y 偏移"
 traditional_chinese = "名字板按鍵行 Y 偏移"
 japanese = "ネームプレートキー行 Y オフセット"
 korean = "네임플레이트 키 행 Y 오프셋"
@@ -11970,7 +11970,7 @@ polish = "Przesunięcie Y wiersza przycisków tabliczki z nazwą"
 [[message]]
 key = "Name plate name line X offset"
 [message.translations]
-simplified_chinese = "名字板昵称行 X 偏移"
+simplified_chinese = "铭牌昵称行 X 偏移"
 traditional_chinese = "名字板暱稱行 X 偏移"
 japanese = "ネームプレートネーム行 X オフセット"
 korean = "네임플레이트 닉네임 행 X 오프셋"
@@ -11986,7 +11986,7 @@ polish = "Przesunięcie X wiersza pseudonimu tabliczki z nazwą"
 [[message]]
 key = "Name plate name line Y offset"
 [message.translations]
-simplified_chinese = "名字板昵称行 Y 偏移"
+simplified_chinese = "铭牌昵称行 Y 偏移"
 traditional_chinese = "名字板暱稱行 Y 偏移"
 japanese = "ネームプレートネーム行 Y オフセット"
 korean = "네임플레이트 닉네임 행 Y 오프셋"
@@ -12002,7 +12002,7 @@ polish = "Przesunięcie Y wiersza pseudonimu tabliczki z nazwą"
 [[message]]
 key = "Name plate strength line X offset"
 [message.translations]
-simplified_chinese = "名字板强弱行 X 偏移"
+simplified_chinese = "铭牌强弱行 X 偏移"
 traditional_chinese = "名字板強弱行 X 偏移"
 japanese = "ネームプレート強弱行 X オフセット"
 korean = "네임플레이트 강도 행 X 오프셋"
@@ -12018,7 +12018,7 @@ polish = "Przesunięcie X wiersza siły tabliczki z nazwą"
 [[message]]
 key = "Name plate strength line Y offset"
 [message.translations]
-simplified_chinese = "名字板强弱行 Y 偏移"
+simplified_chinese = "铭牌强弱行 Y 偏移"
 traditional_chinese = "名字板強弱行 Y 偏移"
 japanese = "ネームプレート強弱行 Y オフセット"
 korean = "네임플레이트 강도 행 Y 오프셋"
@@ -12034,7 +12034,7 @@ polish = "Przesunięcie Y wiersza siły tabliczki z nazwą"
 [[message]]
 key = "Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)"
 [message.translations]
-simplified_chinese = "名牌钩子强度图标范围（0=自己 1=他人 2=强钩 3=弱钩 4=所有玩家）"
+simplified_chinese = "铭牌钩索强度图标范围（0=自己，1=他人，2=强钩，3=弱钩，4=所有玩家）"
 traditional_chinese = "名牌鉤子強度圖標範圍（0=自己 1=他人 2=強鉤 3=弱鉤 4=所有玩家）"
 japanese = "ネームプレートフック強度アイコン範囲（0=自分 1=他人 2=強フック 3=弱フック 4=全プレイヤー）"
 korean = "이름표 갈고리 강도 아이콘 범위 (0=자신 1=타인 2=강한 갈고리 3=약한 갈고리 4=모든 플레이어)"
@@ -12050,7 +12050,7 @@ polish = "Zakres ikony siły haka na tabliczce (0=Własny 1=Inni 2=Mocny hak 3=S
 [[message]]
 key = "Nameplate position X"
 [message.translations]
-simplified_chinese = "名字牌显示坐标 X"
+simplified_chinese = "铭牌 X 坐标"
 traditional_chinese = "名字牌顯示座標 X"
 japanese = "ネームプレートに X 座標を表示"
 korean = "네임플레이트에 좌표 X 표시"
@@ -12066,7 +12066,7 @@ polish = "Pokaż współrzędną X na tabliczce z nazwą"
 [[message]]
 key = "Nameplate position Y"
 [message.translations]
-simplified_chinese = "名字牌显示坐标 Y"
+simplified_chinese = "铭牌 Y 坐标"
 traditional_chinese = "名字牌顯示座標 Y"
 japanese = "ネームプレートに Y 座標を表示"
 korean = "네임플레이트에 좌표 Y 표시"
@@ -12082,7 +12082,7 @@ polish = "Pokaż współrzędną Y na tabliczce z nazwą"
 [[message]]
 key = "Nameplate strong hook icon color"
 [message.translations]
-simplified_chinese = "名牌强钩图标颜色"
+simplified_chinese = "铭牌强钩图标颜色"
 traditional_chinese = "名牌強鉤圖標顏色"
 japanese = "ネームプレート強フックアイコン色"
 korean = "이름표 강한 갈고리 아이콘 색상"
@@ -12114,7 +12114,7 @@ polish = "Tekst tabliczki"
 [[message]]
 key = "Nameplate text border color"
 [message.translations]
-simplified_chinese = "名牌文字边框颜色"
+simplified_chinese = "铭牌文字边框颜色"
 traditional_chinese = "名牌文字邊框顏色"
 japanese = "ネームプレートテキスト枠線色"
 korean = "이름표 텍스트 테두리 색상"
@@ -12130,7 +12130,7 @@ polish = "Kolor obramowania tekstu tabliczki"
 [[message]]
 key = "Nameplate text border range"
 [message.translations]
-simplified_chinese = "名牌文字边框范围"
+simplified_chinese = "铭牌文字边框范围"
 traditional_chinese = "名牌文字邊框範圍"
 japanese = "ネームプレートテキストの境界範囲"
 korean = "이름표 텍스트 테두리 범위"
@@ -12146,7 +12146,7 @@ polish = "Zakres obramowania tekstu tabliczki"
 [[message]]
 key = "Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)"
 [message.translations]
-simplified_chinese = "名牌文字效果（1=边框 2=渐变 4=彩虹 8=发光）"
+simplified_chinese = "铭牌文字效果（1=边框，2=渐变，4=彩虹，8=发光）"
 traditional_chinese = "名牌文字效果（1=邊框 2=漸變 4=彩虹 8=發光）"
 japanese = "ネームプレートテキストエフェクト（1=境界 2=グラデーション 4=レインボー 8=グロー）"
 korean = "이름표 텍스트 효과 (1=테두리 2=그라데이션 4=무지개 8=발광)"
@@ -12290,7 +12290,7 @@ polish = "Kolor ikony słabego haka na tabliczce"
 [[message]]
 key = "Nameplate X alignment hint duration window (ms)"
 [message.translations]
-simplified_chinese = "名字牌 X 对齐提示持续判定窗口（毫秒）"
+simplified_chinese = "铭牌 X 坐标对齐提示持续时间窗口（毫秒）"
 traditional_chinese = "名字牌 X 對齊提示持續判定窗口（毫秒）"
 japanese = "ネームプレート X 揃えヒント持続判定ウィンドウ（ミリ秒）"
 korean = "네임플레이트 X 정렬 힌트 지속 판정 창 (ms)"
@@ -12306,7 +12306,7 @@ polish = "Okno ciągłego wykrywania podpowiedzi wyrównania X tabliczki z nazw�
 [[message]]
 key = "Nameplate X alignment hint highlight color"
 [message.translations]
-simplified_chinese = "名字牌 X 对齐提示高亮颜色"
+simplified_chinese = "铭牌 X 坐标对齐提示高亮颜色"
 traditional_chinese = "名字牌 X 對齊提示高亮顏色"
 japanese = "ネームプレート X 揃えヒントハイライト色"
 korean = "네임플레이트 X 정렬 힌트 강조 색상"
@@ -12322,7 +12322,7 @@ polish = "Kolor podświetlenia podpowiedzi wyrównania X tabliczki z nazwą"
 [[message]]
 key = "Nameplate X alignment hint strict mode"
 [message.translations]
-simplified_chinese = "名字牌 X 对齐提示严格模式"
+simplified_chinese = "铭牌 X 坐标对齐提示严格模式"
 traditional_chinese = "名字牌 X 對齊提示嚴格模式"
 japanese = "ネームプレート X 揃えヒント厳格モード"
 korean = "네임플레이트 X 정렬 힌트 엄격 모드"
@@ -12338,7 +12338,7 @@ polish = "Tryb ścisły podpowiedzi wyrównania X tabliczki z nazwą"
 [[message]]
 key = "Nameplate X alignment hint with local player"
 [message.translations]
-simplified_chinese = "名字牌显示与本地玩家 X 对齐的提示"
+simplified_chinese = "铭牌与本地玩家 X 坐标对齐提示"
 traditional_chinese = "名字牌顯示與本地玩家 X 對齊的提示"
 japanese = "ネームプレートにローカルプレイヤーの X 座標との位置合わせヒントを表示"
 korean = "네임플레이트에 로컬 플레이어와 X 정렬 힌트 표시"
@@ -13554,7 +13554,7 @@ polish = "Lyrics overall opacity percent"
 [[message]]
 key = "Override Death Tile Entity Alpha (0-100)"
 [message.translations]
-simplified_chinese = "覆盖死亡图块的实体 alpha (0-100)"
+simplified_chinese = "覆盖死亡图块的实体不透明度（0-100）"
 traditional_chinese = "覆蓋死亡圖塊的實體 alpha (0-100)"
 japanese = "デスタイルのエンティティアルファを上書き（0-100）"
 korean = "죽음 타일의 엔티티 알파 덮어쓰기 (0-100)"
@@ -13570,7 +13570,7 @@ polish = "Zastąpienie alfa encji dla śmiercionośnych płytek (0-100)"
 [[message]]
 key = "Override Entity Alpha for Unfreeze Tiles (0-100)"
 [message.translations]
-simplified_chinese = "覆盖实体 alpha 以解冻图块 (0-100)"
+simplified_chinese = "覆盖解冻图块的实体不透明度（0-100）"
 traditional_chinese = "覆蓋實體 alpha 以解凍圖塊 (0-100)"
 japanese = "アンフリーズタイルのエンティティアルファを上書き（0-100）"
 korean = "해동 타일의 엔티티 알파 덮어쓰기 (0-100)"
@@ -13586,7 +13586,7 @@ polish = "Zastąpienie alfa encji dla rozmrożonych płytek (0-100)"
 [[message]]
 key = "Override Freeze Tile Entity Alpha (0-100)"
 [message.translations]
-simplified_chinese = "覆盖冻结图块的实体 alpha (0-100)"
+simplified_chinese = "覆盖冻结图块的实体不透明度（0-100）"
 traditional_chinese = "覆蓋凍結圖塊的實體 alpha (0-100)"
 japanese = "フリーズタイルのエンティティアルファを上書き（0-100）"
 korean = "얼음 타일의 엔티티 알파 덮어쓰기 (0-100)"
@@ -13970,7 +13970,7 @@ polish = "Menu kołowe"
 [[message]]
 key = "Pie menu rename list (separate with |, e.g., name1|name2)"
 [message.translations]
-simplified_chinese = "饼菜单改名名单（使用 | 分隔，如：璇梦 1|璇梦 2）"
+simplified_chinese = "饼菜单改名名单（使用 | 分隔，例如：name1|name2）"
 traditional_chinese = "餅菜單改名名單（使用 | 分隔，如：璇夢 1|璇夢 2）"
 japanese = "パイメニュー名前変更リスト（| で区切る、例：璇夢1|璇夢2）"
 korean = "파이 메뉴 이름 변경 목록 (|로 구분, 예: 현몽1|현몽2)"
@@ -14318,6 +14318,22 @@ brazilian_portuguese = "Jogadores não podem se enganchar neste servidor"
 portuguese = "Os jogadores não podem agarrar-se uns aos outros neste servidor"
 turkish = "Bu sunucuda oyuncular birbirini kancalayamaz"
 polish = "Gracze nie mogą się nawzajem hakować na tym serwerze"
+
+[[message]]
+key = "Pistol guide line"
+[message.translations]
+simplified_chinese = "手枪辅助线"
+traditional_chinese = "手槍輔助線"
+japanese = "ピストル補助線"
+korean = "권총 보조선"
+russian = "Линия траектории пистолета"
+german = "Pistolen-Hilfslinie"
+spanish = "Línea guía de la pistola"
+french = "Ligne guide du pistolet"
+brazilian_portuguese = "Linha guia da pistola"
+portuguese = "Linha guia da pistola"
+turkish = "Tabanca yardımcı çizgisi"
+polish = "Linia pomocnicza pistoletu"
 
 [[message]]
 key = "Playing effects"
@@ -14690,7 +14706,7 @@ polish = "Amplituda pulsu"
 [[message]]
 key = "Pulse Amplitude (0-100)"
 [message.translations]
-simplified_chinese = "脉冲振幅 (0-100)"
+simplified_chinese = "脉冲振幅（0-100）"
 traditional_chinese = "脈衝振幅 (0-100)"
 japanese = "パルス振幅（0-100）"
 korean = "맥동 진폭 (0-100)"
@@ -14706,7 +14722,7 @@ polish = "Amplituda pulsu (0-100)"
 [[message]]
 key = "Pulse animation speed (percentage, 100=normal)"
 [message.translations]
-simplified_chinese = "脉冲动画速度 ( 百分比，100=正常)"
+simplified_chinese = "脉冲动画速度（百分比，100=正常）"
 traditional_chinese = "脈衝動畫速度 ( 百分比，100=正常)"
 japanese = "パルスアニメーション速度（パーセント、100=通常）"
 korean = "맥동 애니메이션 속도 (백분율, 100=보통)"
@@ -14930,7 +14946,7 @@ polish = "Kolejność modułów paska bocznego QmDream"
 [[message]]
 key = "QmUi animation intensity: 0=Off, 1=Reduced, 2=Full"
 [message.translations]
-simplified_chinese = "QmUi 动效强度：0=关闭 1=降低 2=完整"
+simplified_chinese = "QmUi 动效强度：0=关闭，1=降低，2=完整"
 traditional_chinese = "QmUi 動效強度：0=關閉 1=降低 2=完整"
 japanese = "QmUi アニメーション強度：0=オフ 1=低減 2=フル"
 korean = "QmUi 애니메이션 강도: 0=끄기 1=낮음 2=전체"
@@ -14946,7 +14962,7 @@ polish = "Siła efektów QmUi: 0=Wyłączone 1=Zmniejszone 2=Pełne"
 [[message]]
 key = "QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform"
 [message.translations]
-simplified_chinese = "QmUi 颜色动画插值：0=sRGB 线性 1=OKLAB 感知均匀"
+simplified_chinese = "QmUi 颜色动画插值：0=sRGB 线性，1=OKLAB 感知均匀"
 traditional_chinese = "QmUi 顏色動畫插值：0=sRGB 線性 1=OKLAB 感知均勻"
 japanese = "QmUi カラーアニメーション補間：0=sRGB 線形 1=OKLAB 知覚均一"
 korean = "QmUi 색상 애니메이션 보간：0=sRGB 선형 1=OKLAB 지각 균일"
@@ -15106,7 +15122,7 @@ polish = "Losowy"
 [[message]]
 key = "Random emote when hit by hammer/grenade"
 [message.translations]
-simplified_chinese = "被锤子/榴弹击中时随机表情"
+simplified_chinese = "被锤子/榴弹枪击中时随机播放表情"
 traditional_chinese = "被錘子/榴彈擊中時隨機表情"
 japanese = "ハンマー/グレネード被弾時にランダム表情"
 korean = "해머/유탄에 맞을 때 무작위 이모티콘"
@@ -15154,7 +15170,7 @@ polish = "Lokalny próg rozpoznawania języka docelowego"
 [[message]]
 key = "Read new feature indicators"
 [message.translations]
-simplified_chinese = "已读的设置界面新功能标识"
+simplified_chinese = "将设置界面新功能提示标记为已读"
 traditional_chinese = "已讀的設置界面新功能標識"
 japanese = "既読の設定画面新機能マーク"
 korean = "읽은 설정 인터페이스 새 기능 표시"
@@ -16706,7 +16722,7 @@ polish = "Pokaż obramowanie obszarów kolizji"
 [[message]]
 key = "Show combo hint when hooking or hammering player within 2 seconds"
 [message.translations]
-simplified_chinese = "2 秒内连续钩中或锤中玩家时显示连击提示"
+simplified_chinese = "2 秒内钩中或锤击玩家时显示连击提示"
 traditional_chinese = "2 秒內連續鉤中或錘中玩家時顯示連擊提示"
 japanese = "2 秒以内に連続でフックまたはハンマーでヒットしたときにコンボ表示"
 korean = "2초 내에 연속으로 갈고리나 망치로 플레이어를 맞추면 콤보 알림 표시"
@@ -17026,7 +17042,7 @@ polish = "Pokaż w Dynamic Island"
 [[message]]
 key = "Show input overlay"
 [message.translations]
-simplified_chinese = "显示输入覆盖"
+simplified_chinese = "显示输入叠加层"
 traditional_chinese = "顯示輸入覆蓋"
 japanese = "入力オーバーレイを表示"
 korean = "입력 오버레이 표시"
@@ -17234,7 +17250,7 @@ polish = "Pokaż współrzędne innych graczy"
 [[message]]
 key = "Show others' nameplate coordinates"
 [message.translations]
-simplified_chinese = "名字牌显示他人坐标"
+simplified_chinese = "显示其他玩家的铭牌坐标"
 traditional_chinese = "名字牌顯示他人座標"
 japanese = "ネームプレートに他人の座標を表示"
 korean = "네임플레이트에 타인 좌표 표시"
@@ -17282,7 +17298,7 @@ polish = "Pokaż własne współrzędne"
 [[message]]
 key = "Show own nameplate coordinates"
 [message.translations]
-simplified_chinese = "名字牌显示自己坐标"
+simplified_chinese = "显示自己的铭牌坐标"
 traditional_chinese = "名字牌顯示自己座標"
 japanese = "ネームプレートに自分の座標を表示"
 korean = "네임플레이트에 자신 좌표 표시"
@@ -17346,7 +17362,7 @@ polish = "Pokaż odznakę Qm"
 [[message]]
 key = "Show Qm badge: identify via central server and mark QmClient users on nameplate/scoreboard"
 [message.translations]
-simplified_chinese = "显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户"
+simplified_chinese = "显示 Qm 标识：通过中心服务器识别 QmClient 用户，并在铭牌和计分板上标记"
 traditional_chinese = "顯示 Qm 標識：通過中心服識別並在名字板/計分板標記 QmClient 用戶"
 japanese = "Qm マークを表示：中央サーバー経由で識別し、ネームプレート/スコアボードに QmClient ユーザーをマーク"
 korean = "Qm 배지 표시: 중앙 서버를 통해 식별하고 이름표/점수판에 QmClient 사용자 표시"
@@ -17470,38 +17486,6 @@ brazilian_portuguese = "Mostrar time"
 portuguese = "Mostrar equipa"
 turkish = "Takımı göster"
 polish = "Pokaż drużynę"
-
-[[message]]
-key = "Show Tune Zone effects"
-[message.translations]
-japanese = "Tune Zone 効果を表示"
-korean = "Tune Zone 효과 표시"
-simplified_chinese = "显示 Tune Zone 效果"
-traditional_chinese = "顯示 Tune Zone 效果"
-russian = "Показывать эффекты Tune Zone"
-german = "Tune-Zone-Effekte anzeigen"
-spanish = "Mostrar efectos de Tune Zone"
-french = "Afficher les effets de Tune Zone"
-brazilian_portuguese = "Mostrar efeitos da Tune Zone"
-portuguese = "Mostrar efeitos da Tune Zone"
-turkish = "Tune Zone etkilerini göster"
-polish = "Pokaż efekty Tune Zone"
-
-[[message]]
-key = "Tune Zone effect icon legend"
-[message.translations]
-simplified_chinese = "Tune Zone 效果图标说明"
-traditional_chinese = "Tune Zone 效果圖示說明"
-japanese = "Tune Zone エフェクトアイコン一覧"
-korean = "Tune Zone 효과 아이콘 안내"
-russian = "Показывать эффекты Tune Zone"
-german = "Tune-Zone-Effekte anzeigen"
-spanish = "Mostrar efectos de Tune Zone"
-french = "Afficher les effets de Tune Zone"
-brazilian_portuguese = "Mostrar efeitos da Tune Zone"
-portuguese = "Mostrar efeitos da Tune Zone"
-turkish = "Tune Zone etkilerini göster"
-polish = "Pokaż efekty Tune Zone"
 
 [[message]]
 key = "Show team on HUD Dynamic Island"
@@ -18418,7 +18402,7 @@ polish = "Sekundy licznika czasu speedrun"
 [[message]]
 key = "Speedrun timer time (MM:SS, legacy)"
 [message.translations]
-simplified_chinese = "速通计时器时间（MMSS 格式，兼容旧版）"
+simplified_chinese = "速通计时器时间（MM:SS 格式，兼容旧版）"
 traditional_chinese = "速通計時器時間（MMSS 格式，兼容舊版）"
 japanese = "スピードラインタイマーの時間（MMSS 形式、旧バージョン互換）"
 korean = "스피드런 타이머 시간 (MMSS 형식, 구버전 호환)"
@@ -18802,7 +18786,7 @@ polish = "Zmiana skórki po uderzeniu młotkiem"
 [[message]]
 key = "Switch tile overlay alpha (0-100)"
 [message.translations]
-simplified_chinese = "开关图块的覆盖实体 alpha (0-100)"
+simplified_chinese = "开关图块覆盖层的实体不透明度（0-100）"
 traditional_chinese = "開關圖塊的覆蓋實體 alpha (0-100)"
 japanese = "スイッチタイルのオーバーレイエンティティアルファ（0-100）"
 korean = "스위치 타일의 오버레이 엔티티 알파 (0-100)"
@@ -18910,6 +18894,22 @@ brazilian_portuguese = "Controle de mídia do sistema"
 portuguese = "Controlo multimédia do sistema"
 turkish = "Sistem medya kontrolü"
 polish = "Systemowa kontrola multimediów"
+
+[[message]]
+key = "Lyrics sources and display"
+[message.translations]
+simplified_chinese = "歌词来源与显示"
+traditional_chinese = "歌詞來源與顯示"
+japanese = "歌詞のソースと表示"
+korean = "가사 소스 및 표시"
+russian = "Источники текста и отображение"
+german = "Textquellen und Anzeige"
+spanish = "Fuentes de letras y visualización"
+french = "Sources de paroles et affichage"
+brazilian_portuguese = "Fontes de letras e exibição"
+portuguese = "Fontes de letras e exibição"
+turkish = "Şarkı sözü kaynakları ve görüntüleme"
+polish = "Źródła tekstu i wyświetlanie"
 
 [[message]]
 key = "System media lyric font size"
@@ -19506,7 +19506,7 @@ polish = "Nieprzezroczystość teleportu"
 [[message]]
 key = "Teletile overlay alpha (0-100)"
 [message.translations]
-simplified_chinese = "Teletile 的覆盖实体 alpha (0-100)"
+simplified_chinese = "传送图块覆盖层的实体不透明度（0-100）"
 traditional_chinese = "Teletile 的覆蓋實體 alpha (0-100)"
 japanese = "テレポートタイルのエンティティアルファ (0-100)"
 korean = "텔레타일 오버레이 엔티티 알파 (0-100)"
@@ -21154,7 +21154,7 @@ polish = "Ustawienia i diagnostyka czatu głosowego"
 [[message]]
 key = "Voice distance radius (Tiles)"
 [message.translations]
-simplified_chinese = "语音距离半径（Tiles）"
+simplified_chinese = "语音距离半径（图块）"
 traditional_chinese = "語音距離半徑（Tiles）"
 japanese = "音声距離半径（Tiles）"
 korean = "음성 거리 반경 (Tiles)"
@@ -25657,7 +25657,7 @@ polish = "Rozmiar myszy"
 [[message]]
 key = "Input overlay keyboard scale (percent)"
 [message.translations]
-simplified_chinese = "输入覆盖键盘比例（百分比）"
+simplified_chinese = "输入叠加层键盘缩放比例（百分比）"
 traditional_chinese = "輸入覆蓋鍵盤比例（百分比）"
 japanese = "入力オーバーレイのキーボード倍率（パーセント）"
 korean = "입력 오버레이 키보드 배율(퍼센트)"
@@ -25673,7 +25673,7 @@ polish = "Skala klawiatury w nakładce wejścia (procent)"
 [[message]]
 key = "Input overlay mouse scale (percent)"
 [message.translations]
-simplified_chinese = "输入覆盖鼠标比例（百分比）"
+simplified_chinese = "输入叠加层鼠标缩放比例（百分比）"
 traditional_chinese = "輸入覆蓋滑鼠比例（百分比）"
 japanese = "入力オーバーレイのマウス倍率（パーセント）"
 korean = "입력 오버레이 마우스 배율(퍼센트)"
@@ -25685,22 +25685,6 @@ brazilian_portuguese = "Escala do mouse na sobreposição de entrada (porcentage
 portuguese = "Escala do rato na sobreposição de entrada (percentagem)"
 turkish = "Giriş katmanındaki fare ölçeği (yüzde)"
 polish = "Skala myszy w nakładce wejścia (procent)"
-
-[[message]]
-key = "Show Tune Zone effects on HUD Dynamic Island"
-[message.translations]
-simplified_chinese = "HUD 灵动岛显示 Tune Zone 效果"
-traditional_chinese = "HUD 靈動島顯示 Tune Zone 效果"
-japanese = "HUD ダイナミックアイランドに Tune Zone 効果を表示"
-korean = "HUD 다이내믹 아일랜드에 Tune Zone 효과 표시"
-russian = "Показывать эффекты Tune Zone в динамическом острове HUD"
-german = "Tune-Zone-Effekte auf der dynamischen HUD-Insel anzeigen"
-spanish = "Mostrar efectos de Tune Zone en la isla dinámica del HUD"
-french = "Afficher les effets de Tune Zone dans l'îlot dynamique du HUD"
-brazilian_portuguese = "Mostrar efeitos da Tune Zone na ilha dinâmica do HUD"
-portuguese = "Mostrar efeitos da Tune Zone na ilha dinâmica do HUD"
-turkish = "Tune Zone etkilerini HUD Dinamik Ada'da göster"
-polish = "Pokazuj efekty Tune Zone na dynamicznej wyspie HUD"
 
 [[message]]
 key = "Message merging"
@@ -25877,3 +25861,467 @@ brazilian_portuguese = "Probabilidade da animação de recarga da arma"
 portuguese = "Probabilidade da animação de recarga da arma"
 turkish = "Silah yeniden doldurma animasyonu olasılığı"
 polish = "Prawdopodobieństwo animacji przeładowania broni"
+
+[[message]]
+key = "Tee collision (Tee to Tee)"
+[message.translations]
+simplified_chinese = "Tee 碰撞（Tee 与 Tee）"
+traditional_chinese = "Tee 碰撞（Tee 與 Tee）"
+japanese = "Tee の衝突（Tee 対 Tee）"
+korean = "Tee 충돌(Tee 대 Tee)"
+russian = "Столкновение Tee (Tee с Tee)"
+german = "Tee-Kollision (Tee gegen Tee)"
+spanish = "Colisión de Tee (Tee contra Tee)"
+french = "Collision des Tee (Tee contre Tee)"
+brazilian_portuguese = "Colisão de Tee (Tee contra Tee)"
+portuguese = "Colisão de Tee (Tee contra Tee)"
+turkish = "Tee çarpışması (Tee ile Tee)"
+polish = "Kolizja Tee (Tee z Tee)"
+
+[[message]]
+key = "Tee freeze probe (Tee to Freeze)"
+[message.translations]
+simplified_chinese = "Tee 冻结探针（Tee 与 Freeze）"
+traditional_chinese = "Tee 凍結探針（Tee 與 Freeze）"
+japanese = "Tee のフリーズ判定（Tee 対 Freeze）"
+korean = "Tee 프리즈 탐지(Tee 대 Freeze)"
+russian = "Проверка заморозки Tee (Tee с Freeze)"
+german = "Tee-Freeze-Prüfung (Tee gegen Freeze)"
+spanish = "Detección de Freeze del Tee (Tee contra Freeze)"
+french = "Détection du gel du Tee (Tee contre Freeze)"
+brazilian_portuguese = "Detecção de Freeze do Tee (Tee contra Freeze)"
+portuguese = "Deteção de Freeze do Tee (Tee contra Freeze)"
+turkish = "Tee dondurma algısı (Tee ile Freeze)"
+polish = "Wykrywanie zamrożenia Tee (Tee z Freeze)"
+
+[[message]]
+key = "Tee death probe"
+[message.translations]
+simplified_chinese = "Tee 死亡探针"
+traditional_chinese = "Tee 死亡探針"
+japanese = "Tee のデス判定"
+korean = "Tee 데스 탐지"
+russian = "Проверка смерти Tee"
+german = "Tee-Todesprüfung"
+spanish = "Detección de muerte del Tee"
+french = "Détection de mort du Tee"
+brazilian_portuguese = "Detecção de morte do Tee"
+portuguese = "Deteção de morte do Tee"
+turkish = "Tee ölüm algısı"
+polish = "Wykrywanie śmierci Tee"
+
+[[message]]
+key = "Hammer interaction"
+[message.translations]
+simplified_chinese = "锤子交互"
+traditional_chinese = "鎚子互動"
+japanese = "ハンマーの相互作用"
+korean = "망치 상호작용"
+russian = "Взаимодействие молота"
+german = "Hammer-Interaktion"
+spanish = "Interacción del martillo"
+french = "Interaction du marteau"
+brazilian_portuguese = "Interação do martelo"
+portuguese = "Interação do martelo"
+turkish = "Çekiç etkileşimi"
+polish = "Interakcja młotka"
+
+[[message]]
+key = "Projectile / explosion range"
+[message.translations]
+simplified_chinese = "投射物/爆炸范围"
+traditional_chinese = "投射物 / 爆炸範圍"
+japanese = "投射物 / 爆発範囲"
+korean = "투사체 / 폭발 범위"
+russian = "Радиус снаряда / взрыва"
+german = "Projektil-/Explosionsradius"
+spanish = "Alcance del proyectil / explosión"
+french = "Portée du projectile / explosion"
+brazilian_portuguese = "Alcance do projétil / explosão"
+portuguese = "Alcance do projétil / explosão"
+turkish = "Mermi / patlama menzili"
+polish = "Zasięg pocisku / eksplozji"
+
+[[message]]
+key = "Laser / shotgun interaction"
+[message.translations]
+simplified_chinese = "激光/霰弹枪交互"
+traditional_chinese = "激光 / 霰彈槍互動"
+japanese = "レーザー / ショットガンの相互作用"
+korean = "레이저 / 샷건 상호작용"
+russian = "Взаимодействие лазера / дробовика"
+german = "Laser-/Schrotflinten-Interaktion"
+spanish = "Interacción del láser / escopeta"
+french = "Interaction du laser / fusil à pompe"
+brazilian_portuguese = "Interação do laser / escopeta"
+portuguese = "Interação do laser / caçadeira"
+turkish = "Lazer / pompalı etkileşimi"
+polish = "Interakcja lasera / strzelby"
+
+[[message]]
+key = "Freeze laser collision volume"
+[message.translations]
+simplified_chinese = "冻结激光碰撞体积"
+traditional_chinese = "凍結激光碰撞體積"
+japanese = "フリーズレーザーの衝突範囲"
+korean = "프리즈 레이저 충돌 범위"
+russian = "Объём столкновения замораживающего лазера"
+german = "Kollisionsvolumen des Freeze-Lasers"
+spanish = "Volumen de colisión del láser Freeze"
+french = "Volume de collision du laser Freeze"
+brazilian_portuguese = "Volume de colisão do laser Freeze"
+portuguese = "Volume de colisão do laser Freeze"
+turkish = "Freeze lazer çarpışma hacmi"
+polish = "Objętość kolizji lasera Freeze"
+
+[[message]]
+key = "Hook interaction"
+[message.translations]
+simplified_chinese = "钩索交互"
+traditional_chinese = "鉤子互動"
+japanese = "フックの相互作用"
+korean = "후크 상호작용"
+russian = "Взаимодействие крюка"
+german = "Haken-Interaktion"
+spanish = "Interacción del gancho"
+french = "Interaction du crochet"
+brazilian_portuguese = "Interação do gancho"
+portuguese = "Interação do gancho"
+turkish = "Kanca etkileşimi"
+polish = "Interakcja haka"
+
+[[message]]
+key = "Input overlay profile id"
+[message.translations]
+simplified_chinese = "输入叠加层配置档 ID"
+traditional_chinese = "輸入疊加層設定檔 ID"
+japanese = "入力オーバーレイのプロファイル ID"
+korean = "입력 오버레이 프로필 ID"
+russian = "Идентификатор профиля наложения ввода"
+german = "Profil-ID des Eingabe-Overlays"
+spanish = "ID del perfil de superposición de entrada"
+french = "ID du profil de superposition de saisie"
+brazilian_portuguese = "ID do perfil de sobreposição de entrada"
+portuguese = "ID do perfil de sobreposição de entrada"
+turkish = "Giriş kaplaması profil kimliği"
+polish = "Identyfikator profilu nakładki wejściowej"
+
+[[message]]
+key = "Enable Netease Music hook integration"
+[message.translations]
+simplified_chinese = "启用网易云音乐 Hook 集成"
+traditional_chinese = "啟用網易雲音樂 Hook 整合"
+japanese = "Netease Music Hook 統合を有効化"
+korean = "Netease Music Hook 통합 활성화"
+russian = "Включить интеграцию с Netease Music через Hook"
+german = "Netease-Music-Hook-Integration aktivieren"
+spanish = "Habilitar la integración Hook de Netease Music"
+french = "Activer l'intégration Hook de Netease Music"
+brazilian_portuguese = "Ativar a integração Hook do Netease Music"
+portuguese = "Ativar a integração Hook do Netease Music"
+turkish = "Netease Music Hook entegrasyonunu etkinleştir"
+polish = "Włącz integrację Netease Music przez Hook"
+
+[[message]]
+key = "Enable SodaMusic hook integration"
+[message.translations]
+simplified_chinese = "启用汽水音乐 Hook 集成"
+traditional_chinese = "啟用汽水音樂 Hook 整合"
+japanese = "SodaMusic Hook 統合を有効化"
+korean = "SodaMusic Hook 통합 활성화"
+russian = "Включить интеграцию с SodaMusic через Hook"
+german = "SodaMusic-Hook-Integration aktivieren"
+spanish = "Habilitar la integración Hook de SodaMusic"
+french = "Activer l'intégration Hook de SodaMusic"
+brazilian_portuguese = "Ativar a integração Hook do SodaMusic"
+portuguese = "Ativar a integração Hook do SodaMusic"
+turkish = "SodaMusic Hook entegrasyonunu etkinleştir"
+polish = "Włącz integrację SodaMusic przez Hook"
+
+[[message]]
+key = "Netease hook heartbeat timeout (milliseconds)"
+[message.translations]
+simplified_chinese = "网易云音乐 Hook 心跳超时时间（毫秒）"
+traditional_chinese = "網易雲音樂 Hook 心跳逾時時間（毫秒）"
+japanese = "Netease Hook のハートビートタイムアウト（ミリ秒）"
+korean = "Netease Hook 하트비트 시간 초과(밀리초)"
+russian = "Тайм-аут heartbeat Netease Hook (миллисекунды)"
+german = "Netease-Hook-Heartbeat-Timeout (Millisekunden)"
+spanish = "Tiempo de espera del heartbeat de Netease Hook (milisegundos)"
+french = "Délai d'expiration du heartbeat de Netease Hook (millisecondes)"
+brazilian_portuguese = "Tempo limite do heartbeat do Netease Hook (milissegundos)"
+portuguese = "Tempo limite do heartbeat do Netease Hook (milissegundos)"
+turkish = "Netease Hook heartbeat zaman aşımı (milisaniye)"
+polish = "Limit czasu heartbeat Netease Hook (milisekundy)"
+
+[[message]]
+key = "SodaMusic hook heartbeat timeout (milliseconds)"
+[message.translations]
+simplified_chinese = "汽水音乐 Hook 心跳超时时间（毫秒）"
+traditional_chinese = "汽水音樂 Hook 心跳逾時時間（毫秒）"
+japanese = "SodaMusic Hook のハートビートタイムアウト（ミリ秒）"
+korean = "SodaMusic Hook 하트비트 시간 초과(밀리초)"
+russian = "Тайм-аут heartbeat SodaMusic Hook (миллисекунды)"
+german = "SodaMusic-Hook-Heartbeat-Timeout (Millisekunden)"
+spanish = "Tiempo de espera del heartbeat de SodaMusic Hook (milisegundos)"
+french = "Délai d'expiration du heartbeat de SodaMusic Hook (millisecondes)"
+brazilian_portuguese = "Tempo limite do heartbeat do SodaMusic Hook (milissegundos)"
+portuguese = "Tempo limite do heartbeat do SodaMusic Hook (milissegundos)"
+turkish = "SodaMusic Hook heartbeat zaman aşımı (milisaniye)"
+polish = "Limit czasu heartbeat SodaMusic Hook (milisekundy)"
+
+[[message]]
+key = "Netease hook helper path (empty=beside QmClient)"
+[message.translations]
+simplified_chinese = "网易云音乐 Hook 辅助程序路径（留空则使用 QmClient 所在目录中的程序）"
+traditional_chinese = "網易雲音樂 Hook 輔助程式路徑（留空則使用 QmClient 所在目錄中的程式）"
+japanese = "Netease Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）"
+korean = "Netease Hook 도우미 경로(비워 두면 QmClient과 같은 디렉터리)"
+russian = "Путь к помощнику Netease Hook (пусто = рядом с QmClient)"
+german = "Pfad zum Netease-Hook-Hilfsprogramm (leer = neben QmClient)"
+spanish = "Ruta del ayudante de Netease Hook (vacía = junto a QmClient)"
+french = "Chemin de l'assistant Netease Hook (vide = à côté de QmClient)"
+brazilian_portuguese = "Caminho do auxiliar do Netease Hook (vazio = ao lado do QmClient)"
+portuguese = "Caminho do auxiliar do Netease Hook (vazio = junto do QmClient)"
+turkish = "Netease Hook yardımcı yolu (boş = QmClient'ın yanında)"
+polish = "Ścieżka pomocnika Netease Hook (pusta = obok QmClient)"
+
+[[message]]
+key = "SodaMusic hook helper path (empty=beside QmClient)"
+[message.translations]
+simplified_chinese = "汽水音乐 Hook 辅助程序路径（留空则使用 QmClient 所在目录中的程序）"
+traditional_chinese = "汽水音樂 Hook 輔助程式路徑（留空則使用 QmClient 所在目錄中的程式）"
+japanese = "SodaMusic Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）"
+korean = "SodaMusic Hook 도우미 경로(비워 두면 QmClient과 같은 디렉터리)"
+russian = "Путь к помощнику SodaMusic Hook (пусто = рядом с QmClient)"
+german = "Pfad zum SodaMusic-Hook-Hilfsprogramm (leer = neben QmClient)"
+spanish = "Ruta del ayudante de SodaMusic Hook (vacía = junto a QmClient)"
+french = "Chemin de l'assistant SodaMusic Hook (vide = à côté de QmClient)"
+brazilian_portuguese = "Caminho do auxiliar do SodaMusic Hook (vazio = ao lado do QmClient)"
+portuguese = "Caminho do auxiliar do SodaMusic Hook (vazio = junto do QmClient)"
+turkish = "SodaMusic Hook yardımcı yolu (boş = QmClient'ın yanında)"
+polish = "Ścieżka pomocnika SodaMusic Hook (pusta = obok QmClient)"
+
+[[message]]
+key = "Enable Netease lyric integration"
+[message.translations]
+simplified_chinese = "启用网易云音乐歌词集成"
+traditional_chinese = "啟用網易雲音樂歌詞整合"
+japanese = "Netease の歌詞統合を有効化"
+korean = "Netease 가사 통합 활성화"
+russian = "Включить интеграцию текстов песен Netease"
+german = "Netease-Lyrics-Integration aktivieren"
+spanish = "Habilitar la integración de letras de Netease"
+french = "Activer l'intégration des paroles Netease"
+brazilian_portuguese = "Ativar a integração de letras do Netease"
+portuguese = "Ativar a integração de letras do Netease"
+turkish = "Netease şarkı sözü entegrasyonunu etkinleştir"
+polish = "Włącz integrację tekstów piosenek Netease"
+
+[[message]]
+key = "Show current Netease lyric in Media Island"
+[message.translations]
+simplified_chinese = "在灵动岛中显示当前网易云音乐歌词"
+traditional_chinese = "在靈動島中顯示目前網易雲音樂歌詞"
+japanese = "現在の Netease の歌詞をメディアアイランドに表示"
+korean = "현재 Netease 가사를 미디어 아일랜드에 표시"
+russian = "Показывать текущий текст песни Netease на Media Island"
+german = "Aktuellen Netease-Liedtext in der Media Island anzeigen"
+spanish = "Mostrar la letra actual de Netease en Media Island"
+french = "Afficher les paroles Netease actuelles dans Media Island"
+brazilian_portuguese = "Exibir a letra atual do Netease na Media Island"
+portuguese = "Mostrar a letra atual do Netease na Media Island"
+turkish = "Güncel Netease şarkı sözünü Media Island'da göster"
+polish = "Pokaż bieżący tekst piosenki Netease w Media Island"
+
+[[message]]
+key = "Delete profile"
+[message.translations]
+simplified_chinese = "删除配置档"
+traditional_chinese = "刪除設定檔"
+japanese = "プロファイルを削除"
+korean = "프로필 삭제"
+russian = "Удалить профиль"
+german = "Profil löschen"
+spanish = "Eliminar perfil"
+french = "Supprimer le profil"
+brazilian_portuguese = "Excluir perfil"
+portuguese = "Eliminar perfil"
+turkish = "Profili sil"
+polish = "Usuń profil"
+
+[[message]]
+key = "Delete the current input overlay profile"
+[message.translations]
+simplified_chinese = "删除当前输入叠加层配置档"
+traditional_chinese = "刪除目前輸入覆蓋設定檔"
+japanese = "現在の入力オーバーレイプロファイルを削除"
+korean = "현재 입력 오버레이 프로필 삭제"
+russian = "Удалить текущий профиль оверлея ввода"
+german = "Aktuelles Eingabe-Overlay-Profil löschen"
+spanish = "Eliminar el perfil de superposición de entrada actual"
+french = "Supprimer le profil de superposition d'entrée actuel"
+brazilian_portuguese = "Excluir o perfil de sobreposição de entrada atual"
+portuguese = "Eliminar o perfil de sobreposição de entrada atual"
+turkish = "Mevcut giriş kaplaması profilini sil"
+polish = "Usuń bieżący profil nakładki wejściowej"
+
+[[message]]
+key = "Enable Netease music Hook"
+[message.translations]
+simplified_chinese = "启用网易云音乐 Hook"
+traditional_chinese = "啟用網易雲音樂 Hook"
+japanese = "Netease Music Hook を有効化"
+korean = "Netease Music Hook 활성화"
+russian = "Включить Netease Music Hook"
+german = "Netease-Music-Hook aktivieren"
+spanish = "Activar Hook de Netease Music"
+french = "Activer le Hook de Netease Music"
+brazilian_portuguese = "Ativar o Hook do Netease Music"
+portuguese = "Ativar o Hook do Netease Music"
+turkish = "Netease Music Hook'u etkinleştir"
+polish = "Włącz Netease Music Hook"
+
+[[message]]
+key = "Enable SodaMusic Hook"
+[message.translations]
+simplified_chinese = "启用汽水音乐 Hook"
+traditional_chinese = "啟用汽水音樂 Hook"
+japanese = "SodaMusic Hook を有効化"
+korean = "SodaMusic Hook 활성화"
+russian = "Включить SodaMusic Hook"
+german = "SodaMusic-Hook aktivieren"
+spanish = "Activar Hook de SodaMusic"
+french = "Activer le Hook de SodaMusic"
+brazilian_portuguese = "Ativar o Hook do SodaMusic"
+portuguese = "Ativar o Hook do SodaMusic"
+turkish = "SodaMusic Hook'u etkinleştir"
+polish = "Włącz SodaMusic Hook"
+
+[[message]]
+key = "Format: QmClient input overlay v3"
+[message.translations]
+simplified_chinese = "格式：QmClient 输入叠加层 v3"
+traditional_chinese = "格式：QmClient 輸入覆蓋 v3"
+japanese = "形式: QmClient 入力オーバーレイ v3"
+korean = "형식: QmClient 입력 오버레이 v3"
+russian = "Формат: входной оверлей QmClient v3"
+german = "Format: QmClient-Eingabe-Overlay v3"
+spanish = "Formato: superposición de entrada de QmClient v3"
+french = "Format : superposition d'entrée QmClient v3"
+brazilian_portuguese = "Formato: sobreposição de entrada do QmClient v3"
+portuguese = "Formato: sobreposição de entrada do QmClient v3"
+turkish = "Biçim: QmClient giriş kaplaması v3"
+polish = "Format: nakładka wejściowa QmClient v3"
+
+[[message]]
+key = "Import"
+[message.translations]
+simplified_chinese = "导入"
+traditional_chinese = "匯入"
+japanese = "インポート"
+korean = "가져오기"
+russian = "Импорт"
+german = "Importieren"
+spanish = "Importar"
+french = "Importer"
+brazilian_portuguese = "Importar"
+portuguese = "Importar"
+turkish = "İçe aktar"
+polish = "Importuj"
+
+[[message]]
+key = "Import an input overlay ZIP"
+[message.translations]
+simplified_chinese = "导入输入叠加层 ZIP"
+traditional_chinese = "匯入輸入覆蓋 ZIP"
+japanese = "入力オーバーレイ ZIP をインポート"
+korean = "입력 오버레이 ZIP 가져오기"
+russian = "Импортировать ZIP-файл оверлея ввода"
+german = "Eingabe-Overlay-ZIP importieren"
+spanish = "Importar ZIP de la superposición de entrada"
+french = "Importer le ZIP de la superposition d'entrée"
+brazilian_portuguese = "Importar ZIP da sobreposição de entrada"
+portuguese = "Importar ZIP da sobreposição de entrada"
+turkish = "Giriş kaplaması ZIP'ini içe aktar"
+polish = "Importuj ZIP nakładki wejściowej"
+
+[[message]]
+key = "Open editor"
+[message.translations]
+simplified_chinese = "打开编辑器"
+traditional_chinese = "開啟編輯器"
+japanese = "エディターを開く"
+korean = "편집기 열기"
+russian = "Открыть редактор"
+german = "Editor öffnen"
+spanish = "Abrir editor"
+french = "Ouvrir l'éditeur"
+brazilian_portuguese = "Abrir editor"
+portuguese = "Abrir editor"
+turkish = "Düzenleyiciyi aç"
+polish = "Otwórz edytor"
+
+[[message]]
+key = "Open the input overlay editor"
+[message.translations]
+simplified_chinese = "打开输入叠加层编辑器"
+traditional_chinese = "開啟輸入覆蓋編輯器"
+japanese = "入力オーバーレイエディターを開く"
+korean = "입력 오버레이 편집기 열기"
+russian = "Открыть редактор оверлея ввода"
+german = "Eingabe-Overlay-Editor öffnen"
+spanish = "Abrir el editor de la superposición de entrada"
+french = "Ouvrir l'éditeur de superposition d'entrée"
+brazilian_portuguese = "Abrir o editor de sobreposição de entrada"
+portuguese = "Abrir o editor de sobreposição de entrada"
+turkish = "Giriş kaplaması düzenleyicisini aç"
+polish = "Otwórz edytor nakładki wejściowej"
+
+[[message]]
+key = "Path to .zip"
+[message.translations]
+simplified_chinese = "ZIP 文件路径"
+traditional_chinese = "ZIP 檔案路徑"
+japanese = ".zip ファイルのパス"
+korean = ".zip 파일 경로"
+russian = "Путь к файлу .zip"
+german = "Pfad zur .zip-Datei"
+spanish = "Ruta del archivo .zip"
+french = "Chemin du fichier .zip"
+brazilian_portuguese = "Caminho do arquivo .zip"
+portuguese = "Caminho do ficheiro .zip"
+turkish = ".zip dosyasının yolu"
+polish = "Ścieżka do pliku .zip"
+
+[[message]]
+key = "Profile"
+[message.translations]
+simplified_chinese = "配置档"
+traditional_chinese = "設定檔"
+japanese = "プロファイル"
+korean = "프로필"
+russian = "Профиль"
+german = "Profil"
+spanish = "Perfil"
+french = "Profil"
+brazilian_portuguese = "Perfil"
+portuguese = "Perfil"
+turkish = "Profil"
+polish = "Profil"
+
+[[message]]
+key = "ZIP path"
+[message.translations]
+simplified_chinese = "ZIP 文件路径"
+traditional_chinese = "ZIP 檔案路徑"
+japanese = "ZIP のパス"
+korean = "ZIP 경로"
+russian = "Путь к ZIP-файлу"
+german = "ZIP-Pfad"
+spanish = "Ruta del ZIP"
+french = "Chemin du ZIP"
+brazilian_portuguese = "Caminho do ZIP"
+portuguese = "Caminho do ZIP"
+turkish = "ZIP yolu"
+polish = "Ścieżka ZIP"

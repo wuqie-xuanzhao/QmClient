@@ -40,10 +40,13 @@ class QmBuildIconMsdfTest(unittest.TestCase):
             )
 
             fake_msdfgen_impl = temp_path / "fake_msdfgen.py"
+            fake_msdfgen_args = temp_path / "msdfgen-args.txt"
             fake_msdfgen_impl.write_text(
                 "\n".join(
                     (
                         "import sys",
+                        "from pathlib import Path",
+                        f"Path({str(fake_msdfgen_args)!r}).write_text('\\n'.join(sys.argv[1:]), encoding='utf-8')",
                         "from PIL import Image",
                         "output = sys.argv[sys.argv.index('-o') + 1]",
                         "Image.new('RGB', (48, 48), (17, 29, 71)).save(output)",
@@ -97,6 +100,47 @@ class QmBuildIconMsdfTest(unittest.TestCase):
 
             manifest = json.loads((output_dir / "test_icons_msdf.json").read_text(encoding="utf-8"))
             self.assertEqual(set(manifest["icons"]), {"test", "shared"})
+            self.assertNotIn("-yflip", fake_msdfgen_args.read_text(encoding="utf-8").splitlines())
+
+    def test_committed_satellite_check_keeps_svg_vertical_orientation(self) -> None:
+        for weight in ("regular", "bold", "thin", "fill"):
+            with self.subTest(weight=weight):
+                alpha_manifest = json.loads((ICON_ROOT / f"qm_icons_{weight}_1x.json").read_text(encoding="utf-8"))
+                msdf_manifest = json.loads((ICON_ROOT / f"qm_icons_{weight}_msdf.json").read_text(encoding="utf-8"))
+                alpha_entry = alpha_manifest["icons"]["satellite-check"]
+                msdf_entry = msdf_manifest["icons"]["satellite-check"]
+
+                with Image.open(ICON_ROOT / f"qm_icons_{weight}_1x.png") as alpha_atlas:
+                    alpha_icon = alpha_atlas.crop(
+                        (
+                            alpha_entry["x"],
+                            alpha_entry["y"],
+                            alpha_entry["x"] + alpha_entry["w"],
+                            alpha_entry["y"] + alpha_entry["h"],
+                        )
+                    ).getchannel("A")
+                with Image.open(ICON_ROOT / f"qm_icons_{weight}_msdf.png") as msdf_atlas:
+                    msdf_icon = msdf_atlas.crop(
+                        (
+                            msdf_entry["x"],
+                            msdf_entry["y"],
+                            msdf_entry["x"] + msdf_entry["w"],
+                            msdf_entry["y"] + msdf_entry["h"],
+                        )
+                    ).convert("RGB")
+
+                alpha_icon = alpha_icon.resize(msdf_icon.size, Image.Resampling.NEAREST)
+                alpha_mask = [value >= 128 for value in alpha_icon.get_flattened_data()]
+                flipped_alpha_mask = [
+                    value
+                    for y in range(alpha_icon.height - 1, -1, -1)
+                    for value in alpha_mask[y * alpha_icon.width : (y + 1) * alpha_icon.width]
+                ]
+                msdf_mask = [sorted(pixel)[1] >= 128 for pixel in pixels(msdf_icon)]
+                normal_mismatches = sum(alpha != msdf for alpha, msdf in zip(alpha_mask, msdf_mask))
+                flipped_mismatches = sum(alpha != msdf for alpha, msdf in zip(flipped_alpha_mask, msdf_mask))
+
+                self.assertLess(normal_mismatches, flipped_mismatches)
 
     def test_committed_msdf_atlases_are_rgba_distance_fields_with_padding(self) -> None:
         manifests = {}

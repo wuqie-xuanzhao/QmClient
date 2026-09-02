@@ -1,9 +1,9 @@
 {
   "atlas": {
-    "height": 160,
+    "height": 128,
     "image": "qmclient/icons/qm_icons_bold_1x.png",
     "padding": 4,
-    "width": 192
+    "width": 160
   },
   "icons": {
     "bookmark": {
@@ -21,8 +21,8 @@
     "close": {
       "h": 24,
       "w": 24,
-      "x": 164,
-      "y": 132
+      "x": 36,
+      "y": 100
     },
     "eye": {
       "h": 24,
@@ -45,146 +45,68 @@
     "plus": {
       "h": 24,
       "w": 24,
-      "x": 164,
-      "y": 4
+      "x": 4,
+      "y": 36
     },
     "satellite-check": {
       "h": 24,
       "w": 24,
-      "x": 4,
+      "x": 36,
       "y": 36
     },
     "satellite-mute": {
       "h": 24,
       "w": 24,
-      "x": 36,
+      "x": 68,
       "y": 36
     },
     "satellite-spectator-eye": {
       "h": 24,
       "w": 24,
-      "x": 100,
+      "x": 132,
       "y": 36
     },
     "satellite-spectator-eye-closed": {
       "h": 24,
       "w": 24,
-      "x": 68,
+      "x": 100,
       "y": 36
     },
     "satellite-swap": {
       "h": 24,
       "w": 24,
-      "x": 4,
+      "x": 68,
       "y": 68
     },
     "satellite-swap-incoming": {
       "h": 24,
       "w": 24,
-      "x": 132,
-      "y": 36
+      "x": 4,
+      "y": 68
     },
     "satellite-swap-outgoing": {
       "h": 24,
       "w": 24,
-      "x": 164,
-      "y": 36
+      "x": 36,
+      "y": 68
     },
     "satellite-switch": {
       "h": 24,
       "w": 24,
-      "x": 36,
+      "x": 100,
       "y": 68
     },
     "star": {
       "h": 24,
       "w": 24,
-      "x": 68,
+      "x": 132,
       "y": 68
     },
     "trash": {
       "h": 24,
       "w": 24,
-      "x": 100,
-      "y": 68
-    },
-    "tune-collision": {
-      "h": 24,
-      "w": 24,
-      "x": 132,
-      "y": 68
-    },
-    "tune-elasticity": {
-      "h": 24,
-      "w": 24,
-      "x": 164,
-      "y": 68
-    },
-    "tune-gravity": {
-      "h": 24,
-      "w": 24,
       "x": 4,
       "y": 100
-    },
-    "tune-grenade-explosion": {
-      "h": 24,
-      "w": 24,
-      "x": 36,
-      "y": 100
-    },
-    "tune-gun-jetpack": {
-      "h": 24,
-      "w": 24,
-      "x": 68,
-      "y": 100
-    },
-    "tune-hammer": {
-      "h": 24,
-      "w": 24,
-      "x": 100,
-      "y": 100
-    },
-    "tune-hook": {
-      "h": 24,
-      "w": 24,
-      "x": 132,
-      "y": 100
-    },
-    "tune-jump": {
-      "h": 24,
-      "w": 24,
-      "x": 164,
-      "y": 100
-    },
-    "tune-laser": {
-      "h": 24,
-      "w": 24,
-      "x": 4,
-      "y": 132
-    },
-    "tune-movement": {
-      "h": 24,
-      "w": 24,
-      "x": 36,
-      "y": 132
-    },
-    "tune-shotgun": {
-      "h": 24,
-      "w": 24,
-      "x": 68,
-      "y": 132
-    },
-    "tune-velramp": {
-      "h": 24,
-      "w": 24,
-      "x": 100,
-      "y": 132
-    },
-    "tune-weapon-fire-rate": {
-      "h": 24,
-      "w": 24,
-      "x": 132,
-      "y": 132
     }
   },
   "scale": 1,

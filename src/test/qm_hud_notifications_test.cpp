@@ -1349,6 +1349,30 @@ TEST(QmHudEditorGeometry, ReportsVisibleSnapGuidePosition)
 	EXPECT_FLOAT_EQ(Free.m_Position, 120.0f);
 }
 
+TEST(QmHudEditorGeometry, MediaIslandUsesWeakerScreenEdgeSnapOnly)
+{
+	const QmHudEditor::SAxisReference aReferences[] = {
+		{40.0f, 60.0f},
+	};
+
+	const QmHudEditor::SSnapAxisResult FreeNearEdge = QmHudEditor::SnapAxisToGuidesEx(3.0f, 40.0f, 0.0f, 300.0f, nullptr, 0, QmHudEditor::MEDIA_ISLAND_EDGE_SNAP_DISTANCE);
+	EXPECT_FALSE(FreeNearEdge.m_HasGuide);
+	EXPECT_FLOAT_EQ(FreeNearEdge.m_Position, 3.0f);
+
+	const QmHudEditor::SSnapAxisResult SnappedEdge = QmHudEditor::SnapAxisToGuidesEx(2.0f, 40.0f, 0.0f, 300.0f, nullptr, 0, QmHudEditor::MEDIA_ISLAND_EDGE_SNAP_DISTANCE);
+	EXPECT_TRUE(SnappedEdge.m_HasGuide);
+	EXPECT_FLOAT_EQ(SnappedEdge.m_Position, 0.0f);
+	EXPECT_EQ(SnappedEdge.m_GuideKind, QmHudEditor::ESnapGuideKind::ScreenStart);
+
+	const QmHudEditor::SSnapAxisResult ScreenCenter = QmHudEditor::SnapAxisToGuidesEx(127.0f, 40.0f, 0.0f, 300.0f, nullptr, 0, QmHudEditor::MEDIA_ISLAND_EDGE_SNAP_DISTANCE);
+	EXPECT_FLOAT_EQ(ScreenCenter.m_Position, 130.0f);
+	EXPECT_EQ(ScreenCenter.m_GuideKind, QmHudEditor::ESnapGuideKind::ScreenCenter);
+
+	const QmHudEditor::SSnapAxisResult ReferenceStart = QmHudEditor::SnapAxisToGuidesEx(44.0f, 30.0f, 0.0f, 300.0f, aReferences, 1, QmHudEditor::MEDIA_ISLAND_EDGE_SNAP_DISTANCE);
+	EXPECT_FLOAT_EQ(ReferenceStart.m_Position, 40.0f);
+	EXPECT_EQ(ReferenceStart.m_GuideKind, QmHudEditor::ESnapGuideKind::ReferenceStart);
+}
+
 TEST(QmHudEditorGeometry, HudNotificationsUsesStableLayoutToken)
 {
 	const char *pToken = QmHudEditor::ElementToken(EHudEditorElement::HudNotifications);

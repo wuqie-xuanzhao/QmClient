@@ -42,7 +42,7 @@ void CTooltips::DoToolTip(const void *pId, const CUIRect *pNearRect, const char 
 	const auto &[Entry, WasInserted] = m_Tooltips.emplace(Id, CTooltip{
 									  pId,
 									  *pNearRect,
-									  pText,
+									  pText != nullptr ? pText : "",
 									  WidthHint,
 									  false});
 	CTooltip &Tooltip = Entry->second;
@@ -50,7 +50,7 @@ void CTooltips::DoToolTip(const void *pId, const CUIRect *pNearRect, const char 
 	if(!WasInserted)
 	{
 		Tooltip.m_Rect = *pNearRect; // update in case of window resize
-		Tooltip.m_pText = pText; // update in case of language change
+		Tooltip.m_Text = pText != nullptr ? pText : ""; // update in case of language change
 	}
 
 	Tooltip.m_OnScreen = true;
@@ -79,7 +79,7 @@ void CTooltips::OnRender()
 		// Reset hover time if a different tooltip is active.
 		// Only reset hover time when rendering, because multiple tooltips can be
 		// activated in the same frame, but only the last one should be rendered.
-		if(!m_PreviousTooltip.has_value() || m_PreviousTooltip.value().get().m_pText != Tooltip.m_pText)
+		if(!m_PreviousTooltip.has_value() || &m_PreviousTooltip.value().get() != &Tooltip)
 			m_HoverTime = time_get();
 		m_PreviousTooltip.emplace(Tooltip);
 
@@ -99,7 +99,7 @@ void CTooltips::OnRender()
 		constexpr float Margin = 5.0f;
 		constexpr float Padding = 5.0f;
 
-		const STextBoundingBox BoundingBox = TextRender()->TextBoundingBox(FontSize, Tooltip.m_pText, -1, Tooltip.m_WidthHint);
+		const STextBoundingBox BoundingBox = TextRender()->TextBoundingBox(FontSize, Tooltip.m_Text.c_str(), -1, Tooltip.m_WidthHint);
 		CUIRect Rect;
 		Rect.w = BoundingBox.m_W + 2 * Padding;
 		Rect.h = BoundingBox.m_H + 2 * Padding;
@@ -144,7 +144,7 @@ void CTooltips::OnRender()
 		STextContainerIndex TextContainerIndex;
 		const unsigned OldRenderFlags = TextRender()->GetRenderFlags();
 		TextRender()->SetRenderFlags(OldRenderFlags | TEXT_RENDER_FLAG_ONE_TIME_USE);
-		TextRender()->CreateTextContainer(TextContainerIndex, &Cursor, Tooltip.m_pText);
+		TextRender()->CreateTextContainer(TextContainerIndex, &Cursor, Tooltip.m_Text.c_str());
 		TextRender()->SetRenderFlags(OldRenderFlags);
 
 		if(TextContainerIndex.Valid())

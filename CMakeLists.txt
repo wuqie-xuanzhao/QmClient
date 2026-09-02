@@ -184,6 +184,89 @@ option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
 option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG sources" ON)
 
+if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
+  add_subdirectory(vendor/minhook EXCLUDE_FROM_ALL)
+  add_library(qm-nmt-hook64 SHARED
+    src/qm-nmt-hook/qm_netease_hook_dll.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.h
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.h
+  )
+  set_target_properties(qm-nmt-hook64 PROPERTIES OUTPUT_NAME "qm-nmt-hook64")
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-hook64 PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-hook64 PRIVATE src vendor/minhook/include)
+  target_compile_definitions(qm-nmt-hook64 PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-hook64 PRIVATE minhook windowsapp bcrypt)
+
+  # 网易云启动期 Bootstrap 在 QmClient 目录中使用独立文件名；部署器只在
+  # 网易云安装目录内将它安装为 version.dll，并拒绝覆盖未知同名 DLL。
+  add_library(qm-nmt-bootstrap SHARED
+    src/qm-nmt-hook/qm_netease_version_proxy.cpp
+    src/qm-nmt-hook/qm_netease_bootstrap.cpp
+    src/qm-nmt-hook/qm_netease_bootstrap.h
+    src/qm-nmt-hook/qm_netease_version_proxy.def
+  )
+  set_target_properties(qm-nmt-bootstrap PROPERTIES OUTPUT_NAME "qm-nmt-bootstrap")
+  set_property(TARGET qm-nmt-bootstrap PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-bootstrap PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-bootstrap PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-bootstrap PRIVATE src)
+  target_compile_definitions(qm-nmt-bootstrap PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-bootstrap PRIVATE ws2_32)
+
+  add_executable(qm-nmt-helper src/qm-nmt-hook/qm_netease_hook_helper.cpp)
+  target_sources(qm-nmt-helper PRIVATE
+    src/qm-nmt-hook/qm_netease_bootstrap.cpp
+    src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
+    src/qm-nmt-hook/qm_netease_frontend_bridge.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_state.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_v5_writer.cpp
+    src/engine/external/json-parser/json.c
+  )
+  set_target_properties(qm-nmt-helper PROPERTIES OUTPUT_NAME "qm-nmt-helper")
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-nmt-helper PROPERTY CXX_EXTENSIONS OFF)
+  target_include_directories(qm-nmt-helper PRIVATE src)
+  target_compile_definitions(qm-nmt-helper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-nmt-helper PRIVATE bcrypt winhttp ws2_32)
+
+  # 汽水音乐 Hook Helper:发现 SodaMusic.exe 主进程,激活 Node inspector(9229),
+  # 提取 sharedState 播放态(整首 KRC 歌词 + 逐字 + 翻译)。复用网易云 CDP 会话。
+  add_executable(qm-soda-helper
+    src/qm-soda-hook/qm_soda_helper.cpp
+    src/qm-soda-hook/qm_soda_probe.cpp
+    src/qm-soda-hook/qm_soda_probe.h
+    src/qm-soda-hook/qm_soda_protocol.cpp
+    src/qm-soda-hook/qm_soda_protocol.h
+    src/qm-soda-hook/qm_soda_watchdog.cpp
+    src/qm-soda-hook/qm_soda_watchdog.h
+    src/qm-soda-hook/qm_soda_writer.cpp
+    src/qm-soda-hook/qm_soda_writer.h
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
+    src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_krc.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_qrc.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+    src/engine/external/json-parser/json.c
+  )
+  set_target_properties(qm-soda-helper PROPERTIES OUTPUT_NAME "qm-soda-helper")
+  set_property(TARGET qm-soda-helper PROPERTY CXX_STANDARD 20)
+  set_property(TARGET qm-soda-helper PROPERTY CXX_STANDARD_REQUIRED ON)
+  set_property(TARGET qm-soda-helper PROPERTY CXX_EXTENSIONS OFF)
+  set_property(TARGET qm-soda-helper PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  target_include_directories(qm-soda-helper PRIVATE src)
+  target_compile_definitions(qm-soda-helper PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+  target_link_libraries(qm-soda-helper PRIVATE bcrypt winhttp ws2_32)
+endif()
+
 if(TARGET_OS STREQUAL "android")
   set(DISCORD OFF)
   set(STEAM OFF)
@@ -600,6 +683,15 @@ if(TARGET_OS STREQUAL "android")
   find_package(Android)
 endif()
 find_package(ZLIB)
+# 汽水 Helper 与网易云 Helper 都在 find_package 之前定义,这里补链接 zlib。
+if(TARGET qm-soda-helper)
+  if(ZLIB_DEP)
+    target_sources(qm-soda-helper PRIVATE ${ZLIB_DEP})
+    target_include_directories(qm-soda-helper PRIVATE ${ZLIB_INCLUDE_DIRS})
+  elseif(ZLIB_LIBRARIES)
+    target_link_libraries(qm-soda-helper PRIVATE ${ZLIB_LIBRARIES})
+  endif()
+endif()
 find_package(Crypto)
 find_package(Curl)
 if(CLIENT AND VIDEORECORDER)
@@ -964,12 +1056,16 @@ if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
       )
 
       if(MSVC)
-        foreach(target gtest gmock)
-          set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded$<${DBG}:Debug>)
+        foreach(target gtest gmock gtest_main gmock_main)
+          if(TARGET ${target})
+            set_property(TARGET ${target} PROPERTY MSVC_RUNTIME_LIBRARY MultiThreaded$<${DBG}:Debug>)
+          endif()
           # `/w` disables all warnings. This is needed because `gtest` enables
           # `/WX` (equivalent of `-Werror`) for some reason, breaking builds
           # when MSVS adds new warnings.
-          target_compile_options(${target} PRIVATE /w)
+          if(TARGET ${target})
+            target_compile_options(${target} PRIVATE /w)
+          endif()
         endforeach()
       endif()
 
@@ -1716,13 +1812,11 @@ set(EXPECTED_DATA
   gui_icons.png
   gui_logo.png
   hud.png
-  "input overlay-Zac/mouse-no-movement.json"
-  "input overlay-Zac/mouse.json"
-  "input overlay-Zac/mouse.png"
-  "input overlay-Zac/wasd.json"
-  "input overlay-Zac/wasd.png"
-  "input overlay-Zac/参数.txt"
-  input_overlay.json
+  qmclient/InputOverlay/input_overlay.json
+  qmclient/InputOverlay/mouse.json
+  qmclient/InputOverlay/mouse.png
+  qmclient/InputOverlay/wasd.json
+  qmclient/InputOverlay/wasd.png
   languages/arabic.txt
   languages/azerbaijani.txt
   languages/belarusian.txt
@@ -1886,6 +1980,22 @@ set(EXPECTED_DATA
   menuimages/settings.png
   particles.png
   qmclient/builtinscripts/sayemoticon.chai
+  qmclient/chat_emojis/agree.png
+  qmclient/chat_emojis/angry.png
+  qmclient/chat_emojis/awkward.png
+  qmclient/chat_emojis/cute.png
+  qmclient/chat_emojis/dead.png
+  qmclient/chat_emojis/hehe.png
+  qmclient/chat_emojis/insult.png
+  qmclient/chat_emojis/kneel.png
+  qmclient/chat_emojis/love.png
+  qmclient/chat_emojis/no.png
+  qmclient/chat_emojis/oppose.png
+  qmclient/chat_emojis/question.png
+  qmclient/chat_emojis/shocked.png
+  qmclient/chat_emojis/smell.png
+  qmclient/chat_emojis/support.png
+  qmclient/chat_emojis/surrender.png
   qmclient/fonts/Cabin-Regular.ttf
   qmclient/fonts/FreeSansBold.ttf
   qmclient/fonts/GoogleSans-Regular.ttf
@@ -1896,6 +2006,7 @@ set(EXPECTED_DATA
   qmclient/fonts/Rubik-Regular.ttf
   qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
+  qmclient/input_overlay_editor.html
   race_flag.png
   shader/gaussian_blur.frag
   shader/gaussian_blur.vert
@@ -2195,7 +2306,7 @@ set(EXPECTED_DATA
   wordlist.txt
 )
 
-set_glob(DATA GLOB_RECURSE "cfg;chai;frag;json;map;md;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
+set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
 
 ########################################################################
 # COPY DATA AND SHARED LIBS
@@ -2353,6 +2464,34 @@ file(GLOB QM_ICON_ATLAS_SVG_SOURCES
   datasrc/qm_icons/phosphor_thin/*.svg
   datasrc/qm_icons/tabler/*.svg
 )
+set(QM_ICON_MORPH_SVG_SOURCES
+  datasrc/qm_icons/phosphor_bold/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_bold/icon-eye.svg
+  datasrc/qm_icons/phosphor_fill/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_fill/icon-eye.svg
+  datasrc/qm_icons/phosphor_regular/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_regular/icon-eye.svg
+  datasrc/qm_icons/phosphor_thin/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_thin/icon-eye.svg
+)
+set(QM_ICON_MORPH_GENERATED ${PROJECT_BINARY_DIR}/src/generated/qm_icon_morph_generated.inc)
+add_custom_command(OUTPUT ${QM_ICON_MORPH_GENERATED}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/src/generated
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_morph.py
+    --source-root datasrc/qm_icons
+    --output ${QM_ICON_MORPH_GENERATED}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  DEPENDS
+    qmclient_scripts/qm_build_icon_atlas.py
+    qmclient_scripts/qm_build_icon_morph.py
+    ${QM_ICON_MORPH_SVG_SOURCES}
+  COMMENT "Building QmClient eye path morph data"
+)
+add_custom_target(qm-icon-morph DEPENDS ${QM_ICON_MORPH_GENERATED})
+if(TARGET sync_runtime_data)
+  add_dependencies(sync_runtime_data qm-icon-morph)
+endif()
 add_custom_target(qm-icon-atlas
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
@@ -2976,9 +3115,6 @@ if(CLIENT)
     components/censor.h
     components/chat.cpp
     components/chat.h
-    components/chat_completion.cpp
-    components/chat_completion.h
-    components/chat_completion_pinyin.inc
     components/community_icons.cpp
     components/community_icons.h
     components/console.cpp
@@ -3005,6 +3141,7 @@ if(CLIENT)
     components/ghost.h
     components/hud.cpp
     components/hud.h
+    components/hud_frozen_tee_state.h
     components/hud_media_island_logic.h
     components/hud_editor.cpp
     components/hud_editor.h
@@ -3063,6 +3200,8 @@ if(CLIENT)
     components/qmclient/axiom_scores.h
     components/qmclient/axiom_scores_data.cpp
     components/qmclient/axiom_scores_data.h
+    components/qmclient/chat_emoji.cpp
+    components/qmclient/chat_emoji.h
     components/qmclient/collision_hitbox.cpp
     components/qmclient/collision_hitbox.h
     components/qmclient/colored_parts.h
@@ -3078,6 +3217,8 @@ if(CLIENT)
     components/qmclient/hud_notifications/hud_notifications.h
     components/qmclient/input_overlay.cpp
     components/qmclient/input_overlay.h
+    components/qmclient/input_overlay_format.cpp
+    components/qmclient/input_overlay_format.h
     components/qmclient/jelly_tee.cpp
     components/qmclient/jelly_tee.h
     components/qmclient/keyword_reply_rules.h
@@ -3087,36 +3228,34 @@ if(CLIENT)
     components/qmclient/monitoring/monitoring.cpp
     components/qmclient/monitoring/monitoring_device_perf.cpp
     components/qmclient/monitoring/monitoring.h
-    components/qmclient/qm_lyrics/qm_lyrics.cpp
-    components/qmclient/qm_lyrics/qm_lyrics.h
-    components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_cache.h
-    components/qmclient/qm_lyrics/qm_lyrics_clock.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_clock.h
-    components/qmclient/qm_lyrics/qm_lyrics_match.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_match.h
-    components/qmclient/qm_lyrics/qm_lyrics_model.h
-    components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.h
-    components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.h
-    components/qmclient/qm_lyrics/qm_lyrics_render.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_render.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.h
-    components/qmclient/qm_lyrics/qm_lyrics_source.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_kugou.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_local_files.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.h
-    components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.h
-    components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
-    components/qmclient/qm_lyrics/qm_lyrics_song_search_map.h
+    components/qmclient/music_lyrics/music_lyrics_integration.cpp
+    components/qmclient/music_lyrics/music_lyrics_integration.h
+    components/qmclient/music_lyrics/music_lyrics_krc.cpp
+    components/qmclient/music_lyrics/music_lyrics_krc.h
+    components/qmclient/music_lyrics/music_lyrics_model.h
+    components/qmclient/music_lyrics/music_lyrics_qrc.cpp
+    components/qmclient/music_lyrics/music_lyrics_qrc.h
+    components/qmclient/music_lyrics/qm_soda_hook_provider.cpp
+    components/qmclient/music_lyrics/qm_soda_hook_provider.h
+    components/qmclient/music_lyrics/qm_soda_lyric_file.cpp
+    components/qmclient/music_lyrics/qm_soda_lyric_file.h
+    ../../qm-soda-hook/qm_soda_protocol.cpp
+    components/qmclient/netease/netease_integration.cpp
+    components/qmclient/netease/netease_integration.h
+    components/qmclient/netease/netease_lyric_parser.cpp
+    components/qmclient/netease/netease_lyric_parser.h
+    components/qmclient/netease/netease_lyric_state.cpp
+    components/qmclient/netease/netease_lyric_state.h
+    components/qmclient/netease/netease_lyric_timeline.cpp
+    components/qmclient/netease/netease_lyric_timeline.h
+    components/qmclient/netease/netease_shared_memory.cpp
+    components/qmclient/netease/netease_shared_memory.h
+    components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    components/qmclient/netease_hook/qm_netease_hook_protocol.h
+    components/qmclient/netease_hook/qm_netease_hook_v5_writer.cpp
+    components/qmclient/netease_hook/qm_netease_hook_v5_writer.h
+    components/qmclient/netease_hook/qm_netease_hook_provider.cpp
+    components/qmclient/netease_hook/qm_netease_hook_provider.h
     components/qmclient/qmclient.cpp
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
@@ -3257,6 +3396,8 @@ if(CLIENT)
     projectile_data.h
     qm_icon_manager.cpp
     qm_icon_manager.h
+    qm_icon_morph.cpp
+    qm_icon_morph.h
     qm_ime_candidate_popup.cpp
     qm_ime_candidate_popup.h
     qm_ime_manager.cpp
@@ -3550,6 +3691,21 @@ if(CLIENT)
     )
   endif()
   add_dependencies(game-client generate_content_types)
+  add_dependencies(game-client qm-icon-morph)
+  if(TARGET qm-nmt-hook64)
+    add_dependencies(game-client qm-nmt-hook64 qm-nmt-helper qm-nmt-bootstrap)
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-hook64>" "$<TARGET_FILE_DIR:game-client>/qm-nmt-hook64.dll"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-helper>" "$<TARGET_FILE_DIR:game-client>/qm-nmt-helper.exe"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-nmt-bootstrap>" "$<TARGET_FILE_DIR:game-client>/$<TARGET_FILE_NAME:qm-nmt-bootstrap>"
+      COMMENT "Copying Netease hook helper and bootstrap")
+  endif()
+  if(TARGET qm-soda-helper)
+    add_dependencies(game-client qm-soda-helper)
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-soda-helper>" "$<TARGET_FILE_DIR:game-client>/qm-soda-helper.exe"
+      COMMENT "Copying SodaMusic hook helper")
+  endif()
   if(VULKAN)
     add_dependencies(game-client build_vulkan_shaders)
   endif()
@@ -3945,6 +4101,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     QmAnimTest.cpp
     QmIconAtlasTest.cpp
     QmLayoutTest.cpp
+    input_overlay_format_test.cpp
     QmUiTokensTest.cpp
     qm_card_order_model_test.cpp
     qm_card_registry_test.cpp
@@ -4005,6 +4162,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     prng_test.cpp
     qm_background_particles_test.cpp
     qm_axiom_scores_test.cpp
+    qm_chat_emoji_test.cpp
     qm_chat_interactions_test.cpp
     qm_hammer_hit_detection_test.cpp
     qm_hud_media_island_logic_test.cpp
@@ -4012,18 +4170,14 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_ime_platform_test.cpp
     qm_new_ui_menu_branch_test.cpp
     qm_update_arguments_test.cpp
-    qm_lyrics_cache_test.cpp
-    qm_lyrics_clock_test.cpp
-    qm_lyrics_match_test.cpp
-    qm_lyrics_parser_lrc_test.cpp
-    qm_lyrics_parser_ttml_test.cpp
-    qm_lyrics_render_test.cpp
-    qm_lyrics_source_amll_ttml_db_test.cpp
-    qm_lyrics_source_apple_music_test.cpp
-    qm_lyrics_source_local_files_test.cpp
-    qm_lyrics_source_lyricify_cn_test.cpp
-    qm_lyrics_source_lrclib_test.cpp
-    qm_lyrics_song_search_map_test.cpp
+    netease_lyric_parser_test.cpp
+    netease_lyric_timeline_test.cpp
+    netease_lyric_state_test.cpp
+    netease_shared_memory_test.cpp
+    qm_netease_cdp_test.cpp
+    qm_netease_hook_protocol_test.cpp
+    music_lyrics_krc_test.cpp
+    music_lyrics_qrc_test.cpp
     qm_modes_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
@@ -4076,7 +4230,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/engine/client/backend/metal/metal_frame_state.cpp
     src/engine/client/backend/metal/metal_render_target_state.cpp
     src/game/client/animstate.cpp
-    src/game/client/components/chat_completion.cpp
     src/game/client/race_parse.cpp
     src/game/client/skin.cpp
     src/game/client/components/tclient/map_history.cpp
@@ -4111,19 +4264,15 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/axiom_scores.cpp
     src/game/client/components/qmclient/axiom_scores_data.cpp
     src/game/client/components/qmclient/monitoring/monitoring_device_perf.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_cache.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_clock.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_match.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_lrc.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_parser_ttml.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_render.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_amll_ttml_db.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_apple_music.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_kugou.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_local_files.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lyricify_cn.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_source_lrclib.cpp
-    src/game/client/components/qmclient/qm_lyrics/qm_lyrics_song_search_map.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_krc.cpp
+    src/game/client/components/qmclient/music_lyrics/music_lyrics_qrc.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_state.cpp
+    src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
+    src/game/client/components/qmclient/netease/netease_shared_memory.cpp
+    src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+    src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp
@@ -4133,6 +4282,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/translate/translate_parse.cpp
     src/game/client/components/qmclient/voice/voice_capture_pipeline.cpp
     src/game/client/components/qmclient/voice/voice_utils.cpp
+    src/game/client/components/qmclient/input_overlay_format.cpp
+    src/game/client/components/qmclient/input_overlay_format.h
     src/game/client/frame_scheduler.cpp
     src/engine/client/blocklist_driver.cpp
     src/engine/client/blocklist_driver.h
@@ -4168,6 +4319,9 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   add_dependencies(${TARGET_TESTRUNNER} generate_protocol)
   target_link_libraries(${TARGET_TESTRUNNER} ${PNG_LIBRARIES} ${WebP_LIBRARIES} ${GTEST_LIBRARIES} ${LIBS_SERVER})
+  if(TARGET_OS STREQUAL "windows")
+    target_link_libraries(${TARGET_TESTRUNNER} bcrypt winhttp ws2_32)
+  endif()
   if(FFMPEG_FOUND)
     target_link_libraries(${TARGET_TESTRUNNER} ${FFMPEG_LIBRARIES})
   endif()
@@ -4188,6 +4342,57 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   )
   if(FFMPEG_FOUND)
     target_include_directories(${TARGET_TESTRUNNER} SYSTEM PRIVATE ${FFMPEG_INCLUDE_DIRS})
+  endif()
+
+  set(QM_NMT_GTEST_MAIN_TARGET)
+  if(TARGET GTest::gtest_main)
+    set(QM_NMT_GTEST_MAIN_TARGET GTest::gtest_main)
+  elseif(TARGET gtest_main)
+    set(QM_NMT_GTEST_MAIN_TARGET gtest_main)
+  endif()
+  if(QM_NMT_GTEST_MAIN_TARGET)
+    add_executable(qm-nmt-tests EXCLUDE_FROM_ALL
+      src/test/music_lyrics_krc_test.cpp
+      src/test/music_lyrics_qrc_test.cpp
+      src/test/qm_soda_lyric_file_test.cpp
+      src/test/qm_soda_probe_test.cpp
+      src/test/qm_soda_protocol_test.cpp
+      src/test/netease_lyric_parser_test.cpp
+      src/test/netease_lyric_state_test.cpp
+      src/test/netease_lyric_timeline_test.cpp
+      src/test/netease_shared_memory_test.cpp
+      src/test/qm_netease_cdp_test.cpp
+      src/test/qm_netease_hook_protocol_test.cpp
+      src/qm-soda-hook/qm_soda_probe.cpp
+      src/qm-soda-hook/qm_soda_protocol.cpp
+      src/game/client/components/qmclient/music_lyrics/qm_soda_lyric_file.cpp
+      src/game/client/components/qmclient/music_lyrics/music_lyrics_krc.cpp
+      src/game/client/components/qmclient/music_lyrics/music_lyrics_qrc.cpp
+      src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
+      src/game/client/components/qmclient/netease/netease_lyric_state.cpp
+      src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
+      src/game/client/components/qmclient/netease/netease_shared_memory.cpp
+      src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
+      src/qm-nmt-hook/qm_netease_bootstrap.cpp
+      src/qm-nmt-hook/qm_netease_cdp.cpp
+      src/qm-nmt-hook/qm_netease_cdp_client.cpp
+      src/engine/external/json-parser/json.c
+    )
+    target_include_directories(qm-nmt-tests PRIVATE src)
+    target_link_libraries(qm-nmt-tests PRIVATE ${QM_NMT_GTEST_MAIN_TARGET})
+    if(TARGET_OS STREQUAL "windows")
+      target_compile_definitions(qm-nmt-tests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+      target_link_libraries(qm-nmt-tests PRIVATE bcrypt winhttp ws2_32)
+    endif()
+    if(ZLIB_DEP)
+      target_sources(qm-nmt-tests PRIVATE ${ZLIB_DEP})
+      target_include_directories(qm-nmt-tests PRIVATE ${ZLIB_INCLUDE_DIRS})
+    elseif(ZLIB_LIBRARIES)
+      target_link_libraries(qm-nmt-tests PRIVATE ${ZLIB_LIBRARIES})
+    endif()
+    list(APPEND TARGETS_OWN qm-nmt-tests)
+    enable_testing()
+    add_test(NAME qm-nmt-tests COMMAND $<TARGET_FILE:qm-nmt-tests>)
   endif()
 
   list(APPEND TARGETS_OWN ${TARGET_TESTRUNNER})
@@ -4432,6 +4637,16 @@ endif()
 set(CPACK_TARGETS)
 if(TARGET game-client)
   list(APPEND CPACK_TARGETS game-client)
+  # 网易云注入运行时必须与客户端一起发布并保持同级。
+  foreach(qm_nmt_runtime_target qm-nmt-helper qm-nmt-hook64 qm-nmt-bootstrap)
+    if(TARGET ${qm_nmt_runtime_target})
+      list(APPEND CPACK_TARGETS ${qm_nmt_runtime_target})
+    endif()
+  endforeach()
+  # 汽水音乐 Hook Helper 与客户端同级发布。
+  if(TARGET qm-soda-helper)
+    list(APPEND CPACK_TARGETS qm-soda-helper)
+  endif()
 endif()
 if(TARGET qm-client-updater)
   list(APPEND CPACK_TARGETS qm-client-updater)

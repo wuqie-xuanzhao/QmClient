@@ -5,17 +5,43 @@
 #include <engine/graphics.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/netease_hook/qm_netease_hook_provider.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <thread>
 
 namespace SystemMediaControls
 {
 	constexpr uint32_t ALBUM_ART_MAX_DIMENSION = 256;
+	constexpr uint64_t NETEASE_HOOK_REFRESH_INTERVAL_FRAMES = 3;
+
+	inline bool ShouldRefreshNeteaseHookSnapshot(uint64_t CurrentFrame, uint64_t LastReadFrame, bool HasReadFrame)
+	{
+		if(!HasReadFrame || CurrentFrame < LastReadFrame)
+			return true;
+		return CurrentFrame - LastReadFrame >= NETEASE_HOOK_REFRESH_INTERVAL_FRAMES;
+	}
+
+	inline bool MediaSourceChanged(const char *pPrevious, const char *pCurrent)
+	{
+		return std::string_view(pPrevious != nullptr ? pPrevious : "") != std::string_view(pCurrent != nullptr ? pCurrent : "");
+	}
+
+	inline bool AnyMediaSourceEnabled(bool SmtcEnabled, bool NeteaseHookEnabled)
+	{
+		return SmtcEnabled || NeteaseHookEnabled;
+	}
+
+	inline bool ShouldStopNeteaseHookForConfigurationChange(bool ConfigurationInitialized, bool WasHookEnabled)
+	{
+		return ConfigurationInitialized && WasHookEnabled;
+	}
 
 	struct SAlbumArtDecodeSize
 	{
@@ -70,20 +96,26 @@ namespace SystemMediaControls
 class CSystemMediaControls : public CComponent
 {
 public:
+	enum class EPlaybackState : uint8_t
+	{
+		Unknown = 0,
+		Playing,
+		Paused,
+		Stopped,
+	};
+
 	struct SState
 	{
 		bool m_CanPlay = false;
 		bool m_CanPause = false;
 		bool m_CanPrev = false;
 		bool m_CanNext = false;
+		EPlaybackState m_PlaybackState = EPlaybackState::Unknown;
 		bool m_Playing = false;
 		char m_aSourceAppId[128] = {};
 		char m_aTitle[128] = {};
 		char m_aArtist[128] = {};
 		char m_aAlbum[128] = {};
-		char m_aNeteaseSongId[128] = {};
-		char m_aQqMusicSongId[128] = {};
-		char m_aLinkedFileName[128] = {};
 		int64_t m_PositionMs = 0;
 		int64_t m_DurationMs = 0;
 		int64_t m_PositionUpdatedTick = 0;
@@ -108,11 +140,23 @@ public:
 	void OnUpdate() override;
 
 	bool GetStateSnapshot(SState &State) const;
+	// 读取网易云私有 v5 快照；不会把其字段合并到标准 SMTC 状态。
+	bool GetNeteaseSnapshot(QmNeteaseHook::SSnapshotV5 &Snapshot) const;
 	void Previous();
 	void PlayPause();
 	void Next();
 
 private:
+	void SyncNeteaseHookConfiguration();
+
+	std::unique_ptr<CQmNeteaseHookProvider> m_pNeteaseHook;
+	bool m_NeteaseHookConfigInitialized = false;
+	bool m_LastNeteaseHookEnabled = false;
+	std::string m_LastNeteaseHookHelperPath;
+	QmNeteaseHook::SSnapshotV5 m_NeteaseSnapshot{};
+	bool m_HasNeteaseSnapshot = false;
+	uint64_t m_LastNeteaseHookReadFrame = 0;
+	bool m_NeteaseHookReadFrameInitialized = false;
 #if SYSTEM_MEDIA_CONTROLS_WINRT_ENABLED
 	std::unique_ptr<SWinrt> m_pWinrt;
 	std::unique_ptr<SShared> m_pShared;

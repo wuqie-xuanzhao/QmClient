@@ -3,7 +3,6 @@
 
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/components/qmclient/afk_presentation.h>
-#include <game/client/components/qmclient/input_overlay.h>
 #include <game/client/components/qmclient/scoreboard_team_modes.h>
 #include <game/client/components/scoreboard.h>
 #include <game/map/render_map.h>
@@ -12,48 +11,8 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <string>
 #include <vector>
-
-TEST(QmInputOverlayLayout, MouseClassificationRequiresMouseOnlyInputs)
-{
-	EXPECT_TRUE(QmInputOverlay::IsMouseOnlyLayout(false, true));
-	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(true, false));
-	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(true, true));
-	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(false, false));
-}
-
-TEST(QmInputOverlayLayout, MouseSizeDoesNotMoveKeyboardOrMouseAnchor)
-{
-	constexpr float KeyboardScale = 0.5f;
-	const auto Keyboard = QmInputOverlay::ScaledLayoutBounds(0.0f, 0.0f, 432.0f, 300.0f, KeyboardScale, KeyboardScale);
-	const auto SmallMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.1f);
-	const auto LargeMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.5f);
-
-	EXPECT_FLOAT_EQ(Keyboard.m_MinX, 0.0f);
-	EXPECT_FLOAT_EQ(Keyboard.m_MaxX, 216.0f);
-	EXPECT_FLOAT_EQ(SmallMouse.m_MinX, LargeMouse.m_MinX);
-	EXPECT_FLOAT_EQ(SmallMouse.m_MinX - Keyboard.m_MaxX, 17.5f);
-	EXPECT_FLOAT_EQ(SmallMouse.m_MaxX - SmallMouse.m_MinX, 28.5f);
-	EXPECT_FLOAT_EQ(LargeMouse.m_MaxX - LargeMouse.m_MinX, 142.5f);
-}
-
-TEST(QmInputOverlayLayout, VisibleBoundsUseIndependentContentScales)
-{
-	constexpr float KeyboardScale = 0.5f;
-	const auto Keyboard = QmInputOverlay::ScaledLayoutBounds(0.0f, 0.0f, 432.0f, 300.0f, KeyboardScale, KeyboardScale);
-	const auto SmallMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.25f);
-	const auto LargeMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.5f);
-
-	const auto SmallBounds = QmInputOverlay::UnionBounds(Keyboard, SmallMouse);
-	EXPECT_FLOAT_EQ(SmallBounds.m_MinX, 0.0f);
-	EXPECT_FLOAT_EQ(SmallBounds.m_MinY, 0.0f);
-	EXPECT_FLOAT_EQ(SmallBounds.m_MaxX, 304.75f);
-	EXPECT_FLOAT_EQ(SmallBounds.m_MaxY, 150.0f);
-
-	const auto LargeBounds = QmInputOverlay::UnionBounds(Keyboard, LargeMouse);
-	EXPECT_FLOAT_EQ(LargeBounds.m_MaxX, 376.0f);
-	EXPECT_FLOAT_EQ(LargeBounds.m_MaxY, 210.5f);
-}
 
 TEST(QmTuneColorMapper, NonArrayBackendsKeepTheOriginalTuneTileIndex)
 {
@@ -72,6 +31,19 @@ TEST(QmAfkPresentation, ServerAndEscMenuStatesRemainAvailableForNonOpacityIndica
 	EXPECT_FALSE(IsQmAfkForPresentation(false, true, true, 4, 3));
 	EXPECT_FALSE(IsQmAfkForPresentation(false, false, true, 3, 3));
 	EXPECT_FALSE(IsQmAfkForPresentation(false, true, true, -1, -1));
+}
+
+TEST(QmAfkPresentation, AfkStateDoesNotChangeTeeHookOrNameplateOpacity)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/qmclient/afk_presentation.h");
+	const std::string Players = ReadTestSourceFile("src/game/client/components/players.cpp");
+	const std::string Nameplates = ReadTestSourceFile("src/game/client/components/nameplates.cpp");
+
+	EXPECT_EQ(Header.find("QM_AFK_PRESENTATION_ALPHA"), std::string::npos);
+	EXPECT_EQ(Header.find("ApplyQmAfkPresentationAlpha"), std::string::npos);
+	EXPECT_EQ(Players.find("ApplyQmAfkPresentationAlpha"), std::string::npos);
+	EXPECT_EQ(Players.find("Afk ? Alpha : 1.0f"), std::string::npos);
+	EXPECT_EQ(Nameplates.find("ApplyQmAfkPresentationAlpha"), std::string::npos);
 }
 
 TEST(QmScoreboardTeamModes, AggregationRequiresDisplayInfoAndCombinesKnownMembers)

@@ -2,6 +2,8 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_COLLISION_HITBOX_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_COLLISION_HITBOX_H
 
+#include "collision_hitbox_logic.h"
+
 #include <base/color.h>
 
 #include <game/client/component.h>
@@ -39,6 +41,7 @@ private:
 	void DrawCross(vec2 Position, float Size, ColorRGBA Color);
 	void DrawCircleOutline(vec2 Center, float Radius, ColorRGBA Color, int Segments = 32);
 	void DrawBoxOutline(vec2 Center, float Radius, ColorRGBA Color);
+	void DrawCapsuleOutline(vec2 From, vec2 To, float Radius, ColorRGBA Color, int ArcSegments = 16);
 	bool GetProjectileRenderPosition(const class CProjectileData &Projectile, vec2 &Position, vec2 &PreviousPosition) const;
 
 	void RenderTileHitboxes();

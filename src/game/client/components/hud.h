@@ -12,7 +12,7 @@
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/component.h>
 #include <game/client/components/hud_media_island_logic.h>
-#include <game/client/components/qmclient/tune_zone_effects.h>
+#include <game/client/components/system_media_controls.h>
 #include <game/client/ui_rect.h>
 #include <game/teamscore.h>
 
@@ -158,6 +158,11 @@ class CHud : public CComponent
 
 		EVisualState m_VisualState = EVisualState::MINIMIZED;
 		int64_t m_ExpandUntilTick = 0;
+		int64_t m_TrackDetailsUntilTick = 0;
+		bool m_LyricsActive = false;
+		bool m_LyricsMarqueeInitialized = false;
+		int64_t m_LyricsMarqueeStartTick = 0;
+		char m_aLyricsMarquee[256] = {};
 		float m_TargetX = 0.0f;
 		float m_TargetWidth = 0.0f;
 		float m_TargetHeight = 0.0f;
@@ -216,7 +221,6 @@ class CHud : public CComponent
 			float m_LiquidProgress = 0.0f;
 			float m_LiquidOriginCenterX = 0.0f;
 			float m_LiquidOriginWidth = 0.0f;
-			SQmTuneZoneEffectSummary m_TuneZoneSummary;
 
 			void Reset()
 			{
@@ -260,6 +264,11 @@ class CHud : public CComponent
 		{
 			m_VisualState = EVisualState::MINIMIZED;
 			m_ExpandUntilTick = 0;
+			m_TrackDetailsUntilTick = 0;
+			m_LyricsActive = false;
+			m_LyricsMarqueeInitialized = false;
+			m_LyricsMarqueeStartTick = 0;
+			m_aLyricsMarquee[0] = '\0';
 			m_TargetX = 0.0f;
 			m_TargetWidth = 0.0f;
 			m_TargetHeight = 0.0f;
@@ -318,12 +327,39 @@ class CHud : public CComponent
 		}
 	};
 	SHudMediaIslandAnimState m_MediaIslandAnimState;
+	struct SHudMediaIslandFrameCache
+	{
+		uint64_t m_Frame = 0;
+		bool m_Valid = false;
+		bool m_HasMediaState = false;
+		CSystemMediaControls::SState m_MediaState{};
+		bool m_ShowLyrics = false;
+		bool m_LyricsActive = false;
+		char m_aLyrics[256] = {};
+		ColorRGBA m_LyricsColor = ColorRGBA(0.97f, 0.98f, 1.0f, 0.90f);
+		int m_SpectatorCount = 0;
+		bool m_HasVisible = false;
+		bool m_AvoidanceValid = false;
+		float m_AvoidanceRight = 0.0f;
+
+		void Reset()
+		{
+			*this = {};
+			m_LyricsColor = ColorRGBA(0.97f, 0.98f, 1.0f, 0.90f);
+		}
+	};
+	mutable SHudMediaIslandFrameCache m_MediaIslandFrameCache;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurSource;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurTemporary;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurTarget;
 	int m_MediaIslandBlurWidth = 0;
 	int m_MediaIslandBlurHeight = 0;
 	bool m_MediaIslandBlurReady = false;
+	uint64_t m_MediaIslandBlurLastAttemptFrame = 0;
+	bool m_MediaIslandBlurAttemptInitialized = false;
+	IGraphics::CRenderTargetHandle m_DummyMiniViewRenderTarget;
+	int m_DummyMiniViewRenderTargetWidth = 0;
+	int m_DummyMiniViewRenderTargetHeight = 0;
 	struct SHudWeaponPresentationState
 	{
 		bool m_aClientInitialized[MAX_CLIENTS] = {};
@@ -465,6 +501,7 @@ class CHud : public CComponent
 	void ResetSwitchCountdownRings();
 	void RenderFollowSwitchCountdowns();
 	void RenderDummyMiniMap();
+	void DestroyDummyMiniViewRenderTarget();
 	bool GetDummyMiniMapRect(float &X, float &Y, float &W, float &H) const;
 	void RenderConnectionWarning();
 	void RenderTeambalanceWarning();
@@ -474,6 +511,7 @@ class CHud : public CComponent
 
 	void PreparePlayerStateQuads();
 	void RenderPlayerState(int ClientId);
+	void EnsureMediaIslandFrameCache() const;
 	bool HasVisibleMediaIsland() const;
 	float GetTopIslandAvoidanceRight() const;
 	void DestroyMediaIslandBlurTargets();

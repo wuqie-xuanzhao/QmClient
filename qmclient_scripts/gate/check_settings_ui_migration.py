@@ -53,7 +53,6 @@ PAGE_STABLE_IDS = {
 		"qm:dummy_miniview",
 		"qm:dynamic_island",
 		"qm:system_media_controls",
-		"qm:lyrics",
 		"qm:background_3d",
 	),
 	"qmclient_function": (

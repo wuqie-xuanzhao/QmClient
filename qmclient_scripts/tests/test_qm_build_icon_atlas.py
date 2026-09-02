@@ -43,10 +43,29 @@ class QmBuildIconAtlasTest(unittest.TestCase):
         self.assertEqual(relative[0][-1], (20.0, 0.0))
 
     def test_phosphor_variants_render_with_fallback(self) -> None:
+        expected_sources = {
+            "icon-bookmark.svg",
+            "icon-chevron-down.svg",
+            "icon-eye-off.svg",
+            "icon-eye.svg",
+            "icon-magnifying-glass.svg",
+            "icon-plus.svg",
+            "icon-satellite-check.svg",
+            "icon-satellite-mute.svg",
+            "icon-satellite-spectator-eye-closed.svg",
+            "icon-satellite-spectator-eye.svg",
+            "icon-satellite-swap-incoming.svg",
+            "icon-satellite-swap-outgoing.svg",
+            "icon-satellite-swap.svg",
+            "icon-satellite-switch.svg",
+            "icon-star.svg",
+            "icon-trash.svg",
+            "icon-x.svg",
+        }
         for variant in ("phosphor_thin", "phosphor_regular", "phosphor_bold", "phosphor_fill"):
             source_dir = REPO_ROOT / "datasrc/qm_icons" / variant
             sources = sorted(source_dir.glob("*.svg"))
-            self.assertEqual(len(sources), 16)
+            self.assertSetEqual({source.name for source in sources}, expected_sources)
 
             with tempfile.TemporaryDirectory(prefix="qm-icon-test-") as temp_dir:
                 for source in sources:
@@ -71,11 +90,11 @@ class QmBuildIconAtlasTest(unittest.TestCase):
             primary.mkdir()
             shared.mkdir()
             (primary / "icon-search.svg").touch()
-            (shared / "icon-tune-gravity.svg").touch()
+            (shared / "icon-star.svg").touch()
 
             svg_files = ICON_ATLAS.collect_svg_files([primary, shared])
 
-            self.assertEqual([svg.name for svg in svg_files], ["icon-search.svg", "icon-tune-gravity.svg"])
+            self.assertEqual([svg.name for svg in svg_files], ["icon-search.svg", "icon-star.svg"])
 
     def test_collect_svg_files_rejects_duplicate_icon_names(self) -> None:
         with tempfile.TemporaryDirectory(prefix="qm-icon-test-") as temp_dir:

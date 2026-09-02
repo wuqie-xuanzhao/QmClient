@@ -12,7 +12,7 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/animstate.h>
 #include <game/client/components/nameplate_text_effects.h>
-#include <game/client/components/qmclient/afk_presentation.h>
+#include <game/client/components/qmclient/chat_emoji.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/gameclient.h>
@@ -1837,13 +1837,6 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		Alpha *= (float)g_Config.m_ClShowOthersAlpha / 100.0f;
 	if(GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(pPlayerInfo->m_ClientId))
 		Alpha = std::min(Alpha, 0.5f);
-	const bool Afk = IsQmAfkForPresentation(
-		ClientData.m_Afk,
-		Client()->State() == IClient::STATE_ONLINE,
-		GameClient()->m_Menus.IsActive(),
-		ClientId,
-		GameClient()->m_Snap.m_LocalClientId);
-	Alpha = ApplyQmAfkPresentationAlpha(Alpha, Afk);
 	Data.m_CoordXAlignColor.a *= Alpha;
 
 	Data.m_Color = ColorRGBA(1.0f, 1.0f, 1.0f);
@@ -2460,6 +2453,8 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	AnimState.m_LastTyping = IsTyping;
 
 	const char *pRenderText = HasSourceText ? pBubbleText : AnimState.m_aCachedText;
+	const EQmChatEmoji ChatEmoji = QmChatEmojiFromText(pRenderText);
+	const bool RenderChatEmoji = GameClient()->m_QmChatEmoji.CanRender(ChatEmoji);
 	char aAnimatedText[sizeof(AnimState.m_aCachedText)];
 	aAnimatedText[0] = '\0';
 	const char *pDisplayText = pRenderText;
@@ -2470,7 +2465,7 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	(void)RenderBytes;
 	const int RenderCharCount = static_cast<int>(RenderCharCountSize);
 
-	if(IsTyping)
+	if(IsTyping && !RenderChatEmoji)
 	{
 		const float TargetFillChars = static_cast<float>(RenderCharCount);
 		const float CurrentFillChars = AnimRuntime.GetValue(NodeKey, EUiAnimProperty::WIDTH, TargetFillChars);
@@ -2545,13 +2540,18 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 	unsigned int PrevFlags = TextRender()->GetRenderFlags();
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
 
-	const bool UseTextContainer = !IsTyping && std::abs(AnimScale - 1.0f) <= 0.001f;
+	const bool UseTextContainer = !RenderChatEmoji && !IsTyping && std::abs(AnimScale - 1.0f) <= 0.001f;
 	const bool LayoutDirty = !AnimState.m_TextContainerIndex.Valid() ||
 				 str_comp(AnimState.m_aLayoutText, pDisplayText) != 0 ||
 				 AnimState.m_CachedFontSize != FontSize ||
 				 AnimState.m_CachedLineWidth != MaxWidth;
 
-	if(!IsTyping && LayoutDirty)
+	if(RenderChatEmoji && AnimState.m_TextContainerIndex.Valid())
+	{
+		TextRender()->DeleteTextContainer(AnimState.m_TextContainerIndex);
+		AnimState.m_aLayoutText[0] = '\0';
+	}
+	else if(!RenderChatEmoji && !IsTyping && LayoutDirty)
 	{
 		TextRender()->DeleteTextContainer(AnimState.m_TextContainerIndex);
 
@@ -2579,7 +2579,12 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 
 	float TextHeight = 0.0f;
 	float TextWidth = 0.0f;
-	if(IsTyping)
+	if(RenderChatEmoji)
+	{
+		TextHeight = QmChatEmojiBubbleDisplaySize(FontSize);
+		TextWidth = TextHeight;
+	}
+	else if(IsTyping)
 	{
 		CTextCursor MeasureCursor;
 		MeasureCursor.m_FontSize = FontSize;
@@ -2619,35 +2624,50 @@ void CNamePlates::RenderChatBubble(vec2 Position, int ClientId, float Alpha)
 		IGraphics::CORNER_ALL,
 		Rounding);
 
-	ColorHSLA TextHSLA(g_Config.m_QmChatBubbleTextColor, false);
-	ColorRGBA TextColor = color_cast<ColorRGBA>(TextHSLA);
-	TextColor.a *= BubbleAlpha * ConfigAlpha;
-
-	ColorRGBA OutlineColor = TextRender()->DefaultTextOutlineColor();
-	OutlineColor.a *= TextColor.a;
-
-	TextRender()->TextColor(TextColor);
-	TextRender()->TextOutlineColor(OutlineColor);
-
-	if(UseTextContainer && AnimState.m_TextContainerIndex.Valid())
+	if(RenderChatEmoji)
 	{
-		const float TextX = BubbleX + (BubbleWidth - TextWidth) / 2.0f;
-		const float TextY = BubbleY + (BubbleHeight - TextHeight) / 2.0f;
-		TextRender()->RenderTextContainer(AnimState.m_TextContainerIndex, TextColor, OutlineColor, TextX, TextY);
+		const float EmojiWidth = TextWidth * AnimScale;
+		const float EmojiHeight = TextHeight * AnimScale;
+		GameClient()->m_QmChatEmoji.Render(
+			ChatEmoji,
+			BubbleX + (BubbleWidth - EmojiWidth) / 2.0f,
+			BubbleY + (BubbleHeight - EmojiHeight) / 2.0f,
+			EmojiWidth,
+			EmojiHeight,
+			BubbleAlpha * ConfigAlpha);
 	}
 	else
 	{
-		const float ScaledTextWidth = TextWidth * AnimScale;
-		const float ScaledTextHeight = TextHeight * AnimScale;
-		const float TextX = BubbleX + (BubbleWidth - ScaledTextWidth) / 2.0f;
-		const float TextY = BubbleY + (BubbleHeight - ScaledTextHeight) / 2.0f;
+		ColorHSLA TextHSLA(g_Config.m_QmChatBubbleTextColor, false);
+		ColorRGBA TextColor = color_cast<ColorRGBA>(TextHSLA);
+		TextColor.a *= BubbleAlpha * ConfigAlpha;
 
-		CTextCursor Cursor;
-		Cursor.m_FontSize = FontSize * AnimScale;
-		Cursor.m_LineWidth = MaxWidth * AnimScale;
-		Cursor.m_Flags = TEXTFLAG_RENDER;
-		Cursor.SetPosition(vec2(TextX, TextY));
-		TextRender()->TextEx(&Cursor, pDisplayText);
+		ColorRGBA OutlineColor = TextRender()->DefaultTextOutlineColor();
+		OutlineColor.a *= TextColor.a;
+
+		TextRender()->TextColor(TextColor);
+		TextRender()->TextOutlineColor(OutlineColor);
+
+		if(UseTextContainer && AnimState.m_TextContainerIndex.Valid())
+		{
+			const float TextX = BubbleX + (BubbleWidth - TextWidth) / 2.0f;
+			const float TextY = BubbleY + (BubbleHeight - TextHeight) / 2.0f;
+			TextRender()->RenderTextContainer(AnimState.m_TextContainerIndex, TextColor, OutlineColor, TextX, TextY);
+		}
+		else
+		{
+			const float ScaledTextWidth = TextWidth * AnimScale;
+			const float ScaledTextHeight = TextHeight * AnimScale;
+			const float TextX = BubbleX + (BubbleWidth - ScaledTextWidth) / 2.0f;
+			const float TextY = BubbleY + (BubbleHeight - ScaledTextHeight) / 2.0f;
+
+			CTextCursor Cursor;
+			Cursor.m_FontSize = FontSize * AnimScale;
+			Cursor.m_LineWidth = MaxWidth * AnimScale;
+			Cursor.m_Flags = TEXTFLAG_RENDER;
+			Cursor.SetPosition(vec2(TextX, TextY));
+			TextRender()->TextEx(&Cursor, pDisplayText);
+		}
 	}
 
 	TextRender()->TextColor(TextRender()->DefaultTextColor());

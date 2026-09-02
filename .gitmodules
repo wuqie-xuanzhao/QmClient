@@ -5,3 +5,6 @@
 [submodule "docs/dyl/QmClient_docs"]
 	path = docs/QmClient_docs
 	url = https://github.com/wuqie-xuanzhao/QmClient-docs.git
+[submodule "vendor/minhook"]
+	path = vendor/minhook
+	url = https://github.com/TsudaKageyu/minhook.git

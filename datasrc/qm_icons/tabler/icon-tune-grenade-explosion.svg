@@ -1,6 +1,0 @@
-<!-- QmClient hand-drawn Tune Zone grenade icon: round grenade with an explosion spark. -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <circle cx="108" cy="146" r="68" fill="currentColor"/>
-  <path d="M78 58h60v30H78V58Zm38 0c8-30 34-39 55-22" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="m192 34 8 24 24-8-14 21 22 13-26 1 2 26-17-20-19 18 6-25-26-4 24-10-11-24 20 16 7-28Z" fill="currentColor"/>
-</svg>

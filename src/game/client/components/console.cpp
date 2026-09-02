@@ -44,6 +44,52 @@ static constexpr float CONSOLE_SCROLLBAR_MARGIN = 5.0f;
 static constexpr ColorRGBA LINK_TEXT_COLOR = ColorRGBA(0.2f, 0.65f, 1.0f, 1.0f);
 static constexpr ColorRGBA LINK_UNDERLINE_COLOR = ColorRGBA(0.2f, 0.65f, 1.0f, 0.9f);
 
+struct SConfigHelpLookup
+{
+	const char *m_pScriptName;
+	const SConfigVariable *m_pVariable = nullptr;
+};
+
+static void FindConfigHelpVariable(const SConfigVariable *pVar, void *pUserData)
+{
+	auto *pLookup = static_cast<SConfigHelpLookup *>(pUserData);
+	if(pLookup->m_pVariable == nullptr && str_comp(pVar->m_pScriptName, pLookup->m_pScriptName) == 0)
+		pLookup->m_pVariable = pVar;
+}
+
+static bool BuildLocalizedConfigHelpText(const SConfigVariable *pVar, char *pBuffer, size_t BufferSize)
+{
+	if(pVar == nullptr || pVar->m_pHelpLocalizeKey == nullptr)
+		return false;
+
+	const char *pHelpText = Localize(pVar->m_pHelpLocalizeKey);
+	if(pVar->m_Type == SConfigVariable::VAR_INT)
+	{
+		const auto *pInt = static_cast<const SIntConfigVariable *>(pVar);
+		if(pInt->m_Min == pInt->m_Max)
+			str_format(pBuffer, BufferSize, Localize("%s (default: %d)", "Config help"), pHelpText, pInt->m_Default);
+		else if(pInt->m_Max == 0)
+			str_format(pBuffer, BufferSize, Localize("%s (default: %d, min: %d)", "Config help"), pHelpText, pInt->m_Default, pInt->m_Min);
+		else
+			str_format(pBuffer, BufferSize, Localize("%s (default: %d, min: %d, max: %d)", "Config help"), pHelpText, pInt->m_Default, pInt->m_Min, pInt->m_Max);
+	}
+	else if(pVar->m_Type == SConfigVariable::VAR_COLOR)
+	{
+		const auto *pColor = static_cast<const SColorConfigVariable *>(pVar);
+		str_format(pBuffer, BufferSize, Localize("%s (default: $%0*X)", "Config help"), pHelpText, pColor->m_Alpha ? 8 : 6, color_cast<ColorRGBA>(ColorHSLA(pColor->m_Default, pColor->m_Alpha)).Pack(pColor->m_Alpha));
+	}
+	else if(pVar->m_Type == SConfigVariable::VAR_STRING)
+	{
+		const auto *pString = static_cast<const SStringConfigVariable *>(pVar);
+		str_format(pBuffer, BufferSize, Localize("%s (default: \"%s\", max length: %d)", "Config help"), pHelpText, pString->m_pDefault, (int)pString->m_MaxSize - 1);
+	}
+	else
+	{
+		str_copy(pBuffer, pHelpText, BufferSize);
+	}
+	return true;
+}
+
 // NOLINTNEXTLINE(misc-use-internal-linkage)
 struct SLinkRange
 {
@@ -2465,7 +2511,14 @@ void CGameConsole::OnRender()
 					char aBuf[1024];
 					const char *pCommandHelp = pConsole->m_pCommandHelp != nullptr ? pConsole->m_pCommandHelp : "";
 					const char *pCommandParams = pConsole->m_pCommandParams != nullptr ? pConsole->m_pCommandParams : "";
-					const char *pLocalizedHelp = Localize(pCommandHelp);
+					char aLocalizedConfigHelp[1024];
+					const char *pLocalizedHelp = nullptr;
+					SConfigHelpLookup Lookup{pConsole->m_pCommandName};
+					ConfigManager()->PossibleConfigVariables(pConsole->m_pCommandName, pConsole->m_CompletionFlagmask, FindConfigHelpVariable, &Lookup);
+					if(BuildLocalizedConfigHelpText(Lookup.m_pVariable, aLocalizedConfigHelp, sizeof(aLocalizedConfigHelp)))
+						pLocalizedHelp = aLocalizedConfigHelp;
+					if(pLocalizedHelp == nullptr)
+						pLocalizedHelp = Localize(pCommandHelp);
 					const char *pLocalizedParams = Localize(pCommandParams);
 					str_format(aBuf, sizeof(aBuf), Localize("Help: %s"), pLocalizedHelp);
 					TextRender()->TextEx(&Info.m_Cursor, aBuf, -1);

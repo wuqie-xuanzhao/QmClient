@@ -9,11 +9,13 @@
 #include <game/client/QmUi/SettingsCardDeckLogic.h>
 #include <game/client/QmUi/SettingsPageLayout.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/components/qmclient/collision_hitbox_logic.h>
 
 #include <gtest/gtest.h>
 #include <test/test.h>
 
 #include <array>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -246,11 +248,41 @@ TEST(SettingsCardDeck, DisplayViewKeyChangesWhenAnySettingsSubTabChanges)
 TEST(SettingsPageLayout, DynamicVisualCardHeightsUseSharedMetrics)
 {
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
+	EXPECT_FLOAT_EQ(ResolveQmVisualWeaponAnimationHeight(Metrics, false, false), 2.0f * Metrics.m_RowStep + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(ResolveQmVisualWeaponAnimationHeight(Metrics, false, true), 4.0f * Metrics.m_RowStep + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(ResolveQmVisualWeaponAnimationHeight(Metrics, true, false), 7.0f * Metrics.m_RowStep + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(ResolveQmVisualWeaponAnimationHeight(Metrics, true, true), 8.0f * Metrics.m_RowStep + Metrics.m_LineSpacing);
 	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, false), Metrics.m_RowStep);
-	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, true), 10.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, true), 16.0f * Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ResolveQmVisualFocusModeHeight(Metrics), 16.0f * Metrics.m_RowStep + 3.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing) + Metrics.m_LineSpacing);
 	EXPECT_FLOAT_EQ(ResolveQmVisualSkinTransitionHeight(Metrics, true) - ResolveQmVisualSkinTransitionHeight(Metrics, false), 5.0f * Metrics.m_RowStep);
 	EXPECT_GT(ResolveQmVisualSkinTransitionHeight(Metrics, false), 0.0f);
+}
+
+TEST(CollisionHitboxLogic, CapsuleOutlineHandlesDegenerateAndAxisAlignedLasers)
+{
+	const auto Circle = BuildHitboxCapsuleOutline({10.0f, 20.0f}, {10.0f, 20.0f}, 5.0f, 4);
+	ASSERT_EQ(Circle.size(), 8u);
+	for(const auto &Line : Circle)
+	{
+		EXPECT_NEAR(distance(Line.m_From, vec2(10.0f, 20.0f)), 5.0f, 0.0001f);
+		EXPECT_NEAR(distance(Line.m_To, vec2(10.0f, 20.0f)), 5.0f, 0.0001f);
+	}
+
+	const auto Horizontal = BuildHitboxCapsuleOutline({0.0f, 0.0f}, {10.0f, 0.0f}, 2.0f, 4);
+	ASSERT_EQ(Horizontal.size(), 10u);
+	EXPECT_NEAR(Horizontal[0].m_From.y, 2.0f, 0.0001f);
+	EXPECT_NEAR(Horizontal[0].m_To.y, 2.0f, 0.0001f);
+	EXPECT_NEAR(Horizontal[1].m_From.y, -2.0f, 0.0001f);
+	EXPECT_NEAR(Horizontal[1].m_To.y, -2.0f, 0.0001f);
+
+	const auto Vertical = BuildHitboxCapsuleOutline({0.0f, 0.0f}, {0.0f, 10.0f}, 2.0f, 4);
+	ASSERT_EQ(Vertical.size(), 10u);
+	EXPECT_NEAR(Vertical[0].m_From.x, -2.0f, 0.0001f);
+	EXPECT_NEAR(Vertical[0].m_To.x, -2.0f, 0.0001f);
+	EXPECT_TRUE(BuildHitboxCapsuleOutline({0.0f, 0.0f}, {1.0f, 1.0f}, 0.0f).empty());
+	const float MaxFloat = std::numeric_limits<float>::max();
+	EXPECT_TRUE(BuildHitboxCapsuleOutline({-MaxFloat, 0.0f}, {MaxFloat, 0.0f}, 2.0f).empty());
 }
 
 TEST(SettingsPageLayout, DynamicIslandHeightMatchesTheRenderedRowsAndColorRow)
@@ -260,7 +292,7 @@ TEST(SettingsPageLayout, DynamicIslandHeightMatchesTheRenderedRowsAndColorRow)
 	const float ExpandedHeight = ResolveQmHudDynamicIslandHeight(Metrics, false, 700.0f);
 	const CUIRect ColorRowView{0.0f, 0.0f, 700.0f, 0.0f};
 
-	EXPECT_FLOAT_EQ(OriginalHeight, 4.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(OriginalHeight, 2.0f * Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ExpandedHeight - OriginalHeight, ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight);
 }
 

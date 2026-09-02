@@ -988,6 +988,8 @@ bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion(int &Major, int &Minor, 
 		pName = "OpenGL";
 	else if(m_BackendType == BACKEND_TYPE_OPENGL_ES)
 		pName = "GLES";
+	else if(m_BackendType == BACKEND_TYPE_VULKAN)
+		pName = "Vulkan";
 	else
 		return false;
 
@@ -1221,7 +1223,10 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	default:
 		dbg_assert_failed("Invalid m_BackendType: %d", m_BackendType);
 	}
-	log_info("gfx", "Created %s %d.%d context", pBackendName, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor);
+	if(m_BackendType == BACKEND_TYPE_VULKAN)
+		log_info("gfx", "Creating Vulkan context with configured API selection");
+	else
+		log_info("gfx", "Created %s %d.%d context", pBackendName, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor);
 
 	if(m_BackendType == BACKEND_TYPE_OPENGL)
 	{

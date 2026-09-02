@@ -2,7 +2,6 @@
 #include <base/system.h>
 
 #include <game/client/components/chat.h>
-#include <game/client/components/chat_completion.h>
 #include <game/client/components/console.h>
 #include <game/client/components/qmclient/axiom_auto_login.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
@@ -539,202 +538,85 @@ TEST(QmChatInteractions, ClampBacklogLine)
 	EXPECT_EQ(CChat::ClampBacklogLine(20, 10, 4), 6);
 }
 
-TEST(QmChatCompletion, ParsesSupportedFirstArguments)
+TEST(QmChatInteractions, HudTransformInversePreservesChatOrigin)
 {
-	QmChatCompletion::SContext Context;
-	EXPECT_TRUE(QmChatCompletion::ParseContext("/w qi", 5, Context));
-	EXPECT_EQ(Context.m_Provider, QmChatCompletion::EProvider::PLAYER);
-	EXPECT_EQ(Context.m_Query, "qi");
-	EXPECT_EQ(Context.m_ReplaceStart, 3u);
-	EXPECT_EQ(Context.m_ReplaceEnd, 5u);
+	const CUIRect DefaultRect = {0.0f, 50.0f, 400.0f, 250.0f};
+	const CUIRect TargetRect = {100.0f, 200.0f, 800.0f, 500.0f};
+	const vec2 LogicalPoint = {73.0f, 91.0f};
+	const float Scale = TargetRect.w / DefaultRect.w;
+	const vec2 TransformedPoint = {
+		TargetRect.x + (LogicalPoint.x - DefaultRect.x) * Scale,
+		TargetRect.y + (LogicalPoint.y - DefaultRect.y) * Scale};
 
-	EXPECT_TRUE(QmChatCompletion::ParseContext("/map go", 7, Context));
-	EXPECT_EQ(Context.m_Provider, QmChatCompletion::EProvider::MAP);
-	EXPECT_EQ(Context.m_Query, "go");
-	EXPECT_FALSE(QmChatCompletion::ParseContext("/unknown qi", 11, Context));
-	EXPECT_FALSE(QmChatCompletion::ParseContext("/team 1", 7, Context));
-	EXPECT_FALSE(QmChatCompletion::ParseContext("hello", 5, Context));
-	EXPECT_FALSE(QmChatCompletion::ParseContext("", 0, Context));
-	EXPECT_TRUE(QmChatCompletion::ParseContext("/w", 2, Context));
-	EXPECT_TRUE(Context.m_Query.empty());
+	const vec2 Result = CChat::InverseHudTransformPoint(TransformedPoint, DefaultRect, TargetRect);
+	EXPECT_NEAR(Result.x, LogicalPoint.x, 0.001f);
+	EXPECT_NEAR(Result.y, LogicalPoint.y, 0.001f);
 }
 
-TEST(QmChatCompletion, ParsesPlayerCandidatesRequestedByTab)
+TEST(QmChatInteractions, ChatLineHitStopsAtContentWidth)
 {
-	QmChatCompletion::SContext Context;
-	EXPECT_TRUE(QmChatCompletion::ParsePlayerTabContext("qi", 2, Context));
-	EXPECT_EQ(Context.m_Provider, QmChatCompletion::EProvider::PLAYER);
-	EXPECT_EQ(Context.m_Query, "qi");
-	EXPECT_EQ(Context.m_ReplaceStart, 0u);
-	EXPECT_EQ(Context.m_ReplaceEnd, 2u);
-	EXPECT_TRUE(Context.m_AppendColon);
+	const CUIRect ContentRect = {5.0f, 90.0f, 120.0f, 15.0f};
 
-	EXPECT_TRUE(QmChatCompletion::ParsePlayerTabContext("hello qi", 8, Context));
-	EXPECT_EQ(Context.m_Query, "qi");
-	EXPECT_EQ(Context.m_ReplaceStart, 6u);
-	EXPECT_EQ(Context.m_ReplaceEnd, 8u);
-	EXPECT_FALSE(Context.m_AppendColon);
-	EXPECT_FALSE(QmChatCompletion::ParsePlayerTabContext("/unknown", 8, Context));
+	EXPECT_TRUE(CChat::IsChatLineHit(ContentRect, vec2(100.0f, 95.0f)));
+	EXPECT_FALSE(CChat::IsChatLineHit(ContentRect, vec2(130.0f, 95.0f)));
+	EXPECT_FALSE(CChat::IsChatLineHit(ContentRect, vec2(100.0f, 106.0f)));
 }
 
-TEST(QmChatCompletion, HidesAfterFirstArgumentIsComplete)
+TEST(QmChatInteractions, ChatLineMenuUsesContentBoundsAndKeepsTargetHighlighted)
 {
-	QmChatCompletion::SContext Context;
-	EXPECT_FALSE(QmChatCompletion::ParseContext("/w qi hello", 11, Context));
-	EXPECT_FALSE(QmChatCompletion::ParseContext("/w qi hello", 5, Context));
-	EXPECT_FALSE(QmChatCompletion::ParseContext("/w \"Qi Men\" hello", 17, Context));
-	EXPECT_FALSE(QmChatCompletion::ParseContext("/w \"Qi Men\"", 7, Context));
-	EXPECT_TRUE(QmChatCompletion::ParseContext("/w \"Qi M", 8, Context));
-	EXPECT_EQ(Context.m_Query, "Qi M");
+	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string OnRender = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const std::string OpenMenu = SourceFunctionBody(Source, "void CChat::OpenChatLineMenu(");
+
+	EXPECT_NE(Header.find("float m_ContentWidth"), std::string::npos);
+	EXPECT_NE(Header.find("int m_LineIndex = -1"), std::string::npos);
+	EXPECT_NE(OnRender.find("Line.m_ContentWidth"), std::string::npos);
+	EXPECT_NE(OnRender.find("const float RenderedContentWidth = Line.m_ContentWidth * RenderScale;"), std::string::npos);
+	EXPECT_NE(OnRender.find("const bool MouseInsideLine = IsChatLineHit(RenderedTextRect, MousePos);"), std::string::npos);
+	EXPECT_NE(OnRender.find("ChatLineMenuOpen && m_ChatLinePopupContext.m_LineIndex == LineIndex"), std::string::npos);
+	EXPECT_NE(OnRender.find("const ColorRGBA SelectionColor"), std::string::npos);
+	EXPECT_NE(OnRender.find("Graphics()->DrawRect(RenderedTextRect.x"), std::string::npos);
+	EXPECT_NE(OpenMenu.find("m_ChatLinePopupContext.m_LineIndex = GetLineIndex(&Line);"), std::string::npos);
+	EXPECT_NE(OpenMenu.find("UiMousePos.x, UiMousePos.y"), std::string::npos);
+	EXPECT_EQ(OpenMenu.find("ChatToUiScale"), std::string::npos);
+	EXPECT_NE(OnRender.find("OpenChatLineMenu(*pMenuLine, GetUiMousePos());"), std::string::npos);
 }
 
-TEST(QmChatCompletion, CompletesAndQuotesCandidateWithoutSubmitting)
+TEST(QmChatCommandCompletion, KeepsDdnetTabCompletionWithoutQmExtensions)
 {
-	QmChatCompletion::SContext Context;
-	ASSERT_TRUE(QmChatCompletion::ParseContext("/w qi", 5, Context));
-	char aOutput[256];
-	size_t CursorOffset = 0;
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w qi", Context, "Qi Men", aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "/w \"Qi Men\" ");
-	EXPECT_EQ(CursorOffset, str_length(aOutput));
+	const std::string ChatHeader = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string BindChatHeader = ReadTestSourceFile("src/game/client/components/tclient/bindchat.h");
+	const std::string BindChat = ReadTestSourceFile("src/game/client/components/tclient/bindchat.cpp");
+	const std::string CMake = ReadTestSourceFile("CMakeLists.txt");
+	const std::string OnInput = SourceFunctionBody(Chat, "bool CChat::OnInput(");
+	const std::string RegisterCommand = SourceFunctionBody(Chat, "void CChat::RegisterCommand(");
+	const size_t CompletionBufferGuard = OnInput.find("if(!m_CompletionUsed)");
+	const size_t PlayerCompletionGuard = OnInput.find("if(!m_CompletionUsed && m_aCompletionBuffer[0] != '/')");
 
-	ASSERT_TRUE(QmChatCompletion::ParseContext("/w q", 4, Context));
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w q", Context, "Qi \"Men\"", aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "/w \"Qi \\\"Men\\\"\" ");
-	EXPECT_EQ(CursorOffset, str_length(aOutput));
-
-	ASSERT_TRUE(QmChatCompletion::ParseContext("/w foo", 6, Context));
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/w foo", Context, "foo\\bar", aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "/w \"foo\\\\bar\" ");
-	EXPECT_EQ(CursorOffset, str_length(aOutput));
-
-	ASSERT_TRUE(QmChatCompletion::ParsePlayerTabContext("qi", 2, Context));
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("qi", Context, "Qi Men", aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "Qi Men: ");
-	EXPECT_EQ(CursorOffset, str_length(aOutput));
-
-	ASSERT_TRUE(QmChatCompletion::ParsePlayerTabContext("qi hello", 2, Context));
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("qi hello", Context, "Qi Men", aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "Qi Men: hello");
-
-	ASSERT_TRUE(QmChatCompletion::ParsePlayerTabContext("foo", 3, Context));
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("foo", Context, "foo\\bar", aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "foo\\bar: ");
-}
-
-TEST(QmChatCompletion, RanksPrefixBeforeContains)
-{
-	std::vector<QmChatCompletion::SCandidate> vCandidates;
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "aQi", "qi");
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "Qimen", "qi");
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "奇门", "qi", true);
-	QmChatCompletion::SortCandidates(vCandidates);
-	ASSERT_EQ(vCandidates.size(), 3u);
-	EXPECT_EQ(vCandidates[0].m_Value, "Qimen");
-	EXPECT_EQ(vCandidates[0].m_MatchOffset, 0);
-	EXPECT_EQ(vCandidates[1].m_Value, "aQi");
-	EXPECT_EQ(vCandidates[2].m_Value, "奇门");
-}
-
-TEST(QmChatCompletion, MatchesChinesePlayerNamesByFullPinyinAndInitials)
-{
-	std::vector<QmChatCompletion::SCandidate> vCandidates;
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "奇门", "qimen", true);
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "测试玩家", "cswj", true);
-	ASSERT_EQ(vCandidates.size(), 2u);
-	EXPECT_EQ(vCandidates[0].m_MatchOffset, -1);
-	EXPECT_EQ(vCandidates[1].m_MatchOffset, -1);
-}
-
-TEST(QmChatCompletion, KeepsMapTypeAsDisplayOnlyMetadata)
-{
-	std::vector<QmChatCompletion::SCandidate> vCandidates;
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "Kobra 3", "kob", false, "Moderate");
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "Aip-Gores", "", false, "Brutal");
-	ASSERT_EQ(vCandidates.size(), 2u);
-	EXPECT_EQ(vCandidates[0].m_Value, "Kobra 3");
-	EXPECT_EQ(vCandidates[0].m_Detail, "Moderate");
-	EXPECT_EQ(vCandidates[1].m_Value, "Aip-Gores");
-	EXPECT_EQ(vCandidates[1].m_Detail, "Brutal");
-
-	QmChatCompletion::SContext Context;
-	ASSERT_TRUE(QmChatCompletion::ParseContext("/map kob", 8, Context));
-	char aOutput[256];
-	size_t CursorOffset = 0;
-	ASSERT_TRUE(QmChatCompletion::ApplyCandidate("/map kob", Context, vCandidates[0].m_Value.c_str(), aOutput, sizeof(aOutput), CursorOffset));
-	EXPECT_STREQ(aOutput, "/map \"Kobra 3\" ");
-}
-
-TEST(QmChatCompletion, SizesCandidatePopupToContent)
-{
-	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(500.0f, 42.0f, false), 80.0f);
-	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(500.0f, 170.0f, false), 180.0f);
-	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(500.0f, 170.0f, true), 184.0f);
-	EXPECT_FLOAT_EQ(QmChatCompletion::CalculateCandidatePopupWidth(160.0f, 170.0f, true), 160.0f);
-}
-
-TEST(QmChatCompletion, ExtractsDifficultyCategoryInsteadOfGameType)
-{
-	std::string Category;
-	EXPECT_TRUE(QmChatCompletion::ExtractMapCategory("Moderate", "DDNet GER", Category));
-	EXPECT_EQ(Category, "Moderate");
-	EXPECT_TRUE(QmChatCompletion::ExtractMapCategory("None", "DDNet GER - Brutal", Category));
-	EXPECT_EQ(Category, "Brutal");
-	EXPECT_TRUE(QmChatCompletion::ExtractMapCategory("", "DDNet CHN - Novice", Category));
-	EXPECT_EQ(Category, "Novice");
-	EXPECT_FALSE(QmChatCompletion::ExtractMapCategory("None", "DDNet GER", Category));
-	EXPECT_TRUE(Category.empty());
-}
-
-TEST(QmChatCompletion, UsesOfficialDdnetMapRepositoryCategories)
-{
-	std::string Category;
-	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("#wontfix", Category));
-	EXPECT_EQ(Category, "Moderate");
-	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("Away", Category));
-	EXPECT_EQ(Category, "DDmaX Next");
-	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("kobra 3", Category));
-	EXPECT_EQ(Category, "Novice");
-	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("Experiment", Category));
-	EXPECT_EQ(Category, "DDmaX Next");
-	EXPECT_TRUE(QmChatCompletion::FindOfficialDdnetMapCategory("experiment", Category));
-	EXPECT_EQ(Category, "Oldschool");
-	EXPECT_FALSE(QmChatCompletion::FindOfficialDdnetMapCategory("EXPERIMENT", Category));
-	EXPECT_TRUE(Category.empty());
-	EXPECT_FALSE(QmChatCompletion::FindOfficialDdnetMapCategory("001", Category));
-	EXPECT_TRUE(Category.empty());
-}
-
-TEST(QmChatCompletion, LabelsUnknownMapsAsOtherOnlyInDdnetMode)
-{
-	std::string Category;
-	QmChatCompletion::ResolveMapCompletionCategory("#wontfix", true, "Insane", Category);
-	EXPECT_EQ(Category, "Moderate");
-	QmChatCompletion::ResolveMapCompletionCategory("001", true, "Insane", Category);
-	EXPECT_EQ(Category, "Other");
-	QmChatCompletion::ResolveMapCompletionCategory("001", false, "Insane", Category);
-	EXPECT_EQ(Category, "Insane");
-}
-
-TEST(QmChatCompletion, PrefersKnownCategoryForDuplicateMaps)
-{
-	std::vector<QmChatCompletion::SCandidate> vCandidates;
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "Kobra 3", "", false);
-	QmChatCompletion::AddMatchingCandidate(vCandidates, "Kobra 3", "", false, "Moderate");
-	QmChatCompletion::SortCandidates(vCandidates);
-	ASSERT_EQ(vCandidates.size(), 2u);
-	EXPECT_EQ(vCandidates[0].m_Detail, "Moderate");
-}
-
-TEST(QmChatCompletion, ExtractsOrdinaryPlayerMapVoteNames)
-{
-	std::string MapName;
-	EXPECT_TRUE(QmChatCompletion::ExtractMapNameFromVoteOption("Map: gores", MapName));
-	EXPECT_EQ(MapName, "gores");
-	EXPECT_TRUE(QmChatCompletion::ExtractMapNameFromVoteOption("Kobra 3 by Fňokurka | 3/5 ★", MapName));
-	EXPECT_EQ(MapName, "Kobra 3");
-	EXPECT_FALSE(QmChatCompletion::ExtractMapNameFromVoteOption("Change server settings", MapName));
-	EXPECT_TRUE(MapName.empty());
+	EXPECT_EQ(ChatHeader.find("SSlashCommandSuggestion"), std::string::npos);
+	EXPECT_EQ(ChatHeader.find("BuildCommandUsagePreview"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("m_ServerCommandsNeedSorting"), std::string::npos);
+	EXPECT_EQ(Chat.find("RenderSlashCommandSuggestions"), std::string::npos);
+	EXPECT_EQ(Chat.find("BuildCommandUsagePreview"), std::string::npos);
+	EXPECT_EQ(Chat.find("Autocompletion hint"), std::string::npos);
+	EXPECT_EQ(OnInput.find("ApplySelectedSlashCommandSuggestion"), std::string::npos);
+	EXPECT_EQ(OnInput.find("Event.m_Key == KEY_TAB && m_Input.GetString()[0] == '/'"), std::string::npos);
+	ASSERT_NE(CompletionBufferGuard, std::string::npos);
+	ASSERT_NE(PlayerCompletionGuard, std::string::npos);
+	EXPECT_LT(CompletionBufferGuard, PlayerCompletionGuard);
+	EXPECT_NE(OnInput.find("const bool ShiftPressed = Input()->ShiftIsPressed();"), std::string::npos);
+	EXPECT_NE(OnInput.find("if(m_aCompletionBuffer[0] == '/' && !m_vServerCommands.empty())"), std::string::npos);
+	EXPECT_NE(OnInput.find("str_startswith_nocase(Command.m_aName, pCommandStart)"), std::string::npos);
+	EXPECT_NE(OnInput.find("if(m_Input.GetString()[0] == '/' && (str_find(pCompletionString, \" \") || str_find(pCompletionString, \"\\\"\")))"), std::string::npos);
+	EXPECT_NE(OnInput.find("m_aPlayerCompletionList"), std::string::npos);
+	EXPECT_NE(RegisterCommand.find("m_ServerCommandsNeedSorting = true;"), std::string::npos);
+	EXPECT_NE(OnInput.find("std::sort(m_vServerCommands.begin(), m_vServerCommands.end());"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("std::vector<CCommand> m_vServerCommands"), std::string::npos);
+	EXPECT_EQ(BindChatHeader.find("ChatDoAutocomplete"), std::string::npos);
+	EXPECT_EQ(BindChat.find("CBindChat::ChatDoAutocomplete"), std::string::npos);
+	EXPECT_EQ(CMake.find("components/chat_completion"), std::string::npos);
 }
 
 TEST(QmChatInteractions, ScrollbarValueToBacklogLine)
@@ -834,6 +716,21 @@ TEST(QmChatInteractions, ChatInputClipPaddingDoesNotExpandContentScrollArea)
 	EXPECT_NE(Body.find("InputContentRect.y + InputContentRect.h"), std::string::npos);
 	EXPECT_NE(Body.find("Graphics()->ClipEnable((int)(InputClippingRect.x * XScale)"), std::string::npos);
 	EXPECT_EQ(Body.find("CaretPositionY < InputClippingRect.y"), std::string::npos);
+}
+
+TEST(QmChatInteractions, ChatInputPrefixDoesNotReserveSpaceForRightAlignedTranslateButton)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string Body = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const size_t InputLayoutStart = Body.find("// render chat input");
+	ASSERT_NE(InputLayoutStart, std::string::npos);
+	const size_t InputLayoutEnd = Body.find("// 渲染翻译按钮", InputLayoutStart);
+	ASSERT_NE(InputLayoutEnd, std::string::npos);
+	const std::string InputLayout = Body.substr(InputLayoutStart, InputLayoutEnd - InputLayoutStart);
+
+	EXPECT_NE(InputLayout.find("InputCursor.SetPosition(vec2(x, y));"), std::string::npos);
+	EXPECT_EQ(InputLayout.find("InputCursor.SetPosition(vec2(x + TranslateButtonSize + TranslateButtonGap, y));"), std::string::npos);
+	EXPECT_NE(Body.find("CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap"), std::string::npos);
 }
 
 TEST(QmChatInteractions, AppendsBlockWordsWithSeparator)

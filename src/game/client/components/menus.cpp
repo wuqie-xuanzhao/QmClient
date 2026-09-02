@@ -70,6 +70,7 @@ namespace
 {
 	constexpr float MENU_MENUBAR_HEIGHT_NEW = 24.0f;
 	constexpr float MENU_MENUBAR_HEIGHT_LEGACY = 30.0f;
+	constexpr float MENU_MENUBAR_CONTENT_SCALE_NEW = 1.10f;
 
 	constexpr float MenuMenubarHeight(bool UseNewUi)
 	{
@@ -1941,7 +1942,7 @@ int CMenus::DoButton_CheckBox_Number(const void *pId, const char *pText, int Che
 	return DoButton_CheckBox_Common(pId, pText, aBuf, pRect, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 }
 
-int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement)
+int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	// Compose target background color from active / hover / idle states. Custom
@@ -1967,19 +1968,19 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 		CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
 		Resolved = ResolveUiAnimValueColor(AnimRt, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
 	}
-	DrawRoundedSurface(Ui(), *pRect, Resolved, ColorRGBA(), UseNewUi ? 7.0f : 10.0f, 0.0f, Corners);
+	DrawRoundedSurface(Ui(), *pRect, Resolved, ColorRGBA(), UseNewUi ? 7.0f * ContentScale : 10.0f, 0.0f, Corners);
 
 	if(pCommunityIcon != nullptr)
 	{
 		CUIRect IconRect;
-		pRect->Margin(2.0f, &IconRect);
+		pRect->Margin(2.0f * ContentScale, &IconRect);
 		m_CommunityIcons.Render(pCommunityIcon, IconRect, true);
 	}
 	else
 	{
 		CUIRect Label;
-		pRect->HMargin(2.0f, &Label);
-		const float LabelFontSize = UseNewUi ? ui_token::settings::TAB_FONT_SIZE : Label.h * CUi::ms_FontmodHeight;
+		pRect->HMargin(2.0f * ContentScale, &Label);
+		const float LabelFontSize = UseNewUi ? ui_token::settings::TAB_FONT_SIZE * ContentScale : Label.h * CUi::ms_FontmodHeight;
 		if(pTextUiElement != nullptr)
 		{
 			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);
@@ -2053,7 +2054,8 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	if(UseNewUi)
 	{
 		const float MenubarOuterInsetX = 6.0f;
-		const float MenubarOuterInsetY = 2.5f;
+		const float MenubarBaseOuterInsetY = 2.5f;
+		const float MenubarOuterInsetY = (Box.h - (Box.h - 2.0f * MenubarBaseOuterInsetY) * MENU_MENUBAR_CONTENT_SCALE_NEW) * 0.5f;
 		Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f), IGraphics::CORNER_ALL, 10.0f);
 		Box.VMargin(MenubarOuterInsetX, &Box);
 		Box.HMargin(MenubarOuterInsetY, &Box);
@@ -2076,7 +2078,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(QuitButton.w, QuitButton.h);
 			QuitButton.x += (QuitButton.w - CircleSize) / 2.0f;
 			QuitButton.w = CircleSize;
-			if(DoMenuTabV2(&s_QuitButton, FONT_ICON_POWER_OFF, false, &QuitButton, IGraphics::CORNER_ALL, &QuitButtonDefault, nullptr, &QuitButtonHover))
+			if(DoMenuTabV2(&s_QuitButton, FONT_ICON_POWER_OFF, false, &QuitButton, IGraphics::CORNER_ALL, &QuitButtonDefault, nullptr, &QuitButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				if(GameClient()->Editor()->HasUnsavedData() || (GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmQuitTime && g_Config.m_ClConfirmQuitTime >= 0) || m_MenusIngameTouchControls.UnsavedChanges() || GameClient()->m_TouchControls.HasEditingChanges())
 				{
@@ -2098,7 +2100,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(SettingsButton.w, SettingsButton.h);
 			SettingsButton.x += (SettingsButton.w - CircleSize) / 2.0f;
 			SettingsButton.w = CircleSize;
-			if(DoMenuTabV2(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+			if(DoMenuTabV2(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_SETTINGS;
 			}
@@ -2114,7 +2116,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(EditorButton.w, EditorButton.h);
 			EditorButton.x += (EditorButton.w - CircleSize) / 2.0f;
 			EditorButton.w = CircleSize;
-			if(DoMenuTabV2(&s_EditorButton, FONT_ICON_PEN_TO_SQUARE, false, &EditorButton, IGraphics::CORNER_ALL, &IconButtonDefault, nullptr, &IconButtonHover))
+			if(DoMenuTabV2(&s_EditorButton, FONT_ICON_PEN_TO_SQUARE, false, &EditorButton, IGraphics::CORNER_ALL, &IconButtonDefault, nullptr, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				g_Config.m_ClEditor = 1;
 			}
@@ -2147,7 +2149,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
 				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
 				DemoButton.w = CircleSize;
-				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 				{
 					NewPage = PAGE_DEMOS;
 				}
@@ -2190,18 +2192,18 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(HomeButton.w, HomeButton.h);
 				HomeButton.x += (HomeButton.w - CircleSize) / 2.0f;
 				HomeButton.w = CircleSize;
-				if(DoMenuTabV2(&s_StartButton, pHomeScreenButtonLabel, false, &HomeButton, IGraphics::CORNER_ALL, pHomeButtonColor != nullptr ? pHomeButtonColor : &HomeButtonDefault, nullptr, pHomeButtonColorHover != nullptr ? pHomeButtonColorHover : &HomeButtonHover))
+				if(DoMenuTabV2(&s_StartButton, pHomeScreenButtonLabel, false, &HomeButton, IGraphics::CORNER_ALL, pHomeButtonColor != nullptr ? pHomeButtonColor : &HomeButtonDefault, nullptr, pHomeButtonColorHover != nullptr ? pHomeButtonColorHover : &HomeButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 				{
 					m_ShowStart = true;
 				}
 			}
 			GameClient()->m_Tooltips.DoToolTip(&s_StartButton, &Button, Localize("Main menu"));
 
-			const float BrowserButtonWidth = 58.0f;
+			const float BrowserButtonWidth = 58.0f * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			Box.VSplitLeft(6.0f, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_InternetButton;
-			if(DoMenuTabV2(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_INTERNET;
 			}
@@ -2211,7 +2213,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_LanButton;
-			if(DoMenuTabV2(&s_LanButton, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_LanButton, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_LAN;
 			}
@@ -2221,7 +2223,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoritesButton;
-			if(DoMenuTabV2(&s_FavoritesButton, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_FavoritesButton, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_FAVORITES;
 			}
@@ -2233,7 +2235,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoriteMapsButton;
-			if(DoMenuTabV2(&s_FavoriteMapsButton, "", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL))
+			if(DoMenuTabV2(&s_FavoriteMapsButton, "", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_FAVORITE_MAPS;
 			}
@@ -2321,7 +2323,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				HoverColor.a *= AppearStrength;
 
 				const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-				if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id())))
+				if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id()), nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 				{
 					NewPage = Page;
 				}
@@ -2341,12 +2343,13 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
-			const float GameButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
-			const float PlayersButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
-			const float ServerInfoButtonWidth = CompactOnlineMenuTabs ? 94.0f : 104.0f;
-			const float BrowserButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
-			const float GhostButtonWidth = CompactOnlineMenuTabs ? 56.0f : 64.0f;
-			const float CallVoteButtonWidth = CompactOnlineMenuTabs ? 80.0f : 88.0f;
+			const bool CompactOnlineMenuTabs = Graphics()->ScreenAspect() <= 1.45f || Box.w < 690.0f;
+			const float GameButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
+			const float PlayersButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
+			const float ServerInfoButtonWidth = (CompactOnlineMenuTabs ? 94.0f : 104.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
+			const float BrowserButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
+			const float GhostButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
+			const float CallVoteButtonWidth = (CompactOnlineMenuTabs ? 80.0f : 88.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			const float OnlineTabGap = 4.0f;
 
 			Box.VSplitLeft(GameButtonWidth, &Button, &Box);
@@ -2395,6 +2398,30 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				m_ControlPageOpening = true;
 			}
 			MenubarTrackActive(PAGE_CALLVOTE, Button);
+
+			if(Box.w >= 10.0f + 33.0f + 10.0f)
+			{
+				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+
+				Box.VSplitRight(10.0f, &Box, nullptr);
+				Box.VSplitRight(33.0f, &Box, &Button);
+				static CButtonContainer s_DemoButton;
+				CUIRect DemoButton = Button;
+				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
+				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
+				DemoButton.w = CircleSize;
+				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+				{
+					NewPage = PAGE_DEMOS;
+				}
+				MenubarTrackActive(PAGE_DEMOS, DemoButton);
+				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
+				Box.VSplitRight(10.0f, &Box, nullptr);
+
+				TextRender()->SetRenderFlags(0);
+				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+			}
 		}
 	}
 	else
@@ -5851,10 +5878,11 @@ int CMenus::DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const 
 	if(pTextId == nullptr)
 		return DoButton_MenuTab(pButtonContainer, pText, Checked, pRect, Corners);
 	CUIRect Text = *pRect;
-	Text.HMargin(2.0f, &Text);
+	const float ContentScale = g_Config.m_QmNewUi != 0 ? MENU_MENUBAR_CONTENT_SCALE_NEW : 1.0f;
+	Text.HMargin(2.0f * ContentScale, &Text);
 	SLabelProperties Props;
 	Props.m_MaxWidth = Text.w;
-	const float FontSize = g_Config.m_QmNewUi != 0 ? minimum(Text.h * CUi::ms_FontmodHeight, 13.0f) : Text.h * CUi::ms_FontmodHeight;
+	const float FontSize = g_Config.m_QmNewUi != 0 ? ui_token::settings::TAB_FONT_SIZE * ContentScale : Text.h * CUi::ms_FontmodHeight;
 	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, FontSize, TEXTALIGN_MC, Props);
 	if(m_MenuTextPlanCollecting)
 	{
@@ -5863,7 +5891,7 @@ int CMenus::DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const 
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
 	if(g_Config.m_QmNewUi != 0)
-		return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement);
+		return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement, ContentScale);
 	return DoButton_MenuTab(pButtonContainer, pText, Checked, pRect, Corners, nullptr, nullptr, nullptr, nullptr, 10.0f, nullptr, &TextElement);
 }
 

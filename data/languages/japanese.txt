@@ -79,9 +79,6 @@
 %i seconds left
 == 残り %i 秒
 
-%s (/%s %s)
-== %s（/%s %s）
-
 %s and %s have swapped
 == %s と %s が交換しました
 
@@ -263,9 +260,6 @@ A demo with this name already exists
 A folder with this name already exists
 == この名前のフォルダーは既に存在します
 
-a player
-== プレイヤー
-
 A screenshot with this name already exists
 == この名前のスクリーンショットは既に存在します
 
@@ -292,18 +286,6 @@ Active color
 
 Active disconnect
 == アクティブ切断
-
-Active line font size
-== アクティブ行のフォントサイズ
-
-Active line font size (px)
-== アクティブ行フォントサイズ px
-
-Active line scale
-== アクティブ行のスケール
-
-Active line scale (%)
-== アクティブ行のスケール（%）
 
 Active moderator mode disabled because you are afk.
 == あなたが AFK のため、アクティブモデレーターモードが無効になりました。
@@ -677,9 +659,6 @@ Always show own player's hook collision line
 Always translate
 == 常に翻訳
 
-AMLL TTML DB API base URL (mirror)
-== AMLL TTML DB API ベース URL（ミラーに変更可能）
-
 Amount
 == 量
 
@@ -772,9 +751,6 @@ Appearance / Name Plate
 
 Append to log file instead of overwriting
 == 上書きではなくログファイルに追記
-
-Apple Music media-user-token
-== Apple Music メディアユーザートークン
 
 Applied to %d same-family part(s).
 == 同じファミリーの %d 個のパーツに適用しました。
@@ -989,9 +965,6 @@ Auto enable/disable IME on text focus
 Auto execute
 == 自動実行
 
-Auto fetch lyrics
-== 歌詞を自動取得
-
 Auto fetch replay info on refresh
 == リフレッシュ時にリプレイ情報を自動取得
 
@@ -1006,9 +979,6 @@ Auto greet friend text
 
 Auto greet friends entering map
 == マップに入ったフレンドに自動挨拶
-
-Auto hot-reload after external saves
-== 外部保存後に自動ホットリロード
 
 Auto login Axiom server
 == Axiom サーバーに自動ログイン
@@ -1093,9 +1063,6 @@ Auto-fetch all players' skins for dummy rotation queue
 
 Auto-fetch all players' skins for rotation queue
 == 全マッププレイヤーのスキンを自動取得しローテーションキューとして使用
-
-Auto-fetch lyrics on detecting new song
-== 新曲検出時に自動で歌詞を取得
 
 Auto-follow delay
 == 自動追従遅延
@@ -1337,9 +1304,6 @@ Background image in menu
 Background music volume
 == 背景音楽の音量
 
-Background opacity
-== 背景の不透明度
-
 Background stroke color
 == 背景ストロークの色
 
@@ -1414,9 +1378,6 @@ Best input prediction offset (0.01 tick)
 
 Best input smooth percentage
 == Best input スムージングパーセンテージ
-
-Best match
-== 最適一致
 
 Better scoreboard
 == より良いスコアボード
@@ -1573,9 +1534,6 @@ Buttons with this behavior execute some predefined actions.
 
 c = Player position
 == c = プレイヤー座標
-
-Cache TTL
-== キャッシュ TTL
 
 Calculate unfinished maps for player in certain mode
 == 特定モードのプレイヤーの未完了マップを計算
@@ -1985,12 +1943,6 @@ Client prediction time is high
 Client uptime
 == クライアント稼働時間
 
-Clock drift hard cut threshold (ms)
-== クロックドリフトハードカットしきい値 ms
-
-Clock drift hard-snap
-== クロックドリフトハードスナップしきい値
-
 Close
 == 閉じる
 
@@ -2116,9 +2068,6 @@ Config Changes
 
 Config directory
 == 設定ディレクトリ
-
-Config file: data/input_overlay.json
-== 設定ファイル: data/input_overlay.json
 
 Config Files
 == 設定ファイル
@@ -2494,12 +2443,6 @@ Current cut is invalid or already added
 
 Current file
 == 現在のファイル
-
-Current line color
-== 現在行の色
-
-Current line lyric color
-== 歌詞現在の行の色
 
 Current rescue mode: %s
 == 現在のレスキューモード：%s
@@ -3077,18 +3020,6 @@ Displays your ping to the current server
 Dissolve
 == ディゾルブ
 
-Distance fade per line
-== 行ごとの距離フェード
-
-Distance scale falloff
-== 距離スケール減衰
-
-Distant line opacity decay per line (%)
-== 遠方行の透明度減衰（行あたり %）
-
-Distant line shrink per line (%)
-== 遠方行の縮小率（行あたり %）
-
 Do not auto-show server info on entering map
 == 参加時にサーバー情報を自動表示しない
 
@@ -3383,9 +3314,6 @@ Dynamic Island background alpha
 Dynamic Island background color
 == ダイナミックアイランドの背景色
 
-Dynamic Island HUD editor edge margin px
-== ダイナミックアイランド HUD エディターのエッジマージン px
-
 Ease in out quad
 == イーズインアウトクワッド
 
@@ -3647,12 +3575,6 @@ Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 == LLM 思考モードを有効化（応答時間が増加する可能性あり）
 
-Enable local lyrics cache
-== ローカルの歌詞キャッシュを有効にする
-
-Enable lyric HUD overlay
-== 歌詞 HUD オーバーレイを有効化
-
 Enable lyrics
 == 歌詞を有効化
 
@@ -3670,6 +3592,15 @@ Enable mod weapon on %d: %s
 
 Enable MySQL backend instead of SQLite (fallback to sv_sqlite_file when no MySQL server is reachable)
 == SQLite の代わりに MySQL バックエンドを有効にする（MySQL サーバーに接続できない場合は sv_sqlite_file にフォールバック）
+
+Enable Netease lyric integration
+== Netease の歌詞統合を有効化
+
+Enable Netease music Hook
+== Netease Music Hook を有効化
+
+Enable Netease Music hook integration
+== Netease Music Hook 統合を有効化
 
 Enable new IME candidate bar
 == 新しい IME 候補バーを有効化
@@ -3743,6 +3674,12 @@ Enable skin switch animation
 Enable smooth cinematic camera while free spectating
 == フリー観戦中に滑らかなシネマティックカメラを有効にする
 
+Enable SodaMusic Hook
+== SodaMusic Hook を有効化
+
+Enable SodaMusic hook integration
+== SodaMusic Hook 統合を有効化
+
 Enable sound
 == サウンドを有効にする
 
@@ -3769,9 +3706,6 @@ Enable switch countdown
 
 Enable system media control
 == システムメディアコントロールを有効にする
-
-Enable system media lyrics
-== システムメディア歌詞を有効化
 
 Enable system media transport control integration
 == システムメディアトランスポートコントロール統合を有効化
@@ -3823,9 +3757,6 @@ Enable warlist
 
 Enable word filter list
 == フィルターワードリストを有効にする
-
-Enable word-by-word highlighting
-== 歌詞の単語ごとのハイライトを有効化
 
 Enable Zen Mode
 == 禅モード（Zen Mode）を有効化
@@ -4015,9 +3946,6 @@ f = Frame rate
 
 Fade and slide
 == フェード＆スライド
-
-Fade duration
-== フェード時間
 
 Fade in
 == フェードイン
@@ -4315,6 +4243,9 @@ Freeze border color
 
 Freeze Collision Border Color
 == フリーズ衝突境界線の色
+
+Freeze laser collision volume
+== フリーズレーザーの衝突範囲
 
 Freeze Laser Inner Color
 == フリーズレーザー内側の色
@@ -4682,6 +4613,9 @@ Gun
 Hammer
 == ハンマー
 
+Hammer interaction
+== ハンマーの相互作用
+
 Hammer Mode:
 == ハンマーモード：
 
@@ -4799,12 +4733,6 @@ Hide kill and finish messages in Zen mode
 Hide kill/finish messages
 == キル/フィニッシュメッセージを非表示
 
-Hide lyrics on pause
-== 一時停止中に歌詞を非表示
-
-Hide lyrics when no system media
-== システムメディア状態がない場合に歌詞を非表示
-
 Hide map progress
 == マップ進行度を非表示
 
@@ -4885,15 +4813,6 @@ Hide weapon fire effects in Zen Mode
 
 Hide weapon muzzle flashes
 == 武器の発射炎を非表示
-
-Hide when no lyrics found (instead of showing hint)
-== 歌詞が見つからない場合に非表示（ヒント表示の代わり）
-
-Hide when paused
-== 一時停止中は非表示
-
-Hide without media state
-== メディア状態がないときは非表示
 
 High Detail
 == 高精細
@@ -4978,6 +4897,9 @@ Hook Collisions
 
 Hook collisions
 == フック衝突
+
+Hook interaction
+== フックの相互作用
 
 Hook line tip
 == フックライン先端
@@ -5108,12 +5030,6 @@ If chat score exceeds this value, the player is muted for sv_spam_mute_duration 
 If lasers can hit you when shot and pull you to bounce origin (0 for all new maps), or lasers cannot hit you and pull others to shooter.
 == レーザーを撃ったときにレーザーが自分に当たり、バウンス元に引き寄せられるか（すべての新しいマップでは 0）、またはレーザーが自分に当たらず、他の人を射手に引き寄せるかを設定します。
 
-Ignore cache providers
-== キャッシュプロバイダーを無視
-
-Ignore cached sources when searching lyrics (use | separator, e.g. QQ|Kugou)
-== 歌詞検索時にキャッシュを無視するソースリスト（| で区切る、例：QQ|Kugou）
-
 Ignore clan tag when searching friends
 == フレンド検索時にクランタグを無視する
 
@@ -5122,6 +5038,9 @@ Ignore keyboard modifier mask
 
 Ignore voice distance attenuation
 == ボイス距離減衰を無視
+
+Ignored legacy Dynamic Island edge margin
+== 旧式ダイナミックアイランドの端の余白は無視されます
 
 Import from clipboard
 == クリップボードからインポート
@@ -5143,12 +5062,6 @@ In-game crosshair scale percent (50=half, 200=double)
 
 Inactive color
 == 非アクティブカラー
-
-Inactive line font size (px)
-== 非アクティブ行フォントサイズ px
-
-Inactive line opacity
-== 非アクティブ行の不透明度
 
 Include clan when saving/loading config preset
 == 設定プリセットの保存/読み込み時にクランを含める
@@ -5276,12 +5189,6 @@ Input overlay mouse scale (percent)
 Input overlay opacity (percent)
 == 入力オーバーレイの不透明度（パーセント）
 
-Input overlay X position (percent)
-== 入力オーバーレイ X 位置（パーセント）
-
-Input overlay Y position (percent)
-== 入力オーバーレイ Y 位置（パーセント）
-
 Input smoothing
 == 入力スムージング
 
@@ -5366,9 +5273,6 @@ Invalid Y coordinate.
 Invert camera drift direction
 == カメラドリフト方向を反転
 
-Invite %s to the locked team
-== %s をロックされたチームに招待
-
 Invite a person to a locked team
 == ロックされたチームにプレイヤーを招待
 
@@ -5417,9 +5321,6 @@ Join QQ group
 Join red
 == 赤チームに参加
 
-Join team %s
-== チーム %s に参加
-
 Join the team of the specified player
 == 指定されたプレイヤーのチームに参加
 
@@ -5461,9 +5362,6 @@ k = Resend loss
 
 Kaomoji
 == 顔文字
-
-Karaoke edge softness
-== カラオケエッジのソフトネス
 
 Keep hook when teleporting
 == テレポート時にフックを維持する
@@ -5588,6 +5486,9 @@ Large text for friend join (use %s for friend name)
 Laser
 == レーザー
 
+Laser / shotgun interaction
+== レーザー / ショットガンの相互作用
+
 Laser colors
 == レーザーの色
 
@@ -5690,41 +5591,14 @@ Limit information in spectator mode
 Limiter threshold (percent)
 == リミッターしきい値（パーセント）
 
-Line scroll duration
-== 行スクロール時間
-
-Line spacing
-== 行間隔
-
-Line switch scroll duration (ms)
-== 行切り替えスクロール時間 ms
-
 Line width
 == 線幅
 
 Linear
 == リニア
 
-Lines
-== 行数
-
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
-
-Lines above active
-== アクティブ行の上行数
-
-Lines above active line
-== アクティブ行の上に表示する行数
-
-Lines below active
-== アクティブ行の下行数
-
-Lines below active line
-== アクティブ行の下に表示する行数
-
-Links below open external ID and map statistics.
-== 下のリンクから外部ID統計とマップ統計を開けます。
 
 List all commands that are available in practice mode
 == プラクティスモードで使用可能なすべてのコマンドを一覧表示
@@ -5800,9 +5674,6 @@ Load
 
 Load drawings from a given csv file (defaults to map name)
 == 指定された CSV ファイルから描画を読み込み（デフォルトはマップ名）
-
-Load save %s
-== セーブ %s をロード
 
 Load sound files in thread
 == スレッドでサウンドファイルを読み込む
@@ -5882,27 +5753,6 @@ Local
 Local + Dummy
 == ローカル + ダミー
 
-Local ESLRC file
-== ローカル ESLRC ファイル
-
-Local game mode statistics
-== ローカルゲームモード統計
-
-Local LRC file
-== ローカル LRC ファイル
-
-Local media folders
-== ローカルメディアフォルダ
-
-Local media library directories (separate by |)
-== 歌詞ローカルメディアライブラリディレクトリ（複数ディレクトリは | で区切る）
-
-Local mode statistics are stored on this client.
-== ローカルのゲームモード統計はこのクライアントに保存されます。
-
-Local music file
-== ローカル音楽ファイル
-
 Local only
 == ローカルのみ
 
@@ -5924,9 +5774,6 @@ Local test mode, no server needed
 Local Time
 == ローカルタイム
 
-Local TTML file
-== ローカル TTML ファイル
-
 Local-only
 == ローカルのみ
 
@@ -5935,9 +5782,6 @@ Lock delay
 
 Lock team
 == チームをロック
-
-Lock the team so other players cannot join directly
-== チームをロックして他のプレイヤーが直接参加できないようにする
 
 Locked
 == ロック済み
@@ -5960,86 +5804,11 @@ Lose weapons when teleporting (useful for race maps)
 Low to high
 == 低から高へ
 
-LRCLIB API base URL (mirror)
-== LRCLIB API ベース URL（ミラーに変更可能）
-
-Lyric auto search source order/enable list (empty=default; use | separator, e.g. QQ|Kugou|Netease|LrcLib)
-== 歌詞自動検索ソース順序/有効リスト（空欄=デフォルト；| で区切る、例：QQ|Kugou|Netease|LrcLib）
-
-Lyric background color
-== 歌詞の背景色
-
-Lyric background opacity
-== 歌詞背景透明度
-
-Lyric fade in/out time
-== 歌詞フェードイン/アウト時間
-
-Lyric HTTP proxy (e.g. http://127.0.0.1:7890)
-== 歌詞 HTTP プロキシ（例：http://127.0.0.1:7890）
-
-Lyric HTTP request timeout (ms)
-== 歌詞 HTTP リクエストタイムアウト ms
-
-Lyric HUD edge margin (px)
-== 歌詞 HUD 端余白 px
-
-Lyric outline color
-== 歌詞のアウトライン色
-
-Lyric outline opacity
-== 歌詞縁取り透明度
-
-Lyric search strategy (0=Sequential by source, 1=Concurrent best match)
-== 歌詞検索戦略（0=ソース順、1=並行最適一致）
-
-Lyric snap to Dynamic Island threshold
-== 歌詞ダイナミックアイランド吸着しきい値
-
-Lyric source (0=Auto best match, 1=LRCLIB, 2=Kugou, 3=QQ, 4=Netease, 5=AMLL TTML DB, 6=Apple Music, 7=Local Music File, 8=Local LRC, 9=Local ESLRC, 10=Local TTML)
-== 歌詞データソース（0=自動最適一致、1=LRCLIB、2=Kugou、3=QQ、4=Netease、5=AMLL TTML DB、6=Apple Music、7=Local Music File、8=Local LRC、9=Local ESLRC、10=Local TTML）
-
-Lyric source specific match threshold (empty=global threshold; e.g. QQ=60|LrcLib=70)
-== 歌詞ソース個別一致しきい値（空欄=グローバルしきい値；例：QQ=60|LrcLib=70）
-
 Lyrics
 == 歌詞
 
-Lyrics cache expiration days (0=forever)
-== 歌詞キャッシュ有効期限日数（0=無期限）
-
-Lyrics fuzzy match score threshold
-== 歌詞のあいまい一致スコアしきい値
-
-Lyrics HTTP timeout
-== 歌詞 HTTP タイムアウト
-
-Lyrics line spacing (px)
-== 歌詞行間隔 px
-
-Lyrics search type
-== 歌詞検索タイプ
-
-Lyrics source
-== 歌詞ソース
-
-Lyrics source order
-== 歌詞ソース順序
-
-Lyrics translation/transliteration color
-== 歌詞の翻訳/音訳の色
-
-Lyrics: empty track
-== 歌詞：空のトラック
-
-Lyrics: no lyrics found
-== 歌詞：歌詞が見つかりません
-
-Lyrics: no media playing
-== 歌詞：メディアが再生されていません
-
-Lyrics: searching...
-== 歌詞：検索中……
+Lyrics sources and display
+== 歌詞のソースと表示
 
 Main Asset
 == メインアセット
@@ -6097,9 +5866,6 @@ Manual
 
 Manual concurrency: %d
 == 手動同時実行数：%d
-
-Manual lyric timeline offset (ms, step 500ms)
-== 歌詞手動タイムラインオフセット ms（実行時は 500ms ステップ）
 
 Manual scope
 == 手動スコープ
@@ -6200,12 +5966,6 @@ Mark the end of a demo cut
 Markers
 == マーカー
 
-Marquee for long lyrics
-== 歌詞が長すぎる場合のマーキー
-
-Marquee speed
-== 歌詞マーキースピード
-
 Master server URL to register
 == 登録するマスターサーバー URL
 
@@ -6214,9 +5974,6 @@ Match %d of %d
 
 Match ghost by map version instead of map name
 == マップ名ではなくマップバージョンでゴーストを一致させる
-
-Match score threshold
-== マッチスコアしきい値
 
 Matched with callable peer
 == 通話可能なピアとマッチしました
@@ -6436,9 +6193,6 @@ Minimum delay allowed between invitations.
 
 Minimum dynamic camera cursor distance
 == 最小ダイナミックカメラカーソル距離
-
-Minimum inactive line opacity (%)
-== 非アクティブ行の最小不透明度（%）
 
 Minimum match chars
 == 最小マッチ文字数
@@ -6782,6 +6536,12 @@ Negative stability buffer (for Gores)
 Net
 == ネット
 
+Netease hook heartbeat timeout (milliseconds)
+== Netease Hook のハートビートタイムアウト（ミリ秒）
+
+Netease hook helper path (empty=beside QmClient)
+== Netease Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）
+
 Netlimit: exponential moving average alpha
 == Netlimit: 指数移動平均のアルファ
 
@@ -6832,12 +6592,6 @@ News
 
 Next
 == 次へ
-
-Next line color
-== 次の行の色
-
-Next line lyric color
-== 歌詞次の行の色
 
 Next page in console
 == コンソールの次のページ
@@ -7232,6 +6986,9 @@ Open color picker
 Open DDNet Wiki
 == DDNet Wiki を開く
 
+Open editor
+== エディターを開く
+
 Open emote selector
 == 絵文字セレクターを開く
 
@@ -7273,6 +7030,9 @@ Open the folder containing demo files
 
 Open the folder containing screenshots
 == スクリーンショットが保存されているフォルダを開く
+
+Open the input overlay editor
+== 入力オーバーレイエディターを開く
 
 Open the saves file
 == セーブファイルを開く
@@ -7328,12 +7088,6 @@ Optional authentication key for the DNSBL provider
 Other
 == その他
 
-Other lines font size
-== 他の行のフォントサイズ
-
-Other modes
-== その他のモード
-
 Other players' hook line width
 == 他のプレイヤーのフックラインの幅
 
@@ -7348,9 +7102,6 @@ Outgoing language
 
 Outgoing translation target language code
 == 送信翻訳のターゲット言語コード
-
-Outline color
-== アウトライン色
 
 Outline global opacity
 == アウトライン全体の不透明度
@@ -7378,9 +7129,6 @@ Output switch
 
 Output voice debug log
 == 音声デバッグログを出力
-
-Overall lyrics opacity (%)
-== 歌詞全体の不透明度（%）
 
 Overlay entities
 == エンティティのオーバーレイ
@@ -7523,9 +7271,6 @@ Penalty in seconds for saving or swapping positions
 Per-name volume (name=percent)
 == 名前ごとの個別音量（name=percent）
 
-Per-word highlight (karaoke)
-== 単語ごとのハイライト（カラオケ）
-
 Performance debug log threshold (ms)
 == パフォーマンスデバッグログのしきい値（ms）
 
@@ -7583,6 +7328,9 @@ Ping the current server
 Pistol
 == ピストル
 
+Pistol guide line
+== ピストル補助線
+
 Plasma gun shots per second
 == プラズマガンの毎秒発射数
 
@@ -7618,9 +7366,6 @@ Play/pause the current demo
 
 Playback volume
 == 再生音量
-
-Played word color
-== 再生済み単語の色
 
 Player
 == プレイヤー
@@ -8030,11 +7775,11 @@ Progress bar height
 Progress bar width
 == プログレスバーの幅
 
+Projectile / explosion range
+== 投射物 / 爆発範囲
+
 Protect names and skins while streaming
 == 配信時に名前とスキンを保護
-
-Provider thresholds
-== プロバイダーのしきい値
 
 PTT release delay (ms)
 == PTT 解放遅延（ミリ秒）
@@ -8158,24 +7903,6 @@ QQ group: 1076765929 (click to copy)
 
 Quads are used for background decoration
 == 背景装飾に使用されるクアッド
-
-Query current map info
-== 現在のマップ情報を照会
-
-Query map info for %s
-== %s のマップ情報を照会
-
-Query points for %s
-== %s のポイントを照会
-
-Query rank for %s
-== %s のランクを照会
-
-Query server setting: %s
-== サーバー設定を照会：%s
-
-Query team rank for %s
-== %s のチームランクを照会
 
 Queue is empty
 == キューが空です
@@ -8660,12 +8387,6 @@ Reply
 Reply to messages from muted players
 == ミュートされたプレイヤーからのメッセージに返信
 
-Reply to the last whisper target
-== 最後の whisper 相手に返信
-
-Reply to the last whisper target: %s
-== 最後の whisper 相手に送信：%s
-
 Reply with dummy
 == ダミーで返信
 
@@ -8699,12 +8420,6 @@ Report service URL
 Reports are not available on Axiom servers
 == Axiom サーバーではレポート機能は利用できません
 
-Request a position swap
-== 位置交換をリクエスト
-
-Request to swap positions with %s
-== %s との位置交換をリクエスト
-
 Request to swap your tee with another team member
 == 別のチームメンバーと Tee を交換するリクエスト
 
@@ -8725,9 +8440,6 @@ Rescue to a nearby air tile
 
 Rescue/Freeze: %d/%d
 == 救助/フリーズ：%d/%d
-
-Rescue: auto mode teleports out of freeze; manual mode records a rescue point on landing and teleports when frozen
-== レスキュー：自動モードはフリーズからテレポート；手動モードは着地時にレスキューポイントを記録し、フリーズ時にテレポート
 
 Reset
 == リセット
@@ -9026,12 +8738,6 @@ Save team with code r.
 Save the best demo of each race
 == 各レースのベストデモを保存
 
-Save the current team
-== 現在のチームを保存
-
-Save the team as %s
-== チームを %s として保存
-
 Save unsent chat draft
 == 未送信のチャット下書きを保存
 
@@ -9151,12 +8857,6 @@ Screenshots
 
 Screenshots directory
 == スクリーンショットディレクトリ
-
-Scroll long lines
-== 長い行をスクロール
-
-Scroll speed
-== スクロール速度
 
 Search
 == 検索
@@ -9304,9 +9004,6 @@ Sends a command to the antibot
 
 Separate with commas
 == カンマで区切る
-
-Sequential
-== 順次
 
 Server
 == サーバー
@@ -9635,8 +9332,8 @@ Show coordinates above players
 Show country flags in nameplates
 == ネームプレートに国旗を表示
 
-Show current and next lyric lines on HUD
-== HUD に現在と次の歌詞行を表示
+Show current Netease lyric in Media Island
+== 現在の Netease の歌詞をメディアアイランドに表示
 
 Show daily message to client
 == クライアントにデイリーメッセージを表示
@@ -9712,9 +9409,6 @@ Show enemy reason
 
 Show entities
 == エンティティ表示
-
-Show existing saves
-== 既存のセーブを表示
 
 Show eye wheel and expressions
 == 目のホイールと表情を表示
@@ -9820,9 +9514,6 @@ Show important server prompts and Echo messages as popups
 
 Show important server prompts as notifications
 == 重要なサーバープロンプトを通知として表示
-
-Show in Dynamic Island
-== Dynamic Island に表示
 
 Show in-game FPS
 == ゲーム内 FPS を表示
@@ -9949,12 +9640,6 @@ Show logs of the last i seconds
 
 Show lyrics inside Dynamic Island
 == Dynamic Island 内に歌詞を表示
-
-Show lyrics translation (if available)
-== 歌詞の翻訳を表示（利用可能な場合）
-
-Show lyrics transliteration (if available)
-== 歌詞の音訳を表示（利用可能な場合）
 
 Show map details
 == マップの詳細を表示
@@ -10172,9 +9857,6 @@ Show server help and usage messages
 Show server prompts and Echo messages as popups
 == Show server prompts and Echo messages as popups
 
-Show server settings
-== サーバー設定を表示
-
 Show settings card borders
 == 設定カードの枠線を表示
 
@@ -10274,15 +9956,6 @@ Show tiles layers from BG map
 Show toast
 == トーストを表示
 
-Show translation
-== 翻訳を表示
-
-Show Tune Zone effects
-== Tune Zone 効果を表示
-
-Show Tune Zone effects on HUD Dynamic Island
-== HUD ダイナミックアイランドに Tune Zone 効果を表示
-
 Show tuning parameters affecting own player (0=Off, 1=Show changed, 2=Show all)
 == 自身のプレイヤーに影響するチューニングパラメーターを表示（0 = オフ、1 = 変更のみ表示、2 = すべて表示）
 
@@ -10330,9 +10003,6 @@ Show X
 
 Show Y
 == Y を表示
-
-Show your current team
-== 現在のチームを表示
 
 Show zzz emoji next to afk players
 == AFK プレイヤーの横に zzz 絵文字を表示
@@ -10574,9 +10244,6 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 SMTC
 == システムメディアコントロール
 
-Snap threshold
-== スナップしきい値
-
 Snapshot Age
 == スナップショット経過時間
 
@@ -10600,6 +10267,12 @@ Snapshot tick gap
 
 Social
 == ソーシャル
+
+SodaMusic hook heartbeat timeout (milliseconds)
+== SodaMusic Hook のハートビートタイムアウト（ミリ秒）
+
+SodaMusic hook helper path (empty=beside QmClient)
+== SodaMusic Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）
 
 Solid
 == 単色
@@ -11039,15 +10712,6 @@ System media control
 System media controls
 == システムメディアコントロール
 
-System media lyric font size
-== システムメディア歌詞のフォントサイズ
-
-System media lyrics display lines
-== システムメディア歌詞の表示行数
-
-System media lyrics time offset (milliseconds)
-== システムメディア歌詞の時間オフセット（ms）
-
 System message
 == システムメッセージ
 
@@ -11198,8 +10862,14 @@ Tee 0.7
 Tee appearance
 == Tee 外観
 
-Tee hitbox
-== Tee 当たり判定
+Tee collision (Tee to Tee)
+== Tee の衝突（Tee 対 Tee）
+
+Tee death probe
+== Tee のデス判定
+
+Tee freeze probe (Tee to Freeze)
+== Tee のフリーズ判定（Tee 対 Freeze）
 
 Tee hitbox color
 == Tee 当たり判定色
@@ -11531,9 +11201,6 @@ Time limit
 Time limit: %d min
 == 制限時間：%d 分
 
-Time offset
-== 時間オフセット
-
 Time to wait before changing team: %s
 == チーム変更までの待機時間: %s
 
@@ -11771,9 +11438,6 @@ Translation button active color
 Translation button cancel color
 == 翻訳ボタンオフ時の色
 
-Translation color
-== 翻訳の色
-
 Translation color alpha migration completed flag
 == 翻訳カラーのアルファ移行完了フラグ
 
@@ -11842,9 +11506,6 @@ Tune variable to value
 
 Tune variable to value or show current value
 == チューン変数を値に設定するか、現在の値を表示
-
-Tune Zone effect icon legend
-== Tune Zone エフェクトアイコン一覧
 
 Tutorial
 == チュートリアル
@@ -12029,9 +11690,6 @@ Unknown status
 Unlock a team
 == チームのロックを解除
 
-Unlock the team
-== チームをアンロック
-
 Unmute
 == ミュート解除
 
@@ -12049,9 +11707,6 @@ Unmute player with list index
 
 Unmute:
 == ミュート解除：
-
-Unplayed word color
-== 未再生の単語の色
 
 Unpredictable ghost opacity (0-100)
 == 予測不可能なゴーストの不透明度（0-100）
@@ -12104,14 +11759,8 @@ URL for downloading maps (must start with https://)
 URL for downloading skins
 == スキン用ダウンロード URL
 
-Usage
-== 使い方
-
 Usage: %s %s
 == 使用方法: %s %s
-
-Usage: /%s %s
-== 使い方：/%s %s
 
 Use 12 hour clock
 == 12 時間制を使用
@@ -12455,6 +12104,12 @@ Vote yes/no
 Voting
 == 投票
 
+Vulkan API
+== Vulkan API のバージョン
+
+Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+== Vulkan API バージョン：11=1.1 互換、14=1.4 厳格
+
 Wait for current vote to end before calling a new one.
 == 現在の投票が終了してから新しい投票を呼び出してください。
 
@@ -12529,9 +12184,6 @@ Weapon
 
 Weapon animation
 == 武器アニメーション
-
-Weapon interaction range
-== 武器インタラクション範囲
 
 Weapon range color
 == 武器範囲の色
@@ -12692,15 +12344,6 @@ Whisper option color
 Whisper something to someone (private message)
 == 誰かにささやく（プライベートメッセージ）
 
-Whisper to %s
-== %s にささやく
-
-Whisper to %s: %s
-== %s にささやく: %s
-
-Whisper: /w player message
-== ウィスパー：/w プレイヤー名 メッセージ
-
 White
 == 白
 
@@ -12751,9 +12394,6 @@ Word Filter
 
 Word filter action: 0=replace matching words, 1=hide entire message
 == 単語フィルター操作: 0=一致する単語を置換、1=メッセージ全体を非表示
-
-Word highlight soft edge width (px)
-== 文字単位のエッジソフトトランジション幅 px
 
 Write local console contents to a text file
 == ローカルコンソールの内容をテキストファイルに書き出す
@@ -13067,9 +12707,6 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == タイムアウトコードが設定されました。0.7 クライアントはタイムアウト時に Tee を取り戻せませんが、0.6 クライアントはあなたの Tee を引き継げます
 
-yourself
-== 自分自身
-
 z = Zoom
 == z = ズーム
 
@@ -13162,6 +12799,26 @@ Inactive
 [Auto camera]
 Unavailable for this player
 == このプレイヤーには利用できません
+
+[Config help]
+%s (default: "%s", max length: %d)
+== %s（デフォルト: 「%s」、最大長: %d）
+
+[Config help]
+%s (default: $%0*X)
+== %s（デフォルト: $%0*X）
+
+[Config help]
+%s (default: %d)
+== %s（デフォルト: %d）
+
+[Config help]
+%s (default: %d, min: %d)
+== %s（デフォルト: %d、最小値: %d）
+
+[Config help]
+%s (default: %d, min: %d, max: %d)
+== %s（デフォルト: %d、最小値: %d、最大値: %d）
 
 [data_version.h]
 You may have installed only DDNet.exe. Please use the full QmClient folder.
