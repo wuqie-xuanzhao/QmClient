@@ -8570,6 +8570,9 @@ RNNoise noise reduction
 RNNoise noise reduction (unavailable in this build)
 == RNNoise 降噪（当前构建不可用）
 
+Retry remote stats
+== 重试远程统计
+
 RNNoise noise reduction strength
 == RNNoise 降噪强度
 
@@ -10739,8 +10742,14 @@ Taper trail width
 Target language
 == 目标语言
 
+Sync remote stats
+== 同步远程统计
+
 Target language code (e.g. zh, en, ja, zh-TW)
 == 翻译目标语言代码（如 zh、en、ja、zh-TW）
+
+Syncing remote stats
+== 正在同步远程统计
 
 Target language ratio
 == 目标语言比例
@@ -11648,6 +11657,9 @@ Unfinished map data refreshing
 Unfinished maps
 == 未完成图
 
+Unavailable
+== 不可用
+
 Unfinished maps are shown first
 == 未完成地图优先显示
 
@@ -11824,6 +11836,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 启用动态摄像机时使用鼠标灵敏度
+
+Use current name
+== 使用当前名称
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换

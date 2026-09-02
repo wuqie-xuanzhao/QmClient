@@ -213,8 +213,10 @@ TEST(QmDdnetPlayerStatsState, PendingRefreshStartsImmediatelyAfterCompletedParse
 	State.SetPlayer("DYL");
 	ASSERT_TRUE(State.ShouldFetch(100, 60));
 	State.BeginHttp("DYL");
+	EXPECT_TRUE(State.IsFetching());
 	State.CompleteHttp(true, 100, 0);
 	ASSERT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::PARSING);
+	EXPECT_TRUE(State.IsFetching());
 	EXPECT_EQ(State.RequestRefresh(), EQmDdnetPlayerStatsRefreshAction::WAIT_FOR_PARSE);
 	EXPECT_TRUE(State.RefreshPending());
 
@@ -224,6 +226,7 @@ TEST(QmDdnetPlayerStatsState, PendingRefreshStartsImmediatelyAfterCompletedParse
 	EXPECT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::IDLE);
 	EXPECT_EQ(State.LastSync(), 0);
 	EXPECT_EQ(State.NextRetry(), 0);
+	EXPECT_FALSE(State.LastRequestFailed());
 	EXPECT_TRUE(State.ShouldFetch(200, 60));
 }
 
@@ -235,6 +238,7 @@ TEST(QmDdnetPlayerStatsState, FailedResponsesWaitForRetryUnlessManuallyRefreshed
 	State.CompleteHttp(false, 100, 30);
 	EXPECT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::IDLE);
 	EXPECT_EQ(State.NextRetry(), 130);
+	EXPECT_TRUE(State.LastRequestFailed());
 	EXPECT_FALSE(State.ShouldFetch(129, 60));
 	EXPECT_TRUE(State.ShouldFetch(130, 60));
 
@@ -276,6 +280,7 @@ TEST(QmDdnetPlayerStatsState, RefreshDuringHttpClearsRetryAndKeepsRequestReplace
 	State.AbortHttp();
 	EXPECT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::IDLE);
 	EXPECT_TRUE(State.ShouldFetch(100, 60));
+	EXPECT_FALSE(State.LastRequestFailed());
 }
 
 TEST(QmDdnetPlayerStatsState, PlayerSwitchDuringHttpInvalidatesRequest)

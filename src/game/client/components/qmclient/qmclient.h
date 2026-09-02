@@ -168,6 +168,8 @@ public:
 	const char *QmDdnetPlayerName() const { return m_aQmDdnetPlayerName; }
 	const char *QmDdnetPrimaryPlayerName() const { return m_QmDdnetPrimaryPlayerName.c_str(); }
 	const char *QmDdnetFavoritePartner() const { return m_aQmDdnetFavoritePartner; }
+	bool QmDdnetStatsIsFetching() const { return m_QmDdnetPlayerState.IsFetching(); }
+	bool QmDdnetStatsLastRequestFailed() const { return m_QmDdnetPlayerState.LastRequestFailed(); }
 	const std::vector<SQmClientLocalModeStats> &QmClientLocalModeStats() const { return m_vQmClientLocalModeStats; }
 	const std::vector<SQmClientDdnetPlayerStats> &QmClientDdnetPlayerStats() const { return m_vQmClientDdnetPlayerStats; }
 	bool SaveQmClientStatistics() const;

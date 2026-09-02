@@ -3013,19 +3013,22 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	FormatStatsPlaytime(ServerPlaytimeSeconds, false, aServerPlaytime, sizeof(aServerPlaytime));
 
 	const int FinishedMaps = GameClient()->m_QmClient.QmDdnetTotalFinishes();
+	const bool DdnetStatsFetching = GameClient()->m_QmClient.QmDdnetStatsIsFetching();
+	const bool DdnetStatsFailed = GameClient()->m_QmClient.QmDdnetStatsLastRequestFailed();
+	const char *pDdnetStatsUnavailableText = DdnetStatsFailed ? Localize("Unavailable") : Localize("Loading");
 
 	char aFinishedMapsText[32];
 	if(FinishedMaps >= 0)
 		str_format(aFinishedMapsText, sizeof(aFinishedMapsText), "%d", FinishedMaps);
 	else
-		str_copy(aFinishedMapsText, Localize("Loading"), sizeof(aFinishedMapsText));
+		str_copy(aFinishedMapsText, pDdnetStatsUnavailableText, sizeof(aFinishedMapsText));
 
 	const char *pFavoritePartner = GameClient()->m_QmClient.QmDdnetFavoritePartner();
 	char aFavoriteFriendText[160];
 	if(pFavoritePartner && pFavoritePartner[0] != '\0')
 		str_copy(aFavoriteFriendText, pFavoritePartner, sizeof(aFavoriteFriendText));
 	else
-		str_copy(aFavoriteFriendText, Localize("Loading"), sizeof(aFavoriteFriendText));
+		str_copy(aFavoriteFriendText, pDdnetStatsUnavailableText, sizeof(aFavoriteFriendText));
 
 	std::unordered_map<std::string, int> aOnlineFriendCounts;
 	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumSortedServers(); ++ServerIndex)
@@ -3053,7 +3056,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	if(GameClient()->m_QmClient.QmDdnetPoints() >= 0)
 		str_format(aPointsText, sizeof(aPointsText), "%" PRId64, GameClient()->m_QmClient.QmDdnetPoints());
 	else
-		str_copy(aPointsText, Localize("Loading"), sizeof(aPointsText));
+		str_copy(aPointsText, pDdnetStatsUnavailableText, sizeof(aPointsText));
 
 	char aFriendsText[32];
 	str_format(aFriendsText, sizeof(aFriendsText), "%d", TotalFriends);
@@ -3152,7 +3155,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		ModeTitleButton = ModeTitleActions;
 	}
 	static CButtonContainer s_StatisticsRefreshButton;
-	if(DoButton_Menu(&s_StatisticsRefreshButton, Localize("Sync remote stats"), 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
+	const char *pRefreshStatsLabel = DdnetStatsFetching ? Localize("Syncing remote stats") : (DdnetStatsFailed ? Localize("Retry remote stats") : Localize("Sync remote stats"));
+	if(DoButton_Menu(&s_StatisticsRefreshButton, pRefreshStatsLabel, 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
 		GameClient()->m_QmClient.RefreshQmClientStatistics();
 	static CButtonContainer s_StatisticsUseCurrentNameButton;
 	if(DoButton_Menu(&s_StatisticsUseCurrentNameButton, Localize("Use current name"), 0, &UseCurrentNameButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))

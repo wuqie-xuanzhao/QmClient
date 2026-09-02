@@ -8570,6 +8570,9 @@ RNNoise noise reduction
 RNNoise noise reduction (unavailable in this build)
 == RNNoise-Rauschunterdrückung (in diesem Build nicht verfügbar)
 
+Retry remote stats
+== Remote-Statistiken erneut abrufen
+
 RNNoise noise reduction strength
 == RNNoise-Rauschunterdrückungsstärke
 
@@ -10739,8 +10742,14 @@ Taper trail width
 Target language
 == Zielsprache
 
+Sync remote stats
+== Remote-Statistiken synchronisieren
+
 Target language code (e.g. zh, en, ja, zh-TW)
 == Zielsprachcode für Übersetzung (z. B. zh, en, ja, zh-TW)
+
+Syncing remote stats
+== Remote-Statistiken werden synchronisiert
 
 Target language ratio
 == Verhältnis der Zielsprache
@@ -11648,6 +11657,9 @@ Unfinished map data refreshing
 Unfinished maps
 == Unfertige Karten
 
+Unavailable
+== Nicht verfügbar
+
 Unfinished maps are shown first
 == Unvollständige Karten werden zuerst angezeigt
 
@@ -11824,6 +11836,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == Mausempfindlichkeit bei aktivierter dynamischer Kamera verwenden
+
+Use current name
+== Aktuellen Namen verwenden
 
 Use multi-char replacement based on word length
 == Mehrzeichenersatz basierend auf Wortlänge verwenden

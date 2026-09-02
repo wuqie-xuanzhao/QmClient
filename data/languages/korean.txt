@@ -8570,6 +8570,9 @@ RNNoise noise reduction
 RNNoise noise reduction (unavailable in this build)
 == RNNoise 노이즈 감소 (이 빌드에서는 사용 불가)
 
+Retry remote stats
+== 원격 통계 재시도
+
 RNNoise noise reduction strength
 == RNNoise 노이즈 감소 강도
 
@@ -10739,8 +10742,14 @@ Taper trail width
 Target language
 == 대상 언어
 
+Sync remote stats
+== 원격 통계 동기화
+
 Target language code (e.g. zh, en, ja, zh-TW)
 == 번역 대상 언어 코드 (예: zh, en, ja, zh-TW)
+
+Syncing remote stats
+== 원격 통계 동기화 중
 
 Target language ratio
 == 대상 언어 비율
@@ -11648,6 +11657,9 @@ Unfinished map data refreshing
 Unfinished maps
 == 미완료 맵
 
+Unavailable
+== 사용할 수 없음
+
 Unfinished maps are shown first
 == 미완료 맵이 먼저 표시됩니다
 
@@ -11824,6 +11836,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
+
+Use current name
+== 현재 이름 사용
 
 Use multi-char replacement based on word length
 == 단어 길이에 따른 다중 문자 대체 사용

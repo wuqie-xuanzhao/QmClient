@@ -8570,6 +8570,9 @@ RNNoise noise reduction
 RNNoise noise reduction (unavailable in this build)
 == RNNoise ノイズリダクション（このビルドでは利用不可）
 
+Retry remote stats
+== リモート統計を再試行
+
 RNNoise noise reduction strength
 == RNNoise ノイズリダクション強度
 
@@ -10739,8 +10742,14 @@ Taper trail width
 Target language
 == ターゲット言語
 
+Sync remote stats
+== リモート統計を同期
+
 Target language code (e.g. zh, en, ja, zh-TW)
 == 翻訳先言語コード（例：zh、en、ja、zh-TW）
+
+Syncing remote stats
+== リモート統計を同期中
 
 Target language ratio
 == ターゲット言語比率
@@ -11648,6 +11657,9 @@ Unfinished map data refreshing
 Unfinished maps
 == 未完了マップ
 
+Unavailable
+== 利用不可
+
 Unfinished maps are shown first
 == 未完了のマップを優先表示
 
@@ -11824,6 +11836,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
+
+Use current name
+== 現在の名前を使用
 
 Use multi-char replacement based on word length
 == 単語の長さに基づいて複数文字置換を使用

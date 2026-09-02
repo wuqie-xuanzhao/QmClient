@@ -20893,3 +20893,67 @@ brazilian_portuguese = "Mostrar se você concluiu um mapa do DDNet (envia seu no
 portuguese = "Mostrar se concluíste um mapa do DDNet (envia o teu nome de jogador para info.ddnet.org/info)"
 turkish = "Bir DDNet haritasını bitirip bitirmediğinizi gösterir (oyuncu adınızı info.ddnet.org/info adresine gönderir)"
 polish = "Pokazuj, czy ukończono mapę DDNet (wysyła nazwę gracza do info.ddnet.org/info)"
+
+[[message]]
+key = "Sync remote stats"
+[message.translations]
+simplified_chinese = "同步远程统计"
+traditional_chinese = "同步遠程統計"
+japanese = "リモート統計を同期"
+korean = "원격 통계 동기화"
+russian = "Синхронизировать удаленную статистику"
+german = "Remote-Statistiken synchronisieren"
+spanish = "Sincronizar estadísticas remotas"
+french = "Synchroniser les statistiques distantes"
+brazilian_portuguese = "Sincronizar estatísticas remotas"
+portuguese = "Sincronizar estatísticas remotas"
+turkish = "Uzak istatistikleri senkronize et"
+polish = "Synchronizuj statystyki zdalne"
+
+[[message]]
+key = "Syncing remote stats"
+[message.translations]
+simplified_chinese = "正在同步远程统计"
+traditional_chinese = "正在同步遠程統計"
+japanese = "リモート統計を同期中"
+korean = "원격 통계 동기화 중"
+russian = "Синхронизация удаленной статистики"
+german = "Remote-Statistiken werden synchronisiert"
+spanish = "Sincronizando estadísticas remotas"
+french = "Synchronisation des statistiques distantes"
+brazilian_portuguese = "Sincronizando estatísticas remotas"
+portuguese = "A sincronizar estatísticas remotas"
+turkish = "Uzak istatistikler senkronize ediliyor"
+polish = "Synchronizowanie statystyk zdalnych"
+
+[[message]]
+key = "Retry remote stats"
+[message.translations]
+simplified_chinese = "重试远程统计"
+traditional_chinese = "重試遠程統計"
+japanese = "リモート統計を再試行"
+korean = "원격 통계 재시도"
+russian = "Повторить запрос статистики"
+german = "Remote-Statistiken erneut abrufen"
+spanish = "Reintentar estadísticas remotas"
+french = "Réessayer les statistiques distantes"
+brazilian_portuguese = "Tentar novamente as estatísticas remotas"
+portuguese = "Tentar novamente as estatísticas remotas"
+turkish = "Uzak istatistikleri yeniden dene"
+polish = "Ponów statystyki zdalne"
+
+[[message]]
+key = "Unavailable"
+[message.translations]
+simplified_chinese = "不可用"
+traditional_chinese = "無法使用"
+japanese = "利用不可"
+korean = "사용할 수 없음"
+russian = "Недоступно"
+german = "Nicht verfügbar"
+spanish = "No disponible"
+french = "Indisponible"
+brazilian_portuguese = "Indisponível"
+portuguese = "Indisponível"
+turkish = "Kullanılamıyor"
+polish = "Niedostępne"

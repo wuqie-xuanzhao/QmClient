@@ -8570,6 +8570,9 @@ RNNoise noise reduction
 RNNoise noise reduction (unavailable in this build)
 == RNNoise gürültü azaltma (bu yapıda kullanılamaz)
 
+Retry remote stats
+== Uzak istatistikleri yeniden dene
+
 RNNoise noise reduction strength
 == RNNoise gürültü azaltma gücü
 
@@ -10739,8 +10742,14 @@ Taper trail width
 Target language
 == Hedef dil
 
+Sync remote stats
+== Uzak istatistikleri senkronize et
+
 Target language code (e.g. zh, en, ja, zh-TW)
 == Çeviri hedef dil kodu (ör. zh, en, ja, zh-TW)
+
+Syncing remote stats
+== Uzak istatistikler senkronize ediliyor
 
 Target language ratio
 == Hedef dil oranı
@@ -11648,6 +11657,9 @@ Unfinished map data refreshing
 Unfinished maps
 == Bitmemiş haritalar
 
+Unavailable
+== Kullanılamıyor
+
 Unfinished maps are shown first
 == Tamamlanmamış haritalar önce gösterilir
 
@@ -11824,6 +11836,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
+
+Use current name
+== Geçerli adı kullan
 
 Use multi-char replacement based on word length
 == Kelime uzunluğuna göre çok karakterli değiştirme kullan

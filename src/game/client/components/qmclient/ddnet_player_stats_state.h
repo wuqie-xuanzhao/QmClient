@@ -25,6 +25,7 @@ class CQmDdnetPlayerStatsState
 	int64_t m_LastSync = 0;
 	int64_t m_NextRetry = 0;
 	bool m_RefreshPending = false;
+	bool m_LastRequestFailed = false;
 
 public:
 	void SetPlayer(const char *pPlayerName)
@@ -36,6 +37,7 @@ public:
 		m_LastSync = 0;
 		m_NextRetry = 0;
 		m_RefreshPending = false;
+		m_LastRequestFailed = false;
 		if(m_Phase == EQmDdnetPlayerStatsPhase::HTTP)
 		{
 			m_Phase = EQmDdnetPlayerStatsPhase::IDLE;
@@ -51,6 +53,7 @@ public:
 		m_LastSync = 0;
 		m_NextRetry = 0;
 		m_RefreshPending = false;
+		m_LastRequestFailed = false;
 	}
 
 	const std::string &PlayerName() const { return m_PlayerName; }
@@ -59,6 +62,8 @@ public:
 	int64_t LastSync() const { return m_LastSync; }
 	int64_t NextRetry() const { return m_NextRetry; }
 	bool RefreshPending() const { return m_RefreshPending; }
+	bool IsFetching() const { return m_Phase != EQmDdnetPlayerStatsPhase::IDLE; }
+	bool LastRequestFailed() const { return m_LastRequestFailed; }
 
 	bool ShouldFetch(int64_t Now, int64_t SyncIntervalTicks) const
 	{
@@ -74,6 +79,7 @@ public:
 		m_PlayerName = pPlayerName ? pPlayerName : "";
 		m_RequestPlayerName = m_PlayerName;
 		m_Phase = EQmDdnetPlayerStatsPhase::HTTP;
+		m_LastRequestFailed = false;
 	}
 
 	void AbortHttp()
@@ -97,6 +103,7 @@ public:
 		m_RequestPlayerName.clear();
 		m_LastSync = 0;
 		m_NextRetry = Now + RetryDelayTicks;
+		m_LastRequestFailed = true;
 	}
 
 	EQmDdnetPlayerStatsRefreshAction RequestRefresh()
@@ -108,6 +115,7 @@ public:
 		}
 		m_LastSync = 0;
 		m_NextRetry = 0;
+		m_LastRequestFailed = false;
 		return EQmDdnetPlayerStatsRefreshAction::START_REQUEST;
 	}
 
@@ -129,11 +137,13 @@ public:
 		{
 			m_LastSync = Now;
 			m_NextRetry = 0;
+			m_LastRequestFailed = false;
 		}
 		else
 		{
 			m_LastSync = 0;
 			m_NextRetry = Now + RetryDelayTicks;
+			m_LastRequestFailed = true;
 		}
 		if(RefreshPending)
 		{

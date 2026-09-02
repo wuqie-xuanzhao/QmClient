@@ -1707,10 +1707,16 @@ void CQmClient::FetchQmDdnetPlayerStats(const char *pPlayerName)
 	str_format(aUrl, sizeof(aUrl), "%s%s", DDNET_PLAYER_STATS_URL, aEncodedName);
 
 	m_pQmDdnetPlayerTask = HttpGet(aUrl);
+	if(!m_pQmDdnetPlayerTask)
+	{
+		m_QmDdnetPlayerState.BeginHttp(pPlayerName);
+		m_QmDdnetPlayerState.CompleteHttp(false, time_get(), (int64_t)QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS * time_freq());
+		return;
+	}
+	m_QmDdnetPlayerState.BeginHttp(pPlayerName);
 	m_pQmDdnetPlayerTask->Timeout(CTimeout{10000, 30000, 100, 10});
 	m_pQmDdnetPlayerTask->LogProgress(HTTPLOG::FAILURE);
 	Http()->Run(m_pQmDdnetPlayerTask);
-	m_QmDdnetPlayerState.BeginHttp(pPlayerName);
 }
 
 void CQmClient::FinishQmDdnetPlayerStats()
