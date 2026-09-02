@@ -217,6 +217,9 @@
 1 star
 == 1 つ星
 
+128 player id <-> 64 player id map update rate
+== 128 player id <-> 64 player id map update rate
+
 2 stars
 == 2 つ星
 
@@ -2645,9 +2648,6 @@ Death tile outline width
 Deaths
 == デス数
 
-Debug Curl.
-== Curl のデバッグ
-
 Debug graph
 == デバッググラフ
 
@@ -2656,6 +2656,9 @@ Debug graph panel opacity (percent)
 
 Debug group clipping.
 == グループクリッピングのデバッグ
+
+Debug HTTP
+== Debug HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == デバッグモードが有効になりました。Ctrl+Shift+D でデバッグモードを無効にできます。
@@ -4133,9 +4136,6 @@ Finish name
 Finish Name:
 == フィニッシュネーム:
 
-Finish time
-== 完了時間
-
 Finished
 == 完了
 
@@ -4579,6 +4579,9 @@ Graphics card
 
 Graphics display
 == グラフィック表示
+
+Graphics Error
+== Graphics Error
 
 Graphics library major version (0 = auto-detect)
 == グラフィックスライブラリのメジャーバージョン（0 = 自動検出）
@@ -5156,6 +5159,9 @@ Initializing assets
 Initializing components
 == コンポーネントを初期化中
 
+Initializing layers
+== Initializing layers
+
 Initializing map logic
 == マップロジックを初期化中
 
@@ -5600,6 +5606,9 @@ Linear
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
 
+Links below open external ID and map statistics.
+== 下のリンクから外部ID統計とマップ統計を開けます。
+
 List all commands that are available in practice mode
 == プラクティスモードで使用可能なすべてのコマンドを一覧表示
 
@@ -5753,6 +5762,12 @@ Local
 Local + Dummy
 == ローカル + ダミー
 
+Local game mode statistics
+== ローカルゲームモード統計
+
+Local mode statistics are stored on this client.
+== ローカルのゲームモード統計はこのクライアントに保存されます。
+
 Local only
 == ローカルのみ
 
@@ -5803,12 +5818,6 @@ Lose weapons when teleporting (useful for race maps)
 
 Low to high
 == 低から高へ
-
-Lyrics
-== 歌詞
-
-Lyrics sources and display
-== 歌詞のソースと表示
 
 Main Asset
 == メインアセット
@@ -6023,8 +6032,14 @@ maximum
 Maximum auto-saves retained per map name (0=unlimited)
 == マップ名ごとに保持される最大自動保存数（0 = 無制限）
 
+Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Maximum banned addresses sent their ban message per second (0 = unlimited).
+
 Maximum clients per IP
 == IP ごとの最大クライアント数
+
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 
 Maximum cursor distance
 == 最大カーソル距離
@@ -6056,8 +6071,23 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 == サーバー上の最大クライアント数
 
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+
+Maximum number of resend requests answered per second (0 for no limit)
+== Maximum number of resend requests answered per second (0 for no limit)
+
+Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Maximum number of server info responses of any size sent per second (0 = unlimited).
+
 Maximum number of skins loaded simultaneously
 == 同時に読み込まれる最大スキン数
+
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 
 Maximum players participating in a vote (0 = unlimited)
 == 投票に参加できる最大プレイヤー数（0 = 無制限）
@@ -6259,9 +6289,6 @@ Modified
 
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == ドラッグ中、モジュールは画面端、中央線、および他の HUD モジュールにスナップします
-
-More aggressive prediction of other players' movement (only with cl_antiping 1)
-== 他のプレイヤーの移動のより積極的な予測（cl_antiping 1 の場合のみ）
 
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 == Tee の安定方向に沿ったより楽観的な予測、安定までの遅延を削減
@@ -7088,6 +7115,9 @@ Optional authentication key for the DNSBL provider
 Other
 == その他
 
+Other modes
+== その他のモード
+
 Other players' hook line width
 == 他のプレイヤーのフックラインの幅
 
@@ -7249,6 +7279,15 @@ Password incorrect
 
 Password required to use reserved slots.
 == 予約スロットを使用するために必要なパスワード
+
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+
+Path to client certificate for the MySQL/MariaDB SSL connection
+== Path to client certificate for the MySQL/MariaDB SSL connection
+
+Path to client key for the MySQL/MariaDB SSL connection
+== Path to client key for the MySQL/MariaDB SSL connection
 
 Pause
 == 一時停止
@@ -7603,6 +7642,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == グレネードの軌道を予測（cl_antiping 1 の場合のみ）
+
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 武器の発射物を予測（cl_antiping 1 の場合のみ）
@@ -8528,6 +8570,9 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 == 旧式の単一セグメントフック衝突線動作を復元
 
+Retry remote stats
+== リモート統計を再試行
+
 Retrying…
 == 再試行中…
 
@@ -8569,9 +8614,6 @@ RNNoise noise reduction
 
 RNNoise noise reduction (unavailable in this build)
 == RNNoise ノイズリダクション（このビルドでは利用不可）
-
-Retry remote stats
-== リモート統計を再試行
 
 RNNoise noise reduction strength
 == RNNoise ノイズリダクション強度
@@ -10700,8 +10742,14 @@ Switching back to default input
 Switching back to default output
 == デフォルト出力に戻しています
 
+Sync remote stats
+== リモート統計を同期
+
 Sync Workshop Assets
 == ワークショップアセットを同期
+
+Syncing remote stats
+== リモート統計を同期中
 
 System
 == システム
@@ -10709,8 +10757,8 @@ System
 System default
 == システムデフォルト
 
-System media control
-== システムメディアコントロール
+System media control and lyrics
+== System media control and lyrics
 
 System media controls
 == システムメディアコントロール
@@ -10742,14 +10790,8 @@ Taper trail width
 Target language
 == ターゲット言語
 
-Sync remote stats
-== リモート統計を同期
-
 Target language code (e.g. zh, en, ja, zh-TW)
 == 翻訳先言語コード（例：zh、en、ja、zh-TW）
-
-Syncing remote stats
-== リモート統計を同期中
 
 Target language ratio
 == ターゲット言語比率
@@ -11035,6 +11077,9 @@ The format of texture %s is not RGBA which will cause visual bugs.
 
 The FPS at which the recorder should record replay.
 == レコーダーがリプレイを録画する FPS
+
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 
 The name "default" is reserved.
 == 「default」という名前は予約されています。
@@ -11612,6 +11657,9 @@ Unable to save the skin
 Unable to save the skin with a reserved name
 == 予約された名前のスキンを保存できません
 
+Unavailable
+== 利用不可
+
 Unban a certain nickname
 == 特定のニックネームの BAN を解除
 
@@ -11656,9 +11704,6 @@ Unfinished map data refreshing
 
 Unfinished maps
 == 未完了マップ
-
-Unavailable
-== 利用不可
 
 Unfinished maps are shown first
 == 未完了のマップを優先表示
@@ -11756,12 +11801,6 @@ Update or add a specific war group
 Update Rate
 == 更新レート
 
-Update rate for mapping 64 player IDs to vanilla IDs
-== 64 プレイヤー ID をバニラ ID にマッピングする更新レート
-
-Uploading map data to GPU
-== マップデータを GPU にアップロード中
-
 URL for downloading community skins
 == コミュニティスキン用ダウンロード URL
 
@@ -11797,6 +11836,9 @@ Use compact list view for config variables
 
 Use current map as background
 == 現在のマップを背景として使用
+
+Use current name
+== 現在の名前を使用
 
 Use custom skins instead of the ninja tee
 == ニンジャ Tee の代わりにカスタムスキンを使用
@@ -11836,9 +11878,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
-
-Use current name
-== 現在の名前を使用
 
 Use multi-char replacement based on word length
 == 単語の長さに基づいて複数文字置換を使用
@@ -11980,6 +12019,9 @@ Virtual joystick which always uses fire.
 
 Virtual joystick which always uses hook.
 == 常にフックを使用するバーチャルジョイスティック。
+
+Virtual joystick which only aims and moves the mouse pointer relatively.
+== Virtual joystick which only aims and moves the mouse pointer relatively.
 
 Virtual joystick which only aims without using an action.
 == アクションを使用せずに照準のみを行うバーチャルジョイスティック。
@@ -12293,8 +12335,8 @@ Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
 == ダミーがジャンプするかどうか（cl_dummy_control 1 が必要）
 
-Whether non-voting players count as 'no' (0) or ignored (1)
-== 投票権のないプレイヤーを「いいえ」（0）としてカウントするか、無視するか（1）
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 
 Whether players can hammer/grenade/laser each other.
 == プレイヤー同士がハンマー/グレネード/レーザーを使用できるかどうか。
@@ -12883,6 +12925,62 @@ Fire
 Hook
 == フック
 
+[Direct touch input]
+Relative aim
+== Relative aim
+
+[Editor]
+[Ctrl+F4] Close the current map.
+== [Ctrl+F4] Close the current map.
+
+[Editor]
+Close map
+== Close map
+
+[Editor]
+Discard changes
+== Discard changes
+
+[Editor]
+Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+
+[Editor]
+Open the directory for automapper rules in the file browser.
+== Open the directory for automapper rules in the file browser.
+
+[Editor]
+Save changes?
+== Save changes?
+
+[Editor]
+Show directory
+== Show directory
+
+[Editor curve type abbreviation]
+B
+== B
+
+[Editor curve type abbreviation]
+F
+== F
+
+[Editor curve type abbreviation]
+L
+== L
+
+[Editor curve type abbreviation]
+M
+== M
+
+[Editor curve type abbreviation]
+N
+== N
+
+[Editor curve type abbreviation]
+S
+== S
+
 [Friend auto follow]
 Follow this friend across servers
 == このフレンドをサーバー間で追跡
@@ -12998,6 +13096,10 @@ Joystick Fire
 [Predefined touch button behaviors]
 Joystick Hook
 == ジョイスティック：フック
+
+[Predefined touch button behaviors]
+Joystick Relative Aim
+== Joystick Relative Aim
 
 [Predefined touch button behaviors]
 Spectate

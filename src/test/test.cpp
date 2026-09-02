@@ -36,7 +36,11 @@ std::string ReadTestSourceFile(const char *pRelativePath)
 	EXPECT_TRUE(File.good()) << Path;
 	std::ostringstream Buffer;
 	Buffer << File.rdbuf();
-	return Buffer.str();
+	std::string Contents = Buffer.str();
+	// Source-contract tests use '\n' literals; normalize checked-in CRLF files
+	// so assertions are independent of the checkout's line-ending policy.
+	Contents.erase(std::remove(Contents.begin(), Contents.end(), '\r'), Contents.end());
+	return Contents;
 }
 
 CTestInfo::CTestInfo()

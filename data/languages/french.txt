@@ -217,6 +217,9 @@
 1 star
 == 1 étoile
 
+128 player id <-> 64 player id map update rate
+== 128 player id <-> 64 player id map update rate
+
 2 stars
 == 2 étoiles
 
@@ -2645,9 +2648,6 @@ Death tile outline width
 Deaths
 == Morts
 
-Debug Curl.
-== Débogage Curl.
-
 Debug graph
 == Graphique de débogage
 
@@ -2656,6 +2656,9 @@ Debug graph panel opacity (percent)
 
 Debug group clipping.
 == Débogage du clipping de groupe.
+
+Debug HTTP
+== Debug HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Mode débogage activé. Appuyez sur Ctrl+Maj+D pour désactiver le mode débogage.
@@ -4133,9 +4136,6 @@ Finish name
 Finish Name:
 == Nom à l'arrivée :
 
-Finish time
-== Temps de fin
-
 Finished
 == Terminé
 
@@ -4579,6 +4579,9 @@ Graphics card
 
 Graphics display
 == Affichage graphique
+
+Graphics Error
+== Graphics Error
 
 Graphics library major version (0 = auto-detect)
 == Version majeure de la bibliothèque graphique (0 = détection automatique)
@@ -5156,6 +5159,9 @@ Initializing assets
 Initializing components
 == Initialisation des composants
 
+Initializing layers
+== Initializing layers
+
 Initializing map logic
 == Initialisation de la logique de la carte
 
@@ -5600,6 +5606,9 @@ Linear
 Lines %d - %d (%s)
 == Lignes %d - %d (%s)
 
+Links below open external ID and map statistics.
+== Les liens ci-dessous ouvrent les statistiques externes d'ID et de cartes.
+
 List all commands that are available in practice mode
 == Lister toutes les commandes disponibles en mode entraînement
 
@@ -5753,6 +5762,12 @@ Local
 Local + Dummy
 == Local + Dummy
 
+Local game mode statistics
+== Statistiques des modes de jeu locaux
+
+Local mode statistics are stored on this client.
+== Les statistiques des modes locaux sont enregistrées dans ce client.
+
 Local only
 == Local uniquement
 
@@ -5803,12 +5818,6 @@ Lose weapons when teleporting (useful for race maps)
 
 Low to high
 == Faible à élevé
-
-Lyrics
-== Paroles
-
-Lyrics sources and display
-== Sources de paroles et affichage
 
 Main Asset
 == Élément principal
@@ -6023,8 +6032,14 @@ maximum
 Maximum auto-saves retained per map name (0=unlimited)
 == Nombre maximal de sauvegardes automatiques conservées par nom de carte (0 = illimité)
 
+Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Maximum banned addresses sent their ban message per second (0 = unlimited).
+
 Maximum clients per IP
 == Nombre maximal de clients par IP
+
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 
 Maximum cursor distance
 == Distance maximale du curseur
@@ -6056,8 +6071,23 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 == Nombre maximal de clients sur le serveur
 
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+
+Maximum number of resend requests answered per second (0 for no limit)
+== Maximum number of resend requests answered per second (0 for no limit)
+
+Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Maximum number of server info responses of any size sent per second (0 = unlimited).
+
 Maximum number of skins loaded simultaneously
 == Nombre maximal de skins chargés simultanément
+
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 
 Maximum players participating in a vote (0 = unlimited)
 == Nombre maximal de joueurs participant à un vote (0 = illimité)
@@ -6259,9 +6289,6 @@ Modified
 
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == Les modules s'alignent sur les bords de l'écran, les lignes centrales et les autres modules HUD lors du glissement
-
-More aggressive prediction of other players' movement (only with cl_antiping 1)
-== Prédiction plus agressive des mouvements des autres joueurs (uniquement avec cl_antiping 1)
 
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 == Prédiction plus optimiste le long de la direction stable du Tee, réduit le délai de stabilisation
@@ -7088,6 +7115,9 @@ Optional authentication key for the DNSBL provider
 Other
 == Autre
 
+Other modes
+== Autres modes
+
 Other players' hook line width
 == Largeur de la ligne de crochet des autres joueurs
 
@@ -7249,6 +7279,15 @@ Password incorrect
 
 Password required to use reserved slots.
 == Mot de passe requis pour utiliser les emplacements réservés.
+
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+
+Path to client certificate for the MySQL/MariaDB SSL connection
+== Path to client certificate for the MySQL/MariaDB SSL connection
+
+Path to client key for the MySQL/MariaDB SSL connection
+== Path to client key for the MySQL/MariaDB SSL connection
 
 Pause
 == Pause
@@ -7603,6 +7642,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == Prédire la trajectoire du lance-grenades (uniquement avec cl_antiping 1)
+
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == Prédire les projectiles d'armes (uniquement avec cl_antiping 1)
@@ -8528,6 +8570,9 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 == Restaurer l'ancien comportement de la ligne de collision de crochet à segment unique
 
+Retry remote stats
+== Réessayer les statistiques distantes
+
 Retrying…
 == Nouvelle tentative…
 
@@ -8569,9 +8614,6 @@ RNNoise noise reduction
 
 RNNoise noise reduction (unavailable in this build)
 == Réduction de bruit RNNoise (indisponible dans cette version)
-
-Retry remote stats
-== Réessayer les statistiques distantes
 
 RNNoise noise reduction strength
 == Force de réduction de bruit RNNoise
@@ -10700,8 +10742,14 @@ Switching back to default input
 Switching back to default output
 == Retour à la sortie par défaut
 
+Sync remote stats
+== Synchroniser les statistiques distantes
+
 Sync Workshop Assets
 == Synchroniser les éléments du Workshop
+
+Syncing remote stats
+== Synchronisation des statistiques distantes
 
 System
 == Système
@@ -10709,8 +10757,8 @@ System
 System default
 == Par défaut du système
 
-System media control
-== Contrôle multimédia système
+System media control and lyrics
+== System media control and lyrics
 
 System media controls
 == Contrôles média système
@@ -10742,14 +10790,8 @@ Taper trail width
 Target language
 == Langue cible
 
-Sync remote stats
-== Synchroniser les statistiques distantes
-
 Target language code (e.g. zh, en, ja, zh-TW)
 == Code de la langue cible de traduction (ex : zh, en, ja, zh-TW)
-
-Syncing remote stats
-== Synchronisation des statistiques distantes
 
 Target language ratio
 == Ratio de langue cible
@@ -11035,6 +11077,9 @@ The format of texture %s is not RGBA which will cause visual bugs.
 
 The FPS at which the recorder should record replay.
 == Le FPS auquel l'enregistreur doit enregistrer la rediffusion
+
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 
 The name "default" is reserved.
 == Le nom "default" est réservé.
@@ -11612,6 +11657,9 @@ Unable to save the skin
 Unable to save the skin with a reserved name
 == Impossible de sauvegarder le skin avec un nom réservé
 
+Unavailable
+== Indisponible
+
 Unban a certain nickname
 == Débannir un certain pseudonyme
 
@@ -11656,9 +11704,6 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Cartes non terminées
-
-Unavailable
-== Indisponible
 
 Unfinished maps are shown first
 == Les cartes inachevées sont affichées en premier
@@ -11756,12 +11801,6 @@ Update or add a specific war group
 Update Rate
 == Taux de rafraîchissement
 
-Update rate for mapping 64 player IDs to vanilla IDs
-== Taux de mise à jour pour le mappage de 64 ID de joueurs vers des ID vanilla
-
-Uploading map data to GPU
-== Téléchargement des données de la carte vers le GPU
-
 URL for downloading community skins
 == URL pour télécharger les skins communautaires
 
@@ -11797,6 +11836,9 @@ Use compact list view for config variables
 
 Use current map as background
 == Utiliser la carte actuelle comme fond
+
+Use current name
+== Utiliser le nom actuel
 
 Use custom skins instead of the ninja tee
 == Utiliser des skins personnalisés au lieu du tee ninja
@@ -11836,9 +11878,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == Utiliser la sensibilité de la souris lorsque la caméra dynamique est activée
-
-Use current name
-== Utiliser le nom actuel
 
 Use multi-char replacement based on word length
 == Utiliser le remplacement multi-caractères basé sur la longueur du mot
@@ -11980,6 +12019,9 @@ Virtual joystick which always uses fire.
 
 Virtual joystick which always uses hook.
 == Joystick virtuel qui utilise toujours le grappin.
+
+Virtual joystick which only aims and moves the mouse pointer relatively.
+== Virtual joystick which only aims and moves the mouse pointer relatively.
 
 Virtual joystick which only aims without using an action.
 == Joystick virtuel qui vise uniquement sans utiliser d’action.
@@ -12293,8 +12335,8 @@ Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
 == Le Dummy saute (nécessite cl_dummy_control 1)
 
-Whether non-voting players count as 'no' (0) or ignored (1)
-== Si les joueurs ne votant pas comptent comme 'non' (0) ou sont ignorés (1)
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 
 Whether players can hammer/grenade/laser each other.
 == Si les joueurs peuvent se marteler/lancer des grenades/se tirer au laser.
@@ -12883,6 +12925,62 @@ Fire
 Hook
 == Grappin
 
+[Direct touch input]
+Relative aim
+== Relative aim
+
+[Editor]
+[Ctrl+F4] Close the current map.
+== [Ctrl+F4] Close the current map.
+
+[Editor]
+Close map
+== Close map
+
+[Editor]
+Discard changes
+== Discard changes
+
+[Editor]
+Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+
+[Editor]
+Open the directory for automapper rules in the file browser.
+== Open the directory for automapper rules in the file browser.
+
+[Editor]
+Save changes?
+== Save changes?
+
+[Editor]
+Show directory
+== Show directory
+
+[Editor curve type abbreviation]
+B
+== B
+
+[Editor curve type abbreviation]
+F
+== F
+
+[Editor curve type abbreviation]
+L
+== L
+
+[Editor curve type abbreviation]
+M
+== M
+
+[Editor curve type abbreviation]
+N
+== N
+
+[Editor curve type abbreviation]
+S
+== S
+
 [Friend auto follow]
 Follow this friend across servers
 == Suivre cet ami entre les serveurs
@@ -12998,6 +13096,10 @@ Joystick Fire
 [Predefined touch button behaviors]
 Joystick Hook
 == Grappin Joystick
+
+[Predefined touch button behaviors]
+Joystick Relative Aim
+== Joystick Relative Aim
 
 [Predefined touch button behaviors]
 Spectate

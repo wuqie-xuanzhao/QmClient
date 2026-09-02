@@ -217,6 +217,9 @@
 1 star
 == 1 yıldız
 
+128 player id <-> 64 player id map update rate
+== 128 player id <-> 64 player id map update rate
+
 2 stars
 == 2 yıldız
 
@@ -2645,9 +2648,6 @@ Death tile outline width
 Deaths
 == Ölümler
 
-Debug Curl.
-== Curl hata ayıklama.
-
 Debug graph
 == Hata ayıklama grafiği
 
@@ -2656,6 +2656,9 @@ Debug graph panel opacity (percent)
 
 Debug group clipping.
 == Grup kırpma hata ayıklama.
+
+Debug HTTP
+== Debug HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Hata ayıklama modu etkin. Hata ayıklama modunu devre dışı bırakmak için Ctrl+Shift+D tuşlarına basın.
@@ -4133,9 +4136,6 @@ Finish name
 Finish Name:
 == Bitiş İsmi:
 
-Finish time
-== Tamamlanma süresi
-
 Finished
 == Tamamlandı
 
@@ -4579,6 +4579,9 @@ Graphics card
 
 Graphics display
 == Grafik görüntüsü
+
+Graphics Error
+== Graphics Error
 
 Graphics library major version (0 = auto-detect)
 == Grafik kitaplığının ana sürümü (0 = otomatik algıla)
@@ -5156,6 +5159,9 @@ Initializing assets
 Initializing components
 == Bileşenler başlatılıyor
 
+Initializing layers
+== Initializing layers
+
 Initializing map logic
 == Harita mantığı başlatılıyor
 
@@ -5600,6 +5606,9 @@ Linear
 Lines %d - %d (%s)
 == Satırlar %d - %d (%s)
 
+Links below open external ID and map statistics.
+== Aşağıdaki bağlantılar harici ID ve harita istatistiklerini açar.
+
 List all commands that are available in practice mode
 == Pratik modunda mevcut olan tüm komutları listele
 
@@ -5753,6 +5762,12 @@ Local
 Local + Dummy
 == Yerel + Dummy
 
+Local game mode statistics
+== Yerel oyun modu istatistikleri
+
+Local mode statistics are stored on this client.
+== Yerel oyun modu istatistikleri bu istemcide saklanır.
+
 Local only
 == Yalnızca yerel
 
@@ -5803,12 +5818,6 @@ Lose weapons when teleporting (useful for race maps)
 
 Low to high
 == Düşükten yükseğe
-
-Lyrics
-== Şarkı sözleri
-
-Lyrics sources and display
-== Şarkı sözü kaynakları ve görüntüleme
 
 Main Asset
 == Ana Varlık
@@ -6023,8 +6032,14 @@ maximum
 Maximum auto-saves retained per map name (0=unlimited)
 == Harita adı başına saklanan maksimum otomatik kayıt sayısı (0=sınırsız)
 
+Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Maximum banned addresses sent their ban message per second (0 = unlimited).
+
 Maximum clients per IP
 == IP başına maksimum istemci sayısı
+
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 
 Maximum cursor distance
 == Maksimum imleç mesafesi
@@ -6056,8 +6071,23 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 == Sunucudaki maksimum istemci sayısı
 
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+
+Maximum number of resend requests answered per second (0 for no limit)
+== Maximum number of resend requests answered per second (0 for no limit)
+
+Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Maximum number of server info responses of any size sent per second (0 = unlimited).
+
 Maximum number of skins loaded simultaneously
 == Aynı anda yüklenen maksimum skin sayısı
+
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 
 Maximum players participating in a vote (0 = unlimited)
 == Bir oylamaya katılabilecek maksimum oyuncu sayısı (0 = sınırsız)
@@ -6259,9 +6289,6 @@ Modified
 
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == Modüller sürüklerken ekran kenarlarına, orta çizgilere ve diğer HUD modüllerine yapışır
-
-More aggressive prediction of other players' movement (only with cl_antiping 1)
-== Diğer oyuncuların hareketinin daha agresif tahmini (yalnızca cl_antiping 1 ile)
 
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 == Tee'nin sabit yönü boyunca daha iyimser tahmin, stabilize olma gecikmesini azaltır
@@ -7088,6 +7115,9 @@ Optional authentication key for the DNSBL provider
 Other
 == Diğer
 
+Other modes
+== Diğer modlar
+
 Other players' hook line width
 == Diğer oyuncuların kanca çizgisi genişliği
 
@@ -7249,6 +7279,15 @@ Password incorrect
 
 Password required to use reserved slots.
 == Ayrılmış yuvaları kullanmak için gereken şifre.
+
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+
+Path to client certificate for the MySQL/MariaDB SSL connection
+== Path to client certificate for the MySQL/MariaDB SSL connection
+
+Path to client key for the MySQL/MariaDB SSL connection
+== Path to client key for the MySQL/MariaDB SSL connection
 
 Pause
 == Duraklat
@@ -7603,6 +7642,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == Bomba yörüngesini tahmin et (yalnızca cl_antiping 1 ile)
+
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == Silah mermilerini tahmin et (yalnızca cl_antiping 1 ile)
@@ -8528,6 +8570,9 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 == Eski tek parçalı kanca çarpışma çizgisi davranışını geri yükle
 
+Retry remote stats
+== Uzak istatistikleri yeniden dene
+
 Retrying…
 == Yeniden deneniyor…
 
@@ -8569,9 +8614,6 @@ RNNoise noise reduction
 
 RNNoise noise reduction (unavailable in this build)
 == RNNoise gürültü azaltma (bu yapıda kullanılamaz)
-
-Retry remote stats
-== Uzak istatistikleri yeniden dene
 
 RNNoise noise reduction strength
 == RNNoise gürültü azaltma gücü
@@ -10700,8 +10742,14 @@ Switching back to default input
 Switching back to default output
 == Varsayılan çıkışa geri dönülüyor
 
+Sync remote stats
+== Uzak istatistikleri senkronize et
+
 Sync Workshop Assets
 == Workshop Varlıklarını Senkronize Et
+
+Syncing remote stats
+== Uzak istatistikler senkronize ediliyor
 
 System
 == Sistem
@@ -10709,8 +10757,8 @@ System
 System default
 == Sistem varsayılanı
 
-System media control
-== Sistem medya kontrolü
+System media control and lyrics
+== System media control and lyrics
 
 System media controls
 == Sistem medya kontrolleri
@@ -10742,14 +10790,8 @@ Taper trail width
 Target language
 == Hedef dil
 
-Sync remote stats
-== Uzak istatistikleri senkronize et
-
 Target language code (e.g. zh, en, ja, zh-TW)
 == Çeviri hedef dil kodu (ör. zh, en, ja, zh-TW)
-
-Syncing remote stats
-== Uzak istatistikler senkronize ediliyor
 
 Target language ratio
 == Hedef dil oranı
@@ -11035,6 +11077,9 @@ The format of texture %s is not RGBA which will cause visual bugs.
 
 The FPS at which the recorder should record replay.
 == Kaydedicinin tekrarı kaydetmesi gereken FPS.
+
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 
 The name "default" is reserved.
 == "default" adı ayrılmıştır.
@@ -11612,6 +11657,9 @@ Unable to save the skin
 Unable to save the skin with a reserved name
 == Ayrılmış bir isimle skin kaydedilemiyor
 
+Unavailable
+== Kullanılamıyor
+
 Unban a certain nickname
 == Belirli bir takma adın yasağını kaldır
 
@@ -11656,9 +11704,6 @@ Unfinished map data refreshing
 
 Unfinished maps
 == Bitmemiş haritalar
-
-Unavailable
-== Kullanılamıyor
 
 Unfinished maps are shown first
 == Tamamlanmamış haritalar önce gösterilir
@@ -11756,12 +11801,6 @@ Update or add a specific war group
 Update Rate
 == Güncelleme Hızı
 
-Update rate for mapping 64 player IDs to vanilla IDs
-== 64 oyuncu kimliğini vanilla kimliklerine eşleme güncelleme hızı
-
-Uploading map data to GPU
-== Harita verileri GPU'ya yükleniyor
-
 URL for downloading community skins
 == Topluluk skinleri indirmek için URL
 
@@ -11797,6 +11836,9 @@ Use compact list view for config variables
 
 Use current map as background
 == Geçerli haritayı arka plan olarak kullan
+
+Use current name
+== Geçerli adı kullan
 
 Use custom skins instead of the ninja tee
 == Ninja tee yerine özel görünümler kullan
@@ -11836,9 +11878,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
-
-Use current name
-== Geçerli adı kullan
 
 Use multi-char replacement based on word length
 == Kelime uzunluğuna göre çok karakterli değiştirme kullan
@@ -11980,6 +12019,9 @@ Virtual joystick which always uses fire.
 
 Virtual joystick which always uses hook.
 == Her zaman kanca kullanan sanal joystick.
+
+Virtual joystick which only aims and moves the mouse pointer relatively.
+== Virtual joystick which only aims and moves the mouse pointer relatively.
 
 Virtual joystick which only aims without using an action.
 == Bir eylem kullanmadan yalnızca nişan alan sanal joystick.
@@ -12293,8 +12335,8 @@ Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
 == Dummy'nin zıplayıp zıplamadığı (cl_dummy_control 1 gerektirir)
 
-Whether non-voting players count as 'no' (0) or ignored (1)
-== Oy kullanmayan oyuncuların 'hayır' (0) olarak sayılıp sayılmadığı veya yok sayıldığı (1)
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 
 Whether players can hammer/grenade/laser each other.
 == Oyuncuların birbirine çekiç/bomba/lazer atıp atamayacağı.
@@ -12883,6 +12925,62 @@ Fire
 Hook
 == Kanca
 
+[Direct touch input]
+Relative aim
+== Relative aim
+
+[Editor]
+[Ctrl+F4] Close the current map.
+== [Ctrl+F4] Close the current map.
+
+[Editor]
+Close map
+== Close map
+
+[Editor]
+Discard changes
+== Discard changes
+
+[Editor]
+Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+
+[Editor]
+Open the directory for automapper rules in the file browser.
+== Open the directory for automapper rules in the file browser.
+
+[Editor]
+Save changes?
+== Save changes?
+
+[Editor]
+Show directory
+== Show directory
+
+[Editor curve type abbreviation]
+B
+== B
+
+[Editor curve type abbreviation]
+F
+== F
+
+[Editor curve type abbreviation]
+L
+== L
+
+[Editor curve type abbreviation]
+M
+== M
+
+[Editor curve type abbreviation]
+N
+== N
+
+[Editor curve type abbreviation]
+S
+== S
+
 [Friend auto follow]
 Follow this friend across servers
 == Bu arkadaşı sunucular arasında takip et
@@ -12998,6 +13096,10 @@ Joystick Fire
 [Predefined touch button behaviors]
 Joystick Hook
 == Joystick Kancası
+
+[Predefined touch button behaviors]
+Joystick Relative Aim
+== Joystick Relative Aim
 
 [Predefined touch button behaviors]
 Spectate

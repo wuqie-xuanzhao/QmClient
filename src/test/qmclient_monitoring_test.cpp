@@ -4101,7 +4101,7 @@ TEST(QmMonitoringHelpers, MacosGraphicsDiagnosticsWritesAutodiagAndChecksBuffere
 	EXPECT_NE(Vulkan.find("perf/autodiag_vulkan"), std::string::npos);
 	EXPECT_NE(Vulkan.find("swapchain present:"), std::string::npos);
 	EXPECT_EQ(Vulkan.find("log_info(\"gfx/vulkan\", \"swapchain present:"), std::string::npos);
-	EXPECT_NE(Config.find("automatic report logging"), std::string::npos);
+	EXPECT_NE(Config.find("QmMacosGraphicsDiagnostics"), std::string::npos);
 }
 
 TEST(QmMonitoringHelpers, MacosGraphicsDiagnosticsTracksSystemMessageLifecycleWithoutText)
@@ -4111,9 +4111,9 @@ TEST(QmMonitoringHelpers, MacosGraphicsDiagnosticsTracksSystemMessageLifecycleWi
 
 	EXPECT_NE(Chat.find("event=server_message_received"), std::string::npos);
 	EXPECT_NE(Chat.find("event=server_message_presentation"), std::string::npos);
-	EXPECT_NE(Chat.find("event=server_message_upload_requested"), std::string::npos);
-	EXPECT_NE(Chat.find("event=server_message_prepare_skip reason=collapsed"), std::string::npos);
 	EXPECT_NE(Chat.find("event=server_message_render_skip reason=invalid_text_container"), std::string::npos);
+	EXPECT_NE(Chat.find("event=server_message_prepare_skip reason=collapsed"), std::string::npos);
+	EXPECT_NE(Chat.find("event=server_message_upload_requested"), std::string::npos);
 	EXPECT_EQ(Chat.find("pMsg->m_pMessage, Client()"), std::string::npos);
 	EXPECT_NE(PerfLogging.find("QmMacosGraphicsDiagnosticsLogPayload"), std::string::npos);
 }

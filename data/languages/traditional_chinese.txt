@@ -217,6 +217,9 @@
 1 star
 == 1 星
 
+128 player id <-> 64 player id map update rate
+== 128 player id <-> 64 player id map update rate
+
 2 stars
 == 2 星
 
@@ -2645,9 +2648,6 @@ Death tile outline width
 Deaths
 == 死亡數
 
-Debug Curl.
-== 調試卷曲
-
 Debug graph
 == 調試圖表
 
@@ -2656,6 +2656,9 @@ Debug graph panel opacity (percent)
 
 Debug group clipping.
 == 調試組裁剪
+
+Debug HTTP
+== Debug HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 調試模式已啟用。按 Ctrl+Shift+D 禁用調試模式。
@@ -4133,9 +4136,6 @@ Finish name
 Finish Name:
 == 恰分名稱：
 
-Finish time
-== 完成時間
-
 Finished
 == 已完成
 
@@ -4579,6 +4579,9 @@ Graphics card
 
 Graphics display
 == 圖像顯示
+
+Graphics Error
+== Graphics Error
 
 Graphics library major version (0 = auto-detect)
 == 圖形庫主版本（0 = 自動偵測）
@@ -5156,6 +5159,9 @@ Initializing assets
 Initializing components
 == 正在初始化遊戲引擎
 
+Initializing layers
+== Initializing layers
+
 Initializing map logic
 == 正在初始化地圖邏輯
 
@@ -5600,6 +5606,9 @@ Linear
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
 
+Links below open external ID and map statistics.
+== 下方連結開啟外部 ID 統計和過圖統計。
+
 List all commands that are available in practice mode
 == 列出練習模式下可用的所有命令
 
@@ -5753,6 +5762,12 @@ Local
 Local + Dummy
 == 本地 + 分身
 
+Local game mode statistics
+== 本地遊戲模式統計
+
+Local mode statistics are stored on this client.
+== 本地遊戲模式統計保存在此客戶端。
+
 Local only
 == 僅本地
 
@@ -5803,12 +5818,6 @@ Lose weapons when teleporting (useful for race maps)
 
 Low to high
 == 由低到高
-
-Lyrics
-== 歌詞
-
-Lyrics sources and display
-== 歌詞來源與顯示
 
 Main Asset
 == 主材質
@@ -6023,8 +6032,14 @@ maximum
 Maximum auto-saves retained per map name (0=unlimited)
 == 每個地圖名稱保留的最大自動保存數量（0 = 無限制）
 
+Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Maximum banned addresses sent their ban message per second (0 = unlimited).
+
 Maximum clients per IP
 == 同一 IP 可連接伺服器的客戶端最大數量
+
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 
 Maximum cursor distance
 == 最大光標距離
@@ -6056,8 +6071,23 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 == 伺服器上允許的最大客戶端數
 
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+
+Maximum number of resend requests answered per second (0 for no limit)
+== Maximum number of resend requests answered per second (0 for no limit)
+
+Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Maximum number of server info responses of any size sent per second (0 = unlimited).
+
 Maximum number of skins loaded simultaneously
 == 最多可同時加載皮膚數量
+
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 
 Maximum players participating in a vote (0 = unlimited)
 == 最多可有多少玩家參與投票（0 = 無限制）
@@ -6259,9 +6289,6 @@ Modified
 
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == 拖動時模塊會吸附到屏幕邊緣、中線和其他 HUD 模塊
-
-More aggressive prediction of other players' movement (only with cl_antiping 1)
-== 更激進地預測其他玩家的移動（僅在 cl_antiping 為 1 時生效）
 
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 == 沿 Tee 的穩定方向進行更樂觀的預測，減少穩定下來所需的延遲
@@ -7088,6 +7115,9 @@ Optional authentication key for the DNSBL provider
 Other
 == 其他
 
+Other modes
+== 其他模式
+
 Other players' hook line width
 == 其他玩家的鉤子輔助線寬度
 
@@ -7249,6 +7279,15 @@ Password incorrect
 
 Password required to use reserved slots.
 == 使用預留插槽所需的密碼
+
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+
+Path to client certificate for the MySQL/MariaDB SSL connection
+== Path to client certificate for the MySQL/MariaDB SSL connection
+
+Path to client key for the MySQL/MariaDB SSL connection
+== Path to client key for the MySQL/MariaDB SSL connection
 
 Pause
 == 暫停
@@ -7603,6 +7642,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == 預測榴彈軌跡（僅在 cl_antiping 為 1 時）
+
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 預測武器投射物（僅在 cl_antiping 為 1 時生效）
@@ -8528,6 +8570,9 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 == 恢復舊版單段鉤子輔助線行為
 
+Retry remote stats
+== 重試遠程統計
+
 Retrying…
 == 正在重試…
 
@@ -8569,9 +8614,6 @@ RNNoise noise reduction
 
 RNNoise noise reduction (unavailable in this build)
 == RNNoise 降噪（當前構建不可用）
-
-Retry remote stats
-== 重試遠程統計
 
 RNNoise noise reduction strength
 == RNNoise 降噪強度
@@ -10700,8 +10742,14 @@ Switching back to default input
 Switching back to default output
 == 正在切回默認輸出
 
+Sync remote stats
+== 同步遠程統計
+
 Sync Workshop Assets
 == 同步商店資源
+
+Syncing remote stats
+== 正在同步遠程統計
 
 System
 == 系統
@@ -10709,8 +10757,8 @@ System
 System default
 == 系統默認
 
-System media control
-== 系統媒體控制
+System media control and lyrics
+== System media control and lyrics
 
 System media controls
 == 系統媒體控制
@@ -10742,14 +10790,8 @@ Taper trail width
 Target language
 == 目標語言
 
-Sync remote stats
-== 同步遠程統計
-
 Target language code (e.g. zh, en, ja, zh-TW)
 == 翻譯目標語言代碼（如 zh、en、ja、zh-TW）
-
-Syncing remote stats
-== 正在同步遠程統計
 
 Target language ratio
 == 目標語言比例
@@ -11035,6 +11077,9 @@ The format of texture %s is not RGBA which will cause visual bugs.
 
 The FPS at which the recorder should record replay.
 == 錄像機應以哪個 FPS 錄製回放。
+
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 
 The name "default" is reserved.
 == “default” 是保留名稱。
@@ -11612,6 +11657,9 @@ Unable to save the skin
 Unable to save the skin with a reserved name
 == 無法保存使用保留名稱的皮膚
 
+Unavailable
+== 無法使用
+
 Unban a certain nickname
 == 解封某個暱稱
 
@@ -11656,9 +11704,6 @@ Unfinished map data refreshing
 
 Unfinished maps
 == 未完成圖
-
-Unavailable
-== 無法使用
 
 Unfinished maps are shown first
 == 未完成地圖優先顯示
@@ -11756,12 +11801,6 @@ Update or add a specific war group
 Update Rate
 == 更新率
 
-Update rate for mapping 64 player IDs to vanilla IDs
-== 64 玩家 ID 與原版 ID 的映射更新率
-
-Uploading map data to GPU
-== 正在將地圖數據傳輸至顯卡
-
 URL for downloading community skins
 == 用於下載社區皮膚的 URL
 
@@ -11797,6 +11836,9 @@ Use compact list view for config variables
 
 Use current map as background
 == 使用當前地圖作為實體層背景地圖
+
+Use current name
+== 使用目前名稱
 
 Use custom skins instead of the ninja tee
 == 使用自定義皮膚代替忍者 Tee
@@ -11836,9 +11878,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 開啟動態攝像頭時使用鼠標感應
-
-Use current name
-== 使用目前名稱
 
 Use multi-char replacement based on word length
 == 根據詞語長度使用多字符替換
@@ -11980,6 +12019,9 @@ Virtual joystick which always uses fire.
 
 Virtual joystick which always uses hook.
 == 始終使用鉤索的虛擬搖桿。
+
+Virtual joystick which only aims and moves the mouse pointer relatively.
+== Virtual joystick which only aims and moves the mouse pointer relatively.
 
 Virtual joystick which only aims without using an action.
 == 僅瞄準而不使用動作的虛擬搖桿。
@@ -12293,8 +12335,8 @@ Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
 == 分身是否跳躍（需要 cl_dummy_control 1）
 
-Whether non-voting players count as 'no' (0) or ignored (1)
-== 無投票權的玩家是否被視為投票“否”（0）或被忽略（1）
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 
 Whether players can hammer/grenade/laser each other.
 == 玩家是否可用錘子/榴彈/激光互相攻擊
@@ -12883,6 +12925,62 @@ Fire
 Hook
 == 鉤索
 
+[Direct touch input]
+Relative aim
+== Relative aim
+
+[Editor]
+[Ctrl+F4] Close the current map.
+== [Ctrl+F4] Close the current map.
+
+[Editor]
+Close map
+== Close map
+
+[Editor]
+Discard changes
+== Discard changes
+
+[Editor]
+Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+
+[Editor]
+Open the directory for automapper rules in the file browser.
+== Open the directory for automapper rules in the file browser.
+
+[Editor]
+Save changes?
+== Save changes?
+
+[Editor]
+Show directory
+== Show directory
+
+[Editor curve type abbreviation]
+B
+== B
+
+[Editor curve type abbreviation]
+F
+== F
+
+[Editor curve type abbreviation]
+L
+== L
+
+[Editor curve type abbreviation]
+M
+== M
+
+[Editor curve type abbreviation]
+N
+== N
+
+[Editor curve type abbreviation]
+S
+== S
+
 [Friend auto follow]
 Follow this friend across servers
 == 跟隨好友換服
@@ -12998,6 +13096,10 @@ Joystick Fire
 [Predefined touch button behaviors]
 Joystick Hook
 == 搖桿：出鉤
+
+[Predefined touch button behaviors]
+Joystick Relative Aim
+== Joystick Relative Aim
 
 [Predefined touch button behaviors]
 Spectate

@@ -3367,6 +3367,12 @@ void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineH
 		return;
 
 	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcShowHud, "Show song info in top-left corner", Localize("Show song info in top-left corner"), &g_Config.m_QmSmtcShowHud);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, "Enable Netease music Hook", Localize("Enable Netease music Hook"), &g_Config.m_QmNeteaseHookEnable);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, "Enable SodaMusic Hook", Localize("Enable SodaMusic Hook"), &g_Config.m_QmSodaHookEnable);
+	if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
+		g_Config.m_QmSodaHookEnable = 0;
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmLyrics);
+	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, "Show lyrics inside Dynamic Island", Localize("Show lyrics inside Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland);
 	CUIRect MediaButtons, PrevButton, PlayButton, NextButton;
 	Content.HSplitTop(LineHeight, &MediaButtons, &Content);
 	MediaButtons.VSplitLeft((MediaButtons.w - LineSpacing * 2.0f) / 3.0f, &PrevButton, &MediaButtons);
@@ -3385,17 +3391,6 @@ void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineH
 	if(DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &s_SmtcNext, "qmclient-smtc-next", Localize("Next"), 0, &NextButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, 5.0f))
 		GameClient()->m_SystemMediaControls.Next();
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
-}
-
-void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
-{
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, "Enable Netease music Hook", Localize("Enable Netease music Hook"), &g_Config.m_QmNeteaseHookEnable);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, "Enable SodaMusic Hook", Localize("Enable SodaMusic Hook"), &g_Config.m_QmSodaHookEnable);
-	// 两个 Hook 互斥:同一时间只能有一个歌词来源,避免优先级歧义。
-	if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
-		g_Config.m_QmSodaHookEnable = 0;
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmLyrics);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, "Show lyrics inside Dynamic Island", Localize("Show lyrics inside Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland);
 }
 
 void CMenus::RenderQmHudNotificationsBasicContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)
@@ -4410,8 +4405,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::HudNotifications: return ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0);
 		case EQmModuleId::Voice: return ResolveQmHudVoiceHeight(Metrics, g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return ResolveQmHudDynamicIslandHeight(Metrics, DynamicIslandOriginalStyle, ContentWidth);
-		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
-		case EQmModuleId::Lyrics: return Rows(4.0f);
+		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(7.0f) : Rows(1.0f);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return Rows(1.0f);
 		}
@@ -4432,8 +4426,12 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		}
 		case EQmModuleId::Voice: return ResolveQmHudVoiceRevision(g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? 1u : 0u;
-		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? 1u : 0u;
-		case EQmModuleId::Lyrics: return 0u;
+		case EQmModuleId::SystemMediaControls:
+			return (g_Config.m_QmSmtcEnable ? 1u : 0u) |
+			       (g_Config.m_QmNeteaseHookEnable ? 2u : 0u) |
+			       (g_Config.m_QmSodaHookEnable ? 4u : 0u) |
+			       (g_Config.m_QmLyrics ? 8u : 0u) |
+			       (g_Config.m_QmLyricsInMediaIsland ? 16u : 0u);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DRevision(g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return 0u;
 		}
@@ -4547,17 +4545,6 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, &g_Config.m_QmSmtcEnable);
 				return Changed;
 			};
-		case EQmModuleId::Lyrics:
-			return [this, LineHeight, LineSpacing](CUIRect Content) {
-				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmNeteaseHookEnable, &g_Config.m_QmNeteaseHookEnable);
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSodaHookEnable, &g_Config.m_QmSodaHookEnable) || Changed;
-				// 互斥:同一时间只能有一个歌词来源。
-				if(g_Config.m_QmNeteaseHookEnable != 0 && g_Config.m_QmSodaHookEnable != 0)
-					g_Config.m_QmSodaHookEnable = 0;
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, &g_Config.m_QmLyrics) || Changed;
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, &g_Config.m_QmLyricsInMediaIsland) || Changed;
-				return Changed;
-			};
 		case EQmModuleId::Background3D:
 			return [this, Metrics, LineHeight, LineSpacing, ConsumeQmHudRow, ConsumeQmHudHeight](CUIRect Content) {
 				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_Qm3DParticles, &g_Config.m_Qm3DParticles);
@@ -4627,8 +4614,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		});
 		AddCard(EQmModuleId::Voice, "qm:voice", "Voice", "Voice chat settings and diagnostics", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudVoiceContent(Content, Metrics, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::DynamicIsland, "qm:dynamic_island", "Dynamic Island", "HUD island appearance settings", [this, LineHeight, LineSpacing, DynamicIslandOriginalStyle](CUIRect &Content) { RenderQmHudDynamicIslandContent(Content, LineHeight, LineSpacing, DynamicIslandOriginalStyle); });
-		AddCard(EQmModuleId::SystemMediaControls, "qm:system_media_controls", "SMTC", "System media control", [this, LineHeight, BodySize, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudSystemMediaControlsContent(Content, LineHeight, BodySize, LineSpacing, ReadOnly); });
-		AddCard(EQmModuleId::Lyrics, "qm:lyrics", "Lyrics", "Lyrics sources and display", [this, LineHeight, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudLyricsContent(Content, LineHeight, LineSpacing, ReadOnly); });
+		AddCard(EQmModuleId::SystemMediaControls, "qm:system_media_controls", "SMTC", "System media control and lyrics", [this, LineHeight, BodySize, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmHudSystemMediaControlsContent(Content, LineHeight, BodySize, LineSpacing, ReadOnly); });
 		AddCard(EQmModuleId::Background3D, "qm:background_3d", "3D Background", "Configure background 3D particle effects", [this, Metrics, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmHudBackground3DContent(Content, Metrics, LabelWidth, ReadOnly); });
 	};
 	uint64_t CardLayoutRevision = 0;

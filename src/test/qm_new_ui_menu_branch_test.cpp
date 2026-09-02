@@ -1916,12 +1916,11 @@ TEST(QmNewUiMenuBranches, NameplateGameUsesFullScopeReferenceFrame)
 TEST(QmNewUiMenuBranches, MediaIslandLyricsUsesNeteaseIntegration)
 {
 	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
-	const std::string RenderMediaIsland = FunctionBody(HudSource, "void CHud::RenderMediaIsland()");
+	const std::string MediaIslandCache = FunctionBody(HudSource, "void CHud::EnsureMediaIslandFrameCache() const");
 	const std::string IntegrationSource = ReadTextFile("src/game/client/components/qmclient/netease/netease_integration.cpp");
-	EXPECT_NE(RenderMediaIsland.find("GameClient()->m_NeteaseIntegration.GetCurrentLyric"), std::string::npos);
-	EXPECT_EQ(RenderMediaIsland.find("m_QmLyrics"), std::string::npos);
-	EXPECT_NE(IntegrationSource.find("qm_lyrics"), std::string::npos);
-	EXPECT_NE(IntegrationSource.find("qm_lyrics_in_media_island"), std::string::npos);
+	EXPECT_NE(MediaIslandCache.find("GameClient()->m_NeteaseIntegration.GetCurrentLyric"), std::string::npos);
+	EXPECT_NE(IntegrationSource.find("m_QmLyrics"), std::string::npos);
+	EXPECT_NE(IntegrationSource.find("m_QmLyricsInMediaIsland"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, HudNotificationsKeepEdgeGeometryStableDuringSlide)
@@ -3228,7 +3227,7 @@ TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
 	EXPECT_NE(HudDeck.find("ResolveSettingsRadioRowLayout(Content, 2, Metrics)"), std::string::npos);
 	EXPECT_NE(QmSource.find("const int NoiseSuppressModeForLayout = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);"), std::string::npos);
 	EXPECT_NE(QmSource.find("g_Config.m_QmLyricsInMediaIsland"), std::string::npos);
-	EXPECT_EQ(QmSource.find("EQmModuleId::Lyrics"), std::string::npos);
+	EXPECT_EQ(QmSource.find("AddCard(EQmModuleId::Lyrics"), std::string::npos);
 	EXPECT_NE(QmSource.find("if(!PrewarmOnly && !Ui()->RenderOnly())"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
@@ -3340,10 +3339,10 @@ TEST(QmNewUiMenuBranches, InputTrailingActionsDoNotStealTextEditingHitArea)
 	EXPECT_NE(Body.find("Search ? static_cast<int>(EQmIcon::SEARCH) : -1"), std::string::npos);
 	EXPECT_NE(Body.find("static_cast<int>(EQmIcon::CLOSE)"), std::string::npos);
 	EXPECT_NE(Source.find("Ctx.m_pIconManager->RenderIcon"), std::string::npos);
-	EXPECT_NE(Source.find("const float IconSide = minimum(Rect.w, Rect.h) * 0.58f;"), std::string::npos);
+	EXPECT_NE(Source.find("const float BaseIconSide = minimum(Rect.w, Rect.h) * 0.58f;"), std::string::npos);
 	EXPECT_NE(Source.find("Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f, TEXTALIGN_MC);"), std::string::npos);
-	EXPECT_EQ(Source.find("EyeOffScale"), std::string::npos);
-	EXPECT_EQ(Source.find("QmIcon == static_cast<int>(EQmIcon::EYE_OFF)"), std::string::npos);
+	EXPECT_NE(Source.find("EyeOffScale"), std::string::npos);
+	EXPECT_NE(Source.find("QmIcon == static_cast<int>(EQmIcon::EYE_OFF)"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
@@ -3994,7 +3993,7 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelS
 	EXPECT_EQ(RenderSettingsGraphics.find("AddCard(BackendSpec"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
+	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount + GraphicsVulkanApiRowCount;"), std::string::npos);
 	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsContentFlowHeight"), std::string::npos);
@@ -4447,8 +4446,8 @@ TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
 	EXPECT_NE(Recovery.find("const int FallbackGLMajor = 0;"), std::string::npos);
 	EXPECT_NE(Recovery.find("const int FallbackGLMinor = 0;"), std::string::npos);
 	EXPECT_EQ(Recovery.find("CONF_PLATFORM_MACOS"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = 0;"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = 0;"), std::string::npos);
+	EXPECT_NE(Recovery.find("SafeConfig.m_FsaaSamples"), std::string::npos);
+	EXPECT_NE(Recovery.find("SafeConfig.m_Fullscreen"), std::string::npos);
 	EXPECT_NE(StartupHook.find("resetting safe graphics settings in windowed mode without FSAA"), std::string::npos);
 	EXPECT_EQ(StartupHook.find("CONF_PLATFORM_MACOS"), std::string::npos);
 
@@ -4626,14 +4625,14 @@ TEST(QmNewUiMenuBranches, VulkanApiSelectionDefaultsTo11AndTreats14AsStrict)
 	EXPECT_NE(SelectGpu.find("m_RequiredVulkanVersionUnavailable = !HasRequiredVersionDevice;"), std::string::npos);
 	EXPECT_NE(SelectGpu.find("m_EffectiveApiVersion"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("g_Config.m_QmVulkanApiVersion = 11;"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("falling back to Vulkan 1.1"), std::string::npos);
+	EXPECT_NE(InitVulkanSdl.find("Falling back to Vulkan 1.1"), std::string::npos);
 	EXPECT_EQ(InitVulkanSdl.find("m_LastVulkanInstanceCreateResult != VK_ERROR_INCOMPATIBLE_DRIVER"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("The selected Vulkan 1.4 instance could not be created"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("FallbackToVulkan11"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("ResetInitializationDiagnostics();"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("DestroyVulkanInstance();"), std::string::npos);
 	EXPECT_NE(DetectedVersion.find("BACKEND_TYPE_VULKAN"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("\"Vulkan (%s)\""), std::string::npos);
+	EXPECT_NE(SettingsSource.find("\"Vulkan (1.1)\""), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, GraphicsCurrentModeLabelSanitizesScaleAndAspectRatio)
@@ -5667,7 +5666,7 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	EXPECT_NE(FunctionBody(ScrollRegion, "void CScrollRegion::DoSlider()").find("DrawRoundedSurface(Ui(), Slider"), std::string::npos);
 	EXPECT_NE(QmClientMenus.find("DrawRoundedSurface(Ui(), Frame.m_Frame.m_ScrollbarTrackRect"), std::string::npos);
 	EXPECT_NE(QmClientMenus.find("DrawRoundedSurface(Ui(), QrRect"), std::string::npos);
-	EXPECT_NE(QmClientMenus.find("DrawRoundedSurface(Ui(), Preview, PreviewBg"), std::string::npos);
+	EXPECT_NE(QmClientMenus.find("g_QmClientRenderTexture(QrRect, 1.0f)"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), PlayerRect, NameButtonColor"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), ClanRect, ClanButtonColor"), std::string::npos);
 	EXPECT_NE(TClientMenus.find("if(!ReadOnly && NameButtonColor.a > 0.0f)"), std::string::npos);

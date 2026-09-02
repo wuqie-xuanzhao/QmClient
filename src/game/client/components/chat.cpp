@@ -1799,7 +1799,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		Highlighted |= GameClient()->m_Snap.m_LocalClientId >= 0 && LineShouldHighlight(pLine, GameClient()->m_aClients[GameClient()->m_Snap.m_LocalClientId].m_aName);
 	}
 
-	if(g_Config.m_QmMessageMerge &&
+	if(g_Config.m_QmMessageMerge && !Highlighted &&
 		PreviousLine.m_Initialized &&
 		(PreviousLine.m_ConsoleSuppressed || m_PendingConsoleLineIndex == m_CurrentLine) &&
 		PreviousLine.m_CustomColor == CustomColor &&
@@ -2833,6 +2833,13 @@ void CChat::OnRender()
 		}
 
 		const bool RenderChatEmoji = Line.m_ChatEmojiRect.w > 0.0f && GameClient()->m_QmChatEmoji.CanRender(Line.m_ChatEmoji);
+		if(Line.m_ClientId == SERVER_MSG && !RenderChatEmoji && !Line.m_TextContainerIndex.Valid() && QmMacosGraphicsDiagnosticsEnabled() && !Line.m_DiagnosticInvalidTextLogged)
+		{
+			char aPayload[192];
+			str_format(aPayload, sizeof(aPayload), "event=server_message_render_skip reason=invalid_text_container class=%d text_container=%d", static_cast<int>(Line.m_ServerMessageClass), Line.m_TextContainerIndex.m_Index);
+			QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
+			Line.m_DiagnosticInvalidTextLogged = true;
+		}
 		if(Line.m_TextContainerIndex.Valid() || RenderChatEmoji)
 		{
 			RenderedAnyLines = true;

@@ -217,6 +217,9 @@
 1 star
 == 1성
 
+128 player id <-> 64 player id map update rate
+== 128 player id <-> 64 player id map update rate
+
 2 stars
 == 2성
 
@@ -2645,9 +2648,6 @@ Death tile outline width
 Deaths
 == 사망 횟수
 
-Debug Curl.
-== Curl 디버그
-
 Debug graph
 == 디버그 그래프
 
@@ -2656,6 +2656,9 @@ Debug graph panel opacity (percent)
 
 Debug group clipping.
 == 그룹 클리핑 디버그
+
+Debug HTTP
+== Debug HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 디버그 모드가 활성화되었습니다. Ctrl+Shift+D 를 눌러 디버그 모드를 비활성화하세요.
@@ -4133,9 +4136,6 @@ Finish name
 Finish Name:
 == 결승선 이름:
 
-Finish time
-== 완료 시간
-
 Finished
 == 완료됨
 
@@ -4579,6 +4579,9 @@ Graphics card
 
 Graphics display
 == 그래픽 표시
+
+Graphics Error
+== Graphics Error
 
 Graphics library major version (0 = auto-detect)
 == 그래픽 라이브러리 주 버전(0 = 자동 감지)
@@ -5156,6 +5159,9 @@ Initializing assets
 Initializing components
 == 구성 요소 초기화 중
 
+Initializing layers
+== Initializing layers
+
 Initializing map logic
 == 맵 로직 초기화 중
 
@@ -5600,6 +5606,9 @@ Linear
 Lines %d - %d (%s)
 == %d행 - %d행 (%s)
 
+Links below open external ID and map statistics.
+== 아래 링크에서 외부 ID 통계와 맵 통계를 엽니다.
+
 List all commands that are available in practice mode
 == 연습 모드에서 사용 가능한 모든 명령을 나열합니다
 
@@ -5753,6 +5762,12 @@ Local
 Local + Dummy
 == 로컬 + 더미
 
+Local game mode statistics
+== 로컬 게임 모드 통계
+
+Local mode statistics are stored on this client.
+== 로컬 게임 모드 통계는 이 클라이언트에 저장됩니다.
+
 Local only
 == 로컬 전용
 
@@ -5803,12 +5818,6 @@ Lose weapons when teleporting (useful for race maps)
 
 Low to high
 == 낮음에서 높음으로
-
-Lyrics
-== 가사
-
-Lyrics sources and display
-== 가사 소스 및 표시
 
 Main Asset
 == 메인 에셋
@@ -6023,8 +6032,14 @@ maximum
 Maximum auto-saves retained per map name (0=unlimited)
 == 맵 이름당 유지되는 최대 자동 저장 수 (0=무제한)
 
+Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Maximum banned addresses sent their ban message per second (0 = unlimited).
+
 Maximum clients per IP
 == IP당 최대 클라이언트 수
+
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 
 Maximum cursor distance
 == 최대 커서 거리
@@ -6056,8 +6071,23 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 == 서버의 최대 클라이언트 수
 
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+
+Maximum number of resend requests answered per second (0 for no limit)
+== Maximum number of resend requests answered per second (0 for no limit)
+
+Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Maximum number of server info responses of any size sent per second (0 = unlimited).
+
 Maximum number of skins loaded simultaneously
 == 동시에 로드되는 최대 스킨 수
+
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 
 Maximum players participating in a vote (0 = unlimited)
 == 투표에 참여할 수 있는 최대 플레이어 수 (0 = 무제한)
@@ -6259,9 +6289,6 @@ Modified
 
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == 모듈을 드래그하면 화면 가장자리, 중심선 및 기타 HUD 모듈에 스냅됩니다
-
-More aggressive prediction of other players' movement (only with cl_antiping 1)
-== 다른 플레이어 움직임의 더 공격적인 예측 (cl_antiping 1에서만)
 
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 == Tee의 안정적인 방향을 따라 더 낙관적인 예측, 안정화 지연 감소
@@ -7088,6 +7115,9 @@ Optional authentication key for the DNSBL provider
 Other
 == 기타
 
+Other modes
+== 기타 모드
+
 Other players' hook line width
 == 다른 플레이어의 갈고리 선 너비
 
@@ -7249,6 +7279,15 @@ Password incorrect
 
 Password required to use reserved slots.
 == 예약된 슬롯을 사용하는 데 필요한 비밀번호
+
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+
+Path to client certificate for the MySQL/MariaDB SSL connection
+== Path to client certificate for the MySQL/MariaDB SSL connection
+
+Path to client key for the MySQL/MariaDB SSL connection
+== Path to client key for the MySQL/MariaDB SSL connection
 
 Pause
 == 일시정지
@@ -7603,6 +7642,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == 유탄 궤적 예측 (cl_antiping 1에서만)
+
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 무기 발사체 예측 (cl_antiping 1에서만)
@@ -8528,6 +8570,9 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 == 이전 단일 세그먼트 갈고리 충돌선 동작 복원
 
+Retry remote stats
+== 원격 통계 재시도
+
 Retrying…
 == 재시도 중…
 
@@ -8569,9 +8614,6 @@ RNNoise noise reduction
 
 RNNoise noise reduction (unavailable in this build)
 == RNNoise 노이즈 감소 (이 빌드에서는 사용 불가)
-
-Retry remote stats
-== 원격 통계 재시도
 
 RNNoise noise reduction strength
 == RNNoise 노이즈 감소 강도
@@ -10700,8 +10742,14 @@ Switching back to default input
 Switching back to default output
 == 기본 출력으로 전환 중
 
+Sync remote stats
+== 원격 통계 동기화
+
 Sync Workshop Assets
 == 워크샵 자산 동기화
+
+Syncing remote stats
+== 원격 통계 동기화 중
 
 System
 == 시스템
@@ -10709,8 +10757,8 @@ System
 System default
 == 시스템 기본값
 
-System media control
-== 시스템 미디어 제어
+System media control and lyrics
+== System media control and lyrics
 
 System media controls
 == 시스템 미디어 컨트롤
@@ -10742,14 +10790,8 @@ Taper trail width
 Target language
 == 대상 언어
 
-Sync remote stats
-== 원격 통계 동기화
-
 Target language code (e.g. zh, en, ja, zh-TW)
 == 번역 대상 언어 코드 (예: zh, en, ja, zh-TW)
-
-Syncing remote stats
-== 원격 통계 동기화 중
 
 Target language ratio
 == 대상 언어 비율
@@ -11035,6 +11077,9 @@ The format of texture %s is not RGBA which will cause visual bugs.
 
 The FPS at which the recorder should record replay.
 == 레코더가 리플레이를 녹화해야 하는 FPS입니다.
+
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 
 The name "default" is reserved.
 == "default" 이름은 예약되어 있습니다.
@@ -11612,6 +11657,9 @@ Unable to save the skin
 Unable to save the skin with a reserved name
 == 예약된 이름으로 스킨을 저장할 수 없습니다
 
+Unavailable
+== 사용할 수 없음
+
 Unban a certain nickname
 == 특정 닉네임 차단 해제
 
@@ -11656,9 +11704,6 @@ Unfinished map data refreshing
 
 Unfinished maps
 == 미완료 맵
-
-Unavailable
-== 사용할 수 없음
 
 Unfinished maps are shown first
 == 미완료 맵이 먼저 표시됩니다
@@ -11756,12 +11801,6 @@ Update or add a specific war group
 Update Rate
 == 업데이트 속도
 
-Update rate for mapping 64 player IDs to vanilla IDs
-== 64명 플레이어 ID를 바닐라 ID로 매핑하는 업데이트 속도
-
-Uploading map data to GPU
-== 맵 데이터를 GPU 에 업로드 중
-
 URL for downloading community skins
 == 커뮤니티 스킨 다운로드 URL
 
@@ -11797,6 +11836,9 @@ Use compact list view for config variables
 
 Use current map as background
 == 현재 맵을 배경으로 사용
+
+Use current name
+== 현재 이름 사용
 
 Use custom skins instead of the ninja tee
 == 닌자 티 대신 사용자 정의 스킨 사용
@@ -11836,9 +11878,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
-
-Use current name
-== 현재 이름 사용
 
 Use multi-char replacement based on word length
 == 단어 길이에 따른 다중 문자 대체 사용
@@ -11980,6 +12019,9 @@ Virtual joystick which always uses fire.
 
 Virtual joystick which always uses hook.
 == 항상 훅을 사용하는 가상 조이스틱입니다.
+
+Virtual joystick which only aims and moves the mouse pointer relatively.
+== Virtual joystick which only aims and moves the mouse pointer relatively.
 
 Virtual joystick which only aims without using an action.
 == 작업을 사용하지 않고 조준만 하는 가상 조이스틱입니다.
@@ -12293,8 +12335,8 @@ Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
 == 더미가 점프하는지 여부 (cl_dummy_control 1 필요)
 
-Whether non-voting players count as 'no' (0) or ignored (1)
-== 투표하지 않는 플레이어를 '아니오'(0)로 계산할지 무시(1)할지 여부
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 
 Whether players can hammer/grenade/laser each other.
 == 플레이어가 서로 망치/유탄/레이저를 사용할 수 있는지 여부
@@ -12883,6 +12925,62 @@ Fire
 Hook
 == 훅
 
+[Direct touch input]
+Relative aim
+== Relative aim
+
+[Editor]
+[Ctrl+F4] Close the current map.
+== [Ctrl+F4] Close the current map.
+
+[Editor]
+Close map
+== Close map
+
+[Editor]
+Discard changes
+== Discard changes
+
+[Editor]
+Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+
+[Editor]
+Open the directory for automapper rules in the file browser.
+== Open the directory for automapper rules in the file browser.
+
+[Editor]
+Save changes?
+== Save changes?
+
+[Editor]
+Show directory
+== Show directory
+
+[Editor curve type abbreviation]
+B
+== B
+
+[Editor curve type abbreviation]
+F
+== F
+
+[Editor curve type abbreviation]
+L
+== L
+
+[Editor curve type abbreviation]
+M
+== M
+
+[Editor curve type abbreviation]
+N
+== N
+
+[Editor curve type abbreviation]
+S
+== S
+
 [Friend auto follow]
 Follow this friend across servers
 == 서버 간 친구 따라가기
@@ -12998,6 +13096,10 @@ Joystick Fire
 [Predefined touch button behaviors]
 Joystick Hook
 == 조이스틱: 훅
+
+[Predefined touch button behaviors]
+Joystick Relative Aim
+== Joystick Relative Aim
 
 [Predefined touch button behaviors]
 Spectate

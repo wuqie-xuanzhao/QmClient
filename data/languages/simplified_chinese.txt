@@ -217,6 +217,9 @@
 1 star
 == 1 星
 
+128 player id <-> 64 player id map update rate
+== 128 player id <-> 64 player id map update rate
+
 2 stars
 == 2 星
 
@@ -2645,9 +2648,6 @@ Death tile outline width
 Deaths
 == 死亡数
 
-Debug Curl.
-== 调试 Curl
-
 Debug graph
 == 调试图表
 
@@ -2656,6 +2656,9 @@ Debug graph panel opacity (percent)
 
 Debug group clipping.
 == 调试组裁剪
+
+Debug HTTP
+== Debug HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 调试模式已启用。按 Ctrl+Shift+D 禁用调试模式。
@@ -4133,9 +4136,6 @@ Finish name
 Finish Name:
 == 恰分名称：
 
-Finish time
-== 完成时间
-
 Finished
 == 已完成
 
@@ -4579,6 +4579,9 @@ Graphics card
 
 Graphics display
 == 图像显示
+
+Graphics Error
+== Graphics Error
 
 Graphics library major version (0 = auto-detect)
 == 图形库主版本（0 = 自动检测）
@@ -5156,6 +5159,9 @@ Initializing assets
 Initializing components
 == 正在初始化游戏引擎
 
+Initializing layers
+== Initializing layers
+
 Initializing map logic
 == 正在初始化地图逻辑
 
@@ -5600,6 +5606,9 @@ Linear
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
 
+Links below open external ID and map statistics.
+== 下方链接打开外部 ID 统计和过图统计。
+
 List all commands that are available in practice mode
 == 列出练习模式下可用的所有命令
 
@@ -5753,6 +5762,12 @@ Local
 Local + Dummy
 == 本地 + 分身
 
+Local game mode statistics
+== 本地游戏模式统计
+
+Local mode statistics are stored on this client.
+== 本地游戏模式统计保存在此客户端。
+
 Local only
 == 仅本地
 
@@ -5803,12 +5818,6 @@ Lose weapons when teleporting (useful for race maps)
 
 Low to high
 == 由低到高
-
-Lyrics
-== 歌词
-
-Lyrics sources and display
-== 歌词来源与显示
 
 Main Asset
 == 主材质
@@ -6023,8 +6032,14 @@ maximum
 Maximum auto-saves retained per map name (0=unlimited)
 == 每个地图名称保留的最大自动保存数量（0 = 无限制）
 
+Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Maximum banned addresses sent their ban message per second (0 = unlimited).
+
 Maximum clients per IP
 == 同一 IP 可连接服务器的客户端最大数量
+
+Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
 
 Maximum cursor distance
 == 最大光标距离
@@ -6056,8 +6071,23 @@ Maximum number of automatic scoreboard screenshots (0 = unlimited)
 Maximum number of clients on server
 == 服务器上允许的最大客户端数
 
+Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+
+Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+
+Maximum number of resend requests answered per second (0 for no limit)
+== Maximum number of resend requests answered per second (0 for no limit)
+
+Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Maximum number of server info responses of any size sent per second (0 = unlimited).
+
 Maximum number of skins loaded simultaneously
 == 最多可同时加载皮肤数量
+
+Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
 
 Maximum players participating in a vote (0 = unlimited)
 == 最多可有多少玩家参与投票（0 = 无限制）
@@ -6259,9 +6289,6 @@ Modified
 
 Modules snap to screen edges, center lines and other HUD modules while dragging
 == 拖动时模块会吸附到屏幕边缘、中线和其他 HUD 模块
-
-More aggressive prediction of other players' movement (only with cl_antiping 1)
-== 更激进地预测其他玩家的移动（仅在 cl_antiping 为 1 时生效）
 
 More optimistic prediction along Tee's stable direction, reduces delay to stabilize
 == 沿 Tee 的稳定方向进行更乐观的预测，减少稳定下来所需的延迟
@@ -7088,6 +7115,9 @@ Optional authentication key for the DNSBL provider
 Other
 == 其他
 
+Other modes
+== 其他模式
+
 Other players' hook line width
 == 其他玩家的钩索辅助线宽度
 
@@ -7249,6 +7279,15 @@ Password incorrect
 
 Password required to use reserved slots.
 == 使用预留插槽所需的密码
+
+Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+
+Path to client certificate for the MySQL/MariaDB SSL connection
+== Path to client certificate for the MySQL/MariaDB SSL connection
+
+Path to client key for the MySQL/MariaDB SSL connection
+== Path to client key for the MySQL/MariaDB SSL connection
 
 Pause
 == 暂停
@@ -7603,6 +7642,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == 预测榴弹轨迹（仅在 cl_antiping 为 1 时）
+
+Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 预测武器投射物（仅在 cl_antiping 为 1 时生效）
@@ -8528,6 +8570,9 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 == 恢复旧版单段钩子辅助线行为
 
+Retry remote stats
+== 重试远程统计
+
 Retrying…
 == 正在重试…
 
@@ -8569,9 +8614,6 @@ RNNoise noise reduction
 
 RNNoise noise reduction (unavailable in this build)
 == RNNoise 降噪（当前构建不可用）
-
-Retry remote stats
-== 重试远程统计
 
 RNNoise noise reduction strength
 == RNNoise 降噪强度
@@ -10700,8 +10742,14 @@ Switching back to default input
 Switching back to default output
 == 正在切回默认输出
 
+Sync remote stats
+== 同步远程统计
+
 Sync Workshop Assets
 == 同步商店资源
+
+Syncing remote stats
+== 正在同步远程统计
 
 System
 == 系统
@@ -10709,8 +10757,8 @@ System
 System default
 == 系统默认
 
-System media control
-== 系统媒体控制
+System media control and lyrics
+== System media control and lyrics
 
 System media controls
 == 系统媒体控制
@@ -10742,14 +10790,8 @@ Taper trail width
 Target language
 == 目标语言
 
-Sync remote stats
-== 同步远程统计
-
 Target language code (e.g. zh, en, ja, zh-TW)
 == 翻译目标语言代码（如 zh、en、ja、zh-TW）
-
-Syncing remote stats
-== 正在同步远程统计
 
 Target language ratio
 == 目标语言比例
@@ -11035,6 +11077,9 @@ The format of texture %s is not RGBA which will cause visual bugs.
 
 The FPS at which the recorder should record replay.
 == 录像机应以哪个 FPS 录制回放。
+
+The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 
 The name "default" is reserved.
 == “default” 是保留名称。
@@ -11612,6 +11657,9 @@ Unable to save the skin
 Unable to save the skin with a reserved name
 == 无法保存使用保留名称的皮肤
 
+Unavailable
+== 不可用
+
 Unban a certain nickname
 == 解封某个昵称
 
@@ -11656,9 +11704,6 @@ Unfinished map data refreshing
 
 Unfinished maps
 == 未完成图
-
-Unavailable
-== 不可用
 
 Unfinished maps are shown first
 == 未完成地图优先显示
@@ -11756,12 +11801,6 @@ Update or add a specific war group
 Update Rate
 == 客户端刷新率
 
-Update rate for mapping 64 player IDs to vanilla IDs
-== 64 玩家 ID 与原版 ID 的映射更新率
-
-Uploading map data to GPU
-== 正在将地图数据传输至显卡
-
 URL for downloading community skins
 == 用于下载社区皮肤的 URL
 
@@ -11797,6 +11836,9 @@ Use compact list view for config variables
 
 Use current map as background
 == 使用当前地图作为实体层背景地图
+
+Use current name
+== 使用当前名称
 
 Use custom skins instead of the ninja tee
 == 使用自定义皮肤代替忍者 Tee
@@ -11836,9 +11878,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 启用动态摄像机时使用鼠标灵敏度
-
-Use current name
-== 使用当前名称
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换
@@ -11980,6 +12019,9 @@ Virtual joystick which always uses fire.
 
 Virtual joystick which always uses hook.
 == 始终用于钩索的虚拟摇杆。
+
+Virtual joystick which only aims and moves the mouse pointer relatively.
+== Virtual joystick which only aims and moves the mouse pointer relatively.
 
 Virtual joystick which only aims without using an action.
 == 仅用于瞄准而不执行动作的虚拟摇杆。
@@ -12293,8 +12335,8 @@ Whether dummy hooks (requires cl_dummy_control 1)
 Whether dummy jumps (requires cl_dummy_control 1)
 == 分身是否跳跃（需要 cl_dummy_control 1）
 
-Whether non-voting players count as 'no' (0) or ignored (1)
-== 无投票权的玩家是否被视为投票“否”（0）或被忽略（1）
+Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
 
 Whether players can hammer/grenade/laser each other.
 == 玩家是否可用锤子/榴弹/激光互相攻击
@@ -12883,6 +12925,10 @@ Fire
 Hook
 == 钩索
 
+[Direct touch input]
+Relative aim
+== Relative aim
+
 [Editor]
 %d new mentions
 == %d 条新被提及消息
@@ -12954,6 +13000,10 @@ Hook
 [Editor]
 [Ctrl+D] Toggle brush draw mode: preserve or override existing tiles.
 == [Ctrl+D] 切换画笔绘制模式: 保留或覆盖现有图块.
+
+[Editor]
+[Ctrl+F4] Close the current map.
+== [Ctrl+F4] Close the current map.
 
 [Editor]
 [Ctrl+F] Find empty slot.
@@ -13472,6 +13522,10 @@ Clip Y
 == 裁剪纵
 
 [Editor]
+Close map
+== Close map
+
+[Editor]
 Close this dialog.
 == 关闭此对话框.
 
@@ -13852,6 +13906,10 @@ Disallow/allow unknown or invalid commands.
 == 禁用/允许未知或无效命令。
 
 [Editor]
+Discard changes
+== Discard changes
+
+[Editor]
 Do not perform quad alignment to other quads/points when moving quads.
 == 移动四边形时不与其他四边形/点进行对齐。
 
@@ -13878,6 +13936,10 @@ Do not show quad bounds when moving quads.
 [Editor]
 Do not show tile information.
 == 不显示图块编号.
+
+[Editor]
+Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
 
 [Editor]
 Done
@@ -14296,10 +14358,6 @@ Error: The image '%s' (size %zu x%zu) has a width or height that is not divisibl
 == 错误：图像“%s”（大小 %zu x%zu）的宽或高不能被 16 整除，因此不能用于图块层。已取消组 #%zu“%s”中图层 #%zu“%s”的图像。
 
 [Editor]
-Error: The map has an unsupported version.
-== 错误：该地图版本不受支持。
-
-[Editor]
 Error: Unsupported image type of image %d '%s'.
 == 错误：图像 %d“%s”的类型不受支持。
 
@@ -14644,10 +14702,6 @@ Go
 == 前往
 
 [Editor]
-Go to a specified coordinate point on the map.
-== 将视图移动到地图的特定坐标.
-
-[Editor]
 Go to images management.
 == 转到图像管理。
 
@@ -14662,10 +14716,6 @@ Go to sounds management.
 [Editor]
 GOLDEN SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
 == 金色尖刺: 杀死tee并给予杀手分数.给予的分数在服务器中设置.
-
-[Editor]
-Goto position
-== 转到位置
 
 [Editor]
 GREEN SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
@@ -15256,6 +15306,10 @@ Open the current directory in the file browser.
 == 在文件浏览器中打开当前目录.
 
 [Editor]
+Open the directory for automapper rules in the file browser.
+== Open the directory for automapper rules in the file browser.
+
+[Editor]
 Open the selected file.
 == 打开选中的文件.
 
@@ -15656,6 +15710,10 @@ Save as
 == 另存为
 
 [Editor]
+Save changes?
+== Save changes?
+
+[Editor]
 Save copy
 == 保存副本
 
@@ -15866,6 +15924,10 @@ SHOTGUN: Not used in FNG. Gives you shotgun with 10 charges.
 [Editor]
 Show Directory
 == 显示目录
+
+[Editor]
+Show directory
+== Show directory
 
 [Editor]
 Show envelope editor history.
@@ -16667,6 +16729,30 @@ X
 Y
 == 纵坐标
 
+[Editor curve type abbreviation]
+B
+== B
+
+[Editor curve type abbreviation]
+F
+== F
+
+[Editor curve type abbreviation]
+L
+== L
+
+[Editor curve type abbreviation]
+M
+== M
+
+[Editor curve type abbreviation]
+N
+== N
+
+[Editor curve type abbreviation]
+S
+== S
+
 [Editor envelope alpha channel]
 A
 == 透
@@ -16902,6 +16988,10 @@ Joystick Fire
 [Predefined touch button behaviors]
 Joystick Hook
 == 摇杆：出钩
+
+[Predefined touch button behaviors]
+Joystick Relative Aim
+== Joystick Relative Aim
 
 [Predefined touch button behaviors]
 Spectate

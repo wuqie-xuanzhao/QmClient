@@ -694,6 +694,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void ReleaseGpuObjects()
 	{
+		WaitForGpuIdle();
 		EndActiveEncoders();
 		DestroyAllRenderTargets();
 		DestroyAllMultiSampleTextures();

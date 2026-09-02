@@ -1718,6 +1718,7 @@ Ingame cursor scale
 Ingame mouse sens.
 Initializing assets
 Initializing components
+Initializing layers
 Initializing map logic
 Input
 Input device
@@ -1866,6 +1867,7 @@ Limiter threshold (percent)
 Line width
 Linear
 Lines %d - %d (%s)
+Links below open external ID and map statistics.
 List all commands that are available in practice mode
 List all commands which are accessible for given access level
 List all commands which are accessible for users
@@ -1917,6 +1919,8 @@ Loading sound files
 Loading…
 Local
 Local + Dummy
+Local game mode statistics
+Local mode statistics are stored on this client.
 Local only
 Local particle effects
 Local particles: show particles behind own Tee (e.g. freeze snow)
@@ -1934,8 +1938,6 @@ Logout of econ
 Logout of rcon
 Lose weapons when teleporting (useful for race maps)
 Low to high
-Lyrics
-Lyrics sources and display
 Main Asset
 Main menu
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
@@ -2368,6 +2370,7 @@ Optimistic prediction along stable direction
 Option color
 Optional authentication key for the DNSBL provider
 Other
+Other modes
 Other players' hook line width
 Others
 Others only
@@ -2852,6 +2855,7 @@ Restart in x seconds (0 = abort)
 Restart the client
 Restarting. Please wait…
 Restore old single-segment hook collision line behavior
+Retry remote stats
 Retrying…
 Review and edit custom key bindings
 Review and reset changed configuration values
@@ -3577,9 +3581,10 @@ Switching back to default input
 Switching back to default output
 Sync remote stats
 Sync Workshop Assets
+Syncing remote stats
 System
 System default
-System media control
+System media control and lyrics
 System media controls
 System message
 System message color
@@ -3879,6 +3884,7 @@ Unable to rename the folder
 Unable to rename the screenshot
 Unable to save the skin
 Unable to save the skin with a reserved name
+Unavailable
 Unban a certain nickname
 Unban all entries
 Unban ip range
@@ -3926,7 +3932,6 @@ Update failed. Please try again
 Update notice
 Update or add a specific war group
 Update Rate
-Uploading map data to GPU
 URL for downloading community skins
 URL for downloading maps (must start with https://)
 URL for downloading skins
@@ -4000,6 +4005,7 @@ View the developers and contributors
 View the people supporting QmClient development
 Virtual joystick which always uses fire.
 Virtual joystick which always uses hook.
+Virtual joystick which only aims and moves the mouse pointer relatively.
 Virtual joystick which only aims without using an action.
 Virtual joystick which uses the active action.
 Visibility
@@ -4292,6 +4298,7 @@ Zoom to current mouse target
 [Direct touch input]	Disabled
 [Direct touch input]	Fire
 [Direct touch input]	Hook
+[Direct touch input]	Relative aim
 [Editor]	%d new mentions
 [Editor]	%d.%03ds
 [Editor]	%d:%02d.%03dmin
@@ -4310,6 +4317,7 @@ Zoom to current mouse target
 [Editor]	[Alt+Up] Move the selected command up.
 [Editor]	[Ctrl+A] Open a map and add everything from that map to the current one.
 [Editor]	[Ctrl+D] Toggle brush draw mode: preserve or override existing tiles.
+[Editor]	[Ctrl+F4] Close the current map.
 [Editor]	[Ctrl+F] Find empty slot.
 [Editor]	[Ctrl+F] Find next free checkpoint number.
 [Editor]	[Ctrl+F] Find next free tele number.
@@ -4439,6 +4447,7 @@ Zoom to current mouse target
 [Editor]	Clip W
 [Editor]	Clip X
 [Editor]	Clip Y
+[Editor]	Close map
 [Editor]	Close this dialog.
 [Editor]	Collaboration
 [Editor]	Collaboration connection cancelled
@@ -4534,6 +4543,7 @@ Zoom to current mouse target
 [Editor]	Detail
 [Editor]	Disable brush coloring.
 [Editor]	Disallow/allow unknown or invalid commands.
+[Editor]	Discard changes
 [Editor]	Do not perform quad alignment to other quads/points when moving quads.
 [Editor]	Do not preview the paths of quads with a position envelope when a quad layer is selected.
 [Editor]	Do not run 'hot_reload' on the local server while rcon authed on map save.
@@ -4541,6 +4551,7 @@ Zoom to current mouse target
 [Editor]	Do not show how weapons, shields, hearts and flags appear ingame.
 [Editor]	Do not show quad bounds when moving quads.
 [Editor]	Do not show tile information.
+[Editor]	Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
 [Editor]	Done
 [Editor]	DOOR: Combined with LASER LENGTH creates doors. Doesn't allow to go through it (only with NINJA).
 [Editor]	Double click to create a new point. Use shift to change the zoom axis. Press S to scale selected envelope points.
@@ -4645,7 +4656,6 @@ Zoom to current mouse target
 [Editor]	Error: Saving is not possible because the sound '%s' could not be loaded. Remove or replace this sound.
 [Editor]	Error: Saving is not possible because there are too many envelope points.
 [Editor]	Error: The image '%s' (size %zu x%zu) has a width or height that is not divisible by 16 and therefore cannot be used for tile layers. The image of group #%zu '%s', layer #%zu '%s', has been unset.
-[Editor]	Error: The map has an unsupported version.
 [Editor]	Error: Unsupported image type of image %d '%s'.
 [Editor]	Exit
 [Editor]	Exit the editor
@@ -4732,12 +4742,10 @@ Zoom to current mouse target
 [Editor]	GLOBAL HOOK OTHERS OFF: Nobody can hook others. Place only one tile somewhere on the map.
 [Editor]	GLOBAL OLD SHOTGUN: Shotgun drags others always towards the shooter, even after having bounced. Shooter can't hit themselves. Place only one tile somewhere on the map.
 [Editor]	Go
-[Editor]	Go to a specified coordinate point on the map.
 [Editor]	Go to images management.
 [Editor]	Go to layers management.
 [Editor]	Go to sounds management.
 [Editor]	GOLDEN SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
-[Editor]	Goto position
 [Editor]	GREEN SPIKE: Kills the tee and gives points to the killer. Amount of points given is set inside the server.
 [Editor]	Green value of the envelope.
 [Editor]	GRENADE LAUNCHER: Throws exploding bullets. Also known as rocket.
@@ -4885,6 +4893,7 @@ Zoom to current mouse target
 [Editor]	OLD SPEEDUP: Gives tee defined speed. Arrow shows direction and angle. Deprecated.
 [Editor]	Open
 [Editor]	Open the current directory in the file browser.
+[Editor]	Open the directory for automapper rules in the file browser.
 [Editor]	Open the selected file.
 [Editor]	Open the selected folder.
 [Editor]	Optimize
@@ -4985,6 +4994,7 @@ Zoom to current mouse target
 [Editor]	S
 [Editor]	Save
 [Editor]	Save as
+[Editor]	Save changes?
 [Editor]	Save copy
 [Editor]	Save file with the specified name.
 [Editor]	Save image
@@ -5038,6 +5048,7 @@ Zoom to current mouse target
 [Editor]	SHOTGUN: Gives you shotgun weapon with 10 charges.
 [Editor]	SHOTGUN: Not used in FNG. Gives you shotgun with 10 charges.
 [Editor]	Show Directory
+[Editor]	Show directory
 [Editor]	Show envelope editor history.
 [Editor]	Show how weapons, shields, hearts and flags appear ingame.
 [Editor]	Show info
@@ -5303,6 +5314,7 @@ Zoom to current mouse target
 [Predefined touch button behaviors]	Joystick Aim
 [Predefined touch button behaviors]	Joystick Fire
 [Predefined touch button behaviors]	Joystick Hook
+[Predefined touch button behaviors]	Joystick Relative Aim
 [Predefined touch button behaviors]	Spectate
 [Predefined touch button behaviors]	Swap Action
 [Predefined touch button behaviors]	Use Action
