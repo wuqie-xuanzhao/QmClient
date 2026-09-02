@@ -224,6 +224,7 @@ if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
     src/qm-nmt-hook/qm_netease_bootstrap.cpp
     src/qm-nmt-hook/qm_netease_cdp.cpp
     src/qm-nmt-hook/qm_netease_cdp_client.cpp
+    src/qm-nmt-hook/qm_netease_bootstrap.cpp
     src/qm-nmt-hook/qm_netease_frontend_bridge.cpp
     src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
     src/game/client/components/qmclient/netease/netease_lyric_state.cpp
