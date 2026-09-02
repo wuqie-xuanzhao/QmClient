@@ -40,7 +40,7 @@
 #include "backend/vulkan/backend_vulkan.h"
 #endif
 
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 #include "backend/metal/backend_metal.h"
 #endif
 
@@ -493,7 +493,7 @@ CCommandProcessor_SDL_GL::CCommandProcessor_SDL_GL(EBackendType BackendType, int
 	}
 	else if(BackendType == BACKEND_TYPE_METAL)
 	{
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 		m_pGLBackend = CreateMetalCommandProcessorFragment();
 #endif
 	}
@@ -963,7 +963,7 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 	else if(BackendType == BACKEND_TYPE_METAL)
 	{
 		pName = "Metal";
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
 		{
 			Major = 0;

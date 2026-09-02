@@ -355,7 +355,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		double GpuExecutionMaxMs = 0.0;
 		TakeMetalGpuTimingStats(GpuExecutionCount, GpuExecutionMs, GpuExecutionMaxMs, GpuExecutionUnavailableCount);
 		CAMetalLayer *pLayer = m_pLayer != nullptr ? (__bridge CAMetalLayer *)m_pLayer : nil;
-		const int DisplaySync = pLayer != nil && pLayer.displaySyncEnabled ? 1 : 0;
+		int DisplaySync = 0;
+#if defined(CONF_PLATFORM_MACOS)
+		DisplaySync = pLayer != nil && pLayer.displaySyncEnabled ? 1 : 0;
+#endif
 		const int AllowsNextDrawableTimeout = pLayer != nil && pLayer.allowsNextDrawableTimeout ? 1 : 0;
 		const unsigned long MaxDrawables = pLayer != nil ? static_cast<unsigned long>(pLayer.maximumDrawableCount) : 0;
 		const int PresentsWithTransaction = pLayer != nil && pLayer.presentsWithTransaction ? 1 : 0;
@@ -1136,7 +1139,9 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 				mem_copy(static_cast<uint8_t *>(Destination.contents) + DestinationOffset, pData, DataBytes);
 			else
 				std::memset(static_cast<uint8_t *>(Destination.contents) + DestinationOffset, 0, DataBytes);
+	#if defined(CONF_PLATFORM_MACOS)
 			[Destination didModifyRange:NSMakeRange(DestinationOffset, DataBytes)];
+	#endif
 			if(m_MetalPerfEnabled)
 				m_MetalPerfUploadBytes += DataBytes;
 			return true;
@@ -2087,11 +2092,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	}
 
 	static STWGraphicGpu::ETWGraphicsGpuType DeviceType(id<MTLDevice> Device)
-	{
-		if(str_startswith(Device.name.UTF8String, "Apple"))
+		{
+			if(str_startswith(Device.name.UTF8String, "Apple"))
+				return STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED;
+	#if defined(CONF_PLATFORM_IOS)
 			return STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED;
-		return Device.lowPower ? STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED : STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_DISCRETE;
-	}
+	#else
+			return Device.lowPower ? STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_INTEGRATED : STWGraphicGpu::ETWGraphicsGpuType::GRAPHICS_GPU_TYPE_DISCRETE;
+	#endif
+		}
 
 	static const char *VendorName(id<MTLDevice> Device)
 	{
@@ -2134,10 +2143,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		// 仅在关闭 VSync 时允许 drawable 获取超时。开启 VSync 时必须保留
 		// 系统背压，否则 nextDrawable 返回 nil 会直接丢掉本帧呈现。
 		pLayer.allowsNextDrawableTimeout = !m_VSync;
+		// displaySyncEnabled 仅在 macOS 上可用；iOS 的 CAMetalLayer 始终由系统
+		// 管理显示同步，不能访问该属性，否则 iOS deployment target 会产生不可用 API。
+#if defined(CONF_PLATFORM_MACOS)
 		pLayer.displaySyncEnabled = m_VSync;
+#endif
 		// 缓存主显示器刷新率，供无 VSync 的 present 节流使用。
 		// 部分模式（如 ProMotion 可变刷新率）可能返回 0，视为未知。
 		m_PresentRefreshRateHz = 0;
+#if defined(CONF_PLATFORM_MACOS)
 		CGDirectDisplayID DisplayId = CGMainDisplayID();
 		CGDisplayModeRef Mode = CGDisplayCopyDisplayMode(DisplayId);
 		if(Mode != nullptr)
@@ -2147,7 +2161,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			if(Rate > 0)
 				m_PresentRefreshRateHz = Rate;
 		}
-		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d refresh_hz=%d", m_VSync ? 1 : 0, pLayer.displaySyncEnabled ? 1 : 0, pLayer.allowsNextDrawableTimeout ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0, m_PresentRefreshRateHz);
+#endif
+		int DisplaySync = 0;
+#if defined(CONF_PLATFORM_MACOS)
+		DisplaySync = pLayer.displaySyncEnabled ? 1 : 0;
+#endif
+		dbg_msg("gfx/metal", "layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu framebuffer_only=%d presents_with_transaction=%d refresh_hz=%d", m_VSync ? 1 : 0, DisplaySync, pLayer.allowsNextDrawableTimeout ? 1 : 0, static_cast<unsigned long>(pLayer.maximumDrawableCount), pLayer.framebufferOnly ? 1 : 0, pLayer.presentsWithTransaction ? 1 : 0, m_PresentRefreshRateHz);
 		UpdateDrawableSize();
 	}
 
@@ -2163,8 +2182,15 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 
 	void SelectDevice(const char *pConfiguredGpuName)
 	{
-		NSArray<id<MTLDevice>> *pDevices = MTLCopyAllDevices();
 		id<MTLDevice> pDefaultDevice = MTLCreateSystemDefaultDevice();
+		NSArray<id<MTLDevice>> *pDevices = nil;
+#if defined(CONF_PLATFORM_MACOS)
+		pDevices = MTLCopyAllDevices();
+#else
+		// MTLCopyAllDevices 在 iOS 18 才可用；QmClient 支持更低 deployment target，
+		// iOS 直接使用系统默认设备，避免触发不可用 API。
+		pDevices = pDefaultDevice != nil ? @[pDefaultDevice] : @[];
+#endif
 		id<MTLDevice> pSelectedDevice = pDefaultDevice;
 		const bool IsAuto = pConfiguredGpuName == nullptr || str_comp(pConfiguredGpuName, "auto") == 0;
 		bool ExplicitMatch = false;
@@ -2215,10 +2241,12 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			ConfigureLayer();
 		}
 
-#if !__has_feature(objc_arc)
+	#if defined(CONF_PLATFORM_MACOS) && !__has_feature(objc_arc)
 		[pDevices release];
+	#endif
+	#if !__has_feature(objc_arc)
 		[pDefaultDevice release];
-#endif
+	#endif
 	}
 
 	bool WaitForPresentedReadback()
@@ -4375,9 +4403,11 @@ public:
 				const auto *pCommand = static_cast<const CCommandBuffer::SCommand_VSync *>(pBaseCommand);
 				m_VSync = pCommand->m_VSync != 0;
 				if(m_pLayer != nullptr)
+	#if defined(CONF_PLATFORM_MACOS)
 					((__bridge CAMetalLayer *)m_pLayer).displaySyncEnabled = m_VSync;
+	#endif
 				if(m_pLayer != nullptr)
-					dbg_msg("gfx/metal", "layer vsync changed: requested=%d display_sync=%d", m_VSync ? 1 : 0, ((__bridge CAMetalLayer *)m_pLayer).displaySyncEnabled ? 1 : 0);
+					dbg_msg("gfx/metal", "layer vsync changed: requested=%d", m_VSync ? 1 : 0);
 				if(pCommand->m_pRetOk != nullptr)
 					*pCommand->m_pRetOk = m_pLayer != nullptr;
 				return RUN_COMMAND_COMMAND_HANDLED;

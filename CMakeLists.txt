@@ -145,6 +145,11 @@ elseif(TARGET_OS STREQUAL "mac")
   set(AUTO_VULKAN_BACKEND ON)
 endif()
 
+set(AUTO_METAL_BACKEND OFF)
+if(TARGET_OS STREQUAL "mac" OR TARGET_OS STREQUAL "ios")
+  set(AUTO_METAL_BACKEND ON)
+endif()
+
 option(WEBSOCKETS "Enable websockets support" OFF)
 option(MYSQL "Enable mysql support" OFF)
 option(TEST_MYSQL "Test mysql support in unit tests (also sets -DMYSQL=ON)" OFF)
@@ -168,7 +173,7 @@ option(DISCORD_DYNAMIC "Enable discovering Discord rich presence libraries at ru
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 option(VULKAN "Enable the vulkan backend" ${AUTO_VULKAN_BACKEND})
-option(METAL "Enable the native Metal backend" OFF)
+option(METAL "Enable the native Metal backend" ${AUTO_METAL_BACKEND})
 option(EXCEPTION_HANDLING "Enable crashdumps (only works with Windows)" ON)
 option(IPO "Enable interprocedural optimizations" ON)
 option(FUSE_LD "Linker to use" OFF)
@@ -186,7 +191,6 @@ elseif(TARGET_OS STREQUAL "ios")
   set(DISCORD OFF)
   set(STEAM OFF)
   set(VULKAN OFF)
-  set(METAL OFF)
 endif()
 
 if(TARGET_OS STREQUAL "emscripten")
@@ -667,19 +671,28 @@ endif()
 
 set(METAL_SHADER_FILE_LIST "" CACHE STRING "Metal shader file list")
 if(CLIENT AND METAL)
-  if(NOT TARGET_OS STREQUAL "mac")
-    message(FATAL_ERROR "METAL=ON is only supported on macOS")
+  if(NOT (TARGET_OS STREQUAL "mac" OR TARGET_OS STREQUAL "ios"))
+    message(FATAL_ERROR "METAL=ON is only supported on macOS and iOS")
+  endif()
+  if(TARGET_OS STREQUAL "ios")
+    if(CMAKE_OSX_SYSROOT MATCHES "iphonesimulator")
+      set(METAL_SDK iphonesimulator)
+    else()
+      set(METAL_SDK iphoneos)
+    endif()
+  else()
+    set(METAL_SDK macosx)
   endif()
   find_program(XCRUN_PROGRAM xcrun)
   if(NOT XCRUN_PROGRAM)
     message(FATAL_ERROR "METAL=ON requires xcrun from Xcode or the macOS Command Line Tools")
   endif()
-  execute_process(COMMAND ${XCRUN_PROGRAM} --find metal
+  execute_process(COMMAND ${XCRUN_PROGRAM} --sdk ${METAL_SDK} --find metal
     OUTPUT_VARIABLE METAL_COMPILER
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
     RESULT_VARIABLE METAL_COMPILER_RESULT)
-  execute_process(COMMAND ${XCRUN_PROGRAM} --find metallib
+  execute_process(COMMAND ${XCRUN_PROGRAM} --sdk ${METAL_SDK} --find metallib
     OUTPUT_VARIABLE METALLIB_COMPILER
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
@@ -2882,7 +2895,7 @@ if(CLIENT)
     warning.cpp
   )
 
-  if(TARGET_OS STREQUAL "mac" AND METAL)
+  if((TARGET_OS STREQUAL "mac" OR TARGET_OS STREQUAL "ios") AND METAL)
     list(APPEND ENGINE_CLIENT
       src/engine/client/backend/metal/backend_metal.mm
     )

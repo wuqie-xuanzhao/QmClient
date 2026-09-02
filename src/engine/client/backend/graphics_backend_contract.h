@@ -23,7 +23,7 @@ namespace graphics_backend
 
 	constexpr bool IsMetalCompiled()
 	{
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 		return true;
 #else
 		return false;

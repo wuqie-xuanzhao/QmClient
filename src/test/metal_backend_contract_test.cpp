@@ -113,7 +113,18 @@ TEST(MetalBackendContract, VSyncMirrorsTheExplicitGraphicsSetting)
 	EXPECT_NE(Source.find("pLayer.displaySyncEnabled = m_VSync;"), std::string::npos);
 	EXPECT_EQ(Source.find("displaySyncEnabled = YES"), std::string::npos);
 	EXPECT_NE(Source.find("layer configured: vsync=%d display_sync=%d allows_next_drawable_timeout=%d max_drawables=%lu"), std::string::npos);
-	EXPECT_NE(Source.find("layer vsync changed: requested=%d display_sync=%d"), std::string::npos);
+	EXPECT_NE(Source.find("layer vsync changed: requested=%d"), std::string::npos);
+}
+
+TEST(MetalBackendContract, ShaderBuildPreservesAppleDeploymentTarget)
+{
+	const std::string CMake = ReadTestSourceFile("cmake/BuildMetalShaders.cmake");
+	EXPECT_NE(CMake.find("set(METAL_DEPLOYMENT_FLAGS)"), std::string::npos);
+	EXPECT_NE(CMake.find("-mios-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}"), std::string::npos);
+	EXPECT_NE(CMake.find("-mmacosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}"), std::string::npos);
+	const size_t MetalCommand = CMake.find(" metal ${METAL_DEPLOYMENT_FLAGS} -c ");
+	ASSERT_NE(MetalCommand, std::string::npos);
+	EXPECT_EQ(CMake.find("metallib ${METAL_DEPLOYMENT_FLAGS}"), std::string::npos);
 }
 
 TEST(MetalBackendContract, TileArraysDoNotSampleUninitializedMipLevels)

@@ -1,7 +1,7 @@
 #include <engine/client/backend/graphics_backend_contract.h>
 #include <engine/client/backend_sdl.h>
 
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 #include <engine/client/backend/metal/backend_metal.h>
 #endif
 
@@ -44,9 +44,9 @@ TEST(GraphicsBackendContract, ParsesKnownNamesAndRejectsUnknownNames)
 	EXPECT_EQ(graphics_backend::ParseBackendName(nullptr, BACKEND_TYPE_VULKAN), BACKEND_TYPE_VULKAN);
 }
 
-TEST(GraphicsBackendContract, MetalIsSelectableOnlyWhenCompiledForMacos)
+TEST(GraphicsBackendContract, MetalIsSelectableOnlyWhenCompiledForApplePlatforms)
 {
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 	EXPECT_TRUE(graphics_backend::IsMetalCompiled());
 	EXPECT_EQ(graphics_backend::ParseBackendName("Metal", BACKEND_TYPE_OPENGL), BACKEND_TYPE_METAL);
 #else
@@ -90,7 +90,7 @@ TEST(GraphicsBackendContract, MetalInitializationIsNotAnOpenGLVersionFailure)
 
 TEST(GraphicsBackendContract, MetalFactoryRejectsUnimplementedCommandsWithoutStickyInitError)
 {
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 	CCommandProcessorFragment_GLBase *pMetal = CreateMetalCommandProcessorFragment();
 	ASSERT_NE(pMetal, nullptr);
 
@@ -179,7 +179,7 @@ TEST(GraphicsBackendContract, ConfiguredIdentityMatchesOnlyRelevantVersionFields
 #else
 	EXPECT_FALSE(graphics_backend::MatchesConfiguredBackend(BACKEND_TYPE_VULKAN, "Vulkan", 0, 0, 0, "vulkan", 4, 1, 0));
 #endif
-#if defined(CONF_PLATFORM_MACOS) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 	EXPECT_TRUE(graphics_backend::MatchesConfiguredBackend(BACKEND_TYPE_METAL, "Metal", 0, 0, 0, "metal", 4, 1, 0));
 #else
 	EXPECT_FALSE(graphics_backend::MatchesConfiguredBackend(BACKEND_TYPE_METAL, "Metal", 0, 0, 0, "metal", 4, 1, 0));
