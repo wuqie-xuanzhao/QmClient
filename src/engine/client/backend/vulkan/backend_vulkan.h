@@ -11,6 +11,8 @@ struct SVulkanVersion
 };
 
 static constexpr SVulkanVersion gs_BackendVulkanFallbackVersion = {1, 1, 0};
+static constexpr SVulkanVersion gs_BackendVulkanMinimumVersion = {1, 1, 0};
+static constexpr SVulkanVersion gs_BackendVulkanMaximumVersion = {1, 4, 0};
 
 constexpr bool IsVulkanVersionAtLeast(const SVulkanVersion &Version, const SVulkanVersion &Required)
 {
