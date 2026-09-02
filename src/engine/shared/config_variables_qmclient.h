@@ -501,8 +501,8 @@ MACRO_CONFIG_INT(QmNeteaseHookTimeoutMs, qm_netease_hook_timeout_ms, 1500, 250, 
 MACRO_CONFIG_STR(QmNeteaseHookHelperPath, qm_netease_hook_helper_path, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Netease hook helper path (empty=beside QmClient)")
 
 // 网易云歌词展示开关。关闭展示时后台桥接仍可继续采集并维护当前歌曲状态。
-MACRO_CONFIG_INT(QmLyrics, qm_lyrics, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Netease lyric integration")
-MACRO_CONFIG_INT(QmLyricsInMediaIsland, qm_lyrics_in_media_island, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show current Netease lyric in Media Island")
+MACRO_CONFIG_INT(QmLyrics, qm_lyrics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Netease lyric integration")
+MACRO_CONFIG_INT(QmLyricsInMediaIsland, qm_lyrics_in_media_island, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show current Netease lyric in Media Island")
 
 // 汽水音乐 Hook 集成(共享同一套歌词展示开关)。
 // 与网易云 Hook 互斥:默认关闭,用户在 Lyrics 设置里切换。
