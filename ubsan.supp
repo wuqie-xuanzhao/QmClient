@@ -1,4 +1,1 @@
-shift-base:bits.c
-shift-base:unpack.c
-shift-base:words.c
 null:ikcp.c
