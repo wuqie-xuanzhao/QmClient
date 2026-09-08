@@ -57,7 +57,7 @@ b943dfa0c194c12740eeba82413cd4bc43128c1c	2026-08-24	build: Use precompiled heade
 3cd460f8eded171b72f10a30ba87f6d666c00c54	2026-09-04	build: Use precompiled headers for faster builds (#12692)	merge-commit	unreviewed				
 53d514d4d0b09c0036a4e1f923fc89e06cad055c	2026-09-01	server: Restart map download when client asks for first chunk	candidate	unreviewed				
 78cb48f82964d5b2b9b68dbae653bfec57200250	2026-09-04	server: Restart map download when client asks for first chunk (#12761)	merge-commit	unreviewed				
-7f99b873220c7da4d84ad00bd9cec06ca4bc5a1e	2026-09-04	change messages saying have to be in a team (1-63) to (1-127)	candidate	unreviewed				
+7f99b873220c7da4d84ad00bd9cec06ca4bc5a1e	2026-09-04	change messages saying have to be in a team (1-63) to (1-127)	candidate	adapted-worktree	server/save + server/score		更新两处大队伍错误提示文本，不改变队伍判定逻辑；本地提交 7f167934f。	clang-format 干跑、git diff --check
 d90b7e5717f18dd40ec9fb7a3940c6588c902b7f	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool	candidate	unreviewed				
 4be2a112ccb3634c6aa4b02f333fca51dda73a78	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool (#12789)	merge-commit	unreviewed				
 36c44dceca40ee1f4b92145642d8694a83abff1c	2026-09-05	Use role name for tele others config	candidate	unreviewed				
