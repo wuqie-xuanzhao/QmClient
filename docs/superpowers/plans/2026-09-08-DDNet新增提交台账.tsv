@@ -14,7 +14,7 @@ bd6cdad31d51aefa0ecf25cb006cbf19f3c5e1f6	2026-09-01	Fix mapsound sample index no
 1159edfa0309f78599b4a2703ae08c663d3789b1	2026-09-01	Fix memory leak of removed vote options (#12754)	merge-commit	unreviewed				
 1fe2e62d1fa0000cc82362eb077fd5d269593366	2026-09-01	ios: Support dark/tinted icons	candidate	unreviewed				
 1f9b189615495defa3114443563863088f8a5f1e	2026-09-01	Keep sound running when no audio device is available (#12706)	merge-commit	unreviewed				
-acfefe91e83af10299cebc7fee4673e997f3c2a6	2026-08-24	client: Show freeze pickups as snowflakes	candidate	unreviewed				
+acfefe91e83af10299cebc7fee4673e997f3c2a6	2026-08-24	client: Show freeze pickups as snowflakes	candidate	requires-approval-gameplay	protocol/pickups + map entities		新增 POWERUP_FREEZE 协议值并改变预测、服务端快照和旧客户端回退语义；按协议/玩法边界单独确认后再实施。	官方 diff 与当前源码核对，未改代码
 eeec4e480378cad98231b440f210eeb1362f417b	2026-08-23	server: Fix old clients when many players are in teams	candidate	unreviewed				
 e8427c5d1afa10b5aec0b62872aa84c880aab461	2026-08-23	build: Support IPO/LTO on Windows, CI release builds and Android	candidate	unreviewed				
 364c03c797d515f6142e7296afb0eaeb1b80af35	2026-09-02	client: Fix crash when refreshing skins while skins are still loading	candidate	verified-code-equivalent	client/skins		Refresh:2360-2363在Abort后将m_pLoadJob设为空；与上游修复相同；其他取消路径也有清理	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
