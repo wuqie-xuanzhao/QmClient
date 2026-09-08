@@ -29,7 +29,7 @@ bdb2792f777b89517a8c0436d0bd2b1abeba35eb	2026-09-02	server: Allow clients to rec
 f1edc1ae5c24f4d85e2b77db171202f913e2ce4c	2026-09-02	editor: Fix tab closing itself after unrelated save	candidate	unreviewed				
 ab17c9acd0dbcead51ce566cf0e2af75167617e7	2026-09-02	editor: Fix crash when tab context menu is open while closing map	candidate	unreviewed				
 fce38335bb1cf5415195da76b06147028d5f0c72	2026-09-02	Fix see-others by vote rate limit (#12773)	merge-commit	unreviewed				
-dd56d7aa2683362950a945270cce11375845cea0	2026-09-01	client: Show back button in the console	candidate	unreviewed				
+dd56d7aa2683362950a945270cce11375845cea0	2026-09-01	client: Show back button in the console	candidate	deferred-ios-runtime	client/console + iOS input		当前 console 输入/触摸路径与官方实现存在结构差异，需结合 iOS 触控回归和现有 QmClient back-button 逻辑单独适配，暂不直接套用。	官方 diff 与当前源码核对
 bdd2253cb0b76b23218351181e783fe89ee8c336	2026-09-03	Skip reopening the audio device while the system reports no output device	candidate	adapted-worktree	engine/sound		UpdateDevice在设备变化标记exchange前检查SDL_GetNumAudioDevices；保持待处理变化，设备恢复后可重开	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
 950a719e9665ed9ccc46ed00c33cc3ad87c3a139	2026-09-03	build: Support IPO/LTO on Windows, CI release builds and Android (#12688)	merge-commit	unreviewed				
 f17a8d6b09e6a04e239953938f835e385f2d5c69	2026-09-03	server: Fix old clients when many players are in teams (#12684)	merge-commit	unreviewed				
