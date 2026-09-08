@@ -507,8 +507,11 @@ void CPlayer::FakeSnap()
 		return;
 	}
 
-	// see others
-	if(GameServer()->m_PlayerMapping.TotalOverhang(m_ClientId))
+	// See Others。为了更好的 0.6 mod 兼容性：队伍玩法下玩家不可用时，
+	// 连 TEAM_BLUE 记分板上的假玩家也隐藏。
+	const bool SeeOthersAvailable = (m_Paused != PAUSE_NONE || m_Team == TEAM_SPECTATORS || (m_PlayerFlags & PLAYERFLAG_IN_MENU));
+	const bool ShowSeeOthersPlayer = !GameServer()->m_pController->IsTeamPlay() || SeeOthersAvailable;
+	if(GameServer()->m_PlayerMapping.TotalOverhang(m_ClientId) && ShowSeeOthersPlayer)
 	{
 		CNetObj_ClientInfo ClientInfo = {};
 		StrToInts(ClientInfo.m_aName, std::size(ClientInfo.m_aName), GameServer()->m_PlayerMapping.SeeOthersName(m_ClientId));
@@ -523,10 +526,11 @@ void CPlayer::FakeSnap()
 		PlayerInfo.m_Local = 0;
 		PlayerInfo.m_ClientId = SeeOthersId;
 		PlayerInfo.m_Score = FinishTime::NOT_FINISHED_TIMESCORE;
-		PlayerInfo.m_Team = TEAM_BLUE;
+		PlayerInfo.m_Team = TEAM_BLUE; // TEAM_BLUE 用来从 ddrace 记分板隐藏
 		Server()->SnapNewItem(SeeOthersId, PlayerInfo);
 	}
 
+	// 空名假玩家，用于未翻译客户端的聊天消息
 	int FakeId = Server()->GetMaxClients(m_ClientId) - 1;
 	CNetObj_ClientInfo ClientInfo = {};
 	StrToInts(ClientInfo.m_aName, std::size(ClientInfo.m_aName), " ");
@@ -534,8 +538,8 @@ void CPlayer::FakeSnap()
 	StrToInts(ClientInfo.m_aSkin, std::size(ClientInfo.m_aSkin), "default");
 	Server()->SnapNewItem(FakeId, ClientInfo);
 
-	// 官方 60d9886cf：原版 0.6 客户端需要本地对象才能进入暂停视图
-	if(GetClientVersion() != VERSION_VANILLA || m_Paused != PAUSE_PAUSED)
+	// 官方 60d9886cf/31a6120f4：旧 0.6 客户端需要本地对象才能进入暂停视图
+	if(GetClientVersion() >= VERSION_DDNET_OLD || m_Paused != PAUSE_PAUSED)
 		return;
 
 	CNetObj_PlayerInfo PlayerInfo = {};

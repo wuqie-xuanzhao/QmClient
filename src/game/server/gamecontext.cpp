@@ -1035,7 +1035,7 @@ void CGameContext::SendVoteStatus(int ClientId, int Total, int Yes, int No)
 	}
 
 	const int MaxClients = Server()->GetMaxClients(ClientId);
-	if(Total > MaxClients && m_apPlayers[ClientId] && !Server()->ClientSupportsServerMaxClients(ClientId))
+	if(Total > MaxClients && !Server()->ClientSupportsServerMaxClients(ClientId))
 	{
 		Yes = (Yes * MaxClients) / (float)Total;
 		No = (No * MaxClients) / (float)Total;
@@ -2367,10 +2367,11 @@ void CGameContext::OnSayNetMessage(const CNetMsg_Cl_Say *pMsg, int ClientId, con
 
 void CGameContext::OnCallVoteNetMessage(const CNetMsg_Cl_CallVote *pMsg, int ClientId)
 {
-	if(RateLimitPlayerVote(ClientId) || m_VoteCloseTime)
+	// 官方 ef3ac05f6：SeeOthers 投票翻页不受 3 秒投票限速影响，先处理再判限速
+	if(str_comp_nocase(pMsg->m_pType, "option") != 0 && m_PlayerMapping.DoSeeOthers(ClientId, str_toint(pMsg->m_pValue), true))
 		return;
 
-	if(str_comp_nocase(pMsg->m_pType, "option") != 0 && m_PlayerMapping.DoSeeOthers(ClientId, str_toint(pMsg->m_pValue), true))
+	if(RateLimitPlayerVote(ClientId) || m_VoteCloseTime)
 		return;
 
 	m_apPlayers[ClientId]->UpdatePlaytime();
@@ -2741,9 +2742,12 @@ void CGameContext::OnIsDDNetLegacyNetMessage(const CNetMsg_Cl_IsDDNetLegacy *pMs
 		DDNetVersion = VERSION_DDRACE;
 	}
 	Server()->SetClientDDNetVersion(ClientId, DDNetVersion);
-	OnClientDDNetVersionKnown(ClientId);
-	// 官方 1a1e165e7：初次识别前按 16 人客户端处理，识别后重建映射以允许 64 槽位
-	m_PlayerMapping.InitPlayerMap(ClientId);
+	if(OnClientDDNetVersionKnown(ClientId))
+		return;
+	// 初次识别前按 16 人客户端处理，识别后重建映射以允许 64 槽位
+	CPlayerMapping::CSixupCfg SixupCfg;
+	SixupCfg.m_ClearSlots = true;
+	m_PlayerMapping.InitPlayerMap(ClientId, SixupCfg);
 }
 
 void CGameContext::OnShowOthersLegacyNetMessage(const CNetMsg_Cl_ShowOthersLegacy *pMsg, int ClientId)
@@ -5416,9 +5420,12 @@ bool CGameContext::PracticeByDefault() const
 	return g_Config.m_SvPracticeByDefault && g_Config.m_SvTestingCommands;
 }
 
-void CGameContext::OnSetTimedOut(int ClientId)
+void CGameContext::ReinitPlayerMap(int ClientId, bool Timeout)
 {
-	// Timeout=true when calling InitPlayerMap because that will make sure each disconnect packet gets sent out to 0.7 clients correctly before inserting
-	// new players on their slots. Resend=true will also trigger teams state update, otherwise you wouldn't see teams correctly in some cases.
-	m_PlayerMapping.InitPlayerMap(ClientId, true);
+	// Timeout 时调用 InitPlayerMap，保证断线包先发给 0.7 客户端再插入新玩家；
+	// 同时会触发队伍状态更新，否则某些情况下看不到正确的队伍。
+	CPlayerMapping::CSixupCfg SixupCfg;
+	SixupCfg.m_SkipTimeoutedId = Timeout;
+	SixupCfg.m_ClearSlots = true;
+	m_PlayerMapping.InitPlayerMap(ClientId, SixupCfg);
 }

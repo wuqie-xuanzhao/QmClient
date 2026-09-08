@@ -15,6 +15,7 @@ void CPlayerMapping::Init(CGameContext *pGameServer)
 	m_pConfig = m_pGameServer->Config();
 	m_pServer = m_pGameServer->Server();
 	std::fill(std::begin(m_aTeamSizes), std::end(m_aTeamSizes), 0);
+	m_ReserveAnyTeamSlots = true;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aMap[i].Init(i, this);
@@ -73,6 +74,7 @@ void CPlayerMapping::CPlayerMap::Init(int ClientId, CPlayerMapping *pPlayerMappi
 	m_NumPages = 0;
 	m_TotalOverhang = 0;
 	m_NumReserved = 0;
+	m_LastSeeOthersVoteTick = 0;
 	m_DoSeeOthersByVote = false;
 	ResetSeeOthers();
 }
@@ -82,7 +84,7 @@ CPlayer *CPlayerMapping::CPlayerMap::Player() const
 	return m_pPlayerMapping->GameServer()->m_apPlayers[m_ClientId];
 }
 
-void CPlayerMapping::CPlayerMap::InitPlayer(bool Timeout)
+void CPlayerMapping::CPlayerMap::InitPlayer(CSixupCfg SixupCfg)
 {
 	std::fill(std::begin(m_aReserved), std::end(m_aReserved), false);
 
@@ -101,7 +103,7 @@ void CPlayerMapping::CPlayerMap::InitPlayer(bool Timeout)
 			{
 				// For 0.7 timeout: Rejoin has to check ourselves because it's the id of the old connection that we want to skip
 				// Do not access our own reverse map on initial initialization, as it's only initialized below
-				if((i != m_ClientId || Timeout) && m_pPlayerMapping->m_aMap[i].m_pReverseMap[i] == NextFreeId)
+				if((i != m_ClientId || SixupCfg.m_SkipTimeoutedId) && m_pPlayerMapping->m_aMap[i].m_pReverseMap[i] == NextFreeId)
 				{
 					NextFreeId++;
 					Finished = false;
@@ -112,7 +114,7 @@ void CPlayerMapping::CPlayerMap::InitPlayer(bool Timeout)
 
 	// make sure no outdated data is stored, so we can start and insert new values
 	// after a timeout remove all players from the previous map in correct order (important for 0.7 net msgs...)
-	if(Timeout)
+	if(SixupCfg.m_ClearSlots)
 	{
 		m_UpdateTeamsState = true; // to get back all teams
 		for(int i = 0; i < LEGACY_MAX_CLIENTS; i++)
@@ -125,34 +127,41 @@ void CPlayerMapping::CPlayerMap::InitPlayer(bool Timeout)
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_pReverseMap[i] = -1;
 
-	m_NumReserved = 2;
-	m_pMap[m_pPlayerMapping->Server()->GetMaxClients(m_ClientId) - 1] = -1; // player with empty name to say chat msgs
-	m_pMap[m_pPlayerMapping->SeeOthersId(m_ClientId)] = -1; // see others in spec menu
-	m_TotalOverhang = 0;
-
-	if(m_pPlayerMapping->Server()->IsSixup(m_ClientId))
+	m_NumReserved = 0;
+	const bool PlayerMappingRequired = !m_pPlayerMapping->Server()->ClientSupportsServerMaxClients(m_ClientId);
+	if(PlayerMappingRequired)
 	{
-		protocol7::CNetMsg_Sv_ClientInfo FakeInfo;
-		FakeInfo.m_ClientId = m_pPlayerMapping->Server()->GetMaxClients(m_ClientId) - 1;
-		FakeInfo.m_Local = 0;
-		FakeInfo.m_Team = TEAM_BLUE;
-		FakeInfo.m_pName = " ";
-		FakeInfo.m_pClan = "";
-		FakeInfo.m_Country = -1;
-		FakeInfo.m_Silent = 1;
-		for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
+		m_NumReserved = 2;
+		m_pMap[m_pPlayerMapping->Server()->GetMaxClients(m_ClientId) - 1] = -1; // player with empty name to say chat msgs
+		m_pMap[m_pPlayerMapping->SeeOthersId(m_ClientId)] = -1; // see others in spec menu
+		m_TotalOverhang = 0;
+
+		if(m_pPlayerMapping->Server()->IsSixup(m_ClientId))
 		{
-			FakeInfo.m_apSkinPartNames[p] = "standard";
-			FakeInfo.m_aUseCustomColors[p] = 0;
-			FakeInfo.m_aSkinPartColors[p] = 0;
+			protocol7::CNetMsg_Sv_ClientInfo FakeInfo;
+			FakeInfo.m_ClientId = m_pPlayerMapping->Server()->GetMaxClients(m_ClientId) - 1;
+			FakeInfo.m_Local = 0;
+			FakeInfo.m_Team = TEAM_BLUE; // TEAM_BLUE 用来从 ddrace 记分板隐藏
+			FakeInfo.m_pName = " ";
+			FakeInfo.m_pClan = "";
+			FakeInfo.m_Country = -1;
+			FakeInfo.m_Silent = 1;
+			for(int p = 0; p < protocol7::NUM_SKINPARTS; p++)
+			{
+				FakeInfo.m_apSkinPartNames[p] = "standard";
+				FakeInfo.m_aUseCustomColors[p] = 0;
+				FakeInfo.m_aSkinPartColors[p] = 0;
+			}
+			m_pPlayerMapping->Server()->SendPackMsg(&FakeInfo, MSGFLAG_VITAL | MSGFLAG_NORECORD | MSGFLAG_NOTRANSLATE, m_ClientId);
+			// see others
+			UpdateSeeOthers();
 		}
-		m_pPlayerMapping->Server()->SendPackMsg(&FakeInfo, MSGFLAG_VITAL | MSGFLAG_NORECORD | MSGFLAG_NOTRANSLATE, m_ClientId);
-		// see others
-		UpdateSeeOthers();
 	}
 
 	// Breaks with more than `MapSize` tees from the same ip, but not a problem on official servers.
-	if(NextFreeId < MapSize())
+	// Required for other player maps, even when this specific one doesn't need playermapping and supports max_clients
+	const bool NextIdValid = NextFreeId < LEGACY_MAX_CLIENTS;
+	if(NextFreeId < MapSize() && NextIdValid)
 	{
 		m_aReserved[m_ClientId] = true;
 		Add(NextFreeId, m_ClientId);
@@ -169,14 +178,14 @@ void CPlayerMapping::CPlayerMap::InitPlayer(bool Timeout)
 
 		// update us with other same ip player infos
 		const int OtherMapId = m_pPlayerMapping->m_aMap[i].m_pReverseMap[i];
-		if(OtherMapId >= 0 && OtherMapId < MapSize())
+		if(PlayerMappingRequired && OtherMapId >= 0 && OtherMapId < MapSize())
 		{
 			m_aReserved[i] = true;
 			Add(OtherMapId, i);
 		}
 
 		// update other same ip players with our info
-		if(NextFreeId < m_pPlayerMapping->m_aMap[i].MapSize())
+		if(NextIdValid && NextFreeId < m_pPlayerMapping->m_aMap[i].MapSize())
 		{
 			m_pPlayerMapping->m_aMap[i].m_aReserved[m_ClientId] = true;
 			m_pPlayerMapping->m_aMap[i].Add(NextFreeId, m_ClientId);
@@ -395,7 +404,7 @@ bool CPlayerMapping::ReserveTeamSlots(int DDTeam, int ClientId) const
 {
 	// 官方 1a1e165e7：vanilla 0.6 客户端不参与队伍槽位预留
 	const bool IsDDNet = m_pGameServer->GetClientVersion(ClientId) >= VERSION_DDNET_OLD;
-	return !g_Config.m_SvSoloServer && DDTeam != TEAM_FLOCK && m_aTeamSizes[DDTeam] <= ms_MaxTeamSizePlayerMap && IsDDNet;
+	return !g_Config.m_SvSoloServer && m_ReserveAnyTeamSlots && DDTeam != TEAM_FLOCK && m_aTeamSizes[DDTeam] <= ms_MaxTeamSizePlayerMap && IsDDNet;
 }
 
 int CPlayerMapping::SeeOthersId(int ClientId) const
@@ -411,6 +420,11 @@ bool CPlayerMapping::DoSeeOthers(int ClientId, int SelectedId, bool DoByVote)
 	{
 		if(DoByVote)
 		{
+			// 官方 ef3ac05f6/ebbe3225b：投票翻页限速 1 秒（+spectate 是 250ms），
+			// 这里只用上次投票时间判断，是否处于投票翻页状态单独用 m_DoSeeOthersByVote 记录
+			if(m_aMap[ClientId].m_LastSeeOthersVoteTick > Server()->Tick() - Server()->TickSpeed())
+				return true;
+			m_aMap[ClientId].m_LastSeeOthersVoteTick = Server()->Tick();
 			m_aMap[ClientId].m_DoSeeOthersByVote = true;
 		}
 		m_aMap[ClientId].DoSeeOthers();
@@ -448,20 +462,26 @@ void CPlayerMapping::UpdatePlayerMap(int ClientId)
 				int DDTeam = GameServer()->GetDDRaceTeam(i);
 				m_aTeamSizes[DDTeam]++;
 			}
+			// 官方 eeec4e480：只有玩家数量超过旧 id 映射容量时才可能出现槽位饥饿
+			int NumReservableTeamPlayers = 0;
+			for(int Team = TEAM_FLOCK + 1; Team < NUM_DDRACE_TEAMS; Team++)
+				if(m_aTeamSizes[Team] <= ms_MaxTeamSizePlayerMap)
+					NumReservableTeamPlayers += m_aTeamSizes[Team];
+			m_ReserveAnyTeamSlots = ClientCount <= LEGACY_MAX_CLIENTS - 2 || NumReservableTeamPlayers <= ms_MaxTotalTeamSizePlayerMap;
 		}
 
 		for(auto &Map : m_aMap)
 		{
-			if(!Map.Player())
+			if(!Map.Player() || Server()->ClientSupportsServerMaxClients(Map.m_ClientId))
 				continue;
 
 			// Calculate overhang every tick, not only when the map updates
 			int Overhang = std::max(0, ClientCount - Map.MapSize());
 			if(Overhang != Map.m_TotalOverhang)
 			{
-				int MaxNumSeeOthers = Map.MaxNumSeeOthers();
+				const int MaxNumSeeOthers = Map.MaxNumSeeOthers();
 				Map.m_TotalOverhang = Overhang;
-				Map.m_NumPages = std::max(1, (Overhang + MaxNumSeeOthers - 1) / MaxNumSeeOthers);
+				Map.m_NumPages = MaxNumSeeOthers > 0 ? std::max(1, (Overhang + MaxNumSeeOthers - 1) / MaxNumSeeOthers) : 1;
 				if(Map.m_TotalOverhang <= 0 && Map.m_SeeOthersPage != -1)
 					Map.ResetSeeOthers();
 
@@ -527,14 +547,13 @@ void CPlayerMapping::CPlayerMap::CycleSeeOthers()
 	{
 		if(!m_pPlayerMapping->GameServer()->m_apPlayers[i] || m_aWasSeeOthers[i])
 			continue;
+		if(Added >= Size)
+			break;
 
 		Add(MapId, i);
 		m_aWasSeeOthers[i] = true;
 		Added++;
 		MapId--;
-
-		if(Added >= Size)
-			break;
 	}
 
 	m_NumSeeOthers = Added;
@@ -607,7 +626,7 @@ void CPlayerMapping::CPlayerMap::UpdateSeeOthers() const
 	protocol7::CNetMsg_Sv_ClientInfo NewClientInfoMsg;
 	NewClientInfoMsg.m_ClientId = SeeOthersId;
 	NewClientInfoMsg.m_Local = 0;
-	NewClientInfoMsg.m_Team = TEAM_BLUE;
+	NewClientInfoMsg.m_Team = TEAM_BLUE; // TEAM_BLUE 用来从 ddrace 记分板隐藏
 	NewClientInfoMsg.m_pName = m_pPlayerMapping->SeeOthersName(m_ClientId);
 	NewClientInfoMsg.m_pClan = "";
 	NewClientInfoMsg.m_Country = -1;

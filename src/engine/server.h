@@ -465,7 +465,8 @@ public:
 
 	virtual void OnPreTickTeehistorian() = 0;
 
-	virtual void OnSetTimedOut(int ClientId) = 0;
+	// 官方 31a6120f4：重连/超时保护后重建玩家映射
+	virtual void ReinitPlayerMap(int ClientId, bool Timeout) = 0;
 	virtual void OnSetAuthed(int ClientId, int Level) = 0;
 	virtual bool PlayerExists(int ClientId) const = 0;
 

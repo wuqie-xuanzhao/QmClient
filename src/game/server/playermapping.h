@@ -27,6 +27,21 @@ class CPlayer;
 
 class CPlayerMapping
 {
+public:
+	// 官方 31a6120f4：初始化玩家映射时的 0.7 相关选项
+	class CSixupCfg
+	{
+	public:
+		CSixupCfg() :
+			m_SkipTimeoutedId(false),
+			m_ClearSlots(false)
+		{
+		}
+		bool m_SkipTimeoutedId;
+		bool m_ClearSlots;
+	};
+
+private:
 	class CGameContext *m_pGameServer;
 	class CConfig *m_pConfig;
 	class IServer *m_pServer;
@@ -38,15 +53,18 @@ class CPlayerMapping
 	static constexpr int ms_MaxNumSeeOthersVanilla = 13;
 	// Teams are messy. Dont highlight teams bigger than 10 tees in playermapping so that big teams wont break anything
 	static constexpr int ms_MaxTeamSizePlayerMap = 10;
+	// Dont reserve more than half of the 62 slots for players in teams, the rest is needed for the closest tees
+	static constexpr int ms_MaxTotalTeamSizePlayerMap = 30;
 
 	int m_aTeamSizes[NUM_DDRACE_TEAMS];
+	bool m_ReserveAnyTeamSlots;
 	char m_aSeeOthersName[MAX_NAME_LENGTH];
 
 	class CPlayerMap
 	{
 	public:
 		void Init(int ClientId, CPlayerMapping *pPlayerMapping);
-		void InitPlayer(bool Timeout);
+		void InitPlayer(CSixupCfg SixupCfg);
 		CPlayerMapping *m_pPlayerMapping;
 		CPlayer *Player() const;
 		int m_ClientId;
@@ -67,6 +85,7 @@ class CPlayerMapping
 		int m_NumPages;
 		int m_NumSeeOthers;
 		bool m_aWasSeeOthers[MAX_CLIENTS];
+		int m_LastSeeOthersVoteTick;
 		bool m_DoSeeOthersByVote;
 		void DoSeeOthers();
 		void CycleSeeOthers();
@@ -84,7 +103,7 @@ public:
 	void Init(CGameContext *pGameServer);
 	void Tick();
 
-	void InitPlayerMap(int ClientId, bool Timeout = false) { m_aMap[ClientId].InitPlayer(Timeout); }
+	void InitPlayerMap(int ClientId, CSixupCfg SixupCfg = CSixupCfg()) { m_aMap[ClientId].InitPlayer(SixupCfg); }
 	void UpdateTeamsState(int ClientId) { m_aMap[ClientId].m_UpdateTeamsState = true; }
 	void ForceInsertPlayer(int Insert, int ClientId) { m_aMap[ClientId].InsertNextEmptyOrReplace(Insert); }
 

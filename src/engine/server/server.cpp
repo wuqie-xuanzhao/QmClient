@@ -2329,6 +2329,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				if(GameServer()->PlayerExists(ClientId) && Version < VERSION_DDNET_OLD)
 				{
 					m_aClients[ClientId].m_DDNetVersion = VERSION_DDNET_OLD;
+					// 官方 31a6120f4：版本提升后按 64 槽位重建映射
+					GameServer()->ReinitPlayerMap(ClientId, false);
 				}
 			}
 			else if(IsRconAuthed(ClientId))
@@ -5151,13 +5153,13 @@ bool CServer::SetTimedOut(int ClientId, int OrigId)
 	m_aClients[ClientId].m_DDNetVersionSettled = OrigDDNetVersionSettled;
 	m_aClients[ClientId].m_ClientBrand = OrigClientBrand;
 
-	// OnSetTimedOut must be called after DelClientCallback to preserve the client id.
+	// ReinitPlayerMap must be called after DelClientCallback to preserve the client id.
 	// The order is important for the player initialization algorithm in CPlayerMapping::CPlayerMap::InitPlayer
 	// because it loops over all players to find others with the same ip address.
 	// IP matching is important for hammerfly/dummy copy to work by guaran-tee-ing dummy and player map have the same ids
 	// Never forget: 0.7 really implemented netmsgs for join/leave, means client ids have to be stable across using timeout protection.
 	// When InitPlayer runs it has to assign the same client id as before since local id cant be changed in 0.7
-	GameServer()->OnSetTimedOut(ClientId);
+	GameServer()->ReinitPlayerMap(ClientId, true);
 	SendClientBrandsToKnownClients();
 	return true;
 }
