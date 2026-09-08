@@ -58,8 +58,8 @@ b943dfa0c194c12740eeba82413cd4bc43128c1c	2026-08-24	build: Use precompiled heade
 53d514d4d0b09c0036a4e1f923fc89e06cad055c	2026-09-01	server: Restart map download when client asks for first chunk	candidate	unreviewed				
 78cb48f82964d5b2b9b68dbae653bfec57200250	2026-09-04	server: Restart map download when client asks for first chunk (#12761)	merge-commit	unreviewed				
 7f99b873220c7da4d84ad00bd9cec06ca4bc5a1e	2026-09-04	change messages saying have to be in a team (1-63) to (1-127)	candidate	adapted-worktree	server/save + server/score		更新两处大队伍错误提示文本，不改变队伍判定逻辑；本地提交 7f167934f。	clang-format 干跑、git diff --check
-d90b7e5717f18dd40ec9fb7a3940c6588c902b7f	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool	candidate	unreviewed				
-4be2a112ccb3634c6aa4b02f333fca51dda73a78	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool (#12789)	merge-commit	unreviewed				
+d90b7e5717f18dd40ec9fb7a3940c6588c902b7f	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool	candidate	adapted-worktree	tools/map_test	新增递归 map_test 批量检查脚本，并在当前 style workflow 中构建和执行 map_test	2026-09-08 py_compile 通过；map_test 目标构建通过；单张 data/maps/coverage.map 检查通过；未运行全量地图扫描
+4be2a112ccb3634c6aa4b02f333fca51dda73a78	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool (#12789)	merge-commit	verified-wrapper	tools/map_test	d90b7e571	合并包装；脚本及 CI 调用已按当前 style workflow 结构适配	父链与相对第一父提交 diff 核对
 36c44dceca40ee1f4b92145642d8694a83abff1c	2026-09-05	Use role name for tele others config	candidate	adapted-worktree	server/config		配置改为 helper/moderator/admin 字符串；保留 1/2/3 兼容并输出弃用警告；非法值拒绝写入	2026-09-08 game-server 构建通过；clang-format --Werror、git diff --check 通过；未做实际服务端配置热加载与权限会话验证
 9cf22b5e55b2c077d3eed7931b4abea160b712c6	2026-09-05	Update json-parser to reduce ubsan errors	candidate	unreviewed				
 17234d7a1f6aab09946dcf16229844c58a12640e	2026-09-05	ios: Support dark/tinted icons, base icons on ddnet-data-svg (#12757)	merge-commit	unreviewed				
