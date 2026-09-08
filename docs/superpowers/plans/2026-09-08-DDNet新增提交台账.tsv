@@ -16,7 +16,7 @@ bd6cdad31d51aefa0ecf25cb006cbf19f3c5e1f6	2026-09-01	Fix mapsound sample index no
 1f9b189615495defa3114443563863088f8a5f1e	2026-09-01	Keep sound running when no audio device is available (#12706)	merge-commit	verified-wrapper	engine/sound	1a16a876bb	合并包装；无设备音频实现已按本地结构适配，另有运行时设备验证缺口。	父链与底层提交核对
 acfefe91e83af10299cebc7fee4673e997f3c2a6	2026-08-24	client: Show freeze pickups as snowflakes	candidate	requires-approval-gameplay	protocol/pickups + map entities		新增 POWERUP_FREEZE 协议值并改变预测、服务端快照和旧客户端回退语义；按协议/玩法边界单独确认后再实施。	官方 diff 与当前源码核对，未改代码
 eeec4e480378cad98231b440f210eeb1362f417b	2026-08-23	server: Fix old clients when many players are in teams	candidate	unreviewed				
-e8427c5d1afa10b5aec0b62872aa84c880aab461	2026-08-23	build: Support IPO/LTO on Windows, CI release builds and Android	candidate	unreviewed				
+e8427c5d1afa10b5aec0b62872aa84c880aab461	2026-08-23	build: Support IPO/LTO on Windows, CI release builds and Android	candidate	adapted-partial	base/string + map_extract + build/IPO		已适配安全的 str_copy、PNG 宽度、map_extract 尺寸校验和 teehistorian 测试修复，本地提交 7cd3848fd；Windows/Android/CI IPO 分支仍需独立构建审查。	clang-format 干跑、git diff --check；Linux testrunner 无法在当前 Windows 主机运行
 364c03c797d515f6142e7296afb0eaeb1b80af35	2026-09-02	client: Fix crash when refreshing skins while skins are still loading	candidate	verified-code-equivalent	client/skins		Refresh:2360-2363在Abort后将m_pLoadJob设为空；与上游修复相同；其他取消路径也有清理	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
 cbb82fff9e2620c3cb223cd985a8cd45fa03168e	2026-09-02	client: Fix segfault on quit with OpenGL 2	candidate	verified-code-equivalent	graphics/opengl		Init六个shader指针均为nullptr，Shutdown的DeleteProgram受m_HasShaders保护；对象delete在条件外但nullptr安全，已静态覆盖上游退出崩溃修复	2026-09-08逐hunk源码核对；未运行OpenGL2退出smoke
 78d8f82c52c631a439c0ef74f15f49d30891e491	2026-09-02	server: Fix MySQL TLS without CA cert	candidate	confirmed-gap	server/mysql		本地仍用CLIENT_SSL且仅有CA时设置SSL mode；未覆盖官方无CA时TLS启用修复，需要MySQL/MariaDB分别验证	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
@@ -87,5 +87,5 @@ ec8c4e6398622a282e2cea23f2d947fb14ecf471	2026-09-06	Fix undefined behavior with 
 3d12558c35322817164743c1a68ef3fe8f743dfb	2026-09-07	"Changed messages saying ""You have to be in a team (1-63)"" to ""You have to be in a team (1-127)""  (#12787)"	merge-commit	unreviewed				
 8e46925225b46bde35cf633de839591b370547cb	2026-09-07	Use role name for tele others config (#12790)	merge-commit	unreviewed				
 8375112945b508cf72c1520925187a8dd115bfe1	2026-08-08	Update wavpack from 4.40 to 5.9.0 and put it in ddnet-libs	candidate	unreviewed				
-7e96eeab395b57c9fed4f905557c7ba7d19c943b	2026-09-05	"Revert ""Suppress the bundled wavpack shift reports for UBSan"""	candidate	unreviewed				
+7e96eeab395b57c9fed4f905557c7ba7d19c943b	2026-09-05	"Revert ""Suppress the bundled wavpack shift reports for UBSan"""	candidate	verified-code-equivalent	build/ubsan	b871d3432	当前 ubsan.supp 未包含 wavpack shift 抑制，与官方撤回结果一致。	源码核对
 59968143f78ce6bff2123e0e540e8763a8ff6f8e	2026-09-07	Update wavpack from 4.40 to 5.9.0 and put it in ddnet-libs (#12552)	merge-commit	unreviewed				
