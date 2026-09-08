@@ -79,7 +79,7 @@ b3c0bae19b06c5164e1be591551558f320c83d50	2026-09-06	Fix JSON validation and esca
 8ebc6713bc3c32b8e1283883de39eb66d42d9e4f	2026-07-29	add standalone map renderer with headless backend	candidate	unreviewed				
 350d0398ccc2408dc182a6ec028aa294d60d9b60	2026-09-06	Fix undefined behavior with invalid demo timeline markers	candidate	confirmed-gap	demo		2026-09-08 对照官方 diff 与当前源码确认旧逻辑仍在；尚未修改	只读源码核查，未运行复现测试
 ec8c4e6398622a282e2cea23f2d947fb14ecf471	2026-09-06	Fix undefined behavior with invalid demo timeline markers (#12807)	merge-commit	unreviewed				
-4ba8fef2fea29460cb4872441d265ee2a6bf8eaf	2026-09-06	Increase spin wait halving threshold to 1000us	candidate	unreviewed				
+4ba8fef2fea29460cb4872441d265ee2a6bf8eaf	2026-09-06	Increase spin wait halving threshold to 1000us	candidate	deferred-local-architecture	client wait loop		当前 QmClient 使用重构后的 WaitWithNetwork 直接等待并重算剩余时间，已不存在官方旧循环；需单独做低刷新率/输入时序审查后再决定是否适配。	源码核对，未改代码
 8f65b372d3c14c883bd78efc4706b92e1d897670	2026-09-07	Increase spin wait halving threshold to 1000us (#12808)	merge-commit	unreviewed				
 321fa2217ee119fae8a09c44e09b2e0346135fe6	2026-09-07	Tool: Standalone map renderer with headless backend (#12467)	merge-commit	unreviewed				
 17e3c2e831ce93e6d1eb83036b51cc5fa6e81dd3	2026-09-07	Fix -1 passed as `size_t` to json parser	candidate	partially-adapted-worktree	test/teehistorian		JsonParse长度改为buffer.size()-16；不删除pointer-overflow:json.c suppression，待第三方parser升级验证	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
