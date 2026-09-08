@@ -203,6 +203,8 @@ public:
 		char m_aDDNetVersionStr[64];
 		CUuid m_ConnectionId;
 		int64_t m_RedirectDropTime;
+		// 官方 7131ad28b：正在重连、暂不改变槽位状态
+		bool m_Rejoining;
 		bool m_KcpCapable;
 		bool m_KcpNegotiated;
 		int m_KcpConv;
@@ -357,7 +359,7 @@ public:
 	static int NewClientNoAuthCallback(int ClientId, void *pUser);
 	static int DelClientCallback(int ClientId, const char *pReason, void *pUser);
 
-	static int ClientRejoinCallback(int ClientId, void *pUser);
+	static int ClientRejoinCallback(int ClientId, void *pUser, bool Sixup, bool VanillaAuth);
 
 	void SendRconType(int ClientId, bool UsernameReq);
 	void SendCapabilities(int ClientId);

@@ -236,6 +236,8 @@ void CServer::CClient::Reset()
 	m_NumPreInputs = 0;
 	m_Flags = 0;
 	m_RedirectDropTime = 0;
+	// 官方 b946fa9a2：换图后也要清掉重连标记，不能只在进游戏和掉线时清
+	m_Rejoining = false;
 	m_KcpCapable = false;
 	m_KcpNegotiated = false;
 	m_KcpConv = 0;
@@ -631,6 +633,7 @@ int CServer::Init()
 		Client.m_Latency = 0;
 		Client.m_Sixup = false;
 		Client.m_RedirectDropTime = 0;
+		Client.m_Rejoining = false;
 	}
 
 	m_CurrentGameTick = MIN_TICK;
@@ -1080,7 +1083,7 @@ void CServer::DoSnapshot()
 	for(int i = 0; i < MaxClients(); i++)
 	{
 		// client must be ingame to receive snapshots
-		if(m_aClients[i].m_State != CClient::STATE_INGAME)
+		if(m_aClients[i].m_State != CClient::STATE_INGAME || m_aClients[i].m_Rejoining)
 			continue;
 
 		// 官方 1a1e165e7：不再用“是否已确认 DDNet 版本”挡住快照，
@@ -1231,9 +1234,17 @@ void CServer::DoSnapshot()
 	}
 }
 
-int CServer::ClientRejoinCallback(int ClientId, void *pUser)
+int CServer::ClientRejoinCallback(int ClientId, void *pUser, bool Sixup, bool VanillaAuth)
 {
 	CServer *pThis = (CServer *)pUser;
+
+	// 官方 7131ad28b：槽位不在游戏中时按新连接处理
+	if(pThis->m_aClients[ClientId].m_State != CClient::STATE_INGAME)
+	{
+		if(VanillaAuth)
+			return NewClientNoAuthCallback(ClientId, pUser);
+		return NewClientCallback(ClientId, pUser, Sixup);
+	}
 
 	pThis->m_aClients[ClientId].m_AuthKey = -1;
 	pThis->m_aClients[ClientId].m_pRconCmdToSend = nullptr;
@@ -1244,6 +1255,9 @@ int CServer::ClientRejoinCallback(int ClientId, void *pUser)
 
 	pThis->m_NetServer.DeactivateKcp(ClientId);
 	pThis->m_aClients[ClientId].Reset();
+	// m_Rejoining 让客户端在不改变槽位状态的情况下回到连接中
+	pThis->m_aClients[ClientId].m_Rejoining = true;
+	pThis->m_aClients[ClientId].m_Sixup = Sixup;
 
 	pThis->GameServer()->TeehistorianRecordPlayerRejoin(ClientId);
 	pThis->Antibot()->OnEngineClientDrop(ClientId, "rejoin");
@@ -1401,6 +1415,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientId].m_Snapshots.PurgeAll();
 	pThis->m_aClients[ClientId].m_Sixup = false;
 	pThis->m_aClients[ClientId].m_RedirectDropTime = 0;
+	pThis->m_aClients[ClientId].m_Rejoining = false;
 	pThis->m_aClients[ClientId].m_HasPersistentData = false;
 	pThis->SendClientBrandsToKnownClients();
 
@@ -2000,7 +2015,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_CLIENTVER)
 		{
-			if(m_aClients[ClientId].m_State == CClient::STATE_PREAUTH)
+			// 官方 7131ad28b：重连中的连接也要接受版本包，但不改变槽位状态
+			if(m_aClients[ClientId].m_State == CClient::STATE_PREAUTH || m_aClients[ClientId].m_Rejoining)
 			{
 				CUuid *pConnectionId = (CUuid *)Unpacker.GetRaw(sizeof(*pConnectionId));
 				int DDNetVersion = Unpacker.GetInt();
@@ -2014,14 +2030,17 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				str_copy(m_aClients[ClientId].m_aDDNetVersionStr, pDDNetVersionStr);
 				m_aClients[ClientId].m_DDNetVersionSettled = true;
 				m_aClients[ClientId].m_GotDDNetVersionPacket = true;
-				m_aClients[ClientId].m_State = CClient::STATE_AUTH;
+				if(!m_aClients[ClientId].m_Rejoining)
+				{
+					m_aClients[ClientId].m_State = CClient::STATE_AUTH;
+				}
 				UpdateClientBrand(ClientId, pDDNetVersionStr);
 				SendCapabilities(ClientId);
 			}
 		}
 		else if(Msg == NETMSG_INFO)
 		{
-			if((m_aClients[ClientId].m_State == CClient::STATE_PREAUTH || m_aClients[ClientId].m_State == CClient::STATE_AUTH))
+			if((m_aClients[ClientId].m_State == CClient::STATE_PREAUTH || m_aClients[ClientId].m_State == CClient::STATE_AUTH || m_aClients[ClientId].m_Rejoining))
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(Unpacker.Error())
@@ -2065,10 +2084,13 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					return;
 				}
 
-				m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
 				SendRconType(ClientId, m_AuthManager.NumNonDefaultKeys() > 0);
 				SendCapabilities(ClientId);
-				SendMap(ClientId);
+				if(!m_aClients[ClientId].m_Rejoining)
+				{
+					m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
+					SendMap(ClientId);
+				}
 			}
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
@@ -2129,9 +2151,24 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 
 			SendConnectionReady(ClientId);
+
+			// 官方 7131ad28b：重连中的连接需要 ReadyToEnter 才能回到游戏
+			if(m_aClients[ClientId].m_Rejoining)
+			{
+				CNetMsg_Sv_ReadyToEnter Msg;
+				SendPackMsg(&Msg, MSGFLAG_VITAL | MSGFLAG_FLUSH, ClientId);
+			}
 		}
 		else if(Msg == NETMSG_ENTERGAME)
 		{
+			// 官方 7131ad28b：重连完成，槽位状态不变，交给游戏层恢复
+			if(m_aClients[ClientId].m_Rejoining)
+			{
+				m_aClients[ClientId].m_Rejoining = false;
+				GameServer()->OnClientRejoin(ClientId);
+				return;
+			}
+
 			if(m_aClients[ClientId].m_State >= CClient::STATE_READY)
 			{
 				if(m_aClients[ClientId].m_KcpNegotiated && !m_NetServer.IsKcpActive(ClientId))

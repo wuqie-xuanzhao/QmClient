@@ -162,7 +162,7 @@ typedef int (*NETFUNC_DELCLIENT)(int ClientId, const char *pReason, void *pUser)
 typedef int (*NETFUNC_NEWCLIENT_CON)(int ClientId, void *pUser);
 typedef int (*NETFUNC_NEWCLIENT)(int ClientId, void *pUser, bool Sixup);
 typedef int (*NETFUNC_NEWCLIENT_NOAUTH)(int ClientId, void *pUser);
-typedef int (*NETFUNC_CLIENTREJOIN)(int ClientId, void *pUser);
+typedef int (*NETFUNC_CLIENTREJOIN)(int ClientId, void *pUser, bool Sixup, bool VanillaAuth);
 
 struct CNetChunk
 {
@@ -398,7 +398,7 @@ public:
 
 	void SetToken7(TOKEN Token);
 
-	void Reset(bool Rejoin = false);
+	void Reset();
 	void Init(NETSOCKET Socket, bool BlockCloseMsg);
 	int Connect(const NETADDR *pAddr, int NumAddrs);
 	int Connect7(const NETADDR *pAddr, int NumAddrs);
@@ -591,10 +591,9 @@ class CNetServer
 	uint64_t m_FakeNetDropped = 0;
 	uint64_t m_FakeNetDelayed = 0;
 
-	void OnTokenCtrlMsg(NETADDR &Addr, int ControlMsg, const CNetPacketConstruct &Packet);
-	int OnSixupCtrlMsg(NETADDR &Addr, CNetChunk *pChunk, int ControlMsg, const CNetPacketConstruct &Packet, SECURITY_TOKEN &ResponseToken, SECURITY_TOKEN Token);
-	void OnPreConnMsg(NETADDR &Addr, CNetPacketConstruct &Packet);
-	void OnConnCtrlMsg(NETADDR &Addr, int ClientId, int ControlMsg, const CNetPacketConstruct &Packet);
+	void OnTokenCtrlMsg(NETADDR &Addr, int ControlMsg, const CNetPacketConstruct &Packet, int Slot);
+	int OnSixupCtrlMsg(NETADDR &Addr, CNetChunk *pChunk, int ControlMsg, const CNetPacketConstruct &Packet, SECURITY_TOKEN &ResponseToken, SECURITY_TOKEN Token, int Slot);
+	void OnPreConnMsg(NETADDR &Addr, CNetPacketConstruct &Packet, int Slot);
 	bool ClientExists(const NETADDR &Addr) { return GetClientSlot(Addr) != -1; }
 	int GetClientSlot(const NETADDR &Addr);
 	void SendControl(NETADDR &Addr, int ControlMsg, const void *pExtra, int ExtraSize, SECURITY_TOKEN SecurityToken);
@@ -613,7 +612,7 @@ class CNetServer
 	bool FakeNetQueuePacket(const NETADDR &Addr, const unsigned char *pData, int Bytes, int64_t DeliverTime);
 	bool FakeNetFilterPacket(const NETADDR &Addr, const unsigned char *pData, int Bytes);
 
-	int TryAcceptClient(NETADDR &Addr, SECURITY_TOKEN SecurityToken, bool VanillaAuth = false, bool Sixup = false, SECURITY_TOKEN Token = 0);
+	int TryAcceptClient(NETADDR &Addr, SECURITY_TOKEN SecurityToken, int Slot, bool VanillaAuth = false, bool Sixup = false, SECURITY_TOKEN Token = 0);
 	int NumClientsWithAddr(NETADDR Addr);
 	bool Connlimit(NETADDR Addr);
 	void SendMsgs(NETADDR &Addr, const CPacker **ppMsgs, int Num);

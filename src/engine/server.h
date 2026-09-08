@@ -467,6 +467,8 @@ public:
 
 	// 官方 31a6120f4：重连/超时保护后重建玩家映射
 	virtual void ReinitPlayerMap(int ClientId, bool Timeout) = 0;
+	// 官方 7131ad28b：连接重连完成，槽位状态未变
+	virtual void OnClientRejoin(int ClientId) = 0;
 	virtual void OnSetAuthed(int ClientId, int Level) = 0;
 	virtual bool PlayerExists(int ClientId) const = 0;
 

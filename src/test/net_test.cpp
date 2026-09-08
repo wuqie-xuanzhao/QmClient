@@ -44,13 +44,39 @@ namespace
 		const std::string Source = ReadTestSourceFile("src/engine/shared/network_server.cpp");
 		const size_t Start = Source.find("else if(!IsCtrl && g_Config.m_SvVanillaAntiSpoof");
 		ASSERT_NE(Start, std::string::npos);
-		const size_t End = Source.find("void CNetServer::OnConnCtrlMsg", Start);
+		// 官方 7131ad28b 把 OnConnCtrlMsg 合并进了 OnTokenCtrlMsg，这里改用新的边界标记
+		const size_t End = Source.find("void CNetServer::OnTokenCtrlMsg", Start);
 		ASSERT_NE(End, std::string::npos);
 		const std::string Handler = Source.substr(Start, End - Start);
 
 		EXPECT_NE(Handler.find("if(Packet.m_DataSize < 2)"), std::string::npos);
 		EXPECT_NE(Handler.find("const int Remaining"), std::string::npos);
 		EXPECT_NE(Handler.find("std::min(Header.m_Size, Remaining)"), std::string::npos);
+	}
+
+	int RejoinCallbackStub(int ClientId, void *pUser, bool Sixup, bool VanillaAuth)
+	{
+		return ClientId + (pUser != nullptr ? 100 : 0) + (Sixup ? 1 : 0) + (VanillaAuth ? 2 : 0);
+	}
+
+	TEST(Net, ClientRejoinCallbackCarriesProtocolAndAuth)
+	{
+		// 官方 7131ad28b：重连回调签名带上协议与认证信息
+		NETFUNC_CLIENTREJOIN pfnRejoin = RejoinCallbackStub;
+		EXPECT_EQ(pfnRejoin(1, nullptr, true, false), 2);
+		EXPECT_EQ(pfnRejoin(1, nullptr, false, true), 3);
+	}
+
+	TEST(Net, RejoiningClientsAreHeldOutsideGameState)
+	{
+		// 官方 7131ad28b/b946fa9a2：重连槽位不发快照，标记在重连、掉线与换图时清理
+		const std::string Header = ReadTestSourceFile("src/engine/shared/network.h");
+		EXPECT_NE(Header.find("typedef int (*NETFUNC_CLIENTREJOIN)(int ClientId, void *pUser, bool Sixup, bool VanillaAuth);"), std::string::npos);
+		const std::string Server = ReadTestSourceFile("src/engine/server/server.cpp");
+		EXPECT_NE(Server.find("m_aClients[i].m_State != CClient::STATE_INGAME || m_aClients[i].m_Rejoining"), std::string::npos);
+		EXPECT_NE(Server.find("m_Rejoining = true;"), std::string::npos);
+		EXPECT_NE(Server.find("m_Rejoining = false;"), std::string::npos);
+		EXPECT_NE(Server.find("GameServer()->OnClientRejoin(ClientId);"), std::string::npos);
 	}
 
 	void InitNetBase()
