@@ -308,6 +308,17 @@ public:
 
 	virtual void GetMapInfo(char *pMapName, int MapNameSize, int *pMapSize, SHA256_DIGEST *pSha256, int *pMapCrc) = 0;
 
+	// 官方 f586be3e0/1c063863e：客户端是否能看到服务器的真实客户端 id。
+	// 本地目前只有 0.6 客户端会经过玩家映射，所以这里等价于版本判断；
+	// 等 playermapping 中间链（方案 H）落地后需要补上 0.7 客户端的分支。
+	bool ClientSupportsServerMaxClients(int ClientId) const
+	{
+		// 控制台与服务器演示客户端使用未翻译的 id
+		if(ClientId < 0)
+			return true;
+		return GetClientVersion(ClientId) >= VERSION_DDNET_128_PLAYERS;
+	}
+
 	virtual bool WouldClientNameChange(int ClientId, const char *pNameRequest) = 0;
 	virtual bool WouldClientClanChange(int ClientId, const char *pClanRequest) = 0;
 	virtual void SetClientName(int ClientId, const char *pName) = 0;

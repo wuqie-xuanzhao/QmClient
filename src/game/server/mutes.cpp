@@ -244,7 +244,7 @@ void CGameContext::ConMuteId(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	const int Victim = pResult->GetVictim();
+	const int Victim = pResult->GetVictim(0);
 	if(!CheckClientId(Victim) || !pSelf->m_apPlayers[Victim])
 	{
 		log_info("mutes", "Client ID not found: %d", Victim);
@@ -282,7 +282,7 @@ void CGameContext::ConUnmuteId(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	const int Victim = pResult->GetVictim();
+	const int Victim = pResult->GetVictim(0);
 	if(!CheckClientId(Victim) || !pSelf->m_apPlayers[Victim])
 	{
 		log_info("mutes", "Client ID not found: %d", Victim);
@@ -322,7 +322,7 @@ void CGameContext::ConVoteMuteId(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	const int Victim = pResult->GetVictim();
+	const int Victim = pResult->GetVictim(0);
 	if(!CheckClientId(Victim) || !pSelf->m_apPlayers[Victim])
 	{
 		log_info("votemutes", "Client ID not found: %d", Victim);
@@ -360,7 +360,7 @@ void CGameContext::ConVoteUnmuteId(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	const int Victim = pResult->GetVictim();
+	const int Victim = pResult->GetVictim(0);
 	if(!CheckClientId(Victim) || !pSelf->m_apPlayers[Victim])
 	{
 		log_info("votemutes", "Client ID not found: %d", Victim);

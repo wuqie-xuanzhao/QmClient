@@ -155,7 +155,10 @@ void CServerBan::ConBanExt(IConsole::IResult *pResult, void *pUser)
 	if(str_isallnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
-		if(ClientId < 0 || ClientId >= MAX_CLIENTS || pThis->Server()->m_aClients[ClientId].m_State == CServer::CClient::STATE_EMPTY)
+		// 官方 f586be3e0：看不到真实 id 的旧客户端不能按 id 封禁
+		if(!pThis->Server()->ClientSupportsServerMaxClients(pResult->m_ClientId))
+			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban error (use a more recent DDNet client)");
+		else if(ClientId < 0 || ClientId >= MAX_CLIENTS || pThis->Server()->m_aClients[ClientId].m_State == CServer::CClient::STATE_EMPTY)
 			pThis->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "net_ban", "ban error (invalid client id)");
 		else
 			pThis->BanAddr(pThis->Server()->ClientAddr(ClientId), Minutes * 60, pReason, false);
@@ -2417,6 +2420,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					}
 					}
 
+					// 官方 f586be3e0：旧客户端看不到真实客户端 id，登录后直接提示
+					if(!ClientSupportsServerMaxClients(ClientId))
+					{
+						SendRconLine(ClientId, "Your client does not see the real client IDs of this server. Use a more recent DDNet client.");
+					}
+
 					// DDRace
 					GameServer()->OnSetAuthed(ClientId, AuthLevel);
 				}
@@ -3919,11 +3928,11 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
 	{
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "Kicked (%s)", pResult->GetString(1));
-		((CServer *)pUser)->Kick(pResult->GetVictim(), aBuf);
+		((CServer *)pUser)->Kick(pResult->GetVictim(0), aBuf);
 	}
 	else
 	{
-		((CServer *)pUser)->Kick(pResult->GetVictim(), "Kicked by console");
+		((CServer *)pUser)->Kick(pResult->GetVictim(0), "Kicked by console");
 	}
 }
 
@@ -4051,6 +4060,10 @@ bool CServer::CanClientUseCommandCallback(int ClientId, const IConsole::ICommand
 
 bool CServer::CanClientUseCommand(int ClientId, const IConsole::ICommandInfo *pCommand) const
 {
+	// 官方 f586be3e0：moderator 用旧客户端时看到的是翻译后的 id，
+	// 带客户端 id 参数的命令会作用到另一个真实客户端，直接拒绝。
+	if(pCommand->TakesClientId() && !ClientSupportsServerMaxClients(ClientId))
+		return false;
 	if(pCommand->Flags() & CFGFLAG_CHAT)
 		return true;
 	if(pCommand->Flags() & CMDFLAG_PRACTICE)
