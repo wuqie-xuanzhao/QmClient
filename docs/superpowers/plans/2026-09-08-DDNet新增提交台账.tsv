@@ -8,7 +8,7 @@ b871d3432ebd5fcced1cf3759d7ef566239f7b05	2026-08-27	Suppress the bundled wavpack
 1a16a876bb1b0fdb1e4bef8fd520b8d74a22d4bf	2026-08-25	Keep sound running when no audio device is available	candidate	unreviewed				
 477825c2a0c9f48a4ef68ea4ef79aadca4fe4911	2025-08-03	Use `std::vector` for shader code lines instead of `new[]`	candidate	unreviewed	graphics/opengl		源码仍使用new[]/delete[]临时shader指针数组，官方是局部所有权清理；与本批JSON修复独立，待后续处理	
 0613b67043d6e38af822c8dc198edc2c6a1e24f0	2026-08-31	Fix memory leak of removed vote options	candidate	verified-code-equivalent	client/voting		voting.cpp:435-436，回收链为空时设置m_pRecycleFirst；AddOption从first弹出并在链空时清last，与官方修复一致	2026-09-08官方diff与当前源码逐处核对；未做音频设备运行时验证；CMake来源确认期间不启动构建
-ab5109826f1e43d60533592f39b9e262a2434804	2026-08-31	Improve sound assertions, add assertions for `Play` function	candidate	unreviewed				
+ab5109826f1e43d60533592f39b9e262a2434804	2026-08-31	Improve sound assertions, add assertions for `Play` function	candidate	verified-code-equivalent	engine/sound		当前 sound.cpp 已包含官方新增的 Play 参数断言及各处带索引的错误信息；无需重复提交。	源码逐处核对
 b4eab43a14bb3d929ef79196631ea38cd073ab69	2026-08-31	Fix mapsound sample index not being initialized on errors	candidate	verified-code-equivalent	client/mapsounds		mapsounds.cpp外置名称失败、内置数据失败两条路径均在continue前设置m_aSounds[i]=-1，与官方两处diff一致	2026-09-08官方diff与当前源码逐处核对；未做音频设备运行时验证；CMake来源确认期间不启动构建
 bd6cdad31d51aefa0ecf25cb006cbf19f3c5e1f6	2026-09-01	Fix mapsound sample index not being initialized on errors, improve assertions (#12753)	merge-commit	unreviewed				
 1159edfa0309f78599b4a2703ae08c663d3789b1	2026-09-01	Fix memory leak of removed vote options (#12754)	merge-commit	unreviewed				
