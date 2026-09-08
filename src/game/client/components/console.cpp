@@ -11,7 +11,6 @@
 
 #include <engine/console.h>
 #include <engine/engine.h>
-#include <engine/font_icons.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/graphics.h>
 #include <engine/image.h>

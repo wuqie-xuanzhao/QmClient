@@ -643,7 +643,14 @@ def audit_shared_contracts(repo_root: Path) -> list[str]:
 	menu_source = _read(repo_root, _NAVIGATION_SOURCE)
 	settings_shell_source = _read(repo_root, _DEFAULT_SOURCE)
 	tclient_source = _read(repo_root, Path("src/game/client/components/tclient/menus_tclient.cpp"))
-	ui_source = _read(repo_root, Path("src/game/client/ui.cpp"))
+	# Dropdown trigger/popup rendering lives in ui_popups.cpp after the UI split.
+	ui_source = "\n".join(
+		_read(repo_root, relative)
+		for relative in (
+			Path("src/game/client/ui.cpp"),
+			Path("src/game/client/ui_popups.cpp"),
+		)
+	)
 	if "ResolveSettingsRadioRowLayout(" not in menu_source:
 		errors.append("shared: responsive settings radio resolver missing")
 	if "SettingsPageUiScale(pRect->w)" in menu_source:

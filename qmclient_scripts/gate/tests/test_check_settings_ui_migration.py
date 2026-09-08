@@ -93,7 +93,8 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 			"src/game/client/components/menus_settings.cpp": "Ui()->SetDropDownFontSize(m_SettingsContentMetrics.m_BodySize);",
 			"src/game/client/components/qmclient/menus_qmclient.cpp": "",
 			"src/game/client/components/tclient/menus_tclient.cpp": "VMargin, 0.0f, FontSize",
-			"src/game/client/ui.cpp": "Props.m_FontSize = ResolvedFontSize; State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;",
+			"src/game/client/ui.cpp": "",
+			"src/game/client/ui_popups.cpp": "Props.m_FontSize = ResolvedFontSize; State.m_SelectionPopupContext.m_FontSize = ResolvedFontSize;",
 		}
 		for relative, content in files.items():
 			path = self.root / relative
@@ -304,7 +305,7 @@ Clean.m_FontSize = Metrics.m_BodySize;
 		qmclient.write_text("Options.m_FontSize = std::min(BodySize, ControlColumn.h * 0.8f);", encoding="utf-8")
 		self.assertTrue(any("settings font assignment still derives" in item for item in audit_shared_contracts(root)))
 		qmclient.write_text("", encoding="utf-8")
-		ui = root / "src/game/client/ui.cpp"
+		ui = root / "src/game/client/ui_popups.cpp"
 		ui.write_text("Props.m_FontSize = ResolvedFontSize;", encoding="utf-8")
 		self.assertTrue(any("dropdown trigger and popup" in item for item in audit_shared_contracts(root)))
 

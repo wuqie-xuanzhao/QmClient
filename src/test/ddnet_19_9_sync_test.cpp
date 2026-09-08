@@ -77,11 +77,11 @@ TEST(DDNet199Sync, AddsDemoBrowserTooltips)
 
 TEST(DDNet199Sync, ImprovesGraphicsFatalErrorPopup)
 {
-	const std::string Backend = ReadTestSourceFile("src/engine/client/backend_sdl.cpp");
+	const std::string Backend = ReadTestSourceFile("src/engine/client/graphics_threaded.cpp");
 	const std::string Client = ReadTestSourceFile("src/engine/client/client.cpp");
 	const std::string Graphics = ReadTestSourceFile("src/engine/graphics.h");
 
-	EXPECT_NE(Backend.find("const char *CGraphicsBackend_Threaded::GetFatalError() const"), std::string::npos);
+	EXPECT_NE(Backend.find("const char *CGraphics_Threaded::GetFatalError() const"), std::string::npos);
 	EXPECT_NE(Graphics.find("virtual const char *GetFatalError() const = 0;"), std::string::npos);
 	EXPECT_NE(Client.find("Graphics Initialization Error"), std::string::npos);
 	EXPECT_NE(Client.find("https://wiki.ddnet.org/wiki/GFX_Troubleshooting"), std::string::npos);

@@ -568,7 +568,7 @@ static int IsVersionSupportedGlew(EBackendType BackendType, int VersionMajor, in
 }
 #endif // !CONF_HEADLESS_CLIENT
 
-EBackendType CGraphicsBackend_SDL_GL::DetectBackend()
+EBackendType CGraphicsBackend_SDL_GL::DetectBackend() const
 {
 	EBackendType RetBackendType = BACKEND_TYPE_OPENGL;
 #if defined(CONF_BACKEND_VULKAN)
@@ -657,8 +657,8 @@ void CGraphicsBackend_SDL_GL::ClampDriverVersion(EBackendType BackendType)
 	else if(BackendType == BACKEND_TYPE_VULKAN)
 	{
 #if defined(CONF_BACKEND_VULKAN)
-		g_Config.m_GfxGLMajor = BACKEND_VULKAN_VERSION_MAJOR;
-		g_Config.m_GfxGLMinor = BACKEND_VULKAN_VERSION_MINOR;
+		g_Config.m_GfxGLMajor = gs_BackendVulkanMinimumVersion.m_Major;
+		g_Config.m_GfxGLMinor = gs_BackendVulkanMinimumVersion.m_Minor;
 		g_Config.m_GfxGLPatch = 0;
 #endif
 	}
@@ -721,6 +721,10 @@ std::optional<int> ShowMessageBoxWithoutGraphics(const IGraphics::CMessageBox &M
 
 std::optional<int> CGraphicsBackend_SDL_GL::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)
 {
+#if defined(CONF_PLATFORM_MACOS)
+	if(m_BackendType == EBackendType::BACKEND_TYPE_VULKAN)
+		return ShowMessageBoxImpl(MessageBox, nullptr);
+#endif
 	if(m_pProcessor != nullptr)
 	{
 		m_pProcessor->ErroneousCleanup();
@@ -815,8 +819,8 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 #ifdef CONF_BACKEND_VULKAN
 		if(DriverAgeType == GRAPHICS_DRIVER_AGE_TYPE_DEFAULT)
 		{
-			Major = BACKEND_VULKAN_VERSION_MAJOR;
-			Minor = BACKEND_VULKAN_VERSION_MINOR;
+			Major = gs_BackendVulkanMinimumVersion.m_Major;
+			Minor = gs_BackendVulkanMinimumVersion.m_Minor;
 			Patch = 0;
 			return true;
 		}
@@ -825,6 +829,31 @@ bool CGraphicsBackend_SDL_GL::GetDriverVersion(EGraphicsDriverAgeType DriverAgeT
 #endif
 	}
 	return false;
+}
+
+bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion(int &Major, int &Minor, int &Patch, const char *&pName)
+{
+	Major = 0;
+	Minor = 0;
+	Patch = 0;
+	pName = "";
+
+	if(m_BackendType == BACKEND_TYPE_OPENGL)
+		pName = "OpenGL";
+	else if(m_BackendType == BACKEND_TYPE_OPENGL_ES)
+		pName = "GLES";
+	else if(m_BackendType == BACKEND_TYPE_VULKAN)
+		pName = "Vulkan";
+	else
+		return false;
+
+	if(m_Capabilities.m_DetectedContextMajor <= 0)
+		return false;
+
+	Major = m_Capabilities.m_DetectedContextMajor;
+	Minor = m_Capabilities.m_DetectedContextMinor;
+	Patch = m_Capabilities.m_DetectedContextPatch;
+	return true;
 }
 
 const char *CGraphicsBackend_SDL_GL::GetScreenName(int Screen) const
@@ -1466,7 +1495,7 @@ void CGraphicsBackend_SDL_GL::SetWindowParams(int FullscreenMode, bool IsBorderl
 		else // Windowed fullscreen
 		{
 			SDL_SetWindowFullscreen(m_pWindow, 0);
-			SDL_SetWindowBordered(m_pWindow, SDL_TRUE);
+			SDL_SetWindowBordered(m_pWindow, SDL_FALSE);
 			SDL_SetWindowResizable(m_pWindow, SDL_FALSE);
 			SDL_DisplayMode DpMode;
 			if(SDL_GetDesktopDisplayMode(g_Config.m_GfxScreen, &DpMode) < 0)

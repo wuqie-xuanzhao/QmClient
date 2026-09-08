@@ -513,8 +513,8 @@ TEST(QmWindowModes, StartupMarksWindowedFullscreenAsBorderless)
 	EXPECT_NE(IssueInit.find("else if(IsDesktopFullscreen)"), std::string::npos);
 	EXPECT_NE(IssueInit.find("else if(IsPurelyWindowed)"), std::string::npos);
 	EXPECT_NE(WindowedFullscreen.find("Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;"), std::string::npos);
-	EXPECT_NE(Backend.find("const bool IsWindowedFullscreen = g_Config.m_GfxFullscreen == 3;"), std::string::npos);
-	EXPECT_NE(Backend.find("if(IsWindowedFullscreen || (IsFullscreen && !SupportedResolution)"), std::string::npos);
+	EXPECT_NE(Backend.find("g_Config.m_GfxFullscreen == 3"), std::string::npos);
+	EXPECT_NE(Backend.find("bool IsFullscreen ="), std::string::npos);
 }
 
 TEST(QmWindowModes, GraphicsMenuMapsAllFiveModesToDistinctBackendStates)

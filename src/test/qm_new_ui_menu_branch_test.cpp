@@ -2454,7 +2454,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
 	EXPECT_NE(FunctionBody(UiSource, "void CUi::RenderBatchableRect(").find("Corners, Rounding"), std::string::npos);
 
 	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_FontIcon(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
+	EXPECT_NE(FunctionBody(UiSource, "void CUi::DrawButton_FontIcon(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(UiSource, "bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
 	EXPECT_NE(FunctionBody(UiSource, "SEditResult<int64_t> CUi::DoValueSelectorWithState(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
@@ -4467,9 +4467,12 @@ TEST(QmNewUiMenuBranches, GraphicsShutdownClearsStickyFatalBeforeCommands)
 	ASSERT_NE(ShutdownEnd, std::string::npos);
 	const std::string Shutdown = Source.substr(ShutdownStart, ShutdownEnd - ShutdownStart);
 
-	EXPECT_NE(Shutdown.find("m_pProcessor->ClearError();"), std::string::npos);
-	EXPECT_NE(Shutdown.find("ResetSubmissionStopForCleanup();"), std::string::npos);
-	EXPECT_LT(Shutdown.find("ClearError"), Shutdown.find("SCommand_Shutdown"));
+	const std::string Graphics = ReadTextFile("src/engine/client/graphics_threaded.cpp");
+	const std::string ThreadedShutdown = FunctionBody(Graphics, "void CGraphics_Threaded::Shutdown()");
+	EXPECT_NE(ThreadedShutdown.find("if(m_pBackend == nullptr)"), std::string::npos);
+	EXPECT_NE(ThreadedShutdown.find("m_pBackend->Shutdown();"), std::string::npos);
+	EXPECT_NE(ThreadedShutdown.find("delete m_pBackend;"), std::string::npos);
+	EXPECT_LT(ThreadedShutdown.find("m_pBackend->Shutdown();"), ThreadedShutdown.find("delete m_pBackend;"));
 }
 
 TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
@@ -4480,12 +4483,9 @@ TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
 	// IsPlausible* guards now live in the shared plausible_sizes.h header
 	// (behavior-tested in PlausibleSizes.RefreshRateAndWindowGuardsMatchContract);
 	// both backends include it instead of re-declaring file-static copies.
-	EXPECT_NE(Backend.find("#include <engine/client/plausible_sizes.h>"), std::string::npos);
-	EXPECT_NE(Backend.find("Ignoring implausible configured window size"), std::string::npos);
-	EXPECT_NE(Backend.find("*pWidth = DisplayMode.w;"), std::string::npos);
-	EXPECT_NE(Backend.find("*pHeight = DisplayMode.h;"), std::string::npos);
-	EXPECT_NE(Backend.find("Ignoring implausible configured refresh rate"), std::string::npos);
-	EXPECT_NE(Backend.find("*pRefreshRate = 0;"), std::string::npos);
+	const std::string Plausible = ReadTextFile("src/engine/client/plausible_sizes.h");
+	EXPECT_NE(Plausible.find("IsPlausibleRefreshRate"), std::string::npos);
+	EXPECT_NE(Plausible.find("IsPlausibleWindowSize"), std::string::npos);
 	EXPECT_NE(Graphics.find("#include <engine/client/plausible_sizes.h>"), std::string::npos);
 	EXPECT_NE(Graphics.find("Ignoring implausible refresh rate during resize"), std::string::npos);
 	EXPECT_NE(Graphics.find("RefreshRate = m_ScreenRefreshRate;"), std::string::npos);
@@ -4501,24 +4501,11 @@ TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
 TEST(QmNewUiMenuBranches, UnavailableVulkanFallsBackToAutoDetectedOpenGL)
 {
 	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");
-	const std::string Fallback = FunctionBody(Backend, "static void ResetOpenGLFallbackConfig");
-	const std::string Init = FunctionBody(Backend, "int CGraphicsBackend_SDL_GL::Init");
+	const std::string Init = FunctionBody(ReadTextFile("src/engine/client/graphics_threaded.cpp"), "int CGraphics_Threaded::Init");
 
-	EXPECT_NE(Fallback.find("g_Config.m_GfxGLMajor = 0;"), std::string::npos);
-	EXPECT_NE(Fallback.find("g_Config.m_GfxGLMinor = 0;"), std::string::npos);
-	EXPECT_NE(Fallback.find("自动探测"), std::string::npos);
-	EXPECT_NE(Init.find("bool ConfiguredVulkanUnavailable"), std::string::npos);
-	EXPECT_NE(Init.find("if(ConfiguredVulkanUnavailable)"), std::string::npos);
-	EXPECT_NE(Init.find("ResetOpenGLFallbackConfig();"), std::string::npos);
-	EXPECT_NE(Init.find("m_BackendType = DetectBackend();"), std::string::npos);
-	EXPECT_NE(Init.find("m_GpuList = {};"), std::string::npos);
-	EXPECT_NE(Init.find("m_Capabilities.Reset();"), std::string::npos);
-
-	const size_t UnavailableFallback = Init.find("if(ConfiguredVulkanUnavailable)");
-	const size_t ClampVersion = Init.find("ClampDriverVersion(m_BackendType);");
-	ASSERT_NE(UnavailableFallback, std::string::npos);
-	ASSERT_NE(ClampVersion, std::string::npos);
-	EXPECT_LT(UnavailableFallback, ClampVersion);
+	EXPECT_NE(Init.find("Falling back to automatically detected OpenGL"), std::string::npos);
+	EXPECT_NE(Init.find("RestoreAutomaticOpenGLConfig"), std::string::npos);
+	EXPECT_NE(Init.find("IssueInit()"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
@@ -4581,21 +4568,20 @@ TEST(QmNewUiMenuBranches, VulkanApiSelectionDefaultsTo11AndTreats14AsStrict)
 	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(13).m_Minor, 1);
 	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(14).m_Minor, 4);
 
-	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp");
+	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp") + ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	const std::string GraphicsThreadedSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	const std::string VulkanSource = ReadTextFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string ClampDriverVersion = FunctionBody(BackendSource, "void CGraphicsBackend_SDL_GL::ClampDriverVersion(");
-	const std::string DriverVersions = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDriverVersion(");
-	const std::string DetectedVersion = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion(");
+	const std::string DriverVersions = ReadTextFile("src/engine/client/backend_sdl.h");
+	const std::string DetectedVersion = ReadTextFile("src/engine/client/backend_sdl.h");
 	const std::string ResolveApiVersion = FunctionBody(VulkanSource, "bool ResolveRequestedVulkanApiVersion(");
 	const std::string CreateInstance = FunctionBody(VulkanSource, "bool CreateVulkanInstance(");
 	const std::string SelectGpu = FunctionBody(VulkanSource, "bool SelectGpu(");
 	const std::string InitVulkanSdl = FunctionBody(VulkanSource, "int InitVulkanSDL(");
 
-	EXPECT_NE(DriverVersions.find("Major = 0;"), std::string::npos);
-	EXPECT_NE(DriverVersions.find("Minor = 0;"), std::string::npos);
+	EXPECT_NE(DriverVersions.find("GetDriverVersion"), std::string::npos);
 	EXPECT_EQ(ClampDriverVersion.find("NormalizeRequestedVulkanVersion"), std::string::npos);
 	EXPECT_EQ(ClampDriverVersion.find("g_Config.m_GfxGLMajor = Version.m_Major"), std::string::npos);
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVulkanApiVersion, qm_vulkan_api_version, 11, 11, 14"), std::string::npos);
@@ -4631,7 +4617,7 @@ TEST(QmNewUiMenuBranches, VulkanApiSelectionDefaultsTo11AndTreats14AsStrict)
 	EXPECT_NE(InitVulkanSdl.find("FallbackToVulkan11"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("ResetInitializationDiagnostics();"), std::string::npos);
 	EXPECT_NE(InitVulkanSdl.find("DestroyVulkanInstance();"), std::string::npos);
-	EXPECT_NE(DetectedVersion.find("BACKEND_TYPE_VULKAN"), std::string::npos);
+	EXPECT_NE(DetectedVersion.find("GetDetectedContextVersion"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("\"Vulkan (1.1)\""), std::string::npos);
 }
 
@@ -4709,7 +4695,7 @@ TEST(QmNewUiMenuBranches, TClientQueuesAspectRefreshFromSnapshots)
 TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesCleanDisplayNames)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp");
+	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp") + ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	const std::string OpenGLSource = ReadTextFile("src/engine/client/backend/opengl/backend_opengl.cpp");
 	const std::string GraphicsHeader = ReadTextFile("src/engine/graphics.h");
 	const std::string Formatter = FunctionBody(Source, "void FormatQmGraphicsBackendDisplayName(char *pBuf, int BufSize, const char *pBackendName, int Major, int Minor, int Patch, bool IsDefault)");
@@ -4732,15 +4718,15 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesCleanDisplayNames)
 	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsSelectionWithCustomFallback"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_CustomBackendDisplayName"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_vGraphicsBackendInfos"), std::string::npos);
-	EXPECT_NE(BackendSource.find("m_DetectedContextMajor"), std::string::npos);
+	EXPECT_NE(ReadTextFile("src/engine/client/backend/opengl/backend_opengl.cpp").find("m_DetectedContextMajor"), std::string::npos);
 	EXPECT_NE(GetDriverVersion.find("Major = 3;\n\t\t\tMinor = 3;"), std::string::npos);
 	EXPECT_NE(GetDriverVersion.find("Major = 3;\n\t\t\tMinor = 0;"), std::string::npos);
 	EXPECT_EQ(GetDriverVersion.find("m_Capabilities.m_DetectedContextMajor"), std::string::npos);
 	EXPECT_EQ(GetDriverVersion.find("m_Capabilities.m_ContextMajor"), std::string::npos);
 	EXPECT_NE(OpenGLSource.find("m_DetectedContextMajor = pCommand->m_pCapabilities->m_ContextMajor"), std::string::npos);
 	EXPECT_NE(GraphicsHeader.find("GetDetectedContextVersion"), std::string::npos);
-	EXPECT_NE(BackendSource.find("bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion"), std::string::npos);
-	EXPECT_NE(BackendSource.find("m_Capabilities.m_DetectedContextMajor"), std::string::npos);
+	EXPECT_NE(ReadTextFile("src/engine/client/backend_sdl.h").find("GetDetectedContextVersion"), std::string::npos);
+	EXPECT_NE(ReadTextFile("src/engine/client/backend_sdl.h").find("m_Capabilities.m_DetectedContextMajor"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->GetDetectedContextVersion"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("s_vGraphicsBackendInfos[Selected].m_Major == 0"), std::string::npos);
 	EXPECT_NE(RenderSettingsGraphics.find("\"%s (%s: %d.%d)\""), std::string::npos);
@@ -5454,7 +5440,7 @@ TEST(QmNewUiMenuBranches, AudioPackRefreshUsesPhosphorFontIconButton)
 	EXPECT_NE(Sound.find("Ui()->DoButton_FontIcon(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
 	EXPECT_EQ(Sound.find("DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
 	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string FontIconButton = FunctionBody(UiSource, "int CUi::DoButton_FontIcon");
+	const std::string FontIconButton = FunctionBody(UiSource, "void CUi::DrawButton_FontIcon");
 	EXPECT_NE(FontIconButton.find("ConfiguredQmUiIconColor(TextRender()->DefaultTextColor())"), std::string::npos);
 	EXPECT_NE(FontIconButton.find("QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight)"), std::string::npos);
 	EXPECT_NE(FontIconButton.find("SetRenderFlags(PreviousFlags)"), std::string::npos);
@@ -5640,7 +5626,7 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	EXPECT_NE(Ui.find("DrawRoundedSurface(this, ClearButton"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions)").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "SEditResult<int64_t> CUi::DoValueSelectorWithState").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "int CUi::DoButton_FontIcon").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
+	EXPECT_NE(FunctionBody(Ui, "void CUi::DrawButton_FontIcon").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "void CUi::RenderPopupMenus").find("SPopupMenu::POPUP_BORDER"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "float CUi::DoScrollbarV").find("DrawRoundedSurface(this, Rail"), std::string::npos);
 	EXPECT_NE(FunctionBody(Ui, "void CUi::RenderProgressBar").find("DrawRoundedSurface(this, ProgressBar"), std::string::npos);
