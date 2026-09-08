@@ -36,7 +36,7 @@ f17a8d6b09e6a04e239953938f835e385f2d5c69	2026-09-03	server: Fix old clients when
 56cd7ce0b5ae7a0f6883a1c68f7c4b507c93b5a4	2026-09-03	Use `std::vector` for shader code lines instead of `new[]` (#12731)	merge-commit	unreviewed				
 8ebcbdc9a83f2ff9c82672bf355beacfcfa2dacd	2026-09-03	Skip reopening the audio device while the system reports no output device (#12775)	merge-commit	unreviewed				
 a7472a83ba437ce4598fa06743163ba5093142a7	2026-09-01	ios: Don't use the display cutout	candidate	confirmed-gap	ios/display cutout		本地无IosDisplayCutoutInsets/GetDisplayCutoutInsets链；需iOS渲染与输入统一坐标适配，不机械添加backend单函数	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
-636e2efe08e38fa7032054fa116e34f46741b7b4	2026-09-03	Add missing includes	candidate	unreviewed				
+636e2efe08e38fa7032054fa116e34f46741b7b4	2026-09-03	Add missing includes	candidate	adapted-worktree	shared headers		补齐 fifo.cpp 的 cerrno、network.h 的 vector 和 snapshot.cpp 的 algorithm；本地提交 a83b8685b。	git diff --check 通过；clang-format 干跑暴露 network.h 既有 include 排序漂移；完整构建待 Windows SDK 环境恢复
 e6edb9bb0bcaace8ded336262f24016459d90929	2026-09-03	ios: Don't use the display cutout (#12758)	merge-commit	unreviewed				
 45372b68abf0e0cc9f9c18d9858159d821962680	2026-09-03	Add missing includes (#12776)	merge-commit	unreviewed				
 9ed3b24d9d2737e5e81250cf27ee665f8bb12b69	2026-08-31	client: Improve performance for low refresh/update rates	candidate	unreviewed				
