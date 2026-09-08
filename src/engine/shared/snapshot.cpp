@@ -12,6 +12,7 @@
 #include <generated/protocol7.h>
 #include <generated/protocolglue.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <limits>
 
