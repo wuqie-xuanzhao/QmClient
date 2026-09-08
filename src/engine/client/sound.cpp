@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "sound.h"
 
-#include <base/bytes.h>
 #include <base/dbg.h>
 #include <base/log.h>
 #include <base/math.h>
@@ -421,16 +420,20 @@ CSample *CSound::AllocSample()
 	return pSample;
 }
 
-void CSound::RateConvert(CSample &Sample) const
+bool CSound::RateConvert(CSample &Sample) const
 {
 	dbg_assert(Sample.IsLoaded(), "Sample not loaded: %d", Sample.m_Index);
 	// make sure that we need to convert this sound
 	if(Sample.m_Rate == m_MixingRate)
-		return;
+		return true;
 
 	// allocate new data
 	const int NumFrames = (int)((Sample.m_NumFrames / (float)Sample.m_Rate) * m_MixingRate);
+	if(NumFrames <= 0)
+		return false;
 	short *pNewData = (short *)calloc((size_t)NumFrames * Sample.m_Channels, sizeof(short));
+	if(pNewData == nullptr)
+		return false;
 
 	for(int i = 0; i < NumFrames; i++)
 	{
@@ -459,6 +462,7 @@ void CSound::RateConvert(CSample &Sample) const
 	Sample.m_pData = pNewData;
 	Sample.m_NumFrames = NumFrames;
 	Sample.m_Rate = m_MixingRate;
+	return true;
 }
 
 bool CSound::DecodeOpus(CSample &Sample, const void *pData, unsigned DataSize, const char *pContextName) const
