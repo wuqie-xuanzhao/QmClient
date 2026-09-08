@@ -3422,6 +3422,7 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	Info.m_NoSkinChangeForFrozen = false;
 	Info.m_DDRaceTeam = false;
 	Info.m_PredictEvents = Vanilla;
+	Info.m_OldLaser = false;
 	Info.m_MinTeamSize = 0;
 	Info.m_MaxTeamSize = 0;
 	Info.m_NumDDRaceTeams = LEGACY_MAX_CLIENTS + 1;
@@ -3492,6 +3493,9 @@ static CGameInfo GetGameInfo(const CNetObj_GameInfoEx *pInfoEx, int InfoExSize, 
 	{
 		Info.m_PredictEvents = Flags2 & GAMEINFOFLAG2_PREDICT_EVENTS;
 	}
+	// 官方 79184e826：OLD_LASER 追加在 Flags2 末尾，服务器不升版本号也会置位，
+	// 所以不按版本门控；老服务器不发送该位时保持客户端配置回退值 false。
+	Info.m_OldLaser = Flags2 & GAMEINFOFLAG2_OLD_LASER;
 	if(Version >= 12)
 	{
 		// SecureUnpackObj 通常会用默认值填充旧对象；这里仍按实际收到的大小读取，
@@ -6523,6 +6527,7 @@ void CGameClient::UpdatePrediction()
 	m_GameWorld.m_WorldConfig.m_PredictFreeze = g_Config.m_ClPredictFreeze;
 	m_GameWorld.m_WorldConfig.m_PredictWeapons = AntiPingWeapons();
 	m_GameWorld.m_WorldConfig.m_PredictEvents = g_Config.m_ClPredictEvents && m_GameInfo.m_PredictEvents;
+	m_GameWorld.m_WorldConfig.m_OldLaser = m_GameInfo.m_OldLaser;
 	m_GameWorld.m_WorldConfig.m_PredictTeleport = false;
 	m_GameWorld.m_WorldConfig.m_BugDDRaceInput = m_GameInfo.m_BugDDRaceInput;
 	m_GameWorld.m_WorldConfig.m_NoWeakHookAndBounce = m_GameInfo.m_NoWeakHookAndBounce;

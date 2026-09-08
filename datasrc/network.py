@@ -112,6 +112,7 @@ GameInfoFlags2 = [
 	"NO_SKIN_CHANGE_FOR_FROZEN",
 	"DDRACE_TEAM",
 	"PREDICT_EVENTS",
+	"OLD_LASER",
 ]
 ExPlayerFlags = ["AFK", "PAUSED", "SPEC"]
 LegacyProjectileFlags = [f"CLIENTID_BIT{i}" for i in range(8)] + [

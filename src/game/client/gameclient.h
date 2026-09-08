@@ -177,6 +177,7 @@ public:
 
 	bool m_DDRaceTeam;
 	bool m_PredictEvents;
+	bool m_OldLaser;
 	char m_aGameType[16];
 
 	// 服务器未广播时为零。

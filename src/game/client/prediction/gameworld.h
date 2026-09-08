@@ -84,6 +84,7 @@ public:
 		bool m_BugDDRaceInput;
 		bool m_NoWeakHookAndBounce;
 		bool m_PredictEvents;
+		bool m_OldLaser;
 		bool m_PredictTeleport = false;
 	} m_WorldConfig;
 

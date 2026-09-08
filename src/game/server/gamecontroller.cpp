@@ -659,6 +659,9 @@ void IGameController::Snap(int SnappingClient)
 			      GAMEINFOFLAG2_PREDICT_EVENTS;
 	if(g_Config.m_SvNoWeakHook)
 		GameInfoEx.m_Flags2 |= GAMEINFOFLAG2_NO_WEAK_HOOK;
+	// 官方 79184e826：把服务端 old laser 状态同步给客户端预测，避免预测与命中不一致。
+	if(g_Config.m_SvOldLaser)
+		GameInfoEx.m_Flags2 |= GAMEINFOFLAG2_OLD_LASER;
 	GameInfoEx.m_Version = GAMEINFO_CURVERSION;
 	GameInfoEx.m_MinTeamSize = g_Config.m_SvMinTeamSize;
 	GameInfoEx.m_MaxTeamSize = g_Config.m_SvMaxTeamSize;
