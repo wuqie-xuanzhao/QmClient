@@ -580,7 +580,7 @@ MACRO_CONFIG_INT(SvPauseMessages, sv_pause_messages, 0, 0, 1, CFGFLAG_SERVER, "W
 MACRO_CONFIG_INT(SvSpecFrequency, sv_pause_frequency, 1, 0, 9999, CFGFLAG_SERVER, "Minimum delay allowed between /spec.")
 MACRO_CONFIG_INT(SvInvite, sv_invite, 1, 0, 1, CFGFLAG_SERVER, "Whether players can invite other players to team.")
 MACRO_CONFIG_INT(SvInviteFrequency, sv_invite_frequency, 1, 0, 9999, CFGFLAG_SERVER, "Minimum delay allowed between invitations.")
-MACRO_CONFIG_INT(SvTeleOthersAuthLevel, sv_tele_others_auth_level, 1, 1, 3, CFGFLAG_SERVER, "Auth level required to send phone to others.")
+MACRO_CONFIG_STR(SvTeleOthersAuthLevel, sv_tele_others_auth_level, 256, "helper", CFGFLAG_SERVER, "The auth level you need to tele others")
 MACRO_CONFIG_INT(SvRegionalRankings, sv_regional_rankings, 1, 0, 1, CFGFLAG_SERVER, "Show region rankings in /rank, /top5, and /top5team.")
 
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, -1, 1, CFGFLAG_SERVER, "Enable emote eyes? 1=enabled, 0=disabled, -1=disabled.")

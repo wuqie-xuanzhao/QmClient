@@ -60,7 +60,7 @@ b943dfa0c194c12740eeba82413cd4bc43128c1c	2026-08-24	build: Use precompiled heade
 7f99b873220c7da4d84ad00bd9cec06ca4bc5a1e	2026-09-04	change messages saying have to be in a team (1-63) to (1-127)	candidate	adapted-worktree	server/save + server/score		更新两处大队伍错误提示文本，不改变队伍判定逻辑；本地提交 7f167934f。	clang-format 干跑、git diff --check
 d90b7e5717f18dd40ec9fb7a3940c6588c902b7f	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool	candidate	unreviewed				
 4be2a112ccb3634c6aa4b02f333fca51dda73a78	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool (#12789)	merge-commit	unreviewed				
-36c44dceca40ee1f4b92145642d8694a83abff1c	2026-09-05	Use role name for tele others config	candidate	unreviewed				
+36c44dceca40ee1f4b92145642d8694a83abff1c	2026-09-05	Use role name for tele others config	candidate	adapted-worktree	server/config		配置改为 helper/moderator/admin 字符串；保留 1/2/3 兼容并输出弃用警告；非法值拒绝写入	2026-09-08 game-server 构建通过；clang-format --Werror、git diff --check 通过；未做实际服务端配置热加载与权限会话验证
 9cf22b5e55b2c077d3eed7931b4abea160b712c6	2026-09-05	Update json-parser to reduce ubsan errors	candidate	unreviewed				
 17234d7a1f6aab09946dcf16229844c58a12640e	2026-09-05	ios: Support dark/tinted icons, base icons on ddnet-data-svg (#12757)	merge-commit	unreviewed				
 1e83a7d09d3dbb8bc1595320ff782b2ab5d30276	2026-09-05	Update json-parser to reduce ubsan errors (#12794)	merge-commit	unreviewed				
@@ -85,7 +85,7 @@ ec8c4e6398622a282e2cea23f2d947fb14ecf471	2026-09-06	Fix undefined behavior with 
 17e3c2e831ce93e6d1eb83036b51cc5fa6e81dd3	2026-09-07	Fix -1 passed as `size_t` to json parser	candidate	partially-adapted-worktree	test/teehistorian		JsonParse长度改为buffer.size()-16；不删除pointer-overflow:json.c suppression，待第三方parser升级验证	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
 7c5de8c3d54a055dd88d2cb30c18c147c3c653bd	2026-09-07	Fix -1 passed as `size_t` to json parser (#12811)	merge-commit	unreviewed				
 3d12558c35322817164743c1a68ef3fe8f743dfb	2026-09-07	"Changed messages saying ""You have to be in a team (1-63)"" to ""You have to be in a team (1-127)""  (#12787)"	merge-commit	unreviewed				
-8e46925225b46bde35cf633de839591b370547cb	2026-09-07	Use role name for tele others config (#12790)	merge-commit	unreviewed				
+8e46925225b46bde35cf633de839591b370547cb	2026-09-07	Use role name for tele others config (#12790)	merge-commit	verified-wrapper	server/config	36c44dceca	合并包装；底层角色名配置适配已落入当前工作树	父链与底层提交核对
 8375112945b508cf72c1520925187a8dd115bfe1	2026-08-08	Update wavpack from 4.40 to 5.9.0 and put it in ddnet-libs	candidate	unreviewed				
 7e96eeab395b57c9fed4f905557c7ba7d19c943b	2026-09-05	"Revert ""Suppress the bundled wavpack shift reports for UBSan"""	candidate	verified-code-equivalent	build/ubsan	b871d3432	当前 ubsan.supp 未包含 wavpack shift 抑制，与官方撤回结果一致。	源码核对
 59968143f78ce6bff2123e0e540e8763a8ff6f8e	2026-09-07	Update wavpack from 4.40 to 5.9.0 and put it in ddnet-libs (#12552)	merge-commit	unreviewed				
