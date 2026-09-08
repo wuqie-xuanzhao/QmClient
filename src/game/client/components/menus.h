@@ -1615,6 +1615,7 @@ protected:
 	bool LoadDemoScreenshotPreviewTexture(const CDemoItem &Item);
 	void RenderDemoScreenshotPreview(CUIRect PreviewRect, const CDemoItem &Item);
 	void DemolistOnUpdate(bool Reset);
+	void DemolistSelectNeighbor();
 	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
 	bool EnsureDemoDate(CDemoItem &Item);
 	bool EnsureDemoSize(CDemoItem &Item);

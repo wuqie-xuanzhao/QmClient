@@ -3224,6 +3224,7 @@ void CMenus::PopupConfirmDeleteSelectedDemos()
 {
 	if(m_vDemoDeleteTargets.empty())
 		return;
+	const bool SelectNeighbor = m_vDemoDeleteTargets.size() == 1 && m_DemolistSelectedIndex >= 0 && m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size();
 
 	int NumDeleted = 0;
 	int NumFailed = 0;
@@ -3254,6 +3255,8 @@ void CMenus::PopupConfirmDeleteSelectedDemos()
 
 	if(NumDeleted > 0)
 	{
+		if(SelectNeighbor)
+			DemolistSelectNeighbor();
 		DemolistPopulate();
 		DemolistOnUpdate(false);
 	}
@@ -3275,6 +3278,12 @@ void CMenus::PopupConfirmDeleteSelectedDemos()
 		str_format(aError, sizeof(aError), Localize("%d selected items were deleted, but %d items could not be deleted. The first failing item was '%s'."), NumDeleted, NumFailed, aFirstFailedName);
 	}
 	PopupMessage(Localize("Error"), aError, Localize("Ok"));
+}
+
+void CMenus::DemolistSelectNeighbor()
+{
+	const int NeighborIndex = m_DemolistSelectedIndex + 1 < (int)m_vpFilteredDemos.size() ? m_DemolistSelectedIndex + 1 : m_DemolistSelectedIndex - 1;
+	str_copy(m_aCurrentDemoSelectionName, NeighborIndex >= 0 ? m_vpFilteredDemos[NeighborIndex]->m_aName : "");
 }
 
 void CMenus::PopupConfirmDeleteDemo()
