@@ -69,6 +69,7 @@ public:
 	void RunBuffer(CCommandBuffer *pBuffer) override;
 
 	const SGfxErrorContainer &GetError() const override;
+	void ClearError() override { m_Error = {}; }
 	void ErroneousCleanup() override;
 	const SGfxWarningContainer &GetWarning() const override;
 
@@ -150,7 +151,8 @@ public:
 	bool HasTextBuffering() override { return m_Capabilities.m_TextBuffering; }
 	bool HasQuadContainerBuffering() override { return m_Capabilities.m_QuadContainerBuffering; }
 	bool Uses2DTextureArrays() override { return m_Capabilities.m_2DArrayTextures; }
-	bool HasTextureArraysSupport() override { return m_Capabilities.m_2DArrayTextures || m_Capabilities.m_3DTextures; }
+	bool HasTextureArraysSupport() const override { return m_Capabilities.m_2DArrayTextures || m_Capabilities.m_3DTextures; }
+	EBackendType GetBackendType() const override { return m_BackendType; }
 
 	const char *GetErrorString() override { return m_aErrorString[0] ? m_aErrorString : nullptr; }
 	const char *GetVendorString() override { return m_aVendorString; }

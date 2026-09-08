@@ -1,7 +1,6 @@
 #include <base/log.h>
 #include <base/logger.h>
 #include <base/math.h>
-#include <base/os.h>
 #include <base/str.h>
 #include <base/system.h>
 
@@ -138,6 +137,7 @@ namespace MapRenderer
 			int Start;
 			m_pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &m_Count);
 			m_Count = std::clamp<int>(m_Count, 0, MAX_MAPIMAGES);
+			const int TextureLoadFlag = m_pGraphics->Uses2DTextureArrays() ? IGraphics::TEXLOAD_TO_2D_ARRAY_TEXTURE : IGraphics::TEXLOAD_TO_3D_TEXTURE;
 
 			constexpr LOG_COLOR WarningLogColor = LOG_COLOR{255, 255, 0};
 
@@ -170,7 +170,7 @@ namespace MapRenderer
 				{
 					char aPath[IO_MAX_PATH_LENGTH];
 					str_format(aPath, sizeof(aPath), "mapres/%s.png", pName);
-					m_aTextures[i] = m_pGraphics->LoadTexture(aPath, IStorage::TYPE_ALL, m_pGraphics->TextureLoadFlags());
+					m_aTextures[i] = m_pGraphics->LoadTexture(aPath, IStorage::TYPE_ALL, TextureLoadFlag);
 				}
 				else
 				{
@@ -183,7 +183,7 @@ namespace MapRenderer
 					{
 						char aTexName[IO_MAX_PATH_LENGTH];
 						str_format(aTexName, sizeof(aTexName), "embedded: %s", pName);
-						m_aTextures[i] = m_pGraphics->LoadTextureRaw(ImageInfo, m_pGraphics->TextureLoadFlags(), aTexName);
+						m_aTextures[i] = m_pGraphics->LoadTextureRaw(ImageInfo, TextureLoadFlag, aTexName);
 						m_pMap->UnloadData(pImg->m_ImageData);
 					}
 					else
@@ -437,22 +437,23 @@ int main(int argc, const char **argv)
 		return 1;
 	}
 
-	std::unique_ptr<IMap> pMap(CreateMap());
+	std::unique_ptr<IEngineMap> pMap(CreateEngineMap());
 	if(!pMap)
 	{
 		log_error_color(ErrorLogColor, TOOL_NAME, "Error creating map");
 		return 1;
 	}
+	pKernel->RegisterInterface(pMap.get(), false);
 
 	// Load map from absolute path
-	if(!pMap->Load(pStorage.get(), InputMap.c_str(), IStorage::TYPE_ABSOLUTE))
+	if(!pMap->Load(InputMap.c_str(), IStorage::TYPE_ABSOLUTE))
 	{
 		log_error_color(ErrorLogColor, TOOL_NAME, "Failed to load map '%s'", InputMap.c_str());
 		return 1;
 	}
 
 	CLayers Layers;
-	Layers.Init(pMap.get(), false, true);
+	Layers.Init(pMap.get(), false);
 
 	CToolMapImages MapImages(&Graphics, pMap.get());
 
@@ -501,7 +502,7 @@ int main(int argc, const char **argv)
 	RenderParams.m_DebugRenderTileClips = false;
 
 	// Set up initial screen mapping
-	Graphics.MapScreen(CScreenRect(0, 0, OutputWidth, OutputHeight));
+	Graphics.MapScreen(0, 0, OutputWidth, OutputHeight);
 	Graphics.Clear(0, 0, 0);
 
 	MapRenderer.Render(RenderParams);
