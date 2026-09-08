@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <vector>
 
 TEST(Snapshot, CrcOneInt)
@@ -127,6 +128,34 @@ TEST(SnapshotDelta, LargeDeltaNeedsDoubleSizedBuffer)
 	const int DeltaSize = pDelta->CreateDelta(*CSnapshot::EmptySnapshot(), *Snapshot.AsSnapshot(), BigBuffer.AsMutSlice());
 	EXPECT_GT(DeltaSize, (int)CSnapshot::MAX_SIZE);
 	EXPECT_LE(DeltaSize, (int)sizeof(BigBuffer.m_aData));
+}
+
+TEST(SnapshotDelta, MalformedDeltaIsRejected)
+{
+	// 官方 0198e362b 修的是 C++ 解包里的指针加法溢出；本地解包在 Rust 侧，
+	// 这里用畸形 delta 覆盖同类边界：越界和非法计数都必须返回失败。
+	rust::Box<CSnapshotDelta> pDelta = CSnapshotDelta::New();
+	pDelta->SetStaticsize(0, 0);
+
+	CSnapshotBuffer To;
+
+	// 空 delta
+	{
+		std::vector<int32_t> vEmpty;
+		EXPECT_LT(pDelta->UnpackDelta(*CSnapshot::EmptySnapshot(), To, rust::Slice<const int32_t>(vEmpty.data(), vEmpty.size())), 0);
+	}
+
+	// 头部不完整
+	{
+		std::vector<int32_t> vTruncated = {0};
+		EXPECT_LT(pDelta->UnpackDelta(*CSnapshot::EmptySnapshot(), To, rust::Slice<const int32_t>(vTruncated.data(), vTruncated.size())), 0);
+	}
+
+	// 删除项数量超出剩余数据（官方溢出修复针对的形态）
+	{
+		std::vector<int32_t> vHugeDeleted = {std::numeric_limits<int32_t>::max(), 0, 0};
+		EXPECT_LT(pDelta->UnpackDelta(*CSnapshot::EmptySnapshot(), To, rust::Slice<const int32_t>(vHugeDeleted.data(), vHugeDeleted.size())), 0);
+	}
 }
 
 TEST(Snapshot, StorageGet)
