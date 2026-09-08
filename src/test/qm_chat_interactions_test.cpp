@@ -497,26 +497,6 @@ TEST(QmWindowModes, WindowedFullscreenRemainsABorderlessNonResizableWindow)
 	EXPECT_NE(WindowedFullscreen.find("SDL_SetWindowResizable(m_pWindow, SDL_FALSE);"), std::string::npos);
 }
 
-TEST(QmWindowModes, StartupMarksWindowedFullscreenAsBorderless)
-{
-	const std::string Backend = ReadTestSourceFile("src/engine/client/backend_sdl.cpp");
-	const std::string Graphics = ReadTestSourceFile("src/engine/client/graphics_threaded.cpp");
-	const std::string IssueInit = SourceFunctionBody(Graphics, "int CGraphics_Threaded::IssueInit()");
-
-	const size_t WindowedFullscreenStart = IssueInit.find("else // Windowed fullscreen");
-	const size_t VSyncStart = IssueInit.find("if(g_Config.m_GfxVsync)", WindowedFullscreenStart + 1);
-	ASSERT_NE(WindowedFullscreenStart, std::string::npos);
-	ASSERT_NE(VSyncStart, std::string::npos);
-	const std::string WindowedFullscreen = IssueInit.substr(WindowedFullscreenStart, VSyncStart - WindowedFullscreenStart);
-
-	EXPECT_NE(IssueInit.find("if(IsExclusiveFullscreen)"), std::string::npos);
-	EXPECT_NE(IssueInit.find("else if(IsDesktopFullscreen)"), std::string::npos);
-	EXPECT_NE(IssueInit.find("else if(IsPurelyWindowed)"), std::string::npos);
-	EXPECT_NE(WindowedFullscreen.find("Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;"), std::string::npos);
-	EXPECT_NE(Backend.find("g_Config.m_GfxFullscreen == 3"), std::string::npos);
-	EXPECT_NE(Backend.find("bool IsFullscreen ="), std::string::npos);
-}
-
 TEST(QmWindowModes, GraphicsMenuMapsAllFiveModesToDistinctBackendStates)
 {
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");

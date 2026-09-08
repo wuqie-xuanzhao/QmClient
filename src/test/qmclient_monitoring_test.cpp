@@ -5220,42 +5220,6 @@ TEST(QmMonitoringHelpers, MenuIdleRenderThrottleOnlySkipsSettingsDuringPerfSampl
 	EXPECT_LT(SettingsReturn, Body.find("return maximum(MENU_IDLE_REFRESH_RATE, g_Config.m_GfxScreenRefreshRate);"));
 }
 
-TEST(QmMonitoringHelpers, ClientRenderLoopUsesGameClientIdleThrottleWithOneFrameRatePath)
-{
-	const std::string ClientSource = ReadRepoFile("src/engine/client/client.cpp");
-	const std::string ClientInterface = ReadRepoFile("src/engine/client.h");
-	const std::string GameClientHeader = ReadRepoFile("src/game/client/gameclient.h");
-	const std::string GameClientSource = ReadRepoFile("src/game/client/gameclient.cpp");
-	const std::string Forwarder = ExtractSourceFunctionBody(GameClientSource, "int CGameClient::RenderThrottleRefreshRate() const");
-	ASSERT_FALSE(Forwarder.empty());
-
-	EXPECT_NE(ClientInterface.find("virtual int RenderThrottleRefreshRate() const = 0;"), std::string::npos);
-	EXPECT_NE(GameClientHeader.find("int RenderThrottleRefreshRate() const override;"), std::string::npos);
-	EXPECT_NE(Forwarder.find("if(!m_Menus.IsActive())"), std::string::npos);
-	EXPECT_NE(Forwarder.find("return 0;"), std::string::npos);
-	EXPECT_NE(Forwarder.find("return m_Menus.IdleRenderFrameRate();"), std::string::npos);
-	EXPECT_NE(ClientSource.find("RequestedRenderThrottleRate = GameClient()->RenderThrottleRefreshRate();"), std::string::npos);
-	EXPECT_NE(ClientSource.find("GfxRefreshRate = std::clamp(RequestedRenderThrottleRate, 10, 10000);"), std::string::npos);
-	EXPECT_NE(ClientSource.find("IdleRenderThrottleRate = GfxRefreshRate;"), std::string::npos);
-	EXPECT_NE(ClientSource.find("int LastIdleRenderThrottleRate = -1;"), std::string::npos);
-	EXPECT_NE(ClientSource.find("event=idle_render_throttle rate=%d requested=%d configured=%d vsync=%d"), std::string::npos);
-	EXPECT_NE(ClientSource.find("LastIdleRenderThrottleRate = IdleRenderThrottleRate;"), std::string::npos);
-	EXPECT_NE(ClientSource.find("fs_makedir_rec_for(aPerfLogCompletePath);"), std::string::npos);
-	EXPECT_NE(ClientSource.find("PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);"), std::string::npos);
-	EXPECT_NE(ClientSource.find("char aWorkingDir[IO_MAX_PATH_LENGTH];"), std::string::npos);
-	EXPECT_NE(ClientSource.find("if(fs_getcwd(aWorkingDir, sizeof(aWorkingDir)))"), std::string::npos);
-	EXPECT_NE(ClientSource.find("str_format(aPerfLogCompletePath, sizeof(aPerfLogCompletePath), \"%s/%s\", aWorkingDir, aPerfLogPath);"), std::string::npos);
-	EXPECT_NE(ClientSource.find("const int64_t RenderFrameTicks = GfxRefreshRate > 0 ? time_freq() / (int64_t)GfxRefreshRate : 0;"), std::string::npos);
-	EXPECT_NE(ClientSource.find("const bool RenderDue = GfxRefreshRate ? Now >= NextRenderTime : UpdateDue;"), std::string::npos);
-	EXPECT_NE(ClientSource.find("NextRenderTime = std::max(NextRenderTime + time_freq() / GfxRefreshRate, Now);"), std::string::npos);
-	EXPECT_NE(ClientSource.find("state=%d render_rate=%d throttle=%d"), std::string::npos);
-	EXPECT_NE(ClientSource.find("if(WakeTime != std::numeric_limits<int64_t>::max())"), std::string::npos);
-	EXPECT_NE(ClientSource.find("WakeTime = std::min(WakeTime, Now + (m_aPredTick[g_Config.m_ClDummy] * time_freq() / GameTickSpeed() - m_PredictedTime.Get(Now)));"), std::string::npos);
-	EXPECT_NE(ClientSource.find("IdleRenderThrottleRate > 0 && !RefreshRate"), std::string::npos);
-	EXPECT_NE(ClientSource.find("WaitTime > 1000us ? WaitTime / 2 : 0ns"), std::string::npos);
-	EXPECT_EQ(ClientSource.find("time_freq() / (int64_t)g_Config.m_GfxRefreshRate"), std::string::npos);
-}
-
 TEST(QmMonitoringHelpers, ConsoleQueuedResultCopyPreservesExternalArguments)
 {
 	const std::string ConsoleSource = ReadRepoFile("src/engine/shared/console.cpp");

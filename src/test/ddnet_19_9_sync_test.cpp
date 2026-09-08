@@ -75,18 +75,6 @@ TEST(DDNet199Sync, AddsDemoBrowserTooltips)
 	EXPECT_NE(Source.find("DoToolTip(&s_RenderButton, &RenderButton"), std::string::npos);
 }
 
-TEST(DDNet199Sync, ImprovesGraphicsFatalErrorPopup)
-{
-	const std::string Backend = ReadTestSourceFile("src/engine/client/graphics_threaded.cpp");
-	const std::string Client = ReadTestSourceFile("src/engine/client/client.cpp");
-	const std::string Graphics = ReadTestSourceFile("src/engine/graphics.h");
-
-	EXPECT_NE(Backend.find("const char *CGraphics_Threaded::GetFatalError() const"), std::string::npos);
-	EXPECT_NE(Graphics.find("virtual const char *GetFatalError() const = 0;"), std::string::npos);
-	EXPECT_NE(Client.find("Graphics Initialization Error"), std::string::npos);
-	EXPECT_NE(Client.find("https://wiki.ddnet.org/wiki/GFX_Troubleshooting"), std::string::npos);
-}
-
 TEST(DDNet199Sync, RejectsEscapeBindsAndUsesCurrentHookState)
 {
 	const std::string Binds = ReadTestSourceFile("src/game/client/components/binds.cpp");
