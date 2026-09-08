@@ -884,6 +884,30 @@ int CServer::GetClientVersion(int ClientId) const
 	return VERSION_NONE;
 }
 
+int CServer::GetMaxClients(int ClientId) const
+{
+	// 官方 f817a14fc：客户端实际能看到的槽位数取决于协议与版本。
+	// 控制台/演示等伪客户端没有槽位概念，按最大值处理。
+	if(ClientId < 0)
+		return MAX_CLIENTS;
+	if(m_aClients[ClientId].m_Sixup)
+		return LEGACY_MAX_CLIENTS;
+	if(m_aClients[ClientId].m_DDNetVersion >= VERSION_DDNET_128_PLAYERS)
+		return MAX_CLIENTS;
+	if(m_aClients[ClientId].m_DDNetVersion >= VERSION_DDNET_OLD)
+		return LEGACY_MAX_CLIENTS;
+	return VANILLA_MAX_CLIENTS;
+}
+
+bool CServer::ClientSupportsServerMaxClients(int ClientId) const
+{
+	// 控制台/演示等伪客户端使用未翻译的 id
+	if(ClientId < 0)
+		return true;
+	// 官方 1a1e165e7：槽位数够多才不需要玩家映射；playermapping 目前依赖 0.7 客户端也走映射
+	return GetMaxClients(ClientId) >= m_NetServer.MaxClients() && !m_aClients[ClientId].m_Sixup;
+}
+
 static inline bool RepackMsg(const CMsgPacker *pMsg, CPacker &Packer, bool Sixup)
 {
 	int MsgId = pMsg->m_MsgId;
@@ -1059,9 +1083,8 @@ void CServer::DoSnapshot()
 		if(m_aClients[i].m_State != CClient::STATE_INGAME)
 			continue;
 
-		// don't send snapshots to clients that haven't identified as DDNet-based yet, can crash them.
-		if(!m_aClients[i].m_Sixup && m_aClients[i].m_DDNetVersion < VERSION_DDNET_OLD)
-			continue;
+		// 官方 1a1e165e7：不再用“是否已确认 DDNet 版本”挡住快照，
+		// vanilla 0.6 客户端也要按自己的槽位映射尽早收到快照。
 
 		// this client is trying to recover, don't spam snapshots
 		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_RECOVER && (Tick() % TickSpeed()) != 0)

@@ -161,7 +161,7 @@ public:
 				if(MsgCopy.m_Mode == WhisperSend && *pId == ClientId)
 					Translate(*pId, ClientId);
 				else
-					*pId = LEGACY_MAX_CLIENTS - 1;
+					*pId = GetMaxClients(ClientId) - 1;
 			}
 		}
 
@@ -297,7 +297,7 @@ public:
 			return true;
 		if(GetClientVersion(ClientId) >= VERSION_DDNET_128_PLAYERS)
 			return true;
-		if(Target < 0 || Target >= LEGACY_MAX_CLIENTS)
+		if(Target < 0 || Target >= GetMaxClients(ClientId))
 			return false;
 		int *pMap = GetIdMap(ClientId);
 		if(pMap[Target] == -1)
@@ -308,16 +308,9 @@ public:
 
 	virtual void GetMapInfo(char *pMapName, int MapNameSize, int *pMapSize, SHA256_DIGEST *pSha256, int *pMapCrc) = 0;
 
-	// 官方 f586be3e0/1c063863e：客户端是否能看到服务器的真实客户端 id。
-	// 本地目前只有 0.6 客户端会经过玩家映射，所以这里等价于版本判断；
-	// 等 playermapping 中间链（方案 H）落地后需要补上 0.7 客户端的分支。
-	bool ClientSupportsServerMaxClients(int ClientId) const
-	{
-		// 控制台与服务器演示客户端使用未翻译的 id
-		if(ClientId < 0)
-			return true;
-		return GetClientVersion(ClientId) >= VERSION_DDNET_128_PLAYERS;
-	}
+	// 官方 f586be3e0/1c063863e + aefb9b0f1：客户端是否能看到服务器的真实客户端 id。
+	// 由 CServer 按客户端实际可见槽位数与服务器槽位数比较实现。
+	virtual bool ClientSupportsServerMaxClients(int ClientId) const = 0;
 
 	virtual bool WouldClientNameChange(int ClientId, const char *pNameRequest) = 0;
 	virtual bool WouldClientClanChange(int ClientId, const char *pClanRequest) = 0;
@@ -391,6 +384,8 @@ public:
 	virtual const char *GetMapName() const = 0;
 
 	virtual bool IsSixup(int ClientId) const = 0;
+	// 官方 f817a14fc：客户端按版本看到的槽位数（vanilla 16、旧 0.6 64、128 人 64、DDNet 128）
+	virtual int GetMaxClients(int ClientId) const = 0;
 };
 
 class IGameServer : public IInterface

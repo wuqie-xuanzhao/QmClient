@@ -1034,11 +1034,12 @@ void CGameContext::SendVoteStatus(int ClientId, int Total, int Yes, int No)
 		return;
 	}
 
-	if(Total > LEGACY_MAX_CLIENTS && m_apPlayers[ClientId] && m_apPlayers[ClientId]->GetClientVersion() < VERSION_DDNET_128_PLAYERS)
+	const int MaxClients = Server()->GetMaxClients(ClientId);
+	if(Total > MaxClients && m_apPlayers[ClientId] && !Server()->ClientSupportsServerMaxClients(ClientId))
 	{
-		Yes = (Yes * LEGACY_MAX_CLIENTS) / (float)Total;
-		No = (No * LEGACY_MAX_CLIENTS) / (float)Total;
-		Total = LEGACY_MAX_CLIENTS;
+		Yes = (Yes * MaxClients) / (float)Total;
+		No = (No * MaxClients) / (float)Total;
+		Total = MaxClients;
 	}
 
 	CNetMsg_Sv_VoteStatus Msg = {0};
@@ -1183,12 +1184,17 @@ void CGameContext::OnTick()
 		{
 			// By supporting 128 players with full backwards compatibility (in +spectate menu too), it's basically impossible and
 			// really unnecessary to have old 16 player clients supported
+			// 官方 f817a14fc：默认仍然支持，但服务器可以用 sv_vanilla_connections 关掉
 			IServer::CClientInfo Info;
-			if(Server()->Tick() >= m_apPlayers[i]->m_DDNetVersionKickTick && !Server()->IsSixup(i) &&
+			if(m_apPlayers[i]->m_DDNetVersionKickTick > 0 && Server()->Tick() >= m_apPlayers[i]->m_DDNetVersionKickTick && !Server()->IsSixup(i) &&
 				Server()->GetClientInfo(i, &Info) && Info.m_DDNetVersion < VERSION_DDNET_OLD)
 			{
-				Server()->Kick(i, "Old Teeworlds 0.6 versions are unsupported. Use DDNet client or Teeworlds 0.7");
-				continue;
+				if(!g_Config.m_SvVanillaConnections)
+				{
+					Server()->Kick(i, "Old Teeworlds 0.6 versions are unsupported. Use DDNet client or Teeworlds 0.7");
+					continue;
+				}
+				m_apPlayers[i]->m_DDNetVersionKickTick = -1;
 			}
 
 			// send vote options
@@ -2736,6 +2742,8 @@ void CGameContext::OnIsDDNetLegacyNetMessage(const CNetMsg_Cl_IsDDNetLegacy *pMs
 	}
 	Server()->SetClientDDNetVersion(ClientId, DDNetVersion);
 	OnClientDDNetVersionKnown(ClientId);
+	// 官方 1a1e165e7：初次识别前按 16 人客户端处理，识别后重建映射以允许 64 槽位
+	m_PlayerMapping.InitPlayerMap(ClientId);
 }
 
 void CGameContext::OnShowOthersLegacyNetMessage(const CNetMsg_Cl_ShowOthersLegacy *pMsg, int ClientId)
