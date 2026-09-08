@@ -4154,6 +4154,8 @@ void CClient::Run()
 
 	auto LastTime = time_get_nanoseconds();
 	int64_t LastRenderTime = time_get();
+	int64_t NextUpdateTime = time_get();
+	int64_t NextRenderTime = time_get();
 	int LastIdleRenderThrottleRate = -1;
 	int LastRequestedRenderThrottleRate = -1;
 
@@ -4278,6 +4280,8 @@ void CClient::Run()
 		}
 
 		int IdleRenderThrottleRate = 0;
+		bool Inactive = false;
+		int64_t WakeTime = std::numeric_limits<int64_t>::max();
 
 		// render
 		{
@@ -4311,6 +4315,15 @@ void CClient::Run()
 			bool IsRenderActive = (g_Config.m_GfxBackgroundRender || m_pGraphics->WindowOpen());
 
 			bool AsyncRenderOld = g_Config.m_GfxAsyncRenderOld;
+			Inactive = g_Config.m_ClRefreshRateInactive && !m_pGraphics->WindowActive();
+			const int RefreshRate = Inactive ? g_Config.m_ClRefreshRateInactive : g_Config.m_ClRefreshRate;
+			bool UpdateDue = true;
+			if(RefreshRate)
+			{
+				UpdateDue = Now >= NextUpdateTime;
+				if(UpdateDue)
+					NextUpdateTime = std::max(NextUpdateTime + time_freq() / RefreshRate, Now);
+			}
 
 			int GfxRefreshRate = g_Config.m_GfxRefreshRate;
 			int RequestedRenderThrottleRate = 0;
@@ -4323,6 +4336,8 @@ void CClient::Run()
 					IdleRenderThrottleRate = GfxRefreshRate;
 				}
 			}
+			if(RefreshRate && GfxRefreshRate >= RefreshRate)
+				GfxRefreshRate = 0;
 
 #if defined(CONF_VIDEORECORDER)
 			// keep rendering synced
@@ -4344,10 +4359,11 @@ void CClient::Run()
 				LastRequestedRenderThrottleRate = RequestedRenderThrottleRate;
 			}
 			const int64_t RenderFrameTicks = GfxRefreshRate > 0 ? time_freq() / (int64_t)GfxRefreshRate : 0;
+			const bool RenderDue = GfxRefreshRate ? Now >= NextRenderTime : UpdateDue;
 
 			if(IsRenderActive &&
 				(!AsyncRenderOld || m_pGraphics->IsIdle()) &&
-				(!GfxRefreshRate || RenderFrameTicks <= Now - LastRenderTime))
+				RenderDue)
 			{
 				// update frametime
 				m_RenderFrameTime = (Now - m_LastRenderTime) / (float)time_freq();
@@ -4374,6 +4390,8 @@ void CClient::Run()
 				if(AdditionalTime > (time_freq() / 60))
 					AdditionalTime = (time_freq() / 60);
 				LastRenderTime = Now - AdditionalTime;
+				if(GfxRefreshRate)
+					NextRenderTime = std::max(NextRenderTime + time_freq() / GfxRefreshRate, Now);
 				m_LastRenderTime = Now;
 
 				if(PerfEnabled)
@@ -4401,7 +4419,17 @@ void CClient::Run()
 			{
 				// if the client does not render, it should reset its render time to a time where it would render the first frame, when it wakes up again
 				LastRenderTime = GfxRefreshRate ? (Now - RenderFrameTicks) : Now;
+				if(GfxRefreshRate)
+					NextRenderTime = Now;
 			}
+			if(RefreshRate)
+				WakeTime = NextUpdateTime;
+			if(IsRenderActive && GfxRefreshRate)
+				WakeTime = std::min(WakeTime, NextRenderTime);
+			if(IdleRenderThrottleRate > 0 && !RefreshRate && WakeTime == std::numeric_limits<int64_t>::max())
+				WakeTime = Now + time_freq() / IdleRenderThrottleRate;
+			if(State() == IClient::STATE_ONLINE && m_aPredTick[g_Config.m_ClDummy] > 0 && !Inactive && WakeTime != std::numeric_limits<int64_t>::max())
+				WakeTime = std::min(WakeTime, Now + (m_aPredTick[g_Config.m_ClDummy] * time_freq() / GameTickSpeed() - m_PredictedTime.Get(Now)));
 		}
 
 		AutoScreenshot_Cleanup();
@@ -4416,56 +4444,19 @@ void CClient::Run()
 			break;
 
 		// beNice
-		auto Now = time_get_nanoseconds();
-		decltype(Now) SleepTimeInNanoSeconds{0};
-		bool Slept = false;
-		const auto WaitWithNetwork = [&](std::chrono::nanoseconds WaitTime) {
-			auto SleepTimeInNanoSecondsInner = WaitTime;
-			auto NowInner = Now;
-			while(std::chrono::duration_cast<std::chrono::microseconds>(SleepTimeInNanoSecondsInner) > 0us)
+		if(WakeTime != std::numeric_limits<int64_t>::max())
+		{
+			const std::chrono::nanoseconds Deadline(WakeTime);
+			std::chrono::nanoseconds WaitTime = Deadline - time_get_nanoseconds();
+			if(Inactive)
 			{
-				net_socket_read_wait(m_aNetClient[CONN_MAIN].m_Socket, SleepTimeInNanoSecondsInner);
-				auto NowInnerCalc = time_get_nanoseconds();
-				SleepTimeInNanoSecondsInner -= (NowInnerCalc - NowInner);
-				NowInner = NowInnerCalc;
+				std::this_thread::sleep_for(WaitTime);
 			}
-		};
-		if(g_Config.m_ClRefreshRateInactive && !m_pGraphics->WindowActive())
-		{
-			SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)g_Config.m_ClRefreshRateInactive) - (Now - LastTime);
-			std::this_thread::sleep_for(SleepTimeInNanoSeconds);
-			Slept = true;
-		}
-		else if(g_Config.m_ClRefreshRate)
-		{
-			SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)g_Config.m_ClRefreshRate) - (Now - LastTime);
-			WaitWithNetwork(SleepTimeInNanoSeconds);
-			Slept = true;
-		}
-		else if(IdleRenderThrottleRate > 0)
-		{
-			SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)IdleRenderThrottleRate) - (Now - LastTime);
-			WaitWithNetwork(SleepTimeInNanoSeconds);
-			Slept = true;
-		}
-		if(Slept)
-		{
-			// if the diff gets too small it shouldn't get even smaller (drop the updates, that could not be handled)
-			if(SleepTimeInNanoSeconds < -16666666ns)
-				SleepTimeInNanoSeconds = -16666666ns;
-			// don't go higher than the frametime of a 60 fps frame
-			else if(SleepTimeInNanoSeconds > 16666666ns)
-				SleepTimeInNanoSeconds = 16666666ns;
-			// the time diff between the time that was used actually used and the time the thread should sleep/wait
-			// will be calculated in the sleep time of the next update tick by faking the time it should have slept/wait.
-			// so two cases (and the case it slept exactly the time it should):
-			//	- the thread slept/waited too long, then it adjust the time to sleep/wait less in the next update tick
-			//	- the thread slept/waited too less, then it adjust the time to sleep/wait more in the next update tick
-			LastTime = Now + SleepTimeInNanoSeconds;
-		}
-		else
-		{
-			LastTime = Now;
+			else
+			{
+				while(WaitTime > 0ns && net_socket_read_wait(m_aNetClient[CONN_MAIN].m_Socket, WaitTime > 1000us ? WaitTime / 2 : 0ns) == 0)
+					WaitTime = Deadline - time_get_nanoseconds();
+			}
 		}
 
 		// update local and global time
