@@ -178,7 +178,7 @@ include(cmake/QmAppleGraphics.cmake)
 option(EXCEPTION_HANDLING "Enable crashdumps (only works with Windows)" ON)
 option(IPO "Enable interprocedural optimizations" ON)
 option(FUSE_LD "Linker to use" OFF)
-option(SECURITY_COMPILER_FLAGS "Whether to set security-relevant compiler flags like -D_FORTIFY_SOURCE=2 and -fstack-protector-strong" ON)
+option(SECURITY_COMPILER_FLAGS "Whether to set security-relevant compiler flags like -D_FORTIFY_SOURCE=3 and -fstack-protector-strong" ON)
 option(QM_DISABLE_PARALLEL_COMPILE "Disable /MP for compiler warnings-sensitive gates" OFF)
 option(QM_MSVC_USE_EMBEDDED_DEBUG_INFO "Use embedded MSVC debug information instead of per-target PDB files" OFF)
 option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF)
@@ -453,8 +453,18 @@ if(NOT MSVC AND NOT HAIKU)
   if(SECURITY_COMPILER_FLAGS)
     # Protect the stack pointer.
     add_cxx_compiler_flag_if_supported(OUR_FLAGS -fstack-protector-strong)
+    # 探测大栈分配的每个页面，降低 stack clash 攻击风险。
+    add_cxx_compiler_flag_if_supported(OUR_FLAGS -fstack-clash-protection)
+    # 在目标编译器支持时启用前向控制流保护。
+    add_cxx_compiler_flag_if_supported(OUR_FLAGS -fcf-protection=full)
+    add_cxx_compiler_flag_if_supported(OUR_FLAGS -mbranch-protection=standard)
     if(MINGW)
       add_linker_flag_if_supported(OUR_FLAGS_LINK -lssp)
+    endif()
+    if(NOT TARGET_OS STREQUAL "windows" AND NOT TARGET_OS STREQUAL "mac")
+      # 启动时解析动态符号，随后将 GOT 设为只读。
+      add_linker_flag_if_supported(OUR_FLAGS_LINK -Wl,-z,relro)
+      add_linker_flag_if_supported(OUR_FLAGS_LINK -Wl,-z,now)
     endif()
   endif()
 
@@ -526,7 +536,15 @@ if(NOT MSVC AND NOT HAIKU)
 endif()
 
 if(NOT MSVC AND NOT HAIKU AND SECURITY_COMPILER_FLAGS)
+  check_c_compiler_flag("-O2;-Wp,-Werror;-D_FORTIFY_SOURCE=3" DEFINE_FORTIFY_SOURCE_3)
   check_c_compiler_flag("-O2;-Wp,-Werror;-D_FORTIFY_SOURCE=2" DEFINE_FORTIFY_SOURCE) # Some distributions define _FORTIFY_SOURCE by themselves.
+  if(NOT CMAKE_VERSION VERSION_LESS 3.14 AND NOT TARGET_OS STREQUAL "emscripten")
+    include(CheckPIESupported)
+    check_pie_supported(LANGUAGES C CXX)
+    if(CMAKE_C_LINK_PIE_SUPPORTED AND CMAKE_CXX_LINK_PIE_SUPPORTED)
+      set(ENABLE_PIE TRUE)
+    endif()
+  endif()
 endif()
 
 ########################################################################
@@ -5093,12 +5111,17 @@ foreach(target ${TARGETS})
   if(OUR_FLAGS)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS})
   endif()
-  if(DEFINE_FORTIFY_SOURCE)
+  if(DEFINE_FORTIFY_SOURCE_3 OR DEFINE_FORTIFY_SOURCE)
     if(MINGW)
       target_compile_definitions(${target} PRIVATE $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=0>) # Currently broken in MinGW, see https://sourceforge.net/p/mingw-w64/discussion/723798/thread/b9d24f041f/
+    elseif(DEFINE_FORTIFY_SOURCE_3)
+      target_compile_definitions(${target} PRIVATE $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=3>) # 在支持的平台上检查动态大小缓冲区溢出。
     else()
       target_compile_definitions(${target} PRIVATE $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=2>) # Detect some buffer overflows.
     endif()
+  endif()
+  if(ENABLE_PIE)
+    set_property(TARGET ${target} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
   endif()
   if(ENABLE_IPO)
     # Keep debug iteration fast and stable; use IPO/LTO for optimized configs.
