@@ -11,6 +11,7 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 
 class CLayer;
 class CLayerTiles;
@@ -23,8 +24,8 @@ public:
 	public:
 		bool m_Active;
 		ivec2 m_TextIndex;
-		// 换行返回到的列。
-		int m_LineStart;
+		// 换行返回到的列；未确定行首时为空。
+		std::optional<int> m_LineStart;
 		std::shared_ptr<CLayer> m_pLastLayer;
 		int m_TilesPlacedSinceActivate;
 

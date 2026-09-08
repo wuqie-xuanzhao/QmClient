@@ -18,7 +18,7 @@ void CFontTyper::CState::Reset()
 {
 	m_Active = false;
 	m_TextIndex = ivec2(0, 0);
-	m_LineStart = 0;
+	m_LineStart = std::nullopt;
 	m_pLastLayer = nullptr;
 	m_TilesPlacedSinceActivate = 0;
 }
@@ -56,18 +56,21 @@ void CFontTyper::PlaceTile(unsigned char Index, const std::shared_ptr<CLayerTile
 	{
 		if(Index == 0)
 			return;
-		State.m_TextIndex.x = State.m_LineStart;
+		State.m_TextIndex.x = State.m_LineStart.value_or(0);
 		State.m_TextIndex.y++;
 
-		// 角落情况：已到图层底部
+		// 角落情况：已到图层底部，把光标停在最后一行末尾
 		if(State.m_TextIndex.y >= pLayer->m_Height)
+		{
+			State.m_TextIndex.x = pLayer->m_Width;
+			State.m_TextIndex.y = pLayer->m_Height - 1;
 			return;
+		}
 	}
-	// 处理在行首左侧输入
-	else if(Index != 0 && State.m_TextIndex.x < State.m_LineStart)
-	{
+
+	// 处理在行首左侧输入，同时记录尚未确定的行首
+	if(Index != 0 && (!State.m_LineStart.has_value() || State.m_TextIndex.x < State.m_LineStart.value()))
 		State.m_LineStart = State.m_TextIndex.x;
-	}
 	SetTile(State.m_TextIndex, Index, pLayer);
 	State.m_TextIndex.x++;
 }
@@ -108,6 +111,71 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 	if(!(Event.m_Flags & IInput::FLAG_PRESS))
 		return false;
 
+	if(State.m_LineStart.has_value())
+		State.m_LineStart = std::clamp(State.m_LineStart.value(), 0, pLayer->m_Width - 1);
+
+	// 官方 39c675977：Ctrl+S 交给编辑器保存，不要写成字母 S
+	if(Input()->ModifierIsPressed() && Input()->KeyIsPressed(KEY_S))
+	{
+		TextModeOff();
+		return false;
+	}
+
+	// 官方 39c675977：Ctrl+V 粘贴剪贴板文本，超长内容改为提示而不是卡死
+	if(Input()->ModifierIsPressed() && Input()->KeyIsPressed(KEY_V))
+	{
+		std::string Clipboard = Input()->GetClipboardText();
+		if(!Clipboard.empty())
+		{
+			if(Clipboard.size() > 10000)
+			{
+				Editor()->ShowFileDialogError("The clipboard contains %" PRIzu " characters, please post it in chunks", Clipboard.size());
+				return false;
+			}
+			str_sanitize(Clipboard.data());
+			for(auto &Char : Clipboard)
+			{
+				if(Char == '\r')
+					continue;
+				if(Char == '\t')
+					Char = ' ';
+
+				// 空格
+				if(Char == ' ')
+				{
+					PlaceTile(0, pLayer);
+				}
+				// 换行
+				else if(Char == '\n')
+				{
+					if(State.m_TextIndex.y < pLayer->m_Height - 1)
+					{
+						State.m_TextIndex.y++;
+						if(State.m_LineStart.has_value())
+							State.m_TextIndex.x = State.m_LineStart.value();
+					}
+				}
+				// 数字
+				else if(str_isnum(Char))
+				{
+					if(Char == '0')
+						PlaceTile(KEY_0 - KEY_1 + NUMBER_OFFSET, pLayer);
+					else
+						PlaceTile(Char - '1' + NUMBER_OFFSET, pLayer);
+				}
+				else
+				{
+					Char = str_uppercase(Char);
+					if(Char >= 'A' && Char <= 'Z')
+					{
+						PlaceTile(Char - 'A' + LETTER_OFFSET, pLayer);
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	// letters
 	if(Event.m_Key >= KEY_A && Event.m_Key <= KEY_Z)
 		PlaceTile(Event.m_Key - KEY_A + LETTER_OFFSET, pLayer);
@@ -123,6 +191,12 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 		State.m_TextIndex.x--;
 		SetTile(State.m_TextIndex, 0, pLayer);
 	}
+	// 官方 39c675977：Delete 清除光标所在格的字符
+	else if(Event.m_Key == KEY_DELETE)
+	{
+		if(State.m_TextIndex.x < pLayer->m_Width)
+			SetTile(State.m_TextIndex, 0, pLayer);
+	}
 	// space
 	if(Event.m_Key == KEY_SPACE)
 		PlaceTile(0, pLayer);
@@ -130,13 +204,39 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 	if(Event.m_Key == KEY_RETURN)
 	{
 		State.m_TextIndex.y++;
-		State.m_TextIndex.x = State.m_LineStart;
+		if(State.m_LineStart.has_value())
+			State.m_TextIndex.x = State.m_LineStart.value();
 	}
+
+	// 官方 39c675977：Home/End 在行首行尾之间跳转
+	if(Event.m_Key == KEY_HOME)
+	{
+		for(int StartIndex = State.m_LineStart.value_or(0); StartIndex < pLayer->m_Width; ++StartIndex)
+		{
+			State.m_TextIndex.x = StartIndex;
+			if(pLayer->GetTile(StartIndex, State.m_TextIndex.y).m_Index != 0)
+				break;
+		}
+		// 行内没有字符时回到行首
+		if(pLayer->GetTile(State.m_TextIndex.x, State.m_TextIndex.y).m_Index == 0)
+			State.m_TextIndex.x = State.m_LineStart.value_or(0);
+	}
+	else if(Event.m_Key == KEY_END)
+	{
+		int LastIndex = -1;
+		for(int EndIndex = State.m_LineStart.value_or(0); EndIndex < pLayer->m_Width; ++EndIndex)
+		{
+			if(pLayer->GetTile(EndIndex, State.m_TextIndex.y).m_Index)
+				LastIndex = EndIndex;
+		}
+		State.m_TextIndex.x = LastIndex >= 0 ? LastIndex + 1 : State.m_LineStart.value_or(0);
+	}
+
 	// arrow key navigation
 	if(Event.m_Key == KEY_LEFT)
 	{
 		State.m_TextIndex.x--;
-		if(Input()->KeyIsPressed(KEY_LCTRL))
+		if(Input()->ModifierIsPressed())
 		{
 			while(State.m_TextIndex.x >= 1 && State.m_TextIndex.x <= pLayer->m_Width - 2 && pLayer->GetTile(State.m_TextIndex.x, State.m_TextIndex.y).m_Index)
 			{
@@ -147,7 +247,7 @@ bool CFontTyper::OnInput(const IInput::CEvent &Event)
 	if(Event.m_Key == KEY_RIGHT)
 	{
 		State.m_TextIndex.x++;
-		if(Input()->KeyIsPressed(KEY_LCTRL))
+		if(Input()->ModifierIsPressed())
 		{
 			while(State.m_TextIndex.x >= 1 && State.m_TextIndex.x <= pLayer->m_Width - 2 && pLayer->GetTile(State.m_TextIndex.x, State.m_TextIndex.y).m_Index)
 			{
@@ -207,7 +307,6 @@ void CFontTyper::SetCursor()
 	CFontTyper::CState &State = Map()->m_FontTyperState;
 	State.m_TextIndex.x = (int)(Editor()->MapView()->MouseWorldPos().x / 32);
 	State.m_TextIndex.y = (int)(Editor()->MapView()->MouseWorldPos().y / 32);
-	State.m_LineStart = State.m_TextIndex.x;
 	m_CursorRenderTime = time_get_nanoseconds() - 501ms;
 }
 
