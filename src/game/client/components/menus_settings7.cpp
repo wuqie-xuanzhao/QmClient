@@ -378,6 +378,7 @@ void CMenus::PopupConfirmDeleteSkin7()
 		PopupMessage(Localize("Error"), Localize("Unable to delete skin"), Localize("Ok"));
 		return;
 	}
+	m_DeletedSkinIndex7 = m_SelectedSkinIndex7;
 	m_SelectedSkin7Name.clear();
 }
 
@@ -508,12 +509,14 @@ void CMenus::RenderSkinSelection7(CUIRect MainView, float BodySize)
 	}
 
 	m_SelectedSkin7Name.clear();
+	m_SelectedSkinIndex7 = -1;
 	int OldSelected = -1;
 	for(int i = 0; i < (int)s_vSkinNames.size(); ++i)
 	{
 		if(!str_comp(s_vSkinNames[i].c_str(), CSkins7::ms_apSkinNameVariables[m_Dummy]))
 		{
 			m_SelectedSkin7Name = s_vSkinNames[i];
+			m_SelectedSkinIndex7 = i;
 			OldSelected = i;
 			break;
 		}
@@ -553,7 +556,12 @@ void CMenus::RenderSkinSelection7(CUIRect MainView, float BodySize)
 		Ui()->DoLabel(&Label, pSkin->m_aName, BodySize, TEXTALIGN_ML, Props);
 	}
 
-	const int NewSelected = s_ListBox.DoEnd();
+	int NewSelected = s_ListBox.DoEnd();
+	if(m_DeletedSkinIndex7 >= 0)
+	{
+		NewSelected = std::min(m_DeletedSkinIndex7, (int)s_vSkinNames.size() - 1);
+		m_DeletedSkinIndex7 = -1;
+	}
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		s_LastSelectionTime = Client()->GlobalTime();
