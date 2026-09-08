@@ -1,7 +1,7 @@
 upstream_base	1d507dad90812cd0873b151aac60ad7bff5127b6	upstream_head	59968143f78ce6bff2123e0e540e8763a8ff6f8e	local_head	6d37ad1c112a3dd9b178be5966cb3b25fc786bb9
 commit	date	subject	patch_equivalence	disposition	module	dependencies	notes	validation
 be3e5e6a3c03065241c71051dd2f15e2a1c0a7fc	2026-07-31	Size the snapshot delta buffers correctly	candidate	unreviewed				
-cda171db1e781fa346ef7ac5950683b731d2b6e6	2026-08-19	client: When deleting demo select the next demo	candidate	unreviewed				
+cda171db1e781fa346ef7ac5950683b731d2b6e6	2026-08-19	client: When deleting demo select the next demo	candidate	adapted-worktree	client/demo browser		适配到多选删除流程：仅单个 demo 或文件夹删除后选择相邻条目，多选删除保持原有选择行为；本地提交 83541a9ac。	clang-format 干跑、git diff --check；完整客户端构建待 Windows SDK 环境恢复
 3e7e479de15a96b02163b59e66cdcea21add8528	2026-08-19	client: When deleting 0.7 skin select the next skin	candidate	unreviewed				
 178da1eadeb2f9c7b7197e27723322d8169b1c2e	2026-08-24	client: Handle input earlier	candidate	unreviewed				
 b871d3432ebd5fcced1cf3759d7ef566239f7b05	2026-08-27	Suppress the bundled wavpack shift reports for UBSan	candidate	unreviewed				
