@@ -16,6 +16,7 @@
 #include <base/perf_timer.h>
 #include <base/str.h>
 #include <base/system.h>
+#include <base/thread.h>
 #include <base/windows.h>
 
 #include <engine/client/backend/graphics_backend_contract.h>
@@ -6577,6 +6578,9 @@ int main(int argc, const char **argv)
 		PerformAllCleanup();
 		return -1;
 	}
+
+	// SDL raises the timer resolution on Windows while initializing, the other platforms need this.
+	thread_request_precise_wakeups();
 
 	// run the client
 	log_trace("client", "initialization finished after %.2fms, starting...", (time_get() - MainStart) * 1000.0f / (float)time_freq());

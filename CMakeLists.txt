@@ -4148,6 +4148,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     datafile_test.cpp
     dbg_test.cpp
     ddnet_19_9_sync_test.cpp
+    demo_player_test.cpp
     editor_test.cpp
     fs_test.cpp
     gameworld_test.cpp
