@@ -4167,6 +4167,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     keyword_reply_rules_test.cpp
     logger_test.cpp
     map_history_test.cpp
+    map_load_test.cpp
     linereader_test.cpp
     mapbugs_test.cpp
     mapitems_test.cpp
