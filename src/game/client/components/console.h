@@ -214,6 +214,10 @@ private:
 
 	bool m_WantsSelectionCopy = false;
 	CUi::CTouchState m_TouchState;
+	vec2 m_ButtonPressPosition = vec2(0.0f, 0.0f);
+	bool m_ButtonPressed = false;
+
+	bool DoButton(const CUIRect &Rect, const char *pIcon, vec2 MousePosition, bool Released);
 	CButtonContainer m_aFilterButtons[3];
 	CButtonContainer m_ChatExportButton;
 	CButtonContainer m_ChatExportSelectAllButton;

@@ -11,6 +11,7 @@
 
 #include <engine/console.h>
 #include <engine/engine.h>
+#include <engine/font_icons.h>
 #include <engine/gfx/image_loader.h>
 #include <engine/graphics.h>
 #include <engine/image.h>
@@ -228,6 +229,19 @@ static void BuildLinkColorSplits(const std::vector<SLinkRange> &vRanges, std::ve
 		Cursor = Range.m_EndChar;
 	}
 	vSplits.emplace_back(Cursor, 9999, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f));
+}
+
+bool CGameConsole::DoButton(const CUIRect &Rect, const char *pIcon, vec2 MousePosition, bool Released)
+{
+	const bool PressedInside = Rect.Inside(m_ButtonPressPosition);
+	const bool MouseInside = Rect.Inside(MousePosition);
+	const bool Active = CurrentConsole()->m_MouseIsPress && PressedInside;
+	if(Active)
+		m_ButtonPressed = true;
+
+	const float ColorMul = Active ? Ui()->ButtonColorMulActive() : (MouseInside ? Ui()->ButtonColorMulHot() : Ui()->ButtonColorMulDefault());
+	Ui()->DrawButton_FontIcon(pIcon, &Rect, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ColorMul), IGraphics::CORNER_B);
+	return m_ConsoleState == CONSOLE_OPEN && Released && PressedInside && MouseInside;
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -2367,7 +2381,10 @@ void CGameConsole::OnRender()
 		{
 			pConsole->m_MouseIsPress = true;
 			pConsole->m_MousePress = GetMousePosition();
+			m_ButtonPressPosition = pConsole->m_MousePress;
 		}
+		if(!pConsole->m_MouseIsPress)
+			m_ButtonPressed = false;
 		if(pConsole->m_MouseIsPress && !m_TouchState.m_PrimaryPressed && !Input()->NativeMousePressed(1))
 		{
 			const vec2 ReleasePos = GetMousePosition();
@@ -2385,6 +2402,16 @@ void CGameConsole::OnRender()
 				LinkClickPress = pConsole->m_MousePress;
 			}
 		}
+		const bool ButtonReleased = WasMousePressed && !pConsole->m_MouseIsPress;
+		const vec2 ButtonMousePosition = ButtonReleased ? pConsole->m_MouseRelease : GetMousePosition();
+		#if defined(CONF_PLATFORM_IOS)
+		CUIRect CloseButtonBar, CloseButton;
+		Screen.HSplitTop(RowHeight, &CloseButtonBar, nullptr);
+		CloseButtonBar.VSplitRight(10.0f, &CloseButtonBar, nullptr);
+		CloseButtonBar.VSplitRight(RowHeight, &CloseButtonBar, &CloseButton);
+		if(DoButton(CloseButton, FontIcon::XMARK, ButtonMousePosition, ButtonReleased))
+			Toggle(m_ConsoleType);
+		#endif
 		if(pConsole->m_MouseIsPress)
 		{
 			pConsole->m_MouseRelease = GetMousePosition();
@@ -2738,7 +2765,7 @@ void CGameConsole::OnRender()
 			EntryCursor.m_LineWidth = EntryLineWidth;
 			EntryCursor.m_MaxLines = pEntry->m_LineCount;
 			EntryCursor.m_LineSpacing = LINE_SPACING;
-			EntryCursor.m_CalculateSelectionMode = (!pConsole->m_ChatExportMode && m_ConsoleState == CONSOLE_OPEN && pConsole->m_MousePress.y < pConsole->m_BoundingBox.m_Y && (pConsole->m_MouseIsPress || (pConsole->m_CurSelStart != pConsole->m_CurSelEnd) || pConsole->m_HasSelection)) ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_NONE;
+			EntryCursor.m_CalculateSelectionMode = (!pConsole->m_ChatExportMode && m_ConsoleState == CONSOLE_OPEN && !m_ButtonPressed && pConsole->m_MousePress.y < pConsole->m_BoundingBox.m_Y && (pConsole->m_MouseIsPress || (pConsole->m_CurSelStart != pConsole->m_CurSelEnd) || pConsole->m_HasSelection)) ? TEXT_CURSOR_SELECTION_MODE_CALCULATE : TEXT_CURSOR_SELECTION_MODE_NONE;
 			EntryCursor.m_PressMouse = pConsole->m_MousePress;
 			EntryCursor.m_ReleaseMouse = pConsole->m_MouseRelease;
 
@@ -2950,7 +2977,11 @@ void CGameConsole::OnRender()
 		const float FilterY = (RowHeight - FilterHeight) / 2.0f;
 		const float FilterPadding = 6.0f;
 		const float FilterSpacing = 4.0f;
-		const float TopbarRightMargin = 10.0f;
+		const float TopbarRightMargin = 10.0f
+		#if defined(CONF_PLATFORM_IOS)
+			+ RowHeight + 10.0f
+		#endif
+			;
 
 		vec2 UiMousePos = Input()->NativeMousePos();
 		if(WindowSize.x > 0.0f && WindowSize.y > 0.0f)

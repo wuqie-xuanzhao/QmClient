@@ -1848,10 +1848,10 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 	return DoButtonLogic(pId, Props.m_Checked, pRect, Props.m_Flags);
 }
 
-int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, int Corners, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
+void CUi::DrawButton_FontIcon(const char *pText, const CUIRect *pRect, ColorRGBA Color, int Corners, bool Enabled)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
-	DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer)))), ColorRGBA(), 5.0f, 0.0f, Corners);
+	DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(Color), ColorRGBA(), 5.0f, 0.0f, Corners);
 
 	const ColorRGBA PreviousColor = TextRender()->GetTextColor();
 	const ColorRGBA PreviousOutlineColor = TextRender()->GetTextOutlineColor();
@@ -1879,6 +1879,12 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 	TextRender()->SetFontPreset(PreviousPreset);
 	TextRender()->TextOutlineColor(PreviousOutlineColor);
 	TextRender()->TextColor(PreviousColor);
+	(void)Enabled;
+}
+
+int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, int Corners, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
+{
+	DrawButton_FontIcon(pText, pRect, ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer))), Corners, Enabled);
 
 	return DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
