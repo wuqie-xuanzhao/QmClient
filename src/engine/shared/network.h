@@ -11,7 +11,6 @@
 #include <array>
 #include <optional>
 #include <vector>
-#include <vector>
 
 class CHuffman;
 class CNetBan;

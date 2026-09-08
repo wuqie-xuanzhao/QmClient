@@ -38,7 +38,7 @@ f17a8d6b09e6a04e239953938f835e385f2d5c69	2026-09-03	server: Fix old clients when
 a7472a83ba437ce4598fa06743163ba5093142a7	2026-09-01	ios: Don't use the display cutout	candidate	confirmed-gap	ios/display cutout		本地无IosDisplayCutoutInsets/GetDisplayCutoutInsets链；需iOS渲染与输入统一坐标适配，不机械添加backend单函数	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
 636e2efe08e38fa7032054fa116e34f46741b7b4	2026-09-03	Add missing includes	candidate	adapted-worktree	shared headers		补齐 fifo.cpp 的 cerrno、network.h 的 vector 和 snapshot.cpp 的 algorithm；本地提交 a83b8685b。	git diff --check 通过；clang-format 干跑暴露 network.h 既有 include 排序漂移；完整构建待 Windows SDK 环境恢复
 e6edb9bb0bcaace8ded336262f24016459d90929	2026-09-03	ios: Don't use the display cutout (#12758)	merge-commit	unreviewed				
-45372b68abf0e0cc9f9c18d9858159d821962680	2026-09-03	Add missing includes (#12776)	merge-commit	unreviewed				
+45372b68abf0e0cc9f9c18d9858159d821962680	2026-09-03	Add missing includes (#12776)	merge-commit	verified-wrapper	shared headers	636e2efe	合并包装；fifo.cpp、network.h、snapshot.cpp 的 include 修复已由本地提交覆盖	父链与相对第一父提交 diff 核对；清理 network.h 重复 vector include
 9ed3b24d9d2737e5e81250cf27ee665f8bb12b69	2026-08-31	client: Improve performance for low refresh/update rates	candidate	unreviewed				
 b35a6a92adecdb0848e88ca02a6d235baca43bf3	2026-09-02	Request more precise wakeups	candidate	unreviewed				
 54728f7bf9a9a0d737099b85b877cfaf88517a7b	2026-09-03	client: Fix macOS crashes when resizing/moving window	candidate	unreviewed				
