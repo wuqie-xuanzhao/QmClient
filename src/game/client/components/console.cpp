@@ -2404,14 +2404,14 @@ void CGameConsole::OnRender()
 		}
 		const bool ButtonReleased = WasMousePressed && !pConsole->m_MouseIsPress;
 		const vec2 ButtonMousePosition = ButtonReleased ? pConsole->m_MouseRelease : GetMousePosition();
-		#if defined(CONF_PLATFORM_IOS)
+#if defined(CONF_PLATFORM_IOS)
 		CUIRect CloseButtonBar, CloseButton;
 		Screen.HSplitTop(RowHeight, &CloseButtonBar, nullptr);
 		CloseButtonBar.VSplitRight(10.0f, &CloseButtonBar, nullptr);
 		CloseButtonBar.VSplitRight(RowHeight, &CloseButtonBar, &CloseButton);
 		if(DoButton(CloseButton, FontIcon::XMARK, ButtonMousePosition, ButtonReleased))
 			Toggle(m_ConsoleType);
-		#endif
+#endif
 		if(pConsole->m_MouseIsPress)
 		{
 			pConsole->m_MouseRelease = GetMousePosition();
@@ -2977,11 +2977,10 @@ void CGameConsole::OnRender()
 		const float FilterY = (RowHeight - FilterHeight) / 2.0f;
 		const float FilterPadding = 6.0f;
 		const float FilterSpacing = 4.0f;
-		const float TopbarRightMargin = 10.0f
-		#if defined(CONF_PLATFORM_IOS)
-			+ RowHeight + 10.0f
-		#endif
-			;
+		float TopbarRightMargin = 10.0f;
+#if defined(CONF_PLATFORM_IOS)
+		TopbarRightMargin += RowHeight + 10.0f;
+#endif
 
 		vec2 UiMousePos = Input()->NativeMousePos();
 		if(WindowSize.x > 0.0f && WindowSize.y > 0.0f)
