@@ -5706,6 +5706,7 @@ void CEditor::CloseMap(size_t Index, bool Confirm)
 	if(Index == m_SelectedMap)
 		Reset(false);
 
+	Ui()->ClosePopupMenu(&m_PopupMapTab);
 	m_vpMaps.erase(m_vpMaps.begin() + Index);
 	if(m_vpMaps.empty())
 	{

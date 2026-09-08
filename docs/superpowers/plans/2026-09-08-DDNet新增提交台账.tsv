@@ -26,8 +26,8 @@ b946fa9a2078f39e28ac35ecf1e616625892bff9	2026-09-02	server: Allow clients to rec
 ebbe3225bf71c8db06dead1df7de23e46bbf3dcb	2026-09-02	Fix see-others by vote rate limit	candidate	unreviewed				
 bdb2792f777b89517a8c0436d0bd2b1abeba35eb	2026-09-02	server: Allow clients to reconnect reliably (#12770)	merge-commit	verified-wrapper	server/reconnect	b946fa9a2	合并包装；底层 server 重连修复单独审计。	父链与底层提交核对
 4698a48bdc47251871614d9ff54f286a79995d38	2026-09-02	server: Fix MySQL TLS without CA cert (#12769)	merge-commit	verified-wrapper	server/mysql	78d8f82c5	合并包装；底层 MySQL TLS 差距仍待适配与数据库环境验证。	父链与底层提交核对
-f1edc1ae5c24f4d85e2b77db171202f913e2ce4c	2026-09-02	editor: Fix tab closing itself after unrelated save	candidate	unreviewed				
-ab17c9acd0dbcead51ce566cf0e2af75167617e7	2026-09-02	editor: Fix crash when tab context menu is open while closing map	candidate	unreviewed				
+f1edc1ae5c24f4d85e2b77db171202f913e2ce4c	2026-09-02	editor: Fix tab closing itself after unrelated save	candidate	verified-code-equivalent	editor/multi-map-save		本地多地图实现以每张地图独立的 m_CloseOnSave、OnModify 清除和保存完成按地图关闭覆盖官方单地图状态修复	2026-09-08 逐 hunk 核对；未重复引入官方单地图 m_CloseMapAfterSave
+ab17c9acd0dbcead51ce566cf0e2af75167617e7	2026-09-02	editor: Fix crash when tab context menu is open while closing map	candidate	adapted-worktree	editor/multi-map-tabs		CloseMap 在移除地图前关闭 m_PopupMapTab，避免 popup 持有被删除地图上下文	2026-09-08 game-client 目标构建待执行；未做手动 tab popup smoke
 fce38335bb1cf5415195da76b06147028d5f0c72	2026-09-02	Fix see-others by vote rate limit (#12773)	merge-commit	unreviewed				
 dd56d7aa2683362950a945270cce11375845cea0	2026-09-01	client: Show back button in the console	candidate	deferred-ios-runtime	client/console + iOS input		当前 console 输入/触摸路径与官方实现存在结构差异，需结合 iOS 触控回归和现有 QmClient back-button 逻辑单独适配，暂不直接套用。	官方 diff 与当前源码核对
 bdd2253cb0b76b23218351181e783fe89ee8c336	2026-09-03	Skip reopening the audio device while the system reports no output device	candidate	adapted-worktree	engine/sound		UpdateDevice在设备变化标记exchange前检查SDL_GetNumAudioDevices；保持待处理变化，设备恢复后可重开	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
