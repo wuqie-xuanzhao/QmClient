@@ -146,13 +146,14 @@ protected:
 			char aFilename[IO_MAX_PATH_LENGTH];
 			IOHANDLE File;
 
-			str_format(aFilename, sizeof(aFilename), "%sGot.teehistorian", pTestName);
+			str_format(aFilename, sizeof(aFilename), "tmp/tests/teehistorian/%sGot.teehistorian", pTestName);
+			fs_makedir_rec_for(aFilename);
 			File = io_open(aFilename, IOFLAG_WRITE);
 			ASSERT_TRUE(File);
 			io_write(File, m_vBuffer.data(), m_vBuffer.size());
 			io_close(File);
 
-			str_format(aFilename, sizeof(aFilename), "%sExpected.teehistorian", pTestName);
+			str_format(aFilename, sizeof(aFilename), "tmp/tests/teehistorian/%sExpected.teehistorian", pTestName);
 			File = io_open(aFilename, IOFLAG_WRITE);
 			ASSERT_TRUE(File);
 			io_write(File, pOutput, OutputSize);
