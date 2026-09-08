@@ -17,8 +17,11 @@
 
 int str_copy(char *dst, const char *src, int dst_size)
 {
-	dst[0] = '\0';
-	strncat(dst, src, dst_size - 1);
+	const size_t MaxLength = (size_t)dst_size - 1;
+	const char *pSrcEnd = (const char *)memchr(src, '\0', MaxLength);
+	const size_t CopyLength = pSrcEnd == nullptr ? MaxLength : (size_t)(pSrcEnd - src);
+	mem_copy(dst, src, CopyLength);
+	dst[CopyLength] = '\0';
 	return str_utf8_fix_truncation(dst);
 }
 
