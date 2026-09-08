@@ -274,13 +274,24 @@ void CDemoRecorder::WriteTickMarker(int Tick, bool Keyframe)
 		m_FirstTick = Tick;
 }
 
-void CDemoRecorder::Write(int Type, const void *pData, int Size)
+bool CDemoRecorder::Write(int Type, const void *pData, int Size)
 {
 	if(!m_File)
-		return;
+		return false;
+
+	// 官方 be3e5e6a3：负长度是上游 create delta 的失败返回值，必须在这里拒绝，
+	// 否则会以 size_t 参与 mem_copy。
+	if(Size < 0)
+	{
+		log_error("demo_recorder", "Dropped chunk of type %d, invalid size %d", Type, Size);
+		return false;
+	}
 
 	if(Size > 64 * 1024)
-		return;
+	{
+		log_error("demo_recorder", "Dropped chunk of type %d, size %d is too large", Type, Size);
+		return false;
+	}
 
 	/* pad the data with 0 so we get an alignment of 4,
 	else the compression won't work and miss some bytes */
@@ -291,11 +302,11 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 		aBuffer2[Size++] = 0;
 	Size = CVariableInt::Compress(aBuffer2, Size, aBuffer, sizeof(aBuffer)); // buffer2 -> buffer
 	if(Size < 0)
-		return;
+		return false;
 
 	Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2)); // buffer -> buffer2
 	if(Size < 0)
-		return;
+		return false;
 
 	unsigned char aChunk[3];
 	aChunk[0] = ((Type & 0x3) << 5);
@@ -322,6 +333,7 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 	}
 
 	io_write(m_File, aBuffer2, Size);
+	return true;
 }
 
 void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size)
@@ -336,8 +348,10 @@ void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size, bool K
 		// write full tickmarker
 		WriteTickMarker(Tick, true);
 
-		// write snapshot
-		Write(CHUNKTYPE_SNAPSHOT, pData, Size);
+		// write snapshot。官方 be3e5e6a3：只有 chunk 真正写进文件才推进 delta 基准，
+		// 否则回放会用没写进去的快照去解后续 delta。
+		if(!Write(CHUNKTYPE_SNAPSHOT, pData, Size))
+			return;
 
 		m_LastKeyFrame = Tick;
 		mem_copy(&m_LastSnapshotData, pData, Size);
@@ -348,13 +362,17 @@ void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size, bool K
 		WriteTickMarker(Tick, false);
 
 		// create delta
-		int32_t aDeltaData[CSnapshot::MAX_SIZE / sizeof(int32_t)];
-		const int DeltaSize = m_pSnapshotDelta->CreateDelta(*m_LastSnapshotData.AsSnapshot(), *(CSnapshot *)pData, rust::Slice(aDeltaData, std::size(aDeltaData)));
-		if(DeltaSize)
+		CSnapshotDeltaBuffer DeltaData;
+		const int DeltaSize = m_pSnapshotDelta->CreateDelta(*m_LastSnapshotData.AsSnapshot(), *(CSnapshot *)pData, DeltaData.AsMutSlice());
+		if(DeltaSize > 0)
 		{
 			// record delta
-			Write(CHUNKTYPE_DELTA, aDeltaData, DeltaSize);
-			mem_copy(&m_LastSnapshotData, pData, Size);
+			if(Write(CHUNKTYPE_DELTA, DeltaData.m_aData, DeltaSize))
+				mem_copy(&m_LastSnapshotData, pData, Size);
+		}
+		else if(DeltaSize < 0)
+		{
+			log_error("demo_recorder", "Failed to create delta for tick %d, dropping snapshot", Tick);
 		}
 	}
 }

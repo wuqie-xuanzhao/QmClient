@@ -6,6 +6,8 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+
 TEST(Snapshot, CrcOneInt)
 {
 	rust::Box<CSnapshotBuilder> pBuilder = CSnapshotBuilder::New();
@@ -92,6 +94,39 @@ TEST(Snapshot, RejectsUnalignedItemSize)
 	pData[2] = 0;
 
 	EXPECT_FALSE(Buffer.AsSnapshot()->IsValid(sizeof(CSnapshot) + sizeof(int32_t) + pData[0]));
+}
+
+TEST(SnapshotDelta, LargeDeltaNeedsDoubleSizedBuffer)
+{
+	// 官方 be3e5e6a3：对象多、数据大时 delta 会比快照本身还大，
+	// 所以缓冲要用两倍 CSnapshot::MAX_SIZE；容量不足时 CreateDelta 返回 -1，
+	// 调用方必须按失败处理，而不是当成“零变化”。
+	constexpr int ITEM_DATA_INTS = 8189; // 两个对象刚好把快照填满 64 KiB
+
+	rust::Box<CSnapshotDelta> pDelta = CSnapshotDelta::New();
+	pDelta->SetStaticsize(0, 0);
+	pDelta->SetStaticsize(1, ITEM_DATA_INTS * sizeof(int32_t));
+
+	rust::Box<CSnapshotBuilder> pBuilder = CSnapshotBuilder::New();
+	pBuilder->Init(false);
+	const std::vector<int32_t> vItemData(ITEM_DATA_INTS, 7);
+	const rust::Slice<const int32_t> ItemData(vItemData.data(), vItemData.size());
+	ASSERT_TRUE(pBuilder->NewItem(1, 0, ItemData));
+	ASSERT_TRUE(pBuilder->NewItem(1, 1, ItemData));
+
+	CSnapshotBuffer Snapshot;
+	const int SnapshotSize = pBuilder->Finish(Snapshot);
+	ASSERT_EQ(SnapshotSize, (int)CSnapshot::MAX_SIZE);
+
+	// 一倍缓冲装不下这个 delta，Rust 侧返回 -1。
+	std::vector<int32_t> vSmallBuffer(CSnapshot::MAX_SIZE / sizeof(int32_t), 0);
+	EXPECT_EQ(pDelta->CreateDelta(*CSnapshot::EmptySnapshot(), *Snapshot.AsSnapshot(), rust::Slice(vSmallBuffer.data(), vSmallBuffer.size())), -1);
+
+	// 两倍缓冲足够，并且确实用到了超过一个快照上限的容量。
+	CSnapshotDeltaBuffer BigBuffer;
+	const int DeltaSize = pDelta->CreateDelta(*CSnapshot::EmptySnapshot(), *Snapshot.AsSnapshot(), BigBuffer.AsMutSlice());
+	EXPECT_GT(DeltaSize, (int)CSnapshot::MAX_SIZE);
+	EXPECT_LE(DeltaSize, (int)sizeof(BigBuffer.m_aData));
 }
 
 TEST(Snapshot, StorageGet)

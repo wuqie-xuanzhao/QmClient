@@ -1129,8 +1129,15 @@ void CServer::DoSnapshot()
 
 			// create delta
 			CSnapshotDelta *const pSnapshotDelta = IsSixup(i) ? &*m_pSnapshotDeltaSixup : &*m_pSnapshotDelta;
-			int32_t aDeltaData[CSnapshot::MAX_SIZE / sizeof(int32_t)];
-			int DeltaSize = pSnapshotDelta->CreateDelta(*pDeltashot, *Data.AsSnapshot(), rust::Slice(aDeltaData, std::size(aDeltaData)));
+			CSnapshotDeltaBuffer DeltaData;
+			const int DeltaSize = pSnapshotDelta->CreateDelta(*pDeltashot, *Data.AsSnapshot(), DeltaData.AsMutSlice());
+
+			if(DeltaSize < 0)
+			{
+				// 官方 be3e5e6a3：delta 创建失败时不能进入压缩/发送路径。
+				log_error("server", "failed to create snapshot delta for client %d", i);
+				continue;
+			}
 
 			if(DeltaSize)
 			{
@@ -1144,8 +1151,14 @@ void CServer::DoSnapshot()
 				const int MaxSize = MAX_SNAPSHOT_PACKSIZE;
 
 				char aCompData[CSnapshot::MAX_SIZE];
-				SnapshotSize = CVariableInt::Compress(aDeltaData, DeltaSize, aCompData, sizeof(aCompData));
-				int NumPackets = (SnapshotSize + MaxSize - 1) / MaxSize;
+				SnapshotSize = CVariableInt::Compress(DeltaData.m_aData, DeltaSize, aCompData, sizeof(aCompData));
+				const int NumPackets = (SnapshotSize + MaxSize - 1) / MaxSize;
+				if(SnapshotSize < 0 || NumPackets > CSnapshot::MAX_PARTS)
+				{
+					// 客户端无法接收这个快照，会一直 ack 旧快照。
+					log_error("server", "snapshot for client %d is too large to send, delta_size=%d packed_size=%d", i, DeltaSize, SnapshotSize);
+					continue;
+				}
 
 				for(int n = 0, Left = SnapshotSize; Left > 0; n++)
 				{
