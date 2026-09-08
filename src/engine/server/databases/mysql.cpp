@@ -252,10 +252,8 @@ bool CMysqlConnection::ConnectImpl()
 		mysql_options(&m_Mysql, MYSQL_OPT_BIND, m_Config.m_aBindaddr);
 	}
 
-	unsigned int ClientFlags = CLIENT_IGNORE_SIGPIPE;
 	if(m_Config.m_UseSsl)
 	{
-		ClientFlags |= CLIENT_SSL;
 		if(m_Config.m_aSslCert[0])
 		{
 			mysql_options(&m_Mysql, MYSQL_OPT_SSL_CERT, m_Config.m_aSslCert);
@@ -263,18 +261,21 @@ bool CMysqlConnection::ConnectImpl()
 		if(m_Config.m_aSslCa[0])
 		{
 			mysql_options(&m_Mysql, MYSQL_OPT_SSL_CA, m_Config.m_aSslCa);
-#if defined(MARIADB_VERSION_ID)
-			my_bool OptVerifyServerCert = 1;
-			mysql_options(&m_Mysql, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &OptVerifyServerCert);
-#else
-			// MySQL 8.0 中 MYSQL_OPT_SSL_VERIFY_SERVER_CERT 已废弃/移除，改用 MYSQL_OPT_SSL_MODE
-			unsigned int OptSslMode = SSL_MODE_VERIFY_IDENTITY;
-			mysql_options(&m_Mysql, MYSQL_OPT_SSL_MODE, &OptSslMode);
-#endif
 		}
+		// 客户端库依据这些选项自行启用 TLS，CLIENT_SSL 标志由库内部设置
+#if defined(MARIADB_VERSION_ID)
+		my_bool OptSslEnforce = 1;
+		mysql_options(&m_Mysql, MYSQL_OPT_SSL_ENFORCE, &OptSslEnforce);
+		my_bool OptVerifyServerCert = m_Config.m_aSslCa[0] != '\0';
+		mysql_options(&m_Mysql, MYSQL_OPT_SSL_VERIFY_SERVER_CERT, &OptVerifyServerCert);
+#else
+		// MySQL 8.0 中 MYSQL_OPT_SSL_VERIFY_SERVER_CERT 已废弃/移除，改用 MYSQL_OPT_SSL_MODE
+		unsigned int OptSslMode = m_Config.m_aSslCa[0] != '\0' ? SSL_MODE_VERIFY_IDENTITY : SSL_MODE_REQUIRED;
+		mysql_options(&m_Mysql, MYSQL_OPT_SSL_MODE, &OptSslMode);
+#endif
 	}
 
-	if(!mysql_real_connect(&m_Mysql, m_Config.m_aIp, m_Config.m_aUser, m_Config.m_aPass, nullptr, m_Config.m_Port, nullptr, ClientFlags))
+	if(!mysql_real_connect(&m_Mysql, m_Config.m_aIp, m_Config.m_aUser, m_Config.m_aPass, nullptr, m_Config.m_Port, nullptr, CLIENT_IGNORE_SIGPIPE))
 	{
 		StoreErrorMysql("real_connect");
 		return false;
