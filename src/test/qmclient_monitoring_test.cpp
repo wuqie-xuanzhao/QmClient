@@ -7817,7 +7817,7 @@ TEST(QmMonitoringHelpers, SettingsCardDeckSkipsAnimationRuntimeOnStableFrames)
 TEST(QmMonitoringHelpers, RenderOnlyNumericFieldsAndDropDownsDoNotMutateControlState)
 {
 	const std::string Forms = ReadRepoFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp") + ReadRepoFile("src/game/client/ui_popups.cpp");
 	const std::string IntegerField = ExtractSourceFunctionBody(Forms, "SInputFieldResult IntegerField(");
 	const std::string NumericField = ExtractSourceFunctionBody(Forms, "bool NumericField(");
 	const std::string DropDown = ExtractSourceFunctionBody(Ui, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
@@ -9591,7 +9591,7 @@ TEST(QmMonitoringHelpers, AudioPackEditorTextInputsUseSharedQmTextField)
 
 TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 {
-	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp") + ReadRepoFile("src/game/client/ui_popups.cpp");
 	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
 	const std::string DropdownHeader = ReadRepoFile("src/game/client/QmUi/QmDropdown.h");
 	const std::string DropdownSource = ReadRepoFile("src/game/client/QmUi/QmDropdown.cpp");
@@ -9651,7 +9651,7 @@ TEST(QmMonitoringHelpers, DropdownPopupUsesComputedGeometrySize)
 
 TEST(QmMonitoringHelpers, ColorPickerUsesModalPointerInputAndFullGradientHitAreas)
 {
-	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp") + ReadRepoFile("src/game/client/ui_popups.cpp");
 	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
 	const std::string ColorPickerBody = ExtractSourceFunctionBody(Ui, "CUi::EPopupMenuFunctionResult CUi::PopupColorPicker(void *pContext, CUIRect View, bool Active)");
 	const std::string ShowColorPickerBody = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupColorPicker(float X, float Y, SColorPickerPopupContext *pContext)");
@@ -9758,7 +9758,7 @@ TEST(QmMonitoringHelpers, WheelOwnershipFrameBeginsOnlyFromUiUpdate)
 }
 TEST(QmMonitoringHelpers, DropdownRegistersWheelOwnerBeforeParentCanConsume)
 {
-	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp") + ReadRepoFile("src/game/client/ui_popups.cpp");
 	const std::string ShowPopup = ExtractSourceFunctionBody(Ui, "void CUi::ShowPopupSelection(float X, float Y, SSelectionPopupContext *pContext)");
 	const std::string Register = ExtractSourceFunctionBody(Ui, "void CUi::RegisterWheelOwner(const void *pOwnerId, EUiWheelOwnerPriority Priority, const CUIRect &HotRect, bool Eligible)");
 	const std::string Consume = ExtractSourceFunctionBody(Ui, "bool CUi::TryConsumeWheel(const void *pOwnerId, float *pDelta)");
@@ -10403,7 +10403,7 @@ TEST(QmMonitoringHelpers, MenuUiPerfOperationsAreEmittedFromRealListOwners)
 	const std::string Demo = ReadRepoFile("src/game/client/components/menus_demo.cpp");
 	const std::string Settings = ReadRepoFile("src/game/client/components/menus_settings.cpp");
 	const std::string Assets = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
-	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadRepoFile("src/game/client/ui.cpp") + ReadRepoFile("src/game/client/ui_popups.cpp");
 	const std::string Scroll = ReadRepoFile("src/game/client/ui_scrollregion.cpp");
 
 	for(const char *pOperation : {"server_browser_scroll", "friends_scroll"})
@@ -10482,7 +10482,7 @@ TEST(QmMonitoringHelpers, MenuUiPerfScrollOwnersGateSamplesAndReuseOneFpsTracker
 	const std::string Assets = ReadRepoFile("src/game/client/components/menus_settings_assets.cpp");
 	const std::string ListBoxHeader = ReadRepoFile("src/game/client/ui_listbox.h");
 	const std::string UiHeader = ReadRepoFile("src/game/client/ui.h");
-	const std::string UiSource = ReadRepoFile("src/game/client/ui.cpp");
+	const std::string UiSource = ReadRepoFile("src/game/client/ui.cpp") + ReadRepoFile("src/game/client/ui_popups.cpp");
 
 	EXPECT_NE(MenusHeader.find("StartSettingsPerfScrollWindow(const char *pOperation"), std::string::npos);
 	EXPECT_NE(MenusSource.find("m_SettingsPerfWindowTracker.EnsureScrollWindow("), std::string::npos);

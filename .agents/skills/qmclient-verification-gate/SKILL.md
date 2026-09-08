@@ -1,169 +1,61 @@
 ---
 name: qmclient-verification-gate
-description: >
-  QmClient 改动后的验证流程：check_gate 四层模式、构建测试串行、全量与过滤测试边界、
-  视觉检查与证据格式。代码改完、准备声称「通过 / 无回归 / 可提交」之前必须用本 skill；
-  不要只 build 或只跑 filter 测试就收工。
+description: QmClient 代码交付或选择验证命令时使用；按变更风险选择测试和 gate，复用已有证据，约束共享构建目录串行执行。
 ---
 
-# QmClient 验证与 Gate
+# QmClient 验证
 
-用能覆盖改动风险的最小验证集合，然后把证据记录到当前 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`。
+选能覆盖本轮风险的最小检查集合。测试通过后继续交付；只有新改动、失败或未解决问题才扩大或重复验证。
 
-## 文档
+## 检查范围
 
-纯文档改动不运行代码 gate。人工核对相对链接、状态字段、权威来源说明和命令是否仍可执行；`docs/superpowers/` 下的任务记录与提示词保持版本化保留。
+| 改动 | 验证 |
+| --- | --- |
+| 纯文档、skills、规则 | 核对内容、引用、状态和命令；不跑代码 gate |
+| 局部低风险代码 | 相关行为测试或已有过滤测试，必要的目标构建，以及 quick gate |
+| 共享接口、生命周期、线程、格式或跨模块行为 | 相关回归与对应语言全量入口；涉及消费者一并验证 |
+| 翻译或生成链 | 按 `qmclient-i18n-workflow` 选择生成与验证；脚本逻辑变化补相关测试 |
+| 性能日志/报表代码 | `qmclient_scripts/perf` 下 `bun test.ts`；TS 改动补 `npx tsc --noEmit`，跨语言字段补合同验证 |
+| 代码提交前 | 优先 default gate；用户限制范围或环境不足时记录实际未覆盖项 |
+| 准发布或明确综合验证 | full gate；CI 等价构建任务才选 build 模式 |
 
-## i18n 脚本工作流
+可复现 bug 优先写能揭示回归的失败测试；不用源码字符串或实现镜像代替行为测试。无适用单测的视觉小改用目标构建与实际场景验证。
 
-当改动 `qmclient_scripts/languages_qmclient/`、`data/languages/*.txt`、`translations/i18n/*.toml`，或任何会新增/删除 `Localize`、`Localizable`、`Register` help 文本的源码时，默认按这条顺序验证：
+## Gate 与证据复用
 
-```bash
-python3 qmclient_scripts/languages_qmclient/extract_strings.py
-python3 qmclient_scripts/languages_qmclient/generate_all.py
-python3 qmclient_scripts/languages_qmclient/validate.py
-python3 qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
+在仓库根运行，Windows 用 `py -3` 或 `python`，Linux/macOS 用 `python3`：
+
+```text
+python qmclient_scripts/gate/check_gate.py --mode quick
+python qmclient_scripts/gate/check_gate.py --mode default
+python qmclient_scripts/gate/check_gate.py --mode full
 ```
 
-说明：
+- quick 做源码卫生检查，不构建、不跑真实测试。
+- default 包含 quick 层检查及 C++、Rust 全量测试；full 在其上增加重检查。
+- 选一次能覆盖需求的入口；计划跑 default 时不先单独重跑 quick 和两套全量测试。
+- 同一代码状态、环境和范围下已有成功证据可复用。检查之后有相关改动才重跑受影响部分；不靠重复运行证明认真。
+- 过滤测试可作为低风险局部修改的验收证据，准确称“相关测试通过”；不能称“全量通过”或笼统保证无回归。
+- 必要检查失败时查明原因；不要削弱测试、刷 allowlist 或隐藏失败来放行；确认测试本身错误或需求已变化时，可以修正并说明依据。
 
-- `extract_strings.py` 默认使用 Git diff 和 `extracted_records_cache.json` 做增量提取，并保持 `extracted_strings.txt` 为完整 active source key 集；需要重建缓存或做严格核对时使用 `--full`。
-- `translations/i18n/*.toml` 是按代码模块拆分的翻译维护源；单条记录可同时维护多语言翻译，不要求全语言补齐。
-- `data/languages/*.txt` 是运行时生成产物，不作为手工维护的长期真相源。
-- `generate_all.py` 会以英文 source key 作为缺省回退，并生成 `generate_all.GENERATED_LANGUAGES` 中登记的运行时语言文件。
-- 新增英文 source key 后，先运行 `extract_strings.py`，再用 `translate_with_local_http.py --languages ...` 为目标语言生成 `translations_draft/<language>/*.toml`；审核通过后再显式 `--write-back` 回填维护源。
-- `translate_with_local_http.py --write-back` 只应把审核通过的 draft 条目 patch 到对应 `translations/i18n/*.toml`，不能重写整份模块 TOML 或重排未触碰的 `[[message]]` block。
-- `validate.py` 默认重扫源码做严格新鲜度校验；本地快速校验可显式使用 `--incremental`。
-- `review_duplicate_entries.py` 是只读审查脚本；duplicate/similar 报告用于人工收口，unused 默认基于 `extracted_strings.txt` 的最终 active source key 集合，避免重复全量扫描。
-- `translate_with_local_http.py` 通过 OpenAI-compatible HTTP 模型生成翻译 draft；所有语言默认只写 `translations_draft/<language>/*.toml`，审核通过后才允许显式 `--write-back` 回填 `translations/i18n/*.toml`，不属于运行时生成主链。
+## 构建与测试入口
 
-### 历史译法审计
+Windows 使用封装入口，避免依赖会话已加载 MSVC 环境：
 
-当需要核对当前 `translations/i18n/*.toml` 是否偏离项目既有简中口径时，补跑历史译法审计：
-
-```bash
-python3 qmclient_scripts/languages_qmclient/audit_translation_drift.py --git-ref HEAD
-```
-
-说明：
-
-- 这是只读审计，不参与运行时生成链。
-- 结果只用于人工判断历史译法是否需要回退或统一风格。
-- 它不替代 `extract_strings.py` / `generate_all.py` / `validate.py`，也不阻断 `validate.py`。
-
-## 构建
-
-Windows 推荐：
-
-```pwsh
-qmclient_scripts/cmake-windows.cmd -G Ninja -S . -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
+```text
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14
-```
-
-说明：当前仓库的自动化与 Agent 会话在 Windows 上默认走 `qmclient_scripts/cmake-windows.cmd`，因为不能假设当前 PowerShell 已经注入了可用的 MSVC 环境。当前 canonical 的 `cmake-build-*` 目录按 Ninja 生成器维护；只有在调用方已经明确处于可用的 VS/MSVC shell 时，才可以直接使用裸 `cmake`。
-
-Linux/macOS：
-
-```sh
-cmake -G Ninja -S . -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
-cmake --build cmake-build-release --target game-client -j 14
-```
-
-说明：如果当前宿主是 Windows，但需要验证 Linux 构建，优先在 WSL Ubuntu 中使用 GCC/G++、CMake 和 Ninja 走原生 Linux 构建，不要复用 Windows 的 `cmake-build-release` 目录。推荐单独使用 `cmake-build-linux-release` 之类的目录，避免和 Windows 生成的 `CMakeCache.txt` 冲突。已验证可用的 WSL 口径示例：
-
-```pwsh
-wsl env HOME=/home/<user> bash -lc 'set -e; . "$HOME/.cargo/env"; cd /mnt/<drive>/<path-to-repo>; cmake -G Ninja -S . -B cmake-build-linux-release -DCMAKE_BUILD_TYPE=Release -DDOWNLOAD_GTEST=ON; cmake --build cmake-build-linux-release --target game-client -j 14'
-```
-
-如果需要 Linux 打包，可直接把 target 切到 `package_default`：
-
-```pwsh
-wsl env HOME=/home/<user> bash -lc 'set -e; . "$HOME/.cargo/env"; cd /mnt/<drive>/<path-to-repo>; cmake -G Ninja -S . -B cmake-build-linux-release -DCMAKE_BUILD_TYPE=Release -DDOWNLOAD_GTEST=ON; cmake --build cmake-build-linux-release --target package_default -j 14'
-```
-
-## 测试
-
-Windows:
-
-```pwsh
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests -j 14
 ```
 
-过滤测试只用于 TDD 红绿灯、定位和快速复现，例如 `testrunner.exe --gtest_filter=...`。当要做最终汇报、交给用户验收、提交或声称“无回归 / 测试通过”时，必须补跑对应测试入口的全量版本：
+Linux/macOS 使用 `cmake --build cmake-build-release --target <目标> -j 14`。首次配置与 WSL 目录选择见 [build-platforms.md](references/build-platforms.md)。已有 build 目录只在需要时重新配置。
 
-- C++ 源码或 C++ 测试改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_cxx_tests -j 14`，不能只跑 `--gtest_filter`。
-- Rust 代码改动：跑 `qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust_tests -j 14`。
-- `qmclient_scripts/perf` 改动：跑 `cd qmclient_scripts/perf && bun test.ts`，并在 TypeScript 代码改动时补 `npx tsc --noEmit`。
-- 只改文档：无需运行代码 gate，人工核对引用和内容。
+同一 build 目录的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 及会调用它们的 gate 必须串行；并行需独立 build 目录。
 
-如果环境、时间或用户明确范围导致全量测试不能跑，最终汇报必须把它列为 gap；不能用过滤测试、build 或 quick gate 代替“全量测试通过”。
+过滤测试先确保 `testrunner` 已针对当前源码构建，再从 build 目录运行：PowerShell 用 `./testrunner.exe --gtest_filter=<suite.test>`，Linux/macOS 用 `./testrunner --gtest_filter=<suite.test>`。测试临时产物使用 build 下 `tmp/tests/`；源码合同测试不能依赖当前工作目录查找源码。
 
-说明：常规运行/测试目录默认是 `cmake-build-release`；C++ 测试主路径是 `run_cxx_tests`，该目标会构建 `testrunner` 并在 build 目录下执行测试二进制，测试产物会留在 build 目录的 `tmp/tests/` 下。源码结构测试需要通过测试源码根解析 `src/...` / `data/...` 文件，不能依赖当前工作目录。单测过滤或快速复现时，可以从 build 目录运行 `./testrunner.exe --gtest_filter=<suite.test>`，或在其他目录运行 `cmake-build-release/testrunner.exe --gtest_filter=<suite.test>`。严格构建与静态分析只属于 full gate，会另外使用 `cmake-build-debug` 和 `cmake-build-analyze`。
+## 视觉与证据
 
-重要：同一 build 目录中的 `game-client`、`testrunner`、`run_cxx_tests`、`run_rust_tests`、`package_default` 不要并行发起。它们会共享生成产物与中间文件，代理或脚本必须串行执行；如果确实要并行，只能拆到不同的 build 目录。
+UI/HUD/动画改变后构建并运行当前工作区的开发实例，检查目标场景；布局涉及缩放时加一个非默认比例，交互仅查相关输入和状态。视觉交付按需保留截图；无法启动或缺少设备时说明实际缺口。
 
-Linux/macOS:
-
-```sh
-cmake --build cmake-build-release --target run_cxx_tests -j 14
-cmake --build cmake-build-release --target run_rust_tests -j 14
-```
-
-如果走 Windows 宿主下的 WSL Linux 验证，对应地把目录替换成独立的 Linux build 目录，例如：
-
-```pwsh
-wsl env HOME=/home/<user> bash -lc 'set -e; . "$HOME/.cargo/env"; cd /mnt/<drive>/<path-to-repo>; cmake --build cmake-build-linux-release --target run_cxx_tests -j 14; cmake --build cmake-build-linux-release --target run_rust_tests -j 14'
-```
-
-## Gate 模式
-
-macOS/Linux 使用 `python3`；Windows 使用 `py -3` 或已配置的 `python`。
-
-```bash
-python3 qmclient_scripts/gate/check_gate.py --mode quick
-python3 qmclient_scripts/gate/check_gate.py --mode default
-python3 qmclient_scripts/gate/check_gate.py --mode full
-```
-
-说明：除非用户明确把任务限制为纯调查、纯文档同步或只要求某个单项命令，否则不要只用 build/test 代替 gate。代码改动至少选择一条与本轮范围匹配的 gate 作为验收证据：
-
-- 常规代码改动：至少 `python3 qmclient_scripts/gate/check_gate.py --mode quick`
-- 提交前日常严格门：优先 `python3 qmclient_scripts/gate/check_gate.py --mode default`，该模式必须覆盖 C++ 全量测试和 Rust 全量测试。
-- 集中收口 / 准发布：`python3 qmclient_scripts/gate/check_gate.py --mode full`，该模式是在 default 基础上增加高噪音或更重的附加检查，不作为“全量测试”的默认入口。
-
-版本 / release 相关修改后，至少额外验证：
-
-```bash
-python3 qmclient_scripts/bump_version.py --version 2.58.0 --dry-run
-python3 qmclient_scripts/generate_release_notes.py --version "$(git describe --tags --abbrev=0)" --current-tag "$(git describe --tags --abbrev=0)"
-```
-
-## 视觉改动
-
-对菜单、HUD、UI 控件、浏览器列表行、设置页、覆盖层和动画类改动：
-
-- Build the client.
-- Launch `DDNet.exe`.
-- Verify the target screen at normal UI scale and at least one non-default scale if the layout is scale-sensitive.
-- Check hover, selected, disabled, modal, keyboard, and controller paths if relevant.
-- Capture screenshots when preparing a PR or visual handoff.
-
-## 证据格式
-
-记录格式：
-
-```text
-Command: <exact command>
-Result: <pass/fail and key output>
-Scope: <what this proves>
-Gaps: <what was not verified>
-```
-
-没有证据就不要把功能标成 `done`。如果某项检查因为环境或时间跑不了，也要明确记成 gap。
-
-
-## 与其他 skill
-
-- i18n 链细节也可对照 `qmclient-i18n-workflow`
-- 提交前文案 → `qmclient-git-commit`
+记录执行命令、关键结果、覆盖范围和剩余问题即可；小任务写最终回复，长任务写已有计划或报告。未执行的运行时、视觉、性能或跨平台检查不能用构建成功替代，也不要把本来不适用的检查列成缺口。

@@ -173,7 +173,7 @@ jobs:
           for tap in aws/tap azure/bicep; do
             brew untap "$tap" 2>/dev/null || true
           done
-          for pkg in cmake ninja pkg-config python freetype sdl2 libpng libogg opus opusfile sqlite wavpack ffmpeg molten-vk vulkan-loader glslang; do
+          for pkg in cmake ninja pkg-config python freetype sdl2 libpng libogg opus opusfile sqlite wavpack ffmpeg; do
             if brew list --formula "$pkg" &>/dev/null; then
               brew link --overwrite "$pkg" 2>/dev/null || true
             else
@@ -213,7 +213,7 @@ jobs:
               SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
               ARGS+=(
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-                -DPREFER_BUNDLED_LIBS=ON -DVULKAN=ON
+                -DPREFER_BUNDLED_LIBS=ON -DVULKAN=OFF -DMETAL=ON
                 -DCMAKE_OSX_SYSROOT="${SDKROOT}" -DIPO=OFF
               )
               ;;

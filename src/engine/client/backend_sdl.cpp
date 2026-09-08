@@ -708,7 +708,7 @@ EBackendType CGraphicsBackend_SDL_GL::DetectBackend() const
 {
 	if(m_BackendOverride != BACKEND_TYPE_AUTO)
 		return m_BackendOverride;
-	EBackendType RetBackendType = BACKEND_TYPE_OPENGL;
+	EBackendType RetBackendType = graphics_backend::IsMetalCompiled() ? BACKEND_TYPE_METAL : BACKEND_TYPE_OPENGL;
 	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
 	RetBackendType = graphics_backend::ParseBackendName(pEnvDriver != nullptr ? pEnvDriver : g_Config.m_GfxBackend, RetBackendType);
 #if !defined(CONF_BACKEND_OPENGL_ES) && !defined(CONF_BACKEND_OPENGL_ES3)
@@ -1186,8 +1186,11 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	// little fallback for Vulkan
 	if(ConfiguredVulkanUnavailable)
 	{
-		// 使用现代 OpenGL 回退，同时修复未编译 Vulkan 时遗留的 Vulkan 配置。
-		ResetOpenGLFallbackConfig();
+		// Apple 的旧 Vulkan 配置迁移到原生 Metal，其他平台仍回退到 OpenGL。
+		if(graphics_backend::IsMetalCompiled())
+			str_copy(g_Config.m_GfxBackend, "Metal");
+		else
+			ResetOpenGLFallbackConfig();
 		// do another analysis round too, just in case
 		g_Config.m_Gfx3DTextureAnalysisRan = 0;
 		g_Config.m_GfxDriverIsBlocked = 0;

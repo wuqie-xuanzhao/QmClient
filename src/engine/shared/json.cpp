@@ -2,67 +2,78 @@
 
 #include <engine/shared/json.h>
 
-static bool JsonValidateUtf8Recursive(const json_value *pValue)
+#include <memory>
+#include <vector>
+
+static bool JsonValidateUtf8(const json_value *pRoot)
 {
-	dbg_assert(pValue != nullptr, "JsonValidateUtf8Recursive: pValue must not be null");
-	switch(pValue->type)
+	std::vector<const json_value *> vpValues;
+	vpValues.push_back(pRoot);
+	while(!vpValues.empty())
 	{
-	case json_string:
-		return str_utf8_check(*pValue);
-	case json_array:
-		for(unsigned i = 0; i < pValue->u.array.length; i++)
+		const json_value *pValue = vpValues.back();
+		vpValues.pop_back();
+		switch(pValue->type)
 		{
-			if(!JsonValidateUtf8Recursive(&(*pValue)[i]))
+		case json_string:
+			if(!str_utf8_check(*pValue))
+			{
 				return false;
+			}
+			break;
+		case json_array:
+			for(unsigned i = 0; i < pValue->u.array.length; i++)
+			{
+				vpValues.push_back(pValue->u.array.values[i]);
+			}
+			break;
+		case json_object:
+			for(unsigned i = 0; i < pValue->u.object.length; i++)
+			{
+				if(!str_utf8_check(pValue->u.object.values[i].name))
+				{
+					return false;
+				}
+				vpValues.push_back(pValue->u.object.values[i].value);
+			}
+			break;
+		default:
+			break;
 		}
-		return true;
-	case json_object:
-		for(unsigned i = 0; i < pValue->u.object.length; i++)
-		{
-			const char *pName = pValue->u.object.values[i].name;
-			if(!str_utf8_check(pName))
-				return false;
-			if(!JsonValidateUtf8Recursive(&(*pValue)[i]))
-				return false;
-		}
-		return true;
-	default:
-		return true;
 	}
+	return true;
 }
 
 json_value *JsonParse(const json_char *pJson, size_t Length)
 {
-	json_value *pValue = json_parse(pJson, Length);
+	std::unique_ptr<json_value, decltype(&json_value_free)> pValue(json_parse(pJson, Length), json_value_free);
 	if(pValue == nullptr)
 	{
 		return nullptr;
 	}
-	if(!JsonValidateUtf8Recursive(pValue))
+	if(!JsonValidateUtf8(pValue.get()))
 	{
-		json_value_free(pValue);
 		return nullptr;
 	}
-	return pValue;
+	return pValue.release();
 }
 
 json_value *JsonParseEx(json_settings *pSettings, const json_char *pJson, size_t Length, char *pError)
 {
-	json_value *pValue = json_parse_ex(pSettings, pJson, Length, pError);
+	std::unique_ptr<json_value, decltype(&json_value_free)> pValue(json_parse_ex(pSettings, pJson, Length, pError), json_value_free);
 	if(pValue == nullptr)
 	{
 		return nullptr;
 	}
-	if(!JsonValidateUtf8Recursive(pValue))
+	if(!JsonValidateUtf8(pValue.get()))
 	{
 		if(pError)
 		{
 			str_copy(pError, "invalid utf-8 in string literal", json_error_max);
 		}
-		json_value_free(pValue);
 		return nullptr;
 	}
-	return pValue;
+	return pValue.release();
 }
 
 const struct _json_value *json_object_get(const json_value *pObject, const char *pIndex)
@@ -154,7 +165,8 @@ char *EscapeJson(char *pBuffer, int BufferSize, const char *pString)
 			{
 				break;
 			}
-			str_format(pBuffer, BufferSize, "\\u%04x", c);
+			// BufferSize 已扣除终止符空间，格式化时加回以保留完整的六字节转义。
+			str_format(pBuffer, BufferSize + 1, "\\u%04x", c);
 			pBuffer += 6;
 			BufferSize -= 6;
 		}

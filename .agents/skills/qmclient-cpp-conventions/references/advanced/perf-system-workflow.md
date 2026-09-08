@@ -17,9 +17,9 @@
 - 使用 `qm_` / `Qm` 配置前缀。
 - 保持 key=value 兼容；JSON Lines 可作为增强，不阻塞第一步。
 - 每个事件必须有 `event`、`page` 或明确的系统标签。
-- 时间字段统一使用 `dur_ms` 或 `duration_ms`，单位为毫秒。
+- 耗时字段沿用对应事件的 `dur_ms` / `duration_ms` 毫秒合同；时间戳和其他单位字段不因本参考改名或换算。
 - `page_switch` 是边界事件，不应混入耗时归因总量。
-- `list_frame` 应记录 total/visible/processed/skipped，且必须控制采样开销。
+- `list_frame` 沿用当前事件字段：如 `items_total` / `rows_total`、`rows_visible`、`rows_processed` / `rows_iterated` / `rows_rendered`、`rows_skipped`；以发出端和解析器为准，控制采样开销，不统一改名。
 - `section` 应记录 `dirty`、`text_new`、`text_reused`，缺失时用明确的 `unknown`。
 - `work_drain` 必须记录 `kind`、`count`、`bytes`、`dur_ms`、`stop`。
 
@@ -35,11 +35,4 @@
 
 ## 测试要求
 
-性能量化系统改动至少覆盖：
-
-- TypeScript 单测：`cd qmclient_scripts/perf && npm test`
-- TypeScript 类型检查：`cd qmclient_scripts/perf && npx tsc --noEmit`
-- C++/TS 合同测试：相关 `qmclient_monitoring_test` 或 `run_cxx_tests`
-- 文档改动：人工核对命令、链接和字段合同
-
-新增字段时，优先补跨语言合同测试，避免 TS 解析器和 C++ 日志格式漂移。
+验证命令和范围统一见 `qmclient-verification-gate`。新增或改变跨语言字段时，补充 C++/TS 合同验证，避免解析器与日志格式漂移；单侧改动只验证受影响的行为，纯文档不运行代码测试。

@@ -821,7 +821,9 @@ MACRO_CONFIG_STR(Gfx3DTextureAnalysisRenderer, gfx_3d_texture_analysis_renderer,
 MACRO_CONFIG_STR(Gfx3DTextureAnalysisVersion, gfx_3d_texture_analysis_version, 128, "", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Version performing the analysis")
 
 MACRO_CONFIG_STR(GfxGpuName, gfx_gpu_name, 256, "auto", CFGFLAG_SAVE | CFGFLAG_CLIENT, "GPU name, chosen by backend (if supported)")
-#if defined(CONF_PLATFORM_ANDROID)
+#if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
+MACRO_CONFIG_STR(GfxBackend, gfx_backend, 256, "Metal", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Backend to use (e.g. OpenGL or Vulkan)")
+#elif defined(CONF_PLATFORM_ANDROID)
 MACRO_CONFIG_STR(GfxBackend, gfx_backend, 256, "GLES", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Backend to use (e.g. OpenGL or Vulkan)")
 #elif defined(CONF_PLATFORM_EMSCRIPTEN) || defined(CONF_PLATFORM_IOS)
 MACRO_CONFIG_STR(GfxBackend, gfx_backend, 256, "GLES", CFGFLAG_SAVE | CFGFLAG_CLIENT, "Backend to use (e.g. OpenGL or Vulkan)")

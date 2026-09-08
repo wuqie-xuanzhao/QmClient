@@ -2615,7 +2615,7 @@ TEST(SettingsWarmup, TClientSettingsUseTwoLevelFontScale)
 	const std::string MenusHeader = ReadTestSourceFile("src/game/client/components/menus.h");
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus.cpp");
-	const std::string Ui = ReadTestSourceFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadTestSourceFile("src/game/client/ui.cpp") + ReadTestSourceFile("src/game/client/ui_popups.cpp");
 	const std::string KeyBinder = ReadTestSourceFile("src/game/client/components/key_binder.cpp");
 
 	EXPECT_NE(MenusHeader.find("static constexpr float TCLIENT_SETTINGS_BODY_FONT_SIZE = 11.2f;"), std::string::npos);

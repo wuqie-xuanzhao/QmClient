@@ -1,0 +1,91 @@
+upstream_base	1d507dad90812cd0873b151aac60ad7bff5127b6	upstream_head	59968143f78ce6bff2123e0e540e8763a8ff6f8e	local_head	6d37ad1c112a3dd9b178be5966cb3b25fc786bb9
+commit	date	subject	patch_equivalence	disposition	module	dependencies	notes	validation
+be3e5e6a3c03065241c71051dd2f15e2a1c0a7fc	2026-07-31	Size the snapshot delta buffers correctly	candidate	unreviewed				
+cda171db1e781fa346ef7ac5950683b731d2b6e6	2026-08-19	client: When deleting demo select the next demo	candidate	unreviewed				
+3e7e479de15a96b02163b59e66cdcea21add8528	2026-08-19	client: When deleting 0.7 skin select the next skin	candidate	unreviewed				
+178da1eadeb2f9c7b7197e27723322d8169b1c2e	2026-08-24	client: Handle input earlier	candidate	unreviewed				
+b871d3432ebd5fcced1cf3759d7ef566239f7b05	2026-08-27	Suppress the bundled wavpack shift reports for UBSan	candidate	unreviewed				
+1a16a876bb1b0fdb1e4bef8fd520b8d74a22d4bf	2026-08-25	Keep sound running when no audio device is available	candidate	unreviewed				
+477825c2a0c9f48a4ef68ea4ef79aadca4fe4911	2025-08-03	Use `std::vector` for shader code lines instead of `new[]`	candidate	unreviewed	graphics/opengl		源码仍使用new[]/delete[]临时shader指针数组，官方是局部所有权清理；与本批JSON修复独立，待后续处理	
+0613b67043d6e38af822c8dc198edc2c6a1e24f0	2026-08-31	Fix memory leak of removed vote options	candidate	verified-code-equivalent	client/voting		voting.cpp:435-436，回收链为空时设置m_pRecycleFirst；AddOption从first弹出并在链空时清last，与官方修复一致	2026-09-08官方diff与当前源码逐处核对；未做音频设备运行时验证；CMake来源确认期间不启动构建
+ab5109826f1e43d60533592f39b9e262a2434804	2026-08-31	Improve sound assertions, add assertions for `Play` function	candidate	unreviewed				
+b4eab43a14bb3d929ef79196631ea38cd073ab69	2026-08-31	Fix mapsound sample index not being initialized on errors	candidate	verified-code-equivalent	client/mapsounds		mapsounds.cpp外置名称失败、内置数据失败两条路径均在continue前设置m_aSounds[i]=-1，与官方两处diff一致	2026-09-08官方diff与当前源码逐处核对；未做音频设备运行时验证；CMake来源确认期间不启动构建
+bd6cdad31d51aefa0ecf25cb006cbf19f3c5e1f6	2026-09-01	Fix mapsound sample index not being initialized on errors, improve assertions (#12753)	merge-commit	unreviewed				
+1159edfa0309f78599b4a2703ae08c663d3789b1	2026-09-01	Fix memory leak of removed vote options (#12754)	merge-commit	unreviewed				
+1fe2e62d1fa0000cc82362eb077fd5d269593366	2026-09-01	ios: Support dark/tinted icons	candidate	unreviewed				
+1f9b189615495defa3114443563863088f8a5f1e	2026-09-01	Keep sound running when no audio device is available (#12706)	merge-commit	unreviewed				
+acfefe91e83af10299cebc7fee4673e997f3c2a6	2026-08-24	client: Show freeze pickups as snowflakes	candidate	unreviewed				
+eeec4e480378cad98231b440f210eeb1362f417b	2026-08-23	server: Fix old clients when many players are in teams	candidate	unreviewed				
+e8427c5d1afa10b5aec0b62872aa84c880aab461	2026-08-23	build: Support IPO/LTO on Windows, CI release builds and Android	candidate	unreviewed				
+364c03c797d515f6142e7296afb0eaeb1b80af35	2026-09-02	client: Fix crash when refreshing skins while skins are still loading	candidate	verified-code-equivalent	client/skins		Refresh:2360-2363在Abort后将m_pLoadJob设为空；与上游修复相同；其他取消路径也有清理	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
+cbb82fff9e2620c3cb223cd985a8cd45fa03168e	2026-09-02	client: Fix segfault on quit with OpenGL 2	candidate	verified-code-equivalent	graphics/opengl		Init六个shader指针均为nullptr，Shutdown的DeleteProgram受m_HasShaders保护；对象delete在条件外但nullptr安全，已静态覆盖上游退出崩溃修复	2026-09-08逐hunk源码核对；未运行OpenGL2退出smoke
+78d8f82c52c631a439c0ef74f15f49d30891e491	2026-09-02	server: Fix MySQL TLS without CA cert	candidate	confirmed-gap	server/mysql		本地仍用CLIENT_SSL且仅有CA时设置SSL mode；未覆盖官方无CA时TLS启用修复，需要MySQL/MariaDB分别验证	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
+b946fa9a2078f39e28ac35ecf1e616625892bff9	2026-09-02	server: Allow clients to reconnect reliably	candidate	unreviewed				
+048c1ea8509f33b7608d8829ed475d1f59df37bb	2026-09-02	client: Fix crash when refreshing skins while skins are still loading (#12765)	merge-commit	unreviewed				
+8cea0c200832384f9fda6e2f186426dd87532dd1	2026-09-02	client: Fix segfault on quit with OpenGL 2 (#12766)	merge-commit	unreviewed				
+ebbe3225bf71c8db06dead1df7de23e46bbf3dcb	2026-09-02	Fix see-others by vote rate limit	candidate	unreviewed				
+bdb2792f777b89517a8c0436d0bd2b1abeba35eb	2026-09-02	server: Allow clients to reconnect reliably (#12770)	merge-commit	unreviewed				
+4698a48bdc47251871614d9ff54f286a79995d38	2026-09-02	server: Fix MySQL TLS without CA cert (#12769)	merge-commit	unreviewed				
+f1edc1ae5c24f4d85e2b77db171202f913e2ce4c	2026-09-02	editor: Fix tab closing itself after unrelated save	candidate	unreviewed				
+ab17c9acd0dbcead51ce566cf0e2af75167617e7	2026-09-02	editor: Fix crash when tab context menu is open while closing map	candidate	unreviewed				
+fce38335bb1cf5415195da76b06147028d5f0c72	2026-09-02	Fix see-others by vote rate limit (#12773)	merge-commit	unreviewed				
+dd56d7aa2683362950a945270cce11375845cea0	2026-09-01	client: Show back button in the console	candidate	unreviewed				
+bdd2253cb0b76b23218351181e783fe89ee8c336	2026-09-03	Skip reopening the audio device while the system reports no output device	candidate	adapted-worktree	engine/sound		UpdateDevice在设备变化标记exchange前检查SDL_GetNumAudioDevices；保持待处理变化，设备恢复后可重开	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
+950a719e9665ed9ccc46ed00c33cc3ad87c3a139	2026-09-03	build: Support IPO/LTO on Windows, CI release builds and Android (#12688)	merge-commit	unreviewed				
+f17a8d6b09e6a04e239953938f835e385f2d5c69	2026-09-03	server: Fix old clients when many players are in teams (#12684)	merge-commit	unreviewed				
+56cd7ce0b5ae7a0f6883a1c68f7c4b507c93b5a4	2026-09-03	Use `std::vector` for shader code lines instead of `new[]` (#12731)	merge-commit	unreviewed				
+8ebcbdc9a83f2ff9c82672bf355beacfcfa2dacd	2026-09-03	Skip reopening the audio device while the system reports no output device (#12775)	merge-commit	unreviewed				
+a7472a83ba437ce4598fa06743163ba5093142a7	2026-09-01	ios: Don't use the display cutout	candidate	confirmed-gap	ios/display cutout		本地无IosDisplayCutoutInsets/GetDisplayCutoutInsets链；需iOS渲染与输入统一坐标适配，不机械添加backend单函数	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
+636e2efe08e38fa7032054fa116e34f46741b7b4	2026-09-03	Add missing includes	candidate	unreviewed				
+e6edb9bb0bcaace8ded336262f24016459d90929	2026-09-03	ios: Don't use the display cutout (#12758)	merge-commit	unreviewed				
+45372b68abf0e0cc9f9c18d9858159d821962680	2026-09-03	Add missing includes (#12776)	merge-commit	unreviewed				
+9ed3b24d9d2737e5e81250cf27ee665f8bb12b69	2026-08-31	client: Improve performance for low refresh/update rates	candidate	unreviewed				
+b35a6a92adecdb0848e88ca02a6d235baca43bf3	2026-09-02	Request more precise wakeups	candidate	unreviewed				
+54728f7bf9a9a0d737099b85b877cfaf88517a7b	2026-09-03	client: Fix macOS crashes when resizing/moving window	candidate	unreviewed				
+ca4363fe0cff47b3b57706e3ab3a9243157d9cae	2026-09-03	demo player: Fix crash with broken demo files	candidate	confirmed-gap	demo/scan		ResetToStartPosition只校验seek；提前错误返回时可能无keyframe。需与marker修复同批并保留裁剪语义	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
+3cbe5a0e58df40724ae7f9080bd8bb5cd7591e9c	2026-09-03	client: Handle input earlier (#12695)	merge-commit	unreviewed				
+dc92ab543481cc1452ae88b97751cc849d6a3403	2026-09-03	client: Improve performance for low refresh/update rates (#12743)	merge-commit	unreviewed				
+bbb620faccc8c05e0f1c0ed678f3b74b094ed3cf	2026-09-03	demo player: Fix crash with demo files without key frame (#12777)	merge-commit	unreviewed				
+a2260313d735c778e976b3259cffa580d8f627c3	2026-09-03	client: Show back button in the console (#12759)	merge-commit	unreviewed				
+07506d45cd23438356c85731a9864a235b41f5fa	2026-09-03	editor: Fix two bugs in tabs (#12774)	merge-commit	unreviewed				
+a34ebba7395ef3a56c05055898d3821e1f8d60f6	2026-09-03	Fix map bugs not being compared based on SHA256	candidate	requires-approval-map-semantics	map/compatibility		当前CMapDescription比较只用名称和size，缺少SHA256；补上会改变同名同大小不同内容地图的BUG_GRENADE_DOUBLEEXPLOSION判定，需要兼容性批准	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
+c62e4f9e3c30c400b3ef003cec8bd88b9726bffc	2026-09-03	Size the snapshot delta buffers correctly (#12499)	merge-commit	unreviewed				
+0198e362ba5e44454ab2e58573efdf7838c9ce99	2026-09-03	snapshots: Prevent overflow on 32bit systems	candidate	unreviewed				
+4b007d5405474e32e5bd44c91e9493019e7f4c50	2026-09-04	snapshots: Prevent overflow on 32bit systems (#12782)	merge-commit	unreviewed				
+b943dfa0c194c12740eeba82413cd4bc43128c1c	2026-08-24	build: Use precompiled headers for faster builds	candidate	unreviewed				
+9ccad1b4886a9f867851af88c82f23725e72e8f7	2026-09-04	Fix map bugs not being compared based on SHA256 (#12779)	merge-commit	unreviewed				
+3cd460f8eded171b72f10a30ba87f6d666c00c54	2026-09-04	build: Use precompiled headers for faster builds (#12692)	merge-commit	unreviewed				
+53d514d4d0b09c0036a4e1f923fc89e06cad055c	2026-09-01	server: Restart map download when client asks for first chunk	candidate	unreviewed				
+78cb48f82964d5b2b9b68dbae653bfec57200250	2026-09-04	server: Restart map download when client asks for first chunk (#12761)	merge-commit	unreviewed				
+7f99b873220c7da4d84ad00bd9cec06ca4bc5a1e	2026-09-04	change messages saying have to be in a team (1-63) to (1-127)	candidate	unreviewed				
+d90b7e5717f18dd40ec9fb7a3940c6588c902b7f	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool	candidate	unreviewed				
+4be2a112ccb3634c6aa4b02f333fca51dda73a78	2026-09-04	Add `scripts/map_test.py` for testing maps using `map_test` tool (#12789)	merge-commit	unreviewed				
+36c44dceca40ee1f4b92145642d8694a83abff1c	2026-09-05	Use role name for tele others config	candidate	unreviewed				
+9cf22b5e55b2c077d3eed7931b4abea160b712c6	2026-09-05	Update json-parser to reduce ubsan errors	candidate	unreviewed				
+17234d7a1f6aab09946dcf16229844c58a12640e	2026-09-05	ios: Support dark/tinted icons, base icons on ddnet-data-svg (#12757)	merge-commit	unreviewed				
+1e83a7d09d3dbb8bc1595320ff782b2ab5d30276	2026-09-05	Update json-parser to reduce ubsan errors (#12794)	merge-commit	unreviewed				
+54fcf119a12fbd160cf1fc4af74e1cbfd756982b	2026-09-05	client: Don't crash on pasting large text into rcon	candidate	adapted-worktree	client/lineinput		当前工作树最小修复与官方diff一致；每个完整行先进入输入缓冲区再回调；未提交	九场景行为测试+客户端构建通过；只读review正确；default C++2871/Rust全量通过，唯一子模块环境失败已初始化并单项复查通过
+097eb98f569227356df5aae4603518ee357533fb	2026-09-03	Fix use-after-free of working directory launching Android server	candidate	adapted-worktree	android/server		释放JNI字符串前复制工作目录；构造argv使用副本；循环释放jstring局部引用，与官方diff一致	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
+e32c0534277da99657ecb297d195815327121547	2026-09-04	Fix player name not sanitized when recording server player demo	candidate	adapted-worktree	server/demo filename		复制并sanitize玩家名后构造录制文件名；保留本地GetMapName API，不改demo内容格式	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
+c6edccea4c92c065202595de06d0232d7392331b	2026-09-05	client: Don't crash on pasting large text into rcon (#12798)	merge-commit	covered-by-worktree-batch	client/lineinput	54fcf119a	merge wrapper；实际变更已在当前工作树适配，不表示官方merge hash进入本地历史	参见2026-09-08分批同步计划第一/二批证据
+eab9369a5e6266543f52226acf83c1f18977de70	2026-09-05	Fix use-after-free of working directory launching Android server (#12801)	merge-commit	unreviewed				
+a5c75d02e6ed88248d1bc5601f6d91a5f0ecf62c	2026-09-05	Fix player name not sanitized when recording server player demo (#12802)	merge-commit	unreviewed				
+51447775d76f37510eb3368d841aa7f0cc860b62	2026-09-05	Fix `EscapeJson` potentially truncating `\uXXXX` escape	candidate	adapted-worktree	engine/json		2026-09-08实际修复转义容量/对象value UTF8/递归栈溢出；验证期间用unique_ptr保护解析树，保持STL异常传播约定；未提交	四组红灯后转绿；最终game-client+quick10PASS通过；C++全量2874/2874通过；只读review确认unique_ptr解决所有权finding，无新增确定缺陷
+c166a03f405d2ecfccecaa02988887be267bb1fb	2026-09-05	client: When deleting demo/0.7 skin select the next demo/0.7 skin (#12655)	merge-commit	unreviewed				
+6a312c350471f3b394f65d6532e4344d0f5c8e5b	2026-09-05	client: Show freeze pickups as snowflakes (#12694)	merge-commit	unreviewed				
+7b736052170daa29c4bafafeafda7d26c3e0f66a	2026-09-05	Fix strings in JSON object values not check for valid UTF-8	candidate	adapted-worktree	engine/json	7b7360521与ff55fe211合并为一次对象遍历适配	2026-09-08实际修复转义容量/对象value UTF8/递归栈溢出；验证期间用unique_ptr保护解析树，保持STL异常传播约定；未提交	四组红灯后转绿；最终game-client+quick10PASS通过；C++全量2874/2874通过；只读review确认unique_ptr解决所有权finding，无新增确定缺陷
+ff55fe211a2cd092dbde790acad57c5ec1200ec6	2026-09-05	Avoid stack overflow when parsing JSON and validating UTF-8	candidate	adapted-worktree	engine/json	7b7360521与ff55fe211合并为一次对象遍历适配	2026-09-08实际修复转义容量/对象value UTF8/递归栈溢出；验证期间用unique_ptr保护解析树，保持STL异常传播约定；未提交	四组红灯后转绿；最终game-client+quick10PASS通过；C++全量2874/2874通过；只读review确认unique_ptr解决所有权finding，无新增确定缺陷
+b3c0bae19b06c5164e1be591551558f320c83d50	2026-09-06	Fix JSON validation and escaping issues (#12804)	merge-commit	covered-by-worktree-batch	engine/json	51447775d,7b7360521,ff55fe211	merge wrapper；实际变更已在当前工作树适配，不表示官方merge hash进入本地历史	参见2026-09-08分批同步计划第一/二批证据
+8ebc6713bc3c32b8e1283883de39eb66d42d9e4f	2026-07-29	add standalone map renderer with headless backend	candidate	unreviewed				
+350d0398ccc2408dc182a6ec028aa294d60d9b60	2026-09-06	Fix undefined behavior with invalid demo timeline markers	candidate	confirmed-gap	demo		2026-09-08 对照官方 diff 与当前源码确认旧逻辑仍在；尚未修改	只读源码核查，未运行复现测试
+ec8c4e6398622a282e2cea23f2d947fb14ecf471	2026-09-06	Fix undefined behavior with invalid demo timeline markers (#12807)	merge-commit	unreviewed				
+4ba8fef2fea29460cb4872441d265ee2a6bf8eaf	2026-09-06	Increase spin wait halving threshold to 1000us	candidate	unreviewed				
+8f65b372d3c14c883bd78efc4706b92e1d897670	2026-09-07	Increase spin wait halving threshold to 1000us (#12808)	merge-commit	unreviewed				
+321fa2217ee119fae8a09c44e09b2e0346135fe6	2026-09-07	Tool: Standalone map renderer with headless backend (#12467)	merge-commit	unreviewed				
+17e3c2e831ce93e6d1eb83036b51cc5fa6e81dd3	2026-09-07	Fix -1 passed as `size_t` to json parser	candidate	partially-adapted-worktree	test/teehistorian		JsonParse长度改为buffer.size()-16；不删除pointer-overflow:json.c suppression，待第三方parser升级验证	2026-09-08客户端/服务端构建通过；C++2874/2874及quick10PASS；独立审查无确定缺陷；Android构建/运行、设备拔插、特殊名demo落盘未验；parser UBSan抑制仍保留
+7c5de8c3d54a055dd88d2cb30c18c147c3c653bd	2026-09-07	Fix -1 passed as `size_t` to json parser (#12811)	merge-commit	unreviewed				
+3d12558c35322817164743c1a68ef3fe8f743dfb	2026-09-07	"Changed messages saying ""You have to be in a team (1-63)"" to ""You have to be in a team (1-127)""  (#12787)"	merge-commit	unreviewed				
+8e46925225b46bde35cf633de839591b370547cb	2026-09-07	Use role name for tele others config (#12790)	merge-commit	unreviewed				
+8375112945b508cf72c1520925187a8dd115bfe1	2026-08-08	Update wavpack from 4.40 to 5.9.0 and put it in ddnet-libs	candidate	unreviewed				
+7e96eeab395b57c9fed4f905557c7ba7d19c943b	2026-09-05	"Revert ""Suppress the bundled wavpack shift reports for UBSan"""	candidate	unreviewed				
+59968143f78ce6bff2123e0e540e8763a8ff6f8e	2026-09-07	Update wavpack from 4.40 to 5.9.0 and put it in ddnet-libs (#12552)	merge-commit	unreviewed				

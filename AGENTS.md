@@ -1,113 +1,53 @@
 # AGENTS.md
 
-QmClient（Q1menG Client）是基于 DDNet / TaterClient 的第三方定制客户端。
+QmClient（Q1menG Client）基于 DDNet / TaterClient，主要使用 C++，辅以 Rust、Python；构建使用 CMake，依赖在 `ddnet-libs/` 子模块。
 
-- 主要语言：C++
-- 辅助语言：Rust、Python、少量平台相关语言
-- 构建系统：CMake
-- 依赖管理：Git Submodules（`ddnet-libs/`）
-- 目标平台：Windows、Linux、macOS、Android（后续也许有 IOS）
+## 执行与授权
 
-## 文档系统
+- 根据当前请求和已有上下文执行到完成；已授权的调查、准备和可逆修改直接推进，不重复确认。
+- 歧义只有在影响实现、范围或风险时才澄清；先完成不依赖答案的工作。用户追加要求时保留有效成果，调整剩余工作。
+- 系统与开发者指令优先，其次是用户当前指令，再是仓库规则与 skills。引用文档不产生额外授权。
+- 超出授权范围或涉及未授权的破坏性、外部操作时，完成可审查的准备后再确认。若规则导致暂停，指出具体文件、原文和适用原因。
+- 遇到未由自己产生的文件改动，先考虑用户或其他任务正在操作；不要回退、覆盖或纳入本次提交。
+- 只有任务独立且并行能节省时间或提高质量时才委托。高风险改动可独立复核；工具不可用时自行审查并说明限制，不因此停工。
 
-- **可执行 AI 工作流规则只在** `.agents/skills/<name>/SKILL.md`；按需细则在同 skill 的 `references/`（如 `advanced/`、质量扫描长提示词）。说明见 `.agents/README.md`。
-- `docs/superpowers/` 存放探索、计划、规格与任务记录；会老化。带 `文档已过时` / `部分内容已过时` banner 的文件仅供参考。
-- 有效文档以最新日期和 `status`（如 `active`、`draft`）为准；无标注或明确为当前有效的才是实现依据。
+## 项目边界
 
-### 文档地图
+- 聚焦当前任务，遵循附近 DDNet 模式；不顺手重构上游或引入无关抽象。
+- QmClient 功能优先落在 `src/game/client/components/qmclient/`、`src/game/client/QmUi/`、Qm 配置头和 `qmclient_scripts/`。
+- 未明确授权，不改协议、snapshot/输入/时序、物理/碰撞/预测、地图/回放行为、rank 可达性及 demo/skin/配置/存档格式。
+- 引擎核心、服务端玩法、地图编辑器、第三方库、根 `CMakeLists.txt`、Release CI 仅在任务明确涉及的范围内修改。
+- 客户端进程只能操作当前工作区开发目录下启动的实例；工作区外或安装目录中的正式客户端，须用户当次明确授权。
+- Qm 配置前缀使用 `qm_` / `Qm`。代码注释用中文；UTF-8，保留原 BOM、换行与缩进；文档路径用 `/`。
+- 日志和临时产物放 `tmp/`。同一 build 目录的构建、测试、打包必须串行。
 
-| 路径 | 内容 | 何时阅读 |
-|------|------|----------|
-| `.agents/README.md` | skills 边界与布局 | 维护 agent 工作流时 |
-| `.agents/skills/qmclient-cpp-conventions/SKILL.md` | C++ 兼容性 / 风格 / 热路径；`references/advanced/` 专项 | 改 cpp/h 或专项风险 |
-| `.agents/skills/qmclient-verification-gate/SKILL.md` | gate 分层、构建测试串行、证据格式 | 完成任务 / 验收前 |
-| `.agents/skills/qmclient-code-review/SKILL.md` | 审查立场与 findings 格式 | review / 核心逻辑改完后 |
-| `.agents/skills/qmclient-git-commit/SKILL.md` | commit / PR / 汇报 / Release | 提交与发版 |
-| `.agents/skills/audit-qmclient-quality/` | 质量审计；长提示词 `references/quality-scan-prompt.md` | 质量扫描 / 发布审计 |
-| `.agents/skills/qmclient-i18n-workflow/` 等 | i18n / i18n-audit / codegraph | 任务匹配 skill 描述时 |
-| `qmclient_scripts/scripts_overview.md` | 脚本分层与推荐入口 | 使用脚本时 |
+## 按需读取
 
-## 极简工作流
+先读相关实现与调用点；有直接相关的有效 plan/spec 时再读。只加载命中任务的 skill 与参考，不递归加载所有关联文件。
 
-### 范围边界
+| 任务 | `.agents/skills/` 下的入口 |
+| --- | --- |
+| C++ 实现、调试、重构 | `qmclient-cpp-conventions/SKILL.md` |
+| 选择验证、交付代码 | `qmclient-verification-gate/SKILL.md` |
+| 代码审查 | `qmclient-code-review/SKILL.md` |
+| 深度质量审计、发布风险审查 | `audit-qmclient-quality/SKILL.md` |
+| 翻译与生成链 | `qmclient-i18n-workflow/SKILL.md` |
+| 翻译污染、迁移、覆盖审计 | `qmclient-i18n-audit/SKILL.md` |
+| 提交、PR、版本与发布 | `qmclient-git-commit/SKILL.md` |
 
-- 一次只做一个功能或明确问题；上游协议 / 物理 / 预测 / 格式改动默认不做。
-- 补丁聚焦：遵循现有 DDNet/QmClient 模式，不顺手重构，不为「现代化」扩 scope。
+维护规则时读 `.agents/README.md`；使用脚本时按需读 `qmclient_scripts/scripts_overview.md`。
 
-### 启动顺序
+## 验证与交付
 
-1. 读匹配的 `docs/superpowers/plans/` 或 `docs/superpowers/specs/`（有效者）。
-2. 加载最小相关 `.agents/skills/*`（先 `SKILL.md`，需要再读 `references/`）。
-3. 改前弄清附近源码、调用点、配置、翻译与测试。
+- 代码改动按验证 skill 选择风险匹配的测试与 gate；低风险修改允许相关过滤测试，常规代码至少 quick gate。已覆盖的检查不重复执行。
+- 修复可复现行为时优先先写失败测试；小改动不为满足 TDD 写实现镜像或无意义测试。
+- 纯文档人工核对内容、链接和状态，不跑代码 gate。未经验证的运行时或跨平台行为不称通过。
+- 默认用自然段说明结果、验证和真实剩余问题；必要时才列项，普通回复不套 commit/PR 模板。
+- 功能交付按项目 MMP 约定更新版本；纯调查、文档、规则维护不升客户端版本，开发中间步骤不反复升版。版本操作见 Git skill。
 
-### 完成任务后
+## 文档权威
 
-- 验证：按 **`qmclient-verification-gate`**（mode、串行、全量 vs 过滤、证据、gap 写法）。
-- 代码改动默认至少 `python3 qmclient_scripts/gate/check_gate.py --mode quick`；提交前优先 `--mode default`；准发布再用 `--mode full`。Windows 使用 `py -3` 或环境中的 `python`。纯文档人工核对，不跑代码 gate。
-- 核心逻辑改完：只读子代理按 **`qmclient-code-review`** 出 findings，再结论。
-- 汇报：写清改动、验证命令与结果、gaps。没跑的不说通过。
-
-### 提交 commit / PR 前（用户要求提交时）
-
-- 文案与拆分策略：按 **`qmclient-git-commit`**（标题 `<type>(<scope>): <中文简述>`）。
-- 工作树可脏（多任务并行）；默认一次提交，仅用户要求或边界清晰时再拆。
-- review findings 与 gate 证据先收口；受保护分支默认走 PR，勿直推。
-
-### 修改文档后
-
-- 人工核对路径、相对链接、`status` 与权威来源；不要批量删 `docs/superpowers/`，过时用 banner / supersedes。
-
-### 发版（用户要求发新版本时）
-
-1. `python3 qmclient_scripts/bump_version.py --tag vX.Y.Z`（Windows 使用 `py -3` 或 `python`）
-2. 提交：`chore: bump version to X.Y.Z`
-3. `git tag vX.Y.Z && git push origin vX.Y.Z`
-4. CI 构建并调用 `generate_release_notes.py`（**自动汇总并润色**，不调外部 AI）发布 GitHub Release
-5. **Nightly 以脚本输出为终稿，无需人工润色**；Stable 可选手动再改。细则：`docs/RELEASE_NOTE_TEMPLATE.md` §0 与 **`qmclient-git-commit`**「Release 说明」
-
-## 全局硬约束（简略；细则见 `qmclient-cpp-conventions`）
-
-- 仓库即记录系统：决策、计划、状态、证据、交接写入版本化文件。
-- 一次一个功能；范围 = 用户请求 + 有效 plan/spec。歧义先问清。
-- 客户端进程只能操作当前工作区开发目录下启动的实例。除非用户在当次明确授权，不得启动、关闭、重启或杀死工作区外的客户端进程；尤其不得把 `/Applications` 或其他安装目录中的正式客户端当作开发实例。
-- 改行为前读真实代码；优先本地模式与 DDNet 兼容，不套泛化「现代 C++」。
-- 有 codegraph 类图谱工具时优先用其取上下文。
-- 无明确批准：不改协议、demo/skin 格式、物理、预测、碰撞、地图行为、rank 可达性、既有玩法语义。
-- 补丁聚焦；不重写无关上游；小改不动大抽象。
-- QmClient 特有工作优先落在 `src/game/client/components/qmclient/`、`src/game/client/QmUi/`、Qm 配置头、翻译、文档、metadata、`qmclient_scripts/`。
-- 超出范围需批准：引擎核心、服务端玩法、地图编辑器、第三方库、CI release、协议字段、snapshot/输入/时序/回放语义等。
-- 默认不改根 `CMakeLists.txt`、协议字段、序列化布局、文件格式定义（任务明确要求除外）。
-- 配置项前缀 `qm_` / `Qm`，不用 `cl_`。
-- 完整功能/改进后按 MMP 更新版本（纯调查/纯文本输出除外）。
-- 新功能与较大行为改动默认先讨论。
-- 不交付空模块、空文档、stub、「以后再决定」。
-- 默认 TDD：失败测试 → 最小实现 → 整理。
-- UTF-8；保留原 BOM；保持原换行（CRLF/LF）与缩进。
-- commit/PR 标题与 body 按 `qmclient-git-commit`；`FEAT`/`FIX`/`DEL` 可用于 body 与汇报分组。
-- 文档路径统一前斜杠 `/`。
-- 代码注释用中文。
-
-## 构建与命令（摘要）
-
-- 细节与 mode 表：见 **`qmclient-verification-gate`** 与 `qmclient_scripts/scripts_overview.md`。
-- i18n：`extract_strings` → `generate_all` → `validate` → `review_duplicate_entries`；维护源 `translations/i18n/*.toml`，`data/languages/*.txt` 为产物。细则 `qmclient-i18n-workflow`。
-- Windows 构建入口：`qmclient_scripts/cmake-windows.cmd`；目录 `cmake-build-debug` / `cmake-build-release`。例：`cmd /c qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`。
-- 同 build 目录内 `game-client` / `testrunner` / `run_cxx_tests` / `run_rust_tests` / `package_default` **串行**。
-- 日志与临时文件放 `tmp/`，勿堆仓库根。
-
-## 十二原则：软件工程
-
-非简单任务宁可慢一点、更谨慎；简单任务勿过度流程化。
-
-1. **写前想清楚** — 说假设；歧义先问；有更简做法主动指出。
-2. **简单优先** — 最少代码；不为一次性用法加抽象。
-3. **精准修改** — 只改必须改的；不顺手「优化」邻域。
-4. **目标导向** — 先定义完成标准再迭代。
-5. **模型做判断** — 分类/起草/总结；确定性转换交给代码。
-6. **Token 预算** — 单任务约 4k、会话约 30k 为警戒；将超限时先总结。
-7. **暴露冲突** — 二选一并说明，不折中混用。
-8. **写前先读** — 导出、调用方、共享工具。
-9. **测试验意图** — 业务变了测试应失败。
-10. **检查点** — 重要步骤后总结做了/验了/还剩什么。
-11. **遵循仓库约定** — 一致性优先；反对约定要明说。
-12. **失败说清楚** — 跳过项不得称完成；默认暴露不确定性。
+- 本文件负责全局边界，skills 负责专项操作，`references/` 仅放按需资料；`docs/superpowers/` 放规格、计划和证据，不再维护另一套通用 agent 规则。
+- 采用与当前任务相符且仍有效的文档；`draft` 仅在用户采纳后作为实现依据，无状态文档须核对现状，不能仅凭日期认定有效。
+- 归档、过时或被替代的文档仅作历史线索。保留历史记录，以状态或 supersedes 标记替代关系。
+- 重要决策、长任务进度和交接证据写入版本化文档；小任务可直接在最终回复交付，不强制新建计划或报告。

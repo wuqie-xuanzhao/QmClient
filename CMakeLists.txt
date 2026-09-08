@@ -140,9 +140,9 @@ set(AUTO_VULKAN_BACKEND ON)
 if(TARGET_OS STREQUAL "windows")
   set(AUTO_DEPENDENCIES_DEFAULT ON)
   set(AUTO_VULKAN_BACKEND OFF)
-elseif(TARGET_OS STREQUAL "mac")
-  # macOS 通过 MoltenVK 使用 Vulkan，开发与默认构建均启用该后端。
-  set(AUTO_VULKAN_BACKEND ON)
+elseif(TARGET_OS STREQUAL "mac" OR TARGET_OS STREQUAL "ios")
+  # Apple 平台使用原生 Metal，不再构建 MoltenVK 后端。
+  set(AUTO_VULKAN_BACKEND OFF)
 endif()
 
 set(AUTO_METAL_BACKEND OFF)
@@ -174,6 +174,7 @@ option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AU
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 option(VULKAN "Enable the vulkan backend" ${AUTO_VULKAN_BACKEND})
 option(METAL "Enable the native Metal backend" ${AUTO_METAL_BACKEND})
+include(cmake/QmAppleGraphics.cmake)
 option(EXCEPTION_HANDLING "Enable crashdumps (only works with Windows)" ON)
 option(IPO "Enable interprocedural optimizations" ON)
 option(FUSE_LD "Linker to use" OFF)
@@ -3418,6 +3419,7 @@ if(CLIENT)
     skin.h
     ui.cpp
     ui.h
+    ui_popups.cpp
     ui_listbox.cpp
     ui_listbox.h
     ui_rect.cpp

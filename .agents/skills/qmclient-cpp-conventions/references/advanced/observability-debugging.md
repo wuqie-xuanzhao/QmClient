@@ -45,7 +45,7 @@ warning/error 应能归类：
 - config
 - telemetry
 
-无法分类的 warning 要么补分类，要么降级为普通诊断信息。
+分类与严重度分别判断：无法归类时补充上下文或沿用模块类别；不能仅因缺少分类而降低真实 warning/error 的级别。
 
 ## 验收
 

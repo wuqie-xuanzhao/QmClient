@@ -1,334 +1,41 @@
 ---
 name: qmclient-git-commit
-description: >
-  QmClient 的 git commit、PR 标题/正文、最终汇报与 Release 说明格式：type 分组、
-  中文简述、验证清单、Stable/Nightly 通道。写 commit、开 PR、整理发布说明、
-  生成 release notes 时都要用本 skill。
+description: 用户要求 git commit、PR、版本更新或 Release 时使用；维护提交文案与发布边界，不用于普通最终回复。
 ---
 
-# QmClient Git / PR / 汇报规范
+# QmClient Git 与发布
 
-这份文档定义 4 类输出的写法：
+## 操作范围
 
-- commit subject
-- commit body
-- PR 标题与正文
-- 最终汇报
+按用户已授权的步骤执行。“提交”不自动授权推送、开 PR、合并或删除分支；写文案不授权 Git 操作。已授权的步骤无需重复确认。
 
-目标只有 3 个：
+工作树可包含并行任务：检查 diff，只暂存本次改动。默认一个聚焦提交，只有用户要求或边界清晰时拆分。受保护分支遵守仓库权限，已授权推送时优先分支/PR，不绕过保护。
 
-- 让人快速看懂这次改了什么
-- 让验证证据足够短，但足够用
-- 让文案和实际改动边界一致
+## Commit
 
-## 一般原则
+标题用 `<type>(<scope>): <中文简述>`，例如 `fix(hud): 修复通知栏锚点错误`。常用 type 使用 `feat`、`fix`、`perf`、`refactor`、`docs`、`test`、`chore`、`ci`、`revert`；scope 用短英文模块名；`build`、`style`、`improve` 等其他受支持类型以 `check_commit_msg.py` 的 `KNOWN_TYPES` 为准。
 
-- 先写问题，再写做法。尤其是 `fix`，优先说明“修复了什么问题”。
-- 文案直接描述行为和结果，不写“收口”“调整相关逻辑”“优化若干细节”这类空话。
-- 正文分组默认使用提交类型体系，而不是临时自造分类。
-- 文档、测试、脚本、构建相关改动都应放进对应分组，不要全部挤进 `fix`。
-- 如果某类改动这轮不存在，就省略该分组，不写占位。
-- 已经人工确认的内容，不要继续写成风险或 gap。
-- 如果仓库开启了受保护分支，而当前操作者不是仓库主或没有受保护分支直推权限，默认走：本地提交 -> 推到新分支 -> 开 PR -> 合并 PR -> 删分支。只有仓库主或被明确授予直推权限的人，才可以跳过这条默认路径。
+默认带简短 body：说明实际问题、变更行为及必要验证；多类独立改动才按类型分组，不放空组或完整日志。
 
-## 分组类型
+特殊标题：
 
-正文分组默认使用以下类型：
+- merge 保留 Git 默认 message。
+- 上游同步用 `chore(sync): <中文简述>`。
+- cherry-pick 沿用类型规范，可保留来源尾注。
+- 版本提交用 `chore: bump version to X.Y.Z`。
 
-- `feat`
-- `fix`
-- `perf`
-- `refactor`
-- `docs`
-- `test`
-- `chore`
-- `ci`
-- `revert`
+提交消息校验入口为 `qmclient_scripts/check_commit_msg.py`；不要为了文案重新定义其规则。
 
-使用规则：
+## PR
 
-- 只要这轮改动涉及对应类型，就使用对应分组。
-- 一个提交、PR 或最终汇报可以同时包含多个分组。
-- `FEAT`、`FIX`、`DEL` 只作为最低限度的退化方案；只有在没有必要继续细分时才使用。
-- `DEL` 不是默认分组。只有确实存在删除行为，且上面的标准类型不足以表达时，才额外补充。
+采用仓库 [.github/pull_request_template.md](../../../.github/pull_request_template.md)，删除不适用的分组、示例检查和占位。模板中的示例命令不扩大验证范围，实际检查由 `qmclient-verification-gate` 决定。
 
-## Commit 规范
+标题与最终 squash commit 风格一致。正文让未读对话的 reviewer 看懂问题、最终行为、验证与真实限制。只勾选已执行项；范围变化后同步重写标题和正文。
 
-### Commit Subject
+## 版本与 Release
 
-格式：
+功能交付或用户要求版本更新时，统一通过 `python qmclient_scripts/bump_version.py --version X.Y.Z` 或 `--tag vX.Y.Z`；不手改版本源。`CLIENT_RELEASE_VERSION` 源自 `QMCLIENT_VERSION`。纯文档与规则维护不升客户端版本。
 
-```text
-<type>(<scope>): <中文简述>
-```
+发布任务再读 [release.md](references/release.md)，并按 `docs/RELEASE_NOTE_TEMPLATE.md` 的通道与说明规范执行。版本参数使用本次实际目标，先以 `--dry-run` 核对版本解析（该选项不展示文件 diff），实际更新后检查目标文件差异；发版脚本或生成逻辑变动按风险补验证。
 
-规则：
-
-- `type` 使用英文小写：`feat`、`fix`、`perf`、`refactor`、`docs`、`test`、`chore`、`ci`、`revert`
-- `scope` 使用短英文或仓库内模块名，如 `hud`、`docs`、`gate`、`settings`
-- subject 使用中文动宾短语
-- 不写“修改代码”“更新一下”这种无信息标题
-
-示例：
-
-```text
-fix(hud): 修复通知栏编辑位置错误
-docs(ai): 重写 git 和 PR 文案规范
-test(score): 补充完赛消息解析回归测试
-```
-
-### Commit Body
-
-本仓库默认写 body。
-
-推荐结构：
-
-```text
-<为什么要改>
-
-## fix
-- ...
-
-## test
-- ...
-
-## docs
-- ...
-```
-
-规则：
-
-- 开头先写背景、原因或边界
-- 正文按类型分组，不把不相干的内容塞进同一段
-- `fix` 先写修复了什么问题，再写必要的实现变化
-- 不要把大段验证日志贴进 body
-- 只有明显属于本地临时产物或与本轮无关的内容才排除在提交外
-
-### 特殊提交（边界）
-
-以下提交可豁免 `<type>(<scope>):` 格式或使用固定 scope：
-
-- **Merge commit**：保留 git 默认 message（`Merge branch ...` / `Merge pull request #N`），不必改写。
-- **上游同步**：用 `chore(sync): <简述>`，如 `chore(sync): 对齐上游版本号到 2.63.3`。
-- **Cherry-pick**：前缀仍按 `fix(...)`/`feat(...)` 写，可保留 `(cherry picked from commit ...)` 尾注。
-- **版本号提交**：`chore: bump version to X.Y.Z`（配合 `bump_version.py`）。
-
-这些规则与 `qmclient_scripts/check_commit_msg.py` 的豁免逻辑一致。
-
-## PR 规范
-
-> GitHub PR 正文模板见 `.github/pull_request_template.md`（含兼容性、高风险区域 checklist）。**PR 正文以模板为准**；下面的 `## Summary` / 类型分组结构同样适用于 commit body 和最终汇报，分组类型一致。
-
-### PR 标题
-
-PR 标题默认与最终 squash commit 保持同一风格：
-
-```text
-<type>(<scope>): <中文简述>
-```
-
-### PR 正文结构
-
-PR 正文默认使用以下结构：
-
-```text
-## Summary
-<1 到 2 句总体说明>
-
-## fix
-- ...
-
-## test
-- ...
-
-## docs
-- ...
-
-## Verification
-- [x] ...
-
-## Risks / Gaps
-- ...
-```
-
-#### 1. Summary
-
-`Summary` 不能省略。
-
-要求：
-
-- 用 1 句到 2 句写清楚这次 PR 解决了什么问题、涉及哪些核心改动
-- 先写主问题，再写伴随修改
-- 不在 `Summary` 里堆细节，细节放到各类型分组
-
-#### 2. 类型分组
-
-规则：
-
-- 正文分组默认使用 `feat`、`fix`、`perf`、`refactor`、`docs`、`test`、`chore`、`ci`、`revert`
-- 只要涉及对应改动，就使用对应分组
-- `fix` 优先写用户实际遇到的问题，不要只写底层实现细节
-- 文档类改动写到 `docs`
-- 测试类改动写到 `test`
-- 构建、打包、脚本整理写到 `chore`
-
-示例：
-
-```text
-## fix
-- 修复 HUD 编辑器中通知栏位置无法正确拖拽的问题。
-- 修复中文练习命令列表被误显示为通知的问题。
-
-## test
-- 补充通知栏锚点和完赛消息解析测试。
-
-## docs
-- 补充服务端汉化现状探索文档。
-```
-
-#### 3. Verification
-
-`Verification` 默认使用 checklist。
-
-格式：
-
-```text
-## Verification
-- [x] 文档检查：`<命令>`
-- [x] gate 门禁：`<命令>`
-- [x] 客户端构建：`<命令>`
-```
-
-规则：
-
-- 只保留通用检查和本次任务直接相关的检查
-- 同类检查合并写，不要拆成很多行
-- 默认只保留命令和高信号结果
-- 不重复解释“证明了什么”
-- 没有运行的检查不要勾选
-
-常见检查项：
-
-- [x] 文档检查
-- [x] gate 门禁
-- [x] 客户端构建
-- [x] 相关测试
-- [x] 完整包构建
-
-#### 4. Risks / Gaps
-
-只写真实还没覆盖的风险和缺口。
-
-优先写：
-
-- 视觉验收
-- 运行时行为
-- 上游兼容性风险
-
-规则：
-
-- 已经人工确认的内容，明确写“已人工确认”，不要继续列为 gap
-- 不要把已经有明确证据覆盖的内容重复写成风险
-- 如果没有额外 gap，可以只保留真正没覆盖的 1 到 2 项
-
-## 最终汇报
-
-最终汇报默认也沿用类型分组：
-
-- `feat`
-- `fix`
-- `perf`
-- `refactor`
-- `docs`
-- `test`
-- `chore`
-- `ci`
-- `revert`
-
-要求：
-
-- 先说结果，再分组
-- 只写用户需要知道的高信号内容
-- 不按文件罗列变更
-- 不把验证日志原样贴出来
-
-如果这轮改动非常简单，允许退化为短段落，不强制展开全部分组。
-
-## Release 说明
-
-GitHub release 说明由 `qmclient_scripts/generate_release_notes.py` **确定性自动生成并润色**（中文前缀 / 同质省略前缀 / 去重 / 「其他」上限 / 轻量文案清理；**不调用外部 AI / LLM**）：
-
-- **正式版（Stable）**：tag `vX.Y.Z` → 普通 Release；输出标题含「正式版」；脚本输出已应玩家可读，**可选手动**再润色
-- **预发布（Pre-release / Nightly）**：tag `nightly`（及 rc/beta 等）→ GitHub Pre-release；输出含风险提示；**脚本输出即为终稿，无需人工润色**；可被下次 Nightly 覆盖
-
-输出按功能领域分组（commit scope）、中文优先；工程类提交（ci/build/gate 等）不进正文。  
-规范见 `docs/RELEASE_NOTE_TEMPLATE.md`（**§0 通道** + 领域×前缀模型 + 与脚本关系）。
-
-命令示例：
-
-```bash
-# 正式版
-python qmclient_scripts/generate_release_notes.py \
-  --version v2.74.9 --current-tag v2.74.9 --channel auto
-
-# Nightly 预发布（CI 会带 commit / 构建时间）
-python qmclient_scripts/generate_release_notes.py \
-  --version nightly --current-tag nightly --channel pre-release \
-  --commit "$SHA" --branch main --built-at "2026-07-15 12:00:00 UTC"
-```
-
-若某提交需要更稳定的发布说明，在 commit body 补：
-
-```text
-Release-ZH: 中文发布说明
-```
-
-规则：
-
-- `Release-ZH:` 可选；缺失则用 subject 描述
-- 面向用户的重要功能/修复优先补 `Release-ZH:`
-- 主题分组依赖 scope，提交务必带规范 scope（如 `feat(settings):`）
-
-### Release 补发与重发（边界）
-
-- **补发产物**：tag 已在但 Release 缺失时，重新 `git push origin <tag>` 不会重跑 CI；需在 Actions 对应该 tag 手动跑 `build.yml`。
-- **不要强推正式 tag**：`vX.Y.Z` 发布后禁止 `git tag -f`；修正请发新版本。
-- **nightly 可覆盖**：`nightly` tag 每次 Nightly 构建 force-push 属正常行为（Pre-release）。
-
-## 版本 / Tag / Release
-
-- 仓库内版本统一通过 `python qmclient_scripts/bump_version.py --version X.Y.Z` 或 `--tag vX.Y.Z` 更新
-- 不要在 workflow 或本地脚本里直接改 `version.h`
-- tag 构建时，CI 也应调用同一个 `bump_version.py`
-- `CLIENT_RELEASE_VERSION` 的源头是 `QMCLIENT_VERSION`
-
-## 简例
-
-```text
-## Summary
-本次 PR 主要修复 HUD 编辑器无法正确编辑通知栏的问题，并同步修正通知栏相关的中文系统消息识别。
-
-## fix
-- 修复通知栏预览区域和拖拽区域不一致，导致位置不能正确编辑的问题。
-- 修复中文练习命令列表进入通知栏的问题。
-
-## test
-- 补充通知栏锚点和完赛消息解析测试。
-
-## docs
-- 补充服务端汉化现状探索文档。
-
-## Verification
-- [x] gate 门禁：`python qmclient_scripts/gate/check_gate.py --mode quick`
-- [x] 客户端构建：`cmd /c call qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14`
-
-## Risks / Gaps
-- HUD 编辑器相关改动已人工确认。
-- 第三方客户端实机联调未覆盖。
-```
-
-
-## 与其他 skill
-
-- 验证证据 → `qmclient-verification-gate`
-- 核心逻辑审查 → `qmclient-code-review`
+提交前验证由 `qmclient-verification-gate` 统一决定，已完成的相关测试证据可复用。普通最终回复遵循根 `AGENTS.md`，不套本 skill 的提交结构。

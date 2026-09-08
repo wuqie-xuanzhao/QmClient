@@ -1,142 +1,47 @@
 ---
 name: qmclient-cpp-conventions
-description: >
-  QmClient / DDNet C++ 开发约定：兼容性边界、DDNet 风格优先、热路径警惕、配置前缀、
-  内存/线程边界，以及性能/重构/安全等专项规则。修改任何 .cpp/.h、碰引擎/客户端逻辑、
-  做性能优化或行为保持型重构时都要用本 skill；不要只凭通用现代 C++ 习惯动手。
+description: 修改或调试 QmClient C++ 时使用；提供 DDNet 命名、热路径、资源与线程约定，以及按风险读取的专项参考。
 ---
 
-# QmClient C++ 开发约定
+# QmClient C++ 约定
 
-在 QmClient 中做 C++ 实现、重构或调试时，使用这份文档。
+先读当前实现、直接调用点和相关测试。授权与兼容性边界遵循根 `AGENTS.md`。
 
-## 兼容性优先
+## 风格与配置
 
-DDNet 兼容性优先级高于泛化的现代 C++ 偏好。
+- 遵循所在模块的 DDNet 风格，`src/base` 等区域沿用自身约定；不因通用现代 C++ 偏好改写已有模式。
+- 局部变量、方法和类名沿用大驼峰；前缀包括 `m_` 成员、`g_` 全局、`s_` 静态、`p` 指针、`a` 固定数组、`v` 向量、`C` 类、`I` 接口。
+- 枚举类按附近模式使用 `E...` 名称及大写枚举值；所有权和错误传播方式与模块一致。
+- Qm 配置用 `qm_` / `Qm`；新增可翻译文本或配置说明时读取 `qmclient-i18n-workflow`，维护源与运行时产物分开。
+- 抽函数、模板或 RAII 只在能解决当前问题且保持局部风格时引入；不要隐藏所有权转移。
 
-没有明确批准时，不要改这些：
+## 实时路径
 
-- 网络协议字段或布局。
-- Demo、皮肤、地图、配置或存档文件格式。
-- 物理、碰撞、预测、快照、输入、时序、回放或地图行为。
-- 任何会导致现有排名无法达成或现有地图变得更简单的改动。
+识别每帧、tick、玩家、实体、snapshot 和文本布局路径。检查新增的分配、字符串构造、排序扫描、`TextWidth`、配置写入、序列化和网络成本是否必要。
 
-如果任务触碰到这些区域，先指出风险，再开始实现，并把补丁保持在最小范围。
+性能结论须有同场景证据；无需为普通正确性修复启动完整性能诊断。静态发现可先修复并验证正确性，未实测时不宣称性能提升。
 
-## 范围边界
+## 资源与线程
 
-QmClient 的常规范围包括：
+- 校验外部输入、大小和索引；开发者不变量用断言，外部失败沿用运行时错误处理。
+- 涉及缓存、纹理、`CUIElement`、text container、`string_view` 或跨帧引用时，核对 owner、失效和释放路径。
+- 异步结果发布前验证对象与请求版本仍有效；GPU/UI 操作遵循实际后端的线程归属。
+- 音频、图形、HTTP、存储或后台任务改动先识别共享状态；不靠临时加锁替代生命周期设计。
 
-- `src/game/client/components/qmclient/`
-- `src/game/client/QmUi/`
-- `src/engine/shared/config_variables_qmclient*.h`
-- `src/game/version.h`
-- `data/languages/simplified_chinese.txt`
-- `docs/info.json`
-- `qmclient_scripts/`
-- `.agents/`、`docs/superpowers/`、`AGENTS.md` 和其他 agent/harness 文件
+## 专项参考
 
-没有明确请求时，以下内容都算超范围：
+仅在改动触及表中风险时读取，参考中的验收项只适用于实际改变的行为。
 
-- QmClient 配置以外的上游引擎核心。
-- 服务端玩法、地图编辑器内部、协议、物理、碰撞、预测、快照、回放行为。
-- `ddnet-libs/` 或 `src/engine/external/` 中的第三方库。
-- Release CI workflow 行为。
-
-## 风格
-
-优先遵循现有 DDNet 风格，而不是泛化的 C++ 风格：
-
-- 局部变量、方法和类名使用大驼峰（UpperCamelCase），`src/base` 等特殊区域除外。
-- 沿用现有前缀：`m_` 成员、`g_` 全局、`s_` 静态、`p` 指针、`a` 固定数组、`v` 向量、`C` 类、`I` 接口。
-- 优先使用语义化命名。短循环变量仅在作用域极小且含义明确时可接受。
-- 优先使用 early return 和小而专注的函数，但不要拆分到影响 DDNet 风格可读性的程度。
-
-## 现代 C++
-
-如果和当前模块风格匹配，可以使用：
-
-- `constexpr`
-- `enum class`（使用 `E...` 命名，值大写）
-- `std::optional`
-- `std::variant`
-- 移动语义
-- `std::array`
-- 谨慎限定范围的 `std::string_view`
-
-避免：
-
-- 原始 `new` / `delete`，除非周围代码本身就以这种方式管理对象所有权
-- 不必要的宏
-- `goto`
-- `if` 条件内赋值
-- 将整数当作布尔值使用
-- 隐藏的所有权转移
-- 不必要的堆分配
-- 与当前模块风格不匹配的大范围模板或 RAII 重写
-
-## 运行时与热路径
-
-DDNet 是实时联网游戏。先判断代码是不是跑在每帧、每 tick、每玩家、每实体、每个 snapshot、每个渲染项或文本布局路径上。
-
-要特别警惕：
-
-- 渲染/tick 路径中的堆分配
-- 重复的字符串构造
-- 重复的排序或扫描
-- 重复的 `TextWidth` 或布局计算
-- 对未变更状态写入配置
-- 频繁循环中的序列化/反序列化
-- 额外的网络带宽或协议增长
-
-不要过早优化，但也不要把明显的热路径浪费带进去。
-
-## 错误处理与数据边界
-
-- 不要静默忽略文件、网络、解析、配置、控制台、资源或外部数据失败。
-- 校验索引、大小、指针和外部输入。
-- 对开发者不变量使用 debug assertion，对用户/外部失败使用运行时处理。
-- 遵循当前模块既有的错误传播风格，不要大面积改成异常驱动流程。
-
-## 内存与生命周期
-
-重点检查：
-
-- 悬空指针或引用
-- 返回局部数据的引用
-- 迭代器失效
-- 越界访问
-- use-after-free 或 double free
-- 未初始化读取
-- `string_view` 或指针生命周期不匹配
-
-当代码使用缓存、静态或全局状态时，要考虑初始化顺序和线程安全。
-
-## 线程
-
-不要为了“以防万一”就引入线程、锁或原子变量。如果代码碰到音频、图形、HTTP、存储、数据库、日志、平台代码或后台任务，先识别线程边界和共享可变状态。
-
-
-## 专项规则（按需读，勿一次全载）
-
-路径均在本 skill 目录下 `references/advanced/`：
-
-| 任务类型 | 先读 |
+| 风险 | 本 skill 下的参考 |
 | --- | --- |
-| 性能优化、长帧归因、页面降温 | `references/advanced/performance-workflow.md` |
-| 性能量化系统本身的迭代 | `references/advanced/perf-system-workflow.md` |
-| 行为保持型代码重构 | `references/advanced/refactor-workflow.md` |
-| 新特性或新配置引入 | `references/advanced/feature-introduction.md` |
-| 下载、文件、日志、用户反馈包、外部输入 | `references/advanced/safety-security.md` |
-| 缓存、纹理、指针、UI element、生命周期 | `references/advanced/memory-lifetime.md` |
-| jobs、后台任务、主线程发布、GPU context | `references/advanced/threading-jobs.md` |
-| debug 面板、debug bundle、复现信息 | `references/advanced/observability-debugging.md` |
-| 固定场景、A/B、release 前回归防护 | `references/advanced/regression-prevention.md` |
+| 性能优化、长帧 | [performance-workflow.md](references/advanced/performance-workflow.md) |
+| 性能日志和报表系统 | [perf-system-workflow.md](references/advanced/perf-system-workflow.md) |
+| 行为保持型重构 | [refactor-workflow.md](references/advanced/refactor-workflow.md) |
+| 新功能或新配置 | [feature-introduction.md](references/advanced/feature-introduction.md) |
+| 下载、文件、外部输入 | [safety-security.md](references/advanced/safety-security.md) |
+| 缓存、纹理、对象生命周期 | [memory-lifetime.md](references/advanced/memory-lifetime.md) |
+| 后台任务与结果发布 | [threading-jobs.md](references/advanced/threading-jobs.md) |
+| 诊断与反馈包 | [observability-debugging.md](references/advanced/observability-debugging.md) |
+| 回归场景设计 | [regression-prevention.md](references/advanced/regression-prevention.md) |
 
-索引：`references/advanced/README.md`。与上文冲突时优先 DDNet 兼容性与当前代码模式。
-
-## 与其他 skill
-
-- 验证 / gate → `qmclient-verification-gate`
-- 提交文案 → `qmclient-git-commit`
-- 代码审查 → `qmclient-code-review`
+验证集合由 `qmclient-verification-gate` 统一选择；审查使用 `qmclient-code-review`，不因加载本 skill 自动触发全量审计。

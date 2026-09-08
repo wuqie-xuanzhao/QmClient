@@ -8,7 +8,11 @@ docs/dyl/BestClient/
 .ruff_cache
 
 # Agent 本地缓存
-/.agents/
+# 版本化项目规则与参考，继续忽略其他本地产物。
+/.agents/**
+!/.agents/**/
+!/.agents/**/*.md
+!/.agents/**/agents/openai.yaml
 .codex/
 .codegraph/
 .env

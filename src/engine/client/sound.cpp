@@ -336,6 +336,10 @@ void CSound::UpdateDevice()
 		CloseDevice();
 	}
 
+	// 无输出设备时避免 SDL 的设备打开流程长时间阻塞主线程。
+	if(SDL_GetNumAudioDevices(0) <= 0)
+		return;
+
 	if(!m_DeviceChanged.exchange(false, std::memory_order_relaxed))
 		return;
 

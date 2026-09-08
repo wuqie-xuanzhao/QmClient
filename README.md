@@ -1,54 +1,55 @@
-# Q1menG Client
+# QmClient Qm客户端
 
 <p align="center">
-   <img src="data/qmclient/gui_logo.png" alt="Q1menG Client Logo" style="width:60%; max-width:760px;" />
+   <img src="data/qmclient/gui_logo.png" alt="Q1menG 客户端标志" style="width:60%; max-width:760px;" />
 </p>
 
 <p align="center">
-  A project to rebuild a customised client based on DDNet / TaterClient
+  基于 DDNet / TaterClient 构建的定制客户端项目
 </p>
 
-> 📄 This document is available in <a href="README_zh.md">中文</a></p>
+> 本文档另有 <a href="README_en.md"> 版本 English</p>
+>
+>
+>
 
-## 📝 Project Overview
+## [📝 项目概述](README.md)
 
-Q1menG Client is a customised client built upon DDNet and TaterClient.\
-The aim is to provide a more modern UI experience, a wider range of configurable visual effects, and more user-friendly day-to-day features, whilst maintaining compatibility with the core gameplay.
+[QmClient 客户端是基于 DDNet 和 TaterClient 构建的定制版本。
+项目旨在提供更现代的 UI 体验、更丰富的视觉效果配置选项，同时保持与核心游戏玩法的兼容性。](README.md)
 
-> 🤖 **AI agents / contributors**: workflow rules (commit, PR, release, build) live in [`AGENTS.md`](AGENTS.md) and [`docs/ai-workflow/`](docs/ai-workflow/meta.md). Start there.
+## ✨ 功能特性
 
-## ✨ Features
+- 流畅的 UI 过渡和 HUD 动画
+- 增强的输入和交互体验
+- 更丰富的客户端配置选项和自定义设置
+- 保持与 DDNet 生态系统的核心兼容性
 
-- Smooth UI transitions and HUD animations
-- Enhanced input and interaction experience
-- More client configuration options and customisation settings
-- Core capabilities that remain compatible with the DDNet ecosystem
+## ❤️ 贡献者
 
-## ❤️ Contributors
+感谢所有为该项目提交代码、报告问题和提出改进建议的贡献者。
 
-We would like to thank all contributors who have submitted code, reported issues and suggested improvements for this project.
+[![贡献者](https://contrib.rocks/image?repo=wxj881027/QmClient)](https://github.com/wxj881027/QmClient/graphs/contributors)
 
-[![Contributors](https://contrib.rocks/image?repo=wxj881027/QmClient)](https://github.com/wxj881027/QmClient/graphs/contributors)
-
-## 🚀 Build
+## 🚀 构建
 
 ### Windows
 
-Use the repository wrapper so `cmake` always runs inside a configured MSVC developer environment, even from a normal PowerShell or `cmd.exe` session:
+使用仓库包装脚本，`cmake` 始终在配置的 MSVC 开发环境中运行，即使从普通的 PowerShell 或 `cmd.exe` 会话：
 
 ```bat
 qmclient_scripts/cmake-windows.cmd -S . -B cmake-build-release
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target game-client -j 14
 ```
 
-### macOS / Linux / already-initialised developer shell
+### macOS / Linux / 已初始化的开发人员环境
 
 ```sh
 cmake -S . -B cmake-build-release
 cmake --build cmake-build-release --target game-client -j 14
 ```
 
-## ✅ Test
+## ✅ 测试
 
 ### Windows
 
@@ -58,7 +59,7 @@ qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_rust
 qmclient_scripts/cmake-windows.cmd --build cmake-build-release --target run_tests
 ```
 
-### macOS / Linux / already-initialised developer shell
+### macOS / Linux / 已初始化的开发人员环境
 
 ```sh
 cmake --build cmake-build-release --target run_cxx_tests
@@ -66,20 +67,20 @@ cmake --build cmake-build-release --target run_rust_tests
 cmake --build cmake-build-release --target run_tests
 ```
 
-## 🙏 Special Thanks
+## 🙏 特别感谢
 
-- All contributors to DDNet, Teeworlds, DDRace, TaterClient, Best Client, RClient and CactusClient
-- Friends who have taken part in testing, provided feedback and offered inspiration
-- Everyone who continues to contribute to the open-source community
-- All donors – thank you
+- DDNet、Teeworlds、DDRace、TaterClient、RClient、Best Client 和 Cactus Client 的所有贡献者
+- 参与测试、提供反馈和启发灵感的朋友们
+- 继续为开源社区做出贡献的每一个人
+- 所有捐赠者 – 感谢你们
 
-## 🏛 Credits
+## 🏛 致谢
 
 - Teeworlds — Magnus Auvinen
 - DDRace — Shereef Marzouk
-- DDNet — Dennis Felsing and contributors
-- TaterClient — Community modifications
-- Best Client — Community modifications
+- DDNet — Dennis Felsing 和贡献者
+- TaterClient — 社区修改版本
+- Best Client — 社区修改版本
 - [BetterLyrics](https://github.com/jayfunc/BetterLyrics) — [jayfunc](https://github.com/jayfunc)
 - [Lyricify Lyrics Helper](https://github.com/WXRIW/Lyricify-Lyrics-Helper) — [XY Wang (WXRIW)](https://github.com/WXRIW)
 - [163MusicLyrics](https://github.com/jitwxs/163MusicLyrics)
@@ -91,11 +92,11 @@ cmake --build cmake-build-release --target run_tests
 - [ntextcat](https://github.com/ivanakcheurov/ntextcat)
 - [LyricParser](https://github.com/HyPlayer/LyricParser)
 
-## 📜 License
+## 📜 许可证
 
-This project is based on DDNet and TaterClient. Upstream code remains under the zlib/libpng licence.\
-Modified versions must be clearly attributed and must not misrepresent the identity of the original authors.
+本项目基于 DDNet 和 TaterClient。上游代码仍遵循 zlib/libpng 许可证。
+修改版本必须明确标注来源，不得歪曲原作者身份。
 
-## 📮 Notes
+## 📮 说明
 
-This project is a personalised customisation and does not represent the official stance of DDNet or TaterClient.
+本项目为个人定制版本，不代表 DDNet 或 TaterClient 的官方立场。

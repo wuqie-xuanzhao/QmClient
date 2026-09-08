@@ -4764,7 +4764,7 @@ TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesCleanDisplayNames)
 
 TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
 {
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp") + ReadTextFile("src/game/client/ui_popups.cpp");
 	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
 	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
 	const std::string DoDropDownActive = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, bool Enabled)");
@@ -4820,7 +4820,7 @@ TEST(QmNewUiMenuBranches, SettingsDropdownsUseTheSharedWrapper)
 	EXPECT_EQ(ControlsSource.find("Ui()->DoDropDown(&JoystickDropDown"), std::string::npos);
 	EXPECT_NE(ControlsSource.find("GameClient()->m_Menus.DoSettingsDropDown(&JoystickDropDown"), std::string::npos);
 
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp") + ReadTextFile("src/game/client/ui_popups.cpp");
 	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
 	ASSERT_FALSE(DoDropDown.empty());
 	EXPECT_EQ(DoDropDown.find("static CScrollRegion"), std::string::npos);
@@ -4903,7 +4903,7 @@ TEST(QmNewUiMenuBranches, TeePresetListUsesTheSameRowSpacingAsItsMeasuredViewpor
 
 TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
 {
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
+	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp") + ReadTextFile("src/game/client/ui_popups.cpp");
 	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
 	const std::string SelectionReset = FunctionBody(UiSource, "void CUi::SSelectionPopupContext::Reset()");
 	const std::string PopupSelection = FunctionBody(UiSource, "CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)");
@@ -5612,7 +5612,7 @@ TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
 	const std::string UiRect = ReadTextFile("src/game/client/ui_rect.cpp");
 	const std::string Containers = ReadTextFile("src/game/client/QmUi/UiContainers.h");
 	const std::string Overlays = ReadTextFile("src/game/client/QmUi/UiOverlays.h");
-	const std::string Ui = ReadTextFile("src/game/client/ui.cpp");
+	const std::string Ui = ReadTextFile("src/game/client/ui.cpp") + ReadTextFile("src/game/client/ui_popups.cpp");
 	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
 	const std::string IngameMenus = ReadTextFile("src/game/client/components/menus_ingame.cpp");
 	const std::string QmClientMenus = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -5811,6 +5811,7 @@ TEST(QmNewUiMenuBranches, LegacyRoundedRectDrawSitesRequireExplicitAllowlist)
 		"src/game/client/components/ui_effects.cpp",
 		"src/game/client/components/hud_editor.cpp",
 		"src/game/client/ui.cpp",
+		"src/game/client/ui_popups.cpp",
 		"src/game/client/QmUi/UiButtons.cpp",
 		"src/game/client/QmUi/UiForms.cpp",
 		"src/game/client/QmUi/SettingsCard.cpp",

@@ -1,62 +1,42 @@
 ---
 name: qmclient-i18n-workflow
-description: QmClient 翻译工作流：extract → generate → validate → review_duplicate；TOML 为真相源、txt 为产物；配置 Desc/默认文案必须英文 source；draft 审核后再 write-back。
+description: 修改翻译、Localize 文本、配置说明或语言生成脚本时使用；维护 TOML 来源、生成链、草稿审核及实际覆盖规则。
 ---
-
 # QmClient 翻译工作流
 
-## 何时使用
-改动涉及：
-- `qmclient_scripts/languages_qmclient/`
-- `data/languages/*.txt`
-- `translations/i18n/*.toml`
-- 源码中的 `Localize` / `Localizable` / `Register` help / `MACRO_CONFIG_*` 的 `Desc` 或可配置默认文案
+## 维护源与文本
 
-## 真相源
-| 层级 | 路径 | 说明 |
-|------|------|------|
-| 维护源 | `qmclient_scripts/languages_qmclient/translations/i18n/*.toml` | 可改 |
-| 运行时产物 | `data/languages/*.txt` | **禁止手改**，由 `generate_all.py` 生成 |
-| 草稿 | `translations_draft/<语言>/*.toml` | 模型输出，审核后才回填 |
+- 维护源：`qmclient_scripts/languages_qmclient/translations/i18n/*.toml`。
+- 运行时产物：`data/languages/*.txt`，由 `generate_all.py` 生成，不手改。
+- 模型草稿：`qmclient_scripts/languages_qmclient/translations_draft/<语言>/*.toml`，审核后才回填。
+- `Localize` / `Localizable`、`Register` help、`MACRO_CONFIG_*` 的 Desc 与可翻译默认文案使用英文 source；其他语言写 TOML。
+- Desc 对应 `m_pHelpLocalizeKey`，由 UI 本地化。可配置默认文案在展示/发送前按现有调用方式本地化，自定义内容无译文则保留原文。
 
-## 配置说明硬约束
+## 生成与验证
 
-### Desc（MACRO 最后参数）
-- 必须是**英文 source key**；中文等只进 TOML 语言字段
-- 运行时：`m_pHelpLocalizeKey = Desc`，UI 走 `Localize(Desc)`
-- 英文界面无译文时回退 source；Desc 若是中文会在英文 UI 露中文
+从仓库根运行，Windows 用 `python` 或 `py -3`，Linux/macOS 用 `python3`：
 
-### 可配置默认文案（STR 默认值）
-- 出厂默认也必须是**英文 source**，不要把中文写进默认值
-- 运行时展示/发送前：`Localize`；中文用户见中文，英文用户见英文
-- 用户自定义文案无译文时回退原文
-- 旧版中文默认可在代码映射回英文 source 再 Localize
-
-### 提取范围
-| 头文件 | 模块 |
-|--------|------|
-| `src/engine/shared/config_variables.h` | `menus` |
-| `src/engine/shared/config_variables_qmclient.h` | `qmclient` |
-| `src/engine/shared/config_variables_tclient.h` | `tclient` |
-
-历史中文 Desc 用 `migrate_cjk_config_help.py`（`--generate-map` / `--apply`）；映射在 `translations/_migrations/`。
-
-## 标准命令链
-```bash
+```text
 python qmclient_scripts/languages_qmclient/extract_strings.py
 python qmclient_scripts/languages_qmclient/generate_all.py
 python qmclient_scripts/languages_qmclient/validate.py
 python qmclient_scripts/languages_qmclient/review_duplicate_entries.py --show-groups 0 --show-unused 0
 ```
 
-## 新增英文 key 后补译
-1. `extract_strings.py` 更新 active keys  
-2. `translate_with_local_http.py --languages <语言列表>` 生成 draft（补缺**不要**加 `--rewrite`）  
-3. 审核 `translations_draft/` 后显式 `--write-back`  
-4. 再跑 `generate_all.py` → `validate.py`
+源码 key 变化时按此顺序运行；仅译文变化且提取结果仍新鲜时可复用提取结果。只读审查不运行会更新文件的 extract/generate。
 
-## 约束
-- 草稿未审核不得 write-back  
-- 数字门禁：`required = 数字(src) ⊆ 数字(tgt) ⊆ required ∪ 英文词 one…ten`  
-- 跨模块同一 identity：first-wins + integrity 报错；合并后删除非首选副本  
-- 项目 skills 入口仅 `.agents/skills`
+extract 默认增量维护完整 active keys；缓存失效或严格重建时才用 `--full`。validate 默认重新扫描新鲜度，本地快速校验可显式用 `--incremental`；不得把增量验证说成完整重扫。
+
+## 覆盖与质量
+
+覆盖规则以 `validate.py`、`generate_all.GENERATED_LANGUAGES` 和 `i18n_store.english_fallback_identities` 为准：普通 active key 缺译会失败；既有双语回退模块的条目允许非简中语言回退英文。运行时可回退不等于验证允许任意缺译。
+
+局部任务不自动补译无关历史缺口，也不硬编码“12 语全部补齐”。本次新增 key 按所属模块满足现有门禁；若范围外缺口阻断验证，报告来源与影响，不改门禁或把条目移入回退模块来绕过校验。
+
+数字、占位符与 identity 完整性继续校验。跨模块同一 identity 按 first-wins 解析且 integrity 报错；确认归属后合并到正确维护模块。数字兼容逻辑与迁移检查见 `qmclient-i18n-audit`。
+
+## 模型补译（任务需要时）
+
+用 `translate_with_local_http.py --languages <目标语言> --modules <目标模块>` 限定生成范围，先用 `--dry-run` 核对候选；补缺不加 `--rewrite`。使用已有且获授权的服务配置，具体参数以脚本为准。
+
+审核草稿中的语义、术语、数字和占位符后，对同一语言和模块显式 `--write-back` 回填；该命令处理所选模块中的适用草稿，运行前核对其中所有待写条目，不能假定只写刚审核的一条；用户已授权补译时，审核由当前任务完成，不另设人工确认步骤。只 patch 相关 message block，不重排或重写整个模块。最后生成产物并验证。

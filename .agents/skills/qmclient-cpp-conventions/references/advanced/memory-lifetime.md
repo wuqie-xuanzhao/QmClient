@@ -18,9 +18,9 @@
 ## 生命周期规则
 
 - UI/text/texture 资源的 owner 必须明确。
-- 注册项必须在析构或重置时解除。
+- 注册项在 owner 失效前解除；有意跨 reset 保留的注册按实际生命周期处理，避免重复注册。
 - 缓存条目不能保存会被 vector reallocation 失效的裸指针。
-- 后台线程不能直接触碰 GPU context 或 UI state。
+- 普通资源 worker 不得直接修改 UI 或绕过图形命令队列操作 GPU context；专属渲染线程按后端合同执行。
 - 发布结果前必须确认目标对象仍然有效。
 - cache miss、cache disabled、cache corrupt 都必须安全回退。
 
