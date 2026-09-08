@@ -47,7 +47,7 @@ ca4363fe0cff47b3b57706e3ab3a9243157d9cae	2026-09-03	demo player: Fix crash with 
 dc92ab543481cc1452ae88b97751cc849d6a3403	2026-09-03	client: Improve performance for low refresh/update rates (#12743)	merge-commit	unreviewed				
 bbb620faccc8c05e0f1c0ed678f3b74b094ed3cf	2026-09-03	demo player: Fix crash with demo files without key frame (#12777)	merge-commit	unreviewed				
 a2260313d735c778e976b3259cffa580d8f627c3	2026-09-03	client: Show back button in the console (#12759)	merge-commit	unreviewed				
-07506d45cd23438356c85731a9864a235b41f5fa	2026-09-03	editor: Fix two bugs in tabs (#12774)	merge-commit	unreviewed				
+07506d45cd23438356c85731a9864a235b41f5fa	2026-09-03	editor: Fix two bugs in tabs (#12774)	merge-commit	verified-wrapper	editor/multi-map-tabs	f1edc1ae5,ab17c9acd	合并包装；编辑器 tab 保存状态和关闭 popup 两项变更分别已覆盖或适配	父链与相对第一父提交 diff 核对
 a34ebba7395ef3a56c05055898d3821e1f8d60f6	2026-09-03	Fix map bugs not being compared based on SHA256	candidate	requires-approval-map-semantics	map/compatibility		当前CMapDescription比较只用名称和size，缺少SHA256；补上会改变同名同大小不同内容地图的BUG_GRENADE_DOUBLEEXPLOSION判定，需要兼容性批准	2026-09-08源码与官方diff核对；工作树补丁构建/回归进行中；跨平台运行时未验
 c62e4f9e3c30c400b3ef003cec8bd88b9726bffc	2026-09-03	Size the snapshot delta buffers correctly (#12499)	merge-commit	unreviewed				
 0198e362ba5e44454ab2e58573efdf7838c9ce99	2026-09-03	snapshots: Prevent overflow on 32bit systems	candidate	unreviewed				
