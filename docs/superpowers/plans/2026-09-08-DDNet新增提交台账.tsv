@@ -2,7 +2,7 @@ upstream_base	1d507dad90812cd0873b151aac60ad7bff5127b6	upstream_head	59968143f78
 commit	date	subject	patch_equivalence	disposition	module	dependencies	notes	validation
 be3e5e6a3c03065241c71051dd2f15e2a1c0a7fc	2026-07-31	Size the snapshot delta buffers correctly	candidate	unreviewed				
 cda171db1e781fa346ef7ac5950683b731d2b6e6	2026-08-19	client: When deleting demo select the next demo	candidate	adapted-worktree	client/demo browser		适配到多选删除流程：仅单个 demo 或文件夹删除后选择相邻条目，多选删除保持原有选择行为；本地提交 83541a9ac。	clang-format 干跑、git diff --check；完整客户端构建待 Windows SDK 环境恢复
-3e7e479de15a96b02163b59e66cdcea21add8528	2026-08-19	client: When deleting 0.7 skin select the next skin	candidate	unreviewed				
+3e7e479de15a96b02163b59e66cdcea21add8528	2026-08-19	client: When deleting 0.7 skin select the next skin	candidate	adapted-worktree	client/skins7 + ghosts		按现有名称列表模型在删除 0.7 皮肤后选择替代项，并适配同提交中的 ghost 删除索引夹紧；本地提交 82af6af64。	clang-format 干跑、git diff --check；完整客户端构建待 Windows SDK 环境恢复
 178da1eadeb2f9c7b7197e27723322d8169b1c2e	2026-08-24	client: Handle input earlier	candidate	unreviewed				
 b871d3432ebd5fcced1cf3759d7ef566239f7b05	2026-08-27	Suppress the bundled wavpack shift reports for UBSan	candidate	unreviewed				
 1a16a876bb1b0fdb1e4bef8fd520b8d74a22d4bf	2026-08-25	Keep sound running when no audio device is available	candidate	unreviewed				
