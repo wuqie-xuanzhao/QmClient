@@ -3623,6 +3623,13 @@ void CClient::Update()
 {
 	PumpNetwork();
 
+	// 官方 178da1ead：在采集/发送输入之前先更新 editor/gameclient，
+	// 低刷新率下输入能早一个循环发出。
+	if(m_EditorActive)
+		m_pEditor->OnUpdate();
+	else
+		GameClient()->OnUpdate();
+
 	if(State() == IClient::STATE_ONLINE)
 	{
 		UpdatePredictionMargin();
@@ -3917,12 +3924,6 @@ void CClient::Update()
 
 	// update the server browser
 	m_ServerBrowser.Update();
-
-	// update editor/gameclient
-	if(m_EditorActive)
-		m_pEditor->OnUpdate();
-	else
-		GameClient()->OnUpdate();
 
 	Discord()->Update(g_Config.m_TcDiscordRPC);
 	Steam()->Update();
