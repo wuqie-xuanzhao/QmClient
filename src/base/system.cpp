@@ -1402,7 +1402,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 
 			// Set DSCP/TOS
 			{
-				int iptos = 0x10; // IPTOS_LOWDELAY
+				int iptos = 0xB8; // IPTOS_DSCP_EF, expedited forwarding
 				if(setsockopt(socket, IPPROTO_IP, IP_TOS, (const char *)&iptos, sizeof(iptos)) != 0)
 				{
 					log_error("net", "Setting IP_TOS on IPv4 failed (%s)", net_error_message().c_str());
@@ -1448,7 +1448,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 			// https://github.com/ddnet/ddnet/issues/7605.
 #if !defined(CONF_FAMILY_WINDOWS)
 			{
-				int TrafficClass = 0x10; // IPTOS_LOWDELAY
+				int TrafficClass = 0xB8; // IPTOS_DSCP_EF, expedited forwarding
 				if(setsockopt(socket, IPPROTO_IPV6, IPV6_TCLASS, (const char *)&TrafficClass, sizeof(TrafficClass)) != 0)
 				{
 					log_error("net", "Setting IPV6_TCLASS on IPv6 failed (%s)", net_error_message().c_str());

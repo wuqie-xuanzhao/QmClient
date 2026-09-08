@@ -30,6 +30,15 @@ namespace
 		EXPECT_EQ(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IP, IP_TOS"), std::string::npos);
 	}
 
+	TEST(Net, SocketUsesExpeditedForwardingDscp)
+	{
+		// 官方 d3810ba51：IPv4/IPv6 的 DSCP 都改用 EF(0xB8)，本地原先保留 IPTOS_LOWDELAY(0x10)。
+		const std::string Source = ReadTestSourceFile("src/base/system.cpp");
+		EXPECT_NE(Source.find("int iptos = 0xB8; // IPTOS_DSCP_EF, expedited forwarding"), std::string::npos);
+		EXPECT_NE(Source.find("int TrafficClass = 0xB8; // IPTOS_DSCP_EF, expedited forwarding"), std::string::npos);
+		EXPECT_EQ(Source.find("0x10; // IPTOS_LOWDELAY"), std::string::npos);
+	}
+
 	TEST(Net, VanillaAntispoofBoundsPreconnectionChunk)
 	{
 		const std::string Source = ReadTestSourceFile("src/engine/shared/network_server.cpp");
