@@ -4675,7 +4675,6 @@ set(CPACK_SOURCE_FILES
   datasrc/
   ddnet-libs/
   license.txt
-  lsan.supp
   memcheck.supp
   other/
   scripts/
