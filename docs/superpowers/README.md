@@ -21,7 +21,8 @@ status: active
 - [QmLive Phase 2-4 剩余工作](plans/2026-06-28-qmlive-match-live-plan.md)：后续客户端与服务端阶段。
 - [背景粒子、镜头和歌词收口](plans/2026-07-11-background-camera-lyrics-module-refactor.md)：当前并行实现。
 - [过图历史工作区与响应式卡片改造](plans/2026-07-11-map-history-workspace-redesign.md)：当前并行实现。
-- [DDNet 20.0 上游同步实施计划](plans/2026-08-30-DDNet20上游同步实施计划.md)：按批次吸收上游稳定性修复与 iOS 支持。
+- [DDNet 分批同步与旧台账复核](plans/2026-09-08-DDNet分批同步与旧台账复核.md)：当前官方提交复核、适配与验证入口。
+- [DDNet 兼容性批次待确认方案](plans/2026-09-08-DDNet兼容性批次待确认方案.md)：涉及快照、输入时序和地图兼容语义的独立审批批次。
 
 # 当前规格
 
