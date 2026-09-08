@@ -5246,12 +5246,13 @@ TEST(QmMonitoringHelpers, ClientRenderLoopUsesGameClientIdleThrottleWithOneFrame
 	EXPECT_NE(ClientSource.find("if(fs_getcwd(aWorkingDir, sizeof(aWorkingDir)))"), std::string::npos);
 	EXPECT_NE(ClientSource.find("str_format(aPerfLogCompletePath, sizeof(aPerfLogCompletePath), \"%s/%s\", aWorkingDir, aPerfLogPath);"), std::string::npos);
 	EXPECT_NE(ClientSource.find("const int64_t RenderFrameTicks = GfxRefreshRate > 0 ? time_freq() / (int64_t)GfxRefreshRate : 0;"), std::string::npos);
-	EXPECT_NE(ClientSource.find("(!GfxRefreshRate || RenderFrameTicks <= Now - LastRenderTime)"), std::string::npos);
-	EXPECT_NE(ClientSource.find("int64_t AdditionalTime = GfxRefreshRate ? ((Now - LastRenderTime) - RenderFrameTicks) : 0;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("const bool RenderDue = GfxRefreshRate ? Now >= NextRenderTime : UpdateDue;"), std::string::npos);
+	EXPECT_NE(ClientSource.find("NextRenderTime = std::max(NextRenderTime + time_freq() / GfxRefreshRate, Now);"), std::string::npos);
 	EXPECT_NE(ClientSource.find("state=%d render_rate=%d throttle=%d"), std::string::npos);
-	EXPECT_NE(ClientSource.find("const auto WaitWithNetwork = [&](std::chrono::nanoseconds WaitTime)"), std::string::npos);
-	EXPECT_NE(ClientSource.find("else if(IdleRenderThrottleRate > 0)"), std::string::npos);
-	EXPECT_NE(ClientSource.find("SleepTimeInNanoSeconds = (std::chrono::nanoseconds(1s) / (int64_t)IdleRenderThrottleRate) - (Now - LastTime);"), std::string::npos);
+	EXPECT_NE(ClientSource.find("if(WakeTime != std::numeric_limits<int64_t>::max())"), std::string::npos);
+	EXPECT_NE(ClientSource.find("WakeTime = std::min(WakeTime, Now + (m_aPredTick[g_Config.m_ClDummy] * time_freq() / GameTickSpeed() - m_PredictedTime.Get(Now)));"), std::string::npos);
+	EXPECT_NE(ClientSource.find("IdleRenderThrottleRate > 0 && !RefreshRate"), std::string::npos);
+	EXPECT_NE(ClientSource.find("WaitTime > 1000us ? WaitTime / 2 : 0ns"), std::string::npos);
 	EXPECT_EQ(ClientSource.find("time_freq() / (int64_t)g_Config.m_GfxRefreshRate"), std::string::npos);
 }
 
