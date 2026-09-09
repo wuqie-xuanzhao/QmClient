@@ -4355,18 +4355,18 @@ public:
 			return false;
 		}
 
-		if(g_Config.m_QmVulkanApiVersion != 11 && g_Config.m_QmVulkanApiVersion != 14)
+		if(g_Config.m_QmVulkanApiVersion != 11 && g_Config.m_QmVulkanApiVersion != 13 && g_Config.m_QmVulkanApiVersion != 14)
 		{
-			log_warn("gfx/vulkan", "Unsupported Vulkan API selection %d; falling back to Vulkan 1.1.", g_Config.m_QmVulkanApiVersion);
-			g_Config.m_QmVulkanApiVersion = 11;
+			log_warn("gfx/vulkan", "Unsupported Vulkan API selection %d; falling back to automatic Vulkan version selection.", g_Config.m_QmVulkanApiVersion);
+			g_Config.m_QmVulkanApiVersion = 14;
 		}
 
 		SVulkanVersion RequestedVersion = ResolveConfiguredVulkanApiVersion(g_Config.m_QmVulkanApiVersion);
 		if(!IsVulkanVersionAtLeast(LoaderVersion, RequestedVersion))
 		{
-			log_warn("gfx/vulkan", "Vulkan API %d.%d was selected, but the installed loader only supports %d.%d.%d; falling back to Vulkan 1.1.", RequestedVersion.m_Major, RequestedVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
-			g_Config.m_QmVulkanApiVersion = 11;
-			RequestedVersion = gs_BackendVulkanMinimumVersion;
+			const SVulkanVersion ResolvedVersion = ResolveVulkanVersionForLoader(RequestedVersion, LoaderVersion);
+			log_warn("gfx/vulkan", "Vulkan API %d.%d was selected, but the installed loader only supports %d.%d.%d; using Vulkan %d.%d.", RequestedVersion.m_Major, RequestedVersion.m_Minor, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch, ResolvedVersion.m_Major, ResolvedVersion.m_Minor);
+			RequestedVersion = ResolvedVersion;
 		}
 		m_RequestedApiVersion = VK_MAKE_API_VERSION(0, RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch);
 		log_info("gfx/vulkan", "requesting Vulkan API %d.%d.%d, loader supports %d.%d.%d", RequestedVersion.m_Major, RequestedVersion.m_Minor, RequestedVersion.m_Patch, LoaderVersion.m_Major, LoaderVersion.m_Minor, LoaderVersion.m_Patch);
@@ -6817,40 +6817,40 @@ public:
 			return true;
 		};
 
-		const auto FallbackToVulkan11 = [&](const char *pReason) {
-			log_warn("gfx/vulkan", "%s Falling back to Vulkan 1.1.", pReason);
-			g_Config.m_QmVulkanApiVersion = 11;
-			DestroyVulkanInstance();
-			m_RequestedApiVersion = VK_API_VERSION_1_1;
-			m_EffectiveApiVersion = VK_API_VERSION_1_1;
-			m_RequiredVulkanVersionUnavailable = false;
-			ResetInitializationDiagnostics();
-			*m_pGpuList = {};
+		const SVulkanVersion aVersionChain[] = {{1, 4, 0}, {1, 3, 0}, {1, 1, 0}};
+		const int FirstVersion = VK_API_VERSION_MINOR(m_RequestedApiVersion) >= 4 ? 0 : (VK_API_VERSION_MINOR(m_RequestedApiVersion) >= 3 ? 1 : 2);
+		bool VulkanReady = false;
+		for(int VersionIndex = FirstVersion; VersionIndex < (int)std::size(aVersionChain); ++VersionIndex)
+		{
+			const SVulkanVersion Version = aVersionChain[VersionIndex];
+			if(VersionIndex != FirstVersion)
+			{
+				log_warn("gfx/vulkan", "Falling back to Vulkan %d.%d.", Version.m_Major, Version.m_Minor);
+				g_Config.m_QmVulkanApiVersion = Version.m_Minor == 3 ? 13 : 11;
+				DestroyVulkanInstance();
+				m_RequestedApiVersion = VK_MAKE_API_VERSION(0, Version.m_Major, Version.m_Minor, Version.m_Patch);
+				m_EffectiveApiVersion = m_RequestedApiVersion;
+				m_RequiredVulkanVersionUnavailable = false;
+				ResetInitializationDiagnostics();
+				*m_pGpuList = {};
+			}
 			if(!CreateConfiguredVulkanInstance())
 			{
 				DestroyVulkanInstance();
-				return false;
+				continue;
 			}
-			if(!SelectGpu(pRendererString, pVendorString, pVersionString))
+			if(SelectGpu(pRendererString, pVendorString, pVersionString))
 			{
-				DestroyVulkanInstance();
-				return false;
+				if(CreateLogicalDevice(vVKLayers))
+				{
+					VulkanReady = true;
+					break;
+				}
+				CleanupVulkanSDL();
 			}
-			return true;
-		};
-
-		if(!CreateConfiguredVulkanInstance())
-		{
-			if(m_RequestedApiVersion != VK_API_VERSION_1_4 || !FallbackToVulkan11("The selected Vulkan 1.4 instance could not be created."))
-				return -1;
+			DestroyVulkanInstance();
 		}
-		else if(!SelectGpu(pRendererString, pVendorString, pVersionString))
-		{
-			if(m_RequestedApiVersion != VK_API_VERSION_1_4 || !m_RequiredVulkanVersionUnavailable || !FallbackToVulkan11("No physical device supports the selected Vulkan 1.4 API."))
-				return -1;
-		}
-
-		if(!CreateLogicalDevice(vVKLayers))
+		if(!VulkanReady)
 			return -1;
 
 		GetDeviceQueue();

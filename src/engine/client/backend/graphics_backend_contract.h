@@ -1,10 +1,18 @@
 #ifndef ENGINE_CLIENT_BACKEND_GRAPHICS_BACKEND_CONTRACT_H
 #define ENGINE_CLIENT_BACKEND_GRAPHICS_BACKEND_CONTRACT_H
 
+#include <base/detect.h>
+
 #include <engine/graphics.h>
 
 namespace graphics_backend
 {
+	enum EGraphicsMode
+	{
+		GRAPHICS_MODE_COMPATIBILITY = 0,
+		GRAPHICS_MODE_PERFORMANCE = 1,
+	};
+
 	struct SSafeBackendConfig
 	{
 		const char *m_pBackend;
@@ -60,6 +68,25 @@ namespace graphics_backend
 	constexpr bool IsBackendSelectable(EBackendType BackendType)
 	{
 		return BackendType != BACKEND_TYPE_AUTO && IsBackendCompiled(BackendType);
+	}
+
+	inline const char *BackendNameForGraphicsMode(int Mode)
+	{
+		if(Mode == GRAPHICS_MODE_PERFORMANCE)
+		{
+#if defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
+			return IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL");
+#elif defined(CONF_PLATFORM_ANDROID)
+			return IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "GLES";
+#else
+			return IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL";
+#endif
+		}
+#if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
+		return IsBackendCompiled(BACKEND_TYPE_OPENGL_ES) ? "GLES" : "OpenGL";
+#else
+		return "OpenGL";
+#endif
 	}
 
 	constexpr bool UsesOpenGLVersionTuple(EBackendType BackendType)

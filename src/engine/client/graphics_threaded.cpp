@@ -3731,6 +3731,17 @@ void CGraphics_Threaded::AddBackEndWarningIfExists()
 
 int CGraphics_Threaded::InitWindow()
 {
+	if(g_Config.m_QmGraphicsMode == graphics_backend::GRAPHICS_MODE_COMPATIBILITY || g_Config.m_QmGraphicsMode == graphics_backend::GRAPHICS_MODE_PERFORMANCE)
+	{
+		const char *pModeBackend = graphics_backend::BackendNameForGraphicsMode(g_Config.m_QmGraphicsMode);
+		if(str_comp_nocase(g_Config.m_GfxBackend, pModeBackend) != 0)
+		{
+			str_copy(g_Config.m_GfxBackend, pModeBackend);
+			g_Config.m_GfxGLMajor = 0;
+			g_Config.m_GfxGLMinor = 0;
+			g_Config.m_GfxGLPatch = 0;
+		}
+	}
 #if defined(CONF_BACKEND_VULKAN)
 	const char *pEnvDriver = SDL_getenv("DDNET_DRIVER");
 	const bool VulkanForcedByEnvironment = pEnvDriver != nullptr && str_comp_nocase(pEnvDriver, "Vulkan") == 0;

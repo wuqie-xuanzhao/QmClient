@@ -7025,8 +7025,12 @@ void CClient::GetGpuInfoString(char (&aGpuInfo)[512])
 	}
 #else
 	char aConfiguredBackend[128];
-	if(str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0)
-		str_copy(aConfiguredBackend, "Vulkan - performance mode");
+	int DetectedMajor = 0, DetectedMinor = 0, DetectedPatch = 0;
+	const char *pDetectedBackend = "";
+	if(m_pGraphics != nullptr && m_pGraphics->IsBackendInitialized() && m_pGraphics->GetDetectedContextVersion(DetectedMajor, DetectedMinor, DetectedPatch, pDetectedBackend) && pDetectedBackend[0] != '\0')
+		str_format(aConfiguredBackend, sizeof(aConfiguredBackend), "%s %d.%d.%d", pDetectedBackend, DetectedMajor, DetectedMinor, DetectedPatch);
+	else if(str_comp_nocase(g_Config.m_GfxBackend, "Vulkan") == 0)
+		str_format(aConfiguredBackend, sizeof(aConfiguredBackend), "Vulkan API %s", g_Config.m_QmVulkanApiVersion == 14 ? "1.4 (fallback 1.3/1.1)" : (g_Config.m_QmVulkanApiVersion == 13 ? "1.3 (fallback 1.1)" : "1.1"));
 	else
 		str_format(aConfiguredBackend, sizeof(aConfiguredBackend), "%s %d.%d.%d", g_Config.m_GfxBackend, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
 	if(m_pGraphics == nullptr || !m_pGraphics->IsBackendInitialized())

@@ -1,4 +1,5 @@
 #include <engine/client/backend/graphics_backend_contract.h>
+#include <engine/client/backend/vulkan/backend_vulkan.h>
 #include <engine/client/backend_sdl.h>
 
 #if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
@@ -13,6 +14,39 @@ TEST(GraphicsBackendContract, NamesAreStable)
 	EXPECT_STREQ(graphics_backend::BackendName(BACKEND_TYPE_OPENGL_ES), "GLES");
 	EXPECT_STREQ(graphics_backend::BackendName(BACKEND_TYPE_VULKAN), "Vulkan");
 	EXPECT_STREQ(graphics_backend::BackendName(BACKEND_TYPE_METAL), "Metal");
+}
+
+TEST(GraphicsBackendContract, VulkanVersionSelectionFallsBackThrough13To11)
+{
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(14).m_Minor, 4);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(13).m_Minor, 3);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(11).m_Minor, 1);
+	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(12).m_Minor, 1);
+
+	EXPECT_EQ(ResolveVulkanVersionForLoader({1, 4, 0}, {1, 4, 0}).m_Minor, 4);
+	EXPECT_EQ(ResolveVulkanVersionForLoader({1, 4, 0}, {1, 3, 0}).m_Minor, 3);
+	EXPECT_EQ(ResolveVulkanVersionForLoader({1, 4, 0}, {1, 2, 0}).m_Minor, 1);
+	EXPECT_EQ(ResolveVulkanVersionForLoader({1, 3, 0}, {1, 4, 0}).m_Minor, 3);
+}
+
+TEST(GraphicsBackendContract, GraphicsModesMapToPlatformBackends)
+{
+	EXPECT_STREQ(graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_COMPATIBILITY),
+#if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
+		graphics_backend::IsBackendCompiled(BACKEND_TYPE_OPENGL_ES) ? "GLES" : "OpenGL"
+#else
+		"OpenGL"
+#endif
+	);
+	EXPECT_STREQ(graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_PERFORMANCE),
+#if defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
+		graphics_backend::IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL")
+#elif defined(CONF_PLATFORM_ANDROID)
+		graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "GLES"
+#else
+		graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL"
+#endif
+	);
 }
 
 TEST(GraphicsBackendContract, ForcedViewportUsesTopLeftCoordinatesAcrossBackends)
