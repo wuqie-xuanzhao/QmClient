@@ -1221,11 +1221,22 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer(con
 	}
 	else
 	{
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer);
-		if(PreviousDrawFramebuffer == 0)
-			glReadBuffer(GL_BACK);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Target.m_Framebuffer);
-		glBlitFramebuffer(SourceX, SourceY, SourceX + SourceWidth, SourceY + SourceHeight, 0, 0, Target.m_Width, Target.m_Height, GL_COLOR_BUFFER_BIT, Samples > 0 ? GL_NEAREST : GL_LINEAR);
+		if(Samples == 0 && PreviousDrawFramebuffer == 0)
+		{
+			// Copy directly from the window back buffer. Some drivers expose a
+			// stale/empty read framebuffer after a swap, while CopyTexSubImage2D
+			// reliably addresses the presented back buffer.
+			glBindTexture(GL_TEXTURE_2D, Target.m_Texture);
+			glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SourceX, SourceY, SourceWidth, SourceHeight);
+		}
+		else
+		{
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer);
+			if(PreviousDrawFramebuffer == 0)
+				glReadBuffer(GL_BACK);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Target.m_Framebuffer);
+			glBlitFramebuffer(SourceX, SourceY, SourceX + SourceWidth, SourceY + SourceHeight, 0, 0, Target.m_Width, Target.m_Height, GL_COLOR_BUFFER_BIT, Samples > 0 ? GL_NEAREST : GL_LINEAR);
+		}
 	}
 
 	RestoreState();
