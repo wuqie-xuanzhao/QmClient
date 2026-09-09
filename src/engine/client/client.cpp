@@ -6356,6 +6356,7 @@ int main(int argc, const char **argv)
 	pClient->InitInterfaces();
 
 	// execute config file
+	bool LoadedClientConfig = false;
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
 		const char *pConfigPath = GetConfigLoadPath(pStorage, s_aConfigDomains[ConfigDomain]);
@@ -6363,6 +6364,7 @@ int main(int argc, const char **argv)
 		{
 			continue;
 		}
+		LoadedClientConfig = true;
 		if(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath != nullptr && str_comp(pConfigPath, s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath) == 0)
 			gs_aLoadedPreviousConfigPath[ConfigDomain] = true;
 
@@ -6438,7 +6440,14 @@ int main(int argc, const char **argv)
 			g_Config.m_QmHitboxShowHook = g_Config.m_QmHitboxShowWeapons;
 		}
 	}
-	g_Config.m_ClConfigVersion = 4;
+	if(LoadedClientConfig && g_Config.m_ClConfigVersion < 5)
+	{
+		// qm_graphics_mode 是新版新增配置。旧配置没有该字段时，按原 gfx_backend
+		// 推导模式，避免首次启动新版时把用户手动选择的 OpenGL/GLES 改成现代后端。
+		const char *pPerformanceBackend = graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_PERFORMANCE);
+		g_Config.m_QmGraphicsMode = str_comp_nocase(g_Config.m_GfxBackend, pPerformanceBackend) == 0 ? graphics_backend::GRAPHICS_MODE_PERFORMANCE : graphics_backend::GRAPHICS_MODE_COMPATIBILITY;
+	}
+	g_Config.m_ClConfigVersion = 5;
 
 	RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);
 
