@@ -1165,10 +1165,12 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer(con
 	GLint PreviousReadFramebuffer = 0;
 	GLint PreviousDrawFramebuffer = 0;
 	GLint PreviousTexture = 0;
+	GLint PreviousReadBuffer = GL_BACK;
 	GLint aSourceViewport[4] = {0, 0, 0, 0};
 	glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &PreviousReadFramebuffer);
 	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &PreviousDrawFramebuffer);
 	glGetIntegerv(GL_TEXTURE_BINDING_2D, &PreviousTexture);
+	glGetIntegerv(GL_READ_BUFFER, &PreviousReadBuffer);
 	glGetIntegerv(GL_VIEWPORT, aSourceViewport);
 	if(PreviousDrawFramebuffer == (GLint)Target.m_Framebuffer)
 		return;
@@ -1186,6 +1188,7 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer(con
 	auto RestoreState = [&] {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousReadFramebuffer);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, PreviousDrawFramebuffer);
+		glReadBuffer(PreviousReadBuffer);
 		glBindTexture(GL_TEXTURE_2D, PreviousTexture);
 		if(ScissorEnabled)
 			glEnable(GL_SCISSOR_TEST);
@@ -1208,6 +1211,8 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer(con
 			return;
 		}
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer);
+		if(PreviousDrawFramebuffer == 0)
+			glReadBuffer(GL_BACK);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_BackbufferCaptureResolveFramebuffer);
 		glBlitFramebuffer(SourceX, SourceY, SourceX + SourceWidth, SourceY + SourceHeight, 0, 0, SourceWidth, SourceHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_BackbufferCaptureResolveFramebuffer);
@@ -1217,6 +1222,8 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_CaptureBackbuffer(con
 	else
 	{
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer);
+		if(PreviousDrawFramebuffer == 0)
+			glReadBuffer(GL_BACK);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Target.m_Framebuffer);
 		glBlitFramebuffer(SourceX, SourceY, SourceX + SourceWidth, SourceY + SourceHeight, 0, 0, Target.m_Width, Target.m_Height, GL_COLOR_BUFFER_BIT, Samples > 0 ? GL_NEAREST : GL_LINEAR);
 	}

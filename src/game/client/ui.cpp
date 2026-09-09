@@ -1946,12 +1946,18 @@ int CUi::DoButton_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const
 
 	CUIRect Label;
 	pRect->HMargin(2.0f, &Label);
-	DrawQmIcon(Label, Icon, pFallbackIcon, ConfiguredQmUiIconColor(TextRender()->DefaultTextColor()));
+	const float IconSide = std::min(Label.w, Label.h);
+	CUIRect IconRect;
+	IconRect.x = Label.x + (Label.w - IconSide) * 0.5f;
+	IconRect.y = Label.y + (Label.h - IconSide) * 0.5f;
+	IconRect.w = IconSide;
+	IconRect.h = IconSide;
+	DrawQmIcon(IconRect, Icon, pFallbackIcon, ConfiguredQmUiIconColor(TextRender()->DefaultTextColor()));
 
 	if(!Enabled)
 	{
 		// 与 DrawButton_FontIcon 保持一致：禁用时叠加红色斜杠。
-		DrawQmIcon(Label, EQmIcon::SLASH, FONT_ICON_SLASH, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
+		DrawQmIcon(IconRect, EQmIcon::SLASH, FONT_ICON_SLASH, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
 	}
 	TextRender()->TextOutlineColor(PreviousOutlineColor);
 
