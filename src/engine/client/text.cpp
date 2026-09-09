@@ -1673,54 +1673,17 @@ public:
 			Success = false;
 		}
 
-		// ICON_FONT 跟随保存的图标粗细，ICON_FONT_BOLD 供必须使用粗体字形的控件使用。
-		const json_value &IconFace = (*pJsonData)["icon"];
-		if(IconFace.type == json_string)
+		// FONT_ICON_* 与 QmIcon 的字形回退统一固定到随包 Phosphor，避免用户目录
+		// 中旧版 Font Awesome 索引触发无意义的缺字和粗体告警。
+		if(!m_pGlyphMap->TrySetIconFaceByName("Phosphor"))
 		{
-			if(!m_pGlyphMap->SetIconFaceByName(IconFace.u.string.ptr))
-			{
-				Success = false;
-			}
-		}
-		else
-		{
-			log_error("textrender", "Font index malformed: 'icon' must be a string");
+			log_error("textrender", "Bundled 'Phosphor' icon face is unavailable; icon glyphs will be missing");
 			Success = false;
 		}
-
-		const json_value &IconBoldFace = (*pJsonData)["icon bold"];
-		if(IconBoldFace.type == json_string)
+		if(!m_pGlyphMap->TrySetIconBoldFaceByName("Phosphor-Bold"))
 		{
-			if(!m_pGlyphMap->SetIconBoldFaceByName(IconBoldFace.u.string.ptr))
-			{
-				Success = false;
-			}
-		}
-		else
-		{
-			// 用户目录里的自定义 fonts/index.json 可能是 Phosphor 迁移之前写的，没有该键。
-			// 这里只降级到 regular 图标面并告警，不再让 ICON_FONT_BOLD 落到默认正文字体。
-			log_warn("textrender", "Font index has no 'icon bold' string, using the regular icon face for bold icons");
-			m_pGlyphMap->UseRegularFaceForIconBold();
-		}
-
-		// 图标字形依赖随包 Phosphor（由 qmclient/fonts 自动加载）。用户目录里的旧
-		// fonts/index.json 可能把图标面指向别的字体，那样所有 FONT_ICON_* 都会缺字，
-		// 因此按码位覆盖率校验并回退到随包 Phosphor。
-		const size_t NumIcons = std::size(FontIcons::FONT_ICON_ALL);
-		const int MissingIconGlyphs = m_pGlyphMap->CountMissingIconGlyphs(FontIcons::FONT_ICON_ALL, NumIcons);
-		if(MissingIconGlyphs > 0)
-		{
-			if(m_pGlyphMap->TrySetIconFaceByName("Phosphor"))
-			{
-				log_warn("textrender", "The configured icon font misses %d of %d FONT_ICON_ glyphs, using the bundled 'Phosphor' instead", MissingIconGlyphs, (int)NumIcons);
-				if(!m_pGlyphMap->TrySetIconBoldFaceByName("Phosphor-Bold"))
-					m_pGlyphMap->UseRegularFaceForIconBold();
-			}
-			else
-			{
-				log_error("textrender", "The configured icon font misses %d of %d FONT_ICON_ glyphs and no bundled 'Phosphor' face is loaded; icon glyphs will be missing", MissingIconGlyphs, (int)NumIcons);
-			}
+			if(!m_pGlyphMap->TrySetIconBoldFaceByName("Phosphor"))
+				m_pGlyphMap->UseRegularFaceForIconBold();
 		}
 
 		if(const FT_Face IconFace = m_pGlyphMap->IconFace())
