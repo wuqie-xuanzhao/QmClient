@@ -38,38 +38,16 @@ namespace
 
 	EQmIcon IconFromName(const char *pName)
 	{
-		if(str_comp(pName, "star") == 0)
-			return EQmIcon::STAR;
-		if(str_comp(pName, "bookmark") == 0)
-			return EQmIcon::BOOKMARK;
-		if(str_comp(pName, "magnifying-glass") == 0 || str_comp(pName, "search") == 0)
+		for(int IconIndex = 0; IconIndex < static_cast<int>(EQmIcon::COUNT); ++IconIndex)
+		{
+			const EQmIcon Icon = static_cast<EQmIcon>(IconIndex);
+			const char *pIconName = CQmIconManager::IconName(Icon);
+			if(pIconName[0] != '\0' && str_comp(pName, pIconName) == 0)
+				return Icon;
+		}
+		// 兼容历史别名
+		if(str_comp(pName, "search") == 0)
 			return EQmIcon::SEARCH;
-		if(str_comp(pName, "close") == 0)
-			return EQmIcon::CLOSE;
-		if(str_comp(pName, "eye") == 0)
-			return EQmIcon::EYE;
-		if(str_comp(pName, "eye-off") == 0)
-			return EQmIcon::EYE_OFF;
-		if(str_comp(pName, "chevron-down") == 0)
-			return EQmIcon::CHEVRON_DOWN;
-		if(str_comp(pName, "plus") == 0)
-			return EQmIcon::PLUS;
-		if(str_comp(pName, "trash") == 0)
-			return EQmIcon::TRASH;
-		if(str_comp(pName, "satellite-swap-incoming") == 0)
-			return EQmIcon::SATELLITE_SWAP_INCOMING;
-		if(str_comp(pName, "satellite-swap-outgoing") == 0)
-			return EQmIcon::SATELLITE_SWAP_OUTGOING;
-		if(str_comp(pName, "satellite-switch") == 0)
-			return EQmIcon::SATELLITE_SWITCH;
-		if(str_comp(pName, "satellite-mute") == 0)
-			return EQmIcon::SATELLITE_MUTE;
-		if(str_comp(pName, "satellite-check") == 0)
-			return EQmIcon::SATELLITE_CHECK;
-		if(str_comp(pName, "satellite-spectator-eye") == 0)
-			return EQmIcon::SATELLITE_SPECTATOR_EYE;
-		if(str_comp(pName, "satellite-spectator-eye-closed") == 0)
-			return EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED;
 		return EQmIcon::COUNT;
 	}
 

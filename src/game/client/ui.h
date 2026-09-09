@@ -18,6 +18,8 @@
 #include <vector>
 
 class CScrollRegion;
+class CQmIconManager;
+enum class EQmIcon;
 class IClient;
 class IGraphics;
 class IKernel;
@@ -776,6 +778,7 @@ private:
 	IGraphics *m_pGraphics;
 	IInput *m_pInput;
 	ITextRender *m_pTextRender;
+	CQmIconManager *m_pQmIconManager = nullptr;
 	float m_BackgroundAlphaScale = 1.0f;
 
 	std::vector<CUIElement *> m_vpOwnUIElements; // ui elements maintained by CUi class
@@ -1084,6 +1087,20 @@ public:
 	int DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const std::function<const char *()> &GetTextLambda, const CUIRect *pRect, const SMenuButtonProperties &Props = {});
 	void DrawButton_FontIcon(const char *pText, const CUIRect *pRect, ColorRGBA Color, int Corners = IGraphics::CORNER_ALL, bool Enabled = true);
 	int DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags, int Corners = IGraphics::CORNER_ALL, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt);
+	// 图集优先、字形回退的图标绘制：pFallbackIcon 为 FontIcons::FONT_ICON_* 字形。
+	void SetQmIconManager(CQmIconManager *pQmIconManager) { m_pQmIconManager = pQmIconManager; }
+	bool DrawQmIcon(const CUIRect &Rect, EQmIcon Icon, const char *pFallbackIcon, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f)) const;
+	bool DrawQmIconAt(float x, float y, float Size, EQmIcon Icon, const char *pFallbackIcon, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f)) const
+	{
+		CUIRect Rect;
+		Rect.x = x;
+		Rect.y = y;
+		Rect.w = Size;
+		Rect.h = Size;
+		return DrawQmIcon(Rect, Icon, pFallbackIcon, Color);
+	}
+	CLabelResult DoLabel_QmIcon(const CUIRect *pRect, EQmIcon Icon, const char *pFallbackIcon, float Size, int Align, const SLabelProperties &LabelProps = {}) const;
+	int DoButton_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, unsigned Flags, int Corners = IGraphics::CORNER_ALL, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt);
 	// only used for popup menus
 	int DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect, float Size, int Align, float Padding = 0.0f, bool TransparentInactive = false, bool Enabled = true, std::optional<ColorRGBA> ButtonColor = std::nullopt, float MinimumFontSize = -1.0f);
 

@@ -7,8 +7,15 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <array>
+#include <cctype>
+#include <cstdint>
+#include <fstream>
+#include <iterator>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace
 {
@@ -62,12 +69,9 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED), "satellite-spectator-eye-closed");
 
 	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string IconManager = ReadTextFile("src/game/client/qm_icon_manager.cpp");
 	EXPECT_NE(Menus.find("RenderFavoriteMapsIcon"), std::string::npos);
 	EXPECT_NE(Menus.find("EQmIcon::BOOKMARK"), std::string::npos);
 	EXPECT_EQ(Menus.find("\xF0\x9F\x94\x96"), std::string::npos);
-	EXPECT_NE(IconManager.find("str_comp(pName, \"bookmark\") == 0"), std::string::npos);
-	EXPECT_NE(IconManager.find("return EQmIcon::BOOKMARK;"), std::string::npos);
 }
 
 TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
@@ -655,4 +659,199 @@ TEST(QmVulkanRenderTargetDestroy, GuardsPausedRenderingAndActiveRenderPass)
 	const size_t NextFn = Source.find("[[nodiscard]] bool Cmd_TextTextures_Create", BlurPassFn);
 	ASSERT_NE(NextFn, std::string::npos);
 	EXPECT_NE(Source.substr(BlurPassFn, NextFn - BlurPassFn).find("if(m_RenderingPaused)"), std::string::npos);
+}
+
+namespace
+{
+	// FONT_ICON_* 码位必须来自随包的 Phosphor 字体：解析 textrender.h 字面量后逐码位核对字体 cmap。
+	uint16_t FontIconBeU16(const std::string &Data, size_t Offset)
+	{
+		return static_cast<uint16_t>((static_cast<unsigned char>(Data[Offset]) << 8) | static_cast<unsigned char>(Data[Offset + 1]));
+	}
+
+	uint32_t FontIconBeU32(const std::string &Data, size_t Offset)
+	{
+		return (static_cast<uint32_t>(static_cast<unsigned char>(Data[Offset])) << 24) |
+		       (static_cast<uint32_t>(static_cast<unsigned char>(Data[Offset + 1])) << 16) |
+		       (static_cast<uint32_t>(static_cast<unsigned char>(Data[Offset + 2])) << 8) |
+		       static_cast<uint32_t>(static_cast<unsigned char>(Data[Offset + 3]));
+	}
+
+	std::string ReadFontIconBinaryFile(const char *pRelativePath)
+	{
+		std::ifstream File(TestSourcePath(pRelativePath), std::ios::binary);
+		EXPECT_TRUE(File.good()) << TestSourcePath(pRelativePath);
+		return std::string(std::istreambuf_iterator<char>(File), std::istreambuf_iterator<char>());
+	}
+
+	// 只解析 cmap format 4，覆盖 data/fonts 下的两份 Phosphor 字体。
+	size_t FontIconCmapSubtable(const std::string &Font)
+	{
+		EXPECT_GE(Font.size(), 12u);
+		const uint16_t NumTables = FontIconBeU16(Font, 4);
+		size_t CmapOffset = 0;
+		for(uint16_t Table = 0; Table < NumTables; ++Table)
+		{
+			const size_t Record = 12 + 16u * Table;
+			if(Record + 16 > Font.size())
+				break;
+			if(Font.compare(Record, 4, "cmap") == 0)
+				CmapOffset = FontIconBeU32(Font, Record + 8);
+		}
+		EXPECT_NE(CmapOffset, 0u);
+		if(CmapOffset == 0)
+			return 0;
+
+		const uint16_t NumSubtables = FontIconBeU16(Font, CmapOffset + 2);
+		size_t Subtable = 0;
+		for(uint16_t Index = 0; Index < NumSubtables; ++Index)
+		{
+			const size_t Record = CmapOffset + 4 + 8u * Index;
+			if(Record + 8 > Font.size())
+				break;
+			const size_t Candidate = CmapOffset + FontIconBeU32(Font, Record + 4);
+			if(Candidate + 2 > Font.size())
+				continue;
+			if(FontIconBeU16(Font, Candidate) == 4)
+				Subtable = Candidate;
+		}
+		EXPECT_NE(Subtable, 0u);
+		return Subtable;
+	}
+
+	int FontIconGlyphIndex(const std::string &Font, size_t Subtable, uint32_t Codepoint)
+	{
+		if(Subtable == 0 || Codepoint > 0xFFFF)
+			return 0;
+		const size_t SegCount = FontIconBeU16(Font, Subtable + 6) / 2;
+		const size_t EndOffset = Subtable + 14;
+		const size_t StartOffset = EndOffset + 2 * SegCount + 2;
+		const size_t DeltaOffset = StartOffset + 2 * SegCount;
+		const size_t RangeOffsetOffset = DeltaOffset + 2 * SegCount;
+
+		for(size_t Segment = 0; Segment < SegCount; ++Segment)
+		{
+			const uint32_t End = FontIconBeU16(Font, EndOffset + 2 * Segment);
+			const uint32_t Start = FontIconBeU16(Font, StartOffset + 2 * Segment);
+			if(Codepoint < Start || Codepoint > End)
+				continue;
+			const int16_t Delta = static_cast<int16_t>(FontIconBeU16(Font, DeltaOffset + 2 * Segment));
+			const uint16_t RangeOffset = FontIconBeU16(Font, RangeOffsetOffset + 2 * Segment);
+			if(RangeOffset == 0)
+				return static_cast<int>((Codepoint + Delta) & 0xFFFF);
+			const size_t GlyphOffset = RangeOffsetOffset + 2 * Segment + RangeOffset + 2 * (Codepoint - Start);
+			if(GlyphOffset + 2 > Font.size())
+				return 0;
+			const uint16_t Glyph = FontIconBeU16(Font, GlyphOffset);
+			if(Glyph == 0)
+				return 0;
+			return static_cast<int>((Glyph + Delta) & 0xFFFF);
+		}
+		return 0;
+	}
+
+	std::vector<uint32_t> FontIconMappedCodepoints(const std::string &Font)
+	{
+		const size_t Subtable = FontIconCmapSubtable(Font);
+		std::vector<uint32_t> Codepoints;
+		for(uint32_t Codepoint = 0x20; Codepoint <= 0xFFFF; ++Codepoint)
+		{
+			if(FontIconGlyphIndex(Font, Subtable, Codepoint) != 0)
+				Codepoints.push_back(Codepoint);
+		}
+		return Codepoints;
+	}
+
+	std::vector<std::pair<std::string, uint32_t>> ParseFontIconConstants()
+	{
+		const std::string Header = ReadTestSourceFile("src/engine/textrender.h");
+		std::vector<std::pair<std::string, uint32_t>> Icons;
+		const std::string Marker = "FONT_ICON_";
+		size_t Position = 0;
+		while((Position = Header.find(Marker, Position)) != std::string::npos)
+		{
+			const size_t NameStart = Position + Marker.size();
+			size_t NameEnd = NameStart;
+			while(NameEnd < Header.size() && (std::isalnum(static_cast<unsigned char>(Header[NameEnd])) || Header[NameEnd] == '_'))
+				++NameEnd;
+			const std::string Name = Header.substr(NameStart, NameEnd - NameStart);
+			const size_t Assign = Header.find('=', NameEnd);
+			if(Assign == std::string::npos || Assign > NameEnd + 8)
+			{
+				Position = NameEnd;
+				continue;
+			}
+			const size_t Quote = Header.find('"', Assign);
+			const size_t QuoteEnd = Quote == std::string::npos ? std::string::npos : Header.find('"', Quote + 1);
+			if(Quote == std::string::npos || QuoteEnd == std::string::npos)
+			{
+				Position = NameEnd;
+				continue;
+			}
+			const std::string Literal = Header.substr(Quote + 1, QuoteEnd - Quote - 1);
+			std::string Bytes;
+			for(size_t Index = 0; Index + 3 < Literal.size();)
+			{
+				if(Literal[Index] == '\\' && Literal[Index + 1] == 'x')
+				{
+					Bytes.push_back(static_cast<char>(std::stoi(Literal.substr(Index + 2, 2), nullptr, 16)));
+					Index += 4;
+				}
+				else
+				{
+					Bytes.push_back(Literal[Index]);
+					++Index;
+				}
+			}
+			// 只统计 3 字节 PUA 图标字面量，跳过继承自上游的 ASCII 写法。
+			if(Bytes.size() == 3 &&
+				static_cast<unsigned char>(Bytes[0]) >= 0xE0 && static_cast<unsigned char>(Bytes[0]) <= 0xEF)
+			{
+				const uint32_t Codepoint =
+					((static_cast<uint32_t>(Bytes[0]) & 0x0F) << 12) |
+					((static_cast<uint32_t>(Bytes[1]) & 0x3F) << 6) |
+					(static_cast<uint32_t>(Bytes[2]) & 0x3F);
+				Icons.emplace_back(Name, Codepoint);
+			}
+			Position = QuoteEnd;
+		}
+		return Icons;
+	}
+}
+
+TEST(QmFontIcons, CodepointsExistInShippedPhosphorFonts)
+{
+	const auto Icons = ParseFontIconConstants();
+	ASSERT_FALSE(Icons.empty());
+
+	const std::string Regular = ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor-Regular.ttf");
+	const std::string Bold = ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor-Bold.ttf");
+	ASSERT_GT(Regular.size(), 12u);
+	ASSERT_GT(Bold.size(), 12u);
+
+	const std::vector<uint32_t> RegularCodepoints = FontIconMappedCodepoints(Regular);
+	const std::vector<uint32_t> BoldCodepoints = FontIconMappedCodepoints(Bold);
+	EXPECT_FALSE(RegularCodepoints.empty());
+	EXPECT_FALSE(BoldCodepoints.empty());
+
+	for(const auto &[Name, Codepoint] : Icons)
+	{
+		EXPECT_TRUE(std::find(RegularCodepoints.begin(), RegularCodepoints.end(), Codepoint) != RegularCodepoints.end())
+			<< "FONT_ICON_" << Name << " U+" << std::hex << Codepoint << " 不在 Phosphor-Regular.ttf 中";
+		EXPECT_TRUE(std::find(BoldCodepoints.begin(), BoldCodepoints.end(), Codepoint) != BoldCodepoints.end())
+			<< "FONT_ICON_" << Name << " U+" << std::hex << Codepoint << " 不在 Phosphor-Bold.ttf 中";
+	}
+}
+
+TEST(QmFontIcons, FontIndexKeepsIconFacesInSyncWithCodepoints)
+{
+	// 图标字体放在 QmClient 专属目录，由 LoadCustomFonts 自动加载，不再依赖共享的 fonts/index.json。
+	const std::string Index = ReadTestSourceFile("data/fonts/index.json");
+	EXPECT_NE(Index.find("\"icon\": \"Phosphor\""), std::string::npos);
+	EXPECT_NE(Index.find("\"icon bold\": \"Phosphor-Bold\""), std::string::npos);
+	EXPECT_EQ(Index.find("Phosphor-Regular.ttf"), std::string::npos);
+	EXPECT_EQ(Index.find("Phosphor-Bold.ttf"), std::string::npos);
+
+	EXPECT_FALSE(ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor-Regular.ttf").empty());
+	EXPECT_FALSE(ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor-Bold.ttf").empty());
 }

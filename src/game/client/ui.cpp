@@ -1704,7 +1704,7 @@ bool CUi::DoEditBox_Search(CLineInput *pLineInput, const CUIRect *pRect, float F
 	CUIRect QuickSearch = *pRect;
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS, FontSize, TEXTALIGN_ML);
+	DoLabel_QmIcon(&QuickSearch, EQmIcon::SEARCH, FONT_ICON_MAGNIFYING_GLASS, FontSize, TEXTALIGN_ML);
 	const float SearchWidth = TextRender()->TextWidth(FontSize, FONT_ICON_MAGNIFYING_GLASS);
 	TextRender()->SetRenderFlags(PreviousRenderFlags);
 	TextRender()->SetFontPreset(PreviousFontPreset);
@@ -1828,7 +1828,7 @@ int CUi::DoButton_Menu(CUIElement &UIElement, const CButtonContainer *pId, const
 	{
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		DoLabel(&DropDownIcon, FONT_ICON_CIRCLE_CHEVRON_DOWN, DropDownIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MR);
+		DoLabel_QmIcon(&DropDownIcon, EQmIcon::CIRCLE_CHEVRON_DOWN, FONT_ICON_CIRCLE_CHEVRON_DOWN, DropDownIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MR);
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	}
@@ -1870,7 +1870,7 @@ void CUi::DrawButton_FontIcon(const char *pText, const CUIRect *pRect, ColorRGBA
 	{
 		TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
 		TextRender()->TextOutlineColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f));
-		DoLabel(&Label, FONT_ICON_SLASH, Label.h * ms_FontmodHeight, TEXTALIGN_MC);
+		DoLabel_QmIcon(&Label, EQmIcon::SLASH, FONT_ICON_SLASH, Label.h * ms_FontmodHeight, TEXTALIGN_MC);
 		TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
@@ -1885,6 +1885,75 @@ void CUi::DrawButton_FontIcon(const char *pText, const CUIRect *pRect, ColorRGBA
 int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, int Corners, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
 {
 	DrawButton_FontIcon(pText, pRect, ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer))), Corners, Enabled);
+
+	return DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
+}
+
+bool CUi::DrawQmIcon(const CUIRect &Rect, EQmIcon Icon, const char *pFallbackIcon, const ColorRGBA &Color) const
+{
+	if(m_pQmIconManager != nullptr && m_pQmIconManager->RenderIcon(Icon, Rect, Color))
+		return true;
+
+	// 图集未就绪或该图标缺失时回退到 TTF 字形，保证图标仍然可见。
+	if(pFallbackIcon == nullptr || pFallbackIcon[0] == '\0')
+		return false;
+
+	ITextRender *pTextRender = TextRender();
+	const ColorRGBA PreviousColor = pTextRender->GetTextColor();
+	const unsigned PreviousFlags = pTextRender->GetRenderFlags();
+	const EFontPreset PreviousPreset = pTextRender->GetFontPreset();
+	pTextRender->TextColor(Color);
+	pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
+	pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
+	DoLabel(&Rect, pFallbackIcon, Rect.h * ms_FontmodHeight, TEXTALIGN_MC);
+	pTextRender->SetRenderFlags(PreviousFlags);
+	pTextRender->SetFontPreset(PreviousPreset);
+	pTextRender->TextColor(PreviousColor);
+	return true;
+}
+
+CLabelResult CUi::DoLabel_QmIcon(const CUIRect *pRect, EQmIcon Icon, const char *pFallbackIcon, float Size, int Align, const SLabelProperties &LabelProps) const
+{
+	// 图集图标按字号取正方形，并按对齐方式落在 pRect 内。
+	const float Side = minimum(Size, minimum(pRect->w, pRect->h));
+	CUIRect IconRect;
+	IconRect.w = Side;
+	IconRect.h = Side;
+	IconRect.x = pRect->x;
+	IconRect.y = pRect->y;
+	if(Align & TEXTALIGN_CENTER)
+		IconRect.x = pRect->x + (pRect->w - Side) * 0.5f;
+	else if(Align & TEXTALIGN_RIGHT)
+		IconRect.x = pRect->x + pRect->w - Side;
+	if(Align & TEXTALIGN_MIDDLE)
+		IconRect.y = pRect->y + (pRect->h - Side) * 0.5f;
+	else if(Align & TEXTALIGN_BOTTOM)
+		IconRect.y = pRect->y + pRect->h - Side;
+
+	if(DrawQmIcon(IconRect, Icon, pFallbackIcon, TextRender()->GetTextColor()))
+		return CLabelResult{};
+
+	return DoLabel(pRect, pFallbackIcon, Size, Align, LabelProps);
+}
+
+int CUi::DoButton_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, const unsigned Flags, int Corners, bool Enabled, const std::optional<ColorRGBA> ButtonColor)
+{
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
+	DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(ColorRGBA(1.0f, 1.0f, 1.0f, (Checked ? 0.1f : 0.5f) * ButtonColorMul(pButtonContainer)))), ColorRGBA(), 5.0f, 0.0f, Corners);
+
+	const ColorRGBA PreviousOutlineColor = TextRender()->GetTextOutlineColor();
+	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
+
+	CUIRect Label;
+	pRect->HMargin(2.0f, &Label);
+	DrawQmIcon(Label, Icon, pFallbackIcon, ConfiguredQmUiIconColor(TextRender()->DefaultTextColor()));
+
+	if(!Enabled)
+	{
+		// 与 DrawButton_FontIcon 保持一致：禁用时叠加红色斜杠。
+		DrawQmIcon(Label, EQmIcon::SLASH, FONT_ICON_SLASH, ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
+	}
+	TextRender()->TextOutlineColor(PreviousOutlineColor);
 
 	return DoButtonLogic(pButtonContainer, Checked, pRect, Flags);
 }
@@ -2644,7 +2713,7 @@ void CUi::RenderBackButton()
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH |
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING |
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-	DoLabel(&m_BackButtonRect, FONT_ICON_CHEVRON_LEFT, m_BackButtonRect.w * 0.5f, TEXTALIGN_MC);
+	DoLabel_QmIcon(&m_BackButtonRect, EQmIcon::CHEVRON_LEFT, FONT_ICON_CHEVRON_LEFT, m_BackButtonRect.w * 0.5f, TEXTALIGN_MC);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 }

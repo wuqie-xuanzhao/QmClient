@@ -721,6 +721,49 @@ public:
 		return true;
 	}
 
+	// 旧版 font index 可能没有 'icon bold' 键：沿用 regular 图标面，
+	// 避免 ICON_FONT_BOLD（qm_ui_icon_weight 默认取 1）退化到默认正文字体而缺字形。
+	void UseRegularFaceForIconBold()
+	{
+		m_IconBoldFace = m_IconRegularFace;
+	}
+
+	// 当前图标面缺失多少 FONT_ICON_* 码位；0 表示图标字体与码位匹配。
+	int CountMissingIconGlyphs(const char *const *apIcons, size_t NumIcons) const
+	{
+		if(m_IconFace == nullptr)
+			return static_cast<int>(NumIcons);
+		int Missing = 0;
+		for(size_t IconIndex = 0; IconIndex < NumIcons; ++IconIndex)
+		{
+			const char *pIcon = apIcons[IconIndex];
+			const int Codepoint = str_utf8_decode(&pIcon);
+			if(Codepoint <= 0 || FT_Get_Char_Index(m_IconFace, Codepoint) == 0)
+				++Missing;
+		}
+		return Missing;
+	}
+
+	// 回退路径专用：找不到时只返回 false，不写错误日志。
+	bool TrySetIconFaceByName(const char *pFamilyName)
+	{
+		FT_Face Face = GetFaceByName(pFamilyName);
+		if(Face == nullptr)
+			return false;
+		m_IconRegularFace = Face;
+		m_IconFace = Face;
+		return true;
+	}
+
+	bool TrySetIconBoldFaceByName(const char *pFamilyName)
+	{
+		FT_Face Face = GetFaceByName(pFamilyName);
+		if(Face == nullptr)
+			return false;
+		m_IconBoldFace = Face;
+		return true;
+	}
+
 	bool AddFallbackFaceByName(const char *pFamilyName)
 	{
 		FT_Face Face = GetFaceByName(pFamilyName);
@@ -1403,13 +1446,55 @@ public:
 		m_CustomFontFaces.clear();
 		m_CustomFontFaces.emplace_back("DejaVu Sans");
 		for(const auto &Face : vAllFaces)
+		{
+			// 图标字体不作为正文字体候选。
+			if(Face == "Phosphor" || Face == "Phosphor Bold")
+				continue;
 			if(std::find(m_DefaultFontFaces.begin(), m_DefaultFontFaces.end(), Face) == m_DefaultFontFaces.end())
 				m_CustomFontFaces.push_back(Face);
+		}
 	}
+	// TClient
+	// 随包图标字体首次使用时复制到用户目录，让 qmclient/fonts 自包含，用户无需手工放置。
+	void InstallBundledIconFonts()
+	{
+		for(const char *pName : {"Phosphor-Regular.ttf", "Phosphor-Bold.ttf"})
+		{
+			char aPath[IO_MAX_PATH_LENGTH];
+			str_format(aPath, sizeof(aPath), "qmclient/fonts/%s", pName);
+			if(Storage()->FileExists(aPath, IStorage::TYPE_SAVE))
+				continue;
+			void *pData = nullptr;
+			unsigned DataSize = 0;
+			if(!Storage()->ReadFile(aPath, IStorage::TYPE_ALL, &pData, &DataSize))
+			{
+				log_error("textrender", "Bundled icon font '%s' is missing", aPath);
+				continue;
+			}
+			Storage()->CreateFolder("qmclient/fonts", IStorage::TYPE_SAVE);
+			IOHANDLE File = Storage()->OpenFile(aPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+			if(File == nullptr)
+			{
+				log_error("textrender", "Failed to install bundled icon font '%s'", aPath);
+			}
+			else
+			{
+				const bool Written = io_write(File, pData, DataSize) == DataSize;
+				io_close(File);
+				if(Written)
+					log_info("textrender", "Installed bundled icon font '%s'", aPath);
+				else
+					log_error("textrender", "Failed to write bundled icon font '%s'", aPath);
+			}
+			free(pData);
+		}
+	}
+
 	// TClient
 	void LoadCustomFonts()
 	{
 		CheckDefaultFaces();
+		InstallBundledIconFonts();
 		std::vector<std::string> vCustomFonts;
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "qmclient/fonts", LaziestFileCallback, &vCustomFonts);
 		std::sort(vCustomFonts.begin(), vCustomFonts.end());
@@ -1613,8 +1698,36 @@ public:
 		}
 		else
 		{
-			log_error("textrender", "Font index malformed: 'icon bold' must be a string");
-			Success = false;
+			// 用户目录里的自定义 fonts/index.json 可能是 Phosphor 迁移之前写的，没有该键。
+			// 这里只降级到 regular 图标面并告警，不再让 ICON_FONT_BOLD 落到默认正文字体。
+			log_warn("textrender", "Font index has no 'icon bold' string, using the regular icon face for bold icons");
+			m_pGlyphMap->UseRegularFaceForIconBold();
+		}
+
+		// 图标字形依赖随包 Phosphor（由 qmclient/fonts 自动加载）。用户目录里的旧
+		// fonts/index.json 可能把图标面指向别的字体，那样所有 FONT_ICON_* 都会缺字，
+		// 因此按码位覆盖率校验并回退到随包 Phosphor。
+		const size_t NumIcons = std::size(FontIcons::FONT_ICON_ALL);
+		const int MissingIconGlyphs = m_pGlyphMap->CountMissingIconGlyphs(FontIcons::FONT_ICON_ALL, NumIcons);
+		if(MissingIconGlyphs > 0)
+		{
+			if(m_pGlyphMap->TrySetIconFaceByName("Phosphor"))
+			{
+				log_warn("textrender", "The configured icon font misses %d of %d FONT_ICON_ glyphs, using the bundled 'Phosphor' instead", MissingIconGlyphs, (int)NumIcons);
+				if(!m_pGlyphMap->TrySetIconBoldFaceByName("Phosphor-Bold"))
+					m_pGlyphMap->UseRegularFaceForIconBold();
+			}
+			else
+			{
+				log_error("textrender", "The configured icon font misses %d of %d FONT_ICON_ glyphs and no bundled 'Phosphor' face is loaded; icon glyphs will be missing", MissingIconGlyphs, (int)NumIcons);
+			}
+		}
+
+		if(const FT_Face IconFace = m_pGlyphMap->IconFace())
+		{
+			// 图标字体来自哪一份 index.json 直接决定 FONT_ICON_* 能否显示，
+			// 用户目录的同名文件会覆盖 data/fonts/index.json，这里留一条可排查的记录。
+			log_info("textrender", "Icon font face: '%s'", IconFace->family_name != nullptr ? IconFace->family_name : "(unknown)");
 		}
 
 		m_pGlyphMap->SetIconFontWeight(g_Config.m_QmUiIconWeight == 1);
