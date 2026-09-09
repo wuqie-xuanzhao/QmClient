@@ -31,22 +31,25 @@ TEST(GraphicsBackendContract, VulkanVersionSelectionFallsBackThrough13To11)
 
 TEST(GraphicsBackendContract, GraphicsModesMapToPlatformBackends)
 {
-	EXPECT_STREQ(graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_COMPATIBILITY),
+	// 平台分支先算好再进断言：MSVC 的新预处理器不接受宏实参里出现 #if。
 #if defined(CONF_PLATFORM_ANDROID) || defined(CONF_PLATFORM_IOS)
-		graphics_backend::IsBackendCompiled(BACKEND_TYPE_OPENGL_ES) ? "GLES" : "OpenGL"
+	const char *pExpectedCompatibility = graphics_backend::IsBackendCompiled(BACKEND_TYPE_OPENGL_ES) ? "GLES" : "OpenGL";
 #else
-		"OpenGL"
+	const char *pExpectedCompatibility = "OpenGL";
 #endif
-	);
-	EXPECT_STREQ(graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_PERFORMANCE),
-#if defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
-		graphics_backend::IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL")
+	EXPECT_STREQ(graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_COMPATIBILITY),
+		pExpectedCompatibility);
+#if defined(CONF_PLATFORM_MACOS)
+	const char *pExpectedPerformance = graphics_backend::IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL");
+#elif defined(CONF_PLATFORM_IOS)
+	const char *pExpectedPerformance = graphics_backend::IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (graphics_backend::IsBackendCompiled(BACKEND_TYPE_OPENGL_ES) ? "GLES" : "OpenGL");
 #elif defined(CONF_PLATFORM_ANDROID)
-		graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "GLES"
+	const char *pExpectedPerformance = graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "GLES";
 #else
-		graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL"
+	const char *pExpectedPerformance = graphics_backend::IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL";
 #endif
-	);
+	EXPECT_STREQ(graphics_backend::BackendNameForGraphicsMode(graphics_backend::GRAPHICS_MODE_PERFORMANCE),
+		pExpectedPerformance);
 }
 
 TEST(GraphicsBackendContract, ForcedViewportUsesTopLeftCoordinatesAcrossBackends)

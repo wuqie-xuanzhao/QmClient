@@ -74,8 +74,10 @@ namespace graphics_backend
 	{
 		if(Mode == GRAPHICS_MODE_PERFORMANCE)
 		{
-#if defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)
+#if defined(CONF_PLATFORM_MACOS)
 			return IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "OpenGL");
+#elif defined(CONF_PLATFORM_IOS)
+			return IsBackendCompiled(BACKEND_TYPE_METAL) ? "Metal" : (IsBackendCompiled(BACKEND_TYPE_OPENGL_ES) ? "GLES" : "OpenGL");
 #elif defined(CONF_PLATFORM_ANDROID)
 			return IsBackendCompiled(BACKEND_TYPE_VULKAN) ? "Vulkan" : "GLES";
 #else
