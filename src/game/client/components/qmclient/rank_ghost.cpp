@@ -1,5 +1,7 @@
 #include "rank_ghost.h"
 
+#include "rank_demo_manifest.h"
+
 #include <base/log.h>
 #include <base/str.h>
 #include <base/system.h>
@@ -25,6 +27,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 namespace
@@ -62,61 +65,6 @@ namespace
 
 		SParseContext();
 	};
-
-	const json_value *JsonField(const json_value *pObject, const char *pName)
-	{
-		if(!pObject || pObject->type != json_object)
-			return nullptr;
-		return json_object_get(pObject, pName);
-	}
-
-	bool ReadJsonString(const json_value *pObject, const char *pName, std::string &Out, size_t MaxLength)
-	{
-		const json_value *pValue = JsonField(pObject, pName);
-		if(!pValue || pValue->type != json_string)
-			return false;
-		const char *pStr = json_string_get(pValue);
-		if(!pStr || pStr[0] == '\0' || str_length(pStr) > MaxLength)
-			return false;
-		Out = pStr;
-		return true;
-	}
-
-	bool ReadJsonInt(const json_value *pObject, const char *pName, int64_t &Out)
-	{
-		const json_value *pValue = JsonField(pObject, pName);
-		if(!pValue || pValue->type != json_integer)
-			return false;
-		Out = pValue->u.integer;
-		return true;
-	}
-
-	// 时间字段在不同来源里可能是字符串或数字
-	bool ReadJsonTimeString(const json_value *pObject, const char *pName, std::string &Out)
-	{
-		const json_value *pValue = JsonField(pObject, pName);
-		if(!pValue)
-			return false;
-		if(pValue->type == json_string)
-		{
-			const char *pStr = json_string_get(pValue);
-			if(!pStr || pStr[0] == '\0' || str_length(pStr) > 32)
-				return false;
-			Out = pStr;
-			return true;
-		}
-		if(pValue->type == json_double || pValue->type == json_integer)
-		{
-			char aBuf[32];
-			if(pValue->type == json_double)
-				str_format(aBuf, sizeof(aBuf), "%.2f", pValue->u.dbl);
-			else
-				str_format(aBuf, sizeof(aBuf), "%lld", (long long)pValue->u.integer);
-			Out = aBuf;
-			return true;
-		}
-		return false;
-	}
 
 	// 生成用于缓存文件的名称：去掉服务端的 .gz 后缀并清理非法字符。
 	// 服务端文件名本身是 uuid-hash.demo.gz 形式，这里只做防御性处理。
@@ -291,37 +239,37 @@ namespace
 			return false;
 		}
 
-	std::vector<unsigned char> Output;
-	Output.resize(std::max<size_t>(DataSize * 4, 1024 * 1024));
-	if(Output.size() > MAX_UNPACKED_DEMO_BYTES)
-	{
-		inflateEnd(&Stream);
-		free(pData);
-		return false;
-	}
-	size_t OutputLength = 0;
-	int Result = Z_OK;
-	while(Result == Z_OK)
-	{
-		if(OutputLength == Output.size())
+		std::vector<unsigned char> Output;
+		Output.resize(std::max<size_t>(DataSize * 4, 1024 * 1024));
+		if(Output.size() > MAX_UNPACKED_DEMO_BYTES)
 		{
-			if(Output.size() >= MAX_UNPACKED_DEMO_BYTES)
-			{
-				inflateEnd(&Stream);
-				free(pData);
-				return false;
-			}
-			Output.resize(std::min(Output.size() * 2, MAX_UNPACKED_DEMO_BYTES));
+			inflateEnd(&Stream);
+			free(pData);
+			return false;
 		}
+		size_t OutputLength = 0;
+		int Result = Z_OK;
+		while(Result == Z_OK)
+		{
+			if(OutputLength == Output.size())
+			{
+				if(Output.size() >= MAX_UNPACKED_DEMO_BYTES)
+				{
+					inflateEnd(&Stream);
+					free(pData);
+					return false;
+				}
+				Output.resize(std::min(Output.size() * 2, MAX_UNPACKED_DEMO_BYTES));
+			}
 			Stream.next_out = Output.data() + OutputLength;
 			Stream.avail_out = (uInt)std::min<size_t>(Output.size() - OutputLength, 0x40000000);
 			Result = inflate(&Stream, Z_NO_FLUSH);
 			OutputLength = Output.size() - Stream.avail_out;
-	}
-	inflateEnd(&Stream);
-	free(pData);
+		}
+		inflateEnd(&Stream);
+		free(pData);
 
-	if(Result != Z_STREAM_END || OutputLength > MAX_UNPACKED_DEMO_BYTES || !HasDemoMagic(Output.data(), OutputLength))
+		if(Result != Z_STREAM_END || OutputLength > MAX_UNPACKED_DEMO_BYTES || !HasDemoMagic(Output.data(), OutputLength))
 			return false;
 
 		IOHANDLE File = pStorage->OpenFile(pStoragePath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
@@ -494,6 +442,7 @@ void CRankGhost::Fail(const char *pMessage)
 
 void CRankGhost::AbortTask()
 {
+	const bool DownloadInProgress = m_Stage == EStage::FETCH_DEMO;
 	if(m_pManifestRequest)
 	{
 		m_pManifestRequest->Abort();
@@ -508,6 +457,8 @@ void CRankGhost::AbortTask()
 		m_pParse->m_Context.m_pPlayer->Stop();
 	m_pParse.reset();
 	m_Stage = EStage::IDLE;
+	if(DownloadInProgress && m_aDemoStoragePath[0] != '\0')
+		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 }
 
 void CRankGhost::OnUpdate()
@@ -578,6 +529,10 @@ void CRankGhost::OnReset()
 {
 	if(m_Stage != EStage::IDLE)
 		AbortTask();
+	m_StartPending = false;
+	m_RetryLoadPending = false;
+	m_RetryLoadDeadline = 0;
+	m_RetryLoadNextAttempt = 0;
 	// 地图切换/断线会清空 CGhost 的全部槽位，这里同步失效本地记录，
 	// 避免之后误卸载别的影子。
 	m_LoadedSlot = -1;
@@ -604,6 +559,10 @@ void CRankGhost::StartLookup(const char *pMap, int Rank)
 		return;
 	}
 
+	// 新请求不能继承上一次等待地图加载的状态，否则地图切换后可能尝试加载旧影子。
+	m_RetryLoadPending = false;
+	m_RetryLoadDeadline = 0;
+	m_RetryLoadNextAttempt = 0;
 	m_PendingMap = aMap;
 	m_PendingRank = std::clamp(Rank, 1, 9999);
 	m_StartPending = true;
@@ -667,78 +626,28 @@ void CRankGhost::UpdateManifestStage()
 
 bool CRankGhost::ParseManifest(const unsigned char *pData, size_t DataSize)
 {
-	m_vEntries.clear();
-	if(pData == nullptr || DataSize == 0)
-		return false;
-
-	const char *pCur = (const char *)pData;
-	const char *pEnd = pCur + DataSize;
-	while(pCur < pEnd)
+	std::vector<qmclient::rank_demo::SEntry> ParsedEntries;
+	if(!qmclient::rank_demo::ParseManifest(pData, DataSize, ParsedEntries))
 	{
-		const char *pLineEnd = (const char *)memchr(pCur, '\n', (size_t)(pEnd - pCur));
-		if(pLineEnd == nullptr)
-			pLineEnd = pEnd;
-
-		const size_t LineSize = pLineEnd - pCur;
-		if(LineSize > 1 && pCur[0] == '{')
-		{
-			json_value *pRoot = JsonParse(pCur, LineSize);
-			if(pRoot != nullptr)
-			{
-				do
-				{
-					if(pRoot->type != json_object)
-						break;
-
-					std::string Status;
-					if(!ReadJsonString(pRoot, "status", Status, 16) || Status != "ok")
-						break;
-
-					SEntry Entry;
-					if(!ReadJsonString(pRoot, "map", Entry.m_Map, 64))
-						break;
-					if(!ReadJsonString(pRoot, "demo", Entry.m_Demo, 128))
-						break;
-					ReadJsonTimeString(pRoot, "time", Entry.m_Time);
-
-					int64_t Value = 0;
-					if(ReadJsonInt(pRoot, "rank", Value))
-						Entry.m_Rank = (int)Value;
-					if(Entry.m_Rank <= 0)
-						break;
-					if(ReadJsonInt(pRoot, "cid", Value))
-						Entry.m_Cid = (int)Value;
-					if(ReadJsonInt(pRoot, "ts", Value))
-						Entry.m_Ts = Value;
-
-					const json_value *pNames = JsonField(pRoot, "names");
-					if(pNames != nullptr && pNames->type == json_array)
-					{
-						for(unsigned i = 0; i < pNames->u.array.length && Entry.m_Names.size() < 256; i++)
-						{
-							const json_value *pName = pNames->u.array.values[i];
-							if(pName == nullptr || pName->type != json_string)
-								continue;
-							const char *pStr = json_string_get(pName);
-							if(pStr == nullptr || pStr[0] == '\0' || str_length(pStr) > 64)
-								continue;
-							if(!Entry.m_Names.empty())
-								Entry.m_Names += ", ";
-							Entry.m_Names += pStr;
-						}
-					}
-
-					m_vEntries.push_back(std::move(Entry));
-				} while(false);
-
-				json_value_free(pRoot);
-			}
-		}
-
-		pCur = pLineEnd + 1;
+		m_vEntries.clear();
+		return false;
 	}
 
-	return !m_vEntries.empty();
+	m_vEntries.clear();
+	m_vEntries.reserve(ParsedEntries.size());
+	for(const qmclient::rank_demo::SEntry &Parsed : ParsedEntries)
+	{
+		SEntry Entry;
+		Entry.m_Map = Parsed.m_Map;
+		Entry.m_Rank = Parsed.m_Rank;
+		Entry.m_Time = Parsed.m_Time;
+		Entry.m_Demo = Parsed.m_Demo;
+		Entry.m_Names = Parsed.m_Names;
+		Entry.m_Cid = Parsed.m_Cid;
+		Entry.m_Ts = Parsed.m_Ts == std::numeric_limits<int64_t>::min() ? 0 : Parsed.m_Ts;
+		m_vEntries.push_back(std::move(Entry));
+	}
+	return true;
 }
 
 const CRankGhost::SEntry *CRankGhost::FindEntry(const char *pMap, int Rank) const
@@ -880,6 +789,7 @@ void CRankGhost::StartParse()
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), Localize("Rank ghost: failed to load the replay: %s"), Parse.m_pPlayer->ErrorMessage());
 		m_pParse.reset();
+		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(aBuf);
 		return;
 	}

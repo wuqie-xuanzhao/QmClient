@@ -4,6 +4,7 @@
 #include "maplayers.h"
 #include "menus.h"
 #include "qmclient/perf_logging.h"
+#include "qmclient/rank_demo_manifest.h"
 
 #include <base/hash.h>
 #include <base/math.h>
@@ -15,6 +16,7 @@
 #include <engine/gfx/image_loader.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
+#include <engine/shared/json.h>
 #include <engine/shared/localization.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
@@ -30,14 +32,132 @@
 #include <game/client/ui_listbox.h>
 #include <game/localization.h>
 
+#include <zlib.h>
+
 #include <algorithm>
 #include <chrono>
+#include <cstring>
+#include <vector>
 
 using namespace FontIcons;
 using namespace std::chrono_literals;
 
 namespace
 {
+	constexpr const char *RANK_DEMO_MANIFEST_URL = "https://ddnet.org/watch/watchable.jsonl";
+	constexpr const char *RANK_DEMO_URL_PREFIX = "https://ddnet.org/watch/demos";
+	constexpr size_t RANK_DEMO_MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
+	constexpr size_t RANK_DEMO_MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024;
+	constexpr size_t RANK_DEMO_MAX_UNPACKED_BYTES = 256 * 1024 * 1024;
+
+	bool FindRankOneDemo(const unsigned char *pData, size_t DataSize, const char *pMapName, std::string &DemoName)
+	{
+		std::vector<qmclient::rank_demo::SEntry> Entries;
+		if(!qmclient::rank_demo::ParseManifest(pData, DataSize, Entries))
+			return false;
+		const qmclient::rank_demo::SEntry *pEntry = qmclient::rank_demo::FindLatest(Entries, pMapName, 1);
+		if(pEntry == nullptr)
+			return false;
+		DemoName = pEntry->m_Demo;
+		return true;
+	}
+
+	bool IsGzipData(const unsigned char *pData, size_t DataSize)
+	{
+		return DataSize >= 2 && pData[0] == 0x1f && pData[1] == 0x8b;
+	}
+
+	bool HasDemoMagic(const unsigned char *pData, size_t DataSize)
+	{
+		return DataSize >= 7 && mem_comp(pData, "TWDEMO\0", 7) == 0;
+	}
+
+	bool IsStoredDemoValid(IStorage *pStorage, const char *pPath)
+	{
+		if(pStorage == nullptr || pPath == nullptr || pPath[0] == '\0')
+			return false;
+		IOHANDLE File = pStorage->OpenFile(pPath, IOFLAG_READ, IStorage::TYPE_SAVE);
+		if(File == nullptr)
+			return false;
+		unsigned char aHeader[7];
+		const bool Valid = io_read(File, aHeader, sizeof(aHeader)) == sizeof(aHeader) && HasDemoMagic(aHeader, sizeof(aHeader));
+		io_close(File);
+		return Valid;
+	}
+
+	bool UnpackRankDemo(IStorage *pStorage, const char *pSourcePath, const char *pDestinationPath)
+	{
+		void *pData = nullptr;
+		unsigned DataSize = 0;
+		if(!pStorage->ReadFile(pSourcePath, IStorage::TYPE_SAVE, &pData, &DataSize) || pData == nullptr || DataSize == 0)
+		{
+			free(pData);
+			return false;
+		}
+
+		if(!IsGzipData(static_cast<const unsigned char *>(pData), DataSize))
+		{
+			const bool Valid = HasDemoMagic(static_cast<const unsigned char *>(pData), DataSize);
+			if(Valid)
+			{
+				IOHANDLE File = pStorage->OpenFile(pDestinationPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+				if(File == nullptr)
+				{
+					free(pData);
+					return false;
+				}
+				const bool Written = io_write(File, pData, DataSize) == DataSize;
+				io_close(File);
+				free(pData);
+				return Written;
+			}
+			free(pData);
+			return false;
+		}
+
+		z_stream Stream = {};
+		Stream.next_in = static_cast<Bytef *>(pData);
+		Stream.avail_in = DataSize;
+		if(inflateInit2(&Stream, 15 + 32) != Z_OK)
+		{
+			free(pData);
+			return false;
+		}
+
+		std::vector<unsigned char> Output;
+		Output.resize(std::min<size_t>(std::max<size_t>(static_cast<size_t>(DataSize) * 4, 1024 * 1024), RANK_DEMO_MAX_UNPACKED_BYTES));
+		size_t OutputLength = 0;
+		int Result = Z_OK;
+		while(Result == Z_OK)
+		{
+			if(OutputLength == Output.size())
+			{
+				if(Output.size() >= RANK_DEMO_MAX_UNPACKED_BYTES)
+				{
+					inflateEnd(&Stream);
+					free(pData);
+					return false;
+				}
+				Output.resize(std::min(Output.size() * 2, RANK_DEMO_MAX_UNPACKED_BYTES));
+			}
+			Stream.next_out = Output.data() + OutputLength;
+			Stream.avail_out = static_cast<uInt>(std::min<size_t>(Output.size() - OutputLength, 0x40000000));
+			Result = inflate(&Stream, Z_NO_FLUSH);
+			OutputLength = Output.size() - Stream.avail_out;
+		}
+		inflateEnd(&Stream);
+		free(pData);
+
+		if(Result != Z_STREAM_END || OutputLength > RANK_DEMO_MAX_UNPACKED_BYTES || !HasDemoMagic(Output.data(), OutputLength))
+			return false;
+
+		IOHANDLE File = pStorage->OpenFile(pDestinationPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(File == nullptr)
+			return false;
+		const bool Written = io_write(File, Output.data(), OutputLength) == OutputLength;
+		io_close(File);
+		return Written;
+	}
 
 	bool IsScreenshotBrowserFile(const char *pName)
 	{
@@ -2012,8 +2132,143 @@ void CMenus::FetchAllHeaders()
 	AdvanceDemoBrowserMetadata(2, g_Config.m_BrDemoSort == SORT_DATE ? 4 : 0, "fetch_info");
 }
 
+void CMenus::FinishRankDemoDownload(bool Success, const char *pMessage)
+{
+	if(m_aRankDemoManifestPath[0] != '\0')
+		Storage()->RemoveFile(m_aRankDemoManifestPath, IStorage::TYPE_SAVE);
+	if(m_aRankDemoTempPath[0] != '\0')
+		Storage()->RemoveFile(m_aRankDemoTempPath, IStorage::TYPE_SAVE);
+	m_pRankDemoManifestRequest = nullptr;
+	m_pRankDemoRequest = nullptr;
+	m_RankDemoDownloadStage = ERankDemoDownloadStage::IDLE;
+
+	if(Success)
+	{
+		DemolistPopulate();
+		DemolistOnUpdate(false);
+	}
+	PopupMessage(Localize("Rank 1 demo"), pMessage, Localize("Ok"));
+}
+
+void CMenus::StartRankDemoDownload(const char *pMapName)
+{
+	if(m_RankDemoDownloadStage != ERankDemoDownloadStage::IDLE || pMapName == nullptr || pMapName[0] == '\0')
+		return;
+	if(Http() == nullptr)
+	{
+		PopupMessage(Localize("Rank 1 demo"), Localize("HTTP is not available"), Localize("Ok"));
+		return;
+	}
+
+	Storage()->CreateFolder("demos", IStorage::TYPE_SAVE);
+	m_RankDemoMap = pMapName;
+	str_copy(m_aRankDemoManifestPath, "demos/.qm_rank_watchable.jsonl");
+	str_copy(m_aRankDemoTempPath, "demos/.qm_rank1_download.demo.gz");
+	m_aRankDemoDestinationPath[0] = '\0';
+
+	m_pRankDemoManifestRequest = HttpGetFile(RANK_DEMO_MANIFEST_URL, Storage(), m_aRankDemoManifestPath, IStorage::TYPE_SAVE);
+	m_pRankDemoManifestRequest->MaxResponseSize(RANK_DEMO_MAX_MANIFEST_BYTES);
+	m_pRankDemoManifestRequest->Timeout(CTimeout{5000, 120000, 200, 10});
+	m_pRankDemoManifestRequest->LogProgress(HTTPLOG::FAILURE);
+	m_pRankDemoManifestRequest->FailOnErrorStatus(false);
+	m_pRankDemoManifestRequest->SkipByFileTime(false);
+	m_pRankDemoManifestRequest->HeaderString("User-Agent", "QmClient demo browser");
+	Http()->Run(m_pRankDemoManifestRequest);
+	m_RankDemoDownloadStage = ERankDemoDownloadStage::FETCH_MANIFEST;
+}
+
+void CMenus::UpdateRankDemoDownload()
+{
+	if(m_RankDemoDownloadStage == ERankDemoDownloadStage::IDLE)
+		return;
+
+	if(m_RankDemoDownloadStage == ERankDemoDownloadStage::FETCH_MANIFEST)
+	{
+		if(!m_pRankDemoManifestRequest || !m_pRankDemoManifestRequest->Done())
+			return;
+		if(m_pRankDemoManifestRequest->State() != EHttpState::DONE || m_pRankDemoManifestRequest->StatusCode() != 200)
+		{
+			FinishRankDemoDownload(false, Localize("Failed to fetch the replay list"));
+			return;
+		}
+
+		void *pData = nullptr;
+		unsigned DataSize = 0;
+		const bool ReadOk = Storage()->ReadFile(m_aRankDemoManifestPath, IStorage::TYPE_SAVE, &pData, &DataSize);
+		m_pRankDemoManifestRequest = nullptr;
+		if(!ReadOk || pData == nullptr || DataSize == 0)
+		{
+			free(pData);
+			FinishRankDemoDownload(false, Localize("The replay list is empty or malformed"));
+			return;
+		}
+
+		std::string DemoName;
+		const bool Found = FindRankOneDemo(static_cast<const unsigned char *>(pData), DataSize, m_RankDemoMap.c_str(), DemoName);
+		free(pData);
+		Storage()->RemoveFile(m_aRankDemoManifestPath, IStorage::TYPE_SAVE);
+		if(!Found)
+		{
+			FinishRankDemoDownload(false, Localize("No rank 1 replay was found for this map"));
+			return;
+		}
+
+		char aSafeMap[128];
+		char aSafeDemo[256];
+		str_copy(aSafeMap, m_RankDemoMap.c_str(), sizeof(aSafeMap));
+		str_sanitize_filename(aSafeMap);
+		str_copy(aSafeDemo, DemoName.c_str(), sizeof(aSafeDemo));
+		if(str_endswith_nocase(aSafeDemo, ".gz") != nullptr)
+			aSafeDemo[str_length(aSafeDemo) - 3] = '\0';
+		if(str_endswith_nocase(aSafeDemo, ".demo") != nullptr)
+			aSafeDemo[str_length(aSafeDemo) - 5] = '\0';
+		str_sanitize_filename(aSafeDemo);
+		str_format(m_aRankDemoDestinationPath, sizeof(m_aRankDemoDestinationPath), "demos/%s_rank1_%s.demo", aSafeMap, aSafeDemo);
+		if(Storage()->FileExists(m_aRankDemoDestinationPath, IStorage::TYPE_SAVE))
+		{
+			if(IsStoredDemoValid(Storage(), m_aRankDemoDestinationPath))
+			{
+				FinishRankDemoDownload(true, Localize("The rank 1 demo is already downloaded"));
+				return;
+			}
+			Storage()->RemoveFile(m_aRankDemoDestinationPath, IStorage::TYPE_SAVE);
+		}
+
+		char aUrl[1024];
+		str_format(aUrl, sizeof(aUrl), "%s/%s", RANK_DEMO_URL_PREFIX, DemoName.c_str());
+		m_pRankDemoRequest = HttpGetFile(aUrl, Storage(), m_aRankDemoTempPath, IStorage::TYPE_SAVE);
+		m_pRankDemoRequest->MaxResponseSize(RANK_DEMO_MAX_DOWNLOAD_BYTES);
+		m_pRankDemoRequest->Timeout(CTimeout{5000, 120000, 200, 10});
+		m_pRankDemoRequest->LogProgress(HTTPLOG::FAILURE);
+		m_pRankDemoRequest->FailOnErrorStatus(false);
+		m_pRankDemoRequest->SkipByFileTime(false);
+		m_pRankDemoRequest->HeaderString("User-Agent", "QmClient demo browser");
+		Http()->Run(m_pRankDemoRequest);
+		m_RankDemoDownloadStage = ERankDemoDownloadStage::FETCH_DEMO;
+		return;
+	}
+
+	if(!m_pRankDemoRequest || !m_pRankDemoRequest->Done())
+		return;
+	if(m_pRankDemoRequest->State() != EHttpState::DONE || m_pRankDemoRequest->StatusCode() != 200)
+	{
+		FinishRankDemoDownload(false, Localize("Failed to download the rank 1 demo"));
+		return;
+	}
+	if(!UnpackRankDemo(Storage(), m_aRankDemoTempPath, m_aRankDemoDestinationPath))
+	{
+		FinishRankDemoDownload(false, Localize("The downloaded file is not a valid demo"));
+		return;
+	}
+
+	char aMessage[IO_MAX_PATH_LENGTH + 64];
+	str_format(aMessage, sizeof(aMessage), Localize("Rank 1 demo downloaded to '%s'"), m_aRankDemoDestinationPath);
+	FinishRankDemoDownload(true, aMessage);
+}
+
 void CMenus::RenderDemoBrowser(CUIRect MainView)
 {
+	UpdateRankDemoDownload();
 	GameClient()->m_MenuBackground.ChangePosition(CMenuBackground::POS_DEMOS);
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
 
@@ -2676,6 +2931,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 #else
 			false;
 #endif
+		const bool CanDownloadRankDemo = !BrowsingScreenshots && HasSingleSelection && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
 		int NumRightButtons = 0;
 		if(NumSelectedDeletable > 0)
 			NumRightButtons++;
@@ -2684,6 +2940,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		if(HasSingleSelection)
 			NumRightButtons++;
 		if(CanRenderDemo)
+			NumRightButtons++;
+		if(CanDownloadRankDemo)
 			NumRightButtons++;
 
 		if(NumRightButtons > 0)
@@ -2851,6 +3109,21 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 #else
 		CanRenderDemo = false;
 #endif
+		const bool CanDownloadRankDemoNow = !BrowsingScreenshots && HasSingleSelection && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
+		if(CanDownloadRankDemoNow)
+		{
+			CUIRect DownloadButton;
+			RightGroup.VSplitRight(ButtonWidth, &RightGroup, &DownloadButton);
+			if(RightGroup.w > TightSpacing)
+				RightGroup.VSplitRight(TightSpacing, &RightGroup, nullptr);
+			SetIconMode(true);
+			static CButtonContainer s_RankDemoDownloadButton;
+			const bool DownloadActive = m_RankDemoDownloadStage != ERankDemoDownloadStage::IDLE;
+			if(DoButton_Menu_QmIcon(&s_RankDemoDownloadButton, EQmIcon::FILE, FONT_ICON_FILE, DownloadActive ? -1 : 0, &DownloadButton))
+				StartRankDemoDownload(pSelectedItem->m_Info.m_aMapName);
+			GameClient()->m_Tooltips.DoToolTip(&s_RankDemoDownloadButton, &DownloadButton, DownloadActive ? Localize("Downloading rank 1 demo") : Localize("Download the rank 1 demo for this map"));
+			SetIconMode(false);
+		}
 
 		if(m_aCurrentDemoFolder[0] != '\0')
 		{
@@ -3111,6 +3384,20 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 	pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
 	NumSelectedDeletable = NumSelectedDeletableDemos();
+	const bool CanDownloadRankDemo = !BrowsingScreenshots && HasSingleSelection && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
+	if(CanDownloadRankDemo)
+	{
+		CUIRect DownloadButton;
+		ButtonBarBottom.VSplitRight(ButtonBarBottom.h * 3.0f, &ButtonBarBottom, &DownloadButton);
+		ButtonBarBottom.VSplitRight(ButtonBarBottom.h / 2.0f, &ButtonBarBottom, nullptr);
+		SetIconMode(true);
+		static CButtonContainer s_RankDemoDownloadButton;
+		const bool DownloadActive = m_RankDemoDownloadStage != ERankDemoDownloadStage::IDLE;
+		if(DoButton_Menu_QmIcon(&s_RankDemoDownloadButton, EQmIcon::FILE, FONT_ICON_FILE, DownloadActive ? -1 : 0, &DownloadButton))
+			StartRankDemoDownload(pSelectedItem->m_Info.m_aMapName);
+		GameClient()->m_Tooltips.DoToolTip(&s_RankDemoDownloadButton, &DownloadButton, DownloadActive ? Localize("Downloading rank 1 demo") : Localize("Download the rank 1 demo for this map"));
+		SetIconMode(false);
+	}
 
 	if(m_aCurrentDemoFolder[0] != '\0')
 	{

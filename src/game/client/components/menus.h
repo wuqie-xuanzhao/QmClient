@@ -1607,6 +1607,20 @@ protected:
 
 	std::chrono::nanoseconds m_DemoPopulateStartTime{0};
 
+	enum class ERankDemoDownloadStage
+	{
+		IDLE,
+		FETCH_MANIFEST,
+		FETCH_DEMO,
+	};
+	ERankDemoDownloadStage m_RankDemoDownloadStage = ERankDemoDownloadStage::IDLE;
+	std::shared_ptr<IHttpRequest> m_pRankDemoManifestRequest;
+	std::shared_ptr<IHttpRequest> m_pRankDemoRequest;
+	std::string m_RankDemoMap;
+	char m_aRankDemoManifestPath[IO_MAX_PATH_LENGTH] = "";
+	char m_aRankDemoTempPath[IO_MAX_PATH_LENGTH] = "";
+	char m_aRankDemoDestinationPath[IO_MAX_PATH_LENGTH] = "";
+
 	SDemoSelectionEntry DemoSelectionEntryFromItem(const CDemoItem &Item) const;
 	bool IsDemoItemSelected(const CDemoItem &Item) const;
 	bool IsDemoItemDeletable(const CDemoItem &Item) const;
@@ -1829,6 +1843,9 @@ protected:
 	void RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivated);
 	void RenderDemoBrowserDetails(CUIRect DetailsView);
 	void RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemActivated);
+	void StartRankDemoDownload(const char *pMapName);
+	void UpdateRankDemoDownload();
+	void FinishRankDemoDownload(bool Success, const char *pMessage);
 	void PopupConfirmPlayDemo();
 	void PopupConfirmDeleteDemo();
 	void PopupConfirmDeleteFolder();

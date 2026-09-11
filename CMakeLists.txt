@@ -4359,6 +4359,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
     qm_weapon_trajectory_contract_test.cpp
+    qm_rank_demo_manifest_test.cpp
     qmclient_update_version_test.cpp
     qmclient_update_manifest_test.cpp
     qmclient_monitoring_assets_contract_test.cpp

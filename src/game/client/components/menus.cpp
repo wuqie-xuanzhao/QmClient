@@ -5956,6 +5956,17 @@ void CMenus::OnReset()
 
 void CMenus::OnShutdown()
 {
+	if(m_pRankDemoManifestRequest)
+		m_pRankDemoManifestRequest->Abort();
+	if(m_pRankDemoRequest)
+		m_pRankDemoRequest->Abort();
+	if(m_aRankDemoManifestPath[0] != '\0')
+		Storage()->RemoveFile(m_aRankDemoManifestPath, IStorage::TYPE_SAVE);
+	if(m_aRankDemoTempPath[0] != '\0')
+		Storage()->RemoveFile(m_aRankDemoTempPath, IStorage::TYPE_SAVE);
+	m_pRankDemoManifestRequest = nullptr;
+	m_pRankDemoRequest = nullptr;
+	m_RankDemoDownloadStage = ERankDemoDownloadStage::IDLE;
 	if(m_SettingsPerfWindowTracker.HasActiveWindow())
 	{
 		const SQmSettingsPerfWindowSummary Summary = m_SettingsPerfWindowTracker.FinishActiveWindow();
