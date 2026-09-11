@@ -39,7 +39,7 @@ namespace ui_widget
 			pTextRender->TextColor(Color);
 			pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 			pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-			Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			Ctx.m_pUi->DoLabel(&Rect, pIcon, QmIconFallbackFontSize(Rect), TEXTALIGN_MC);
 			pTextRender->SetRenderFlags(PreviousFlags);
 			pTextRender->SetFontPreset(PreviousPreset);
 			pTextRender->TextColor(PreviousColor);
@@ -151,7 +151,7 @@ namespace ui_widget
 		const EQmIconState IconState = Disabled ? EQmIconState::DISABLED : (Pressed ? EQmIconState::ACTIVE : HoverPrev ? EQmIconState::HOVER :
 																 EQmIconState::NORMAL);
 		const SQmIconStyle IconStyle = ConfiguredIconStyle();
-		if(Ctx.m_pIconManager == nullptr || !Ctx.m_pIconManager->RenderIcon(Icon, IconRect, IconState, IconStyle))
+		if(Ctx.m_pIconManager == nullptr || (Ctx.m_pIconManager->PreferFontFallback() && pFallbackIcon != nullptr && pFallbackIcon[0] != '\0') || !Ctx.m_pIconManager->RenderIcon(Icon, IconRect, IconState, IconStyle))
 		{
 			RenderQmGlyphIcon(Ctx, IconRect, pFallbackIcon, IconStyle.Color(IconState));
 		}

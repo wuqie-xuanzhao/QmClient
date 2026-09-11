@@ -459,7 +459,9 @@ int CQmIconManager::PreferredAtlasScale() const
 	if(m_pGraphics == nullptr)
 		return 1;
 
-	return QmIconPreferredAtlasScale(m_pGraphics->ScreenHiDPIScale());
+	// MSDF 能力探测成功但资源加载失败时也会回退到 alpha 图集；
+	// 优先使用 4x，只有资源缺失时才降级到 2x/1x，避免位图放大模糊。
+	return 4;
 }
 
 CUIRect CQmIconManager::PixelAlignedRect(const CUIRect &Rect) const

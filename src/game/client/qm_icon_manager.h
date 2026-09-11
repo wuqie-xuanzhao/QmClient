@@ -259,6 +259,12 @@ inline float QmIconPixelScale(const int DrawableExtent, const float LogicalExten
 	return DrawableExtent > 0 && LogicalExtent > 0.0f ? DrawableExtent / LogicalExtent : 0.0f;
 }
 
+// FontIcon 回退使用与 MSDF 图标相同的目标方框边长，避免两条路径出现尺寸漂移。
+inline float QmIconFallbackFontSize(const CUIRect &Rect)
+{
+	return std::min(Rect.w, Rect.h) * 0.8f;
+}
+
 inline int NormalizeQmIconWeight(const int Weight)
 {
 	return Weight >= 0 && Weight <= 3 ? Weight : 1;
@@ -366,6 +372,8 @@ public:
 	bool Reload();
 	void RefreshForCurrentDpi();
 	bool IsReady() const { return m_Atlas.IsReady(); }
+	// alpha 图集只作为没有 MSDF 或没有字体回退入口时的兜底。
+	bool PreferFontFallback() const { return IsReady() && !m_Atlas.IsMsdf(); }
 	int LoadedIconCount() const { return m_Atlas.LoadedIconCount(); }
 	int AtlasScale() const { return m_Atlas.AtlasScale(); }
 	SQmIconDiagnostics TakeDiagnostics() const;

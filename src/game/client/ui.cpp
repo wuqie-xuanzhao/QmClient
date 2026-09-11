@@ -1907,7 +1907,7 @@ int CUi::DoButton_FontIcon(CButtonContainer *pButtonContainer, const char *pText
 
 bool CUi::DrawQmIcon(const CUIRect &Rect, EQmIcon Icon, const char *pFallbackIcon, const ColorRGBA &Color) const
 {
-	if(m_pQmIconManager != nullptr && m_pQmIconManager->RenderIcon(Icon, Rect, Color))
+	if(m_pQmIconManager != nullptr && !m_pQmIconManager->PreferFontFallback() && m_pQmIconManager->RenderIcon(Icon, Rect, Color))
 		return true;
 
 	// 图集未就绪或该图标缺失时回退到 TTF 字形，保证图标仍然可见。
@@ -1921,7 +1921,7 @@ bool CUi::DrawQmIcon(const CUIRect &Rect, EQmIcon Icon, const char *pFallbackIco
 	pTextRender->TextColor(Color);
 	pTextRender->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 	pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-	DoLabel(&Rect, pFallbackIcon, Rect.h * ms_FontmodHeight, TEXTALIGN_MC);
+	DoLabel(&Rect, pFallbackIcon, QmIconFallbackFontSize(Rect), TEXTALIGN_MC);
 	pTextRender->SetRenderFlags(PreviousFlags);
 	pTextRender->SetFontPreset(PreviousPreset);
 	pTextRender->TextColor(PreviousColor);
