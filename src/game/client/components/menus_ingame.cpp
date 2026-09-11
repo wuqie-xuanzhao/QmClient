@@ -2960,6 +2960,22 @@ int CMenus::GhostlistFetchCallback(const CFsFileInfo *pInfo, int IsDir, int Stor
 
 void CMenus::GhostlistPopulate()
 {
+	struct SActiveGhost
+	{
+		char m_aFilename[IO_MAX_PATH_LENGTH];
+		int m_Slot;
+	};
+	std::vector<SActiveGhost> vActiveGhosts;
+	for(const CGhostItem &Ghost : m_vGhosts)
+	{
+		if(Ghost.m_Slot < 0 || !Ghost.HasFile())
+			continue;
+		SActiveGhost Active;
+		str_copy(Active.m_aFilename, Ghost.m_aFilename);
+		Active.m_Slot = Ghost.m_Slot;
+		vActiveGhosts.push_back(Active);
+	}
+
 	m_vGhosts.clear();
 	m_GhostPopulateStartTime = time_get_nanoseconds();
 	const char *pGhostDir = GameClient()->m_Ghost.GetGhostDir();
@@ -2981,6 +2997,14 @@ void CMenus::GhostlistPopulate()
 	for(auto &Ghost : m_vGhosts)
 	{
 		Ghost.m_Failed = false;
+		for(const SActiveGhost &Active : vActiveGhosts)
+		{
+			if(str_comp(Ghost.m_aFilename, Active.m_aFilename) == 0)
+			{
+				Ghost.m_Slot = Active.m_Slot;
+				break;
+			}
+		}
 		if(str_comp(Ghost.m_aPlayer, Client()->PlayerName()) == 0 && (!pOwnGhost || Ghost < *pOwnGhost))
 			pOwnGhost = &Ghost;
 	}
@@ -2988,7 +3012,8 @@ void CMenus::GhostlistPopulate()
 	if(pOwnGhost)
 	{
 		pOwnGhost->m_Own = true;
-		pOwnGhost->m_Slot = GameClient()->m_Ghost.Load(pOwnGhost->m_aFilename);
+		if(pOwnGhost->m_Slot < 0)
+			pOwnGhost->m_Slot = GameClient()->m_Ghost.Load(pOwnGhost->m_aFilename);
 	}
 }
 
@@ -3233,6 +3258,9 @@ void CMenus::RenderGhost(CUIRect MainView)
 	if(Ui()->DoButton_QmIcon(&s_ReloadButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &Button, BUTTONFLAG_LEFT) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
 	{
 		GameClient()->m_Ghost.UnloadAll();
+		GameClient()->m_RankGhost.OnGhostsUnloaded();
+		for(CGhostItem &Ghost : m_vGhosts)
+			Ghost.m_Slot = -1;
 		GhostlistPopulate();
 	}
 
@@ -3267,25 +3295,28 @@ void CMenus::RenderGhost(CUIRect MainView)
 		const char *pActionText = ActivateAll ? Localize("Activate all") : Localize("Deactivate all");
 		if(DoIngameMenuButton(PAGE_GHOST, ActivateAll ? "ingame-ghost-activate-all" : "ingame-ghost-deactivate-all", &s_ActivateAll, pActionText, 0, &Button))
 		{
-			for(int i = 0; i < NumGhosts; i++)
+			if(!ActivateAll)
 			{
-				CGhostItem *pGhost = &m_vGhosts[i];
-				if(pGhost->m_Failed || (ActivateAll && pGhost->m_Slot != -1))
-					continue;
-
-				if(ActivateAll)
+				GameClient()->m_Ghost.UnloadAll();
+				GameClient()->m_RankGhost.OnGhostsUnloaded();
+				for(CGhostItem &Ghost : m_vGhosts)
+					Ghost.m_Slot = -1;
+			}
+			else
+			{
+				for(int i = 0; i < NumGhosts; i++)
 				{
+					CGhostItem *pGhost = &m_vGhosts[i];
+					if(pGhost->m_Failed || pGhost->m_Slot != -1)
+						continue;
 					if(!GameClient()->m_Ghost.FreeSlots())
 						break;
 
 					pGhost->m_Slot = GameClient()->m_Ghost.Load(pGhost->m_aFilename);
 					if(pGhost->m_Slot == -1)
 						pGhost->m_Failed = true;
-				}
-				else
-				{
-					GameClient()->m_Ghost.UnloadAll();
-					pGhost->m_Slot = -1;
+					else
+						GameClient()->m_RankGhost.OnGhostLoaded(pGhost->m_aFilename, pGhost->m_Slot);
 				}
 			}
 		}
@@ -3309,6 +3340,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 			if(pGhost->Active())
 			{
 				GameClient()->m_Ghost.Unload(pGhost->m_Slot);
+				GameClient()->m_RankGhost.OnGhostUnloaded(pGhost->m_Slot);
 				pGhost->m_Slot = -1;
 			}
 			else
@@ -3316,6 +3348,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 				pGhost->m_Slot = GameClient()->m_Ghost.Load(pGhost->m_aFilename);
 				if(pGhost->m_Slot == -1)
 					pGhost->m_Failed = true;
+				else
+					GameClient()->m_RankGhost.OnGhostLoaded(pGhost->m_aFilename, pGhost->m_Slot);
 			}
 		}
 		Status.VSplitRight(5.0f, &Status, nullptr);
@@ -3327,7 +3361,10 @@ void CMenus::RenderGhost(CUIRect MainView)
 	if(DoIngameMenuButton(PAGE_GHOST, "ingame-ghost-delete", &s_DeleteButton, Localize("Delete"), 0, &Button))
 	{
 		if(pGhost->Active())
+		{
 			GameClient()->m_Ghost.Unload(pGhost->m_Slot);
+			GameClient()->m_RankGhost.OnGhostUnloaded(pGhost->m_Slot);
+		}
 		DeleteGhostItem(s_SelectedIndex);
 		s_SelectedIndex = std::min(s_SelectedIndex, (int)m_vGhosts.size() - 1);
 		return;

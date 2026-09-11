@@ -136,15 +136,23 @@ namespace qmclient::rank_demo
 
 		const char *pCurrent = reinterpret_cast<const char *>(pData);
 		const char *pEnd = pCurrent + DataSize;
+		if(pEnd - pCurrent >= 3 && (unsigned char)pCurrent[0] == 0xef && (unsigned char)pCurrent[1] == 0xbb && (unsigned char)pCurrent[2] == 0xbf)
+			pCurrent += 3;
 		while(pCurrent < pEnd)
 		{
 			const char *pLineEnd = static_cast<const char *>(memchr(pCurrent, '\n', static_cast<size_t>(pEnd - pCurrent)));
 			if(pLineEnd == nullptr)
 				pLineEnd = pEnd;
-			const size_t LineSize = static_cast<size_t>(pLineEnd - pCurrent);
-			if(LineSize > 1 && pCurrent[0] == '{')
+			const char *pLineBegin = pCurrent;
+			while(pLineBegin < pLineEnd && (pLineBegin[0] == ' ' || pLineBegin[0] == '\t' || pLineBegin[0] == '\r'))
+				++pLineBegin;
+			const char *pTrimmedEnd = pLineEnd;
+			while(pTrimmedEnd > pLineBegin && (pTrimmedEnd[-1] == ' ' || pTrimmedEnd[-1] == '\t' || pTrimmedEnd[-1] == '\r'))
+				--pTrimmedEnd;
+			const size_t LineSize = static_cast<size_t>(pTrimmedEnd - pLineBegin);
+			if(LineSize > 1 && pLineBegin[0] == '{')
 			{
-				json_value *pRoot = JsonParse(pCurrent, LineSize);
+				json_value *pRoot = JsonParse(pLineBegin, LineSize);
 				if(pRoot != nullptr)
 				{
 					SEntry Entry;

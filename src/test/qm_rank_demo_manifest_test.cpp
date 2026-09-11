@@ -40,3 +40,12 @@ TEST(QmRankDemoManifest, AcceptsManifestWithoutTrailingNewline)
 	ASSERT_EQ(Entries.size(), 1U);
 	EXPECT_EQ(Entries[0].m_Map, "Map");
 }
+
+TEST(QmRankDemoManifest, AcceptsLeadingBomAndWhitespace)
+{
+	const std::string Manifest = "\xef\xbb\xbf  \t{\"status\":\"ok\",\"map\":\"Map\",\"rank\":1,\"ts\":1,\"demo\":\"map.demo.gz\"} \r\n";
+	std::vector<qmclient::rank_demo::SEntry> Entries;
+	EXPECT_TRUE(qmclient::rank_demo::ParseManifest(reinterpret_cast<const unsigned char *>(Manifest.data()), Manifest.size(), Entries));
+	ASSERT_EQ(Entries.size(), 1U);
+	EXPECT_EQ(Entries[0].m_Demo, "map.demo.gz");
+}

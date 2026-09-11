@@ -18,6 +18,7 @@
 #include <engine/keys.h>
 #include <engine/shared/json.h>
 #include <engine/shared/localization.h>
+#include <engine/shared/snapshot.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 
@@ -37,6 +38,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 using namespace FontIcons;
@@ -50,7 +52,7 @@ namespace
 	constexpr size_t RANK_DEMO_MAX_DOWNLOAD_BYTES = 128 * 1024 * 1024;
 	constexpr size_t RANK_DEMO_MAX_UNPACKED_BYTES = 256 * 1024 * 1024;
 
-	bool FindRankOneDemo(const unsigned char *pData, size_t DataSize, const char *pMapName, std::string &DemoName)
+	bool FindRankOneDemo(const unsigned char *pData, size_t DataSize, const char *pMapName, std::string &DemoName, int64_t &DemoTs)
 	{
 		std::vector<qmclient::rank_demo::SEntry> Entries;
 		if(!qmclient::rank_demo::ParseManifest(pData, DataSize, Entries))
@@ -59,6 +61,7 @@ namespace
 		if(pEntry == nullptr)
 			return false;
 		DemoName = pEntry->m_Demo;
+		DemoTs = pEntry->m_Ts == std::numeric_limits<int64_t>::min() ? 0 : pEntry->m_Ts;
 		return true;
 	}
 
@@ -76,17 +79,23 @@ namespace
 	{
 		if(pStorage == nullptr || pPath == nullptr || pPath[0] == '\0')
 			return false;
-		IOHANDLE File = pStorage->OpenFile(pPath, IOFLAG_READ, IStorage::TYPE_SAVE);
-		if(File == nullptr)
-			return false;
-		unsigned char aHeader[7];
-		const bool Valid = io_read(File, aHeader, sizeof(aHeader)) == sizeof(aHeader) && HasDemoMagic(aHeader, sizeof(aHeader));
-		io_close(File);
-		return Valid;
+		rust::Box<CSnapshotDelta> pDelta = CSnapshotDelta::New();
+		rust::Box<CSnapshotDelta> pDeltaSixup = CSnapshotDelta::New();
+		CDemoPlayer DemoPlayer(&*pDelta, &*pDeltaSixup, false);
+		return DemoPlayer.Load(pStorage, nullptr, pPath, IStorage::TYPE_SAVE) == 0;
 	}
 
 	bool UnpackRankDemo(IStorage *pStorage, const char *pSourcePath, const char *pDestinationPath)
 	{
+		if(pStorage == nullptr || pSourcePath == nullptr || pSourcePath[0] == '\0' || pDestinationPath == nullptr || pDestinationPath[0] == '\0')
+			return false;
+
+		char aTempPath[IO_MAX_PATH_LENGTH];
+		if(str_format(aTempPath, sizeof(aTempPath), "%s.tmp", pDestinationPath) >= (int)sizeof(aTempPath))
+			return false;
+		pStorage->RemoveFile(aTempPath, IStorage::TYPE_SAVE);
+		const auto RemoveTemp = [&]() { pStorage->RemoveFile(aTempPath, IStorage::TYPE_SAVE); };
+
 		void *pData = nullptr;
 		unsigned DataSize = 0;
 		if(!pStorage->ReadFile(pSourcePath, IStorage::TYPE_SAVE, &pData, &DataSize) || pData == nullptr || DataSize == 0)
@@ -100,7 +109,7 @@ namespace
 			const bool Valid = HasDemoMagic(static_cast<const unsigned char *>(pData), DataSize);
 			if(Valid)
 			{
-				IOHANDLE File = pStorage->OpenFile(pDestinationPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+				IOHANDLE File = pStorage->OpenFile(aTempPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 				if(File == nullptr)
 				{
 					free(pData);
@@ -109,7 +118,12 @@ namespace
 				const bool Written = io_write(File, pData, DataSize) == DataSize;
 				io_close(File);
 				free(pData);
-				return Written;
+				if(!Written || !pStorage->RenameFile(aTempPath, pDestinationPath, IStorage::TYPE_SAVE))
+				{
+					RemoveTemp();
+					return false;
+				}
+				return true;
 			}
 			free(pData);
 			return false;
@@ -151,12 +165,17 @@ namespace
 		if(Result != Z_STREAM_END || OutputLength > RANK_DEMO_MAX_UNPACKED_BYTES || !HasDemoMagic(Output.data(), OutputLength))
 			return false;
 
-		IOHANDLE File = pStorage->OpenFile(pDestinationPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		IOHANDLE File = pStorage->OpenFile(aTempPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(File == nullptr)
 			return false;
 		const bool Written = io_write(File, Output.data(), OutputLength) == OutputLength;
 		io_close(File);
-		return Written;
+		if(!Written || !pStorage->RenameFile(aTempPath, pDestinationPath, IStorage::TYPE_SAVE))
+		{
+			RemoveTemp();
+			return false;
+		}
+		return true;
 	}
 
 	bool IsScreenshotBrowserFile(const char *pName)
@@ -2204,7 +2223,8 @@ void CMenus::UpdateRankDemoDownload()
 		}
 
 		std::string DemoName;
-		const bool Found = FindRankOneDemo(static_cast<const unsigned char *>(pData), DataSize, m_RankDemoMap.c_str(), DemoName);
+		int64_t DemoTs = 0;
+		const bool Found = FindRankOneDemo(static_cast<const unsigned char *>(pData), DataSize, m_RankDemoMap.c_str(), DemoName, DemoTs);
 		free(pData);
 		Storage()->RemoveFile(m_aRankDemoManifestPath, IStorage::TYPE_SAVE);
 		if(!Found)
@@ -2223,7 +2243,7 @@ void CMenus::UpdateRankDemoDownload()
 		if(str_endswith_nocase(aSafeDemo, ".demo") != nullptr)
 			aSafeDemo[str_length(aSafeDemo) - 5] = '\0';
 		str_sanitize_filename(aSafeDemo);
-		str_format(m_aRankDemoDestinationPath, sizeof(m_aRankDemoDestinationPath), "demos/%s_rank1_%s.demo", aSafeMap, aSafeDemo);
+		str_format(m_aRankDemoDestinationPath, sizeof(m_aRankDemoDestinationPath), "demos/%s_rank1_%lld_%s.demo", aSafeMap, (long long)DemoTs, aSafeDemo);
 		if(Storage()->FileExists(m_aRankDemoDestinationPath, IStorage::TYPE_SAVE))
 		{
 			if(IsStoredDemoValid(Storage(), m_aRankDemoDestinationPath))
@@ -2255,8 +2275,9 @@ void CMenus::UpdateRankDemoDownload()
 		FinishRankDemoDownload(false, Localize("Failed to download the rank 1 demo"));
 		return;
 	}
-	if(!UnpackRankDemo(Storage(), m_aRankDemoTempPath, m_aRankDemoDestinationPath))
+	if(!UnpackRankDemo(Storage(), m_aRankDemoTempPath, m_aRankDemoDestinationPath) || !IsStoredDemoValid(Storage(), m_aRankDemoDestinationPath))
 	{
+		Storage()->RemoveFile(m_aRankDemoDestinationPath, IStorage::TYPE_SAVE);
 		FinishRankDemoDownload(false, Localize("The downloaded file is not a valid demo"));
 		return;
 	}
@@ -2922,6 +2943,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 			IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 		CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+		if(!BrowsingScreenshots && pSelectedItem != nullptr && pSelectedItem->IsDemoFile() && !pSelectedItem->m_InfosLoaded)
+			FetchHeader(*pSelectedItem);
 		int NumSelectedDeletable = NumSelectedDeletableDemos();
 		CUIRect LeftGroup = MainRow;
 		CUIRect RightGroup;
@@ -3105,11 +3128,11 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
 		NumSelectedDeletable = NumSelectedDeletableDemos();
 #if defined(CONF_VIDEORECORDER)
-		CanRenderDemo = !BrowsingScreenshots && HasSingleSelection && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
+		CanRenderDemo = !BrowsingScreenshots && HasSingleSelection && pSelectedItem != nullptr && !pSelectedItem->m_IsDir && pSelectedItem->IsDemoFile();
 #else
 		CanRenderDemo = false;
 #endif
-		const bool CanDownloadRankDemoNow = !BrowsingScreenshots && HasSingleSelection && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
+		const bool CanDownloadRankDemoNow = !BrowsingScreenshots && HasSingleSelection && pSelectedItem != nullptr && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
 		if(CanDownloadRankDemoNow)
 		{
 			CUIRect DownloadButton;
@@ -3249,6 +3272,8 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 	CDemoItem *pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+	if(!BrowsingScreenshots && pSelectedItem != nullptr && pSelectedItem->IsDemoFile() && !pSelectedItem->m_InfosLoaded)
+		FetchHeader(*pSelectedItem);
 	int NumSelectedDeletable = NumSelectedDeletableDemos();
 
 	// refresh button
@@ -3383,8 +3408,10 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		m_DemolistSelectedIndex < (int)m_vpFilteredDemos.size() &&
 		IsDemoItemSelected(*m_vpFilteredDemos[m_DemolistSelectedIndex]);
 	pSelectedItem = HasSingleSelection ? m_vpFilteredDemos[m_DemolistSelectedIndex] : nullptr;
+	if(!BrowsingScreenshots && pSelectedItem != nullptr && pSelectedItem->IsDemoFile() && !pSelectedItem->m_InfosLoaded)
+		FetchHeader(*pSelectedItem);
 	NumSelectedDeletable = NumSelectedDeletableDemos();
-	const bool CanDownloadRankDemo = !BrowsingScreenshots && HasSingleSelection && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
+	const bool CanDownloadRankDemo = !BrowsingScreenshots && HasSingleSelection && pSelectedItem != nullptr && pSelectedItem->IsDemoFile() && pSelectedItem->m_InfosLoaded && pSelectedItem->m_Valid && pSelectedItem->m_Info.m_aMapName[0] != '\0';
 	if(CanDownloadRankDemo)
 	{
 		CUIRect DownloadButton;

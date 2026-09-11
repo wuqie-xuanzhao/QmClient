@@ -37,6 +37,7 @@ namespace
 	constexpr size_t MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
 	constexpr size_t MAX_DEMO_BYTES = 128 * 1024 * 1024;
 	constexpr size_t MAX_UNPACKED_DEMO_BYTES = 256 * 1024 * 1024;
+	constexpr int64_t MANIFEST_CACHE_TTL_SECONDS = 300;
 	constexpr const char *USER_AGENT = "QmClient (https://github.com/wxj881027/QmClient)";
 
 	// rust::Box 没有默认构造，必须在构造函数里创建
@@ -91,6 +92,7 @@ namespace
 		char *m_pBufferPos = m_aBuffer;
 		int m_BufferNumItems = 0;
 		std::optional<CGhostItem> m_LastItem;
+		bool m_Failed = false;
 
 		void ResetBuffer()
 		{
@@ -98,28 +100,30 @@ namespace
 			m_BufferNumItems = 0;
 		}
 
-		void FlushChunk()
+		bool FlushChunk()
 		{
 			const int Size = (int)(m_pBufferPos - m_aBuffer);
 			if(Size == 0 || m_BufferNumItems == 0 || !m_LastItem.has_value())
 			{
 				ResetBuffer();
-				return;
+				return !m_Failed;
 			}
 
 			int CompressedSize = CVariableInt::Compress(m_aBuffer, Size, m_aBufferTemp, sizeof(m_aBufferTemp));
 			if(CompressedSize < 0)
 			{
+				m_Failed = true;
 				ResetBuffer();
 				m_LastItem = std::nullopt;
-				return;
+				return false;
 			}
 			CompressedSize = CNetBase::Compress(m_aBufferTemp, CompressedSize, m_aBuffer, sizeof(m_aBuffer));
 			if(CompressedSize < 0)
 			{
+				m_Failed = true;
 				ResetBuffer();
 				m_LastItem = std::nullopt;
-				return;
+				return false;
 			}
 
 			unsigned char aChunkHeader[4];
@@ -127,11 +131,17 @@ namespace
 			aChunkHeader[1] = m_BufferNumItems & 0xff;
 			aChunkHeader[2] = (CompressedSize >> 8) & 0xff;
 			aChunkHeader[3] = CompressedSize & 0xff;
-			io_write(m_File, aChunkHeader, sizeof(aChunkHeader));
-			io_write(m_File, m_aBuffer, CompressedSize);
+			if(io_write(m_File, aChunkHeader, sizeof(aChunkHeader)) != sizeof(aChunkHeader) || io_write(m_File, m_aBuffer, CompressedSize) != CompressedSize)
+			{
+				m_Failed = true;
+				ResetBuffer();
+				m_LastItem = std::nullopt;
+				return false;
+			}
 
 			m_LastItem = std::nullopt;
 			ResetBuffer();
+			return true;
 		}
 
 	public:
@@ -150,19 +160,28 @@ namespace
 			Header.m_MapSha256 = MapSha256;
 			uint_to_bytes_be(Header.m_aNumTicks, NumTicks);
 			uint_to_bytes_be(Header.m_aTime, TimeMs);
-			io_write(m_File, &Header, sizeof(Header));
+			if(io_write(m_File, &Header, sizeof(Header)) != sizeof(Header))
+			{
+				io_close(m_File);
+				m_File = nullptr;
+				return false;
+			}
 
 			m_LastItem = std::nullopt;
+			m_Failed = false;
 			ResetBuffer();
 			return true;
 		}
 
 		bool WriteData(int Type, const void *pData, size_t Size)
 		{
-			if(m_File == nullptr || Size == 0 || Size > MAX_ITEM_SIZE || Size % sizeof(uint32_t) != 0)
+			if(m_File == nullptr || m_Failed || Size == 0 || Size > MAX_ITEM_SIZE || Size % sizeof(uint32_t) != 0)
 				return false;
 			if((size_t)(sizeof(m_aBuffer) - (m_pBufferPos - m_aBuffer)) < Size)
-				FlushChunk();
+			{
+				if(!FlushChunk())
+					return false;
+			}
 
 			CGhostItem Item;
 			mem_copy(Item.m_aData, pData, Size);
@@ -179,7 +198,8 @@ namespace
 			}
 			else
 			{
-				FlushChunk();
+				if(!FlushChunk())
+					return false;
 				mem_copy(m_pBufferPos, Item.m_aData, Size);
 			}
 
@@ -188,16 +208,17 @@ namespace
 			m_BufferNumItems++;
 			if(m_BufferNumItems >= NUM_ITEMS_PER_CHUNK)
 				FlushChunk();
-			return true;
+			return !m_Failed;
 		}
 
-		void Close()
+		bool Close()
 		{
 			if(m_File == nullptr)
-				return;
-			FlushChunk();
+				return !m_Failed;
+			const bool Flushed = FlushChunk();
 			io_close(m_File);
 			m_File = nullptr;
+			return Flushed && !m_Failed;
 		}
 	};
 
@@ -240,13 +261,7 @@ namespace
 		}
 
 		std::vector<unsigned char> Output;
-		Output.resize(std::max<size_t>(DataSize * 4, 1024 * 1024));
-		if(Output.size() > MAX_UNPACKED_DEMO_BYTES)
-		{
-			inflateEnd(&Stream);
-			free(pData);
-			return false;
-		}
+		Output.resize(std::min<size_t>(std::max<size_t>(DataSize * 4, 1024 * 1024), MAX_UNPACKED_DEMO_BYTES));
 		size_t OutputLength = 0;
 		int Result = Z_OK;
 		while(Result == Z_OK)
@@ -472,6 +487,12 @@ void CRankGhost::OnUpdate()
 	if(m_UnloadPending)
 	{
 		m_UnloadPending = false;
+		m_StartPending = false;
+		m_RetryLoadPending = false;
+		m_RetryLoadDeadline = 0;
+		m_RetryLoadNextAttempt = 0;
+		if(m_Stage != EStage::IDLE)
+			AbortTask();
 		UnloadGhost();
 		Echo(Localize("Rank ghost unloaded"));
 	}
@@ -479,7 +500,7 @@ void CRankGhost::OnUpdate()
 	if(m_StartPending)
 	{
 		m_StartPending = false;
-		if(m_ManifestLoaded)
+		if(m_ManifestLoaded && time_get() - m_ManifestLoadedAt < time_freq() * MANIFEST_CACHE_TTL_SECONDS)
 			LookupInManifest();
 		else
 			StartManifestFetch();
@@ -488,7 +509,7 @@ void CRankGhost::OnUpdate()
 	if(m_RetryLoadPending)
 	{
 		const int64_t Now = time_get();
-		if(Client()->GetCurrentMap()[0] != '\0' && Now >= m_RetryLoadNextAttempt)
+		if(Client()->GetCurrentMap()[0] != '\0' && str_comp_nocase(Client()->GetCurrentMap(), m_PendingMap.c_str()) == 0 && Now >= m_RetryLoadNextAttempt)
 		{
 			if(LoadGhostFile(m_aGhostStoragePath))
 			{
@@ -497,7 +518,16 @@ void CRankGhost::OnUpdate()
 			}
 			else
 			{
-				m_RetryLoadNextAttempt = Now + time_freq() / 2;
+				// 地图已加载仍无法读取，说明缓存影子损坏或与地图不匹配；
+				// 删除后从缓存回放重建，避免在同一坏文件上无限重试。
+				Storage()->RemoveFile(m_aGhostStoragePath, IStorage::TYPE_SAVE);
+				m_RetryLoadPending = false;
+				m_RetryLoadDeadline = 0;
+				m_RetryLoadNextAttempt = 0;
+				if(Storage()->FileExists(m_aDemoStoragePath, IStorage::TYPE_SAVE))
+					StartParse();
+				else
+					StartDemoFetch();
 			}
 		}
 		if(m_RetryLoadPending && Now >= m_RetryLoadDeadline)
@@ -525,13 +555,22 @@ void CRankGhost::OnUpdate()
 	}
 }
 
+void CRankGhost::OnMapLoad()
+{
+	// CGhost::OnMapLoad 已先清空全部槽位并重建列表，旧 rank 槽位不再有效。
+	OnGhostsUnloaded();
+}
+
 void CRankGhost::OnReset()
 {
+	const bool KeepRetryLoad = m_RetryLoadPending && m_aGhostStoragePath[0] != '\0';
 	if(m_Stage != EStage::IDLE)
 		AbortTask();
+	if(m_LoadedSlot >= 0)
+		GameClient()->m_Ghost.Unload(m_LoadedSlot);
 	m_StartPending = false;
-	m_RetryLoadPending = false;
-	m_RetryLoadDeadline = 0;
+	m_RetryLoadPending = KeepRetryLoad;
+	m_RetryLoadDeadline = KeepRetryLoad ? time_get() + time_freq() * 30 : 0;
 	m_RetryLoadNextAttempt = 0;
 	// 地图切换/断线会清空 CGhost 的全部槽位，这里同步失效本地记录，
 	// 避免之后误卸载别的影子。
@@ -619,6 +658,7 @@ void CRankGhost::UpdateManifestStage()
 	}
 
 	m_ManifestLoaded = true;
+	m_ManifestLoadedAt = time_get();
 	m_Stage = EStage::IDLE;
 	log_info("rank_ghost", "manifest loaded: %d entries", (int)m_vEntries.size());
 	LookupInManifest();
@@ -681,14 +721,16 @@ void CRankGhost::LookupInManifest()
 
 	char aSafeName[IO_MAX_PATH_LENGTH];
 	MakeSafeCacheName(m_ActiveEntry.m_Demo.c_str(), aSafeName, sizeof(aSafeName));
-	str_format(m_aDemoStoragePath, sizeof(m_aDemoStoragePath), "%s/%s.demo", DEMO_CACHE_DIR, aSafeName);
 
 	// 影子文件放在 ghosts/rank_ghost 子目录，与玩家自己的影子分开存放；
 	// 文件名带地图名前缀，便于文件管理器里辨认。Ghost 页会单独扫描该子目录。
 	char aSafeMap[64];
+	char aSafeDemo[256];
 	str_copy(aSafeMap, m_PendingMap.c_str(), sizeof(aSafeMap));
 	str_sanitize_filename(aSafeMap);
-	str_format(m_aGhostStoragePath, sizeof(m_aGhostStoragePath), "%s/%s/%s_rank%d.gho", GHOST_ROOT, GHOST_SUBDIR, aSafeMap, m_PendingRank);
+	MakeSafeCacheName(m_ActiveEntry.m_Demo.c_str(), aSafeDemo, sizeof(aSafeDemo));
+	str_format(m_aDemoStoragePath, sizeof(m_aDemoStoragePath), "%s/%s_%lld.demo", DEMO_CACHE_DIR, aSafeDemo, (long long)m_ActiveEntry.m_Ts);
+	str_format(m_aGhostStoragePath, sizeof(m_aGhostStoragePath), "%s/%s/%s_rank%d_%lld_%s.gho", GHOST_ROOT, GHOST_SUBDIR, aSafeMap, m_PendingRank, (long long)m_ActiveEntry.m_Ts, aSafeDemo);
 
 	Storage()->CreateFolder(DEMO_CACHE_DIR, IStorage::TYPE_SAVE);
 	char aRankGhostDir[IO_MAX_PATH_LENGTH];
@@ -703,12 +745,21 @@ void CRankGhost::LookupInManifest()
 			NotifyLoaded(m_ActiveEntry.m_Names.c_str(), m_ActiveEntry.m_Time.c_str());
 			return;
 		}
-		// 缓存内容只取决于回放，与本地地图状态无关，因此保留缓存。
-		// 常见原因是当前还没有加载到对应地图，等地图出现后再加载。
-		m_RetryLoadPending = true;
-		m_RetryLoadDeadline = time_get() + time_freq() * 30;
-		m_RetryLoadNextAttempt = 0;
-		m_PendingNotify = Localize("Rank ghost: replay converted, waiting for the map to load ...");
+		if(Client()->GetCurrentMap()[0] != '\0' && str_comp_nocase(Client()->GetCurrentMap(), m_PendingMap.c_str()) == 0)
+		{
+			Storage()->RemoveFile(m_aGhostStoragePath, IStorage::TYPE_SAVE);
+			if(Storage()->FileExists(m_aDemoStoragePath, IStorage::TYPE_SAVE))
+				StartParse();
+			else
+				StartDemoFetch();
+		}
+		else
+		{
+			m_RetryLoadPending = true;
+			m_RetryLoadDeadline = time_get() + time_freq() * 30;
+			m_RetryLoadNextAttempt = 0;
+			m_PendingNotify = Localize("Rank ghost: replay converted, waiting for the map to load ...");
+		}
 		return;
 	}
 
@@ -720,6 +771,29 @@ void CRankGhost::LookupInManifest()
 	}
 
 	StartDemoFetch();
+}
+
+void CRankGhost::OnGhostsUnloaded()
+{
+	m_LoadedSlot = -1;
+	m_LastAlignedRaceTick = -1;
+}
+
+void CRankGhost::OnGhostLoaded(const char *pStoragePath, int Slot)
+{
+	if(Slot < 0 || pStoragePath == nullptr || !str_startswith(pStoragePath, "ghosts/rank_ghost/") || (m_LoadedSlot >= 0 && str_comp(pStoragePath, m_aGhostStoragePath) != 0))
+		return;
+	m_LoadedSlot = Slot;
+	m_LastAlignedRaceTick = -1;
+}
+
+void CRankGhost::OnGhostUnloaded(int Slot)
+{
+	if(m_LoadedSlot == Slot)
+	{
+		m_LoadedSlot = -1;
+		m_LastAlignedRaceTick = -1;
+	}
 }
 
 void CRankGhost::StartDemoFetch()
@@ -800,6 +874,7 @@ void CRankGhost::StartParse()
 	if(NumMarkers < 2)
 	{
 		m_pParse.reset();
+		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(Localize("Rank ghost: the replay has no run start/end markers"));
 		return;
 	}
@@ -808,6 +883,7 @@ void CRankGhost::StartParse()
 	if(Parse.m_RunEnd <= Parse.m_RunStart)
 	{
 		m_pParse.reset();
+		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(Localize("Rank ghost: the replay has an invalid run range"));
 		return;
 	}
@@ -888,23 +964,33 @@ void CRankGhost::FinishParse()
 	const int TimeMs = RunTicks * 1000 / SERVER_TICK_SPEED;
 	if(!Parse.m_FoundCharacter || NumTicks < MIN_PATH_TICKS || TimeMs <= 0)
 	{
+		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(Localize("Rank ghost: could not extract the runner's path from the replay"));
 		return;
 	}
 
 	// 按 ghost 文件格式写出，与本地录制 ghost 一致
-	CGhostFileWriter Writer;
-	if(!Writer.Open(Storage(), m_aGhostStoragePath, Parse.m_aMapName, Parse.m_MapSha256, Parse.m_aOwner, NumTicks, TimeMs))
+	const int StartTick = 0;
+	char aTempGhostPath[IO_MAX_PATH_LENGTH];
+	str_format(aTempGhostPath, sizeof(aTempGhostPath), "%s.tmp", m_aGhostStoragePath);
+	Storage()->RemoveFile(aTempGhostPath, IStorage::TYPE_SAVE);
+	CGhostFileWriter TempWriter;
+	if(!TempWriter.Open(Storage(), aTempGhostPath, Parse.m_aMapName, Parse.m_MapSha256, Parse.m_aOwner, NumTicks, TimeMs))
 	{
 		Fail(Localize("Rank ghost: failed to write the ghost file"));
 		return;
 	}
-	const int StartTick = 0;
-	Writer.WriteData(GHOSTDATA_TYPE_START_TICK, &StartTick, sizeof(int));
-	Writer.WriteData(GHOSTDATA_TYPE_SKIN, &Parse.m_Skin, sizeof(CGhostSkin));
+	bool WriteOk = TempWriter.WriteData(GHOSTDATA_TYPE_START_TICK, &StartTick, sizeof(int));
+	WriteOk = WriteOk && TempWriter.WriteData(GHOSTDATA_TYPE_SKIN, &Parse.m_Skin, sizeof(CGhostSkin));
 	for(const CGhostCharacter &Char : Parse.m_vPath)
-		Writer.WriteData(GHOSTDATA_TYPE_CHARACTER, &Char, sizeof(CGhostCharacter));
-	Writer.Close();
+		WriteOk = WriteOk && TempWriter.WriteData(GHOSTDATA_TYPE_CHARACTER, &Char, sizeof(CGhostCharacter));
+	WriteOk = TempWriter.Close() && WriteOk;
+	if(!WriteOk || !Storage()->RenameFile(aTempGhostPath, m_aGhostStoragePath, IStorage::TYPE_SAVE))
+	{
+		Storage()->RemoveFile(aTempGhostPath, IStorage::TYPE_SAVE);
+		Fail(Localize("Rank ghost: failed to write the ghost file"));
+		return;
+	}
 
 	if(!LoadGhostFile(m_aGhostStoragePath))
 	{
@@ -940,7 +1026,9 @@ void CRankGhost::UnloadGhost()
 {
 	m_LastAlignedRaceTick = -1;
 	if(m_LoadedSlot < 0)
+	{
 		return;
+	}
 	GameClient()->m_Ghost.Unload(m_LoadedSlot);
 	m_LoadedSlot = -1;
 }

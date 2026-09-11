@@ -30,7 +30,11 @@ public:
 
 	void OnConsoleInit() override;
 	void OnUpdate() override;
+	void OnMapLoad() override;
 	void OnReset() override;
+	void OnGhostsUnloaded();
+	void OnGhostLoaded(const char *pStoragePath, int Slot);
+	void OnGhostUnloaded(int Slot);
 
 	// 供菜单按钮调用：请求当前地图的官方 rank 影子
 	void RequestCurrentMapGhost(int Rank = 1);
@@ -81,6 +85,7 @@ private:
 	// 索引
 	std::vector<SEntry> m_vEntries;
 	bool m_ManifestLoaded = false;
+	int64_t m_ManifestLoadedAt = 0;
 	std::shared_ptr<IHttpRequest> m_pManifestRequest;
 
 	// 当前阶段输入
