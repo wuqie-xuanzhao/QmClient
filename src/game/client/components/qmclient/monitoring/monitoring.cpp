@@ -971,14 +971,16 @@ void CQmMonitoring::RenderHeader(CUIRect Rect) const
 	const float SummaryFontSize = 22.0f * UiScale;
 	const float DetailFontSize = 15.0f * UiScale;
 	const float BadgeFontSize = 14.0f * UiScale;
-	const float SummaryHeight = 26.0f * UiScale;
 	const float RightColumnWidth = 118.0f * UiScale;
 	const float BadgeHeight = 24.0f * UiScale;
 
-	CUIRect Left, Right, SummaryRect, DetailRect, BadgeRect;
+	CUIRect Left, Right, LineRect, SummaryRect, SeparatorRect, DetailRect, BadgeRect;
 	Rect.VSplitRight(RightColumnWidth, &Left, &Right);
-	Left.HSplitTop(SummaryHeight, &SummaryRect, &DetailRect);
+	Left.VSplitLeft(TextRender()->TextWidth(SummaryFontSize, Localize(m_Snapshot.m_Verdict.m_pSummary)) + 8.0f * UiScale, &SummaryRect, &LineRect);
+	LineRect.VSplitLeft(12.0f * UiScale, &SeparatorRect, &LineRect);
+	LineRect.VSplitLeft(TextRender()->TextWidth(DetailFontSize, Localize(m_Snapshot.m_Verdict.m_pDetail)) + 8.0f * UiScale, &DetailRect, &LineRect);
 	Ui()->DoLabel(&SummaryRect, Localize(m_Snapshot.m_Verdict.m_pSummary), SummaryFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&SeparatorRect, "·", DetailFontSize, TEXTALIGN_MC);
 	Ui()->DoLabel(&DetailRect, Localize(m_Snapshot.m_Verdict.m_pDetail), DetailFontSize, TEXTALIGN_ML);
 	Right.HSplitTop(BadgeHeight, &BadgeRect, nullptr);
 	BadgeRect.Draw(GradeBadgeColor(m_Snapshot.m_Verdict.m_Grade), IGraphics::CORNER_ALL, BadgeRect.h / 2.0f);
@@ -1271,13 +1273,13 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 	const float LabelFontSize = 13.0f * UiScale;
 	const float ValueFontSize = 13.0f * UiScale;
 	const float CornerRadius = 8.0f * UiScale;
-	const float RowHeight = 16.0f * UiScale;
 
 	DrawSurface(Rect, SURFACE_BG, CornerRadius);
 
 	CUIRect Inner, Left, Right;
 	Rect.Margin(Margin, &Inner);
 	Inner.VSplitMid(&Left, &Right, Gap);
+	const float RowHeight = std::clamp((Inner.h - RowGap * 5.0f) / 6.0f, 14.0f * UiScale, 20.0f * UiScale);
 
 	struct SDetailRow
 	{
@@ -1290,11 +1292,11 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 	char aPredictionLeadBuf[32];
 	char aPredictionJitterBuf[32];
 	char aSnapshotGapBuf[32];
-	char aSnapshotRateBuf[64];
 	char aSnapshotTickGapBuf[32];
-	char aSnapshotPayloadBuf[32];
 	char aFrameP95Buf[32];
-	char aFrameQualityBuf[96];
+	char aFrameP99Buf[32];
+	char aFpsLowBuf[32];
+	char aLongFrameBuf[32];
 	char aVitalResendBuf[32];
 
 	FormatTickPairValue(aTickBuf, sizeof(aTickBuf), m_Snapshot.m_Performance.m_GameTick, m_Snapshot.m_Performance.m_PredictedTick);
@@ -1302,32 +1304,26 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 	FormatMetricValue(aPredictionLeadBuf, sizeof(aPredictionLeadBuf), "ms", m_Snapshot.m_Network.m_PredictionLeadMs, 0);
 	FormatMetricValue(aPredictionJitterBuf, sizeof(aPredictionJitterBuf), "ms", m_Snapshot.m_Network.m_PredictionJitterMs, 0);
 	FormatMetricValue(aSnapshotGapBuf, sizeof(aSnapshotGapBuf), "ms", m_Snapshot.m_Network.m_SnapshotGapMs, 0);
-	if(m_Snapshot.m_Network.m_SnapshotRatePerSec < 0.0f || m_Snapshot.m_Network.m_SnapshotPartRatePerSec < 0.0f)
-		str_copy(aSnapshotRateBuf, "--", sizeof(aSnapshotRateBuf));
-	else
-		str_format(aSnapshotRateBuf, sizeof(aSnapshotRateBuf), "%.1f snap/s %.1f part/s", m_Snapshot.m_Network.m_SnapshotRatePerSec, m_Snapshot.m_Network.m_SnapshotPartRatePerSec);
 	FormatMetricValue(aSnapshotTickGapBuf, sizeof(aSnapshotTickGapBuf), "", (float)m_Snapshot.m_Network.m_SnapshotTickGap, 0);
-	FormatRateValue(aSnapshotPayloadBuf, sizeof(aSnapshotPayloadBuf), m_Snapshot.m_Network.m_SnapshotPayloadBytesPerSec);
 	FormatMetricValue(aFrameP95Buf, sizeof(aFrameP95Buf), "ms", m_Snapshot.m_Performance.m_FrameTimeP95Ms, 1);
-	if(m_Snapshot.m_Performance.m_FpsOnePctLow < 0.0f || m_Snapshot.m_Performance.m_FrameTimeP99Ms < 0.0f)
-		str_copy(aFrameQualityBuf, "--", sizeof(aFrameQualityBuf));
-	else
-		str_format(aFrameQualityBuf, sizeof(aFrameQualityBuf), "1%% low %.0f FPS / p99 %.1fms / %d long", m_Snapshot.m_Performance.m_FpsOnePctLow, m_Snapshot.m_Performance.m_FrameTimeP99Ms, m_Snapshot.m_Performance.m_LongFrameCount);
+	FormatMetricValue(aFrameP99Buf, sizeof(aFrameP99Buf), "ms", m_Snapshot.m_Performance.m_FrameTimeP99Ms, 1);
+	FormatMetricValue(aFpsLowBuf, sizeof(aFpsLowBuf), " FPS", m_Snapshot.m_Performance.m_FpsOnePctLow, 0);
+	FormatMetricValue(aLongFrameBuf, sizeof(aLongFrameBuf), "", (float)m_Snapshot.m_Performance.m_LongFrameCount, 0);
 	FormatMetricValue(aVitalResendBuf, sizeof(aVitalResendBuf), "", (float)m_Snapshot.m_Network.m_VitalResendCount, 0);
 
 	const SDetailRow aLeftRows[] = {
 		{Localize("Game/predicted tick"), aTickBuf},
 		{Localize("RTT"), aPingBuf},
 		{Localize("Snapshot age"), aSnapshotGapBuf},
-		{Localize("Snapshot rate / parts"), aSnapshotRateBuf},
-		{Localize("Snapshot payload"), aSnapshotPayloadBuf},
-	};
-	const SDetailRow aRightRows[] = {
 		{Localize("Prediction lead"), aPredictionLeadBuf},
 		{Localize("Prediction jitter"), aPredictionJitterBuf},
+	};
+	const SDetailRow aRightRows[] = {
 		{Localize("Snapshot tick gap"), aSnapshotTickGapBuf},
 		{Localize("Frame time p95"), aFrameP95Buf},
-		{Localize("Frame quality"), aFrameQualityBuf},
+		{Localize("Frame time p99"), aFrameP99Buf},
+		{Localize("1% low"), aFpsLowBuf},
+		{Localize("Long frames"), aLongFrameBuf},
 		{Localize("Vital resend queue"), aVitalResendBuf},
 	};
 
@@ -1336,9 +1332,10 @@ void CQmMonitoring::RenderDebugDetails(CUIRect Rect) const
 		{
 			CUIRect RowRect, LabelRect, ValueRect;
 			ColumnRect.HSplitTop(RowHeight, &RowRect, &ColumnRect);
-			RowRect.VSplitLeft(RowRect.w * 0.31f, &LabelRect, &ValueRect);
+			RowRect.VSplitLeft(RowRect.w * 0.48f, &LabelRect, &ValueRect);
+			ValueRect.Margin(4.0f * UiScale, &ValueRect);
 			Ui()->DoLabel(&LabelRect, pRows[i].m_pLabel, LabelFontSize, TEXTALIGN_ML);
-			Ui()->DoLabel(&ValueRect, pRows[i].m_pValue, ValueFontSize, TEXTALIGN_MR);
+			Ui()->DoLabel(&ValueRect, pRows[i].m_pValue, ValueFontSize, TEXTALIGN_ML);
 			if(i + 1 < RowCount)
 				ColumnRect.HSplitTop(RowGap, nullptr, &ColumnRect);
 		}

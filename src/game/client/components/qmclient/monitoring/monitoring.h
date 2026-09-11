@@ -218,12 +218,12 @@ struct SQmMonitoringGraphCache
 };
 
 inline constexpr float QM_MONITORING_PANEL_PADDING = 12.0f;
-inline constexpr float QM_MONITORING_HEADER_HEIGHT = 56.0f;
+inline constexpr float QM_MONITORING_HEADER_HEIGHT = 50.0f;
 inline constexpr float QM_MONITORING_SECTION_GAP = 8.0f;
-inline constexpr float QM_MONITORING_MAIN_GRAPH_HEIGHT = 280.0f;
-inline constexpr float QM_MONITORING_FPS_GRAPH_HEIGHT = 180.0f;
-inline constexpr float QM_MONITORING_PRIMARY_CARDS_HEIGHT = 112.0f;
-inline constexpr float QM_MONITORING_SECONDARY_CARDS_HEIGHT = 150.0f;
+inline constexpr float QM_MONITORING_MAIN_GRAPH_HEIGHT = 220.0f;
+inline constexpr float QM_MONITORING_FPS_GRAPH_HEIGHT = 140.0f;
+inline constexpr float QM_MONITORING_PRIMARY_CARDS_HEIGHT = 96.0f;
+inline constexpr float QM_MONITORING_SECONDARY_CARDS_HEIGHT = 136.0f;
 inline constexpr int QM_MONITORING_HISTORY_CAPACITY = 180;
 
 inline float QmComputeMonitoringUiScale(float ScreenWidth, float ScreenHeight)
@@ -512,11 +512,11 @@ inline SQmMonitoringHudLayout QmComputeMonitoringHudLayout(float ScreenWidth, fl
 	const float Padding = std::round(QM_MONITORING_PANEL_PADDING * UiScale);
 
 	float PanelW = std::round(ScreenWidth * 0.42f);
-	float PanelH = std::round(ScreenHeight * 0.70f);
-	PanelW = std::max(PanelW, 700.0f * UiScale);
-	PanelH = std::max(PanelH, 680.0f * UiScale);
-	PanelW = std::min(PanelW, 900.0f * UiScale);
-	PanelH = std::min(PanelH, 1040.0f * UiScale);
+	float PanelH = std::round(ScreenHeight * 0.78f);
+	PanelW = std::max(PanelW, 620.0f * UiScale);
+	PanelH = std::max(PanelH, 560.0f * UiScale);
+	PanelW = std::min(PanelW, 760.0f * UiScale);
+	PanelH = std::min(PanelH, 860.0f * UiScale);
 	const float PreferredContentHeight = (QM_MONITORING_HEADER_HEIGHT +
 						     QM_MONITORING_SECTION_GAP * 4.0f +
 						     QM_MONITORING_MAIN_GRAPH_HEIGHT +

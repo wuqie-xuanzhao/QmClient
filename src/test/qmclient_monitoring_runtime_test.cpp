@@ -312,12 +312,14 @@ TEST(QmMonitoringRuntimeContract, HistoryStatsIgnoreUnavailableSamples)
 
 TEST(QmMonitoringLayoutContract, HudLayoutPlacesPanelLeftOfGraphColumn)
 {
+	// 紧凑化布局：1600x900 的 UiScale=5/6，面板宽受 760*UiScale 上限约束，
+	// 高受内容高度(674*UiScale+2*Padding)约束；面板右缘对齐 GraphX-GraphSpacing。
 	const SQmMonitoringHudLayout Layout = QmComputeMonitoringHudLayout(1600.0f, 900.0f, 1184.0f, 16.0f);
-	EXPECT_FLOAT_EQ(Layout.m_PanelRect.w, 768.0f);
-	EXPECT_FLOAT_EQ(Layout.m_PanelRect.h, 594.0f);
-	EXPECT_FLOAT_EQ(Layout.m_PanelRect.x, 400.0f);
+	EXPECT_NEAR(Layout.m_PanelRect.w, 633.333f, 0.01f);
+	EXPECT_FLOAT_EQ(Layout.m_PanelRect.h, 582.0f);
+	EXPECT_NEAR(Layout.m_PanelRect.x, 534.667f, 0.01f);
 	EXPECT_FLOAT_EQ(Layout.m_PanelRect.y, 32.0f);
-	EXPECT_FLOAT_EQ(Layout.m_ContentRect.x, 410.0f);
+	EXPECT_NEAR(Layout.m_ContentRect.x, 544.667f, 0.01f);
 	EXPECT_FLOAT_EQ(Layout.m_ContentRect.y, 42.0f);
 }
 
@@ -338,11 +340,13 @@ TEST(QmMonitoringLayoutContract, BodyLayoutPreservesMetricsBudgetOnCompactPanels
 
 TEST(QmMonitoringLayoutContract, HudLayoutUsesLargerPanelOn4kScreens)
 {
+	// 4K 的 UiScale 被 clamp 到 1.8：面板宽 760*1.8=1368，高受内容高度约束 1257，
+	// 仍是 1080p(633x582) 的两倍以上，"更大面板"语义保持。
 	const SQmMonitoringHudLayout Layout = QmComputeMonitoringHudLayout(3840.0f, 2160.0f, 2842.0f, 38.0f);
-	EXPECT_FLOAT_EQ(Layout.m_PanelRect.w, 1843.0f);
-	EXPECT_GT(Layout.m_PanelRect.h, 1400.0f);
+	EXPECT_FLOAT_EQ(Layout.m_PanelRect.w, 1368.0f);
+	EXPECT_GT(Layout.m_PanelRect.h, 1200.0f);
 	EXPECT_LE(Layout.m_PanelRect.y + Layout.m_PanelRect.h, 2160.0f);
-	EXPECT_FLOAT_EQ(Layout.m_ContentRect.x, 983.0f);
+	EXPECT_FLOAT_EQ(Layout.m_ContentRect.x, 1458.0f);
 	EXPECT_FLOAT_EQ(Layout.m_ContentRect.y, 98.0f);
 }
 
