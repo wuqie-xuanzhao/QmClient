@@ -823,10 +823,43 @@ TEST(QmAxiomScoresComponent, KeepsPersistedScoreVisibleWhileRefreshing)
 
 	Scores.EnsureQueried("wolf_test");
 	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	Scores.EnsureQueried("wolf_test");
+	EXPECT_EQ(Http.m_vRequests.size(), 1u);
+	EXPECT_FALSE(Http.Request(0).m_pRequest->Aborted());
 	pResult = Scores.GetResult("wolf_test");
 	ASSERT_NE(pResult, nullptr);
 	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Status, EQmAxiomScoreStatus::READY);
 	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Score.m_Points, 38);
+}
+
+TEST(QmAxiomScoresComponent, DoesNotRestartExpiredModeRequestsWhilePersistedScoreIsVisible)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	const char *pJson = R"({
+		"remote": {"axiom": {"players": [{
+			"name": "wolf_test",
+			"user_id": 5528,
+			"player_name": "wolf_test",
+			"dummy_name": "",
+			"modes": [{"mode": "Gores", "points": 38, "total_play_time": 2, "total_maps_completed": 3, "performance_points": 4, "mileage": 5, "difficulties": []}]
+		}]}}
+	})";
+	json_value *pRoot = JsonParse(pJson, std::strlen(pJson));
+	ASSERT_NE(pRoot, nullptr);
+	Scores.LoadPersistentCache(pRoot);
+	json_value_free(pRoot);
+
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	Http.Request(0).m_pRequest->Complete(SearchResponse("wolf_test"));
+	Scores.OnUpdate();
+	ASSERT_EQ(Http.m_vRequests.size(), 3u);
+
+	Scores.EnsureQueried("wolf_test");
+	EXPECT_EQ(Http.m_vRequests.size(), 3u);
+	EXPECT_FALSE(Http.Request(1).m_pRequest->Aborted());
+	EXPECT_FALSE(Http.Request(2).m_pRequest->Aborted());
 }
 
 TEST(QmAxiomScoresComponent, PersistentCacheRoundTripsThroughStatisticsDocument)
@@ -1069,6 +1102,28 @@ TEST(QmAxiomScoresComponent, SwitchingPlayersCancelsEveryOldRequest)
 	ASSERT_NE(pResultB, nullptr);
 	EXPECT_EQ(pResultB->Mode(EQmAxiomMode::GORES).m_Status, EQmAxiomScoreStatus::NOT_REQUESTED);
 	EXPECT_EQ(pResultB->Mode(EQmAxiomMode::AXRACE).m_Status, EQmAxiomScoreStatus::NOT_REQUESTED);
+}
+
+TEST(QmAxiomScoresComponent, CancelledPlayerQueryUsesBackoffBeforeRestarting)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+
+	Scores.EnsureQueried("player_a");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	Scores.EnsureQueried("player_b");
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+	EXPECT_TRUE(Http.Request(0).m_pRequest->Aborted());
+
+	// 取消不是立即失败重试的理由，避免多个调用方在切换时反复排队同一 URL。
+	Scores.EnsureQueried("player_a");
+	EXPECT_EQ(Http.m_vRequests.size(), 2u);
+	Scores.AdvanceMs(29999);
+	Scores.EnsureQueried("player_a");
+	EXPECT_EQ(Http.m_vRequests.size(), 2u);
+	Scores.AdvanceMs(1);
+	Scores.EnsureQueried("player_a");
+	EXPECT_EQ(Http.m_vRequests.size(), 3u);
 }
 
 TEST(QmAxiomScoresComponent, ResetCancelsAndShutdownClearsCache)
