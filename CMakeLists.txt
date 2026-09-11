@@ -4279,6 +4279,12 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     serverbrowser_test.cpp
     serverinfo_test.cpp
     settings_card_deck_logic_test.cpp
+    settings_resource_jobs_assets_contract_test.cpp
+    settings_resource_jobs_assets_test.cpp
+    settings_resource_jobs_skin_plan_test.cpp
+    settings_resource_jobs_skin_throughput_test.cpp
+    settings_resource_jobs_adaptive_budget_test.cpp
+    settings_resource_jobs_background_test.cpp
     settings_warmup_test.cpp
     skin_transition_test.cpp
     skins_test.cpp
@@ -4286,7 +4292,14 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     windows_test.cpp
     snapshot_test.cpp
     steam_presence_test.cpp
-    str_test.cpp
+    str_search_test.cpp
+    str_utf8_test.cpp
+    str_format_test.cpp
+    str_codec_test.cpp
+    str_copy_test.cpp
+    str_whitespace_test.cpp
+    str_filename_test.cpp
+    str_integer_packing_test.cpp
     strip_path_and_extension_test.cpp
     swap_endian_test.cpp
     teehistorian_test.cpp
