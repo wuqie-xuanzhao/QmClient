@@ -48,18 +48,21 @@ namespace
 		return MulDiv(Value, static_cast<int>(Dpi), 96);
 	}
 
-	void UpdateWindowCornerRegion(HWND Window, unsigned Dpi)
+	bool UpdateWindowCornerRegion(HWND Window, unsigned Dpi)
 	{
 		RECT ClientRect{};
 		if(Window == nullptr || !GetClientRect(Window, &ClientRect) || ClientRect.right <= 0 || ClientRect.bottom <= 0)
-			return;
-		const int Radius = ScaleDip(24, Dpi);
+			return false;
+		const int Radius = std::max(ScaleDip(28, Dpi), 16);
 		HRGN Region = CreateRoundRectRgn(0, 0, ClientRect.right + 1, ClientRect.bottom + 1, Radius, Radius);
-		if(Region != nullptr)
+		if(Region == nullptr)
+			return false;
+		if(SetWindowRgn(Window, Region, TRUE) == 0)
 		{
-			if(SetWindowRgn(Window, Region, TRUE) == 0)
-				DeleteObject(Region);
+			DeleteObject(Region);
+			return false;
 		}
+		return true;
 	}
 
 	unsigned GetWindowDpiCompat(HWND Window)
@@ -1054,6 +1057,8 @@ std::optional<int> ShowQmFestiveMessageBox(const IGraphics::CMessageBox &Message
 	State.m_FireworksFrame = 0;
 	SetTimer(State.m_Window, gs_FireworksTimerId, gs_FireworksTimerPeriodMs, nullptr);
 	ShowWindow(State.m_Window, SW_SHOWNORMAL);
+	// 首次显示后再应用一次，确保 WM_SIZE/工作区裁剪已经给出最终客户区尺寸。
+	UpdateWindowCornerRegion(State.m_Window, State.m_Dpi);
 	// 崩溃报告通常由已经退出或失去前台资格的客户端进程启动。
 	// 先短暂置顶再恢复普通层级，确保窗口初次出现即可接收鼠标输入。
 	SetWindowPos(State.m_Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
