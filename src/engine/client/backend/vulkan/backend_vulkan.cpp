@@ -66,9 +66,9 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	[[nodiscard]] bool FrameProfilingEnabled()
 	{
 #if defined(CONF_PLATFORM_MACOS)
-		return IsVerbose() || g_Config.m_QmMacosGraphicsDiagnostics != 0;
+		return IsVerbose() || g_Config.m_QmMacosGraphicsDiagnostics != 0 || g_Config.m_QmGraphicsTrace != 0;
 #else
-		return IsVerbose();
+		return IsVerbose() || g_Config.m_QmGraphicsTrace != 0;
 #endif
 	}
 
@@ -743,9 +743,9 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	{
 		vec2 m_TexelOffset;
 		int32_t m_Radius;
-		int32_t m_Padding;
+		int32_t m_Mode;
 		std::array<float, IGraphics::GAUSSIAN_BLUR_MAX_RADIUS + 1> m_aWeights;
-		float m_EndPadding;
+		int32_t m_Pass;
 	};
 	static_assert(sizeof(SUniformGaussianBlur) == 64);
 
@@ -1044,6 +1044,8 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 		std::chrono::nanoseconds m_CPUMainCommandRecordTime = 0ns;
 		std::chrono::nanoseconds m_CPUThreadCommandRecordTime = 0ns;
 		std::chrono::nanoseconds m_CPUFenceWaitTime = 0ns;
+		std::chrono::nanoseconds m_CPUAcquireTime = 0ns;
+		std::chrono::nanoseconds m_CPUPresentTime = 0ns;
 		std::chrono::nanoseconds m_CPUQueueSubmitTime = 0ns;
 		std::chrono::nanoseconds m_CPUQueueWaitTime = 0ns;
 		std::chrono::nanoseconds m_CPUDeviceWaitTime = 0ns;
@@ -1113,6 +1115,8 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 				m_HasGPUFrameTime = true;
 			}
 			m_CPUFenceWaitTime += Other.m_CPUFenceWaitTime;
+			m_CPUAcquireTime += Other.m_CPUAcquireTime;
+			m_CPUPresentTime += Other.m_CPUPresentTime;
 			m_CPUQueueSubmitTime += Other.m_CPUQueueSubmitTime;
 		}
 	};
@@ -1146,6 +1150,7 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	bool m_FrameProfilingActive = false;
 	uint32_t m_RequestedApiVersion = VK_API_VERSION_1_1;
 	uint32_t m_EffectiveApiVersion = VK_API_VERSION_1_1;
+	VkPresentModeKHR m_PresentMode = VK_PRESENT_MODE_FIFO_KHR;
 	VkResult m_LastVulkanInstanceCreateResult = VK_SUCCESS;
 	bool m_RequiredVulkanVersionUnavailable = false;
 
@@ -2899,7 +2904,10 @@ protected:
 
 		m_LastPresentedSwapChainImageIndex = m_CurImageIndex;
 
+		auto PresentStart = m_FrameProfilingActive ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		VkResult QueuePresentRes = m_pfnQueuePresentKHR(m_VKPresentQueue, &PresentInfo);
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUPresentTime += time_get_nanoseconds() - PresentStart;
 		if(QueuePresentRes != VK_SUCCESS && QueuePresentRes != VK_SUBOPTIMAL_KHR)
 		{
 			const char *pCritErrorMsg = CheckVulkanCriticalError(QueuePresentRes);
@@ -2936,7 +2944,10 @@ protected:
 				return false;
 		}
 
+		auto AcquireStart = m_FrameProfilingActive ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		auto AcqResult = m_pfnAcquireNextImageKHR(m_VKDevice, m_VKSwapChain, std::numeric_limits<uint64_t>::max(), m_AcquireImageSemaphore, VK_NULL_HANDLE, &m_CurImageIndex);
+		if(m_FrameProfilingActive)
+			m_FrameProfileStats.m_CPUAcquireTime += time_get_nanoseconds() - AcquireStart;
 		if(AcqResult != VK_SUCCESS)
 		{
 			if(AcqResult == VK_ERROR_OUT_OF_DATE_KHR || m_RecreateSwapChain)
@@ -4755,7 +4766,10 @@ public:
 
 			char aBuff[256];
 			str_copy(pVendorName, pVendorNameStr, gs_GpuInfoStringSize);
-			str_format(pVersionName, gs_GpuInfoStringSize, "Vulkan %d.%d.%d (driver: %s)", DevApiMajor, DevApiMinor, DevApiPatch, GetDriverVersion(aBuff, DeviceProp.driverVersion, DeviceProp.vendorID));
+			const char *pDriverVersion = GetDriverVersion(aBuff, DeviceProp.driverVersion, DeviceProp.vendorID);
+			str_format(pVersionName, gs_GpuInfoStringSize, "Vulkan %d.%d.%d (driver: %s)", DevApiMajor, DevApiMinor, DevApiPatch, pDriverVersion);
+			if(g_Config.m_QmGraphicsTrace != 0)
+				dbg_msg("perf/graphics/vulkan", "event=device vendor=%s vendor_id=%u device=%s driver=%s api=%d.%d.%d", pVendorNameStr, DeviceProp.vendorID, DeviceProp.deviceName, pDriverVersion, DevApiMajor, DevApiMinor, DevApiPatch);
 			log_info("gfx/vulkan", "effective Vulkan API %d.%d.%d (instance %u.%u.%u, device %d.%d.%d)", EffectiveVersion.m_Major, EffectiveVersion.m_Minor, EffectiveVersion.m_Patch, VK_API_VERSION_MAJOR(m_RequestedApiVersion), VK_API_VERSION_MINOR(m_RequestedApiVersion), VK_API_VERSION_PATCH(m_RequestedApiVersion), DevApiMajor, DevApiMinor, DevApiPatch);
 
 			// get important device limits
@@ -5129,6 +5143,7 @@ public:
 		VkPresentModeKHR PresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 		if(!GetPresentationMode(PresentMode))
 			return false;
+		m_PresentMode = PresentMode;
 
 		uint32_t SwapImgCount = GetNumberOfSwapImages(VKSurfCap);
 
@@ -7886,21 +7901,27 @@ public:
 
 	void LogFrameProfileStats()
 	{
-		if(!FrameProfilingEnabled() || m_CurFrame - m_LastFrameProfileLogFrame < 120)
+		if(!FrameProfilingEnabled())
+			return;
+		SFrameProfileStats Stats = CurrentFrameProfileStats();
+		const bool PeriodicSummary = m_CurFrame - m_LastFrameProfileLogFrame >= 120;
+		const bool SlowFrame = g_Config.m_QmGraphicsTrace >= 2 && Stats.m_CPUFrameTime >= std::chrono::milliseconds(8);
+		if(!PeriodicSummary && !SlowFrame)
 			return;
 
-		m_LastFrameProfileLogFrame = m_CurFrame;
-		SFrameProfileStats Stats = CurrentFrameProfileStats();
-		const char *pProfileLogSystem = g_Config.m_QmMacosGraphicsDiagnostics != 0 ? "perf/autodiag_vulkan" : "vulkan";
+		if(PeriodicSummary)
+			m_LastFrameProfileLogFrame = m_CurFrame;
+		const char *pProfileLogSystem = g_Config.m_QmMacosGraphicsDiagnostics != 0 ? "perf/autodiag_vulkan" : "perf/graphics/vulkan";
 		dbg_msg(pProfileLogSystem,
-			"profile frame=%" PRIu64 " cmds=%" PRIu64 " render_cmds=%" PRIu64 " prepare=%" PRIu64 " main_record=%" PRIu64 " thread_record=%" PRIu64 " estimated_draws=%" PRIu64 " draws=%" PRIu64 " "
+			"profile kind=%s trace=%d frame=%" PRIu64 " api=%u.%u.%u present_mode=%d swap_images=%u cmds=%" PRIu64 " render_cmds=%" PRIu64 " prepare=%" PRIu64 " main_record=%" PRIu64 " thread_record=%" PRIu64 " estimated_draws=%" PRIu64 " draws=%" PRIu64 " "
 			"pipeline=%" PRIu64 "/%" PRIu64 " vb=%" PRIu64 "/%" PRIu64 " ib=%" PRIu64 "/%" PRIu64 " dynamic=%" PRIu64 "/%" PRIu64 " descriptors=%" PRIu64 "/%" PRIu64 " "
 			"desc_pool=%" PRIu64 " desc_alloc=%" PRIu64 " desc_update=%" PRIu64 " stream=%" PRIu64 "(%" PRIu64 " KiB) stream_alloc=%" PRIu64 "(%" PRIu64 " KiB) staging=%" PRIu64 "(%" PRIu64 " KiB) staging_alloc=%" PRIu64 "(%" PRIu64 " KiB) "
 			"flush=%" PRIu64 "/%" PRIu64 " invalidate=%" PRIu64 "/%" PRIu64 " readback=%" PRIu64 "(%" PRIu64 " KiB) "
 			"barriers=%" PRIu64 "/%" PRIu64 " submits=%" PRIu64 "/%" PRIu64 " waits=%" PRIu64 " queue_waits=%" PRIu64 " device_waits=%" PRIu64 " "
 			"text_prepare=%" PRIu64 " text_bad_container=%" PRIu64 " text_bad_buffer_object=%" PRIu64 " text_missing_buffer=%" PRIu64 " text_bad_texture=%" PRIu64 " text_missing_descriptor=%" PRIu64 " text_zero_draw=%" PRIu64 " "
-			"cpu=%" PRId64 "us gpu_last=%" PRId64 "us gpu_valid=%d prepare=%" PRId64 "us main_record=%" PRId64 "us thread_record=%" PRId64 "us wait=%" PRId64 "us submit=%" PRId64 "us queue_wait=%" PRId64 "us device_wait=%" PRId64 "us invalidate=%" PRId64 "us",
-			m_CurFrame,
+			"cpu=%" PRId64 "us gpu_last=%" PRId64 "us gpu_valid=%d prepare=%" PRId64 "us main_record=%" PRId64 "us thread_record=%" PRId64 "us acquire=%" PRId64 "us fence_wait=%" PRId64 "us submit=%" PRId64 "us present=%" PRId64 "us queue_wait=%" PRId64 "us device_wait=%" PRId64 "us invalidate=%" PRId64 "us",
+			PeriodicSummary ? "summary" : "slow_frame", g_Config.m_QmGraphicsTrace, m_CurFrame,
+			VK_API_VERSION_MAJOR(m_EffectiveApiVersion), VK_API_VERSION_MINOR(m_EffectiveApiVersion), VK_API_VERSION_PATCH(m_EffectiveApiVersion), (int)m_PresentMode, m_SwapChainImageCount,
 			Stats.m_CommandCount, Stats.m_RenderCommands,
 			Stats.m_CommandPrepares, Stats.m_MainCommandRecords, Stats.m_ThreadCommandRecords,
 			Stats.m_EstimatedRenderCallCount, Stats.m_DrawCalls,
@@ -7928,8 +7949,10 @@ public:
 			Stats.m_CPUCommandPrepareTime.count() / 1000,
 			Stats.m_CPUMainCommandRecordTime.count() / 1000,
 			Stats.m_CPUThreadCommandRecordTime.count() / 1000,
+			Stats.m_CPUAcquireTime.count() / 1000,
 			Stats.m_CPUFenceWaitTime.count() / 1000,
 			Stats.m_CPUQueueSubmitTime.count() / 1000,
+			Stats.m_CPUPresentTime.count() / 1000,
 			Stats.m_CPUQueueWaitTime.count() / 1000,
 			Stats.m_CPUDeviceWaitTime.count() / 1000,
 			Stats.m_CPUInvalidateTime.count() / 1000);
@@ -8904,8 +8927,10 @@ public:
 			return true;
 		SRenderTarget &Source = m_vRenderTargets[pCommand->m_SourceTargetId];
 		const SRenderTarget &Destination = m_vRenderTargets[m_ActiveRenderTargetId];
+		const bool DualKawase = pCommand->m_Mode == IGraphics::EBlurMode::DUAL;
 		if(Source.m_Image == VK_NULL_HANDLE || Source.m_Layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ||
-			Source.m_Width != Destination.m_Width || Source.m_Height != Destination.m_Height ||
+			(!DualKawase && (Source.m_Width != Destination.m_Width || Source.m_Height != Destination.m_Height)) ||
+			(DualKawase && (pCommand->m_Upsample ? (Source.m_Width >= Destination.m_Width || Source.m_Height >= Destination.m_Height) : (Source.m_Width <= Destination.m_Width || Source.m_Height <= Destination.m_Height))) ||
 			Source.m_aVKStandardTexturedDescrSets[VULKAN_BACKEND_ADDRESS_MODE_CLAMP_EDGES].m_Descriptor == VK_NULL_HANDLE)
 			return true;
 
@@ -8947,11 +8972,14 @@ public:
 			&Source.m_aVKStandardTexturedDescrSets[VULKAN_BACKEND_ADDRESS_MODE_CLAMP_EDGES].m_Descriptor, 0, nullptr);
 
 		SUniformGaussianBlur PushConstants{};
+		const bool Gaussian = pCommand->m_Mode == IGraphics::EBlurMode::GAUSSIAN;
 		PushConstants.m_TexelOffset = vec2(
-			pCommand->m_Horizontal ? 1.0f / Source.m_Width : 0.0f,
-			pCommand->m_Horizontal ? 0.0f : 1.0f / Source.m_Height);
+			Gaussian && !pCommand->m_Horizontal ? 0.0f : 1.0f / Source.m_Width,
+			Gaussian && pCommand->m_Horizontal ? 0.0f : 1.0f / Source.m_Height);
 		PushConstants.m_Radius = pCommand->m_Radius;
+		PushConstants.m_Mode = static_cast<int32_t>(pCommand->m_Mode);
 		PushConstants.m_aWeights = pCommand->m_aWeights;
+		PushConstants.m_Pass = pCommand->m_Pass;
 		vkCmdPushConstants(CommandBuffer, PipeLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants), &PushConstants);
 		vkCmdDrawIndexed(CommandBuffer, 6, 1, 0, 0, 0);
 		ResetDrawCommandState(0);

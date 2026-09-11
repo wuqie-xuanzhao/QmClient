@@ -890,7 +890,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 		bool Active = GameClient()->m_Camera.m_AutoSpecCamera && GameClient()->m_Camera.SpectatingPlayer() && GameClient()->m_Camera.CanUseAutoSpecCamera();
 		bool Enabled = g_Config.m_ClSpecAutoSync;
-		if(Ui()->DoButton_FontIcon(&s_AutoCameraButton, FONT_ICON_CAMERA, !Active, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, Enabled))
+		if(Ui()->DoButton_QmIcon(&s_AutoCameraButton, EQmIcon::CAMERA, FONT_ICON_CAMERA, !Active, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, Enabled))
 		{
 			GameClient()->m_Camera.ToggleAutoSpecCamera();
 		}
@@ -1424,6 +1424,8 @@ void CMenus::DrainSnapshotTextContainers()
 
 void CMenus::PrepareIngameServerInfoTextRuntime(const CUIRect *pMainView)
 {
+	EnsureSettingsMenuTextPlanReadyForVisible();
+	PrebuildIngameEscTextPoolBeforeOpen(16);
 	CUIRect MainView;
 	if(pMainView != nullptr)
 	{
@@ -1710,15 +1712,6 @@ bool CMenus::RenderIngameMotdStableParagraphCache(CUIRect Motd, float FontSize, 
 	return false;
 }
 
-void CMenus::RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize)
-{
-	CTextCursor Cursor;
-	Cursor.SetPosition(vec2(MotdTextArea.x, MotdTextArea.y));
-	Cursor.m_FontSize = FontSize;
-	Cursor.m_LineWidth = MotdTextArea.w;
-	TextRender()->TextEx(&Cursor, GameClient()->m_Motd.ServerMotd(), -1);
-}
-
 void CMenus::DrainIngameUiSnapshotTextRuntime()
 {
 	DrainSnapshotTextContainers();
@@ -1735,6 +1728,8 @@ void CMenus::DrainIngameUiTextRuntime(bool AllowCurrentFrame)
 
 void CMenus::RenderServerInfo(CUIRect MainView)
 {
+	const bool PreviousServerInfoRenderActive = m_IngameServerInfoRenderActive;
+	m_IngameServerInfoRenderActive = true;
 	const float FontSizeTitle = 32.0f;
 	const float FontSizeBody = 20.0f;
 	const float ServerInfoLabelWidth = 132.0f;
@@ -1988,6 +1983,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	}
 
 	RenderServerInfoMotd(Motd);
+	m_IngameServerInfoRenderActive = PreviousServerInfoRenderActive;
 }
 
 void CMenus::RenderServerInfoMotd(CUIRect Motd)
@@ -2029,8 +2025,8 @@ void CMenus::RenderServerInfoMotd(CUIRect Motd)
 	else
 	{
 		const bool RenderedMotdParagraph = RenderIngameMotdStableParagraphCache(Motd, MotdFontSize, MotdTextArea);
-		if(!RenderedMotdParagraph)
-			RenderIngameMotdFallbackText(MotdTextArea, MotdFontSize);
+		// MOTD 是可延迟通知：未完成时保持旧的完整容器，首次加载则留空，
+		// 不额外光栅化占位文本，也不回退到整段同步 TextEx。
 		if(!RenderedMotdParagraph && QmPerfEnabled())
 		{
 			char aPayload[160];
@@ -2176,7 +2172,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)
 			CUIRect Icon;
 			Label.VSplitLeft(Label.h, &Icon, &Label);
 			Icon.Margin(2.0f, &Icon);
-			RenderFontIcon(Icon, FONT_ICON_FLAG_CHECKERED, 13.0f, TEXTALIGN_MC);
+			RenderFontIcon_QmIcon(Icon, EQmIcon::FLAG_CHECKERED, FONT_ICON_FLAG_CHECKERED, 13.0f, TEXTALIGN_MC);
 		}
 
 		if(IsFavorite)
@@ -2802,7 +2798,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 
 	TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 	static CButtonContainer s_InternetButton;
-	if(DoMenuTabV2(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, g_Config.m_UiPage == PAGE_INTERNET, &Button, IGraphics::CORNER_NONE))
+	if(DoMenuTabV2_QmIcon(&s_InternetButton, EQmIcon::EARTH_AMERICAS, FONT_ICON_EARTH_AMERICAS, g_Config.m_UiPage == PAGE_INTERNET, &Button, IGraphics::CORNER_NONE))
 	{
 		NewPage = PAGE_INTERNET;
 	}
@@ -2810,7 +2806,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 
 	TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 	static CButtonContainer s_LanButton;
-	if(DoMenuTabV2(&s_LanButton, FONT_ICON_NETWORK_WIRED, g_Config.m_UiPage == PAGE_LAN, &Button, IGraphics::CORNER_NONE))
+	if(DoMenuTabV2_QmIcon(&s_LanButton, EQmIcon::NETWORK_WIRED, FONT_ICON_NETWORK_WIRED, g_Config.m_UiPage == PAGE_LAN, &Button, IGraphics::CORNER_NONE))
 	{
 		NewPage = PAGE_LAN;
 	}
@@ -2818,7 +2814,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 
 	TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 	static CButtonContainer s_FavoritesButton;
-	if(DoMenuTabV2(&s_FavoritesButton, FONT_ICON_STAR, g_Config.m_UiPage == PAGE_FAVORITES, &Button, IGraphics::CORNER_NONE))
+	if(DoMenuTabV2_QmIcon(&s_FavoritesButton, EQmIcon::STAR, FONT_ICON_STAR, g_Config.m_UiPage == PAGE_FAVORITES, &Button, IGraphics::CORNER_NONE))
 	{
 		NewPage = PAGE_FAVORITES;
 	}
@@ -2843,7 +2839,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 		TextRender()->TextColor(FavoriteMapsIconColor);
 		TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ui()->DoLabel(&FavoriteMapsIconRect, FONT_ICON_BOOKMARK, FavoriteMapsIconSide, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&FavoriteMapsIconRect, EQmIcon::BOOKMARK, FONT_ICON_BOOKMARK, FavoriteMapsIconSide, TEXTALIGN_MC);
 		TextRender()->SetRenderFlags(OldFlags);
 		TextRender()->SetFontPreset(OldPreset);
 		TextRender()->TextColor(OldTextColor);
@@ -2903,7 +2899,7 @@ void CMenus::RenderInGameNetwork(CUIRect MainView)
 	{
 		TabBar.VSplitLeft(75.0f, &Button, &TabBar);
 		const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-		if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, g_Config.m_UiPage == Page, &Button, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, m_CommunityIcons.Find(pCommunity->Id())))
+		if(DoMenuTabV2_QmIcon(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], EQmIcon::ELLIPSIS, FONT_ICON_ELLIPSIS, g_Config.m_UiPage == Page, &Button, IGraphics::CORNER_NONE, nullptr, nullptr, nullptr, m_CommunityIcons.Find(pCommunity->Id())))
 		{
 			NewPage = Page;
 		}
@@ -2931,11 +2927,15 @@ int CMenus::GhostlistFetchCallback(const CFsFileInfo *pInfo, int IsDir, int Stor
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	const char *pMap = pSelf->Client()->GetCurrentMap();
-	if(IsDir || !str_endswith(pInfo->m_pName, ".gho") || !str_startswith(pInfo->m_pName, pMap))
+	// QmClient: rank 影子位于独立子目录，文件名不要求以地图名开头
+	// （地图匹配由下面的 GetGhostInfo 完成）；普通影子维持原有前缀规则。
+	if(IsDir || !str_endswith(pInfo->m_pName, ".gho"))
+		return 0;
+	if(!pSelf->m_GhostScanIsRankDir && !str_startswith(pInfo->m_pName, pMap))
 		return 0;
 
 	char aFilename[IO_MAX_PATH_LENGTH];
-	str_format(aFilename, sizeof(aFilename), "%s/%s", pSelf->GameClient()->m_Ghost.GetGhostDir(), pInfo->m_pName);
+	str_format(aFilename, sizeof(aFilename), "%s/%s", pSelf->m_aGhostScanDir, pInfo->m_pName);
 
 	CGhostInfo Info;
 	if(!pSelf->GameClient()->m_Ghost.GhostLoader()->GetGhostInfo(aFilename, &Info, pMap, pSelf->GameClient()->Map()->Sha256(), pSelf->GameClient()->Map()->Crc()))
@@ -2944,6 +2944,7 @@ int CMenus::GhostlistFetchCallback(const CFsFileInfo *pInfo, int IsDir, int Stor
 	CGhostItem Item;
 	str_copy(Item.m_aFilename, aFilename);
 	str_copy(Item.m_aPlayer, Info.m_aOwner);
+	Item.m_RankGhost = pSelf->m_GhostScanIsRankDir;
 	Item.m_Date = pInfo->m_TimeModified;
 	Item.m_Time = Info.m_Time;
 	if(Item.m_Time > 0)
@@ -2961,7 +2962,19 @@ void CMenus::GhostlistPopulate()
 {
 	m_vGhosts.clear();
 	m_GhostPopulateStartTime = time_get_nanoseconds();
-	Storage()->ListDirectoryInfo(IStorage::TYPE_ALL, GameClient()->m_Ghost.GetGhostDir(), GhostlistFetchCallback, this);
+	const char *pGhostDir = GameClient()->m_Ghost.GetGhostDir();
+	str_copy(m_aGhostScanDir, pGhostDir);
+	m_GhostScanIsRankDir = false;
+	Storage()->ListDirectoryInfo(IStorage::TYPE_ALL, pGhostDir, GhostlistFetchCallback, this);
+	// QmClient: rank 影子存放在独立子目录，一并列出并在列表中标记
+	char aRankGhostDir[IO_MAX_PATH_LENGTH];
+	str_format(aRankGhostDir, sizeof(aRankGhostDir), "%s/%s", pGhostDir, CRankGhost::GHOST_SUBDIR);
+	if(Storage()->FolderExists(aRankGhostDir, IStorage::TYPE_SAVE))
+	{
+		str_copy(m_aGhostScanDir, aRankGhostDir);
+		m_GhostScanIsRankDir = true;
+		Storage()->ListDirectoryInfo(IStorage::TYPE_ALL, aRankGhostDir, GhostlistFetchCallback, this);
+	}
 	SortGhostlist();
 
 	CGhostItem *pOwnGhost = nullptr;
@@ -3144,6 +3157,8 @@ void CMenus::RenderGhost(CUIRect MainView)
 		ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f);
 		if(pGhost->m_Own)
 			Color = color_cast<ColorRGBA>(ColorHSLA(0.33f, 1.0f, 0.75f));
+		else if(pGhost->m_RankGhost)
+			Color = color_cast<ColorRGBA>(ColorHSLA(0.12f, 1.0f, 0.7f)); // 官方 rank 影子用金色区分
 
 		if(pGhost->m_Failed)
 			Color = ColorRGBA(0.6f, 0.6f, 0.6f, 1.0f);
@@ -3176,7 +3191,15 @@ void CMenus::RenderGhost(CUIRect MainView)
 			}
 			else if(Id == COL_NAME)
 			{
-				Ui()->DoLabel(&Button, pGhost->m_aPlayer, 12.0f, TEXTALIGN_ML);
+				// QmClient: 官方 rank 影子加 [Rank] 标签，便于和玩家自己的影子区分
+				if(pGhost->m_RankGhost)
+				{
+					char aNameBuf[MAX_NAME_LENGTH + 16];
+					str_format(aNameBuf, sizeof(aNameBuf), "[Rank] %s", pGhost->m_aPlayer);
+					Ui()->DoLabel(&Button, aNameBuf, 12.0f, TEXTALIGN_ML);
+				}
+				else
+					Ui()->DoLabel(&Button, pGhost->m_aPlayer, 12.0f, TEXTALIGN_ML);
 			}
 			else if(Id == COL_TIME)
 			{
@@ -3207,7 +3230,7 @@ void CMenus::RenderGhost(CUIRect MainView)
 	static CButtonContainer s_DirectoryButton;
 	static CButtonContainer s_ActivateAll;
 
-	if(Ui()->DoButton_FontIcon(&s_ReloadButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &Button, BUTTONFLAG_LEFT) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
+	if(Ui()->DoButton_QmIcon(&s_ReloadButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &Button, BUTTONFLAG_LEFT) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
 	{
 		GameClient()->m_Ghost.UnloadAll();
 		GhostlistPopulate();
@@ -3221,6 +3244,18 @@ void CMenus::RenderGhost(CUIRect MainView)
 		Storage()->GetCompletePath(IStorage::TYPE_SAVE, "ghosts", aBuf, sizeof(aBuf));
 		Storage()->CreateFolder("ghosts", IStorage::TYPE_SAVE);
 		Client()->ViewFile(aBuf);
+	}
+
+	// QmClient: 下载官方预生成的当前地图 rank 影子（ddnet.org/watch）
+	if(GameClient()->m_GameInfo.m_Race)
+	{
+		Status.VSplitLeft(5.0f, &Button, &Status);
+		Status.VSplitLeft(160.0f, &Button, &Status);
+		static CButtonContainer s_RankGhostButton;
+		if(DoIngameMenuButton(PAGE_GHOST, "ingame-ghost-download-rank", &s_RankGhostButton, Localize("Download rank ghost"), 0, &Button))
+		{
+			GameClient()->m_RankGhost.RequestCurrentMapGhost();
+		}
 	}
 
 	Status.VSplitLeft(5.0f, &Button, &Status);

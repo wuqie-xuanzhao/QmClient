@@ -82,6 +82,7 @@
 #include "components/qmclient/music_lyrics/music_lyrics_integration.h"
 #include "components/qmclient/netease/netease_integration.h"
 #include "components/qmclient/qmclient.h"
+#include "components/qmclient/rank_ghost.h"
 #include "components/qmclient/scripting.h"
 #include "components/qmclient/stutter_diagnostics.h"
 #include "components/qmclient/translate/translate.h"
@@ -300,6 +301,7 @@ public:
 	CQmMonitoring m_QmMonitoring;
 	CQmHudNotifications m_QmHudNotifications;
 	CQmWeaponTrajectory m_QmWeaponTrajectory;
+	CRankGhost m_RankGhost;
 	CTClient m_TClient;
 	CFastPractice m_FastPractice;
 	CVoiceComponent m_Voice;
@@ -399,6 +401,14 @@ private:
 		bool m_RenderEffect;
 	};
 	std::vector<SPendingHammerHitEvent> m_vPendingHammerHitEvents;
+
+	// QmClient: 最近一次锤击特效播放记录。挂 dummy 时同一服务端事件会经主/
+	// 分身两条连接各送达一次，第二次确认会绕过预测事件的 confirmed 屏障
+	// （tick 差可到 2-3，契约只允许 1）；在特效播放处按时间+位置+tick 识别
+	// 跨连接的重复送达，防止粒子偶发双播。
+	vec2 m_LastHammerEffectPos = vec2(0.0f, 0.0f);
+	int m_LastHammerEffectTick = -1;
+	int64_t m_LastHammerEffectTime = 0;
 
 	void ProcessEvents();
 	void FinalizeHammerHitEvents();

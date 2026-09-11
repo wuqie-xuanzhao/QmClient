@@ -4488,19 +4488,25 @@ void CTClient::ApplyGoresFastInputLink()
 		ResetGoresConfigOverrides();
 		m_GoresModeStateKnown = false;
 		m_PrevGoresModeActive = false;
+		m_GoresGameModeStateKnown = false;
+		m_PrevGoresGameMode = false;
 		return;
 	}
 
 	const bool StateWasKnown = m_GoresModeStateKnown;
-	if(!m_GoresModeStateKnown)
-	{
-		m_GoresModeStateKnown = true;
-	}
-
+	const bool GoresGameMode = IsGoresGameMode();
+	// 状态未知时也必须以"当前确实处于 Gores 模式"为准，否则进入任意服务器
+	// 都会被当成进入 Gores 模式，从而误触发 qm_gores 自动开启。
+	const bool GoresGameModeEntered = GoresGameMode && (!m_GoresGameModeStateKnown || !m_PrevGoresGameMode);
+	const bool GoresGameModeLeft = m_GoresGameModeStateKnown && m_PrevGoresGameMode && !GoresGameMode;
 	bool GoresAutoEnableChanged = false;
-	const int GoresEnabled = ApplyQmFocusConfigOverride(m_GoresAutoEnableOverride, g_Config.m_QmGoresAutoEnable != 0 && IsGoresGameMode(), g_Config.m_QmGores, 1, GoresAutoEnableChanged);
+	const int GoresEnabled = ApplyQmGoresAutoEnableConfig(m_GoresAutoEnableOverride, GoresGameModeEntered, GoresGameModeLeft, g_Config.m_QmGoresAutoEnable != 0, g_Config.m_QmGores, GoresAutoEnableChanged);
 	if(GoresAutoEnableChanged)
 		g_Config.m_QmGores = GoresEnabled;
+	m_GoresGameModeStateKnown = true;
+	m_PrevGoresGameMode = GoresGameMode;
+	if(!m_GoresModeStateKnown)
+		m_GoresModeStateKnown = true;
 
 	bool TcFastInputChanged = false;
 	bool TcFastInputOthersChanged = false;
@@ -4548,6 +4554,8 @@ void CTClient::ResetGoresConfigOverrides()
 	RestoreOverride(m_GoresFastInputOverride, g_Config.m_TcFastInput, 1);
 	RestoreOverride(m_GoresFastInputOthersOverride, g_Config.m_TcFastInputOthers, 1);
 	RestoreOverride(m_GoresDummyHammerOverride, g_Config.m_ClDummyHammer, 0);
+	m_GoresGameModeStateKnown = false;
+	m_PrevGoresGameMode = false;
 }
 
 bool CTClient::BuildGoresDebugRoute(std::vector<vec2> &vRoutePoints, int Dummy) const

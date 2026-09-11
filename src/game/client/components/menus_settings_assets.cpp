@@ -29,6 +29,7 @@
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui_listbox.h>
 #include <game/localization.h>
 #include <game/mapitems.h>
@@ -5383,7 +5384,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			if(PreviewState.m_FolderIsWorkshopRoot)
 				TextRender()->TextColor(ColorRGBA(1.0f, 0.78f, 0.78f, 1.0f));
-			Ui()->DoLabel(&IconRect, PreviewState.m_FolderIsParent ? FONT_ICON_FOLDER_OPEN : FONT_ICON_FOLDER, 36.0f, TEXTALIGN_MC);
+			Ui()->DoLabel_QmIcon(&IconRect, PreviewState.m_FolderIsParent ? EQmIcon::FOLDER_OPEN : EQmIcon::FOLDER, PreviewState.m_FolderIsParent ? FONT_ICON_FOLDER_OPEN : FONT_ICON_FOLDER, 36.0f, TEXTALIGN_MC);
 			if(PreviewState.m_FolderIsWorkshopRoot)
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -5490,7 +5491,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 		CUIRect IconRect, LabelRect;
 		FallbackRect.HSplitTop(FallbackRect.h * 0.58f, &IconRect, &LabelRect);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		Ui()->DoLabel(&IconRect, FONT_ICON_PLAY, 30.0f, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&IconRect, EQmIcon::PLAY, FONT_ICON_PLAY, 30.0f, TEXTALIGN_MC);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		LabelRect.Margin(6.0f, &LabelRect);
 		Ui()->DoLabel(&LabelRect, Localize("Video Background"), 10.5f, TEXTALIGN_MC);
@@ -5970,7 +5971,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 			if(HasDeleteButton)
 			{
-				if(Ui()->DoButton_FontIcon(&s_vLocalDeleteButtons[i], FONT_ICON_TRASH, 0, &Shell.m_ActionButtonRect, IGraphics::CORNER_ALL))
+				if(Ui()->DoButton_QmIcon(&s_vLocalDeleteButtons[i], EQmIcon::TRASH, FONT_ICON_TRASH, 0, &Shell.m_ActionButtonRect, IGraphics::CORNER_ALL))
 				{
 					DeleteLocalRequested = true;
 					str_copy(aDeleteLocalName, pItem->m_aName, sizeof(aDeleteLocalName));
@@ -7240,7 +7241,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 
 					if(HasDeleteButton)
 					{
-						if(Ui()->DoButton_FontIcon(&s_vWorkshopLocalDeleteButtons[LocalIndex], FONT_ICON_TRASH, 0, &Shell.m_ActionButtonRect, IGraphics::CORNER_ALL))
+						if(Ui()->DoButton_QmIcon(&s_vWorkshopLocalDeleteButtons[LocalIndex], EQmIcon::TRASH, FONT_ICON_TRASH, 0, &Shell.m_ActionButtonRect, IGraphics::CORNER_ALL))
 						{
 							DeleteLocalRequested = true;
 							str_copy(aDeleteLocalName, pItem->m_aName, sizeof(aDeleteLocalName));
@@ -7314,8 +7315,9 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					RenderAssetsCardPreview(Shell, PreviewState, true, CardHydrationScheduler.CanRenderPreview(CombinedVisible, PreviewReady));
 					WorkshopCardPreviewDrawMs += CardPreviewDrawTimer.ElapsedMs();
 
+					const EQmIcon ActionIconEnum = Downloading ? EQmIcon::ARROW_ROTATE_RIGHT : EQmIcon::CIRCLE_CHEVRON_DOWN;
 					const char *pActionIcon = Downloading ? FONT_ICON_ARROW_ROTATE_RIGHT : FONT_ICON_CIRCLE_CHEVRON_DOWN;
-					if(Ui()->DoButton_FontIcon(&vWorkshopActionButtons[AssetIndex], pActionIcon, 0, &Shell.m_ActionButtonRect, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, !Downloading))
+					if(Ui()->DoButton_QmIcon(&vWorkshopActionButtons[AssetIndex], ActionIconEnum, pActionIcon, 0, &Shell.m_ActionButtonRect, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, !Downloading))
 					{
 						DownloadRequested = true;
 						RequestedDownloadAssetIndex = AssetIndex;
@@ -7663,7 +7665,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	static CButtonContainer s_AssetsReloadBtnId;
-	if(DoButton_Menu(&s_AssetsReloadBtnId, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ReloadButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
+	if(DoButton_Menu_QmIcon(&s_AssetsReloadBtnId, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ReloadButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
 	{
 		FlushPersistedLocalAssetAuthorsIfDirty(Storage(), s_CurCustomTab);
 		ClearCustomItems(s_CurCustomTab);

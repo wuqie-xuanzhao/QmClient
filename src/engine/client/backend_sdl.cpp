@@ -44,6 +44,7 @@
 #endif
 
 #include "graphics_threaded.h"
+#include "qm_festive_message_box.h"
 
 #include <engine/graphics.h>
 
@@ -69,7 +70,27 @@ void CCommandProcessorFragment_SDL::Cmd_Shutdown(const SCommand_Shutdown *pComma
 void CCommandProcessorFragment_SDL::Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand)
 {
 	if(m_GLContext)
+	{
+		static bool s_MetadataLogged = false;
+		if(g_Config.m_QmGraphicsTrace >= 1 && !s_MetadataLogged)
+		{
+			const char *pVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+			const char *pRenderer = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+			const char *pVersion = reinterpret_cast<const char *>(glGetString(GL_VERSION));
+			dbg_msg("perf/graphics/opengl", "event=context vendor=%s renderer=%s version=%s vsync=%d", pVendor ? pVendor : "unknown", pRenderer ? pRenderer : "unknown", pVersion ? pVersion : "unknown", g_Config.m_GfxVsync);
+			s_MetadataLogged = true;
+		}
+		else if(g_Config.m_QmGraphicsTrace == 0)
+			s_MetadataLogged = false;
+		const auto SwapStart = g_Config.m_QmGraphicsTrace >= 2 ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		SDL_GL_SwapWindow(m_pWindow);
+		if(g_Config.m_QmGraphicsTrace >= 2)
+		{
+			const double SwapMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - SwapStart).count();
+			if(SwapMs >= 8.0)
+				dbg_msg("perf/graphics/opengl", "event=slow_swap duration_ms=%.3f vsync=%d", SwapMs, g_Config.m_GfxVsync);
+		}
+	}
 }
 
 void CCommandProcessorFragment_SDL::Cmd_VSync(const CCommandBuffer::SCommand_VSync *pCommand)
@@ -682,6 +703,12 @@ static Uint32 MessageBoxTypeToSdlFlags(IGraphics::EMessageBoxType Type)
 static std::optional<int> ShowMessageBoxImpl(const IGraphics::CMessageBox &MessageBox, SDL_Window *pWindow)
 {
 	dbg_assert(!MessageBox.m_vButtons.empty(), "At least one button is required");
+	if(MessageBox.m_Style == IGraphics::EMessageBoxStyle::QM_FESTIVE)
+	{
+		const std::optional<int> FestiveResult = ShowQmFestiveMessageBox(MessageBox);
+		if(FestiveResult)
+			return FestiveResult;
+	}
 
 	std::vector<SDL_MessageBoxButtonData> vButtonData;
 	vButtonData.reserve(MessageBox.m_vButtons.size());
@@ -721,6 +748,15 @@ std::optional<int> ShowMessageBoxWithoutGraphics(const IGraphics::CMessageBox &M
 
 std::optional<int> CGraphicsBackend_SDL_GL::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)
 {
+	// 图形后端已经报告 fatal error 时，窗口/上下文可能正处于驱动错误状态。
+	// 不要再次调用 ErroneousCleanup 或 SDL_DestroyWindow；NVIDIA 驱动可能在这里
+	// 触发第二次访问违规。改用不依赖图形窗口的系统消息框，随后由主循环执行
+	// 安全图形设置恢复并退出。
+	if(HasFatalError())
+	{
+		log_warn("graphics", "showing graphics error without destroying the SDL window");
+		return ShowMessageBoxWithoutGraphics(MessageBox);
+	}
 #if defined(CONF_PLATFORM_MACOS)
 	if(m_BackendType == EBackendType::BACKEND_TYPE_VULKAN)
 		return ShowMessageBoxImpl(MessageBox, nullptr);

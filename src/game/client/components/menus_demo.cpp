@@ -25,6 +25,7 @@
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/components/console.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/localization.h>
@@ -344,7 +345,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor().WithMultipliedAlpha(Alpha));
 				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-				Ui()->DoLabel(Ui()->Screen(), pInfo->m_Paused ? FONT_ICON_PAUSE : FONT_ICON_PLAY, 36.0f + Time * 12.0f, TEXTALIGN_MC);
+				Ui()->DoLabel_QmIcon(Ui()->Screen(), pInfo->m_Paused ? EQmIcon::PAUSE : EQmIcon::PLAY, pInfo->m_Paused ? FONT_ICON_PAUSE : FONT_ICON_PLAY, 36.0f + Time * 12.0f, TEXTALIGN_MC);
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
 				TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
 				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -458,7 +459,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 		TextRender()->TextColor(pInfo->m_LivePlayback ? ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f) : ColorRGBA(0.6f, 0.6f, 0.6f, 1.0f));
-		Ui()->DoLabel(&LiveButton, FONT_ICON_CIRCLE, 24.0f, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&LiveButton, EQmIcon::CIRCLE, FONT_ICON_CIRCLE, 24.0f, TEXTALIGN_MC);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		TextRender()->SetRenderFlags(0);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -652,7 +653,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// combined play and pause button
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_PlayPauseButton;
-	if(Ui()->DoButton_FontIcon(&s_PlayPauseButton, pInfo->m_Paused ? FONT_ICON_PLAY : FONT_ICON_PAUSE, false, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_PlayPauseButton, pInfo->m_Paused ? EQmIcon::PLAY : EQmIcon::PAUSE, pInfo->m_Paused ? FONT_ICON_PLAY : FONT_ICON_PAUSE, false, &Button, BUTTONFLAG_LEFT))
 	{
 		if(pInfo->m_Paused)
 		{
@@ -670,7 +671,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_ResetButton;
-	if(Ui()->DoButton_FontIcon(&s_ResetButton, FONT_ICON_STOP, false, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_ResetButton, EQmIcon::STOP, FONT_ICON_STOP, false, &Button, BUTTONFLAG_LEFT))
 	{
 		DemoPlayer()->Pause();
 		PositionToSeek = 0.0f;
@@ -681,7 +682,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins + 10.0f, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_TimeBackButton;
-	if(Ui()->DoButton_FontIcon(&s_TimeBackButton, FONT_ICON_BACKWARD, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_TimeBackButton, EQmIcon::BACKWARD, FONT_ICON_BACKWARD, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		TimeToSeek = -SKIP_DURATIONS_SECONDS[m_SkipDurationIndex];
 	}
@@ -720,7 +721,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_TimeForwardButton;
-	if(Ui()->DoButton_FontIcon(&s_TimeForwardButton, FONT_ICON_FORWARD, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_TimeForwardButton, EQmIcon::FORWARD, FONT_ICON_FORWARD, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		TimeToSeek = SKIP_DURATIONS_SECONDS[m_SkipDurationIndex];
 	}
@@ -730,7 +731,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins + 10.0f, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_OneTickBackButton;
-	if(Ui()->DoButton_FontIcon(&s_OneTickBackButton, FONT_ICON_BACKWARD_STEP, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OneTickBackButton, EQmIcon::BACKWARD_STEP, FONT_ICON_BACKWARD_STEP, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		DemoSeekTick(IDemoPlayer::TICK_PREVIOUS);
 	}
@@ -740,7 +741,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_OneTickForwardButton;
-	if(Ui()->DoButton_FontIcon(&s_OneTickForwardButton, FONT_ICON_FORWARD_STEP, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OneTickForwardButton, EQmIcon::FORWARD_STEP, FONT_ICON_FORWARD_STEP, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		DemoSeekTick(IDemoPlayer::TICK_NEXT);
 	}
@@ -750,7 +751,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins + 10.0f, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_OneMarkerBackButton;
-	if(Ui()->DoButton_FontIcon(&s_OneMarkerBackButton, FONT_ICON_BACKWARD_FAST, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OneMarkerBackButton, EQmIcon::BACKWARD_FAST, FONT_ICON_BACKWARD_FAST, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		PositionToSeek = FindPreviousMarkerPosition();
 	}
@@ -760,7 +761,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_OneMarkerForwardButton;
-	if(Ui()->DoButton_FontIcon(&s_OneMarkerForwardButton, FONT_ICON_FORWARD_FAST, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OneMarkerForwardButton, EQmIcon::FORWARD_FAST, FONT_ICON_FORWARD_FAST, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		PositionToSeek = FindNextMarkerPosition();
 	}
@@ -770,7 +771,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins + 10.0f, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SlowDownButton;
-	if(Ui()->DoButton_FontIcon(&s_SlowDownButton, FONT_ICON_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_SlowDownButton, EQmIcon::CHEVRON_DOWN, FONT_ICON_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT))
 		DecreaseDemoSpeed = true;
 	GameClient()->m_Tooltips.DoToolTip(&s_SlowDownButton, &Button, Localize("Slow down the demo"));
 
@@ -778,7 +779,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SpeedUpButton;
-	if(Ui()->DoButton_FontIcon(&s_SpeedUpButton, FONT_ICON_CHEVRON_UP, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_SpeedUpButton, EQmIcon::CHEVRON_UP, FONT_ICON_CHEVRON_UP, 0, &Button, BUTTONFLAG_LEFT))
 		IncreaseDemoSpeed = true;
 	GameClient()->m_Tooltips.DoToolTip(&s_SpeedUpButton, &Button, Localize("Speed up the demo"));
 
@@ -791,7 +792,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// slice begin button
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SliceBeginButton;
-	const int SliceBeginButtonResult = Ui()->DoButton_FontIcon(&s_SliceBeginButton, FONT_ICON_RIGHT_FROM_BRACKET, 0, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+	const int SliceBeginButtonResult = Ui()->DoButton_QmIcon(&s_SliceBeginButton, EQmIcon::RIGHT_FROM_BRACKET, FONT_ICON_RIGHT_FROM_BRACKET, 0, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 	if(SliceBeginButtonResult == 1)
 	{
 		Client()->DemoSliceBegin();
@@ -808,7 +809,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SliceEndButton;
-	const int SliceEndButtonResult = Ui()->DoButton_FontIcon(&s_SliceEndButton, FONT_ICON_RIGHT_TO_BRACKET, 0, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+	const int SliceEndButtonResult = Ui()->DoButton_QmIcon(&s_SliceEndButton, EQmIcon::RIGHT_TO_BRACKET, FONT_ICON_RIGHT_TO_BRACKET, 0, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 	if(SliceEndButtonResult == 1)
 	{
 		Client()->DemoSliceEnd();
@@ -826,7 +827,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SliceAddButton;
 	static CUi::SMessagePopupContext s_SliceAddMessagePopupContext;
-	if(Ui()->DoButton_FontIcon(&s_SliceAddButton, FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_SliceAddButton, EQmIcon::PLUS, FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		if(!AddPendingSlice())
 		{
@@ -841,7 +842,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SliceClearButton;
-	const int SliceClearButtonResult = Ui()->DoButton_FontIcon(&s_SliceClearButton, FONT_ICON_TRASH, 0, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
+	const int SliceClearButtonResult = Ui()->DoButton_QmIcon(&s_SliceClearButton, EQmIcon::TRASH, FONT_ICON_TRASH, 0, &Button, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 	if(SliceClearButtonResult == 1)
 	{
 		if(g_Config.m_ClDemoSliceBegin == -1 && g_Config.m_ClDemoSliceEnd == -1)
@@ -869,7 +870,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitLeft(Margins, nullptr, &ButtonBar);
 	ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 	static CButtonContainer s_SliceSaveButton;
-	if(Ui()->DoButton_FontIcon(&s_SliceSaveButton, FONT_ICON_ARROW_UP_RIGHT_FROM_SQUARE, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, SliceEnabled) && SliceEnabled)
+	if(Ui()->DoButton_QmIcon(&s_SliceSaveButton, EQmIcon::ARROW_UP_RIGHT_FROM_SQUARE, FONT_ICON_ARROW_UP_RIGHT_FROM_SQUARE, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, SliceEnabled) && SliceEnabled)
 	{
 		char aDemoName[IO_MAX_PATH_LENGTH];
 		DemoPlayer()->GetDemoName(aDemoName, sizeof(aDemoName));
@@ -882,7 +883,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// close button
 	ButtonBar.VSplitRight(ButtonbarHeight, &ButtonBar, &Button);
 	static CButtonContainer s_ExitButton;
-	if(Ui()->DoButton_FontIcon(&s_ExitButton, FONT_ICON_XMARK, 0, &Button, BUTTONFLAG_LEFT) || (Input()->KeyPress(KEY_C) && !GameClient()->m_GameConsole.IsActive() && m_DemoPlayerState == DEMOPLAYER_NONE))
+	if(Ui()->DoButton_QmIcon(&s_ExitButton, EQmIcon::CLOSE, FONT_ICON_XMARK, 0, &Button, BUTTONFLAG_LEFT) || (Input()->KeyPress(KEY_C) && !GameClient()->m_GameConsole.IsActive() && m_DemoPlayerState == DEMOPLAYER_NONE))
 	{
 		Client()->Disconnect();
 		SetMenuPage(PAGE_DEMOS);
@@ -894,7 +895,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	ButtonBar.VSplitRight(Margins, &ButtonBar, nullptr);
 	ButtonBar.VSplitRight(ButtonbarHeight, &ButtonBar, &Button);
 	static CButtonContainer s_KeyboardShortcutsButton;
-	if(Ui()->DoButton_FontIcon(&s_KeyboardShortcutsButton, FONT_ICON_KEYBOARD, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, g_Config.m_ClDemoKeyboardShortcuts != 0))
+	if(Ui()->DoButton_QmIcon(&s_KeyboardShortcutsButton, EQmIcon::KEYBOARD, FONT_ICON_KEYBOARD, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, g_Config.m_ClDemoKeyboardShortcuts != 0))
 	{
 		g_Config.m_ClDemoKeyboardShortcuts ^= 1;
 	}
@@ -906,7 +907,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitRight(Margins, &ButtonBar, nullptr);
 		ButtonBar.VSplitRight(ButtonbarHeight, &ButtonBar, &Button);
 		static CButtonContainer s_AutoCameraButton;
-		if(Ui()->DoButton_FontIcon(&s_AutoCameraButton, FONT_ICON_CAMERA, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, GameClient()->m_Camera.m_AutoSpecCamera))
+		if(Ui()->DoButton_QmIcon(&s_AutoCameraButton, EQmIcon::CAMERA, FONT_ICON_CAMERA, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, GameClient()->m_Camera.m_AutoSpecCamera))
 		{
 			GameClient()->m_Camera.m_AutoSpecCamera = !GameClient()->m_Camera.m_AutoSpecCamera;
 		}
@@ -1049,7 +1050,7 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 			Ui()->DoLabel(&SegmentLabel, aBuf, 12.0f, TEXTALIGN_ML);
 
 			static CButtonContainer s_aDeleteSegmentButtons[4];
-			if(Ui()->DoButton_FontIcon(&s_aDeleteSegmentButtons[SegmentIndex], FONT_ICON_XMARK, 0, &DeleteButton, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_QmIcon(&s_aDeleteSegmentButtons[SegmentIndex], EQmIcon::CLOSE, FONT_ICON_XMARK, 0, &DeleteButton, BUTTONFLAG_LEFT))
 			{
 				m_vDemoCutSegments.erase(m_vDemoCutSegments.begin() + SegmentIndex);
 				return;
@@ -2275,15 +2276,28 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 				{
 					Button.Margin(1.0f, &Button);
 
+					EQmIcon IconType;
 					const char *pIconType;
 					if(pItem->m_IsLink || str_comp(pItem->m_aFilename, "..") == 0)
+					{
+						IconType = EQmIcon::FOLDER_TREE;
 						pIconType = FONT_ICON_FOLDER_TREE;
+					}
 					else if(pItem->m_IsDir)
+					{
+						IconType = EQmIcon::FOLDER;
 						pIconType = FONT_ICON_FOLDER;
+					}
 					else if(BrowsingScreenshots)
+					{
+						IconType = EQmIcon::IMAGE;
 						pIconType = FONT_ICON_IMAGE;
+					}
 					else
+					{
+						IconType = EQmIcon::FILM;
 						pIconType = FONT_ICON_FILM;
+					}
 
 					ColorRGBA IconColor;
 					if(!pItem->m_IsDir && pItem->IsDemoFile() && (!pItem->m_InfosLoaded || !pItem->m_Valid))
@@ -2291,13 +2305,9 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 					else
 						IconColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 
-					TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 					TextRender()->TextColor(IconColor);
-					TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-					Ui()->DoLabel(&Button, pIconType, 12.0f, TEXTALIGN_ML);
-					TextRender()->SetRenderFlags(0);
+					Ui()->DoLabel_QmIcon(&Button, IconType, pIconType, 12.0f, TEXTALIGN_ML);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
-					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				}
 				else if(Col.m_Id == COL_DEMONAME)
 				{
@@ -2716,7 +2726,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				LeftGroup.VSplitLeft(TightSpacing, nullptr, &LeftGroup);
 			SetIconMode(true);
 			static CButtonContainer s_RefreshButton;
-			if(DoButton_Menu(&s_RefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
+			if(DoButton_Menu_QmIcon(&s_RefreshButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
 			{
 				SetIconMode(false);
 				DemolistPopulate();
@@ -2766,8 +2776,9 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				RightGroup.VSplitRight(TightSpacing, &RightGroup, nullptr);
 			SetIconMode(true);
 			static CButtonContainer s_PlayButton;
+			const EQmIcon OpenIcon = pSelectedItem->m_IsDir ? EQmIcon::FOLDER_OPEN : (BrowsingScreenshots ? EQmIcon::IMAGE : EQmIcon::PLAY);
 			const char *pOpenIcon = pSelectedItem->m_IsDir ? FONT_ICON_FOLDER_OPEN : (BrowsingScreenshots ? FONT_ICON_IMAGE : FONT_ICON_PLAY);
-			if(DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+			if(DoButton_Menu_QmIcon(&s_PlayButton, OpenIcon, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated || Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) || (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
 			{
 				SetIconMode(false);
 				if(pSelectedItem->m_IsDir) // folder
@@ -2852,7 +2863,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 					RightGroup.VSplitRight(TightSpacing, &RightGroup, nullptr);
 				SetIconMode(true);
 				static CButtonContainer s_RenameButton;
-				if(DoButton_Menu(&s_RenameButton, FONT_ICON_PENCIL, 0, &RenameButton))
+				if(DoButton_Menu_QmIcon(&s_RenameButton, EQmIcon::PENCIL, FONT_ICON_PENCIL, 0, &RenameButton))
 				{
 					SetIconMode(false);
 					m_Popup = POPUP_RENAME_DEMO;
@@ -2880,7 +2891,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				if(RightGroup.w > TightSpacing)
 					RightGroup.VSplitRight(TightSpacing, &RightGroup, nullptr);
 				SetIconMode(true);
-				if(DoButton_Menu(&s_DeleteButton, FONT_ICON_TRASH, 0, &DeleteButton) || Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE) || (Input()->KeyPress(KEY_D) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+				if(DoButton_Menu_QmIcon(&s_DeleteButton, EQmIcon::TRASH, FONT_ICON_TRASH, 0, &DeleteButton) || Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE) || (Input()->KeyPress(KEY_D) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
 				{
 					SetIconMode(false);
 					PrepareDemoDeleteTargetsFromSelection();
@@ -2914,7 +2925,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 					RightGroup.VSplitRight(TightSpacing, &RightGroup, nullptr);
 				SetIconMode(true);
 				static CButtonContainer s_RenderButton;
-				if(DoButton_Menu(&s_RenderButton, FONT_ICON_VIDEO, 0, &RenderButton) || (Input()->KeyPress(KEY_R) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+				if(DoButton_Menu_QmIcon(&s_RenderButton, EQmIcon::VIDEO, FONT_ICON_VIDEO, 0, &RenderButton) || (Input()->KeyPress(KEY_R) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
 				{
 					SetIconMode(false);
 					m_HasPendingDemoRenderSource = false;
@@ -2974,7 +2985,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		ButtonBarBottom.VSplitLeft(ButtonBarBottom.h / 2.0f, nullptr, &ButtonBarBottom);
 		SetIconMode(true);
 		static CButtonContainer s_RefreshButton;
-		if(DoButton_Menu(&s_RefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
+		if(DoButton_Menu_QmIcon(&s_RefreshButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed()))
 		{
 			SetIconMode(false);
 			DemolistPopulate();
@@ -3022,8 +3033,9 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 		ButtonBarBottom.VSplitRight(ButtonBarBottom.h, &ButtonBarBottom, nullptr);
 		SetIconMode(true);
 		static CButtonContainer s_PlayButton;
+		const EQmIcon OpenIcon = pSelectedItem->m_IsDir ? EQmIcon::FOLDER_OPEN : (BrowsingScreenshots ? EQmIcon::IMAGE : EQmIcon::PLAY);
 		const char *pOpenIcon = pSelectedItem->m_IsDir ? FONT_ICON_FOLDER_OPEN : (BrowsingScreenshots ? FONT_ICON_IMAGE : FONT_ICON_PLAY);
-		const bool ActivateSelectedItem = DoButton_Menu(&s_PlayButton, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated ||
+		const bool ActivateSelectedItem = DoButton_Menu_QmIcon(&s_PlayButton, OpenIcon, pOpenIcon, 0, &PlayButton) || WasListboxItemActivated ||
 						  Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER) ||
 						  (!BrowsingScreenshots && Input()->KeyPress(KEY_P) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive());
 		SetIconMode(false);
@@ -3110,7 +3122,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			ButtonBarBottom.VSplitRight(ButtonBarBottom.h / 2.0f, &ButtonBarBottom, nullptr);
 			SetIconMode(true);
 			static CButtonContainer s_RenameButton;
-			if(DoButton_Menu(&s_RenameButton, FONT_ICON_PENCIL, 0, &RenameButton))
+			if(DoButton_Menu_QmIcon(&s_RenameButton, EQmIcon::PENCIL, FONT_ICON_PENCIL, 0, &RenameButton))
 			{
 				SetIconMode(false);
 				m_Popup = POPUP_RENAME_DEMO;
@@ -3139,7 +3151,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			ButtonBarBottom.VSplitRight(ButtonBarBottom.h * 3.0f, &ButtonBarBottom, &DeleteButton);
 			ButtonBarBottom.VSplitRight(ButtonBarBottom.h / 2.0f, &ButtonBarBottom, nullptr);
 			SetIconMode(true);
-			if(DoButton_Menu(&s_DeleteButton, FONT_ICON_TRASH, 0, &DeleteButton) || Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE) || (Input()->KeyPress(KEY_D) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+			if(DoButton_Menu_QmIcon(&s_DeleteButton, EQmIcon::TRASH, FONT_ICON_TRASH, 0, &DeleteButton) || Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE) || (Input()->KeyPress(KEY_D) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
 			{
 				SetIconMode(false);
 				PrepareDemoDeleteTargetsFromSelection();
@@ -3174,7 +3186,7 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 			ButtonBarTop.VSplitRight(ButtonBarBottom.h, &ButtonBarTop, nullptr);
 			SetIconMode(true);
 			static CButtonContainer s_RenderButton;
-			if(DoButton_Menu(&s_RenderButton, FONT_ICON_VIDEO, 0, &RenderButton) || (Input()->KeyPress(KEY_R) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
+			if(DoButton_Menu_QmIcon(&s_RenderButton, EQmIcon::VIDEO, FONT_ICON_VIDEO, 0, &RenderButton) || (Input()->KeyPress(KEY_R) && !GameClient()->m_GameConsole.IsActive() && !m_DemoSearchInput.IsActive()))
 			{
 				SetIconMode(false);
 				m_HasPendingDemoRenderSource = false;

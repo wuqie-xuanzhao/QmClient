@@ -218,7 +218,7 @@
 == 1 étoile
 
 128 player id <-> 64 player id map update rate
-== 128 player id <-> 64 player id map update rate
+== Fréquence de mise à jour de la carte des ID de joueurs 128 <-> 64
 
 2 stars
 == 2 étoiles
@@ -920,9 +920,6 @@ Audio slots
 AUS
 == AUS
 
-Auth level required to send phone to others.
-== Niveau d'authentification requis pour envoyer un téléphone aux autres.
-
 Authed name color in scoreboard
 == Couleur du nom authentifié dans le tableau des scores
 
@@ -1220,6 +1217,9 @@ Axiom scores
 Axis
 == Axe
 
+Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
+== Algorithme de flou d'arrière-plan : 0=Gaussien, 1=Kawase, 2=Dual Kawase
+
 Backend to use (e.g. OpenGL or Vulkan)
 == Backend à utiliser (par exemple OpenGL ou Vulkan)
 
@@ -1447,6 +1447,9 @@ Blue team
 
 Blue team wins!
 == L'équipe bleue gagne !
+
+Blur mode
+== Mode de flou
 
 Body
 == Corps
@@ -2453,9 +2456,6 @@ Current rescue mode: %s
 Current status
 == Statut actuel
 
-Current time: %s
-== Heure actuelle : %s
-
 Current: Ranks
 == Actuel : Classements
 
@@ -2567,6 +2567,9 @@ Darken Tee color when frozen (0-100)
 Data
 == Données
 
+Data source
+== Source des données
+
 Date
 == Date
 
@@ -2597,9 +2600,6 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == Le client DDNet doit être redémarré pour terminer la mise à jour !
 
-DDNet finish totals come from official player data.
-== Les totaux de réussites DDNet proviennent des données officielles des joueurs.
-
 DDNet Memory
 == Mémoire DDNet
 
@@ -2626,6 +2626,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork est un jeu en ligne coopératif où le but est que vous et votre groupe de tees atteigniez la ligne d'arrivée de la carte. En tant que nouveau venu, vous devriez commencer sur les serveurs Novice, qui hébergent les cartes les plus faciles. Tenez compte du ping pour choisir un serveur proche de chez vous.
+
+DDRaceNetwork · DDNet
+== DDRaceNetwork · DDNet
 
 ddstats.tw ID stats
 == Statistiques d'ID ddstats.tw
@@ -2658,7 +2661,7 @@ Debug group clipping.
 == Débogage du clipping de groupe.
 
 Debug HTTP
-== Debug HTTP
+== Débogage HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Mode débogage activé. Appuyez sur Ctrl+Maj+D pour désactiver le mode débogage.
@@ -2827,6 +2830,9 @@ Demos directory
 
 Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
 == Selon le nombre d'arguments fournis, téléportez-vous vers ; (0.) là où vous regardez ou observez ; (1.) le nom du joueur spécifié
+
+Deprecated compatibility alias for qm_graphics_trace (macOS signposts)
+== Alias de compatibilité obsolète pour qm_graphics_trace (signposts macOS)
 
 Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
 == Obsolète. Utilisez 'muteid <client_id> <secondes> <raison>' ou 'muteip <ip> <secondes> <raison>'
@@ -3071,6 +3077,9 @@ Download community skins
 Download failed
 == Échec du téléchargement
 
+Download rank ghost
+== Télécharger le fantôme de rang
+
 Download skins
 == Télécharger les skins
 
@@ -3139,6 +3148,9 @@ Drift smoothness
 
 Drop on right canvas to replace one part.
 == Déposez sur le canevas de droite pour remplacer une partie.
+
+Dual Kawase
+== Kawase double
 
 Dummies are not allowed on this server
 == Les dummies ne sont pas autorisés sur ce serveur
@@ -3422,8 +3434,17 @@ Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
 == Activer l'antiping (prédiction plus agressive)
 
+Enable antispoof for vanilla 0.6 clients
+== Activer l'anti-usurpation pour les clients Vanilla 0.6
+
 Enable audio output and choose a device
 == Enable audio output and choose a device
+
+Enable backdrop blur
+== Activer le flou d'arrière-plan
+
+Enable backdrop blur for translucent interface and selected HUD backgrounds
+== Activer le flou d'arrière-plan pour l'interface translucide et certains arrière-plans du HUD
 
 Enable background 3D particle flicker
 == Activer le scintillement des particules 3D d'arrière-plan
@@ -3436,9 +3457,6 @@ Enable background 3D particle pulse scaling
 
 Enable background 3D particle trail
 == Activer la traînée des particules 3D d'arrière-plan
-
-Enable basic anti-spoof
-== Activer l'anti-spoof de base
 
 Enable camera drift
 == Activer la dérive de la caméra
@@ -3466,6 +3484,9 @@ Enable colored console output
 
 Enable coloring and hearts for friends
 == Activer la coloration et les cœurs pour les amis
+
+Enable connections from vanilla 0.6 clients
+== Autoriser les connexions des clients Vanilla 0.6
 
 Enable controller
 == Activer la manette
@@ -3530,12 +3551,6 @@ Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
 == Activer les sons du jeu
 
-Enable Gaussian blur
-== Activer le flou gaussien
-
-Enable Gaussian blur for translucent interface and selected HUD backgrounds
-== Activer le flou gaussien pour l'interface translucide et certains arrière-plans du HUD
-
 Enable ghost
 == Activer le fantôme
 
@@ -3580,9 +3595,6 @@ Enable LLM thinking mode (may increase response time)
 
 Enable lyrics
 == Activer les paroles
-
-Enable macOS graphics diagnostics and Instruments signposts
-== Activer le diagnostic graphique macOS et les signposts Instruments
 
 Enable main thread and render stage performance debug logging
 == Activer les journaux de débogage des performances du thread principal et de la phase de rendu
@@ -3965,6 +3977,9 @@ Fade out
 Fade trail alpha
 == Alpha de la traînée en fondu
 
+Failed
+== Échec
+
 Failed saving the replay!
 == Échec de la sauvegarde de la rediffusion !
 
@@ -4024,6 +4039,9 @@ Fast input others
 
 Fast practice
 == Entraînement rapide
+
+Fast, lightweight blur with a softer approximation.
+== Flou rapide et léger avec une approximation plus douce.
 
 Fat skins (DDFat)
 == Skins gros (DDFat)
@@ -4207,6 +4225,9 @@ Fraction of players needed to pass a vote
 
 Frags
 == Éliminations
+
+Frame quality
+== Qualité d'image
 
 Frame rate
 == Taux d'images
@@ -4421,6 +4442,9 @@ Gap between statusbar items
 Gap between tee and nametag
 == Espace entre le tee et l'étiquette nominative
 
+Gaussian
+== Gaussien
+
 General
 == Général
 
@@ -4556,6 +4580,9 @@ Gores Mode
 Gores mode key
 == Touche du mode Gores
 
+Gores · Axiom
+== Gores · Axiom
+
 GPU name, chosen by backend (if supported)
 == Nom du GPU, choisi par le backend (si supporté)
 
@@ -4571,9 +4598,6 @@ Gradient color
 Graphics
 == Graphismes
 
-Graphics backend
-== Backend graphique
-
 Graphics card
 == Carte graphique
 
@@ -4581,7 +4605,7 @@ Graphics display
 == Affichage graphique
 
 Graphics Error
-== Graphics Error
+== Erreur graphique
 
 Graphics library major version (0 = auto-detect)
 == Version majeure de la bibliothèque graphique (0 = détection automatique)
@@ -4594,6 +4618,15 @@ Graphics library patch version
 
 Graphics library texture sampling lod bias multiplied by 1000
 == Biais LOD d'échantillonnage de texture de la bibliothèque graphique multiplié par 1000
+
+Graphics mode
+== Mode graphique
+
+Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)
+== Mode graphique : -1 = utiliser le réglage du backend, 0 = compatibilité, 1 = performances (par défaut)
+
+Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace
+== Niveau de traçage graphique : 0 = désactivé, 1 = résumé périodique, 2 = résumé et images lentes, 3 = traçage détaillé du backend
 
 Greeting text
 == Texte de salutation
@@ -4819,9 +4852,6 @@ Hide weapon muzzle flashes
 
 High Detail
 == Haut détail
-
-High process priority
-== Priorité de processus élevée
 
 High to low
 == Élevé à faible
@@ -5160,7 +5190,7 @@ Initializing components
 == Initialisation des composants
 
 Initializing layers
-== Initializing layers
+== Initialisation des calques
 
 Initializing map logic
 == Initialisation de la logique de la carte
@@ -5369,6 +5399,9 @@ k = Resend loss
 Kaomoji
 == Kaomoji
 
+Kawase
+== Kawase
+
 Keep hook when teleporting
 == Garder le crochet lors de la téléportation
 
@@ -5525,6 +5558,9 @@ Last entered
 Last page in console
 == Dernière page dans la console
 
+Last successful sync: %s
+== Dernière synchronisation réussie : %s
+
 Latency
 == Latence
 
@@ -5606,9 +5642,6 @@ Linear
 Lines %d - %d (%s)
 == Lignes %d - %d (%s)
 
-Links below open external ID and map statistics.
-== Les liens ci-dessous ouvrent les statistiques externes d'ID et de cartes.
-
 List all commands that are available in practice mode
 == Lister toutes les commandes disponibles en mode entraînement
 
@@ -5686,6 +5719,9 @@ Load drawings from a given csv file (defaults to map name)
 
 Load sound files in thread
 == Charger les fichiers sonores dans un thread
+
+Load the official rank replay of a map as a ghost (default: current map, rank 1)
+== Charger la rediffusion officielle de rang d'une carte en fantôme (par défaut : carte actuelle, rang 1)
 
 Load with code r. /load to check your existing saves
 == Charger avec le code r. /load pour vérifier vos sauvegardes existantes
@@ -5765,9 +5801,6 @@ Local + Dummy
 Local game mode statistics
 == Statistiques des modes de jeu locaux
 
-Local mode statistics are stored on this client.
-== Les statistiques des modes locaux sont enregistrées dans ce client.
-
 Local only
 == Local uniquement
 
@@ -5803,6 +5836,9 @@ Locked
 
 Log output filename
 == Nom du fichier de sortie du journal
+
+Log predicted event creation/playback and snapshot confirmation to debug double sounds.
+== Journaliser la création/lecture des événements prédits et la confirmation des instantanés pour déboguer les sons en double.
 
 Log the network
 == Journaliser le réseau
@@ -6033,13 +6069,13 @@ Maximum auto-saves retained per map name (0=unlimited)
 == Nombre maximal de sauvegardes automatiques conservées par nom de carte (0 = illimité)
 
 Maximum banned addresses sent their ban message per second (0 = unlimited).
-== Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Nombre maximal d'adresses bannies auxquelles le message de bannissement est envoyé par seconde (0 = illimité).
 
 Maximum clients per IP
 == Nombre maximal de clients par IP
 
 Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
-== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Nombre maximal de paquets compressés provenant d'adresses non connectées décompressés par seconde (0 = illimité).
 
 Maximum cursor distance
 == Distance maximale du curseur
@@ -6072,22 +6108,22 @@ Maximum number of clients on server
 == Nombre maximal de clients sur le serveur
 
 Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
-== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Nombre maximal de paquets reçus en un lot avant de revenir à la boucle principale (0 = illimité).
 
 Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
-== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Nombre maximal de pré-entrées par tick et par client envoyées aux autres clients (0 = aucune limite)
 
 Maximum number of resend requests answered per second (0 for no limit)
-== Maximum number of resend requests answered per second (0 for no limit)
+== Nombre maximal de demandes de renvoi traitées par seconde (0 = aucune limite)
 
 Maximum number of server info responses of any size sent per second (0 = unlimited).
-== Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Nombre maximal de réponses d'informations serveur, quelle que soit leur taille, envoyées par seconde (0 = illimité).
 
 Maximum number of skins loaded simultaneously
 == Nombre maximal de skins chargés simultanément
 
 Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
-== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Nombre maximal de poignées de main anti-usurpation Vanilla traitées par seconde (0 = illimité).
 
 Maximum players participating in a vote (0 = unlimited)
 == Nombre maximal de joueurs participant à un vote (0 = illimité)
@@ -6331,6 +6367,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == Se déplace vers la tuile avec le numéro x/y ii
+
+Multi-resolution blur with a stronger result and balanced GPU cost.
+== Flou multi-résolution offrant un effet plus prononcé et un coût GPU équilibré.
 
 Multi-View
 == Multi-vue
@@ -7280,14 +7319,17 @@ Password incorrect
 Password required to use reserved slots.
 == Mot de passe requis pour utiliser les emplacements réservés.
 
+Past year
+== Année écoulée
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
-== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Chemin vers le certificat CA pour vérifier le certificat du serveur MySQL/MariaDB
 
 Path to client certificate for the MySQL/MariaDB SSL connection
-== Path to client certificate for the MySQL/MariaDB SSL connection
+== Chemin vers le certificat client pour la connexion SSL MySQL/MariaDB
 
 Path to client key for the MySQL/MariaDB SSL connection
-== Path to client key for the MySQL/MariaDB SSL connection
+== Chemin vers la clé client pour la connexion SSL MySQL/MariaDB
 
 Pause
 == Pause
@@ -7306,6 +7348,9 @@ Pause/unpause game
 
 Penalty in seconds for saving or swapping positions
 == Pénalité en secondes pour sauvegarder ou échanger les positions
+
+Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
+== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 
 Per-name volume (name=percent)
 == Volume individuel par nom (nom=pourcentage)
@@ -7644,7 +7689,7 @@ Predict grenade trajectory (only with cl_antiping 1)
 == Prédire la trajectoire du lance-grenades (uniquement avec cl_antiping 1)
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
-== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Prédire les mouvements des autres joueurs (activé seulement si cl_antiping vaut 1) (1 = toujours, 2 = interactions uniquement, 3 = 2 et tees gelés toujours)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == Prédire les projectiles d'armes (uniquement avec cl_antiping 1)
@@ -8027,6 +8072,72 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == Randomiser la couleur du joueur (0 = tout, 1 = corps, 2 = pieds, 3 = skin, 4 = drapeau) exemple : 0011 = randomiser skin et drapeau [le nombre est la position]
 
+Rank ghost loaded: %s, %s s. It follows your current run.
+== Fantôme de rang chargé : %s, %s s. Suit votre course actuelle.
+
+Rank ghost loaded: %s, %s s. It plays when you cross the start line.
+== Fantôme de rang chargé : %s, %s s. Se lance lorsque vous franchissez la ligne de départ.
+
+Rank ghost unloaded
+== Fantôme de rang déchargé
+
+Rank ghost: another task is already running
+== Fantôme de rang : une autre tâche est déjà en cours
+
+Rank ghost: converting the replay ...
+== Fantôme de rang : conversion de la rediffusion…
+
+Rank ghost: could not extract the runner's path from the replay
+== Fantôme de rang : impossible d'extraire la trajectoire du coureur de la rediffusion
+
+Rank ghost: downloading the replay ...
+== Fantôme de rang : téléchargement de la rediffusion…
+
+Rank ghost: failed to download the replay
+== Fantôme de rang : échec du téléchargement de la rediffusion
+
+Rank ghost: failed to fetch the replay list
+== Fantôme de rang : échec de la récupération de la liste des rediffusions
+
+Rank ghost: failed to load the generated ghost (join the map first)
+== Fantôme de rang : échec du chargement du fantôme généré (rejoignez d'abord la carte)
+
+Rank ghost: failed to load the replay: %s
+== Fantôme de rang : échec du chargement de la rediffusion : %s
+
+Rank ghost: failed to write the ghost file
+== Fantôme de rang : échec de l'écriture du fichier fantôme
+
+Rank ghost: fetching the replay list ...
+== Fantôme de rang : récupération de la liste des rediffusions…
+
+Rank ghost: HTTP is not available
+== Fantôme de rang : HTTP n'est pas disponible
+
+Rank ghost: no official replay for '%s' rank %d
+== Fantôme de rang : aucune rediffusion officielle pour « %s », rang %d
+
+Rank ghost: replay converted, waiting for the map to load ...
+== Fantôme de rang : rediffusion convertie, en attente du chargement de la carte…
+
+Rank ghost: specify a map name when not in a game
+== Fantôme de rang : indiquez un nom de carte si vous n'êtes pas en jeu
+
+Rank ghost: the downloaded replay is not a valid demo
+== Fantôme de rang : la rediffusion téléchargée n'est pas une démo valide
+
+Rank ghost: the replay has an invalid run range
+== Fantôme de rang : la rediffusion a une plage de course invalide
+
+Rank ghost: the replay has no run start/end markers
+== Fantôme de rang : la rediffusion n'a pas de marqueurs de début/fin
+
+Rank ghost: the replay list is empty or malformed
+== Fantôme de rang : la liste des rediffusions est vide ou incorrecte
+
+Rank ghost: timed out waiting for the map to load
+== Fantôme de rang : délai d'attente du chargement de la carte dépassé
+
 Ratio
 == Ratio | Référence chinois simplifié : K/D
 
@@ -8035,6 +8146,9 @@ Ratio threshold for local target language detection
 
 Read new feature indicators
 == Badges nouveautés lus
+
+Ready
+== Prêt
 
 Reason
 == Raison
@@ -9176,9 +9290,6 @@ Set server to singleplayer mode (no player interaction, must be set before loadi
 Set team for a player (spectators = -1, game = 0)
 == Définir l'équipe pour un joueur (spectateurs = -1, jeu = 0)
 
-Set team for all players (spectators = -1, game = 0)
-== Définir l'équipe pour tous les joueurs (spectateurs = -1, jeu = 0)
-
 Set timeout protection code s
 == Définir le code de protection contre les timeouts s
 
@@ -9542,8 +9653,8 @@ Show hook strength number indicator
 Show hookable/unhookable tile outlines
 == Afficher les contours des tuiles accrochables/non accrochables
 
-Show how weapons, shields, hearts, and flags appear in game
-== Montrer comment les armes, boucliers, cœurs et drapeaux apparaissent en jeu
+Show how weapons, shields, snowflakes, and flags appear in game
+== Afficher l'apparence des armes, boucliers, flocons et drapeaux en jeu
 
 Show HUD
 == Afficher le HUD
@@ -10262,6 +10373,9 @@ Smaller tees
 Smart
 == Intelligent
 
+Smooth and accurate blur with the highest GPU cost.
+== Flou fluide et précis, avec le coût GPU le plus élevé.
+
 Smooth camera switch animation time when spectating (in ms, 0=off)
 == Durée de l'animation de transition fluide de la caméra en mode spectateur (en ms, 0 = désactivé)
 
@@ -10748,6 +10862,9 @@ Sync remote stats
 Sync Workshop Assets
 == Synchroniser les éléments du Workshop
 
+Syncing
+== Synchronisation
+
 Syncing remote stats
 == Synchronisation des statistiques distantes
 
@@ -10758,7 +10875,7 @@ System default
 == Par défaut du système
 
 System media control and lyrics
-== System media control and lyrics
+== Contrôle multimédia du système et paroles
 
 System media controls
 == Contrôles média système
@@ -11063,6 +11180,9 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 == Le périphérique audio n'a pas pu être initialisé.
 
+The auth level you need to tele others
+== Niveau d'autorisation requis pour téléporter les autres joueurs
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == Le bouton de menu supplémentaire qui active/désactive la visibilité des boutons avec la visibilité « Menu supplémentaire ». Ouvre également le menu du jeu en appui long.
 
@@ -11079,7 +11199,7 @@ The FPS at which the recorder should record replay.
 == Le FPS auquel l'enregistreur doit enregistrer la rediffusion
 
 The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== Le backend graphique s'est arrêté de manière inattendue et les paramètres graphiques sûrs n'ont pas pu être enregistrés.
 
 The name "default" is reserved.
 == Le nom "default" est réservé.
@@ -11293,9 +11413,6 @@ Toggle auto camera
 
 Toggle between game scene preview and raw texture
 == Basculer entre l'aperçu de la scène de jeu et la texture brute
-
-Toggle client process normal/high priority on Windows
-== Basculer la priorité normale/élevée du processus client sur Windows
 
 Toggle config value
 == Basculer la valeur de configuration
@@ -11744,6 +11861,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == Statut inconnu
 
+Unload the rank ghost
+== Décharger le fantôme de rang
+
 Unlock a team
 == Déverrouiller une équipe
 
@@ -12021,7 +12141,7 @@ Virtual joystick which always uses hook.
 == Joystick virtuel qui utilise toujours le grappin.
 
 Virtual joystick which only aims and moves the mouse pointer relatively.
-== Virtual joystick which only aims and moves the mouse pointer relatively.
+== Joystick virtuel servant uniquement à viser et à déplacer relativement le pointeur de la souris.
 
 Virtual joystick which only aims without using an action.
 == Joystick virtuel qui vise uniquement sans utiliser d’action.
@@ -12161,11 +12281,8 @@ Vote yes/no
 Voting
 == Vote
 
-Vulkan API
-== API Vulkan
-
-Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
-== Version de l'API Vulkan : 11=compatibilité 1.1, 14=mode strict 1.4
+Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1
+== Version de l'API Vulkan : 14 = préférer 1.4, puis 1.3 et 1.1 ; 13 = préférer 1.3, puis 1.1 ; 11 = forcer 1.1
 
 Wait for current vote to end before calling a new one.
 == Attendez la fin du vote actuel avant d'en lancer un nouveau.
@@ -12336,7 +12453,7 @@ Whether dummy jumps (requires cl_dummy_control 1)
 == Le Dummy saute (nécessite cl_dummy_control 1)
 
 Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
-== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Ignorer les joueurs qui ne votent pas (0) ou les considérer comme des votes « non » (1)
 
 Whether players can hammer/grenade/laser each other.
 == Si les joueurs peuvent se marteler/lancer des grenades/se tirer au laser.
@@ -12927,35 +13044,7 @@ Hook
 
 [Direct touch input]
 Relative aim
-== Relative aim
-
-[Editor]
-[Ctrl+F4] Close the current map.
-== [Ctrl+F4] Close the current map.
-
-[Editor]
-Close map
-== Close map
-
-[Editor]
-Discard changes
-== Discard changes
-
-[Editor]
-Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-
-[Editor]
-Open the directory for automapper rules in the file browser.
-== Open the directory for automapper rules in the file browser.
-
-[Editor]
-Save changes?
-== Save changes?
-
-[Editor]
-Show directory
-== Show directory
+== Visée relative
 
 [Editor curve type abbreviation]
 B
@@ -13018,8 +13107,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Impossible d'initialiser le backend graphique donné, probablement parce que vous n'avez pas installé le pilote de la carte graphique intégrée.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Échec lors de l'initialisation. Essayez de changer gfx_backend en OpenGL ou Vulkan dans qmclient/settings_ddnet.cfg dans le répertoire de configuration et réessayez.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Échec lors de l'initialisation. Essayez de changer gfx_backend en OpenGL ou Vulkan dans settings_ddnet.cfg dans le répertoire de configuration et réessayez.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13034,8 +13123,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == La soumission des commandes de rendu a échoué. Essayez de mettre à jour vos pilotes GPU.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Erreur inconnue. Essayez de changer gfx_backend en OpenGL ou Vulkan dans qmclient/settings_ddnet.cfg dans le répertoire de configuration et réessayez.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Erreur inconnue. Essayez de changer gfx_backend en OpenGL ou Vulkan dans settings_ddnet.cfg dans le répertoire de configuration et réessayez.
 
 [Hammer Mode]
 Normal
@@ -13099,7 +13188,7 @@ Joystick Hook
 
 [Predefined touch button behaviors]
 Joystick Relative Aim
-== Joystick Relative Aim
+== Visée relative au joystick
 
 [Predefined touch button behaviors]
 Spectate

@@ -1134,10 +1134,12 @@ void CHud::OnInit()
 void CHud::DestroyMediaIslandBlurTargets()
 {
 	Graphics()->DestroyRenderTarget(&m_MediaIslandBlurSource);
-	Graphics()->DestroyRenderTarget(&m_MediaIslandBlurTemporary);
+	for(auto &Target : m_aMediaIslandBlurTemporary)
+		Graphics()->DestroyRenderTarget(&Target);
 	Graphics()->DestroyRenderTarget(&m_MediaIslandBlurTarget);
 	m_MediaIslandBlurWidth = 0;
 	m_MediaIslandBlurHeight = 0;
+	m_MediaIslandBlurMode = -1;
 	m_MediaIslandBlurReady = false;
 	m_MediaIslandBlurLastAttemptFrame = 0;
 	m_MediaIslandBlurAttemptInitialized = false;
@@ -1156,13 +1158,17 @@ bool CHud::PrepareMediaIslandBlur()
 		return false;
 	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
 	{
-		if(m_MediaIslandBlurSource.IsValid() || m_MediaIslandBlurTemporary.IsValid() || m_MediaIslandBlurTarget.IsValid())
+		const bool HasTemporaryTarget = std::any_of(m_aMediaIslandBlurTemporary.begin(), m_aMediaIslandBlurTemporary.end(), [](const auto &Target) { return Target.IsValid(); });
+		if(m_MediaIslandBlurSource.IsValid() || HasTemporaryTarget || m_MediaIslandBlurTarget.IsValid())
 			DestroyMediaIslandBlurTargets();
 		return false;
 	}
 
 	const int BlurWidth = MediaIslandBlurTargetDimension(Graphics()->ScreenWidth());
 	const int BlurHeight = MediaIslandBlurTargetDimension(Graphics()->ScreenHeight());
+	const int BlurMode = std::clamp(g_Config.m_QmBlurMode, 0, 2);
+	const bool DualKawase = BlurMode == static_cast<int>(IGraphics::EBlurMode::DUAL);
+	const int TemporaryCount = DualKawase ? IGraphics::DUAL_KAWASE_PYRAMID_LEVELS : 1;
 	if(BlurWidth <= 0 || BlurHeight <= 0)
 	{
 		m_MediaIslandBlurReady = false;
@@ -1171,20 +1177,28 @@ bool CHud::PrepareMediaIslandBlur()
 		return false;
 	}
 
-	const bool SizeChanged = BlurWidth != m_MediaIslandBlurWidth || BlurHeight != m_MediaIslandBlurHeight;
-	if(SizeChanged || !m_MediaIslandBlurSource.IsValid() || !m_MediaIslandBlurTemporary.IsValid() || !m_MediaIslandBlurTarget.IsValid())
+	const bool SizeChanged = BlurWidth != m_MediaIslandBlurWidth || BlurHeight != m_MediaIslandBlurHeight || BlurMode != m_MediaIslandBlurMode;
+	const bool TemporaryTargetsValid = std::all_of(m_aMediaIslandBlurTemporary.begin(), m_aMediaIslandBlurTemporary.begin() + TemporaryCount, [](const auto &Target) { return Target.IsValid(); });
+	if(SizeChanged || !m_MediaIslandBlurSource.IsValid() || !TemporaryTargetsValid || !m_MediaIslandBlurTarget.IsValid())
 	{
 		DestroyMediaIslandBlurTargets();
 		m_MediaIslandBlurSource = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		m_MediaIslandBlurTemporary = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		for(int Level = 0; Level < TemporaryCount; ++Level)
+		{
+			const int TemporaryWidth = DualKawase ? IGraphics::DualKawasePyramidDimension(BlurWidth, Level) : BlurWidth;
+			const int TemporaryHeight = DualKawase ? IGraphics::DualKawasePyramidDimension(BlurHeight, Level) : BlurHeight;
+			m_aMediaIslandBlurTemporary[Level] = Graphics()->CreateRenderTarget(TemporaryWidth, TemporaryHeight);
+		}
 		m_MediaIslandBlurTarget = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		if(!m_MediaIslandBlurSource.IsValid() || !m_MediaIslandBlurTemporary.IsValid() || !m_MediaIslandBlurTarget.IsValid())
+		const bool CreatedTemporaryTargets = std::all_of(m_aMediaIslandBlurTemporary.begin(), m_aMediaIslandBlurTemporary.begin() + TemporaryCount, [](const auto &Target) { return Target.IsValid(); });
+		if(!m_MediaIslandBlurSource.IsValid() || !CreatedTemporaryTargets || !m_MediaIslandBlurTarget.IsValid())
 		{
 			DestroyMediaIslandBlurTargets();
 			return false;
 		}
 		m_MediaIslandBlurWidth = BlurWidth;
 		m_MediaIslandBlurHeight = BlurHeight;
+		m_MediaIslandBlurMode = BlurMode;
 	}
 
 	const uint64_t CurrentFrame = Client()->PerfFrame();
@@ -1202,9 +1216,10 @@ bool CHud::PrepareMediaIslandBlur()
 	IGraphics::SGaussianBlurParams BlurParams;
 	BlurParams.m_Radius = 4;
 	BlurParams.m_Sigma = 2.0f;
+	BlurParams.m_Mode = static_cast<IGraphics::EBlurMode>(BlurMode);
 	m_MediaIslandBlurReady = Graphics()->GaussianBlurRenderTarget(
 		m_MediaIslandBlurSource,
-		m_MediaIslandBlurTemporary,
+		m_aMediaIslandBlurTemporary,
 		m_MediaIslandBlurTarget,
 		BlurParams);
 	return m_MediaIslandBlurReady;
@@ -2255,8 +2270,8 @@ void CHud::RenderDummyMiniMap()
 		DrawSmoothCircle(Graphics(), vec2(PlaceholderCenter.x, PlaceholderCenter.y - 7.5f), PlaceholderIconSize * 0.9f, ViewState.m_TargetAccent.WithAlpha(0.16f));
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.68f);
-		const float CameraWidth = TextRender()->TextWidth(PlaceholderIconSize, FontIcons::FONT_ICON_CAMERA);
-		TextRender()->Text(PlaceholderCenter.x - CameraWidth * 0.5f, PlaceholderCenter.y - PlaceholderIconSize - 8.0f, PlaceholderIconSize, FontIcons::FONT_ICON_CAMERA, -1.0f);
+		const float CameraWidth = PlaceholderIconSize;
+		Ui()->DrawQmIconAt(PlaceholderCenter.x - CameraWidth * 0.5f, PlaceholderCenter.y - PlaceholderIconSize - 8.0f, PlaceholderIconSize, EQmIcon::CAMERA, FontIcons::FONT_ICON_CAMERA, TextRender()->GetTextColor());
 
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		TextRender()->TextColor(0.97f, 0.98f, 1.0f, 0.90f);
@@ -3858,9 +3873,7 @@ float CHud::GetTopIslandAvoidanceRight() const
 		str_copy(aTimeBuf, "00:00", sizeof(aTimeBuf));
 
 	const bool ShowWaveform = HasMediaState;
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	const float TeamIconWidth = TextRender()->TextWidth(MetaFontSize, FontIcons::FONT_ICON_USERS);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	const float TeamIconWidth = MetaFontSize;
 	const float SpectatorTextWidth = ShowSpectatorSatellite ? TextRender()->TextWidth(MetaFontSize, aSpectatorBuf) : 0.0f;
 	const float SpectatorSatelliteContentWidth = SpectatorSatelliteIconSize + SpectatorGap + SpectatorTextWidth;
 	const float SpectatorSatelliteWidth = std::max(BaseIslandHeight, SpectatorSatelliteContentWidth + SpectatorSatellitePaddingX * 2.0f);
@@ -4295,10 +4308,8 @@ void CHud::RenderMediaIsland()
 		IncomingSwapTextWidth = std::max(IncomingSwapTextWidth, std::round(TextRender()->TextBoundingBox(BottomFontSize, aIncomingSwapInfos[i]->m_aRequestText).m_W));
 
 	const bool ShowWaveform = HasMediaState;
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	const float TeamIconWidth = TextRender()->TextWidth(MetaFontSize, FontIcons::FONT_ICON_USERS);
-	const float PlaceholderWidth = TextRender()->TextWidth(MetaFontSize, FontIcons::FONT_ICON_MUSIC);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	const float TeamIconWidth = MetaFontSize;
+	const float PlaceholderWidth = MetaFontSize;
 	const float SpectatorTextWidth = HasSpectatorSatellitePresentation ? TextRender()->TextWidth(MetaFontSize, aSpectatorBuf) : 0.0f;
 	const float SpectatorSatelliteContentWidth = SpectatorSatelliteIconSize + SpectatorGap + SpectatorTextWidth;
 	const float SpectatorSatelliteWidth = std::max(BaseIslandHeight, SpectatorSatelliteContentWidth + SpectatorSatellitePaddingX * 2.0f);
@@ -4997,10 +5008,7 @@ void CHud::RenderMediaIsland()
 
 		DrawSmoothCircle(Graphics(), CoverCenter, CoverDrawRadius, ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f * Alpha));
 		const float PlaceholderFontSize = MetaFontSize * Scale;
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.35f * Alpha);
-		TextRender()->Text(CoverCenter.x - PlaceholderWidth * Scale * 0.5f, CoverCenter.y - PlaceholderFontSize * 0.5f - QmHudMediaIslandScaled(0.5f), PlaceholderFontSize, FontIcons::FONT_ICON_MUSIC, -1.0f);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		Ui()->DrawQmIconAt(CoverCenter.x - PlaceholderWidth * Scale * 0.5f, CoverCenter.y - PlaceholderFontSize * 0.5f - QmHudMediaIslandScaled(0.5f), PlaceholderFontSize, EQmIcon::MUSIC, FontIcons::FONT_ICON_MUSIC, ColorRGBA(1.0f, 1.0f, 1.0f, 0.35f * Alpha));
 	};
 	const auto RenderTrackText = [&](const SHudMediaIslandTrackSnapshot &Track, const char *pMeta, bool HasMeta, float TitleLayerAlpha, float MetaLayerAlpha, float TitleLayerOffset, float MetaLayerOffset) {
 		if(!ShowCover || TitleAlpha <= 0.001f || TitleAvailableWidth <= QmHudMediaIslandScaled(2.0f))
@@ -5038,11 +5046,8 @@ void CHud::RenderMediaIsland()
 
 	if(ShowTeam)
 	{
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.82f * EntranceContentAlpha);
-		TextRender()->Text(TeamX, MetaY, MetaFontSize, FontIcons::FONT_ICON_USERS, -1.0f);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.82f * EntranceContentAlpha);
+		Ui()->DrawQmIconAt(TeamX, MetaY, MetaFontSize, EQmIcon::USERS, FontIcons::FONT_ICON_USERS, TextRender()->GetTextColor());
 		TextRender()->Text(TeamX + TeamIconWidth + SpectatorGap, MetaY, MetaFontSize, aTeamBuf, -1.0f);
 	}
 
@@ -5879,9 +5884,7 @@ void CHud::RenderSpectatorCount()
 		const float y = StartY + BoxHeight / 3.0f;
 		const float x = StartX + 2.0f;
 
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->Text(x, y, Fontsize, FontIcons::FONT_ICON_EYE, -1.0f);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		Ui()->DrawQmIconAt(x, y, Fontsize, EQmIcon::EYE, FontIcons::FONT_ICON_EYE, TextRender()->GetTextColor());
 		TextRender()->Text(x + Fontsize + 3.0f, y, Fontsize, aBuf, -1.0f);
 		GameClient()->m_HudEditor.EndTransform(HudEditorScope);
 		return;
@@ -5890,7 +5893,7 @@ void CHud::RenderSpectatorCount()
 	{
 		const float Fontsize = 5.0f;
 		const float BoxHeight = 12.5f;
-		const float IconWidth = TextRender()->TextWidth(Fontsize, FontIcons::FONT_ICON_EYE);
+		const float IconWidth = Fontsize;
 		const float TextWidth = TextRender()->TextWidth(Fontsize, aBuf);
 		const float BoxWidth = IconWidth + 3.0f + TextWidth + 10.0f;
 
@@ -5909,9 +5912,7 @@ void CHud::RenderSpectatorCount()
 		const float y = StartY + (BoxHeight - Fontsize) / 2.0f;
 		float x = StartX + 5.0f;
 
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->Text(x, y, Fontsize, FontIcons::FONT_ICON_EYE, -1.0f);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		Ui()->DrawQmIconAt(x, y, Fontsize, EQmIcon::EYE, FontIcons::FONT_ICON_EYE, TextRender()->GetTextColor());
 		x += IconWidth + 3.0f;
 		TextRender()->Text(x, y, Fontsize, aBuf, -1.0f);
 		GameClient()->m_HudEditor.EndTransform(HudEditorScope);
@@ -6780,9 +6781,7 @@ void CHud::RenderSpectatorHud()
 		const float TagX = m_Width - RightMargin - TagWidth;
 		Graphics()->DrawRect(TagX, m_Height - 12.0f, TagWidth, 10.0f, ColorRGBA(1.0f, 1.0f, 1.0f, AutoSpecCameraEnabled ? 0.50f : 0.10f), IGraphics::CORNER_ALL, 2.5f);
 		TextRender()->TextColor(1, 1, 1, AutoSpecCameraEnabled ? 1.0f : 0.65f);
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->Text(TagX + Padding, m_Height - 10.0f, 6.0f, FontIcons::FONT_ICON_CAMERA, -1.0f);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		Ui()->DrawQmIconAt(TagX + Padding, m_Height - 10.0f, 6.0f, EQmIcon::CAMERA, FontIcons::FONT_ICON_CAMERA, TextRender()->GetTextColor());
 		TextRender()->Text(TagX + Padding + IconWidth + Padding, m_Height - 10.0f, 6.0f, pLabelText, -1.0f);
 		TextRender()->TextColor(1, 1, 1, 1);
 	}
@@ -7106,7 +7105,7 @@ void CHud::OnNewSnapshot()
 void CHud::OnRender()
 {
 	if((!QmHudMediaIslandShouldPrepareBackdropBlur(g_Config.m_QmHudIslandBgOpacity, g_Config.m_QmGaussianBlur != 0) || g_Config.m_QmHudIslandUseOriginalStyle || !Graphics()->HasMediaIslandSdf()) &&
-		(m_MediaIslandBlurSource.IsValid() || m_MediaIslandBlurTemporary.IsValid() || m_MediaIslandBlurTarget.IsValid()))
+		(m_MediaIslandBlurSource.IsValid() || std::any_of(m_aMediaIslandBlurTemporary.begin(), m_aMediaIslandBlurTemporary.end(), [](const auto &Target) { return Target.IsValid(); }) || m_MediaIslandBlurTarget.IsValid()))
 		DestroyMediaIslandBlurTargets();
 
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)

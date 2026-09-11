@@ -152,6 +152,7 @@ static MiniDumpWriteDumpFunc gs_pMiniDumpWriteDump = nullptr;
 static std::atomic<bool> gs_FallbackHandlersInstalled{false};
 static std::atomic_flag gs_FatalReportInProgress = ATOMIC_FLAG_INIT;
 static std::atomic_flag gs_FatalReporterLaunched = ATOMIC_FLAG_INIT;
+static std::atomic<bool> gs_FallbackReportWritten{false};
 
 static PVOID gs_pVectoredExceptionHandler = nullptr;
 static LPTOP_LEVEL_EXCEPTION_FILTER gs_pPreviousUnhandledExceptionFilter = nullptr;
@@ -672,14 +673,15 @@ static void WriteRaw(HANDLE FileHandle, const char *pText)
 	}
 }
 
-static void WriteMinimalCrashReport(const char *pReason, EXCEPTION_POINTERS *pExceptionPointers, int SignalNumber, bool DumpWritten)
+static bool WriteMinimalCrashReport(const char *pReason, EXCEPTION_POINTERS *pExceptionPointers, int SignalNumber, bool DumpWritten)
 {
+	gs_FallbackReportWritten.store(false, std::memory_order_release);
 	if(gs_aFallbackReportPath[0] == '\0')
-		return;
+		return false;
 
 	HANDLE FileHandle = CreateFileA(gs_aFallbackReportPath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if(FileHandle == INVALID_HANDLE_VALUE)
-		return;
+		return false;
 
 	char aLine[2048];
 	SYSTEMTIME LocalTime{};
@@ -739,6 +741,8 @@ static void WriteMinimalCrashReport(const char *pReason, EXCEPTION_POINTERS *pEx
 
 	FlushFileBuffers(FileHandle);
 	CloseHandle(FileHandle);
+	gs_FallbackReportWritten.store(true, std::memory_order_release);
+	return true;
 }
 
 static bool TryWriteMiniDumpFile(const char *pFilename, EXCEPTION_POINTERS *pExceptionPointers, MINIDUMP_TYPE DumpType, DWORD *pOutError)
@@ -850,6 +854,8 @@ static void LaunchFatalCrashReporter()
 {
 	if(gs_SuppressNextFatalReporter.exchange(false, std::memory_order_acq_rel))
 		return;
+	if(!gs_FallbackReportWritten.load(std::memory_order_acquire) || gs_aFallbackReportPath[0] == '\0')
+		return;
 	if(gs_FatalReporterLaunched.test_and_set(std::memory_order_acq_rel))
 		return;
 
@@ -913,7 +919,8 @@ static void FallbackSignalHandler(int SignalNumber)
 	// 先恢复默认处理，防止报告失败时递归进入信号处理器。
 	std::signal(SignalNumber, SIG_DFL);
 	HandleFatalCrash("Fatal signal", nullptr, SignalNumber);
-	LaunchFatalCrashReporter();
+	// C 信号处理器中不要创建子进程。报告文件已在上面落盘，下一次启动会
+	// 通过 pending-report 流程展示，避免 CreateProcess/窗口初始化再次触发未定义行为。
 	std::raise(SignalNumber);
 	TerminateFromFatalHandler();
 }

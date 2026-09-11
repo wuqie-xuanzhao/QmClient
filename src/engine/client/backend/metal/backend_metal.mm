@@ -3557,7 +3557,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 			return false;
 		const SRenderTarget &Source = m_vRenderTargets[pCommand->m_SourceTargetId];
 		const SRenderTarget &Destination = m_vRenderTargets[DestinationTargetId];
-		if(!Source.m_Allocated || !Destination.m_Allocated || Source.m_Texture == nil || Destination.m_Texture == nil || Source.m_Width != Destination.m_Width || Source.m_Height != Destination.m_Height || Source.m_Width == 0 || Source.m_Height == 0 || m_CurrentCommandBuffer == nil)
+		const bool DualKawase = pCommand->m_Mode == IGraphics::EBlurMode::DUAL;
+		if(!Source.m_Allocated || !Destination.m_Allocated || Source.m_Texture == nil || Destination.m_Texture == nil || Source.m_Width == 0 || Source.m_Height == 0 || Destination.m_Width == 0 || Destination.m_Height == 0 ||
+			(!DualKawase && (Source.m_Width != Destination.m_Width || Source.m_Height != Destination.m_Height)) ||
+			(DualKawase && (pCommand->m_Upsample ? (Source.m_Width >= Destination.m_Width || Source.m_Height >= Destination.m_Height) : (Source.m_Width <= Destination.m_Width || Source.m_Height <= Destination.m_Height))) || m_CurrentCommandBuffer == nil)
 			return false;
 
 		std::array<CCommandBuffer::SVertex, 4> aVertices{};
@@ -3587,8 +3590,10 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 		VertexUniforms.m_MVP.m_v[15] = 1.0f;
 		VertexUniforms.m_Color = {{1.0f, 1.0f, 1.0f, 1.0f}};
 		SMetalGaussianBlurUniforms FragmentUniforms{};
-		FragmentUniforms.m_TexelOffsetRadius = {{pCommand->m_Horizontal ? 1.0f / static_cast<float>(Source.m_Width) : 0.0f, pCommand->m_Horizontal ? 0.0f : 1.0f / static_cast<float>(Source.m_Height), static_cast<float>(pCommand->m_Radius), 0.0f}};
+		const bool Gaussian = pCommand->m_Mode == IGraphics::EBlurMode::GAUSSIAN;
+		FragmentUniforms.m_TexelOffsetRadius = {{Gaussian && !pCommand->m_Horizontal ? 0.0f : 1.0f / static_cast<float>(Source.m_Width), Gaussian && pCommand->m_Horizontal ? 0.0f : 1.0f / static_cast<float>(Source.m_Height), static_cast<float>(pCommand->m_Radius), static_cast<float>(pCommand->m_Mode)}};
 		mem_copy(FragmentUniforms.m_Weights0.m_v, pCommand->m_aWeights.data(), sizeof(pCommand->m_aWeights));
+		FragmentUniforms.m_Weights2.m_v[3] = static_cast<float>(pCommand->m_Pass);
 		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + VertexUniformOffset, &VertexUniforms, sizeof(VertexUniforms));
 		mem_copy(static_cast<uint8_t *>(Frame.m_VertexBuffer.contents) + FragmentUniformOffset, &FragmentUniforms, sizeof(FragmentUniforms));
 
@@ -4231,7 +4236,7 @@ class CCommandProcessorFragment_Metal final : public CCommandProcessorFragment_G
 	void StartCommands(size_t CommandCount, size_t EstimatedRenderCallCount) override
 	{
 		(void)CommandCount;
-		const bool PerfEnabled = g_Config.m_QmMacosGraphicsDiagnostics != 0;
+		const bool PerfEnabled = g_Config.m_QmMacosGraphicsDiagnostics != 0 || g_Config.m_QmGraphicsTrace != 0;
 		if(PerfEnabled != m_MetalPerfEnabled)
 		{
 			m_MetalPerfEnabled = PerfEnabled;

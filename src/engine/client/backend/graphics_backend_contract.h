@@ -29,6 +29,13 @@ namespace graphics_backend
 		return {"OpenGL", 4, 1, 0, 0, 0, 0};
 	}
 
+	// 图形崩溃恢复时避免把全屏用户缩进普通窗口：窗口模式保持窗口，
+	// 其他模式统一降级为桌面全屏，绕开独占全屏但保留桌面尺寸。
+	constexpr int RecoveryFullscreenMode(int CurrentFullscreenMode)
+	{
+		return CurrentFullscreenMode == 0 ? 0 : 2;
+	}
+
 	constexpr bool IsMetalCompiled()
 	{
 #if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)

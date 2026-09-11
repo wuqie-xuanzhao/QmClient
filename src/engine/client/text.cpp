@@ -51,6 +51,9 @@ struct SGlyph
 		UNINITIALIZED,
 		RENDERED,
 		ERROR,
+		// QmClient: 布局/图集位置已分配，但位图光栅化被推迟到后续帧
+		//（单帧光栅化预算耗尽时）。渲染时该字形区域暂时为空白。
+		PENDING,
 	};
 	EState m_State = EState::UNINITIALIZED;
 
@@ -58,6 +61,12 @@ struct SGlyph
 	FT_Face m_Face;
 	int m_Chr;
 	FT_UInt m_GlyphIndex;
+
+	// QmClient: 图集分配坐标，推迟位图光栅化时由 Phase1 记录、Phase2 使用。
+	int m_AtlasX = 0;
+	int m_AtlasY = 0;
+	int m_AtlasW = 0;
+	int m_AtlasH = 0;
 
 	// these values are scaled to the font size
 	// width * font_size == real_size
@@ -301,15 +310,19 @@ private:
 	/**
 	 * The initial dimension of the atlas textures.
 	 *
-	 * QmClient: 提高到 2048 (4 MB per texture; NUM_FONT_TEXTURES=2 → 8 MB total).
-	 * 原因：中文界面字形密度远高于英文 (GBK 常用 3500+ 字)，1024 (1 MB) 几乎必然
-	 * 在首帧渲染设置页时填满，触发 IncreaseGlyphMapSize → UnloadTextures + 翻倍
-	 * 重分配 + UploadTextures 全量重传，造成 ESC 打开 / 切 tab 首帧的 GPU 上传尖峰
-	 * (实测 settings_page_content 单次 355ms 的一部分来自此)。2048 容纳约 4000
-	 * 字形，足以覆盖中文常用字集，从源头消除运行时扩容。
-	 * 代价：启动多占 6 MB 显存，对所有桌面 GPU 可接受。
+	 * QmClient: 提高到 4096 (16 MB per texture; NUM_FONT_TEXTURES=2 → 33 MB total，
+	 * 单通道 alpha 纹理)。
+	 * 历史：1024 → 2048 消除了设置页首帧扩容（中文常用字集 ~3500 字）。
+	 * 4096 原因：实测进服后其他玩家名/MOTD/聊天的生僻字形仍会把 2048 (~4000
+	 * 字形) 的图集挤满，触发运行时 IncreaseGlyphMapSize → UnloadTextures +
+	 * 全量重传——该耗时计入 glyph_rasterize_ms，perf 实测单帧 794ms/253ms
+	 * 尖峰，表现为"进服后锤的前几下某一下突然卡顿，之后不再出现"（扩容后
+	 * 图集翻倍不再触发；重启后图集重置，每次进服复现）。4096 容纳约 16000
+	 * 字形，覆盖中文常用字集 + 多人玩家名/聊天字形，从源头消除进服后的
+	 * 运行时扩容。代价：显存 33 MB（比 2048 多 25 MB），现代 GPU 可接受；
+	 * 极端情况仍保留向 8192 的运行时扩容路径。
 	 */
-	static constexpr int INITIAL_ATLAS_DIMENSION = 2048;
+	static constexpr int INITIAL_ATLAS_DIMENSION = 4096;
 
 	/**
 	 * The maximum dimension of the atlas textures.
@@ -544,6 +557,252 @@ private:
 	bool FitGlyph(size_t Width, size_t Height, int &PosX, int &PosY)
 	{
 		return m_TextureAtlas.Add(Width, Height, PosX, PosY);
+	}
+
+	// QmClient: Phase1 —— 同步计算 metrics 并在图集分配位置（无位图光栅化，
+	// 开销小，供单帧光栅化预算耗尽时使用）。位图区域暂留空白，由
+	// RenderGlyphBitmap 补齐。返回 false = 字体加载失败。
+	bool RenderGlyphMetricsAndAllocate(SGlyph &Glyph)
+	{
+		FT_Set_Pixel_Sizes(Glyph.m_Face, 0, Glyph.m_FontSize);
+
+		if(FT_Load_Glyph(Glyph.m_Face, Glyph.m_GlyphIndex, FT_LOAD_NO_BITMAP))
+		{
+			log_debug("textrender", "Error loading glyph metrics. Chr=%d GlyphIndex=%u", Glyph.m_Chr, Glyph.m_GlyphIndex);
+			return false;
+		}
+
+		const FT_Glyph_Metrics &Metrics = Glyph.m_Face->glyph->metrics;
+		const unsigned RealWidth = (Metrics.width + 63) >> 6;
+		const unsigned RealHeight = (Metrics.height + 63) >> 6;
+
+		int OutlineThickness = 0;
+		int x = 0;
+		int y = 0;
+		if(RealWidth > 0)
+		{
+			OutlineThickness = AdjustOutlineThicknessToFontSize(1, Glyph.m_FontSize);
+			x += (OutlineThickness + 1);
+			y += (OutlineThickness + 1);
+		}
+
+		// 预留 2px 余量：hinting 后实际位图可能比 metrics 取整略大。
+		const unsigned Width = RealWidth + x * 2 + 2;
+		const unsigned Height = RealHeight + y * 2 + 2;
+
+		int X = 0;
+		int Y = 0;
+		if(Width > 0 && Height > 0)
+		{
+			while(!FitGlyph(Width, Height, X, Y))
+			{
+				if(!IncreaseGlyphMapSize())
+				{
+					log_debug("textrender", "Cannot fit glyph into atlas, which is already at maximum size. Chr=%d GlyphIndex=%u", Glyph.m_Chr, Glyph.m_GlyphIndex);
+					return false;
+				}
+			}
+		}
+
+		Glyph.m_AtlasX = X;
+		Glyph.m_AtlasY = Y;
+		Glyph.m_AtlasW = Width;
+		Glyph.m_AtlasH = Height;
+
+		Glyph.m_Height = Height;
+		Glyph.m_Width = Width;
+		Glyph.m_CharHeight = RealHeight;
+		Glyph.m_CharWidth = RealWidth;
+		Glyph.m_OffsetX = (Metrics.horiBearingX >> 6);
+		Glyph.m_OffsetY = -((Metrics.height >> 6) - (Metrics.horiBearingY >> 6));
+		Glyph.m_AdvanceX = (Glyph.m_Face->glyph->advance.x >> 6);
+
+		Glyph.m_aUVs[0] = X;
+		Glyph.m_aUVs[1] = Y;
+		Glyph.m_aUVs[2] = Glyph.m_aUVs[0] + Width;
+		Glyph.m_aUVs[3] = Glyph.m_aUVs[1] + Height;
+
+		Glyph.m_State = SGlyph::EState::PENDING;
+		return true;
+	}
+
+	// QmClient: Phase2 —— 位图光栅化并上传到已分配的图集区域。hinting 后的
+	// 实际位图可能超出按 metrics 预留的区域，此时重新分配并更新 UV
+	//（该字形已渲染的 quad 极少，代价可忽略）。
+	bool RenderGlyphBitmap(SGlyph &Glyph)
+	{
+		const auto RasterizeStart = time_get_nanoseconds();
+		FT_Set_Pixel_Sizes(Glyph.m_Face, 0, Glyph.m_FontSize);
+
+		if(FT_Load_Glyph(Glyph.m_Face, Glyph.m_GlyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_BITMAP))
+		{
+			log_debug("textrender", "Error loading glyph. Chr=%d GlyphIndex=%u", Glyph.m_Chr, Glyph.m_GlyphIndex);
+			return false;
+		}
+
+		const FT_Bitmap *pBitmap = &Glyph.m_Face->glyph->bitmap;
+		if(pBitmap->pixel_mode != FT_PIXEL_MODE_GRAY)
+		{
+			log_debug("textrender", "Error loading glyph, unsupported pixel mode. Chr=%d GlyphIndex=%u PixelMode=%d", Glyph.m_Chr, Glyph.m_GlyphIndex, pBitmap->pixel_mode);
+			return false;
+		}
+
+		const unsigned RealWidth = pBitmap->width;
+		const unsigned RealHeight = pBitmap->rows;
+
+		int OutlineThickness = 0;
+		int x = 0;
+		int y = 0;
+		if(RealWidth > 0)
+		{
+			OutlineThickness = AdjustOutlineThicknessToFontSize(1, Glyph.m_FontSize);
+			x += (OutlineThickness + 1);
+			y += (OutlineThickness + 1);
+		}
+
+		const unsigned Width = RealWidth + x * 2;
+		const unsigned Height = RealHeight + y * 2;
+
+		int X = Glyph.m_AtlasX;
+		int Y = Glyph.m_AtlasY;
+		if(Width > (unsigned)Glyph.m_AtlasW || Height > (unsigned)Glyph.m_AtlasH)
+		{
+			X = 0;
+			Y = 0;
+			while(!FitGlyph(Width, Height, X, Y))
+			{
+				if(!IncreaseGlyphMapSize())
+				{
+					log_debug("textrender", "Cannot fit glyph into atlas, which is already at maximum size. Chr=%d GlyphIndex=%u", Glyph.m_Chr, Glyph.m_GlyphIndex);
+					return false;
+				}
+			}
+			Glyph.m_aUVs[0] = X;
+			Glyph.m_aUVs[1] = Y;
+			Glyph.m_aUVs[2] = Glyph.m_aUVs[0] + Width;
+			Glyph.m_aUVs[3] = Glyph.m_aUVs[1] + Height;
+			Glyph.m_AtlasX = X;
+			Glyph.m_AtlasY = Y;
+			Glyph.m_AtlasW = Width;
+			Glyph.m_AtlasH = Height;
+		}
+
+		if(Width > 0 && Height > 0)
+		{
+			const size_t GlyphDataSize = (size_t)Width * Height * sizeof(uint8_t);
+			uint8_t *pGlyphDataFill = static_cast<uint8_t *>(malloc(GlyphDataSize));
+			uint8_t *pGlyphDataOutline = static_cast<uint8_t *>(malloc(GlyphDataSize));
+			if(pGlyphDataFill == nullptr || pGlyphDataOutline == nullptr)
+			{
+				free(pGlyphDataFill);
+				free(pGlyphDataOutline);
+				log_debug("textrender", "Failed to allocate glyph data. Chr=%d GlyphIndex=%u", Glyph.m_Chr, Glyph.m_GlyphIndex);
+				return false;
+			}
+			mem_zero(pGlyphDataFill, GlyphDataSize);
+			for(unsigned py = 0; py < pBitmap->rows; ++py)
+			{
+				mem_copy(&pGlyphDataFill[(py + y) * Width + x], &pBitmap->buffer[py * pBitmap->width], pBitmap->width);
+			}
+			Grow(pGlyphDataFill, pGlyphDataOutline, Width, Height, OutlineThickness);
+
+			UploadGlyph(FONT_TEXTURE_FILL, X, Y, Width, Height, pGlyphDataFill);
+			UploadGlyph(FONT_TEXTURE_OUTLINE, X, Y, Width, Height, pGlyphDataOutline);
+			free(pGlyphDataFill);
+			free(pGlyphDataOutline);
+		}
+		Glyph.m_Height = Height;
+		Glyph.m_Width = Width;
+		Glyph.m_CharHeight = RealHeight;
+		Glyph.m_CharWidth = RealWidth;
+		Glyph.m_OffsetX = (Glyph.m_Face->glyph->metrics.horiBearingX >> 6);
+		Glyph.m_OffsetY = -((Glyph.m_Face->glyph->metrics.height >> 6) - (Glyph.m_Face->glyph->metrics.horiBearingY >> 6));
+		Glyph.m_AdvanceX = (Glyph.m_Face->glyph->advance.x >> 6);
+		m_QmPerfGlyphNew++;
+		const double RasterizeMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - RasterizeStart).count();
+		m_QmPerfGlyphRasterizeMs += RasterizeMs;
+		m_QmFrameRasterizeSpentMs += RasterizeMs;
+		return true;
+	}
+
+public:
+	// QmClient: 单帧字形光栅化预算状态（qm_text_rasterize_budget_ms）。
+	double m_QmFrameRasterizeSpentMs = 0.0;
+	struct SQmGlyphFrameStats
+	{
+		int m_Deferred = 0;
+		int m_Pending = 0;
+	};
+	int m_QmFrameGlyphsDeferred = 0;
+	std::vector<std::tuple<FT_Face, int, int>> m_vpPendingGlyphBitmaps;
+	// QmClient: 当前容器是否整体推迟（含未缓存字形且超预算时置位）。
+	// 推迟的容器不创建（当帧不渲染），字形补齐后调用方重建即为完整文本，
+	// 避免"同一行左半显示右半空白"的残缺观感。由 CTextRender::CreateTextContainer
+	// 预扫描判定后设置（见其入口注释）。
+	bool m_QmCurrentContainerDefer = false;
+
+	// QmClient: 预扫描文本串中"尚未完成光栅化"的字形数（只查状态，不创建/不
+	// 光栅化，无副作用）。用于容器级 defer 判定。
+	int CountUnrenderedGlyphs(const char *pText, int Length, int FontSize)
+	{
+		FontSize = std::clamp(FontSize, MIN_FONT_SIZE, MAX_FONT_SIZE);
+		if(pText == nullptr)
+			return 0;
+		if(Length < 0)
+			Length = str_length(pText);
+		int Count = 0;
+		const char *pCurrent = pText;
+		const char *pEnd = pCurrent + Length;
+		while(pCurrent < pEnd)
+		{
+			const int Chr = str_utf8_decode(&pCurrent);
+			if(Chr == 0)
+				continue;
+			FT_Face Face;
+			const FT_UInt GlyphIndex = GetCharGlyph(Chr, &Face, false);
+			if(GlyphIndex == 0)
+				continue; // 替换字符路径，不计入
+			auto It = m_Glyphs.find(std::make_tuple(Face, Chr, FontSize));
+			if(It == m_Glyphs.end() || It->second.m_State != SGlyph::EState::RENDERED)
+				++Count;
+		}
+		return Count;
+	}
+
+	// QmClient: 每渲染帧末尾由 CTextRender::QmTextFrameEnd 转发调用。
+	// 用新帧的预算补齐上一帧推迟的字形位图——只更新图集纹理区域
+	//（UV/布局不变），已创建的文本容器无需重建，字形 1-2 帧内补全。
+	SQmGlyphFrameStats QmGlyphFrameEnd()
+	{
+		SQmGlyphFrameStats Stats;
+		Stats.m_Deferred = m_QmFrameGlyphsDeferred;
+		Stats.m_Pending = (int)m_vpPendingGlyphBitmaps.size();
+		m_QmFrameGlyphsDeferred = 0;
+		m_QmFrameRasterizeSpentMs = 0.0;
+		if(m_vpPendingGlyphBitmaps.empty())
+			return Stats;
+
+		std::vector<std::tuple<FT_Face, int, int>> Remaining;
+		Remaining.reserve(m_vpPendingGlyphBitmaps.size());
+		for(const auto &Key : m_vpPendingGlyphBitmaps)
+		{
+			auto It = m_Glyphs.find(Key);
+			if(It == m_Glyphs.end() || It->second.m_State != SGlyph::EState::PENDING)
+				continue; // 图集已重置或字形已被处理
+			constexpr double PendingRasterizeBudgetMs = 8.0;
+			if(m_QmFrameRasterizeSpentMs >= PendingRasterizeBudgetMs)
+			{
+				Remaining.push_back(Key);
+				continue;
+			}
+			if(!RenderGlyphBitmap(It->second))
+				It->second.m_State = SGlyph::EState::ERROR;
+			else
+				It->second.m_State = SGlyph::EState::RENDERED;
+		}
+		m_vpPendingGlyphBitmaps.swap(Remaining);
+		Stats.m_Pending = (int)m_vpPendingGlyphBitmaps.size();
+		return Stats;
 	}
 
 	bool RenderGlyph(SGlyph &Glyph)
@@ -851,8 +1110,8 @@ public:
 
 		// Check if glyph for this (font face, character, font size)-combination was already rendered.
 		SGlyph &Glyph = m_Glyphs[std::make_tuple(Face, Chr, FontSize)];
-		if(Glyph.m_State == SGlyph::EState::RENDERED)
-			return &Glyph;
+		if(Glyph.m_State == SGlyph::EState::RENDERED || Glyph.m_State == SGlyph::EState::PENDING)
+			return &Glyph; // PENDING：布局与图集位置已就绪，位图等待补齐（当帧显示为空白）
 		else if(Glyph.m_State == SGlyph::EState::ERROR)
 			return nullptr;
 
@@ -861,7 +1120,9 @@ public:
 		Glyph.m_Face = Face;
 		Glyph.m_Chr = Chr;
 		Glyph.m_GlyphIndex = GlyphIndex;
-		if(RenderGlyph(Glyph))
+
+		const bool Rendered = RenderGlyph(Glyph);
+		if(Rendered)
 			return &Glyph;
 
 		// Use replacement character if the glyph could not be rendered,
@@ -1135,6 +1396,13 @@ class CTextRender : public IEngineTextRender
 	double m_QmPerfTextContainerUploadMs = 0.0;
 	SQmTextRuntimeBudgetSnapshot m_QmLastTextRuntimeBudgetSnapshot;
 
+	// QmClient: 单帧文本统计（QmTextFrameEnd 时消费并按阈值打日志）。
+	int m_QmFrameContainerCreates = 0;
+	int m_QmPeakFrameContainerCreates = 0;
+	double m_QmPeakFrameRasterizeMs = 0.0;
+	int m_QmPeakFrameGlyphNew = 0;
+	double m_QmAvgRasterizeMsPerGlyph = 1.0;
+
 	// TClient
 	std::vector<std::string> m_CustomFontFaces;
 	std::vector<std::string> m_DefaultFontFaces;
@@ -1213,6 +1481,52 @@ class CTextRender : public IEngineTextRender
 	SQmTextRuntimeBudgetSnapshot QmTextRuntimeBudgetSnapshot() const override
 	{
 		return m_QmLastTextRuntimeBudgetSnapshot;
+	}
+
+	// QmClient: 每渲染帧末尾由主循环调用。消费本帧的字形统计，容器创建数
+	// 由 CreateTextContainer 递增。单帧超过阈值时打 text_frame_stats 日志，
+	// 用于定位"进服后前几下卡顿"这类单帧文本渲染尖峰。
+	void QmTextFrameEnd() override
+	{
+		if(m_pGlyphMap == nullptr)
+			return;
+
+		// QmClient: 字形光栅化预算/推迟队列由 CGlyphMap 管理（帧末补齐上一帧
+		// 推迟的字形位图，只更新图集纹理区域，已创建的文本容器无需重建）。
+		const auto GlyphFrameStats = m_pGlyphMap->QmGlyphFrameEnd();
+
+		int FrameGlyphNew = 0;
+		int FrameGlyphUploads = 0;
+		double FrameRasterizeMs = 0.0;
+		double FrameUploadMs = 0.0;
+		m_pGlyphMap->ConsumeQmPerfGlyphStats(FrameGlyphNew, FrameGlyphUploads, FrameRasterizeMs, FrameUploadMs);
+		if(FrameGlyphNew > 0)
+			m_QmAvgRasterizeMsPerGlyph = m_QmAvgRasterizeMsPerGlyph * 0.8 + (FrameRasterizeMs / FrameGlyphNew) * 0.2;
+
+		constexpr int ContainerCreatesThreshold = 256;
+		constexpr double RasterizeThresholdMs = 4.0;
+		constexpr int GlyphNewThreshold = 96;
+
+		if(FrameRasterizeMs > m_QmPeakFrameRasterizeMs)
+			m_QmPeakFrameRasterizeMs = FrameRasterizeMs;
+		if(m_QmFrameContainerCreates > m_QmPeakFrameContainerCreates)
+			m_QmPeakFrameContainerCreates = m_QmFrameContainerCreates;
+		if(FrameGlyphNew > m_QmPeakFrameGlyphNew)
+			m_QmPeakFrameGlyphNew = FrameGlyphNew;
+
+		if(QmPerfEnabled() && (m_QmFrameContainerCreates >= ContainerCreatesThreshold ||
+					      FrameRasterizeMs >= RasterizeThresholdMs || FrameGlyphNew >= GlyphNewThreshold || GlyphFrameStats.m_Deferred > 0))
+		{
+			char aPayload[288];
+			str_format(aPayload, sizeof(aPayload),
+				"event=text_frame_stats container_creates=%d glyph_new=%d glyph_uploads=%d glyph_rasterize_ms=%.3f glyph_deferred=%d pending=%d peak_creates=%d peak_rasterize_ms=%.3f peak_glyph_new=%d",
+				m_QmFrameContainerCreates, FrameGlyphNew, FrameGlyphUploads, FrameRasterizeMs,
+				GlyphFrameStats.m_Deferred, GlyphFrameStats.m_Pending,
+				m_QmPeakFrameContainerCreates, m_QmPeakFrameRasterizeMs, m_QmPeakFrameGlyphNew);
+			QmPerfLogPayload("perf/text", aPayload);
+		}
+
+		m_QmFrameContainerCreates = 0;
 	}
 
 	int GetFreeTextContainerIndex()
@@ -1877,8 +2191,10 @@ public:
 	bool CreateTextContainer(STextContainerIndex &TextContainerIndex, CTextCursor *pCursor, const char *pText, int Length = -1) override
 	{
 		dbg_assert(!TextContainerIndex.Valid(), "Text container index was not cleared.");
+
 		const auto CreateStart = time_get_nanoseconds();
 		++m_QmPerfTextContainerNew;
+		++m_QmFrameContainerCreates;
 
 		TextContainerIndex.Reset();
 		TextContainerIndex.m_Index = GetFreeTextContainerIndex();

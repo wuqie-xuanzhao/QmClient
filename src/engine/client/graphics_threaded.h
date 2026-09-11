@@ -350,6 +350,9 @@ public:
 		int m_SourceTargetId = -1;
 		int m_Radius = 0;
 		bool m_Horizontal = false;
+		IGraphics::EBlurMode m_Mode = IGraphics::EBlurMode::GAUSSIAN;
+		int m_Pass = 0;
+		bool m_Upsample = false;
 		std::array<float, IGraphics::GAUSSIAN_BLUR_MAX_RADIUS + 1> m_aWeights{};
 	};
 
@@ -1174,7 +1177,7 @@ public:
 	void EndRenderTarget() override;
 	void DrawRenderTarget(CRenderTargetHandle Target, const SRenderTargetDrawParams &Params) override;
 	bool CaptureBackbufferToRenderTarget(CRenderTargetHandle Target) override;
-	bool GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) override;
+	bool GaussianBlurRenderTarget(CRenderTargetHandle Source, const std::array<CRenderTargetHandle, DUAL_KAWASE_PYRAMID_LEVELS> &aTemporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) override;
 	CRenderTargetReadbackHandle BeginRenderTargetReadback(CRenderTargetHandle Target) override;
 	ERenderTargetReadbackState PollRenderTargetReadback(CRenderTargetReadbackHandle Handle) override;
 	bool ResolveRenderTargetReadback(CRenderTargetReadbackHandle *pHandle, CImageInfo &Image) override;

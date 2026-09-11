@@ -30,6 +30,7 @@
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/localization.h>
 
 #include <algorithm>
@@ -3171,12 +3172,6 @@ void CChat::RenderTranslateButton(const CUIRect &ButtonRect)
 	ButtonRect.Margin(1.0f, &IconRect);
 	const float IconSize = IconRect.h * CUi::ms_FontmodHeight;
 
-	if(!m_TranslateButton.m_IconUiElementInit)
-	{
-		m_TranslateButton.m_IconUiElement.Init(Ui(), 1);
-		m_TranslateButton.m_IconUiElementInit = true;
-	}
-
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH |
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING |
@@ -3184,7 +3179,8 @@ void CChat::RenderTranslateButton(const CUIRect &ButtonRect)
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT |
 				     ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.95f);
-	Ui()->DoLabelStreamed(*m_TranslateButton.m_IconUiElement.Rect(0), &IconRect, FONT_ICON_LANGUAGE, IconSize, TEXTALIGN_MC);
+	// 图标走图集（失败回退 FONT_ICON_LANGUAGE）；单字形无需 streamed 文本缓存。
+	Ui()->DoLabel_QmIcon(&IconRect, EQmIcon::LANGUAGE, FONT_ICON_LANGUAGE, IconSize, TEXTALIGN_MC);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -3445,7 +3441,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupChatLineMenu(void *pContext, CUIRect V
 	constexpr float IconSize = 9.5f;
 	constexpr float IconWidth = 21.0f;
 
-	auto DoEntry = [&](CButtonContainer *pButton, const char *pIcon, const char *pText, bool Enabled, ColorRGBA AccentColor) {
+	auto DoEntry = [&](CButtonContainer *pButton, EQmIcon Icon, const char *pIcon, const char *pText, bool Enabled, ColorRGBA AccentColor) {
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		CUIRect Button, IconRect, LabelRect;
 		View.HSplitTop(ButtonHeight, &Button, &View);
@@ -3462,7 +3458,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupChatLineMenu(void *pContext, CUIRect V
 		Button.VSplitLeft(IconWidth, &IconRect, &LabelRect);
 
 		pChat->TextRender()->TextColor(Enabled ? AccentColor : ColorRGBA(0.55f, 0.60f, 0.64f, 0.45f));
-		pUi->DoLabel(&IconRect, pIcon, IconSize, TEXTALIGN_MC);
+		pUi->DoLabel_QmIcon(&IconRect, Icon, pIcon, IconSize, TEXTALIGN_MC);
 		pChat->TextRender()->TextColor(Enabled ? ColorRGBA(0.93f, 0.96f, 0.98f, 0.96f) : ColorRGBA(0.62f, 0.67f, 0.70f, 0.45f));
 		pUi->DoLabel(&LabelRect, pText, FontSize, TEXTALIGN_ML);
 		pChat->TextRender()->TextColor(pChat->TextRender()->DefaultTextColor());
@@ -3470,22 +3466,22 @@ CUi::EPopupMenuFunctionResult CChat::PopupChatLineMenu(void *pContext, CUIRect V
 		return Active && Enabled && pUi->DoButtonLogic(pButton, 0, &ButtonHitRect, BUTTONFLAG_LEFT);
 	};
 
-	if(DoEntry(&pPopupContext->m_CopyButton, FontIcons::FONT_ICON_COPY, Localize("Copy"), pPopupContext->m_aText[0] != '\0', ColorRGBA(0.74f, 0.88f, 1.0f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_CopyButton, EQmIcon::COPY, FontIcons::FONT_ICON_COPY, Localize("Copy"), pPopupContext->m_aText[0] != '\0', ColorRGBA(0.74f, 0.88f, 1.0f, 1.0f)))
 	{
 		pChat->Input()->SetClipboardText(pPopupContext->m_aText);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
-	if(DoEntry(&pPopupContext->m_AddOneButton, FontIcons::FONT_ICON_ARROWS_ROTATE, Localize("Add one"), pPopupContext->m_aText[0] != '\0', ColorRGBA(0.70f, 0.95f, 0.78f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_AddOneButton, EQmIcon::ARROWS_ROTATE, FontIcons::FONT_ICON_ARROWS_ROTATE, Localize("Add one"), pPopupContext->m_aText[0] != '\0', ColorRGBA(0.70f, 0.95f, 0.78f, 1.0f)))
 	{
 		pChat->RepeatChatLine(*pPopupContext);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
-	if(DoEntry(&pPopupContext->m_ReplyButton, FontIcons::FONT_ICON_COMMENT, Localize("Reply"), pPopupContext->m_PlayerLine && pPopupContext->m_aName[0] != '\0', ColorRGBA(0.88f, 0.78f, 1.0f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_ReplyButton, EQmIcon::COMMENT, FontIcons::FONT_ICON_COMMENT, Localize("Reply"), pPopupContext->m_PlayerLine && pPopupContext->m_aName[0] != '\0', ColorRGBA(0.88f, 0.78f, 1.0f, 1.0f)))
 	{
 		pChat->ReplyToChatLine(*pPopupContext);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
-	if(DoEntry(&pPopupContext->m_SpectateButton, FontIcons::FONT_ICON_EYE, Localize("Spectate"), pPopupContext->m_PlayerLine && pPopupContext->m_aPlayerName[0] != '\0', ColorRGBA(0.72f, 0.86f, 1.0f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_SpectateButton, EQmIcon::EYE, FontIcons::FONT_ICON_EYE, Localize("Spectate"), pPopupContext->m_PlayerLine && pPopupContext->m_aPlayerName[0] != '\0', ColorRGBA(0.72f, 0.86f, 1.0f, 1.0f)))
 	{
 		pChat->SpectateChatLine(*pPopupContext);
 		return CUi::POPUP_CLOSE_CURRENT;
@@ -3496,17 +3492,17 @@ CUi::EPopupMenuFunctionResult CChat::PopupChatLineMenu(void *pContext, CUIRect V
 	Divider.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.09f), IGraphics::CORNER_ALL, 1.0f);
 	View.HSplitTop(3.0f, nullptr, &View);
 
-	if(DoEntry(&pPopupContext->m_MutePlayerButton, FontIcons::FONT_ICON_BAN, Localize("Mute player"), pPopupContext->m_PlayerLine && !pPopupContext->m_LocalPlayer, ColorRGBA(1.0f, 0.50f, 0.52f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_MutePlayerButton, EQmIcon::BAN, FontIcons::FONT_ICON_BAN, Localize("Mute player"), pPopupContext->m_PlayerLine && !pPopupContext->m_LocalPlayer, ColorRGBA(1.0f, 0.50f, 0.52f, 1.0f)))
 	{
 		pChat->GameClient()->m_aClients[pPopupContext->m_ClientId].m_ChatIgnore = true;
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
-	if(DoEntry(&pPopupContext->m_AddBlockedWordButton, FontIcons::FONT_ICON_COMMENT_SLASH, Localize("Add to blocked words"), pPopupContext->m_aText[0] != '\0', ColorRGBA(1.0f, 0.67f, 0.45f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_AddBlockedWordButton, EQmIcon::COMMENT_SLASH, FontIcons::FONT_ICON_COMMENT_SLASH, Localize("Add to blocked words"), pPopupContext->m_aText[0] != '\0', ColorRGBA(1.0f, 0.67f, 0.45f, 1.0f)))
 	{
 		pChat->AddTextToBlockWords(pPopupContext->m_aText);
 		return CUi::POPUP_CLOSE_CURRENT;
 	}
-	if(DoEntry(&pPopupContext->m_CopyNameButton, FontIcons::FONT_ICON_USER, Localize("Copy name"), pPopupContext->m_PlayerLine && pPopupContext->m_aName[0] != '\0', ColorRGBA(0.78f, 0.88f, 0.95f, 1.0f)))
+	if(DoEntry(&pPopupContext->m_CopyNameButton, EQmIcon::USER, FontIcons::FONT_ICON_USER, Localize("Copy name"), pPopupContext->m_PlayerLine && pPopupContext->m_aName[0] != '\0', ColorRGBA(0.78f, 0.88f, 0.95f, 1.0f)))
 	{
 		pChat->Input()->SetClipboardText(pPopupContext->m_aName);
 		return CUi::POPUP_CLOSE_CURRENT;
@@ -3541,7 +3537,7 @@ CUi::EPopupMenuFunctionResult CChat::PopupLanguageMenu(void *pContext, CUIRect V
 	static CButtonContainer s_CloseButton;
 	CUIRect CloseButton;
 	TitleRect.VSplitRight(22.0f, &TitleRect, &CloseButton);
-	if(pUi->DoButton_FontIcon(&s_CloseButton, FontIcons::FONT_ICON_XMARK, 0, &CloseButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
+	if(pUi->DoButton_QmIcon(&s_CloseButton, EQmIcon::CLOSE, FontIcons::FONT_ICON_XMARK, 0, &CloseButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
 		return CUi::POPUP_CLOSE_CURRENT;
 	DoCachedChatPopupLabel(pUi, pPopupContext->m_aLabelUiElements[CLanguagePopupContext::LABEL_TITLE], TitleRect, Localize("Translation Settings"), FontSize, TEXTALIGN_MC);
 	View.HSplitTop(SectionSpacing, nullptr, &View);

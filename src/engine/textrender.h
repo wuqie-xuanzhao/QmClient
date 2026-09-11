@@ -57,6 +57,8 @@ enum ETextRenderFlags
 	TEXT_RENDER_FLAG_NO_AUTOMATIC_QUAD_UPLOAD = 1 << 8,
 	// text is only rendered once and then discarded (a hint for buffer creation)
 	TEXT_RENDER_FLAG_ONE_TIME_USE = 1 << 9,
+	// one-shot UI paths (for example shutdown) must complete synchronously
+	TEXT_RENDER_FLAG_FORCE_SYNCHRONOUS = 1 << 10,
 };
 
 enum class EFontPreset
@@ -447,6 +449,10 @@ public:
 	virtual void UploadTextContainer(STextContainerIndex TextContainerIndex) = 0;
 	virtual void FlushQmTextRuntimeBudgetLog() {}
 	virtual SQmTextRuntimeBudgetSnapshot QmTextRuntimeBudgetSnapshot() const { return {}; }
+	// QmClient: 渲染帧结束时由主循环调用，统计当帧的文本容器创建数与字形
+	// 光栅化耗时（FlushQmTextRuntimeBudgetLog 是跨帧累计观测，无法反映单帧
+	// 尖峰；本钩子提供单帧粒度数据用于定位文本渲染卡顿）。
+	virtual void QmTextFrameEnd() {}
 
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, float X, float Y) = 0;

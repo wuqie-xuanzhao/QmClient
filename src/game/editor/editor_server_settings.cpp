@@ -10,6 +10,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/lineinput.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/editor/editor_actions.h>
@@ -78,7 +79,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
 	static int s_DeleteButton = 0;
-	if(DoButton_FontIcon(&s_DeleteButton, FONT_ICON_TRASH, GotSelection ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Delete] Delete the selected command from the command list.", "Editor"), IGraphics::CORNER_ALL, 9.0f) || (GotSelection && CLineInput::GetActiveInput() == nullptr && m_Dialog == DIALOG_NONE && Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE)))
+	if(DoButton_QmIcon(&s_DeleteButton, EQmIcon::TRASH, FONT_ICON_TRASH, GotSelection ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Delete] Delete the selected command from the command list.", "Editor"), IGraphics::CORNER_ALL, 9.0f) || (GotSelection && CLineInput::GetActiveInput() == nullptr && m_Dialog == DIALOG_NONE && Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE)))
 	{
 		Map()->m_ServerSettingsHistory.RecordAction(std::make_shared<CEditorCommandAction>(Map(), CEditorCommandAction::EType::DELETE, &s_CommandSelectedIndex, s_CommandSelectedIndex, Map()->m_vSettings[s_CommandSelectedIndex].m_aCommand));
 
@@ -98,7 +99,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	const bool CanMoveDown = GotSelection && s_CommandSelectedIndex < (int)Map()->m_vSettings.size() - 1;
 	static int s_DownButton = 0;
-	if(DoButton_FontIcon(&s_DownButton, FONT_ICON_SORT_DOWN, CanMoveDown ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Alt+Down] Move the selected command down.", "Editor"), IGraphics::CORNER_R, 11.0f) || (CanMoveDown && Input()->AltIsPressed() && Ui()->ConsumeHotkey(CUi::HOTKEY_DOWN)))
+	if(DoButton_QmIcon(&s_DownButton, EQmIcon::SORT_DOWN, FONT_ICON_SORT_DOWN, CanMoveDown ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Alt+Down] Move the selected command down.", "Editor"), IGraphics::CORNER_R, 11.0f) || (CanMoveDown && Input()->AltIsPressed() && Ui()->ConsumeHotkey(CUi::HOTKEY_DOWN)))
 	{
 		Map()->m_ServerSettingsHistory.RecordAction(std::make_shared<CEditorCommandAction>(Map(), CEditorCommandAction::EType::MOVE_DOWN, &s_CommandSelectedIndex, s_CommandSelectedIndex));
 
@@ -113,7 +114,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
 	const bool CanMoveUp = GotSelection && s_CommandSelectedIndex > 0;
 	static int s_UpButton = 0;
-	if(DoButton_FontIcon(&s_UpButton, FONT_ICON_SORT_UP, CanMoveUp ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Alt+Up] Move the selected command up.", "Editor"), IGraphics::CORNER_L, 11.0f) || (CanMoveUp && Input()->AltIsPressed() && Ui()->ConsumeHotkey(CUi::HOTKEY_UP)))
+	if(DoButton_QmIcon(&s_UpButton, EQmIcon::SORT_UP, FONT_ICON_SORT_UP, CanMoveUp ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Alt+Up] Move the selected command up.", "Editor"), IGraphics::CORNER_L, 11.0f) || (CanMoveUp && Input()->AltIsPressed() && Ui()->ConsumeHotkey(CUi::HOTKEY_UP)))
 	{
 		Map()->m_ServerSettingsHistory.RecordAction(std::make_shared<CEditorCommandAction>(Map(), CEditorCommandAction::EType::MOVE_UP, &s_CommandSelectedIndex, s_CommandSelectedIndex));
 
@@ -126,7 +127,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	// redo button
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	static int s_RedoButton = 0;
-	if(DoButton_FontIcon(&s_RedoButton, FONT_ICON_REDO, Map()->m_ServerSettingsHistory.CanRedo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last command edit.", "Editor"), IGraphics::CORNER_R, 11.0f))
+	if(DoButton_QmIcon(&s_RedoButton, EQmIcon::REDO, FONT_ICON_REDO, Map()->m_ServerSettingsHistory.CanRedo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last command edit.", "Editor"), IGraphics::CORNER_R, 11.0f))
 	{
 		Map()->m_ServerSettingsHistory.Redo();
 	}
@@ -135,7 +136,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
 	static int s_UndoButton = 0;
-	if(DoButton_FontIcon(&s_UndoButton, FONT_ICON_UNDO, Map()->m_ServerSettingsHistory.CanUndo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last command edit.", "Editor"), IGraphics::CORNER_L, 11.0f))
+	if(DoButton_QmIcon(&s_UndoButton, EQmIcon::UNDO, FONT_ICON_UNDO, Map()->m_ServerSettingsHistory.CanUndo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last command edit.", "Editor"), IGraphics::CORNER_L, 11.0f))
 	{
 		Map()->m_ServerSettingsHistory.Undo();
 	}
@@ -155,7 +156,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	const bool CanUpdate = GotSelection && CurrentInputValid && str_comp(Map()->m_vSettings[s_CommandSelectedIndex].m_aCommand, m_SettingsCommandInput.GetString()) != 0;
 
 	static int s_UpdateButton = 0;
-	if(DoButton_FontIcon(&s_UpdateButton, FONT_ICON_PENCIL, CanUpdate ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Alt+Enter] Update the selected command based on the entered value.", "Editor"), IGraphics::CORNER_R, 9.0f) || (CanUpdate && Input()->AltIsPressed() && m_Dialog == DIALOG_NONE && m_SettingsCommandInput.IsActive() && Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)))
+	if(DoButton_QmIcon(&s_UpdateButton, EQmIcon::PENCIL, FONT_ICON_PENCIL, CanUpdate ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Alt+Enter] Update the selected command based on the entered value.", "Editor"), IGraphics::CORNER_R, 9.0f) || (CanUpdate && Input()->AltIsPressed() && m_Dialog == DIALOG_NONE && m_SettingsCommandInput.IsActive() && Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)))
 	{
 		if(CollidingCommandIndex == -1)
 		{
@@ -222,7 +223,7 @@ void CEditor::RenderServerSettingsEditor(CUIRect View, bool ShowServerSettingsEd
 	ToolBar.VSplitRight(100.0f, &ToolBar, nullptr);
 
 	static int s_AddButton = 0;
-	if(DoButton_FontIcon(&s_AddButton, CanReplace ? FONT_ICON_ARROWS_ROTATE : FONT_ICON_PLUS, CanAdd || CanReplace ? 0 : -1, &Button, BUTTONFLAG_LEFT, CanReplace ? Localize("[Enter] Replace the corresponding command in the command list.", "Editor") : Localize("[Enter] Add a command to the command list.", "Editor"), IGraphics::CORNER_L) || ((CanAdd || CanReplace) && !Input()->AltIsPressed() && m_Dialog == DIALOG_NONE && m_SettingsCommandInput.IsActive() && Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)))
+	if(DoButton_QmIcon(&s_AddButton, CanReplace ? EQmIcon::ARROWS_ROTATE : EQmIcon::PLUS, CanReplace ? FONT_ICON_ARROWS_ROTATE : FONT_ICON_PLUS, CanAdd || CanReplace ? 0 : -1, &Button, BUTTONFLAG_LEFT, CanReplace ? Localize("[Enter] Replace the corresponding command in the command list.", "Editor") : Localize("[Enter] Add a command to the command list.", "Editor"), IGraphics::CORNER_L) || ((CanAdd || CanReplace) && !Input()->AltIsPressed() && m_Dialog == DIALOG_NONE && m_SettingsCommandInput.IsActive() && Ui()->ConsumeHotkey(CUi::HOTKEY_ENTER)))
 	{
 		if(CanReplace)
 		{
@@ -327,7 +328,7 @@ void CEditor::DoMapSettingsEditBox(CMapSettingsBackend::CContext *pContext, cons
 	ToolBar.VSplitRight(ToolBar.h, &ToolBar, &Button);
 
 	// Do the unknown command toggle button
-	if(DoButton_FontIcon(&Context.m_AllowUnknownCommands, FONT_ICON_QUESTION, Context.m_AllowUnknownCommands, &Button, BUTTONFLAG_LEFT, Localize("Disallow/allow unknown or invalid commands.", "Editor"), IGraphics::CORNER_R))
+	if(DoButton_QmIcon(&Context.m_AllowUnknownCommands, EQmIcon::QUESTION, FONT_ICON_QUESTION, Context.m_AllowUnknownCommands, &Button, BUTTONFLAG_LEFT, Localize("Disallow/allow unknown or invalid commands.", "Editor"), IGraphics::CORNER_R))
 	{
 		Context.m_AllowUnknownCommands = !Context.m_AllowUnknownCommands;
 		Context.Update();
@@ -649,7 +650,7 @@ void CEditor::RenderMapSettingsErrorDialog()
 						FixBtn.HMargin(1.0f, &FixBtn);
 
 						// Delete button
-						if(DoButton_FontIcon(&pInvalidSetting->m_Context.m_Deleted, FONT_ICON_TRASH, pInvalidSetting->m_Context.m_Deleted, &DelBtn, BUTTONFLAG_LEFT, Localize("Delete this command.", "Editor"), IGraphics::CORNER_ALL, 10.0f))
+						if(DoButton_QmIcon(&pInvalidSetting->m_Context.m_Deleted, EQmIcon::TRASH, FONT_ICON_TRASH, pInvalidSetting->m_Context.m_Deleted, &DelBtn, BUTTONFLAG_LEFT, Localize("Delete this command.", "Editor"), IGraphics::CORNER_ALL, 10.0f))
 							pInvalidSetting->m_Context.m_Deleted = !pInvalidSetting->m_Context.m_Deleted;
 
 						// Fix button

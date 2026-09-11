@@ -884,15 +884,20 @@ void CGameWorld::CreatePredictedEvent(const CPredictedEvent &NewEvent)
 	}
 }
 
-bool CGameWorld::CheckPredictedEventHandled(const CPredictedEvent &CheckEvent)
+bool CGameWorld::CheckPredictedEventHandled(const CPredictedEvent &CheckEvent, bool *pUnplayedMatch)
 {
 	// 网络确认事件没有实体 Id，只能在有限 tick 窗口内按类型、附加信息和位置匹配。
-	return QmCheckPredictedEventHandled(m_PredictedEvents, CheckEvent);
+	return QmCheckPredictedEventHandled(m_PredictedEvents, CheckEvent, pUnplayedMatch);
 }
 
-bool CGameWorld::CheckPredictedHammerHitHandled(const CPredictedEvent &CheckEvent)
+bool CGameWorld::CheckPredictedHammerHitHandled(const CPredictedEvent &CheckEvent, bool *pUnplayedMatch)
 {
-	return QmCheckPredictedHammerHitHandled(m_PredictedEvents, CheckEvent);
+	return QmCheckPredictedHammerHitHandled(m_PredictedEvents, CheckEvent, pUnplayedMatch);
+}
+
+bool CGameWorld::CheckPredictedHammerHitHandledLoose(int AttackerId, vec2 Pos, int Tick)
+{
+	return QmCheckPredictedHammerHitHandledLoose(m_PredictedEvents, AttackerId, Pos, Tick);
 }
 
 void CGameWorld::CreatePredictedSound(vec2 Pos, int SoundId, int Id)
@@ -900,8 +905,30 @@ void CGameWorld::CreatePredictedSound(vec2 Pos, int SoundId, int Id)
 	if(!g_Config.m_SndEnable)
 		return;
 
+	if(g_Config.m_DbgPredictEvents)
+		dbg_msg("pred_event", "create sound=%d id=%d tick=%d pos=%.1f,%.1f", SoundId, Id, GameTick(), Pos.x, Pos.y);
+
 	CPredictedEvent Event(NETEVENTTYPE_SOUNDWORLD, Pos, Id, GameTick(), SoundId);
 	CreatePredictedEvent(Event);
+}
+
+// QmClient: 见 gameworld.h 声明处注释。屏障事件带实体 Id（本地角色），
+// 因此在 QmCheckPredictedEventHandled 中不受"无 Id 事件只屏蔽 1 tick"的
+// 限制，能覆盖服务端确认晚到数 tick 的情况；同位置 3 秒内的同声快照
+// 事件至多被吞一次，属可接受的权衡（与预测钩子声音的既有行为一致）。
+void CGameWorld::CreateHandledPredictedSound(vec2 Pos, int SoundId, int Id)
+{
+	if(!g_Config.m_SndEnable)
+		return;
+
+	CPredictedEvent Event(NETEVENTTYPE_SOUNDWORLD, Pos, Id, GameTick(), SoundId);
+	Event.m_Handled = true;
+	const auto It = std::find_if(
+		m_PredictedEvents.begin(),
+		m_PredictedEvents.end(),
+		[Event](const CPredictedEvent &Existing) { return QmPredictedEventMatchesForCreation(Existing, Event); });
+	if(It == m_PredictedEvents.end())
+		m_PredictedEvents.push_back(Event);
 }
 
 void CGameWorld::CreatePredictedExplosionEvent(vec2 Pos, int Id)

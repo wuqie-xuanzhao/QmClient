@@ -1074,6 +1074,16 @@ int CMenus::DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, 
 
 int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float TextFontSize)
 {
+	return DoButton_MenuInternal(pButtonContainer, pText, EQmIcon::COUNT, nullptr, Checked, pRect, Flags, pImageName, Corners, Rounding, FontFactor, Color, pTextUiElement, TextFontSize);
+}
+
+int CMenus::DoButton_Menu_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float TextFontSize)
+{
+	return DoButton_MenuInternal(pButtonContainer, nullptr, Icon, pFallbackIcon, Checked, pRect, Flags, pImageName, Corners, Rounding, FontFactor, Color, pTextUiElement, TextFontSize);
+}
+
+int CMenus::DoButton_MenuInternal(CButtonContainer *pButtonContainer, const char *pText, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, const unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float TextFontSize)
+{
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	CUIRect Text = *pRect;
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
@@ -1123,7 +1133,12 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 	}
 
 	Text = MenuButtonTextRect(&Text, FontFactor, HoverLift);
-	if(pText != nullptr && pText[0] != '\0')
+	if(Icon != EQmIcon::COUNT)
+	{
+		const float ResolvedTextFontSize = TextFontSize > 0.0f ? std::min(TextFontSize, Text.h * CUi::ms_FontmodHeight) : Text.h * CUi::ms_FontmodHeight;
+		Ui()->DoLabel_QmIcon(&Text, Icon, pFallbackIcon, ResolvedTextFontSize, TEXTALIGN_MC);
+	}
+	else if(pText != nullptr && pText[0] != '\0')
 	{
 		const float ResolvedTextFontSize = TextFontSize > 0.0f ? std::min(TextFontSize, Text.h * CUi::ms_FontmodHeight) : Text.h * CUi::ms_FontmodHeight;
 		if(pTextUiElement != nullptr)
@@ -1136,6 +1151,16 @@ int CMenus::DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText,
 }
 
 int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float FontSize)
+{
+	return DoButton_MenuTabInternal(pButtonContainer, pText, EQmIcon::COUNT, nullptr, Checked, pRect, Corners, pAnimator, pDefaultColor, pActiveColor, pHoverColor, EdgeRounding, pCommunityIcon, pTextUiElement, FontSize);
+}
+
+int CMenus::DoButton_MenuTab_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float FontSize)
+{
+	return DoButton_MenuTabInternal(pButtonContainer, nullptr, Icon, pFallbackIcon, Checked, pRect, Corners, pAnimator, pDefaultColor, pActiveColor, pHoverColor, EdgeRounding, pCommunityIcon, pTextUiElement, FontSize);
+}
+
+int CMenus::DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const char *pText, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float FontSize)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
@@ -1240,7 +1265,9 @@ int CMenus::DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pTe
 			Props.m_MinimumFontSize = FontSize;
 			Props.m_EllipsisAtEnd = true;
 		}
-		if(pTextUiElement != nullptr && pTextUiElement->AreRectsInit())
+		if(Icon != EQmIcon::COUNT)
+			Ui()->DoLabel_QmIcon(&Label, Icon, pFallbackIcon, FontSize, TEXTALIGN_MC, Props);
+		else if(pTextUiElement != nullptr && pTextUiElement->AreRectsInit())
 			Ui()->DoLabelStreamed(*pTextUiElement->Rect(0), &Label, pText, FontSize, TEXTALIGN_MC, Props);
 		else
 			Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_MC, Props);
@@ -1380,7 +1407,7 @@ int CMenus::DoButton_Favorite(const void *pButtonId, const void *pParentId, bool
 		TextRender()->TextColor(Checked ? ColorRGBA(1.0f, 0.85f, 0.3f, BaseAlpha * ShowAlpha) : ColorRGBA(0.5f, 0.5f, 0.5f, BaseAlpha * ShowAlpha));
 		SLabelProperties Props;
 		Props.m_MaxWidth = pRect->w;
-		Ui()->DoLabel(pRect, FONT_ICON_STAR, 12.0f + HoverStrength, TEXTALIGN_MC, Props);
+		Ui()->DoLabel_QmIcon(pRect, EQmIcon::STAR, FONT_ICON_STAR, 12.0f + HoverStrength, TEXTALIGN_MC, Props);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -1460,7 +1487,7 @@ int CMenus::DoButton_CheckBox_Common_WithLabelElement(const void *pId, const cha
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		const ColorRGBA DefaultColor = TextRender()->DefaultTextColor();
 		TextRender()->TextColor(ColorRGBA(DefaultColor.r, DefaultColor.g, DefaultColor.b, DefaultColor.a * CheckStrength));
-		Ui()->DoLabel(&Box, FONT_ICON_XMARK, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&Box, EQmIcon::CLOSE, FONT_ICON_XMARK, Box.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 		TextRender()->SetRenderFlags(PreviousRenderFlags);
 		TextRender()->SetFontPreset(PreviousFontPreset);
 		TextRender()->TextOutlineColor(PreviousTextOutlineColor);
@@ -1945,6 +1972,16 @@ int CMenus::DoButton_CheckBox_Number(const void *pId, const char *pText, int Che
 
 int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)
 {
+	return DoMenuTabV2Internal(pButtonContainer, pText, EQmIcon::COUNT, nullptr, Active, pRect, Corners, pCustomDefault, pCustomActive, pCustomHover, pCommunityIcon, pTextUiElement, ContentScale);
+}
+
+int CMenus::DoMenuTabV2_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)
+{
+	return DoMenuTabV2Internal(pButtonContainer, nullptr, Icon, pFallbackIcon, Active, pRect, Corners, pCustomDefault, pCustomActive, pCustomHover, pCommunityIcon, pTextUiElement, ContentScale);
+}
+
+int CMenus::DoMenuTabV2Internal(CButtonContainer *pButtonContainer, const char *pText, EQmIcon Icon, const char *pFallbackIcon, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale)
+{
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	// Compose target background color from active / hover / idle states. Custom
 	// overrides are honored when supplied (Quit red, Home news green, favorite
@@ -1982,7 +2019,11 @@ int CMenus::DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, b
 		CUIRect Label;
 		pRect->HMargin(2.0f * ContentScale, &Label);
 		const float LabelFontSize = UseNewUi ? ui_token::settings::TAB_FONT_SIZE * ContentScale : Label.h * CUi::ms_FontmodHeight;
-		if(pTextUiElement != nullptr)
+		if(Icon != EQmIcon::COUNT)
+		{
+			Ui()->DoLabel_QmIcon(&Label, Icon, pFallbackIcon, LabelFontSize, TEXTALIGN_MC);
+		}
+		else if(pTextUiElement != nullptr)
 		{
 			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);
 			const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
@@ -2048,7 +2089,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		const EFontPreset OldPreset = TextRender()->GetFontPreset();
 		TextRender()->SetFontPreset(QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? EFontPreset::ICON_FONT_BOLD : EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ui()->DoLabel(&Tab, FONT_ICON_BOOKMARK, IconSide, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&Tab, EQmIcon::BOOKMARK, FONT_ICON_BOOKMARK, IconSide, TEXTALIGN_MC);
 		TextRender()->SetRenderFlags(OldFlags);
 		TextRender()->SetFontPreset(OldPreset);
 	};
@@ -2079,7 +2120,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(QuitButton.w, QuitButton.h);
 			QuitButton.x += (QuitButton.w - CircleSize) / 2.0f;
 			QuitButton.w = CircleSize;
-			if(DoMenuTabV2(&s_QuitButton, FONT_ICON_POWER_OFF, false, &QuitButton, IGraphics::CORNER_ALL, &QuitButtonDefault, nullptr, &QuitButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			if(DoMenuTabV2_QmIcon(&s_QuitButton, EQmIcon::POWER_OFF, FONT_ICON_POWER_OFF, false, &QuitButton, IGraphics::CORNER_ALL, &QuitButtonDefault, nullptr, &QuitButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				if(GameClient()->Editor()->HasUnsavedData() || (GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmQuitTime && g_Config.m_ClConfirmQuitTime >= 0) || m_MenusIngameTouchControls.UnsavedChanges() || GameClient()->m_TouchControls.HasEditingChanges())
 				{
@@ -2101,7 +2142,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(SettingsButton.w, SettingsButton.h);
 			SettingsButton.x += (SettingsButton.w - CircleSize) / 2.0f;
 			SettingsButton.w = CircleSize;
-			if(DoMenuTabV2(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			if(DoMenuTabV2_QmIcon(&s_SettingsButton, EQmIcon::GEAR, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &SettingsButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_SETTINGS;
 			}
@@ -2117,7 +2158,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CircleSize = minimum(EditorButton.w, EditorButton.h);
 			EditorButton.x += (EditorButton.w - CircleSize) / 2.0f;
 			EditorButton.w = CircleSize;
-			if(DoMenuTabV2(&s_EditorButton, FONT_ICON_PEN_TO_SQUARE, false, &EditorButton, IGraphics::CORNER_ALL, &IconButtonDefault, nullptr, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			if(DoMenuTabV2_QmIcon(&s_EditorButton, EQmIcon::PEN_TO_SQUARE, FONT_ICON_PEN_TO_SQUARE, false, &EditorButton, IGraphics::CORNER_ALL, &IconButtonDefault, nullptr, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				g_Config.m_ClEditor = 1;
 			}
@@ -2130,7 +2171,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitRight(MenubarIconGap, &Box, nullptr);
 			Box.VSplitRight(MenubarIconButtonSize, &Box, &Button);
 			static CButtonContainer s_DemoButton;
-			if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
+			if(DoMenuTabV2_QmIcon(&s_DemoButton, EQmIcon::CLAPPERBOARD, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover))
 			{
 				NewPage = PAGE_DEMOS;
 			}
@@ -2150,7 +2191,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
 				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
 				DemoButton.w = CircleSize;
-				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+				if(DoMenuTabV2_QmIcon(&s_DemoButton, EQmIcon::CLAPPERBOARD, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 				{
 					NewPage = PAGE_DEMOS;
 				}
@@ -2179,6 +2220,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			ColorRGBA *pHomeButtonColor = nullptr;
 			ColorRGBA *pHomeButtonColorHover = nullptr;
 
+			const EQmIcon HomeScreenButtonIcon = GotNewsOrUpdate ? EQmIcon::NEWSPAPER : EQmIcon::HOUSE;
 			const char *pHomeScreenButtonLabel = FONT_ICON_HOUSE;
 			if(GotNewsOrUpdate)
 			{
@@ -2193,7 +2235,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				const float CircleSize = minimum(HomeButton.w, HomeButton.h);
 				HomeButton.x += (HomeButton.w - CircleSize) / 2.0f;
 				HomeButton.w = CircleSize;
-				if(DoMenuTabV2(&s_StartButton, pHomeScreenButtonLabel, false, &HomeButton, IGraphics::CORNER_ALL, pHomeButtonColor != nullptr ? pHomeButtonColor : &HomeButtonDefault, nullptr, pHomeButtonColorHover != nullptr ? pHomeButtonColorHover : &HomeButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+				if(DoMenuTabV2_QmIcon(&s_StartButton, HomeScreenButtonIcon, pHomeScreenButtonLabel, false, &HomeButton, IGraphics::CORNER_ALL, pHomeButtonColor != nullptr ? pHomeButtonColor : &HomeButtonDefault, nullptr, pHomeButtonColorHover != nullptr ? pHomeButtonColorHover : &HomeButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 				{
 					m_ShowStart = true;
 				}
@@ -2204,7 +2246,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(6.0f, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_InternetButton;
-			if(DoMenuTabV2(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			if(DoMenuTabV2_QmIcon(&s_InternetButton, EQmIcon::EARTH_AMERICAS, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_INTERNET;
 			}
@@ -2214,7 +2256,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_LanButton;
-			if(DoMenuTabV2(&s_LanButton, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			if(DoMenuTabV2_QmIcon(&s_LanButton, EQmIcon::NETWORK_WIRED, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_LAN;
 			}
@@ -2224,7 +2266,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoritesButton;
-			if(DoMenuTabV2(&s_FavoritesButton, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			if(DoMenuTabV2_QmIcon(&s_FavoritesButton, EQmIcon::STAR, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 			{
 				NewPage = PAGE_FAVORITES;
 			}
@@ -2324,7 +2366,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				HoverColor.a *= AppearStrength;
 
 				const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-				if(DoMenuTabV2(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id()), nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+				if(DoMenuTabV2_QmIcon(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], EQmIcon::ELLIPSIS, FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id()), nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
 				{
 					NewPage = Page;
 				}
@@ -2399,30 +2441,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				m_ControlPageOpening = true;
 			}
 			MenubarTrackActive(PAGE_CALLVOTE, Button);
-
-			if(Box.w >= 10.0f + 33.0f + 10.0f)
-			{
-				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-
-				Box.VSplitRight(10.0f, &Box, nullptr);
-				Box.VSplitRight(33.0f, &Box, &Button);
-				static CButtonContainer s_DemoButton;
-				CUIRect DemoButton = Button;
-				const float CircleSize = minimum(DemoButton.w, DemoButton.h);
-				DemoButton.x += (DemoButton.w - CircleSize) / 2.0f;
-				DemoButton.w = CircleSize;
-				if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &DemoButton, IGraphics::CORNER_ALL, &IconButtonDefault, &IconButtonActive, &IconButtonHover, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
-				{
-					NewPage = PAGE_DEMOS;
-				}
-				MenubarTrackActive(PAGE_DEMOS, DemoButton);
-				GameClient()->m_Tooltips.DoToolTip(&s_DemoButton, &Button, Localize("Demos"));
-				Box.VSplitRight(10.0f, &Box, nullptr);
-
-				TextRender()->SetRenderFlags(0);
-				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-			}
 		}
 	}
 	else
@@ -2430,7 +2448,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		Box.VSplitRight(33.0f, &Box, &Button);
 		static CButtonContainer s_QuitButton;
 		ColorRGBA QuitColor(1.0f, 0.0f, 0.0f, 0.5f);
-		if(DoButton_MenuTab(&s_QuitButton, FONT_ICON_POWER_OFF, 0, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_QUIT], nullptr, nullptr, &QuitColor, 10.0f))
+		if(DoButton_MenuTab_QmIcon(&s_QuitButton, EQmIcon::POWER_OFF, FONT_ICON_POWER_OFF, 0, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_QUIT], nullptr, nullptr, &QuitColor, 10.0f))
 		{
 			if(GameClient()->Editor()->HasUnsavedData() || (GameClient()->CurrentRaceTime() / 60 >= g_Config.m_ClConfirmQuitTime && g_Config.m_ClConfirmQuitTime >= 0) || m_MenusIngameTouchControls.UnsavedChanges() || GameClient()->m_TouchControls.HasEditingChanges())
 			{
@@ -2446,7 +2464,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		Box.VSplitRight(10.0f, &Box, nullptr);
 		Box.VSplitRight(33.0f, &Box, &Button);
 		static CButtonContainer s_SettingsButton;
-		if(DoButton_MenuTab(&s_SettingsButton, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_SETTINGS]))
+		if(DoButton_MenuTab_QmIcon(&s_SettingsButton, EQmIcon::GEAR, FONT_ICON_GEAR, ActivePage == PAGE_SETTINGS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_SETTINGS]))
 		{
 			NewPage = PAGE_SETTINGS;
 		}
@@ -2455,7 +2473,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		Box.VSplitRight(10.0f, &Box, nullptr);
 		Box.VSplitRight(33.0f, &Box, &Button);
 		static CButtonContainer s_EditorButton;
-		if(DoButton_MenuTab(&s_EditorButton, FONT_ICON_PEN_TO_SQUARE, 0, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_EDITOR]))
+		if(DoButton_MenuTab_QmIcon(&s_EditorButton, EQmIcon::PEN_TO_SQUARE, FONT_ICON_PEN_TO_SQUARE, 0, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_EDITOR]))
 		{
 			g_Config.m_ClEditor = 1;
 		}
@@ -2466,7 +2484,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitRight(10.0f, &Box, nullptr);
 			Box.VSplitRight(33.0f, &Box, &Button);
 			static CButtonContainer s_DemoButton;
-			if(DoButton_MenuTab(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_DEMOBUTTON]))
+			if(DoButton_MenuTab_QmIcon(&s_DemoButton, EQmIcon::CLAPPERBOARD, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_DEMOBUTTON]))
 			{
 				NewPage = PAGE_DEMOS;
 			}
@@ -2478,7 +2496,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitRight(10.0f, &Box, nullptr);
 			Box.VSplitRight(33.0f, &Box, &Button);
 			static CButtonContainer s_DemoButton;
-			if(DoMenuTabV2(&s_DemoButton, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button))
+			if(DoMenuTabV2_QmIcon(&s_DemoButton, EQmIcon::CLAPPERBOARD, FONT_ICON_CLAPPERBOARD, ActivePage == PAGE_DEMOS, &Button))
 			{
 				NewPage = PAGE_DEMOS;
 			}
@@ -2506,6 +2524,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			ColorRGBA *pHomeButtonColor = nullptr;
 			ColorRGBA *pHomeButtonColorHover = nullptr;
 
+			const EQmIcon HomeScreenButtonIcon = GotNewsOrUpdate ? EQmIcon::NEWSPAPER : EQmIcon::HOUSE;
 			const char *pHomeScreenButtonLabel = FONT_ICON_HOUSE;
 			if(GotNewsOrUpdate)
 			{
@@ -2515,7 +2534,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			}
 
 			static CButtonContainer s_StartButton;
-			if(DoButton_MenuTab(&s_StartButton, pHomeScreenButtonLabel, false, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_HOME], pHomeButtonColor, pHomeButtonColor, pHomeButtonColorHover, 10.0f))
+			if(DoButton_MenuTab_QmIcon(&s_StartButton, HomeScreenButtonIcon, pHomeScreenButtonLabel, false, &Button, IGraphics::CORNER_T, &m_aAnimatorsSmallPage[SMALL_TAB_HOME], pHomeButtonColor, pHomeButtonColor, pHomeButtonColorHover, 10.0f))
 			{
 				m_ShowStart = true;
 			}
@@ -2525,7 +2544,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			Box.VSplitLeft(10.0f, nullptr, &Box);
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_InternetButton;
-			if(DoButton_MenuTab(&s_InternetButton, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_INTERNET]))
+			if(DoButton_MenuTab_QmIcon(&s_InternetButton, EQmIcon::EARTH_AMERICAS, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_INTERNET]))
 			{
 				NewPage = PAGE_INTERNET;
 			}
@@ -2533,7 +2552,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_LanButton;
-			if(DoButton_MenuTab(&s_LanButton, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_LAN]))
+			if(DoButton_MenuTab_QmIcon(&s_LanButton, EQmIcon::NETWORK_WIRED, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_LAN]))
 			{
 				NewPage = PAGE_LAN;
 			}
@@ -2541,7 +2560,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 
 			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
 			static CButtonContainer s_FavoritesButton;
-			if(DoButton_MenuTab(&s_FavoritesButton, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_FAVORITES]))
+			if(DoButton_MenuTab_QmIcon(&s_FavoritesButton, EQmIcon::STAR, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIG_TAB_FAVORITES]))
 			{
 				NewPage = PAGE_FAVORITES;
 			}
@@ -2637,7 +2656,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				HoverColor.a *= AppearStrength;
 
 				const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-				if(DoButton_MenuTab(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIT_TAB_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex], &InactiveColor, &ActiveColor, &HoverColor, 10.0f, m_CommunityIcons.Find(pCommunity->Id())))
+				if(DoButton_MenuTab_QmIcon(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], EQmIcon::ELLIPSIS, FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_T, &m_aAnimatorsBigPage[BIT_TAB_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex], &InactiveColor, &ActiveColor, &HoverColor, 10.0f, m_CommunityIcons.Find(pCommunity->Id())))
 				{
 					NewPage = Page;
 				}
@@ -4715,7 +4734,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Row.VSplitLeft(20.0f, &SlowDownButton, &Row);
 		Row.VSplitLeft(5.0f, nullptr, &Row);
 		static CButtonContainer s_SlowDownButton;
-		if(Ui()->DoButton_FontIcon(&s_SlowDownButton, FONT_ICON_BACKWARD, 0, &SlowDownButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_SlowDownButton, EQmIcon::BACKWARD, FONT_ICON_BACKWARD, 0, &SlowDownButton, BUTTONFLAG_LEFT))
 			m_Speed = std::clamp(m_Speed - 1, 0, (int)(std::size(DEMO_SPEEDS) - 1));
 
 		// paused
@@ -4723,7 +4742,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Row.VSplitLeft(20.0f, &PausedButton, &Row);
 		Row.VSplitLeft(5.0f, nullptr, &Row);
 		static CButtonContainer s_PausedButton;
-		if(Ui()->DoButton_FontIcon(&s_PausedButton, FONT_ICON_PAUSE, 0, &PausedButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_PausedButton, EQmIcon::PAUSE, FONT_ICON_PAUSE, 0, &PausedButton, BUTTONFLAG_LEFT))
 			m_StartPaused ^= 1;
 
 		// fastforward
@@ -4731,7 +4750,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		Row.VSplitLeft(20.0f, &FastForwardButton, &Row);
 		Row.VSplitLeft(8.0f, nullptr, &Row);
 		static CButtonContainer s_FastForwardButton;
-		if(Ui()->DoButton_FontIcon(&s_FastForwardButton, FONT_ICON_FORWARD, 0, &FastForwardButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_FastForwardButton, EQmIcon::FORWARD, FONT_ICON_FORWARD, 0, &FastForwardButton, BUTTONFLAG_LEFT))
 			m_Speed = std::clamp(m_Speed + 1, 0, (int)(std::size(DEMO_SPEEDS) - 1));
 
 		// speed meter
@@ -6097,8 +6116,11 @@ int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, TextElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
 	if(&TextElement != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid())
 	{
-		CountMenuTextImmediateFallback();
-		Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+		if(!m_IngameServerInfoRenderActive)
+		{
+			CountMenuTextImmediateFallback();
+			Ui()->DoLabel(&Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);
+		}
 	}
 	return Result;
 }
@@ -6145,8 +6167,11 @@ void CMenus::DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRe
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);
 	if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
 	{
-		CountMenuTextImmediateFallback();
-		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+		if(!m_IngameServerInfoRenderActive)
+		{
+			CountMenuTextImmediateFallback();
+			Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+		}
 	}
 }
 
@@ -6169,8 +6194,11 @@ void CMenus::DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, Element, pRect, pText, Size, Align, LabelProps);
 	if(&Element != &m_MenuTextFallbackElement && !HadReadyContainer && !pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
 	{
-		CountMenuTextImmediateFallback();
-		Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+		if(!m_IngameServerInfoRenderActive)
+		{
+			CountMenuTextImmediateFallback();
+			Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+		}
 	}
 }
 
@@ -6342,7 +6370,7 @@ bool CMenus::RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *p
 	return true;
 }
 
-void CMenus::QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor)
+void CMenus::QueueMenuTextContainerBuild(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor)
 {
 	if(pRect == nullptr || pText == nullptr)
 		return;
@@ -6350,6 +6378,7 @@ void CMenus::QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRe
 	{
 		if(Request.m_pElement == &Element)
 		{
+			Request.m_IngameScope = Scope == MENU_TEXT_SCOPE_INGAME && m_IngameServerInfoRenderActive;
 			Request.m_Text = pText;
 			Request.m_Rect = *pRect;
 			Request.m_Size = Size;
@@ -6361,6 +6390,7 @@ void CMenus::QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRe
 		}
 	}
 	SMenuTextContainerBuildRequest Request;
+	Request.m_IngameScope = Scope == MENU_TEXT_SCOPE_INGAME && m_IngameServerInfoRenderActive;
 	Request.m_pElement = &Element;
 	Request.m_Text = pText;
 	Request.m_Rect = *pRect;
@@ -6374,14 +6404,23 @@ void CMenus::QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRe
 
 void CMenus::DrainMenuTextContainerBuildRequests()
 {
-	while(m_CurrentSettingsUiFrameBudget.m_TextContainerTokens > 0 && !m_vMenuTextContainerBuildRequests.empty())
+	while(!m_vMenuTextContainerBuildRequests.empty())
 	{
-		SMenuTextContainerBuildRequest Request = std::move(m_vMenuTextContainerBuildRequests.front());
-		m_vMenuTextContainerBuildRequests.erase(m_vMenuTextContainerBuildRequests.begin());
+		auto ReadyRequest = std::find_if(m_vMenuTextContainerBuildRequests.begin(), m_vMenuTextContainerBuildRequests.end(), [this](const SMenuTextContainerBuildRequest &Candidate) {
+			const SSettingsAdaptiveBudgetOutput &Budget = Candidate.m_IngameScope ? m_IngameTextFrameBudget : m_CurrentSettingsUiFrameBudget;
+			return Budget.m_TextContainerTokens > 0;
+		});
+		if(ReadyRequest == m_vMenuTextContainerBuildRequests.end())
+			break;
+		SMenuTextContainerBuildRequest Request = std::move(*ReadyRequest);
+		m_vMenuTextContainerBuildRequests.erase(ReadyRequest);
 		if(Request.m_pElement == nullptr)
 			continue;
 		bool TextContainerRecreated = false;
-		--m_CurrentSettingsUiFrameBudget.m_TextContainerTokens;
+		SSettingsAdaptiveBudgetOutput &FrameBudget = Request.m_IngameScope ? m_IngameTextFrameBudget : m_CurrentSettingsUiFrameBudget;
+		if(FrameBudget.m_TextContainerTokens <= 0)
+			continue;
+		--FrameBudget.m_TextContainerTokens;
 		DrainMenuTextContainerBuild(*Request.m_pElement, &Request.m_Rect, Request.m_Text.c_str(), Request.m_Size, Request.m_Align, Request.m_LabelProps, Request.m_StrLen, nullptr, false, &TextContainerRecreated);
 		if(TextContainerRecreated)
 		{
@@ -6446,7 +6485,7 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 	{
 		if(Render && m_MenuTextPoolVisibleGuard)
 			++m_MenuTextStableFallbackImmediateThisFrame;
-		if(Render)
+		if(Render && !(Scope == MENU_TEXT_SCOPE_INGAME && m_IngameServerInfoRenderActive))
 			Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
 		return;
 	}
@@ -6463,10 +6502,20 @@ void CMenus::DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, cons
 	{
 		if(m_MenuTextPoolVisibleGuard)
 			++m_MenuTextStableBuildQueuedThisFrame;
-		QueueMenuTextContainerBuild(Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor);
-		if(Render && pElementRect->m_UITextContainer.Valid() && pRect != nullptr)
+		QueueMenuTextContainerBuild(Scope, Element, pRect, pText, Size, Align, LabelProps, StrLen, pReadCursor);
+		if(Render && pRect != nullptr)
 		{
-			Ui()->RenderLabelTextContainerAligned(*pElementRect, pRect, Align);
+			if(pElementRect->m_UITextContainer.Valid())
+			{
+				Ui()->RenderLabelTextContainerAligned(*pElementRect, pRect, Align);
+			}
+			else if((Scope == MENU_TEXT_SCOPE_INGAME ? m_IngameTextFrameBudget.m_TextContainerTokens : m_CurrentSettingsUiFrameBudget.m_TextContainerTokens) <= 0)
+			{
+				// 可见的服务器信息文本是可延迟内容：没有旧容器时保持空白，
+				// 不为占位文本额外触发一次光栅化。
+				if(!(Scope == MENU_TEXT_SCOPE_INGAME && m_IngameServerInfoRenderActive))
+					Ui()->DoLabel(pRect, pText, Size, Align, LabelProps);
+			}
 		}
 		return;
 	}
@@ -7571,7 +7620,7 @@ void CMenus::OnRender()
 		if(IsActive() && Client()->State() == IClient::STATE_ONLINE)
 		{
 			if(m_GamePage == PAGE_SERVER_INFO)
-				DrainIngameUiSnapshotTextRuntime();
+				DrainIngameUiTextRuntime(true);
 			else if(m_IngameServerInfoBackgroundPrepareRequested && Client()->PerfFrame() > m_IngameEscOpenFrame)
 			{
 				PrepareIngameServerInfoTextRuntime();

@@ -1467,18 +1467,24 @@ void CCharacter::AntiPingInterference(int ClientId, bool DisallowReset, bool Has
 	if(HasToBeUnfrozen && m_FreezeTime)
 		return;
 
+	// QmClient: 目标角色可能不在预测世界中（尚未预测或已被移除），
+	// GetCharacterById 会返回 nullptr，直接解引用会崩溃（写 m_Interfering 空指针）。
+	CCharacter *pInterferingChar = GameWorld()->GetCharacterById(ClientId);
+	if(pInterferingChar == nullptr)
+		return;
+
 	bool AllowEnablePrediction = m_IsLocal || m_Interfering;
 	if(!AllowEnablePrediction && !DisallowReset)
 	{
 		// 非预测玩家与目标交互时关闭 antiping（此处不含玩家弹跳）
-		if(!GameWorld()->GetCharacterById(ClientId)->m_FreezeTime || g_Config.m_ClAntiPingPlayers != 3)
+		if(!pInterferingChar->m_FreezeTime || g_Config.m_ClAntiPingPlayers != 3)
 		{
-			GameWorld()->GetCharacterById(ClientId)->m_Interfering = false;
+			pInterferingChar->m_Interfering = false;
 		}
 	}
 	else if(AllowEnablePrediction)
 	{
-		GameWorld()->GetCharacterById(ClientId)->m_Interfering = true;
+		pInterferingChar->m_Interfering = true;
 	}
 }
 

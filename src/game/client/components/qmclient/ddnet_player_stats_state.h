@@ -23,6 +23,7 @@ class CQmDdnetPlayerStatsState
 	std::string m_RequestPlayerName;
 	EQmDdnetPlayerStatsPhase m_Phase = EQmDdnetPlayerStatsPhase::IDLE;
 	int64_t m_LastSync = 0;
+	int64_t m_LastSuccessfulSyncTimestamp = 0;
 	int64_t m_NextRetry = 0;
 	bool m_RefreshPending = false;
 	bool m_LastRequestFailed = false;
@@ -35,6 +36,7 @@ public:
 			return;
 		m_PlayerName = PlayerName;
 		m_LastSync = 0;
+		m_LastSuccessfulSyncTimestamp = 0;
 		m_NextRetry = 0;
 		m_RefreshPending = false;
 		m_LastRequestFailed = false;
@@ -51,6 +53,7 @@ public:
 		m_RequestPlayerName.clear();
 		m_Phase = EQmDdnetPlayerStatsPhase::IDLE;
 		m_LastSync = 0;
+		m_LastSuccessfulSyncTimestamp = 0;
 		m_NextRetry = 0;
 		m_RefreshPending = false;
 		m_LastRequestFailed = false;
@@ -60,6 +63,7 @@ public:
 	const std::string &RequestPlayerName() const { return m_RequestPlayerName; }
 	EQmDdnetPlayerStatsPhase Phase() const { return m_Phase; }
 	int64_t LastSync() const { return m_LastSync; }
+	int64_t LastSuccessfulSyncTimestamp() const { return m_LastSuccessfulSyncTimestamp; }
 	int64_t NextRetry() const { return m_NextRetry; }
 	bool RefreshPending() const { return m_RefreshPending; }
 	bool IsFetching() const { return m_Phase != EQmDdnetPlayerStatsPhase::IDLE; }
@@ -119,7 +123,7 @@ public:
 		return EQmDdnetPlayerStatsRefreshAction::START_REQUEST;
 	}
 
-	bool CompleteParse(const std::string &RequestPlayerName, bool Parsed, int64_t Now, int64_t RetryDelayTicks, bool &StartRefresh)
+	bool CompleteParse(const std::string &RequestPlayerName, bool Parsed, int64_t Now, int64_t SuccessfulSyncTimestamp, int64_t RetryDelayTicks, bool &StartRefresh)
 	{
 		StartRefresh = false;
 		if(m_Phase != EQmDdnetPlayerStatsPhase::PARSING || m_RequestPlayerName != RequestPlayerName)
@@ -136,6 +140,7 @@ public:
 		if(Parsed)
 		{
 			m_LastSync = Now;
+			m_LastSuccessfulSyncTimestamp = SuccessfulSyncTimestamp;
 			m_NextRetry = 0;
 			m_LastRequestFailed = false;
 		}

@@ -17,6 +17,7 @@
 
 #include <game/client/components/qmclient/qmclient.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 
 #if defined(CONF_PLATFORM_ANDROID)
 #include <android/android_main.h>
@@ -2652,7 +2653,7 @@ void CRClientVoice::RenderSpeakerOverlay() NO_THREAD_SAFETY_ANALYSIS
 	pTextRender->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.40f);
 
 	pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
-	const float UserIconWidth = pTextRender->TextWidth(UserIconFontSize, FontIcons::FONT_ICON_USERS);
+	const float UserIconWidth = UserIconFontSize;
 	const float MicIconWidth = pTextRender->TextWidth(IconFontSize, s_pVoiceOverlayMicIcon);
 	pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	float PanelWidth = 0.0f;
@@ -2686,12 +2687,11 @@ void CRClientVoice::RenderSpeakerOverlay() NO_THREAD_SAFETY_ANALYSIS
 
 		const float UserIconX = RowX + 1.0f + (UserBoxWidth - UserIconWidth) * 0.5f;
 		const float UserIconY = RowY + (RowHeight - UserIconFontSize) * 0.5f - 0.5f;
-		pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
-		pTextRender->TextColor(1.0f, 1.0f, 1.0f, 0.82f);
-		pTextRender->Text(UserIconX, UserIconY, UserIconFontSize, FontIcons::FONT_ICON_USERS, -1.0f);
+		m_pGameClient->Ui()->DrawQmIconAt(UserIconX, UserIconY, UserIconFontSize, EQmIcon::USERS, FontIcons::FONT_ICON_USERS, ColorRGBA(1.0f, 1.0f, 1.0f, 0.82f));
 
 		const float MicIconX = RowX + RowWidth - RowPaddingX - MicIconWidth;
 		const float MicIconY = RowY + (RowHeight - IconFontSize) * 0.5f - 0.5f;
+		pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
 		pTextRender->TextColor(1.0f, 1.0f, 1.0f, 0.90f);
 		pTextRender->Text(MicIconX, MicIconY, IconFontSize, s_pVoiceOverlayMicIcon, -1.0f);
 

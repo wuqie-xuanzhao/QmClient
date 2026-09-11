@@ -9,7 +9,8 @@ default Release path. The implementation stages are tracked in
 `docs/superpowers/plans/2026-09-01-QmClient-iOS-Metal默认Release适配计划.md`.
 
 The iOS runtime acceptance record is maintained in
-`docs/superpowers/plans/2026-08-30-DDNet20-iOS运行时适配计划.md`. A successful
+`docs/superpowers/reports/archive/2026-09-08-upstream-sync-history/2026-08-30-DDNet20-iOS运行时适配计划.md`
+(archived as historical context; it is no longer an active plan). A successful
 bundle build is not simulator launch or device validation.
 
 ## Requirements

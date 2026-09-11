@@ -28,6 +28,7 @@
 #include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/skin.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
@@ -349,7 +350,7 @@ void CMenus::RenderSettingsTee7Content(CUIRect MainView, const SSettingsContentM
 	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 	static CButtonContainer s_SkinRefreshButton;
-	if(!Ui()->RenderOnly() && (DoButton_Menu(&s_SkinRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) ||
+	if(!Ui()->RenderOnly() && (DoButton_Menu_QmIcon(&s_SkinRefreshButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) ||
 					  (!Ui()->IsPopupOpen() && !GameClient()->m_GameConsole.IsActive() && (Input()->KeyPress(KEY_F5) || (Input()->ModifierIsPressed() && Input()->KeyPress(KEY_R))))))
 	{
 		// reset render flags for possible loading screen
@@ -465,17 +466,14 @@ void CMenus::RenderSettingsTeeCustom7(CUIRect MainView, const SSettingsContentMe
 	// Random skin button
 	static CButtonContainer s_RandomSkinButton;
 	static const char *s_apDice[] = {FONT_ICON_DICE_ONE, FONT_ICON_DICE_TWO, FONT_ICON_DICE_THREE, FONT_ICON_DICE_FOUR, FONT_ICON_DICE_FIVE, FONT_ICON_DICE_SIX};
+	static const EQmIcon s_aDiceIcons[] = {EQmIcon::DICE_ONE, EQmIcon::DICE_TWO, EQmIcon::DICE_THREE, EQmIcon::DICE_FOUR, EQmIcon::DICE_FIVE, EQmIcon::DICE_SIX};
 	static int s_CurrentDie = rand() % std::size(s_apDice);
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	if(DoButton_Menu(&s_RandomSkinButton, s_apDice[s_CurrentDie], 0, &RandomSkinButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, -0.2f))
+	if(DoButton_Menu_QmIcon(&s_RandomSkinButton, s_aDiceIcons[s_CurrentDie], s_apDice[s_CurrentDie], 0, &RandomSkinButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, -0.2f))
 	{
 		GameClient()->m_Skins7.RandomizeSkin(m_Dummy);
 		SetNeedSendInfo();
 		s_CurrentDie = rand() % std::size(s_apDice);
 	}
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
 
 	if(TransitionActive)

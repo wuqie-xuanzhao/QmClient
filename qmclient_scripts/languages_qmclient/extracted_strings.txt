@@ -305,7 +305,6 @@ Audio packets
 Audio packs
 Audio slots
 AUS
-Auth level required to send phone to others.
 Authed name color in scoreboard
 Authenticate to rcon
 Authenticate to rcon with a username
@@ -405,6 +404,7 @@ Axiom main account password
 Axiom score request failed
 Axiom scores
 Axis
+Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
 Backend to use (e.g. OpenGL or Vulkan)
 Background
 Background (entities)
@@ -481,6 +481,7 @@ Block words
 Blue
 Blue team
 Blue team wins!
+Blur mode
 Body
 Bold
 Border
@@ -816,7 +817,6 @@ Current cut is invalid or already added
 Current file
 Current rescue mode: %s
 Current status
-Current time: %s
 Current: Ranks
 Current: Score
 Current: Time
@@ -854,6 +854,7 @@ Cycle through emotes
 d = Prediction latency
 Darken Tee color when frozen (0-100)
 Data
+Data source
 Date
 Days
 DDmaX
@@ -864,7 +865,6 @@ DDmaX Pro
 DDNet
 DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
-DDNet finish totals come from official player data.
 DDNet Memory
 DDNet memory
 DDNet points
@@ -874,6 +874,7 @@ DDNet.org map stats
 DDNet/total CPU
 DDRace HUD
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
+DDRaceNetwork · DDNet
 ddstats.tw ID stats
 Deactivate
 Deactivate all
@@ -941,6 +942,7 @@ Demofile: %s
 Demos
 Demos directory
 Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
+Deprecated compatibility alias for qm_graphics_trace (macOS signposts)
 Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
 Deprecated. Use either 'vote_muteid <client_id> <seconds> <reason>' or 'vote_muteip <ip> <seconds> <reason>'
 Deprecated: jump hint color, migrated to qm_jump_hint_color on startup
@@ -1022,6 +1024,7 @@ Door Laser Outline Color
 Door laser outline color
 Download community skins
 Download failed
+Download rank ghost
 Download skins
 Download skins immediately from cl_skin_download_url
 Download this asset?
@@ -1045,6 +1048,7 @@ Drift direction
 Drift intensity
 Drift smoothness
 Drop on right canvas to replace one part.
+Dual Kawase
 Dummies are not allowed on this server
 Dummy
 Dummy body color
@@ -1139,12 +1143,14 @@ Enable 3D background particles
 Enable absolute controller aiming in game
 Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
+Enable antispoof for vanilla 0.6 clients
 Enable audio output and choose a device
+Enable backdrop blur
+Enable backdrop blur for translucent interface and selected HUD backgrounds
 Enable background 3D particle flicker
 Enable background 3D particle glow
 Enable background 3D particle pulse scaling
 Enable background 3D particle trail
-Enable basic anti-spoof
 Enable camera drift
 Enable camera drift effect, slightly drags camera based on speed
 Enable chat mention sound
@@ -1154,6 +1160,7 @@ Enable cheats for your current team's run, but you can't earn a rank
 Enable client stutter diagnostics at startup
 Enable colored console output
 Enable coloring and hearts for friends
+Enable connections from vanilla 0.6 clients
 Enable controller
 Enable custom prediction margin when frozen
 Enable Deleting
@@ -1175,8 +1182,6 @@ Enable fat skin
 Enable freeze call sound
 Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
-Enable Gaussian blur
-Enable Gaussian blur for translucent interface and selected HUD backgrounds
 Enable ghost
 Enable Gores mode
 Enable Gores mode (King of Gores helper tools)
@@ -1192,7 +1197,6 @@ Enable keyword reply
 Enable left swipe offset on chat fade
 Enable LLM thinking mode (may increase response time)
 Enable lyrics
-Enable macOS graphics diagnostics and Instruments signposts
 Enable main thread and render stage performance debug logging
 Enable map compatibility mode using the specified bug (example: grenade-doubleexplosion@ddnet.tw)
 Enable mod weapon on %d: %s
@@ -1320,6 +1324,7 @@ Fade only
 Fade opacity along trail length
 Fade out
 Fade trail alpha
+Failed
 Failed saving the replay!
 Failed to check for updates
 Failed to copy main asset image.
@@ -1340,6 +1345,7 @@ Fast input
 Fast input (reduce visual latency)
 Fast input others
 Fast practice
+Fast, lightweight blur with a softer approximation.
 Fat skins (DDFat)
 Favorite
 Favorite friend
@@ -1401,6 +1407,7 @@ FPM
 FPS
 Fraction of players needed to pass a vote
 Frags
+Frame quality
 Frame rate
 Frame time
 Frame time p95
@@ -1472,6 +1479,7 @@ Gameplay
 Gap aim rescue
 Gap between statusbar items
 Gap between tee and nametag
+Gaussian
 General
 Getting game info
 Getting server list from master server
@@ -1517,12 +1525,12 @@ Gores actor
 Gores auto weapon switch
 Gores Mode
 Gores mode key
+Gores · Axiom
 GPU name, chosen by backend (if supported)
 Grabs
 Gradient
 Gradient color
 Graphics
-Graphics backend
 Graphics card
 Graphics display
 Graphics Error
@@ -1530,6 +1538,9 @@ Graphics library major version (0 = auto-detect)
 Graphics library minor version (0 = auto-detect)
 Graphics library patch version
 Graphics library texture sampling lod bias multiplied by 1000
+Graphics mode
+Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)
+Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace
 Greeting text
 Grenade
 Group name
@@ -1605,7 +1616,6 @@ Hide UI for focused gameplay
 Hide weapon fire effects in Zen Mode
 Hide weapon muzzle flashes
 High Detail
-High process priority
 High to low
 Highlight Color
 Highlight game type
@@ -1788,6 +1798,7 @@ Jump hint text (use \n for newline)
 Jump hint vertical position (% of screen height)
 k = Resend loss
 Kaomoji
+Kawase
 Keep hook when teleporting
 Keep unsent message on chat close
 Keep vote window open after voting
@@ -1840,6 +1851,7 @@ Laser size
 Laser Size/Thickness (percentage, 100=default)
 Last entered
 Last page in console
+Last successful sync: %s
 Latency
 Latency compensation
 Latency Jitter
@@ -1867,7 +1879,6 @@ Limiter threshold (percent)
 Line width
 Linear
 Lines %d - %d (%s)
-Links below open external ID and map statistics.
 List all commands that are available in practice mode
 List all commands which are accessible for given access level
 List all commands which are accessible for users
@@ -1894,6 +1905,7 @@ LLM translation default concurrency (smart adjustment)
 Load
 Load drawings from a given csv file (defaults to map name)
 Load sound files in thread
+Load the official rank replay of a map as a ghost (default: current map, rank 1)
 Load with code r. /load to check your existing saves
 Load, save, overwrite, or delete profiles
 Loaded %d items
@@ -1920,7 +1932,6 @@ Loading…
 Local
 Local + Dummy
 Local game mode statistics
-Local mode statistics are stored on this client.
 Local only
 Local particle effects
 Local particles: show particles behind own Tee (e.g. freeze snow)
@@ -1933,6 +1944,7 @@ Lock delay
 Lock team
 Locked
 Log output filename
+Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 Log the network
 Logout of econ
 Logout of rcon
@@ -2109,6 +2121,7 @@ Move to category
 Movement
 Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
+Multi-resolution blur with a stronger result and balanced GPU cost.
 Multi-View
 Multiple exact Axiom players found
 Mute
@@ -2425,6 +2438,7 @@ Password for Axiom alt account auto-login
 Password for Axiom main account auto-login
 Password incorrect
 Password required to use reserved slots.
+Past year
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 Path to client certificate for the MySQL/MariaDB SSL connection
 Path to client key for the MySQL/MariaDB SSL connection
@@ -2434,6 +2448,7 @@ Pause video rendering when demo playback is paused
 Pause voice when window unfocused
 Pause/unpause game
 Penalty in seconds for saving or swapping positions
+Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 Per-name volume (name=percent)
 Performance debug log threshold (ms)
 Performance points
@@ -2674,9 +2689,32 @@ Random map
 Random pick
 Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
+Rank ghost loaded: %s, %s s. It follows your current run.
+Rank ghost loaded: %s, %s s. It plays when you cross the start line.
+Rank ghost unloaded
+Rank ghost: another task is already running
+Rank ghost: converting the replay ...
+Rank ghost: could not extract the runner's path from the replay
+Rank ghost: downloading the replay ...
+Rank ghost: failed to download the replay
+Rank ghost: failed to fetch the replay list
+Rank ghost: failed to load the generated ghost (join the map first)
+Rank ghost: failed to load the replay: %s
+Rank ghost: failed to write the ghost file
+Rank ghost: fetching the replay list ...
+Rank ghost: HTTP is not available
+Rank ghost: no official replay for '%s' rank %d
+Rank ghost: replay converted, waiting for the map to load ...
+Rank ghost: specify a map name when not in a game
+Rank ghost: the downloaded replay is not a valid demo
+Rank ghost: the replay has an invalid run range
+Rank ghost: the replay has no run start/end markers
+Rank ghost: the replay list is empty or malformed
+Rank ghost: timed out waiting for the map to load
 Ratio
 Ratio threshold for local target language detection
 Read new feature indicators
+Ready
 Reason
 Reason:
 Rebinds the client's listening address and port
@@ -3057,7 +3095,6 @@ Set fullscreen mode: 0=off, 1=exclusive, 2=desktop, 3=windowed fullscreen
 Set microphone mute state (0=on, 1=mute)
 Set server to singleplayer mode (no player interaction, must be set before loading map)
 Set team for a player (spectators = -1, game = 0)
-Set team for all players (spectators = -1, game = 0)
 Set timeout protection code s
 Set voice input device
 Set voice output device
@@ -3179,7 +3216,7 @@ Show Hook Collision
 Show hook strength icon indicator
 Show hook strength number indicator
 Show hookable/unhookable tile outlines
-Show how weapons, shields, hearts, and flags appear in game
+Show how weapons, shields, snowflakes, and flags appear in game
 Show HUD
 Show important messages when rendering video
 Show important server prompts
@@ -3419,6 +3456,7 @@ Slow down the demo
 Small Tee size
 Smaller tees
 Smart
+Smooth and accurate blur with the highest GPU cost.
 Smooth camera switch animation time when spectating (in ms, 0=off)
 Smooth Dynamic Camera
 Smooth fade
@@ -3581,6 +3619,7 @@ Switching back to default input
 Switching back to default output
 Sync remote stats
 Sync Workshop Assets
+Syncing
 Syncing remote stats
 System
 System default
@@ -3686,6 +3725,7 @@ Text input focus ring color
 Thank you for your company and trust. This is what gives me the courage to keep going.
 Thanks for supporting QmClient
 The audio device couldn't be initialised.
+The auth level you need to tele others
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 The extra menu with the given number is activated.
 The force pause timer is now over, you can exit with /spec
@@ -3763,7 +3803,6 @@ To save all players in your team have to be alive and not in '/spec'
 Toast uses UiTokens + QmMotion slide
 Toggle auto camera
 Toggle between game scene preview and raw texture
-Toggle client process normal/high priority on Windows
 Toggle config value
 Toggle config value via keypress
 Toggle custom color
@@ -3913,6 +3952,7 @@ Unknown argument. Check '/rescuemode list'
 Unknown emote. Use /emote to see available emotes.
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
+Unload the rank ghost
 Unlock a team
 Unmute
 Unmute emoticons
@@ -4052,8 +4092,7 @@ Vote started automatically
 Vote yes
 Vote yes/no
 Voting
-Vulkan API
-Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
+Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1
 Wait for current vote to end before calling a new one.
 Wait time before a player can rejoin after being voted to spectators (in minutes)
 Wait time before triggering auto vote
@@ -4548,7 +4587,7 @@ Zoom to current mouse target
 [Editor]	Do not preview the paths of quads with a position envelope when a quad layer is selected.
 [Editor]	Do not run 'hot_reload' on the local server while rcon authed on map save.
 [Editor]	Do not select layers when ctrl+right clicking on a tile.
-[Editor]	Do not show how weapons, shields, hearts and flags appear ingame.
+[Editor]	Do not show how weapons, shields, snowflakes and flags appear ingame.
 [Editor]	Do not show quad bounds when moving quads.
 [Editor]	Do not show tile information.
 [Editor]	Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
@@ -4756,7 +4795,6 @@ Zoom to current mouse target
 [Editor]	HD
 [Editor]	HEART: Does nothing in FNG.
 [Editor]	HEART: Gives player +1 health
-[Editor]	HEART: Works like a FREEZE tile. Freezes tees for 3 seconds by default.
 [Editor]	Height
 [Editor]	History
 [Editor]	HIT OTHERS: You can activate hitting others for single weapons, using delay number to select which.
@@ -5050,7 +5088,7 @@ Zoom to current mouse target
 [Editor]	Show Directory
 [Editor]	Show directory
 [Editor]	Show envelope editor history.
-[Editor]	Show how weapons, shields, hearts and flags appear ingame.
+[Editor]	Show how weapons, shields, snowflakes and flags appear ingame.
 [Editor]	Show info
 [Editor]	Show info: Dec
 [Editor]	Show info: Hex
@@ -5066,6 +5104,7 @@ Zoom to current mouse target
 [Editor]	Size: %zu × %zu
 [Editor]	Slice
 [Editor]	Smooth
+[Editor]	SNOWFLAKE: Works like a FREEZE tile. Freezes tees for 3 seconds by default.
 [Editor]	Softness 
 [Editor]	SOLO: You are now in a solo part.
 [Editor]	SOLO: You are now out of the solo part.
@@ -5085,8 +5124,8 @@ Zoom to current mouse target
 [Editor]	SPAWN: Red team members spawn here, same as normal spawn in DDRace.
 [Editor]	SPAWN: Red team members spawn here.
 [Editor]	Speed
-[Editor]	SPEEDER: Causes weapons, SHIELD, HEART and SPINNING LASER to move quickly.
-[Editor]	SPEEDER: Causes weapons, SHIELD, HEART and SPINNING LASER to move slowly.
+[Editor]	SPEEDER: Causes weapons, SHIELD, SNOWFLAKE and SPINNING LASER to move quickly.
+[Editor]	SPEEDER: Causes weapons, SHIELD, SNOWFLAKE and SPINNING LASER to move slowly.
 [Editor]	Speedup
 [Editor]	SPEEDUP: Gives tee defined speed. Arrow shows direction and angle.
 [Editor]	SPIKE: Old FNG spikes. Deprecated.
@@ -5294,11 +5333,11 @@ Zoom to current mouse target
 [Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
 [Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.
 [Graphics error]	Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
 [Graphics error]	Failed to swap framebuffers. Try to update your GPU drivers.
 [Graphics error]	Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
 [Graphics error]	Submitting the render commands failed. Try to update your GPU drivers.
-[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
 [Hammer Mode]	Normal
 [Hammer Mode]	Rotate with cursor
 [Hammer Mode]	Rotate with cursor like gun

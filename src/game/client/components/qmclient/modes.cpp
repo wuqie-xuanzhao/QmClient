@@ -6,6 +6,7 @@
 #include <generated/protocol.h>
 
 #include <algorithm>
+#include <limits>
 
 static bool QmTextContainsNoCase(const char *pText, const char *pNeedle)
 {
@@ -63,6 +64,34 @@ int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActiv
 {
 	// Gores 只在进入时临时开启快速输入；离开或取消联动时恢复自动改动前的值。
 	return ApplyQmFocusConfigOverride(State, GoresActive && AutoToggle, CurrentValue, 1, Changed);
+}
+
+int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameModeEntered, bool GameModeLeft, bool AutoEnable, int CurrentValue, bool &Changed)
+{
+	Changed = false;
+	if(GameModeEntered && AutoEnable && CurrentValue == 0)
+	{
+		State.m_WasActive = true;
+		State.m_SavedValue = CurrentValue;
+		State.m_AutoChangedValue = true;
+		State.m_LastValue = 1;
+		Changed = true;
+		return 1;
+	}
+	if(State.m_WasActive && State.m_AutoChangedValue && CurrentValue != State.m_LastValue)
+		State.m_AutoChangedValue = false;
+	State.m_LastValue = CurrentValue;
+	if(GameModeLeft)
+	{
+		const bool Restore = State.m_WasActive && State.m_AutoChangedValue && CurrentValue == 1;
+		if(Restore)
+		{
+			Changed = true;
+			CurrentValue = State.m_SavedValue;
+		}
+		State = {};
+	}
+	return CurrentValue;
 }
 
 int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Changed)
@@ -221,16 +250,33 @@ bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *p
 	       QmTextContainsNoCase(pCommunityName, "axiom");
 }
 
+bool ServerPrefersTeeMenuSkin(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName)
+{
+	return QmTextEqualsNoCase(pGameInfoGameType, "DDRaceNetwork") ||
+	       QmTextEqualsNoCase(pGameInfoGameType, "DDNet") ||
+	       QmTextEqualsNoCase(pServerInfoGameType, "DDRaceNetwork") ||
+	       QmTextEqualsNoCase(pServerInfoGameType, "DDNet") ||
+	       QmTextContainsNoCase(pCommunityId, "axiom") ||
+	       QmTextContainsNoCase(pCommunityName, "axiom");
+}
+
 bool ShouldUseServerControlledLocalSkin(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName)
 {
-	const bool UseTeeMenuSkin =
-		QmTextEqualsNoCase(pGameInfoGameType, "DDRaceNetwork") ||
-		QmTextEqualsNoCase(pGameInfoGameType, "DDNet") ||
-		QmTextEqualsNoCase(pServerInfoGameType, "DDRaceNetwork") ||
-		QmTextEqualsNoCase(pServerInfoGameType, "DDNet") ||
-		QmTextContainsNoCase(pCommunityId, "axiom") ||
-		QmTextContainsNoCase(pCommunityName, "axiom");
-	return !UseTeeMenuSkin;
+	// 该判据只回答「服务器是否希望用服务器端下发的皮肤」，与协议版本无关。
+	// 协议版本由调用方用 Client()->IsSixup() 单独判定，见 EServerSkinProtocol。
+	return !ServerPrefersTeeMenuSkin(pGameInfoGameType, pServerInfoGameType, pCommunityId, pCommunityName);
+}
+
+EServerSkinProtocol ResolveServerSkinProtocol(bool Sixup, bool UseServerControlledSkin, bool LocalClientHasServerSkin)
+{
+	// 皮肤部位只能来自当前连接实际使用的协议：0.6 连接永远不能取 0.7 皮肤部件，
+	// 反之亦然。此前仅凭服务器白名单决定，导致 0.6 服务器被渲染成 0.7 皮肤。
+	if(Sixup)
+	{
+		// 0.7 连接只有拿到服务器下发的皮肤部件时才使用七部位皮肤。
+		return UseServerControlledSkin && LocalClientHasServerSkin ? EServerSkinProtocol::SEVEN : EServerSkinProtocol::NONE;
+	}
+	return EServerSkinProtocol::SIX;
 }
 
 int ResolveLocalSkinConfigIndex(bool DemoPlayback, int ClientId, int MainClientId, int DummyClientId)
@@ -253,6 +299,44 @@ bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget)
 		return true;
 	Cursor = std::min(Total, Cursor + Budget);
 	return Cursor < Total;
+}
+
+bool QmStatisticsShouldShowAxiomGores(bool HasLocalAxiomGores, bool IsCurrentAxiomCommunity, bool HasAxiomResult)
+{
+	return HasLocalAxiomGores || IsCurrentAxiomCommunity || HasAxiomResult;
+}
+
+SQmStatisticsModeDisplay ResolveQmStatisticsModeDisplay(int LocalMaps, int64_t LocalPlaytimeSeconds, bool IsAxiomGores, bool HasAxiomStats, int64_t AxiomMaps, int64_t AxiomPlaytimeSeconds, bool IsDdnet, int DdnetFinishes, int64_t DdnetPlaytimeHours)
+{
+	SQmStatisticsModeDisplay Display;
+	Display.m_Maps = std::max(0, LocalMaps);
+	Display.m_PlaytimeSeconds = std::max<int64_t>(0, LocalPlaytimeSeconds);
+	if(IsAxiomGores && HasAxiomStats)
+	{
+		Display.m_Maps = AxiomMaps > std::numeric_limits<int>::max() ? std::numeric_limits<int>::max() : (int)std::max<int64_t>(0, AxiomMaps);
+		Display.m_PlaytimeSeconds = std::max<int64_t>(0, AxiomPlaytimeSeconds);
+	}
+	else if(IsDdnet)
+	{
+		if(DdnetFinishes >= 0)
+			Display.m_Maps = DdnetFinishes;
+		// 官方 DDNet 统计的游玩小时数换算成秒，作为该模式的真实时长。
+		// 本地统计只记录本机游玩，与官方账号口径不一致，有官方数据时优先用官方。
+		if(DdnetPlaytimeHours >= 0)
+		{
+			constexpr int64_t SECONDS_PER_HOUR = 3600;
+			if(DdnetPlaytimeHours > std::numeric_limits<int64_t>::max() / SECONDS_PER_HOUR)
+				Display.m_PlaytimeSeconds = std::numeric_limits<int64_t>::max();
+			else
+				Display.m_PlaytimeSeconds = DdnetPlaytimeHours * SECONDS_PER_HOUR;
+		}
+	}
+	return Display;
+}
+
+int64_t QmStatisticsChartWeight(int Maps, int64_t PlaytimeSeconds, bool UseMaps)
+{
+	return UseMaps ? std::max(0, Maps) : std::max<int64_t>(0, PlaytimeSeconds);
 }
 
 bool ShouldHideFocusHud(bool FocusActive, bool HideHud)

@@ -17,9 +17,20 @@ inline bool QmPerfEnabled()
 	return g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfLogfile != 0 || g_Config.m_QmPerfStutterDiagnostics != 0;
 }
 
+inline int QmGraphicsTraceLevel()
+{
+	const int Configured = g_Config.m_QmGraphicsTrace < 0 ? 0 : (g_Config.m_QmGraphicsTrace > 3 ? 3 : g_Config.m_QmGraphicsTrace);
+	return g_Config.m_QmMacosGraphicsDiagnostics != 0 && Configured < 1 ? 1 : Configured;
+}
+
+inline bool QmGraphicsTraceEnabled(int MinimumLevel = 1)
+{
+	return QmGraphicsTraceLevel() >= MinimumLevel;
+}
+
 inline bool QmMacosGraphicsDiagnosticsEnabled()
 {
-	return g_Config.m_QmMacosGraphicsDiagnostics != 0;
+	return QmGraphicsTraceEnabled();
 }
 
 inline double QmPerfThresholdMs()

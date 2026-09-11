@@ -218,7 +218,7 @@
 == 1성
 
 128 player id <-> 64 player id map update rate
-== 128 player id <-> 64 player id map update rate
+== 128 플레이어 ID와 64 플레이어 ID 맵 업데이트 속도
 
 2 stars
 == 2성
@@ -920,9 +920,6 @@ Audio slots
 AUS
 == 호주
 
-Auth level required to send phone to others.
-== 다른 사람에게 전화를 보내는 데 필요한 인증 수준.
-
 Authed name color in scoreboard
 == 점수판에서 인증된 이름 색상
 
@@ -1220,6 +1217,9 @@ Axiom scores
 Axis
 == 축
 
+Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
+== 배경 흐림 알고리즘: 0=가우시안, 1=Kawase, 2=Dual Kawase
+
 Backend to use (e.g. OpenGL or Vulkan)
 == 사용할 백엔드 (예: OpenGL 또는 Vulkan)
 
@@ -1447,6 +1447,9 @@ Blue team
 
 Blue team wins!
 == 파란 팀 승리!
+
+Blur mode
+== 흐림 모드
 
 Body
 == 몸통
@@ -2453,9 +2456,6 @@ Current rescue mode: %s
 Current status
 == 현재 상태
 
-Current time: %s
-== 현재 시간: %s
-
 Current: Ranks
 == 현재: 순위
 
@@ -2567,6 +2567,9 @@ Darken Tee color when frozen (0-100)
 Data
 == 데이터
 
+Data source
+== 데이터 출처
+
 Date
 == 날짜
 
@@ -2597,9 +2600,6 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet 클라이언트를 다시 시작해야 업데이트가 완료됩니다!
 
-DDNet finish totals come from official player data.
-== DDNet 클리어 합계는 공식 플레이어 데이터를 기반으로 합니다.
-
 DDNet Memory
 == DDNet 메모리
 
@@ -2626,6 +2626,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork는 협동 온라인 게임으로, 당신과 당신의 티 그룹이 맵의 결승선에 도달하는 것이 목표입니다. 초보자라면 가장 쉬운 맵을 제공하는 Novice 서버에서 시작해야 합니다. 핑을 고려하여 가까운 서버를 선택하세요.
+
+DDRaceNetwork · DDNet
+== DDRaceNetwork · DDNet
 
 ddstats.tw ID stats
 == ddstats.tw ID 통계
@@ -2658,7 +2661,7 @@ Debug group clipping.
 == 그룹 클리핑 디버그
 
 Debug HTTP
-== Debug HTTP
+== HTTP 디버그
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 디버그 모드가 활성화되었습니다. Ctrl+Shift+D 를 눌러 디버그 모드를 비활성화하세요.
@@ -2827,6 +2830,9 @@ Demos directory
 
 Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
 == 제공된 인수 개수에 따라 자신을 (0) 관전 중이거나 조준 중인 위치로, (1) 지정된 플레이어 이름으로 순간이동합니다
+
+Deprecated compatibility alias for qm_graphics_trace (macOS signposts)
+== qm_graphics_trace의 사용 중단된 호환 별칭(macOS 사인포스트)
 
 Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
 == 사용 중단됨. 'muteid <client_id> <seconds> <reason>' 또는 'muteip <ip> <seconds> <reason>' 를 사용하세요
@@ -3071,6 +3077,9 @@ Download community skins
 Download failed
 == 다운로드 실패
 
+Download rank ghost
+== Rank 고스트 다운로드
+
 Download skins
 == 스킨 다운로드
 
@@ -3139,6 +3148,9 @@ Drift smoothness
 
 Drop on right canvas to replace one part.
 == 오른쪽 캔버스에 드롭하여 한 부품을 교체합니다.
+
+Dual Kawase
+== 듀얼 Kawase
 
 Dummies are not allowed on this server
 == 이 서버에서는 더미가 허용되지 않습니다
@@ -3422,8 +3434,17 @@ Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
 == 안티핑 활성화 (더 공격적인 예측)
 
+Enable antispoof for vanilla 0.6 clients
+== 바닐라 0.6 클라이언트의 스푸핑 방지 활성화
+
 Enable audio output and choose a device
 == Enable audio output and choose a device
+
+Enable backdrop blur
+== 배경 흐림 효과 사용
+
+Enable backdrop blur for translucent interface and selected HUD backgrounds
+== 반투명 인터페이스와 선택한 HUD 배경에 배경 흐림 효과 사용
 
 Enable background 3D particle flicker
 == 배경 3D 파티클 깜빡임 활성화
@@ -3436,9 +3457,6 @@ Enable background 3D particle pulse scaling
 
 Enable background 3D particle trail
 == 배경 3D 파티클 트레일 활성화
-
-Enable basic anti-spoof
-== 기본 안티 스푸핑 활성화
 
 Enable camera drift
 == 카메라 드리프트 활성화
@@ -3466,6 +3484,9 @@ Enable colored console output
 
 Enable coloring and hearts for friends
 == 친구에게 색상 및 하트 표시 활성화
+
+Enable connections from vanilla 0.6 clients
+== 바닐라 0.6 클라이언트의 연결 허용
 
 Enable controller
 == 컨트롤러 사용
@@ -3530,12 +3551,6 @@ Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
 == 게임 사운드 활성화
 
-Enable Gaussian blur
-== 가우시안 블러 사용
-
-Enable Gaussian blur for translucent interface and selected HUD backgrounds
-== 반투명 인터페이스와 선택한 HUD 배경에 가우시안 흐림 효과 사용
-
 Enable ghost
 == 고스트 활성화
 
@@ -3580,9 +3595,6 @@ Enable LLM thinking mode (may increase response time)
 
 Enable lyrics
 == 가사 활성화
-
-Enable macOS graphics diagnostics and Instruments signposts
-== macOS 그래픽 진단 및 Instruments 표지 활성화
 
 Enable main thread and render stage performance debug logging
 == 메인 스레드 및 렌더링 단계 성능 디버그 로그 활성화
@@ -3965,6 +3977,9 @@ Fade out
 Fade trail alpha
 == 꼬리 알파 페이드
 
+Failed
+== 실패
+
 Failed saving the replay!
 == 리플레이 저장 실패!
 
@@ -4024,6 +4039,9 @@ Fast input others
 
 Fast practice
 == 빠른 연습
+
+Fast, lightweight blur with a softer approximation.
+== 빠르고 가벼운 블러로, 더 부드러운 근사 효과를 제공합니다.
 
 Fat skins (DDFat)
 == 통통한 스킨 (DDFat)
@@ -4207,6 +4225,9 @@ Fraction of players needed to pass a vote
 
 Frags
 == 킬 수
+
+Frame quality
+== 프레임 품질
 
 Frame rate
 == 프레임 속도
@@ -4421,6 +4442,9 @@ Gap between statusbar items
 Gap between tee and nametag
 == 티와 이름표 사이 간격
 
+Gaussian
+== 가우시안
+
 General
 == 일반
 
@@ -4556,6 +4580,9 @@ Gores Mode
 Gores mode key
 == Gores 모드 키
 
+Gores · Axiom
+== Gores · Axiom
+
 GPU name, chosen by backend (if supported)
 == GPU 이름, 백엔드에서 선택 (지원 시)
 
@@ -4571,9 +4598,6 @@ Gradient color
 Graphics
 == 그래픽
 
-Graphics backend
-== 그래픽 백엔드
-
 Graphics card
 == 그래픽 카드
 
@@ -4581,7 +4605,7 @@ Graphics display
 == 그래픽 표시
 
 Graphics Error
-== Graphics Error
+== 그래픽 오류
 
 Graphics library major version (0 = auto-detect)
 == 그래픽 라이브러리 주 버전(0 = 자동 감지)
@@ -4594,6 +4618,15 @@ Graphics library patch version
 
 Graphics library texture sampling lod bias multiplied by 1000
 == 그래픽 라이브러리 텍스처 샘플링 lod 바이어스 x1000
+
+Graphics mode
+== 그래픽 모드
+
+Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)
+== 그래픽 모드: -1 = 백엔드 설정 사용, 0 = 호환성, 1 = 성능(기본값)
+
+Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace
+== 그래픽 추적 수준: 0 = 끄기, 1 = 주기적 요약, 2 = 요약 및 느린 프레임, 3 = 상세 백엔드 추적
 
 Greeting text
 == 인사말 텍스트
@@ -4819,9 +4852,6 @@ Hide weapon muzzle flashes
 
 High Detail
 == 높은 상세도
-
-High process priority
-== 높은 프로세스 우선순위
 
 High to low
 == 높음에서 낮음으로
@@ -5160,7 +5190,7 @@ Initializing components
 == 구성 요소 초기화 중
 
 Initializing layers
-== Initializing layers
+== 레이어 초기화 중
 
 Initializing map logic
 == 맵 로직 초기화 중
@@ -5369,6 +5399,9 @@ k = Resend loss
 Kaomoji
 == 카오모지
 
+Kawase
+== Kawase
+
 Keep hook when teleporting
 == 순간이동 시 갈고리 유지
 
@@ -5525,6 +5558,9 @@ Last entered
 Last page in console
 == 콘솔의 마지막 페이지
 
+Last successful sync: %s
+== 마지막 동기화 성공: %s
+
 Latency
 == 지연 시간
 
@@ -5606,9 +5642,6 @@ Linear
 Lines %d - %d (%s)
 == %d행 - %d행 (%s)
 
-Links below open external ID and map statistics.
-== 아래 링크에서 외부 ID 통계와 맵 통계를 엽니다.
-
 List all commands that are available in practice mode
 == 연습 모드에서 사용 가능한 모든 명령을 나열합니다
 
@@ -5686,6 +5719,9 @@ Load drawings from a given csv file (defaults to map name)
 
 Load sound files in thread
 == 스레드에서 사운드 파일 로드
+
+Load the official rank replay of a map as a ghost (default: current map, rank 1)
+== 맵의 공식 랭크 리플레이를 고스트로 불러오기 (기본: 현재 맵, Rank 1)
 
 Load with code r. /load to check your existing saves
 == 코드 r로 불러오기; /load를 사용하여 기존 저장 데이터를 확인할 수 있습니다
@@ -5765,9 +5801,6 @@ Local + Dummy
 Local game mode statistics
 == 로컬 게임 모드 통계
 
-Local mode statistics are stored on this client.
-== 로컬 게임 모드 통계는 이 클라이언트에 저장됩니다.
-
 Local only
 == 로컬 전용
 
@@ -5803,6 +5836,9 @@ Locked
 
 Log output filename
 == 로그 출력 파일 이름
+
+Log predicted event creation/playback and snapshot confirmation to debug double sounds.
+== 중복 사운드를 디버깅하기 위해 예측 이벤트 생성/재생과 스냅샷 확인을 기록합니다.
 
 Log the network
 == 네트워크 로그 기록
@@ -6033,13 +6069,13 @@ Maximum auto-saves retained per map name (0=unlimited)
 == 맵 이름당 유지되는 최대 자동 저장 수 (0=무제한)
 
 Maximum banned addresses sent their ban message per second (0 = unlimited).
-== Maximum banned addresses sent their ban message per second (0 = unlimited).
+== 초당 차단 메시지를 전송할 수 있는 차단 주소의 최대 수(0 = 제한 없음).
 
 Maximum clients per IP
 == IP당 최대 클라이언트 수
 
 Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
-== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== 연결되지 않은 주소에서 초당 압축 해제할 수 있는 최대 압축 패킷 수(0 = 제한 없음).
 
 Maximum cursor distance
 == 최대 커서 거리
@@ -6072,22 +6108,22 @@ Maximum number of clients on server
 == 서버의 최대 클라이언트 수
 
 Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
-== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== 메인 루프로 돌아가기 전에 한 번에 수신할 수 있는 최대 패킷 수(0 = 제한 없음).
 
 Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
-== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== 틱 및 클라이언트당 다른 클라이언트에 전송할 사전 입력의 최대 수(0 = 제한 없음)
 
 Maximum number of resend requests answered per second (0 for no limit)
-== Maximum number of resend requests answered per second (0 for no limit)
+== 초당 응답할 재전송 요청의 최대 수(0 = 제한 없음)
 
 Maximum number of server info responses of any size sent per second (0 = unlimited).
-== Maximum number of server info responses of any size sent per second (0 = unlimited).
+== 크기와 관계없이 초당 전송할 수 있는 서버 정보 응답의 최대 수(0 = 제한 없음).
 
 Maximum number of skins loaded simultaneously
 == 동시에 로드되는 최대 스킨 수
 
 Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
-== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== 초당 응답할 수 있는 바닐라 스푸핑 방지 핸드셰이크의 최대 수(0 = 제한 없음).
 
 Maximum players participating in a vote (0 = unlimited)
 == 투표에 참여할 수 있는 최대 플레이어 수 (0 = 무제한)
@@ -6331,6 +6367,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == x/y 번호 ii 의 타일로 이동
+
+Multi-resolution blur with a stronger result and balanced GPU cost.
+== 더 강한 효과와 균형 잡힌 GPU 부하를 제공하는 다중 해상도 블러입니다.
 
 Multi-View
 == 멀티 뷰
@@ -7280,14 +7319,17 @@ Password incorrect
 Password required to use reserved slots.
 == 예약된 슬롯을 사용하는 데 필요한 비밀번호
 
+Past year
+== 지난 1년
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
-== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== MySQL/MariaDB 서버 인증서 확인에 사용할 CA 인증서 경로
 
 Path to client certificate for the MySQL/MariaDB SSL connection
-== Path to client certificate for the MySQL/MariaDB SSL connection
+== MySQL/MariaDB SSL 연결의 클라이언트 인증서 경로
 
 Path to client key for the MySQL/MariaDB SSL connection
-== Path to client key for the MySQL/MariaDB SSL connection
+== MySQL/MariaDB SSL 연결의 클라이언트 키 경로
 
 Pause
 == 일시정지
@@ -7306,6 +7348,9 @@ Pause/unpause game
 
 Penalty in seconds for saving or swapping positions
 == 위치 저장 또는 교체에 대한 초 단위 패널티
+
+Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
+== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 
 Per-name volume (name=percent)
 == 이름별 개별 볼륨 (name=percent)
@@ -7644,7 +7689,7 @@ Predict grenade trajectory (only with cl_antiping 1)
 == 유탄 궤적 예측 (cl_antiping 1에서만)
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
-== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== 다른 플레이어의 움직임 예측(cl_antiping이 1일 때만 활성화)(1 = 항상 켜기, 2 = 상호작용 중에만, 3 = 2 및 얼어 있는 Tee는 항상 예측)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 무기 발사체 예측 (cl_antiping 1에서만)
@@ -8027,6 +8072,72 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == 플레이어 색상 무작위화 (0 = 전체, 1 = 몸, 2 = 발, 3 = 스킨, 4 = 깃발) 예: 0011 = 스킨과 깃발 무작위화 [숫자는 위치]
 
+Rank ghost loaded: %s, %s s. It follows your current run.
+== Rank 고스트를 불러왔습니다: %s, %s초. 현재 주행을 따라갑니다.
+
+Rank ghost loaded: %s, %s s. It plays when you cross the start line.
+== Rank 고스트를 불러왔습니다: %s, %s초. 시작선을 넘으면 재생됩니다.
+
+Rank ghost unloaded
+== Rank 고스트를 해제했습니다
+
+Rank ghost: another task is already running
+== Rank 고스트: 다른 작업이 이미 실행 중입니다
+
+Rank ghost: converting the replay ...
+== Rank 고스트: 리플레이 변환 중…
+
+Rank ghost: could not extract the runner's path from the replay
+== Rank 고스트: 리플레이에서 주자의 경로를 추출할 수 없습니다
+
+Rank ghost: downloading the replay ...
+== Rank 고스트: 리플레이 다운로드 중…
+
+Rank ghost: failed to download the replay
+== Rank 고스트: 리플레이 다운로드 실패
+
+Rank ghost: failed to fetch the replay list
+== Rank 고스트: 리플레이 목록을 가져오지 못했습니다
+
+Rank ghost: failed to load the generated ghost (join the map first)
+== Rank 고스트: 생성된 고스트를 불러오지 못했습니다 (먼저 맵에 입장하세요)
+
+Rank ghost: failed to load the replay: %s
+== Rank 고스트: 리플레이 불러오기 실패: %s
+
+Rank ghost: failed to write the ghost file
+== Rank 고스트: 고스트 파일 쓰기 실패
+
+Rank ghost: fetching the replay list ...
+== Rank 고스트: 리플레이 목록 가져오는 중…
+
+Rank ghost: HTTP is not available
+== Rank 고스트: HTTP를 사용할 수 없습니다
+
+Rank ghost: no official replay for '%s' rank %d
+== Rank 고스트: '%s'의 Rank %d 공식 리플레이가 없습니다
+
+Rank ghost: replay converted, waiting for the map to load ...
+== Rank 고스트: 리플레이 변환 완료, 맵 로드를 기다리는 중…
+
+Rank ghost: specify a map name when not in a game
+== Rank 고스트: 게임 중이 아닐 때는 맵 이름을 지정하세요
+
+Rank ghost: the downloaded replay is not a valid demo
+== Rank 고스트: 다운로드한 리플레이가 유효한 데모가 아닙니다
+
+Rank ghost: the replay has an invalid run range
+== Rank 고스트: 리플레이의 주행 구간이 유효하지 않습니다
+
+Rank ghost: the replay has no run start/end markers
+== Rank 고스트: 리플레이에 주행 시작/종료 마커가 없습니다
+
+Rank ghost: the replay list is empty or malformed
+== Rank 고스트: 리플레이 목록이 비어 있거나 손상되었습니다
+
+Rank ghost: timed out waiting for the map to load
+== Rank 고스트: 맵 로드 대기 시간 초과
+
 Ratio
 == 비율
 
@@ -8035,6 +8146,9 @@ Ratio threshold for local target language detection
 
 Read new feature indicators
 == 읽은 설정 인터페이스 새 기능 표시
+
+Ready
+== 준비됨
 
 Reason
 == 이유
@@ -9176,9 +9290,6 @@ Set server to singleplayer mode (no player interaction, must be set before loadi
 Set team for a player (spectators = -1, game = 0)
 == 플레이어의 팀 설정 (관전자 = -1, 게임 = 0)
 
-Set team for all players (spectators = -1, game = 0)
-== 모든 플레이어의 팀 설정 (관전자 = -1, 게임 = 0)
-
 Set timeout protection code s
 == 타임아웃 보호 코드 s 설정
 
@@ -9542,8 +9653,8 @@ Show hook strength number indicator
 Show hookable/unhookable tile outlines
 == 갈고리 가능/불가능 타일 윤곽선 표시
 
-Show how weapons, shields, hearts, and flags appear in game
-== 무기, 방패, 하트, 깃발이 게임에서 어떻게 나타나는지 표시
+Show how weapons, shields, snowflakes, and flags appear in game
+== 무기, 방패, 눈송이, 깃발이 게임에서 어떻게 보이는지 표시
 
 Show HUD
 == HUD 표시
@@ -10262,6 +10373,9 @@ Smaller tees
 Smart
 == 스마트
 
+Smooth and accurate blur with the highest GPU cost.
+== 부드럽고 정확한 블러이지만 GPU 부하가 가장 높습니다.
+
 Smooth camera switch animation time when spectating (in ms, 0=off)
 == 관전 시 부드러운 카메라 전환 애니메이션 시간 (ms, 0 = 끄기)
 
@@ -10748,6 +10862,9 @@ Sync remote stats
 Sync Workshop Assets
 == 워크샵 자산 동기화
 
+Syncing
+== 동기화 중
+
 Syncing remote stats
 == 원격 통계 동기화 중
 
@@ -10758,7 +10875,7 @@ System default
 == 시스템 기본값
 
 System media control and lyrics
-== System media control and lyrics
+== 시스템 미디어 제어 및 가사
 
 System media controls
 == 시스템 미디어 컨트롤
@@ -11063,6 +11180,9 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 == 오디오 장치를 초기화할 수 없습니다.
 
+The auth level you need to tele others
+== 다른 플레이어를 순간이동시키는 데 필요한 권한 레벨
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == "추가 메뉴" 가시성이 있는 버튼의 표시를 전환하는 추가 메뉴 버튼입니다. 길게 누르면 인게임 메뉴도 엽니다.
 
@@ -11079,7 +11199,7 @@ The FPS at which the recorder should record replay.
 == 레코더가 리플레이를 녹화해야 하는 FPS입니다.
 
 The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== 그래픽 백엔드가 예기치 않게 중지되어 안전한 그래픽 설정을 저장할 수 없습니다.
 
 The name "default" is reserved.
 == "default" 이름은 예약되어 있습니다.
@@ -11293,9 +11413,6 @@ Toggle auto camera
 
 Toggle between game scene preview and raw texture
 == 게임 장면 미리보기와 원본 텍스처 간 전환
-
-Toggle client process normal/high priority on Windows
-== Windows에서 클라이언트 프로세스 우선순위를 일반/높음으로 전환
 
 Toggle config value
 == 설정 값 전환
@@ -11744,6 +11861,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == 알 수 없는 상태
 
+Unload the rank ghost
+== Rank 고스트 해제
+
 Unlock a team
 == 팀 잠금 해제
 
@@ -12021,7 +12141,7 @@ Virtual joystick which always uses hook.
 == 항상 훅을 사용하는 가상 조이스틱입니다.
 
 Virtual joystick which only aims and moves the mouse pointer relatively.
-== Virtual joystick which only aims and moves the mouse pointer relatively.
+== 조준과 마우스 포인터의 상대적 이동만 수행하는 가상 조이스틱입니다.
 
 Virtual joystick which only aims without using an action.
 == 작업을 사용하지 않고 조준만 하는 가상 조이스틱입니다.
@@ -12161,11 +12281,8 @@ Vote yes/no
 Voting
 == 투표
 
-Vulkan API
-== Vulkan API 버전
-
-Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
-== Vulkan API 버전: 11=1.1 호환 모드, 14=1.4 엄격 모드
+Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1
+== Vulkan API 버전: 14 = 1.4, 1.3, 1.1 순으로 우선, 13 = 1.3, 1.1 순으로 우선, 11 = 1.1 강제
 
 Wait for current vote to end before calling a new one.
 == 새 투표를 요청하기 전에 현재 투표가 끝날 때까지 기다리세요.
@@ -12336,7 +12453,7 @@ Whether dummy jumps (requires cl_dummy_control 1)
 == 더미가 점프하는지 여부 (cl_dummy_control 1 필요)
 
 Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
-== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== 투표하지 않는 플레이어를 무시할지(0), 아니면 '아니요' 표로 간주할지(1)
 
 Whether players can hammer/grenade/laser each other.
 == 플레이어가 서로 망치/유탄/레이저를 사용할 수 있는지 여부
@@ -12927,35 +13044,7 @@ Hook
 
 [Direct touch input]
 Relative aim
-== Relative aim
-
-[Editor]
-[Ctrl+F4] Close the current map.
-== [Ctrl+F4] Close the current map.
-
-[Editor]
-Close map
-== Close map
-
-[Editor]
-Discard changes
-== Discard changes
-
-[Editor]
-Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-
-[Editor]
-Open the directory for automapper rules in the file browser.
-== Open the directory for automapper rules in the file browser.
-
-[Editor]
-Save changes?
-== Save changes?
-
-[Editor]
-Show directory
-== Show directory
+== 상대 조준
 
 [Editor curve type abbreviation]
 B
@@ -13018,8 +13107,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 지정된 그래픽 백엔드를 초기화할 수 없습니다. 통합 그래픽 카드 드라이버가 설치되지 않았을 수 있습니다.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== 초기화 중 실패했습니다. 설정 디렉토리의 qmclient/settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경한 후 다시 시도하세요.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 초기화 중 실패했습니다. 설정 디렉토리의 settings_ddnet.cfg 에서 gfx_backend 를 OpenGL 또는 Vulkan 으로 변경한 후 다시 시도하세요.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13034,8 +13123,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 렌더 명령 제출에 실패했습니다. GPU 드라이버를 업데이트해 보세요.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== 알 수 없는 오류입니다. 설정 디렉터리의 qmclient/settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 알 수 없는 오류입니다. 설정 디렉토리의 settings_ddnet.cfg에서 gfx_backend를 OpenGL 또는 Vulkan으로 변경하고 다시 시도하세요.
 
 [Hammer Mode]
 Normal
@@ -13099,7 +13188,7 @@ Joystick Hook
 
 [Predefined touch button behaviors]
 Joystick Relative Aim
-== Joystick Relative Aim
+== 조이스틱 상대 조준
 
 [Predefined touch button behaviors]
 Spectate

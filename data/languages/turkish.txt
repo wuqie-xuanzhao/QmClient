@@ -218,7 +218,7 @@
 == 1 yıldız
 
 128 player id <-> 64 player id map update rate
-== 128 player id <-> 64 player id map update rate
+== 128 <-> 64 oyuncu kimliği harita güncelleme hızı
 
 2 stars
 == 2 yıldız
@@ -920,9 +920,6 @@ Audio slots
 AUS
 == Avustralya
 
-Auth level required to send phone to others.
-== Başkalarına telefon göndermek için gereken yetki seviyesi.
-
 Authed name color in scoreboard
 == Skor tablosunda yetkilendirilmiş isim rengi
 
@@ -1220,6 +1217,9 @@ Axiom scores
 Axis
 == Eksen
 
+Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
+== Arka plan bulanıklığı algoritması: 0=Gauss, 1=Kawase, 2=Dual Kawase
+
 Backend to use (e.g. OpenGL or Vulkan)
 == Kullanılacak arka uç (örn. OpenGL veya Vulkan)
 
@@ -1447,6 +1447,9 @@ Blue team
 
 Blue team wins!
 == Mavi takım kazandı!
+
+Blur mode
+== Bulanıklık modu
 
 Body
 == Vücut
@@ -2453,9 +2456,6 @@ Current rescue mode: %s
 Current status
 == Mevcut durum
 
-Current time: %s
-== Geçerli zaman: %s
-
 Current: Ranks
 == Geçerli: Sıralamalar
 
@@ -2567,6 +2567,9 @@ Darken Tee color when frozen (0-100)
 Data
 == Veri
 
+Data source
+== Veri kaynağı
+
 Date
 == Tarih
 
@@ -2597,9 +2600,6 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == Güncellemeyi tamamlamak için DDNet istemcisinin yeniden başlatılması gerekiyor!
 
-DDNet finish totals come from official player data.
-== DDNet bitirme toplamları resmi oyuncu verilerinden alınır.
-
 DDNet Memory
 == DDNet belleği
 
@@ -2626,6 +2626,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork, sizin ve tee grubunuzun haritanın bitiş çizgisine ulaşmayı hedeflediği işbirlikçi bir çevrimiçi oyundur. Yeni başlayan biri olarak, en kolay haritaları barındıran Novice sunucularında başlamalısınız. Size yakın bir sunucu seçmek için ping'i göz önünde bulundurun.
+
+DDRaceNetwork · DDNet
+== DDRaceNetwork · DDNet
 
 ddstats.tw ID stats
 == ddstats.tw ID istatistikleri
@@ -2658,7 +2661,7 @@ Debug group clipping.
 == Grup kırpma hata ayıklama.
 
 Debug HTTP
-== Debug HTTP
+== HTTP hata ayıklama
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Hata ayıklama modu etkin. Hata ayıklama modunu devre dışı bırakmak için Ctrl+Shift+D tuşlarına basın.
@@ -2827,6 +2830,9 @@ Demos directory
 
 Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
 == Sağlanan argüman sayısına bağlı olarak, kendini şuraya ışınla; (0.) izlediğin veya nişan aldığın yere; (1.) belirtilen oyuncu adına
+
+Deprecated compatibility alias for qm_graphics_trace (macOS signposts)
+== qm_graphics_trace için kullanımdan kaldırılmış uyumluluk takma adı (macOS signpost'ları)
 
 Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
 == Kullanımdan kaldırıldı. 'muteid <client_id> <saniye> <sebep>' veya 'muteip <ip> <saniye> <sebep>' kullanın
@@ -3071,6 +3077,9 @@ Download community skins
 Download failed
 == İndirme başarısız
 
+Download rank ghost
+== Rank hayaletini indir
+
 Download skins
 == Görünümleri indir
 
@@ -3139,6 +3148,9 @@ Drift smoothness
 
 Drop on right canvas to replace one part.
 == Bir parçayı değiştirmek için sağ tuvalin üzerine bırakın.
+
+Dual Kawase
+== Çift Kawase
 
 Dummies are not allowed on this server
 == Bu sunucuda dummy'lere izin verilmiyor
@@ -3422,8 +3434,17 @@ Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
 == Antiping'i etkinleştir (daha agresif tahmin)
 
+Enable antispoof for vanilla 0.6 clients
+== Vanilla 0.6 istemcileri için sahteciliği önlemeyi etkinleştir
+
 Enable audio output and choose a device
 == Enable audio output and choose a device
+
+Enable backdrop blur
+== Arka plan bulanıklığını etkinleştir
+
+Enable backdrop blur for translucent interface and selected HUD backgrounds
+== Yarı saydam arayüz ve seçili HUD arka planları için arka plan bulanıklığını etkinleştir
 
 Enable background 3D particle flicker
 == Arka plan 3D parçacık titremesini etkinleştir
@@ -3436,9 +3457,6 @@ Enable background 3D particle pulse scaling
 
 Enable background 3D particle trail
 == Arka plan 3D parçacık izlerini etkinleştir
-
-Enable basic anti-spoof
-== Temel anti-spoof'u etkinleştir
 
 Enable camera drift
 == Kamera sürüklenmesini etkinleştir
@@ -3466,6 +3484,9 @@ Enable colored console output
 
 Enable coloring and hearts for friends
 == Arkadaşlar için renklendirme ve kalpleri etkinleştir
+
+Enable connections from vanilla 0.6 clients
+== Vanilla 0.6 istemcilerinden bağlantılara izin ver
 
 Enable controller
 == Kumandayı etkinleştir
@@ -3530,12 +3551,6 @@ Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
 == Oyun seslerini etkinleştir
 
-Enable Gaussian blur
-== Gauss bulanıklığını etkinleştir
-
-Enable Gaussian blur for translucent interface and selected HUD backgrounds
-== Yarı saydam arayüz ve seçili HUD arka planları için Gauss bulanıklığını etkinleştir
-
 Enable ghost
 == Hayaleti etkinleştir
 
@@ -3580,9 +3595,6 @@ Enable LLM thinking mode (may increase response time)
 
 Enable lyrics
 == Şarkı sözlerini etkinleştir
-
-Enable macOS graphics diagnostics and Instruments signposts
-== macOS grafik tanılamasını ve Instruments işaretlerini etkinleştir
 
 Enable main thread and render stage performance debug logging
 == Ana iş parçacığı ve işleme aşaması performans hata ayıklama günlüklerini etkinleştir
@@ -3965,6 +3977,9 @@ Fade out
 Fade trail alpha
 == İz alfasını soldur
 
+Failed
+== Başarısız
+
 Failed saving the replay!
 == Kayıt kaydedilemedi!
 
@@ -4024,6 +4039,9 @@ Fast input others
 
 Fast practice
 == Hızlı antrenman
+
+Fast, lightweight blur with a softer approximation.
+== Daha yumuşak bir yaklaşıma sahip hızlı ve hafif bulanıklık.
 
 Fat skins (DDFat)
 == Şişman skinler (DDFat)
@@ -4207,6 +4225,9 @@ Fraction of players needed to pass a vote
 
 Frags
 == Öldürme
+
+Frame quality
+== Kare kalitesi
 
 Frame rate
 == Kare hızı
@@ -4421,6 +4442,9 @@ Gap between statusbar items
 Gap between tee and nametag
 == Tee ile isim etiketi arasındaki boşluk
 
+Gaussian
+== Gauss
+
 General
 == Genel
 
@@ -4556,6 +4580,9 @@ Gores Mode
 Gores mode key
 == Gores modu tuşu
 
+Gores · Axiom
+== Gores · Axiom
+
 GPU name, chosen by backend (if supported)
 == GPU adı, arka uç tarafından seçilir (destekleniyorsa)
 
@@ -4571,9 +4598,6 @@ Gradient color
 Graphics
 == Grafikler
 
-Graphics backend
-== Grafik arka ucu
-
 Graphics card
 == Ekran kartı
 
@@ -4581,7 +4605,7 @@ Graphics display
 == Grafik görüntüsü
 
 Graphics Error
-== Graphics Error
+== Grafik hatası
 
 Graphics library major version (0 = auto-detect)
 == Grafik kitaplığının ana sürümü (0 = otomatik algıla)
@@ -4594,6 +4618,15 @@ Graphics library patch version
 
 Graphics library texture sampling lod bias multiplied by 1000
 == Grafik kütüphanesi doku örnekleme lod yanlılığı 1000 ile çarpılır
+
+Graphics mode
+== Grafik modu
+
+Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)
+== Grafik modu: -1 = arka uç ayarını kullan, 0 = uyumluluk, 1 = performans (varsayılan)
+
+Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace
+== Grafik izleme düzeyi: 0 = kapalı, 1 = dönemsel özet, 2 = özet ve yavaş kareler, 3 = ayrıntılı arka uç izlemesi
 
 Greeting text
 == Selamlama metni
@@ -4819,9 +4852,6 @@ Hide weapon muzzle flashes
 
 High Detail
 == Yüksek Detay
-
-High process priority
-== Yüksek işlem önceliği
 
 High to low
 == Yüksekten düşüğe
@@ -5160,7 +5190,7 @@ Initializing components
 == Bileşenler başlatılıyor
 
 Initializing layers
-== Initializing layers
+== Katmanlar başlatılıyor
 
 Initializing map logic
 == Harita mantığı başlatılıyor
@@ -5369,6 +5399,9 @@ k = Resend loss
 Kaomoji
 == Kaomoji
 
+Kawase
+== Kawase
+
 Keep hook when teleporting
 == Işınlanırken kancayı koru
 
@@ -5525,6 +5558,9 @@ Last entered
 Last page in console
 == Konsolda son sayfa
 
+Last successful sync: %s
+== Son başarılı eşitleme: %s
+
 Latency
 == Gecikme
 
@@ -5606,9 +5642,6 @@ Linear
 Lines %d - %d (%s)
 == Satırlar %d - %d (%s)
 
-Links below open external ID and map statistics.
-== Aşağıdaki bağlantılar harici ID ve harita istatistiklerini açar.
-
 List all commands that are available in practice mode
 == Pratik modunda mevcut olan tüm komutları listele
 
@@ -5686,6 +5719,9 @@ Load drawings from a given csv file (defaults to map name)
 
 Load sound files in thread
 == Ses dosyalarını iş parçacığında yükle
+
+Load the official rank replay of a map as a ghost (default: current map, rank 1)
+== Bir haritanın resmî rank tekrarını hayalet olarak yükle (varsayılan: geçerli harita, rank 1)
 
 Load with code r. /load to check your existing saves
 == r koduyla yükle. Mevcut kayıtlarını kontrol etmek için /load kullan
@@ -5765,9 +5801,6 @@ Local + Dummy
 Local game mode statistics
 == Yerel oyun modu istatistikleri
 
-Local mode statistics are stored on this client.
-== Yerel oyun modu istatistikleri bu istemcide saklanır.
-
 Local only
 == Yalnızca yerel
 
@@ -5803,6 +5836,9 @@ Locked
 
 Log output filename
 == Günlük çıktı dosya adı
+
+Log predicted event creation/playback and snapshot confirmation to debug double sounds.
+== Çift sesleri ayıklamak için tahmin edilen olayların oluşturulmasını/oynatılmasını ve anlık görüntü onayını günlüğe kaydet.
 
 Log the network
 == Ağı günlüğe kaydet
@@ -6033,13 +6069,13 @@ Maximum auto-saves retained per map name (0=unlimited)
 == Harita adı başına saklanan maksimum otomatik kayıt sayısı (0=sınırsız)
 
 Maximum banned addresses sent their ban message per second (0 = unlimited).
-== Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Saniyede engelleme mesajı gönderilecek yasaklı adreslerin maksimum sayısı (0 = sınırsız).
 
 Maximum clients per IP
 == IP başına maksimum istemci sayısı
 
 Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
-== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Bağlı olmayan adreslerden saniyede açılan sıkıştırılmış paketlerin maksimum sayısı (0 = sınırsız).
 
 Maximum cursor distance
 == Maksimum imleç mesafesi
@@ -6072,22 +6108,22 @@ Maximum number of clients on server
 == Sunucudaki maksimum istemci sayısı
 
 Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
-== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Ana döngüye dönmeden önce tek bir toplu işlemde alınabilecek maksimum paket sayısı (0 = sınırsız).
 
 Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
-== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Her tick ve istemci için diğer istemcilere gönderilen ön girdilerin maksimum sayısı (0 = sınırsız)
 
 Maximum number of resend requests answered per second (0 for no limit)
-== Maximum number of resend requests answered per second (0 for no limit)
+== Saniyede yanıtlanacak yeniden gönderme isteği maksimum sayısı (0 = sınırsız)
 
 Maximum number of server info responses of any size sent per second (0 = unlimited).
-== Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Boyutu ne olursa olsun saniyede gönderilecek sunucu bilgisi yanıtlarının maksimum sayısı (0 = sınırsız).
 
 Maximum number of skins loaded simultaneously
 == Aynı anda yüklenen maksimum skin sayısı
 
 Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
-== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Saniyede yanıtlanacak Vanilla sahteciliği önleme el sıkışmalarının maksimum sayısı (0 = sınırsız).
 
 Maximum players participating in a vote (0 = unlimited)
 == Bir oylamaya katılabilecek maksimum oyuncu sayısı (0 = sınırsız)
@@ -6331,6 +6367,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == x/y-numarası ii olan karoya gider
+
+Multi-resolution blur with a stronger result and balanced GPU cost.
+== Daha güçlü sonuç ve dengeli GPU maliyeti sunan çok çözünürlüklü bulanıklık.
 
 Multi-View
 == Çoklu Görünüm
@@ -7280,14 +7319,17 @@ Password incorrect
 Password required to use reserved slots.
 == Ayrılmış yuvaları kullanmak için gereken şifre.
 
+Past year
+== Geçen yıl
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
-== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== MySQL/MariaDB sunucu sertifikasını doğrulamak için CA sertifikasının yolu
 
 Path to client certificate for the MySQL/MariaDB SSL connection
-== Path to client certificate for the MySQL/MariaDB SSL connection
+== MySQL/MariaDB SSL bağlantısı için istemci sertifikasının yolu
 
 Path to client key for the MySQL/MariaDB SSL connection
-== Path to client key for the MySQL/MariaDB SSL connection
+== MySQL/MariaDB SSL bağlantısı için istemci anahtarının yolu
 
 Pause
 == Duraklat
@@ -7306,6 +7348,9 @@ Pause/unpause game
 
 Penalty in seconds for saving or swapping positions
 == Konum kaydetme veya değiştirme için saniye cinsinden ceza
+
+Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
+== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 
 Per-name volume (name=percent)
 == İsme göre bireysel ses seviyesi (isim=yüzde)
@@ -7644,7 +7689,7 @@ Predict grenade trajectory (only with cl_antiping 1)
 == Bomba yörüngesini tahmin et (yalnızca cl_antiping 1 ile)
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
-== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Diğer oyuncuların hareketini tahmin et(cl_antiping yalnızca 1 iken etkin)(1 = her zaman, 2 = yalnızca etkileşimde, 3 = 2 ve donmuş Tee'ler her zaman)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == Silah mermilerini tahmin et (yalnızca cl_antiping 1 ile)
@@ -8027,6 +8072,72 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == Oyuncu rengini rastgeleleştir (0 = tümü, 1 = vücut, 2 = ayak, 3 = cilt, 4 = bayrak) örnek: 0011 = cilt ve bayrağı rastgeleleştir [sayı konumdur]
 
+Rank ghost loaded: %s, %s s. It follows your current run.
+== Rank hayaleti yüklendi: %s, %s sn. Mevcut koşunu takip ediyor.
+
+Rank ghost loaded: %s, %s s. It plays when you cross the start line.
+== Rank hayaleti yüklendi: %s, %s sn. Başlangıç çizgisini geçince oynatılır.
+
+Rank ghost unloaded
+== Rank hayaleti kaldırıldı
+
+Rank ghost: another task is already running
+== Rank hayaleti: başka bir görev zaten çalışıyor
+
+Rank ghost: converting the replay ...
+== Rank hayaleti: tekrar dönüştürülüyor…
+
+Rank ghost: could not extract the runner's path from the replay
+== Rank hayaleti: tekrardan koşucunun izi çıkarılamadı
+
+Rank ghost: downloading the replay ...
+== Rank hayaleti: tekrar indiriliyor…
+
+Rank ghost: failed to download the replay
+== Rank hayaleti: tekrar indirilemedi
+
+Rank ghost: failed to fetch the replay list
+== Rank hayaleti: tekrar listesi alınamadı
+
+Rank ghost: failed to load the generated ghost (join the map first)
+== Rank hayaleti: oluşturulan hayalet yüklenemedi (önce haritaya girin)
+
+Rank ghost: failed to load the replay: %s
+== Rank hayaleti: tekrar yüklenemedi: %s
+
+Rank ghost: failed to write the ghost file
+== Rank hayaleti: hayalet dosyası yazılamadı
+
+Rank ghost: fetching the replay list ...
+== Rank hayaleti: tekrar listesi alınıyor…
+
+Rank ghost: HTTP is not available
+== Rank hayaleti: HTTP kullanılamıyor
+
+Rank ghost: no official replay for '%s' rank %d
+== Rank hayaleti: '%s' için Rank %d resmî tekrarı yok
+
+Rank ghost: replay converted, waiting for the map to load ...
+== Rank hayaleti: tekrar dönüştürüldü, haritanın yüklenmesi bekleniyor…
+
+Rank ghost: specify a map name when not in a game
+== Rank hayaleti: oyunda değilken bir harita adı belirtin
+
+Rank ghost: the downloaded replay is not a valid demo
+== Rank hayaleti: indirilen tekrar geçerli bir demo değil
+
+Rank ghost: the replay has an invalid run range
+== Rank hayaleti: tekrarın koşu aralığı geçersiz
+
+Rank ghost: the replay has no run start/end markers
+== Rank hayaleti: tekrarda başlangıç/bitiş işaretleri yok
+
+Rank ghost: the replay list is empty or malformed
+== Rank hayaleti: tekrar listesi boş veya bozuk
+
+Rank ghost: timed out waiting for the map to load
+== Rank hayaleti: harita yüklemesi beklenirken zaman aşımı
+
 Ratio
 == Oran
 
@@ -8035,6 +8146,9 @@ Ratio threshold for local target language detection
 
 Read new feature indicators
 == Okunan ayarlar arayüzü yeni özellik göstergeleri
+
+Ready
+== Hazır
 
 Reason
 == Sebep
@@ -9176,9 +9290,6 @@ Set server to singleplayer mode (no player interaction, must be set before loadi
 Set team for a player (spectators = -1, game = 0)
 == Bir oyuncu için takım ayarla (izleyiciler = -1, oyun = 0)
 
-Set team for all players (spectators = -1, game = 0)
-== Tüm oyuncular için takım ayarla (izleyiciler = -1, oyun = 0)
-
 Set timeout protection code s
 == Zaman aşımı koruma kodu s'yi ayarla
 
@@ -9542,8 +9653,8 @@ Show hook strength number indicator
 Show hookable/unhookable tile outlines
 == Kancalanabilir/kancalanamaz döşeme ana hatlarını göster
 
-Show how weapons, shields, hearts, and flags appear in game
-== Silahların, kalkanların, kalplerin ve bayrakların oyunda nasıl göründüğünü göster
+Show how weapons, shields, snowflakes, and flags appear in game
+== Silahların, kalkanların, kar tanelerinin ve bayrakların oyunda nasıl göründüğünü göster
 
 Show HUD
 == HUD'u göster
@@ -10262,6 +10373,9 @@ Smaller tees
 Smart
 == Akıllı
 
+Smooth and accurate blur with the highest GPU cost.
+== En yüksek GPU maliyetine sahip, yumuşak ve hassas bulanıklık.
+
 Smooth camera switch animation time when spectating (in ms, 0=off)
 == İzlerken kamera geçiş animasyonu süresi (ms cinsinden, 0=kapalı)
 
@@ -10748,6 +10862,9 @@ Sync remote stats
 Sync Workshop Assets
 == Workshop Varlıklarını Senkronize Et
 
+Syncing
+== Senkronize ediliyor
+
 Syncing remote stats
 == Uzak istatistikler senkronize ediliyor
 
@@ -10758,7 +10875,7 @@ System default
 == Sistem varsayılanı
 
 System media control and lyrics
-== System media control and lyrics
+== Sistem medya denetimi ve şarkı sözleri
 
 System media controls
 == Sistem medya kontrolleri
@@ -11063,6 +11180,9 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 == Ses cihazı başlatılamadı.
 
+The auth level you need to tele others
+== Başkalarını ışınlamak için gereken yetki seviyesi
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == "Ekstra Menü" görünürlüğüne sahip düğmelerin görünürlüğünü değiştiren ekstra menü düğmesi. Ayrıca uzun basıldığında oyun içi menüyü açar.
 
@@ -11079,7 +11199,7 @@ The FPS at which the recorder should record replay.
 == Kaydedicinin tekrarı kaydetmesi gereken FPS.
 
 The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== Grafik arka ucu beklenmedik şekilde durdu ve güvenli grafik ayarları kaydedilemedi.
 
 The name "default" is reserved.
 == "default" adı ayrılmıştır.
@@ -11293,9 +11413,6 @@ Toggle auto camera
 
 Toggle between game scene preview and raw texture
 == Oyun sahnesi önizlemesi ve ham doku arasında geçiş yap
-
-Toggle client process normal/high priority on Windows
-== Windows'ta istemci işleminin normal/yüksek önceliğini değiştir
 
 Toggle config value
 == Yapılandırma değerini değiştir
@@ -11744,6 +11861,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == Bilinmeyen durum
 
+Unload the rank ghost
+== Rank hayaletini kaldır
+
 Unlock a team
 == Bir takımın kilidini aç
 
@@ -12021,7 +12141,7 @@ Virtual joystick which always uses hook.
 == Her zaman kanca kullanan sanal joystick.
 
 Virtual joystick which only aims and moves the mouse pointer relatively.
-== Virtual joystick which only aims and moves the mouse pointer relatively.
+== Yalnızca nişan alan ve fare işaretçisini göreli olarak hareket ettiren sanal joystick.
 
 Virtual joystick which only aims without using an action.
 == Bir eylem kullanmadan yalnızca nişan alan sanal joystick.
@@ -12161,11 +12281,8 @@ Vote yes/no
 Voting
 == Oylama
 
-Vulkan API
-== Vulkan API'si
-
-Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
-== Vulkan API sürümü: 11=1.1 uyumluluk, 14=katı 1.4 modu
+Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1
+== Vulkan API sürümü: 14 = önce 1.4, sonra 1.3 ve 1.1'i tercih et; 13 = önce 1.3, sonra 1.1'i tercih et; 11 = 1.1'i zorla
 
 Wait for current vote to end before calling a new one.
 == Yeni bir oylama çağırmadan önce mevcut oylamanın bitmesini bekleyin.
@@ -12336,7 +12453,7 @@ Whether dummy jumps (requires cl_dummy_control 1)
 == Dummy'nin zıplayıp zıplamadığı (cl_dummy_control 1 gerektirir)
 
 Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
-== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Oy kullanmayan oyuncuların yok sayılması (0) veya 'hayır' oyu sayılması (1)
 
 Whether players can hammer/grenade/laser each other.
 == Oyuncuların birbirine çekiç/bomba/lazer atıp atamayacağı.
@@ -12927,35 +13044,7 @@ Hook
 
 [Direct touch input]
 Relative aim
-== Relative aim
-
-[Editor]
-[Ctrl+F4] Close the current map.
-== [Ctrl+F4] Close the current map.
-
-[Editor]
-Close map
-== Close map
-
-[Editor]
-Discard changes
-== Discard changes
-
-[Editor]
-Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-
-[Editor]
-Open the directory for automapper rules in the file browser.
-== Open the directory for automapper rules in the file browser.
-
-[Editor]
-Save changes?
-== Save changes?
-
-[Editor]
-Show directory
-== Show directory
+== Göreli nişan
 
 [Editor curve type abbreviation]
 B
@@ -13018,8 +13107,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Verilen grafik arka ucu başlatılamadı, bunun nedeni muhtemelen tümleşik grafik kartının sürücüsünü yüklememiş olmanızdır.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Başlatma sırasında başarısız oldu. Yapılandırma dizinindeki qmclient/settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Başlatma sırasında başarısız oldu. Yapılandırma dizinindeki settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13034,8 +13123,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Render komutlarının gönderilmesi başarısız oldu. GPU sürücülerinizi güncellemeyi deneyin.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Bilinmeyen hata. Yapılandırma dizinindeki qmclient/settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Bilinmeyen hata. Yapılandırma dizinindeki settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
 
 [Hammer Mode]
 Normal
@@ -13099,7 +13188,7 @@ Joystick Hook
 
 [Predefined touch button behaviors]
 Joystick Relative Aim
-== Joystick Relative Aim
+== Joystick ile göreli nişan
 
 [Predefined touch button behaviors]
 Spectate

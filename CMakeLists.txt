@@ -967,7 +967,7 @@ endif()
 
 if(TARGET_OS STREQUAL "windows")
   set(PLATFORM_CLIENT)
-  set(PLATFORM_CLIENT_LIBS opengl32.lib winmm.lib imm32.lib oleaut32.lib ole32.lib windowscodecs.lib mfplat.lib mfreadwrite.lib mfuuid.lib)
+  set(PLATFORM_CLIENT_LIBS opengl32.lib gdi32.lib winmm.lib imm32.lib oleaut32.lib ole32.lib windowscodecs.lib mfplat.lib mfreadwrite.lib mfuuid.lib)
   if(MSVC)
     list(APPEND PLATFORM_CLIENT_LIBS windowsapp.lib)
   endif()
@@ -1429,6 +1429,7 @@ set(EXPECTED_DATA
   audio/hook_noattach-02.wv
   audio/hook_noattach-03.wv
   audio/music_menu.wv
+  audio/qm_festive_haoyunlai.mp3
   audio/sfx_ctf_cap_pl.wv
   audio/sfx_ctf_drop.wv
   audio/sfx_ctf_grab_en.wv
@@ -1832,8 +1833,6 @@ set(EXPECTED_DATA
   emoticons.png
   extras.png
   fonts/DejaVuSans.ttf
-  fonts/Phosphor-Regular.ttf
-  fonts/Phosphor-Bold.ttf
   fonts/GlowSansJ-Compressed-Book.otf
   fonts/NotoEmoji-Regular.ttf
   fonts/SourceHanSans.ttc
@@ -2035,6 +2034,8 @@ set(EXPECTED_DATA
   qmclient/fonts/Inter_24pt-SemiBold.ttf
   qmclient/fonts/Montserrat-Regular.ttf
   qmclient/fonts/Nunito-Black.ttf
+  qmclient/fonts/Phosphor-Bold.ttf
+  qmclient/fonts/Phosphor-Regular.ttf
   qmclient/fonts/Rubik-Regular.ttf
   qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
@@ -2338,7 +2339,7 @@ set(EXPECTED_DATA
   wordlist.txt
 )
 
-set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
+set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;mp3;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
 
 ########################################################################
 # COPY DATA AND SHARED LIBS
@@ -3023,6 +3024,8 @@ if(CLIENT)
     backend_sdl.cpp
     backend_sdl.h
     backend_threaded.cpp
+    qm_festive_message_box.cpp
+    qm_festive_message_box.h
     blocklist_driver.cpp
     blocklist_driver.h
     checksum.h
@@ -3298,6 +3301,8 @@ if(CLIENT)
     components/qmclient/qmclient.h
     components/qmclient/qmclient_utils.cpp
     components/qmclient/qmclient_utils.h
+    components/qmclient/rank_ghost.cpp
+    components/qmclient/rank_ghost.h
     components/qmclient/settings_resource_preview.cpp
     components/qmclient/settings_resource_preview.h
     components/qmclient/scripting.cpp
@@ -3810,6 +3815,11 @@ if(CLIENT)
 
   if(VULKAN)
     target_compile_definitions(game-client PRIVATE CONF_BACKEND_VULKAN)
+  endif()
+
+  if(TARGET_OS STREQUAL "emscripten")
+    target_link_options(game-client PRIVATE
+      "-sEXPORTED_FUNCTIONS=['_main','_EmscriptenCallbackDropFile','_EmscriptenCallbackQuit']")
   endif()
 
   list(APPEND TARGETS_OWN game-client)
@@ -5315,9 +5325,9 @@ foreach(target ${TARGETS})
       target_compile_options(${target} PRIVATE /WX)
     endif()
   endif()
-  if(OUR_FLAGS_LINK)
-    target_link_libraries(${target} ${OUR_FLAGS_LINK})
-  endif()
+	if(OUR_FLAGS_LINK)
+		target_link_libraries(${target} ${OUR_FLAGS_LINK})
+	endif()
   if(OUR_FLAGS)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS})
   endif()

@@ -1147,44 +1147,81 @@ bool CGraphics_Threaded::CaptureBackbufferToRenderTarget(CRenderTargetHandle Tar
 	return true;
 }
 
-bool CGraphics_Threaded::GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params)
+bool CGraphics_Threaded::GaussianBlurRenderTarget(CRenderTargetHandle Source, const std::array<CRenderTargetHandle, DUAL_KAWASE_PYRAMID_LEVELS> &aTemporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params)
 {
-	if(!IsRenderTargetGaussianBlurSupported() || !Source.IsValid() || !Temporary.IsValid() || !Destination.IsValid())
+	const bool DualKawase = Params.m_Mode == EBlurMode::DUAL;
+	const int TemporaryCount = DualKawase ? DUAL_KAWASE_PYRAMID_LEVELS : 1;
+	if(!IsRenderTargetGaussianBlurSupported() || !Source.IsValid() || !Destination.IsValid())
 		return false;
-	if(Source.Id() == Temporary.Id() || Source.Id() == Destination.Id() || Temporary.Id() == Destination.Id())
+	int MaxTargetId = std::max(Source.Id(), Destination.Id());
+	for(int Index = 0; Index < TemporaryCount; ++Index)
+	{
+		if(!aTemporary[Index].IsValid() || aTemporary[Index].Id() == Source.Id() || aTemporary[Index].Id() == Destination.Id())
+			return false;
+		for(int Previous = 0; Previous < Index; ++Previous)
+			if(aTemporary[Index].Id() == aTemporary[Previous].Id())
+				return false;
+		MaxTargetId = std::max(MaxTargetId, aTemporary[Index].Id());
+	}
+	if((size_t)MaxTargetId >= m_vRenderTargetIndices.size() || (size_t)MaxTargetId >= m_vRenderTargetSizes.size())
 		return false;
-	const size_t MaxTargetId = (size_t)std::max({Source.Id(), Temporary.Id(), Destination.Id()});
-	if(MaxTargetId >= m_vRenderTargetIndices.size() || MaxTargetId >= m_vRenderTargetSizes.size())
-		return false;
-	if(m_vRenderTargetIndices[Source.Id()] != -1 || m_vRenderTargetIndices[Temporary.Id()] != -1 || m_vRenderTargetIndices[Destination.Id()] != -1)
+	if(m_vRenderTargetIndices[Source.Id()] != -1 || m_vRenderTargetIndices[Destination.Id()] != -1)
 		return false;
 	const ivec2 Size = m_vRenderTargetSizes[Source.Id()];
-	if(Size.x <= 0 || Size.y <= 0 || m_vRenderTargetSizes[Temporary.Id()] != Size || m_vRenderTargetSizes[Destination.Id()] != Size)
+	const ivec2 DestinationSize = m_vRenderTargetSizes[Destination.Id()];
+	if(Size.x <= 0 || Size.y <= 0 || DestinationSize != Size)
 		return false;
+	ivec2 PreviousExpectedSize = Size;
+	for(int Index = 0; Index < TemporaryCount; ++Index)
+	{
+		if(m_vRenderTargetIndices[aTemporary[Index].Id()] != -1)
+			return false;
+		const ivec2 ExpectedSize = DualKawase ? ivec2(DualKawasePyramidDimension(Size.x, Index), DualKawasePyramidDimension(Size.y, Index)) : Size;
+		if(ExpectedSize.x <= 0 || ExpectedSize.y <= 0 || (DualKawase && (ExpectedSize.x >= PreviousExpectedSize.x || ExpectedSize.y >= PreviousExpectedSize.y)) || m_vRenderTargetSizes[aTemporary[Index].Id()] != ExpectedSize)
+			return false;
+		PreviousExpectedSize = ExpectedSize;
+	}
 
 	std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> aWeights{};
-	if(!CalculateGaussianBlurKernel(Params, aWeights))
+	if(Params.m_Mode == EBlurMode::GAUSSIAN && !CalculateGaussianBlurKernel(Params, aWeights))
 		return false;
 
-	if(!BeginRenderTarget(Temporary, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
-		return false;
-	CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Horizontal;
-	Horizontal.m_SourceTargetId = Source.Id();
-	Horizontal.m_Radius = Params.m_Radius;
-	Horizontal.m_Horizontal = true;
-	Horizontal.m_aWeights = aWeights;
-	AddCmd(Horizontal);
-	EndRenderTarget();
+	const auto AddBlurPass = [&](CRenderTargetHandle PassSource, CRenderTargetHandle PassDestination, int Pass, bool Horizontal, bool Upsample) {
+		if(!BeginRenderTarget(PassDestination, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
+			return false;
+		CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Command;
+		Command.m_SourceTargetId = PassSource.Id();
+		Command.m_Radius = Params.m_Radius;
+		Command.m_Horizontal = Horizontal;
+		Command.m_Mode = Params.m_Mode;
+		Command.m_Pass = Pass;
+		Command.m_Upsample = Upsample;
+		Command.m_aWeights = aWeights;
+		AddCmd(Command);
+		EndRenderTarget();
+		return true;
+	};
 
-	if(!BeginRenderTarget(Destination, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
-		return false;
-	CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Vertical;
-	Vertical.m_SourceTargetId = Temporary.Id();
-	Vertical.m_Radius = Params.m_Radius;
-	Vertical.m_Horizontal = false;
-	Vertical.m_aWeights = aWeights;
-	AddCmd(Vertical);
-	EndRenderTarget();
+	if(!DualKawase)
+	{
+		if(!AddBlurPass(Source, aTemporary[0], 0, true, false))
+			return false;
+		return AddBlurPass(aTemporary[0], Destination, 1, false, false);
+	}
+
+	CRenderTargetHandle PassSource = Source;
+	for(int Level = 0; Level < DUAL_KAWASE_PYRAMID_LEVELS; ++Level)
+	{
+		if(!AddBlurPass(PassSource, aTemporary[Level], 0, false, false))
+			return false;
+		PassSource = aTemporary[Level];
+	}
+	for(int Level = DUAL_KAWASE_PYRAMID_LEVELS - 1; Level >= 0; --Level)
+	{
+		const CRenderTargetHandle PassDestination = Level == 0 ? Destination : aTemporary[Level - 1];
+		if(!AddBlurPass(aTemporary[Level], PassDestination, 1, false, true))
+			return false;
+	}
 	return true;
 }
 
@@ -4602,7 +4639,15 @@ bool CGraphics_Threaded::IsIdle() const
 
 void CGraphics_Threaded::WaitForIdle()
 {
+	const bool GraphicsTrace = g_Config.m_QmGraphicsTrace >= 2;
+	const auto WaitStart = GraphicsTrace ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	m_pBackend->WaitForIdle();
+	if(GraphicsTrace)
+	{
+		const double WaitMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - WaitStart).count();
+		if(WaitMs >= 8.0)
+			dbg_msg("perf/graphics/thread", "event=wait_for_idle duration_ms=%.3f backend=%s", WaitMs, GetVersionString());
+	}
 }
 
 void CGraphics_Threaded::AddWarning(const SWarning &Warning)

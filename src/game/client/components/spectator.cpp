@@ -14,6 +14,7 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/animstate.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/localization.h>
 
 #include <algorithm>
@@ -703,21 +704,17 @@ void CSpectator::OnRender()
 		const float IconSize = FontSize >= 10.0f ? FontSize - 2.0f : FontSize;
 		if(IsFriend)
 		{
-			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			ColorRGBA FriendIconColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendHeartColor));
 			FriendIconColor.a *= NameAlpha;
-			TextRender()->TextColor(FriendIconColor);
-			TextRender()->Text(IconX, IconY, IconSize, FontIcons::FONT_ICON_HEART, 220.0f);
+			Ui()->DrawQmIconAt(IconX, IconY, IconSize, EQmIcon::HEART, FontIcons::FONT_ICON_HEART, FriendIconColor);
 			IconX += IconSize - 2.0f;
 		}
 
 		if(IsSameClan)
 		{
-			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			ColorRGBA TeamIconColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClSameClanColor));
 			TeamIconColor.a *= NameAlpha;
-			TextRender()->TextColor(TeamIconColor);
-			TextRender()->Text(IconX, IconY, IconSize, FontIcons::FONT_ICON_USERS, 220.0f);
+			Ui()->DrawQmIconAt(IconX, IconY, IconSize, EQmIcon::USERS, FontIcons::FONT_ICON_USERS, TeamIconColor);
 		}
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

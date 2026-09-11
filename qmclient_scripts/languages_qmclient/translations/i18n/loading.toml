@@ -544,6 +544,22 @@ turkish = "Geçerli zaman: %s"
 polish = "Bieżący czas: %s"
 
 [[message]]
+key = "Last successful sync: %s"
+[message.translations]
+simplified_chinese = "上次成功同步：%s"
+traditional_chinese = "上次成功同步：%s"
+japanese = "前回の同期成功: %s"
+korean = "마지막 동기화 성공: %s"
+russian = "Последняя успешная синхронизация: %s"
+german = "Letzte erfolgreiche Synchronisierung: %s"
+spanish = "Última sincronización correcta: %s"
+french = "Dernière synchronisation réussie : %s"
+brazilian_portuguese = "Última sincronização bem-sucedida: %s"
+portuguese = "Última sincronização bem-sucedida: %s"
+turkish = "Son başarılı eşitleme: %s"
+polish = "Ostatnia udana synchronizacja: %s"
+
+[[message]]
 key = "Local mode statistics are stored on this client."
 [message.translations]
 simplified_chinese = "本地游戏模式统计保存在此客户端。"
@@ -1102,6 +1118,22 @@ brazilian_portuguese = "Inicializando componentes"
 portuguese = "A inicializar componentes"
 turkish = "Bileşenler başlatılıyor"
 polish = "Inicjalizacja komponentów"
+
+[[message]]
+key = "Initializing layers"
+[message.translations]
+simplified_chinese = "正在初始化地图图层"
+traditional_chinese = "正在初始化地圖圖層"
+japanese = "レイヤーを初期化中"
+korean = "레이어 초기화 중"
+russian = "Инициализация слоёв"
+german = "Ebenen werden initialisiert"
+spanish = "Inicializando capas"
+french = "Initialisation des calques"
+brazilian_portuguese = "Inicializando camadas"
+portuguese = "A inicializar camadas"
+turkish = "Katmanlar başlatılıyor"
+polish = "Inicjalizacja warstw"
 
 [[message]]
 key = "Initializing map logic"

@@ -133,7 +133,6 @@ private:
 
 	void StartRecord(int Tick);
 	void StopRecord(int Time = -1);
-	void StartRender(int Tick);
 	void StopRender();
 
 	void UpdateTeeRenderInfo(CGhostItem &Ghost);
@@ -154,6 +153,9 @@ public:
 	void OnNewSnapshot() override;
 
 	void OnNewPredictedSnapshot();
+
+	// QmClient: 影子加载时玩家可能已经在跑图中，需要立即按当前 run 进度开始播放
+	void StartRender(int Tick);
 
 	int FreeSlots() const;
 	int Load(const char *pFilename);

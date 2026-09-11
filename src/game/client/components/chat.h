@@ -293,13 +293,11 @@ private:
 	{
 		bool m_IsPressed = false;
 		bool m_RectValid = false;
-		bool m_IconUiElementInit = false;
 		float m_X = 0.0f;
 		float m_Y = 0.0f;
 		float m_W = 0.0f;
 		float m_H = 0.0f;
 		bool m_AutoTranslateEnabled = false;
-		CUIElement m_IconUiElement;
 	};
 	STranslateButtonState m_TranslateButton;
 

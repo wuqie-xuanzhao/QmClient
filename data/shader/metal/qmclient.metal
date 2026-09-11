@@ -314,6 +314,41 @@ float GaussianBlurWeight(constant SMetalGaussianBlurUniforms &Uniforms, int Offs
 
 fragment float4 qmclient_gaussian_blur_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant SMetalGaussianBlurUniforms &Uniforms [[buffer(1)]])
 {
+	const int Mode = int(Uniforms.m_TexelOffsetRadius.w);
+	const int Pass = int(Uniforms.m_Weights2.w);
+	const float2 Texel = Uniforms.m_TexelOffsetRadius.xy;
+	if(Mode == 1)
+	{
+		const float Step = Pass == 0 ? 1.5 : 2.5;
+		const float2 Offset = Texel * Step;
+		return (Texture.sample(Sampler, Input.m_TexCoord + float2(Offset.x, Offset.y)) +
+			Texture.sample(Sampler, Input.m_TexCoord + float2(-Offset.x, Offset.y)) +
+			Texture.sample(Sampler, Input.m_TexCoord + float2(Offset.x, -Offset.y)) +
+			Texture.sample(Sampler, Input.m_TexCoord - Offset)) * 0.25;
+	}
+	if(Mode == 2)
+	{
+		if(Pass == 0)
+		{
+			const float2 Offset = Texel * 0.5;
+			float4 Result = Texture.sample(Sampler, Input.m_TexCoord) * 4.0;
+			Result += Texture.sample(Sampler, Input.m_TexCoord + float2(-Offset.x, -Offset.y));
+			Result += Texture.sample(Sampler, Input.m_TexCoord + float2(Offset.x, -Offset.y));
+			Result += Texture.sample(Sampler, Input.m_TexCoord + float2(-Offset.x, Offset.y));
+			Result += Texture.sample(Sampler, Input.m_TexCoord + float2(Offset.x, Offset.y));
+			return Result / 8.0;
+		}
+		const float2 Offset = Texel * 0.5;
+		float4 Result = Texture.sample(Sampler, Input.m_TexCoord + float2(-2.0 * Offset.x, 0.0));
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(2.0 * Offset.x, 0.0));
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(0.0, -2.0 * Offset.y));
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(0.0, 2.0 * Offset.y));
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(-Offset.x, -Offset.y)) * 2.0;
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(Offset.x, -Offset.y)) * 2.0;
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(-Offset.x, Offset.y)) * 2.0;
+		Result += Texture.sample(Sampler, Input.m_TexCoord + float2(Offset.x, Offset.y)) * 2.0;
+		return Result / 12.0;
+	}
 	float4 Result = Texture.sample(Sampler, Input.m_TexCoord) * GaussianBlurWeight(Uniforms, 0);
 	const float2 TexelOffset = Uniforms.m_TexelOffsetRadius.xy;
 	const int Radius = int(Uniforms.m_TexelOffsetRadius.z);

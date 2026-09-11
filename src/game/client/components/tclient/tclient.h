@@ -518,6 +518,8 @@ public:
 	// Gores 快速输入临时覆盖
 	bool m_GoresModeStateKnown = false;
 	bool m_PrevGoresModeActive = false;
+	bool m_GoresGameModeStateKnown = false;
+	bool m_PrevGoresGameMode = false;
 	SQmFocusConfigOverrideState m_GoresAutoEnableOverride;
 	SQmFocusConfigOverrideState m_GoresFastInputOverride;
 	SQmFocusConfigOverrideState m_GoresFastInputOthersOverride;

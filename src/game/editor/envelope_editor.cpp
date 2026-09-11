@@ -11,6 +11,7 @@
 #include <engine/keys.h>
 #include <engine/shared/config.h>
 
+#include <game/client/qm_icon_manager.h>
 #include <game/editor/editor.h>
 #include <game/editor/editor_actions.h>
 #include <game/editor/mapitems/envelope.h>
@@ -369,7 +370,7 @@ void CEnvelopeEditor::Render(CUIRect View)
 
 		// redo button
 		ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
-		if(Editor()->DoButton_FontIcon(&m_RedoButtonId, FontIcons::FONT_ICON_REDO, Map()->m_EnvelopeEditorHistory.CanRedo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last action.", "Editor"), IGraphics::CORNER_R, 11.0f) == 1)
+		if(Editor()->DoButton_QmIcon(&m_RedoButtonId, EQmIcon::REDO, FontIcons::FONT_ICON_REDO, Map()->m_EnvelopeEditorHistory.CanRedo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last action.", "Editor"), IGraphics::CORNER_R, 11.0f) == 1)
 		{
 			Map()->m_EnvelopeEditorHistory.Redo();
 		}
@@ -377,7 +378,7 @@ void CEnvelopeEditor::Render(CUIRect View)
 		// undo button
 		ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 		ToolBar.VSplitRight(10.0f, &ToolBar, nullptr);
-		if(Editor()->DoButton_FontIcon(&m_UndoButtonId, FontIcons::FONT_ICON_UNDO, Map()->m_EnvelopeEditorHistory.CanUndo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last action.", "Editor"), IGraphics::CORNER_L, 11.0f) == 1)
+		if(Editor()->DoButton_QmIcon(&m_UndoButtonId, EQmIcon::UNDO, FontIcons::FONT_ICON_UNDO, Map()->m_EnvelopeEditorHistory.CanUndo() ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last action.", "Editor"), IGraphics::CORNER_L, 11.0f) == 1)
 		{
 			Map()->m_EnvelopeEditorHistory.Undo();
 		}
@@ -462,7 +463,7 @@ void CEnvelopeEditor::Render(CUIRect View)
 			{
 				ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
 				ToolBar.VSplitRight(20.0f, &ToolBar, &Button);
-				if(Editor()->DoButton_FontIcon(&m_ZoomOutButtonId, FontIcons::FONT_ICON_MINUS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad-] Zoom out horizontally, hold shift to zoom vertically.", "Editor"), IGraphics::CORNER_R, 9.0f))
+				if(Editor()->DoButton_QmIcon(&m_ZoomOutButtonId, EQmIcon::MINUS, FontIcons::FONT_ICON_MINUS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad-] Zoom out horizontally, hold shift to zoom vertically.", "Editor"), IGraphics::CORNER_R, 9.0f))
 				{
 					if(Input()->ShiftIsPressed())
 						State.m_ZoomY.ChangeValue(0.1f * State.m_ZoomY.GetValue());
@@ -471,11 +472,11 @@ void CEnvelopeEditor::Render(CUIRect View)
 				}
 
 				ToolBar.VSplitRight(20.0f, &ToolBar, &Button);
-				if(Editor()->DoButton_FontIcon(&m_ResetZoomButtonId, FontIcons::FONT_ICON_MAGNIFYING_GLASS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad*] Reset zoom to default value.", "Editor"), IGraphics::CORNER_NONE, 9.0f))
+				if(Editor()->DoButton_QmIcon(&m_ResetZoomButtonId, EQmIcon::SEARCH, FontIcons::FONT_ICON_MAGNIFYING_GLASS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad*] Reset zoom to default value.", "Editor"), IGraphics::CORNER_NONE, 9.0f))
 					ResetZoomEnvelope(pEnvelope, State.m_ActiveChannels);
 
 				ToolBar.VSplitRight(20.0f, &ToolBar, &Button);
-				if(Editor()->DoButton_FontIcon(&m_ZoomInButtonId, FontIcons::FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad+] Zoom in horizontally, hold shift to zoom vertically.", "Editor"), IGraphics::CORNER_L, 9.0f))
+				if(Editor()->DoButton_QmIcon(&m_ZoomInButtonId, EQmIcon::PLUS, FontIcons::FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT, Localize("[NumPad+] Zoom in horizontally, hold shift to zoom vertically.", "Editor"), IGraphics::CORNER_L, 9.0f))
 				{
 					if(Input()->ShiftIsPressed())
 						State.m_ZoomY.ChangeValue(-0.1f * State.m_ZoomY.GetValue());
@@ -509,7 +510,7 @@ void CEnvelopeEditor::Render(CUIRect View)
 			CurrentEnvelopeSwitched = true;
 		}
 
-		if(Editor()->DoButton_FontIcon(&m_PrevEnvelopeButtonId, FontIcons::FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, Localize("Select previous envelope.", "Editor envelope selector punctuation"), IGraphics::CORNER_L, 7.0f))
+		if(Editor()->DoButton_QmIcon(&m_PrevEnvelopeButtonId, EQmIcon::MINUS, FontIcons::FONT_ICON_MINUS, 0, &Dec, BUTTONFLAG_LEFT, Localize("Select previous envelope.", "Editor envelope selector punctuation"), IGraphics::CORNER_L, 7.0f))
 		{
 			Map()->m_SelectedEnvelope--;
 			if(Map()->m_SelectedEnvelope < 0)
@@ -517,7 +518,7 @@ void CEnvelopeEditor::Render(CUIRect View)
 			CurrentEnvelopeSwitched = true;
 		}
 
-		if(Editor()->DoButton_FontIcon(&m_NextEnvelopeButtonId, FontIcons::FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, Localize("Select next envelope.", "Editor envelope selector punctuation"), IGraphics::CORNER_R, 7.0f))
+		if(Editor()->DoButton_QmIcon(&m_NextEnvelopeButtonId, EQmIcon::PLUS, FontIcons::FONT_ICON_PLUS, 0, &Inc, BUTTONFLAG_LEFT, Localize("Select next envelope.", "Editor envelope selector punctuation"), IGraphics::CORNER_R, 7.0f))
 		{
 			Map()->m_SelectedEnvelope++;
 			if(Map()->m_SelectedEnvelope >= (int)Map()->m_vpEnvelopes.size())

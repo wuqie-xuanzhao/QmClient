@@ -350,10 +350,11 @@ class CHud : public CComponent
 	};
 	mutable SHudMediaIslandFrameCache m_MediaIslandFrameCache;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurSource;
-	IGraphics::CRenderTargetHandle m_MediaIslandBlurTemporary;
+	std::array<IGraphics::CRenderTargetHandle, IGraphics::DUAL_KAWASE_PYRAMID_LEVELS> m_aMediaIslandBlurTemporary;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurTarget;
 	int m_MediaIslandBlurWidth = 0;
 	int m_MediaIslandBlurHeight = 0;
+	int m_MediaIslandBlurMode = -1;
 	bool m_MediaIslandBlurReady = false;
 	uint64_t m_MediaIslandBlurLastAttemptFrame = 0;
 	bool m_MediaIslandBlurAttemptInitialized = false;

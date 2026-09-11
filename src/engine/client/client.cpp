@@ -85,7 +85,9 @@ namespace
 #endif
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <cstdlib>
 #include <iterator>
 #include <limits>
 #include <stack>
@@ -104,32 +106,18 @@ namespace
 
 using namespace std::chrono_literals;
 
-static void ApplyProcessPriorityConfig()
-{
-#if defined(CONF_FAMILY_WINDOWS)
-	const DWORD PriorityClass = g_Config.m_QmProcessHighPriority ? HIGH_PRIORITY_CLASS : NORMAL_PRIORITY_CLASS;
-	if(SetPriorityClass(GetCurrentProcess(), PriorityClass))
-	{
-		log_info("client", "applied Windows %s priority class", g_Config.m_QmProcessHighPriority ? "high" : "normal");
-	}
-	else
-	{
-		log_error("client", "failed to apply Windows process priority class (error=%lu)", GetLastError());
-	}
-#else
-	if(g_Config.m_QmProcessHighPriority)
-	{
-		log_info("client", "high process priority is not supported on this platform");
-	}
-#endif
-}
-
 static constexpr ColorRGBA gs_ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
 static constexpr ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0f};
 static constexpr int64_t gs_HangTimeoutSeconds = 10;
+// QmClient: 退出兜底超时（秒）。正常退出通常 1-2 秒，超过该时间视为退出清理挂起。
+static constexpr int64_t gs_ForcedExitTimeoutSeconds = 10;
+static std::atomic<uint64_t> gs_ForcedExitWatchdogGeneration{0};
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
 static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
 static constexpr const char *gs_pQmGraphicsRecoveryStateFile = "qmclient/graphics_recovery.marker";
+#if defined(CONF_FAMILY_WINDOWS)
+static constexpr const char *gs_pQmCrashReporterBaselineFile = "qmclient/crash_reporter_started_at.marker";
+#endif
 static bool gs_aLoadedPreviousConfigPath[ConfigDomain::NUM] = {};
 
 struct SQmLatestCrashReport
@@ -171,6 +159,189 @@ static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, 
 	pLatest->m_Rank = Rank;
 	return 0;
 }
+
+// QmClient: 退出流程兜底。个别图形驱动会让进程停留在退出清理阶段不再响应，
+// 用户只能手动结束进程（证据见 dumps/QmClient_Crash 下的 hang report）。
+// 配置保存完成后启动本看门狗线程：清理若未在超时前解除看门狗，直接强制退出。
+static void StartForcedExitWatchdog()
+{
+	const uint64_t Generation = gs_ForcedExitWatchdogGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
+	log_info("client", "shutdown watchdog armed: forcing exit if shutdown does not finish within %lld seconds", (long long)gs_ForcedExitTimeoutSeconds);
+	std::thread([Generation]() {
+		std::this_thread::sleep_for(std::chrono::seconds(gs_ForcedExitTimeoutSeconds));
+		if(gs_ForcedExitWatchdogGeneration.load(std::memory_order_acquire) != Generation)
+			return;
+		// 使用 std::_Exit 跳过 atexit/静态析构，确保清理阶段卡死时也能结束进程。
+		std::_Exit(0);
+	}).detach();
+}
+
+static void StopForcedExitWatchdog()
+{
+	gs_ForcedExitWatchdogGeneration.fetch_add(1, std::memory_order_release);
+	log_info("client", "shutdown watchdog disarmed after cleanup completed");
+}
+
+#if defined(CONF_FAMILY_WINDOWS)
+static bool IsQmCrashReporterFilename(const char *pName)
+{
+	return pName != nullptr &&
+	       (str_endswith_nocase(pName, "_fatal_report.txt") != nullptr ||
+		       (str_find_nocase(pName, "_hang_report_") != nullptr && str_endswith_nocase(pName, ".txt") != nullptr));
+}
+
+static bool IsQmCrashReporterPath(const char *pPath)
+{
+	if(pPath == nullptr || pPath[0] == '\0')
+		return false;
+
+	char aNormalizedPath[IO_MAX_PATH_LENGTH];
+	str_copy(aNormalizedPath, pPath);
+	fs_normalize_path(aNormalizedPath);
+	return !fs_is_relative_path(aNormalizedPath) &&
+	       str_find_nocase(aNormalizedPath, "/dumps/QmClient_Crash/") != nullptr &&
+	       IsQmCrashReporterFilename(fs_filename(aNormalizedPath));
+}
+
+static bool MarkQmCrashReportShown(const char *pReportPath)
+{
+	char aMarkerPath[IO_MAX_PATH_LENGTH + 16];
+	str_format(aMarkerPath, sizeof(aMarkerPath), "%s.shown", pReportPath);
+	IOHANDLE File = io_open(aMarkerPath, IOFLAG_WRITE);
+	if(!File)
+		return false;
+
+	char aTimestamp[64];
+	str_format(aTimestamp, sizeof(aTimestamp), "%lld\n", (long long)time_timestamp());
+	const bool Success = io_write(File, aTimestamp, str_length(aTimestamp)) == str_length(aTimestamp);
+	io_close(File);
+	return Success;
+}
+
+static bool ShowQmCrashReporterDialog(const char *pReportPath)
+{
+	if(!IsQmCrashReporterPath(pReportPath))
+		return false;
+
+	IOHANDLE File = io_open(pReportPath, IOFLAG_READ);
+	if(!File)
+		return false;
+	const int64_t ReportLength = io_length(File);
+	if(ReportLength < 0 || ReportLength > 2 * 1024 * 1024)
+	{
+		io_close(File);
+		return false;
+	}
+	char *pReport = io_read_all_str(File);
+	io_close(File);
+	if(pReport == nullptr)
+		return false;
+
+	const std::vector<IGraphics::CMessageBoxButton> vButtons = {
+		{.m_pLabel = "Show crash reports"},
+		{.m_pLabel = "Close report", .m_Confirm = true, .m_Cancel = true},
+	};
+	const std::optional<int> Result = ShowMessageBoxWithoutGraphics({
+		.m_pTitle = "QmClient Crash Report",
+		.m_pMessage = pReport,
+		.m_Style = IGraphics::EMessageBoxStyle::QM_FESTIVE,
+		.m_vButtons = vButtons,
+	});
+	free(pReport);
+	if(!Result.has_value())
+		return false;
+
+	if(!MarkQmCrashReportShown(pReportPath))
+		log_warn("crash_reporter", "failed to mark report as shown: %s", pReportPath);
+	if(*Result == 0)
+	{
+		char aReportDirectory[IO_MAX_PATH_LENGTH];
+		str_copy(aReportDirectory, pReportPath);
+		if(fs_parent_dir(aReportDirectory) == 0)
+			open_file(aReportDirectory);
+	}
+	return true;
+}
+
+struct SQmPendingCrashReportSearch
+{
+	IStorage *m_pStorage = nullptr;
+	int64_t m_StartedAt = 0;
+	char m_aPath[IO_MAX_PATH_LENGTH] = "";
+	time_t m_TimeModified = 0;
+};
+
+static int FindPendingQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, int Type, void *pUser)
+{
+	(void)Type;
+	if(IsDir || pInfo == nullptr || !IsQmCrashReporterFilename(pInfo->m_pName))
+		return 0;
+
+	SQmPendingCrashReportSearch *pSearch = static_cast<SQmPendingCrashReportSearch *>(pUser);
+	if((int64_t)pInfo->m_TimeModified < pSearch->m_StartedAt || pInfo->m_TimeModified < pSearch->m_TimeModified)
+		return 0;
+
+	char aRelativePath[IO_MAX_PATH_LENGTH];
+	str_format(aRelativePath, sizeof(aRelativePath), "%s/%s", gs_pQmCrashDumpDir, pInfo->m_pName);
+	// fatal signal 路径不能在信号处理器中创建子进程，因此这类报告没有
+	// .confirmed 标记；报告写入已完成，启动时统一按时间基线展示。
+	char aShownMarkerPath[IO_MAX_PATH_LENGTH + 16];
+	str_format(aShownMarkerPath, sizeof(aShownMarkerPath), "%s.shown", aRelativePath);
+	if(pSearch->m_pStorage->FileExists(aShownMarkerPath, IStorage::TYPE_SAVE))
+		return 0;
+
+	str_copy(pSearch->m_aPath, aRelativePath);
+	pSearch->m_TimeModified = pInfo->m_TimeModified;
+	return 0;
+}
+
+static bool ReadQmCrashReporterStartedAt(IStorage *pStorage, int64_t &StartedAt)
+{
+	StartedAt = 0;
+	char *pState = pStorage->ReadFileStr(gs_pQmCrashReporterBaselineFile, IStorage::TYPE_SAVE);
+	if(pState == nullptr)
+		return false;
+	StartedAt = str_toint64_base(pState);
+	free(pState);
+	return StartedAt > 0;
+}
+
+static bool WriteQmCrashReporterStartedAt(IStorage *pStorage, int64_t StartedAt)
+{
+	pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE);
+	IOHANDLE File = pStorage->OpenFile(gs_pQmCrashReporterBaselineFile, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return false;
+
+	char aTimestamp[64];
+	str_format(aTimestamp, sizeof(aTimestamp), "%lld\n", (long long)StartedAt);
+	const bool Success = io_write(File, aTimestamp, str_length(aTimestamp)) == str_length(aTimestamp);
+	io_close(File);
+	return Success;
+}
+
+static void ShowPendingQmCrashReport(IStorage *pStorage)
+{
+	int64_t StartedAt = 0;
+	if(!ReadQmCrashReporterStartedAt(pStorage, StartedAt))
+	{
+		// 首次启用时只建立基线，不对更新前的历史报告重复弹窗。
+		WriteQmCrashReporterStartedAt(pStorage, time_timestamp());
+		return;
+	}
+
+	SQmPendingCrashReportSearch Search;
+	Search.m_pStorage = pStorage;
+	Search.m_StartedAt = StartedAt;
+	pStorage->ListDirectoryInfo(IStorage::TYPE_SAVE, gs_pQmCrashDumpDir, FindPendingQmCrashReportCallback, &Search);
+	if(Search.m_aPath[0] == '\0')
+		return;
+
+	char aAbsolutePath[IO_MAX_PATH_LENGTH];
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, Search.m_aPath, aAbsolutePath, sizeof(aAbsolutePath));
+	ShowQmCrashReporterDialog(aAbsolutePath);
+}
+#endif
 
 static bool ReadQmLifecycleMarkerStartedAt(IStorage *pStorage, int64_t &StartedAt)
 {
@@ -267,7 +438,21 @@ static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
 static bool ApplyQmSafeGraphicsRecovery()
 {
 	const auto SafeConfig = graphics_backend::SafeBackendConfig();
+	const int RecoveryFullscreen = graphics_backend::RecoveryFullscreenMode(g_Config.m_GfxFullscreen);
 	bool Changed = false;
+	// 图形设备已丢失后，下一次启动必须真正绕开触发故障的后端。
+	// 仅重置 OpenGL 版本是不够的：性能模式会在 InitWindow 中再次把
+	// gfx_backend 改回 Vulkan，导致每次启动都在首帧重复 device lost。
+	if(str_comp_nocase(g_Config.m_GfxBackend, SafeConfig.m_pBackend) != 0)
+	{
+		str_copy(g_Config.m_GfxBackend, SafeConfig.m_pBackend);
+		Changed = true;
+	}
+	if(g_Config.m_QmGraphicsMode != graphics_backend::GRAPHICS_MODE_COMPATIBILITY)
+	{
+		g_Config.m_QmGraphicsMode = graphics_backend::GRAPHICS_MODE_COMPATIBILITY;
+		Changed = true;
+	}
 	const int FallbackGLMajor = 0;
 	const int FallbackGLMinor = 0;
 	if(g_Config.m_GfxGLMajor != FallbackGLMajor || g_Config.m_GfxGLMinor != FallbackGLMinor || g_Config.m_GfxGLPatch != 0)
@@ -282,12 +467,12 @@ static bool ApplyQmSafeGraphicsRecovery()
 		g_Config.m_GfxFsaaSamples = SafeConfig.m_FsaaSamples;
 		Changed = true;
 	}
-	if(g_Config.m_GfxFullscreen != SafeConfig.m_Fullscreen)
+	if(g_Config.m_GfxFullscreen != RecoveryFullscreen)
 	{
-		g_Config.m_GfxFullscreen = SafeConfig.m_Fullscreen;
+		g_Config.m_GfxFullscreen = RecoveryFullscreen;
 		Changed = true;
 	}
-	if(g_Config.m_GfxBorderless != SafeConfig.m_Borderless)
+	if(RecoveryFullscreen == 0 && g_Config.m_GfxBorderless != SafeConfig.m_Borderless)
 	{
 		g_Config.m_GfxBorderless = SafeConfig.m_Borderless;
 		Changed = true;
@@ -332,7 +517,7 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	const bool Changed = ApplyQmSafeGraphicsRecovery();
 	if(Changed)
 	{
-		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting safe graphics settings in windowed mode without FSAA", Latest.m_aPath);
+		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting safe graphics settings without FSAA while preserving a desktop-sized display mode", Latest.m_aPath);
 	}
 	else
 	{
@@ -3621,7 +3806,22 @@ void CClient::UpdateDemoIntraTimers()
 
 void CClient::Update()
 {
+	const bool GraphicsTrace = QmGraphicsTraceEnabled(2);
+	const auto PumpStart = GraphicsTrace ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
+	const int64_t PumpGapNs = GraphicsTrace && m_QmGraphicsLastPumpNetworkNs != 0 ? PumpStart.count() - m_QmGraphicsLastPumpNetworkNs : 0;
 	PumpNetwork();
+	if(GraphicsTrace)
+	{
+		const double PumpMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - PumpStart).count();
+		const double GapMs = PumpGapNs > 0 ? (double)PumpGapNs / 1000000.0 : 0.0;
+		if(PumpMs >= 8.0 || GapMs >= 100.0)
+		{
+			char aPayload[256];
+			str_format(aPayload, sizeof(aPayload), "event=network_pump pump_ms=%.3f gap_ms=%.3f state=%d", PumpMs, GapMs, State());
+			QmPerfLogPayloadForce("perf/graphics/network", aPayload, this);
+		}
+		m_QmGraphicsLastPumpNetworkNs = time_get_nanoseconds().count();
+	}
 
 	// 官方 178da1ead：在采集/发送输入之前先更新 editor/gameclient，
 	// 低刷新率下输入能早一个循环发出。
@@ -4436,6 +4636,10 @@ void CClient::Run()
 		AutoStatScreenshot_Cleanup();
 		AutoCSV_Cleanup();
 
+		// QmClient: 渲染帧收尾，结算本帧文本统计（容器创建/字形光栅化），
+		// 超阈值帧会打 text_frame_stats 日志用于定位文本渲染卡顿。
+		TextRender()->QmTextFrameEnd();
+
 		m_Fifo.Update();
 		if(PerfEnabled)
 			QmPerfLogStage("perf/main_thread", "loop_total", LoopTimer->ElapsedMs(), false, this);
@@ -4484,6 +4688,10 @@ void CClient::Run()
 		m_vQuittingWarnings.emplace_back(Localize("Error saving settings"));
 	}
 
+	// QmClient: 配置已保存，启动退出兜底看门狗；若退出清理（如驱动销毁渲染上下文、
+	// 图形设备丢失弹出的错误框）挂起，超时后强制结束进程，避免用户手动杀进程。
+	StartForcedExitWatchdog();
+
 	m_ServerBrowser.Shutdown();
 	m_Fifo.Shutdown();
 	m_pHttp->Shutdown();
@@ -4504,6 +4712,9 @@ void CClient::Run()
 
 	// shutdown text render while graphics are still available
 	m_pTextRender->Shutdown();
+
+	// 清理已经完成，后续显示的崩溃报告需要保持到用户主动关闭。
+	StopForcedExitWatchdog();
 }
 
 void CClient::FinishQmConfigMigration()
@@ -5501,6 +5712,9 @@ void CClient::WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat)
 	fs_makedir_rec_for(aDumpPath);
 	WriteMiniDumpFile(aDumpPath);
 #endif
+
+	if(!crashdump_launch_reporter_if_available(aReportPath))
+		log_warn("hang", "failed to launch crash reporter for '%s'; it will be offered on the next start", aReportPath);
 }
 
 void CClient::UpdateAndSwap()
@@ -5802,16 +6016,6 @@ void CClient::ConchainStdoutOutputLevel(IConsole::IResult *pResult, void *pUserD
 	}
 }
 
-void CClient::ConchainProcessHighPriority(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
-{
-	(void)pUserData;
-	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments())
-	{
-		ApplyProcessPriorityConfig();
-	}
-}
-
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -5898,7 +6102,6 @@ void CClient::RegisterCommands()
 
 	m_pConsole->Chain("loglevel", ConchainLoglevel, this);
 	m_pConsole->Chain("stdout_output_level", ConchainStdoutOutputLevel, this);
-	m_pConsole->Chain("qm_process_high_priority", ConchainProcessHighPriority, this);
 }
 
 static CClient *CreateClient()
@@ -6038,6 +6241,104 @@ int main(int argc, const char **argv)
 	CWindowsComLifecycle WindowsComLifecycle(true);
 #endif
 	CCmdlineFix CmdlineFix(&argc, &argv);
+
+#if defined(CONF_FAMILY_WINDOWS)
+	for(int i = 1; i < argc; ++i)
+	{
+		if(str_comp(argv[i], "--qm-preview-launch-crash-reporter") == 0)
+		{
+			if(i + 1 >= argc || !IsQmCrashReporterPath(argv[i + 1]) || !crashdump_launch_reporter_if_available(argv[i + 1]))
+				return 2;
+			return 0;
+		}
+		if(str_comp(argv[i], "--qm-crash-reporter") == 0)
+		{
+			if(i + 1 >= argc || !ShowQmCrashReporterDialog(argv[i + 1]))
+				return 2;
+			return 0;
+		}
+		if(str_comp(argv[i], "--qm-preview-crash-dialog") == 0)
+		{
+			// 预览也覆盖“退出清理已完成后弹出报告”的真实时序，
+			// 确保过期的看门狗不会在 10 秒后关掉用户正在阅读的窗口。
+			StartForcedExitWatchdog();
+			StopForcedExitWatchdog();
+			const char *pPreviewType = i + 1 < argc ? argv[i + 1] : "graphics";
+			const char *pPreviewTitle = "Graphics Error";
+			const char *pPreviewMessage =
+				"Submitting to graphics queue failed.\n"
+				"device lost\n"
+				"Submitting the render commands failed. Try to update your GPU drivers.\n\n"
+				"For detailed troubleshooting instructions please read our Wiki:\n"
+				"https://wiki.ddnet.org/wiki/GFX_Troubleshooting\n\n"
+				"Platform: win64 (little endian)\n"
+				"Configuration: development preview\n"
+				"Game version: QmClient development build\n"
+				"OS version: Windows\n\n"
+				"Configured graphics backend: Vulkan 1.4.0\n"
+				"GPU: Preview GPU - 4K / high-DPI layout test\n"
+				"Texture: 101.34 MiB, Buffer: 24.38 MiB, Streamed: 20.50 MiB, Staging: 48.00 MiB";
+			if(str_comp_nocase(pPreviewType, "assertion") == 0)
+			{
+				pPreviewTitle = "Assertion Error";
+				pPreviewMessage =
+					"An assertion error occurred. Please take a screenshot and report this error.\n"
+					"Please also share the assert log and crash log found in the 'dumps/QmClient_Crash' folder in your config directory.\n\n"
+					"menus.cpp(2048): popup state must have an active owner\n\n"
+					"Platform: win64 (little endian)\n"
+					"Configuration: development preview\n"
+					"Game version: QmClient development build\n"
+					"OS version: Windows";
+			}
+			else if(str_comp_nocase(pPreviewType, "fatal") == 0)
+			{
+				pPreviewTitle = "QmClient Crash Report";
+				pPreviewMessage =
+					"QmClient fatal error report\n"
+					"Report type: fatal-crash\n"
+					"Timestamp: 2026-09-10 20:26:00.000\n"
+					"Reason: Unhandled structured exception\n"
+					"Process ID: 12345\n"
+					"Thread ID: 67890\n"
+					"Exception code: 0xC0000005 (EXCEPTION_ACCESS_VIOLATION)\n"
+					"Exception address: 0x00007FF612345678\n"
+					"Exception module: DDNet.exe + 0x123456\n"
+					"Access violation operation: read\n"
+					"Access violation target address: 0x0000000000000000\n"
+					"Fallback minidump written: yes";
+			}
+			else if(str_comp_nocase(pPreviewType, "hang") == 0)
+			{
+				pPreviewTitle = "QmClient Hang Report";
+				pPreviewMessage =
+					"QmClient hang diagnostic report\n"
+					"Report type: hang\n"
+					"Timestamp: 2026-09-10_20-26-00\n"
+					"Process ID: 12345\n"
+					"Hang timeout threshold: 10 seconds\n"
+					"No heartbeat duration: 12.4 seconds\n"
+					"Client state: online (3)\n"
+					"Current map: Tutorial\n"
+					"Server address: 127.0.0.1:8303\n"
+					"OS version: Windows\n"
+					"Game version: QmClient development build\n"
+					"Report directory: dumps/QmClient_Crash";
+			}
+			std::vector<IGraphics::CMessageBoxButton> vPreviewButtons;
+			if(str_comp_nocase(pPreviewType, "graphics") == 0)
+				vPreviewButtons.push_back({.m_pLabel = "Show Wiki"});
+			vPreviewButtons.push_back({.m_pLabel = "Show crash reports"});
+			vPreviewButtons.push_back({.m_pLabel = "Close report", .m_Confirm = true, .m_Cancel = true});
+			ShowMessageBoxWithoutGraphics({
+				.m_pTitle = pPreviewTitle,
+				.m_pMessage = pPreviewMessage,
+				.m_Style = IGraphics::EMessageBoxStyle::QM_FESTIVE,
+				.m_vButtons = vPreviewButtons,
+			});
+			return 0;
+		}
+	}
+#endif
 
 	std::vector<std::shared_ptr<ILogger>> vpLoggers;
 	std::shared_ptr<ILogger> pStdoutLogger = nullptr;
@@ -6244,7 +6545,14 @@ int main(int argc, const char **argv)
 		}
 #endif
 		vButtons.push_back({.m_pLabel = "OK", .m_Confirm = true, .m_Cancel = true});
-		const std::optional<int> MessageResult = pClient->ShowMessageBox({.m_pTitle = pTitle, .m_pMessage = aMessage, .m_vButtons = vButtons});
+		const std::optional<int> MessageResult = pClient->ShowMessageBox({
+			.m_pTitle = pTitle,
+			.m_pMessage = aMessage,
+			.m_Style = IGraphics::EMessageBoxStyle::QM_FESTIVE,
+			.m_vButtons = vButtons,
+		});
+		if(MessageResult.has_value())
+			crashdump_suppress_reporter_once();
 		if(GotGraphicsError && MessageResult && *MessageResult == 0)
 		{
 			pClient->ViewLink("https://wiki.ddnet.org/wiki/GFX_Troubleshooting");
@@ -6299,6 +6607,10 @@ int main(int argc, const char **argv)
 		fs_makedir_rec_for(aBufPath);
 		crashdump_init_if_available(aBufPath);
 	}
+
+#if defined(CONF_FAMILY_WINDOWS)
+	ShowPendingQmCrashReport(pStorage);
+#endif
 
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT).release();
 	pKernel->RegisterInterface(pConsole);
@@ -6483,8 +6795,8 @@ int main(int argc, const char **argv)
 		pFutureFileLogger->Set(log_logger_noop());
 	}
 
-	const bool MacosGraphicsDiagnostics = g_Config.m_QmMacosGraphicsDiagnostics != 0;
-	const bool PerfLoggingConfigured = g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics;
+	const bool MacosGraphicsDiagnostics = g_Config.m_QmMacosGraphicsDiagnostics != 0 || g_Config.m_QmGraphicsTrace != 0;
+	const bool PerfLoggingConfigured = g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics || g_Config.m_QmGraphicsTrace != 0;
 	if(PerfLoggingConfigured || MacosGraphicsDiagnostics)
 	{
 		pStorage->CreateFolder("dumps", IStorage::TYPE_SAVE);
@@ -6528,8 +6840,6 @@ int main(int argc, const char **argv)
 	{
 		pFuturePerfFileLogger->Set(log_logger_noop());
 	}
-
-	ApplyProcessPriorityConfig();
 
 	// Register protocol and file extensions
 #if defined(CONF_FAMILY_WINDOWS)
@@ -6598,7 +6908,14 @@ int main(int argc, const char **argv)
 
 	std::vector<SWarning> vQuittingWarnings = pClient->QuittingWarnings();
 
+	// QmClient: 从这里开始销毁图形后端。个别图形驱动（NVIDIA nvoglv64.dll 等）
+	// 会在销毁设备/上下文时访问已释放内存。进程此时本来就要结束，这类退出期故障
+	// 不再弹窗或写完整转储，只留一条日志；标记在清理前后各置一次以限定作用范围。
+	crashdump_mark_shutdown_begin(nullptr);
+
 	PerformCleanup();
+
+	crashdump_mark_shutdown_end();
 
 	for(const SWarning &Warning : vQuittingWarnings)
 	{

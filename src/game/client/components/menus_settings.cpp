@@ -41,6 +41,7 @@
 #include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/skin.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
@@ -1820,7 +1821,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
 				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-				Ui()->DoLabel(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
+				Ui()->DoLabel_QmIcon(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? EQmIcon::QUESTION : EQmIcon::TRIANGLE_EXCLAMATION, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
 				TextRender()->SetRenderFlags(0);
 				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -1863,18 +1864,15 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		// Random skin button
 		static CButtonContainer s_RandomSkinButton;
 		static const char *s_apDice[] = {FONT_ICON_DICE_ONE, FONT_ICON_DICE_TWO, FONT_ICON_DICE_THREE, FONT_ICON_DICE_FOUR, FONT_ICON_DICE_FIVE, FONT_ICON_DICE_SIX};
+		static const EQmIcon s_aDiceIcons[] = {EQmIcon::DICE_ONE, EQmIcon::DICE_TWO, EQmIcon::DICE_THREE, EQmIcon::DICE_FOUR, EQmIcon::DICE_FIVE, EQmIcon::DICE_SIX};
 		static int s_CurrentDie = rand() % std::size(s_apDice);
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		if(DoButton_Menu(&s_RandomSkinButton, s_apDice[s_CurrentDie], 0, &RandomSkinButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, -0.2f))
+		if(DoButton_Menu_QmIcon(&s_RandomSkinButton, s_aDiceIcons[s_CurrentDie], s_apDice[s_CurrentDie], 0, &RandomSkinButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 5.0f, -0.2f))
 		{
 			GameClient()->m_Skins.RandomizeSkin(m_Dummy);
 			SetNeedSendInfo();
 			m_SkinListScrollToSelected = true;
 			s_CurrentDie = rand() % std::size(s_apDice);
 		}
-		TextRender()->SetRenderFlags(0);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		GameClient()->m_Tooltips.DoToolTip(&s_RandomSkinButton, &RandomSkinButton, Localize("Create a random skin"));
 
 		static CButtonContainer s_RandomizeColors;
@@ -1959,7 +1957,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				TextRender()->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, 1.0f));
 				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-				Ui()->DoLabel(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
+				Ui()->DoLabel_QmIcon(&StatusIcon, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? EQmIcon::QUESTION : EQmIcon::TRIANGLE_EXCLAMATION, Indicator == CSkins::CSkinContainer::EStatusIndicator::NOT_FOUND ? FONT_ICON_QUESTION : FONT_ICON_TRIANGLE_EXCLAMATION, 12.0f, TEXTALIGN_MC);
 				TextRender()->SetRenderFlags(0);
 				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -2082,7 +2080,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;
 			Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel, BodySize, TEXTALIGN_ML, CurrentQueueLabelProps);
 			static CButtonContainer s_TeeClearCurrentSkinQueueButton;
-			if(Ui()->DoButton_FontIcon(&s_TeeClearCurrentSkinQueueButton, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
+			if(Ui()->DoButton_QmIcon(&s_TeeClearCurrentSkinQueueButton, EQmIcon::TRASH, FONT_ICON_TRASH, 0, &ClearQueueRect, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
 			{
 				GameClient()->m_Skins.ClearSkinQueue(QueueDummy);
 			}
@@ -2196,7 +2194,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 					TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 					const float RemoveAlpha = Ui()->HotItem() == &s_QueueRemoveIds[i] ? 0.2f : 0.0f;
 					TextRender()->TextColor(ColorRGBA(0.9f, 0.3f, 0.3f, 0.7f + RemoveAlpha));
-					Ui()->DoLabel(&RemoveRect, FONT_ICON_TRASH, TeeMetrics.m_SmallSize, TEXTALIGN_MC);
+					Ui()->DoLabel_QmIcon(&RemoveRect, EQmIcon::TRASH, FONT_ICON_TRASH, TeeMetrics.m_SmallSize, TEXTALIGN_MC);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
 					TextRender()->SetRenderFlags(0);
 					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -2620,7 +2618,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				TextRender()->TextColor(Color);
 				SLabelProperties Props;
 				Props.m_MaxWidth = pRect->w;
-				Ui()->DoLabel(pRect, InQueue ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, 12.0f, TEXTALIGN_MC, Props);
+				Ui()->DoLabel_QmIcon(pRect, InQueue ? EQmIcon::SQUARE_MINUS : EQmIcon::SQUARE_PLUS, InQueue ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, 12.0f, TEXTALIGN_MC, Props);
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
 				TextRender()->SetRenderFlags(0);
 				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
@@ -3297,7 +3295,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 		static CButtonContainer s_SkinRefreshButton;
-		if(!Ui()->RenderOnly() && (DoButton_Menu(&s_SkinRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed())))
+		if(!Ui()->RenderOnly() && (DoButton_Menu_QmIcon(&s_SkinRefreshButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton) || Input()->KeyPress(KEY_F5) || (Input()->KeyPress(KEY_R) && Input()->ModifierIsPressed())))
 		{
 			ShouldRefresh = true;
 		}
@@ -3768,7 +3766,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsDisplayContentHeight = ResolveSettingsRowsHeight(GraphicsDisplayRowCount, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineSpacing);
 	const float GraphicsDisplayMinCardHeight = DisplayChromeHeight + GraphicsDisplayContentHeight;
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
-	const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
+	const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
 	const float GraphicsIconsContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
@@ -3776,6 +3774,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 	static CButtonContainer s_aGraphicsIconColorButtons[4];
 	static CButtonContainer s_aGraphicsIconWeightButtons[4];
+	static CButtonContainer s_aGraphicsBlurModeButtons[3];
 	static CButtonContainer s_GraphicsIconCustomColorResetId;
 
 	const bool RenderOnly = Ui()->RenderOnly();
@@ -4108,7 +4107,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 					CheckSettings = true;
 				});
 			} }, GraphicsDisplayMeasureRevision);
-		AddCard(VisualSpec, GraphicsVisualMinCardHeight, VisualChromeHeight, [this, GraphicsMetrics, DoGraphicsNumericField](CUIRect ContentRect) {
+		AddCard(VisualSpec, GraphicsVisualMinCardHeight, VisualChromeHeight, [this, GraphicsMetrics, BodySize, DoGraphicsNumericField](CUIRect ContentRect) {
 			CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);
 			SSettingsContentMetrics ColorMetrics = GraphicsMetrics;
 			ColorMetrics.m_LineSpacing = 0.0f;
@@ -4147,8 +4146,29 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::CONFIG_HASH_CHANGED);
 
 			CUIRect Button = Rows.NextLine();
-			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmGaussianBlur, "enable-gaussian-blur", Localize("Enable Gaussian blur"), g_Config.m_QmGaussianBlur, &Button))
+			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmGaussianBlur, "enable-backdrop-blur", Localize("Enable backdrop blur"), g_Config.m_QmGaussianBlur, &Button))
 				g_Config.m_QmGaussianBlur ^= 1;
+
+			const char *apBlurModeLabels[] = {Localize("Gaussian"), Localize("Kawase"), Localize("Dual Kawase")};
+			const char *apBlurModeTooltips[] = {
+				Localize("Smooth and accurate blur with the highest GPU cost."),
+				Localize("Fast, lightweight blur with a softer approximation."),
+				Localize("Multi-resolution blur with a stronger result and balanced GPU cost."),
+			};
+			CUIRect BlurModeLabel, BlurModeSegments;
+			Button = Rows.NextLine();
+			Button.VSplitLeft(std::clamp(Button.w * 0.36f, 96.0f, 150.0f), &BlurModeLabel, &BlurModeSegments);
+			BlurModeSegments.VSplitLeft(8.0f, nullptr, &BlurModeSegments);
+			Ui()->DoLabel(&BlurModeLabel, Localize("Blur mode"), BodySize, TEXTALIGN_ML);
+			for(int i = 0; i < (int)std::size(apBlurModeLabels); ++i)
+			{
+				CUIRect Segment;
+				BlurModeSegments.VSplitLeft(BlurModeSegments.w / (std::size(apBlurModeLabels) - i), &Segment, &BlurModeSegments);
+				const int Corners = i == 0 ? IGraphics::CORNER_L : (i == (int)std::size(apBlurModeLabels) - 1 ? IGraphics::CORNER_R : IGraphics::CORNER_NONE);
+				if(DoButton_MenuTab(&s_aGraphicsBlurModeButtons[i], apBlurModeLabels[i], g_Config.m_QmBlurMode == i, &Segment, Corners, nullptr, nullptr, nullptr, nullptr, 5.0f))
+					g_Config.m_QmBlurMode = i;
+				GameClient()->m_Tooltips.DoToolTip(&s_aGraphicsBlurModeButtons[i], &Segment, apBlurModeTooltips[i]);
+			}
 
 			Button = Rows.NextLine();
 			if(DoSettingsButton_CheckBox(SETTINGS_GRAPHICS, -1, &g_Config.m_QmUiCardBorders, "show-settings-card-borders", Localize("Show settings card borders"), g_Config.m_QmUiCardBorders, &Button))
@@ -4358,8 +4378,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	{
 		m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
 					  !s_GfxBackendChanged &&
-					  !s_GfxGpuChanged &&
-					  !s_GfxVulkanApiVersionChanged);
+					  !s_GfxGpuChanged);
 	}
 }
 
@@ -4800,7 +4819,7 @@ void CMenus::RenderAudioPackEditorScreen(CUIRect MainView)
 	const float RefreshW = minimum(122.0f, maximum(74.0f, TextRender()->TextWidth(EditorFontSize, Localize("Reload"), -1, -1.0f) + TopButtonPadding));
 	SplitRightSafe(TopBarRow2, RefreshW, &TitleRow, &RefreshButton);
 
-	if(Ui()->DoButton_FontIcon(&s_AudioPackEditorCloseButton, FONT_ICON_XMARK, 0, &CloseButton, IGraphics::CORNER_ALL))
+	if(Ui()->DoButton_QmIcon(&s_AudioPackEditorCloseButton, EQmIcon::CLOSE, FONT_ICON_XMARK, 0, &CloseButton, IGraphics::CORNER_ALL))
 	{
 		AudioPackEditorClose();
 		return;
@@ -5342,7 +5361,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			CUIRect RefreshButton;
 			HeaderRow.VSplitRight(RefreshButtonW, &HeaderRow, &RefreshButton);
 			RefreshButton.VMargin(2.0f, &RefreshButton);
-			if(Ui()->DoButton_FontIcon(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_QmIcon(&s_AudioPackRefreshButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &RefreshButton, BUTTONFLAG_LEFT))
 			{
 				RefreshAudioPackState();
 				SelectedPack = FindSelectedPackIndex();
@@ -8303,7 +8322,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 
 			static CButtonContainer s_BackgroundEntitiesMapPicker, s_BackgroundEntitiesReload;
 
-			if(Ui()->DoButton_FontIcon(&s_BackgroundEntitiesReload, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ReloadButton, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_QmIcon(&s_BackgroundEntitiesReload, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ReloadButton, BUTTONFLAG_LEFT))
 			{
 				CommitBackgroundEntitiesInputIfActive(s_BackgroundEntitiesInput, s_aBackgroundEntitiesSync, sizeof(s_aBackgroundEntitiesSync));
 				g_Config.m_ClBackgroundEntities[0] = '\0';
@@ -8312,7 +8331,7 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 				BackgroundChanged = true;
 			}
 
-			if(Ui()->DoButton_FontIcon(&s_BackgroundEntitiesMapPicker, FONT_ICON_FOLDER, 0, &Button, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_QmIcon(&s_BackgroundEntitiesMapPicker, EQmIcon::FOLDER, FONT_ICON_FOLDER, 0, &Button, BUTTONFLAG_LEFT))
 			{
 				BackgroundChanged |= CommitBackgroundEntitiesInputIfActive(s_BackgroundEntitiesInput, s_aBackgroundEntitiesSync, sizeof(s_aBackgroundEntitiesSync));
 				static SPopupMenuId s_PopupMapPickerId;
@@ -8492,24 +8511,28 @@ CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect Vie
 		if(Map.m_IsDirectory)
 			str_append(aLabelText, "/", sizeof(aLabelText));
 
+		EQmIcon IconType;
 		const char *pIconType;
 		if(!Map.m_IsDirectory)
 		{
+			IconType = EQmIcon::MAP;
 			pIconType = FONT_ICON_MAP;
 		}
 		else
 		{
 			if(!str_comp(Map.m_aFilename, ".."))
+			{
+				IconType = EQmIcon::FOLDER_TREE;
 				pIconType = FONT_ICON_FOLDER_TREE;
+			}
 			else
+			{
+				IconType = EQmIcon::FOLDER;
 				pIconType = FONT_ICON_FOLDER;
+			}
 		}
 
-		pMenus->TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		pMenus->TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-		pMenus->Ui()->DoLabel(&Icon, pIconType, 12.0f, TEXTALIGN_ML);
-		pMenus->TextRender()->SetRenderFlags(0);
-		pMenus->TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		pMenus->Ui()->DoLabel_QmIcon(&Icon, IconType, pIconType, 12.0f, TEXTALIGN_ML);
 
 		pMenus->Ui()->DoLabel(&Label, aLabelText, 10.0f, TEXTALIGN_ML);
 	}

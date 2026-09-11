@@ -17,6 +17,7 @@
 #include <game/client/components/menus.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_scrollregion.h>
 #include <game/localization.h>
@@ -1859,7 +1860,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	BlendRow = TopBarRow2;
 
 	static CButtonContainer s_CloseButton;
-	if(Ui()->DoButton_FontIcon(&s_CloseButton, FONT_ICON_XMARK, 0, &CloseButton, IGraphics::CORNER_ALL))
+	if(Ui()->DoButton_QmIcon(&s_CloseButton, EQmIcon::CLOSE, FONT_ICON_XMARK, 0, &CloseButton, IGraphics::CORNER_ALL))
 	{
 		AssetsEditorRequestClose();
 		if(!m_AssetsEditorState.m_Open)

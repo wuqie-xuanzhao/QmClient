@@ -1996,7 +1996,6 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	}
 	MarkQmNewFeatureHovered("qm_2_63_0_new_ime", Row, PrewarmOnly);
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
-	RenderCheckbox(&g_Config.m_QmProcessHighPriority, "High process priority", &g_Config.m_QmProcessHighPriority);
 	RenderCheckbox(&g_Config.m_QmRepeatEnabled, "Enable repeat", &g_Config.m_QmRepeatEnabled);
 	RenderCheckbox(&g_Config.m_QmRandomEmoteOnHit, "Random emoticon", &g_Config.m_QmRandomEmoteOnHit);
 	RenderCheckbox(&g_Config.m_QmComboPopup, "Combo", &g_Config.m_QmComboPopup);
@@ -3176,7 +3175,7 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 		CUIRect RowLabel, RowRemove;
 		Row.VSplitRight(LineHeight, &RowLabel, &RowRemove);
 		RowRemove.HMargin(std::clamp(2.0f * UiScale, 1.0f, 2.0f), &RowRemove);
-		if(ui_widget::IconButton(IconButtonCtx, &s_aMapRemoveButtons[MapIndex], FONT_ICON_XMARK, RowRemove))
+		if(ui_widget::IconButton(IconButtonCtx, &s_aMapRemoveButtons[MapIndex], EQmIcon::CLOSE, FONT_ICON_XMARK, RowRemove))
 		{
 			if(RemoveMapName.empty())
 				RemoveMapName = MapName;

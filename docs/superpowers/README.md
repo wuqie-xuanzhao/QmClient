@@ -23,10 +23,13 @@ status: active
 - [过图历史工作区与响应式卡片改造](plans/2026-07-11-map-history-workspace-redesign.md)：当前并行实现。
 - [DDNet 分批同步与旧台账复核](plans/2026-09-08-DDNet分批同步与旧台账复核.md)：当前官方提交复核、适配与验证入口。
 - [DDNet 兼容性批次待确认方案](plans/2026-09-08-DDNet兼容性批次待确认方案.md)：涉及快照、输入时序和地图兼容语义的独立审批批次。
+- [Windows 图形掉帧撕裂与连接中断调查](plans/2026-09-09-Windows图形掉帧撕裂与连接中断调查.md)：NVIDIA 620.02、Windows Insider、Vulkan/OpenGL 停顿、implicit layer 与网络泵关联调查。
+- [Qm 图标图集优先与字体自愈迁移计划](plans/2026-09-09-Qm图标图集优先与字体自愈迁移计划.md)：图集全覆盖已完成，调用点迁移进行中。
 
 # 当前规格
 
 - [macOS Metal 原生渲染后端规格](specs/2026-08-04-QmClient-macOS-Metal原生渲染后端规格.md)：Metal 后端的架构、平台约束、实施阶段与验证合同。
+- [GPU-driven 2D 渲染架构规格](specs/2026-09-09-QmClient-GPU-driven-2D渲染架构规格.md)：中立 GPU 2D packet、Vulkan/Metal 后端、render graph、SDL3 兼容边界与实施阶段（draft）。
 - [设置页 UI 统一与滚动体系规格](specs/2026-07-10-QmClient-设置页UI统一与滚动体系规格.md)：设置页公共组件与滚动体系的权威规格。
 - [设置页 UI/UX 现状审查与防回归设计](specs/2026-07-21-QmClient-设置页UIUX现状审查与防回归设计.md)：最新用户决定与防回归约束。
 - [当前 master 未完成需求索引](specs/2026-06-20-待办整合规格.html)：未完成需求的唯一总索引。

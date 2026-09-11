@@ -15,6 +15,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui_scrollregion.h>
 #include <game/editor/mapitems/image.h>
 #include <game/editor/mapitems/sound.h>
@@ -3316,7 +3317,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupAnimateSettings(void *pContext, CUIR
 	const float OldAnimateSpeed = EnvelopeEvaluator.m_AnimateSpeed;
 
 	static char s_DecreaseButton;
-	if(pEditor->DoButton_FontIcon(&s_DecreaseButton, FONT_ICON_MINUS, 0, &ButtonDecrease, BUTTONFLAG_LEFT, Localize("Decrease animation speed.", "Editor"), IGraphics::CORNER_L, 7.0f))
+	if(pEditor->DoButton_QmIcon(&s_DecreaseButton, EQmIcon::MINUS, FONT_ICON_MINUS, 0, &ButtonDecrease, BUTTONFLAG_LEFT, Localize("Decrease animation speed.", "Editor"), IGraphics::CORNER_L, 7.0f))
 	{
 		EnvelopeEvaluator.m_AnimateSpeed -= EnvelopeEvaluator.m_AnimateSpeed <= 1.0f ? 0.1f : 0.5f;
 		EnvelopeEvaluator.m_AnimateSpeed = maximum(EnvelopeEvaluator.m_AnimateSpeed, MIN_ANIM_SPEED);
@@ -3324,7 +3325,7 @@ CUi::EPopupMenuFunctionResult CEditor::PopupAnimateSettings(void *pContext, CUIR
 	}
 
 	static char s_IncreaseButton;
-	if(pEditor->DoButton_FontIcon(&s_IncreaseButton, FONT_ICON_PLUS, 0, &ButtonIncrease, BUTTONFLAG_LEFT, Localize("Increase animation speed.", "Editor"), IGraphics::CORNER_R, 7.0f))
+	if(pEditor->DoButton_QmIcon(&s_IncreaseButton, EQmIcon::PLUS, FONT_ICON_PLUS, 0, &ButtonIncrease, BUTTONFLAG_LEFT, Localize("Increase animation speed.", "Editor"), IGraphics::CORNER_R, 7.0f))
 	{
 		if(EnvelopeEvaluator.m_AnimateSpeed < 0.1f)
 			EnvelopeEvaluator.m_AnimateSpeed = 0.1f;

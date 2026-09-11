@@ -280,7 +280,8 @@ void CUi::OnWindowResize()
 void CUi::BeginGaussianBlurScope(float Alpha)
 {
 	m_vGaussianBlurScopeAlphas.push_back(std::clamp(Alpha, 0.0f, 1.0f));
-	if(!g_Config.m_QmGaussianBlur && (m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid()))
+	const bool HasTemporaryTarget = std::any_of(m_aGaussianBlurTemporary.begin(), m_aGaussianBlurTemporary.end(), [](const auto &Target) { return Target.IsValid(); });
+	if(!g_Config.m_QmGaussianBlur && (m_GaussianBlurSource.IsValid() || HasTemporaryTarget || m_GaussianBlurTarget.IsValid()))
 		DestroyGaussianBlurTargets();
 }
 
@@ -304,10 +305,12 @@ void CUi::DestroyGaussianBlurTargets()
 	if(m_pGraphics == nullptr)
 		return;
 	Graphics()->DestroyRenderTarget(&m_GaussianBlurSource);
-	Graphics()->DestroyRenderTarget(&m_GaussianBlurTemporary);
+	for(auto &Target : m_aGaussianBlurTemporary)
+		Graphics()->DestroyRenderTarget(&Target);
 	Graphics()->DestroyRenderTarget(&m_GaussianBlurTarget);
 	m_GaussianBlurWidth = 0;
 	m_GaussianBlurHeight = 0;
+	m_GaussianBlurMode = -1;
 }
 
 bool CUi::PrepareGaussianBlur()
@@ -320,32 +323,44 @@ bool CUi::PrepareGaussianBlur()
 	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
 	{
 		m_GaussianBlurPrepared = false;
-		if(m_GaussianBlurSource.IsValid() || m_GaussianBlurTemporary.IsValid() || m_GaussianBlurTarget.IsValid())
+		const bool HasTemporaryTarget = std::any_of(m_aGaussianBlurTemporary.begin(), m_aGaussianBlurTemporary.end(), [](const auto &Target) { return Target.IsValid(); });
+		if(m_GaussianBlurSource.IsValid() || HasTemporaryTarget || m_GaussianBlurTarget.IsValid())
 			DestroyGaussianBlurTargets();
 		return false;
 	}
 
 	const int BlurWidth = UiGaussianBlurTargetDimension(Graphics()->ScreenWidth());
 	const int BlurHeight = UiGaussianBlurTargetDimension(Graphics()->ScreenHeight());
+	const int BlurMode = std::clamp(g_Config.m_QmBlurMode, 0, 2);
+	const bool DualKawase = BlurMode == static_cast<int>(IGraphics::EBlurMode::DUAL);
+	const int TemporaryCount = DualKawase ? IGraphics::DUAL_KAWASE_PYRAMID_LEVELS : 1;
 	if(BlurWidth <= 0 || BlurHeight <= 0)
 	{
 		m_GaussianBlurPrepared = false;
 		return false;
 	}
 
-	if(BlurWidth != m_GaussianBlurWidth || BlurHeight != m_GaussianBlurHeight || !m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
+	const bool TemporaryTargetsValid = std::all_of(m_aGaussianBlurTemporary.begin(), m_aGaussianBlurTemporary.begin() + TemporaryCount, [](const auto &Target) { return Target.IsValid(); });
+	if(BlurWidth != m_GaussianBlurWidth || BlurHeight != m_GaussianBlurHeight || BlurMode != m_GaussianBlurMode || !m_GaussianBlurSource.IsValid() || !TemporaryTargetsValid || !m_GaussianBlurTarget.IsValid())
 	{
 		DestroyGaussianBlurTargets();
 		m_GaussianBlurSource = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		m_GaussianBlurTemporary = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
+		for(int Level = 0; Level < TemporaryCount; ++Level)
+		{
+			const int TemporaryWidth = DualKawase ? IGraphics::DualKawasePyramidDimension(BlurWidth, Level) : BlurWidth;
+			const int TemporaryHeight = DualKawase ? IGraphics::DualKawasePyramidDimension(BlurHeight, Level) : BlurHeight;
+			m_aGaussianBlurTemporary[Level] = Graphics()->CreateRenderTarget(TemporaryWidth, TemporaryHeight);
+		}
 		m_GaussianBlurTarget = Graphics()->CreateRenderTarget(BlurWidth, BlurHeight);
-		if(!m_GaussianBlurSource.IsValid() || !m_GaussianBlurTemporary.IsValid() || !m_GaussianBlurTarget.IsValid())
+		const bool CreatedTemporaryTargets = std::all_of(m_aGaussianBlurTemporary.begin(), m_aGaussianBlurTemporary.begin() + TemporaryCount, [](const auto &Target) { return Target.IsValid(); });
+		if(!m_GaussianBlurSource.IsValid() || !CreatedTemporaryTargets || !m_GaussianBlurTarget.IsValid())
 		{
 			DestroyGaussianBlurTargets();
 			return false;
 		}
 		m_GaussianBlurWidth = BlurWidth;
 		m_GaussianBlurHeight = BlurHeight;
+		m_GaussianBlurMode = BlurMode;
 	}
 
 	const uint64_t PerfFrame = Client()->PerfFrame();
@@ -363,7 +378,8 @@ bool CUi::PrepareGaussianBlur()
 	IGraphics::SGaussianBlurParams BlurParams;
 	BlurParams.m_Radius = 4;
 	BlurParams.m_Sigma = 2.0f;
-	if(!Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_GaussianBlurTemporary, m_GaussianBlurTarget, BlurParams))
+	BlurParams.m_Mode = static_cast<IGraphics::EBlurMode>(BlurMode);
+	if(!Graphics()->GaussianBlurRenderTarget(m_GaussianBlurSource, m_aGaussianBlurTemporary, m_GaussianBlurTarget, BlurParams))
 	{
 		m_GaussianBlurPrepared = false;
 		return false;

@@ -70,7 +70,8 @@ TEST(QmNewUiMenuRenderEngineContract, GraphicsDriverCrashRecoveryUsesSafeStartup
 	EXPECT_NE(StartupHook.find("ListDirectoryInfo"), std::string::npos);
 	EXPECT_NE(StartupHook.find("ReadFileStr"), std::string::npos);
 
-	EXPECT_EQ(Recovery.find("str_copy(g_Config.m_GfxBackend, \"OpenGL\");"), std::string::npos);
+	EXPECT_NE(Recovery.find("str_copy(g_Config.m_GfxBackend, SafeConfig.m_pBackend);"), std::string::npos);
+	EXPECT_NE(Recovery.find("g_Config.m_QmGraphicsMode = graphics_backend::GRAPHICS_MODE_COMPATIBILITY;"), std::string::npos);
 	EXPECT_NE(Recovery.find("const int FallbackGLMajor = 0;"), std::string::npos);
 	EXPECT_NE(Recovery.find("const int FallbackGLMinor = 0;"), std::string::npos);
 	EXPECT_EQ(Recovery.find("CONF_PLATFORM_MACOS"), std::string::npos);

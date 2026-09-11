@@ -87,6 +87,7 @@ enum
 };
 
 class CUIRect;
+enum class EQmIcon;
 struct IUiContext;
 struct SCardMotionSpec;
 struct SSettingsCardDeckVisualOptions;
@@ -114,10 +115,16 @@ class CMenus : public CComponent
 public:
 	int DoButton_Toggle(const void *pId, int Checked, const CUIRect *pRect, bool Active, unsigned Flags = BUTTONFLAG_LEFT);
 	int DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, unsigned Flags = BUTTONFLAG_LEFT, const char *pImageName = nullptr, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), CUIElement *pTextUiElement = nullptr, float TextFontSize = -1.0f);
+	// 图集优先、字形回退的菜单按钮：pFallbackIcon 为 FontIcons::FONT_ICON_* 字形。
+	int DoButton_Menu_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, unsigned Flags = BUTTONFLAG_LEFT, const char *pImageName = nullptr, int Corners = IGraphics::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, ColorRGBA Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), CUIElement *pTextUiElement = nullptr, float TextFontSize = -1.0f);
 	int DoButton_MenuTab(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator = nullptr, const ColorRGBA *pDefaultColor = nullptr, const ColorRGBA *pActiveColor = nullptr, const ColorRGBA *pHoverColor = nullptr, float EdgeRounding = 10.0f, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr, float FontSize = -1.0f);
+	// 图集优先、字形回退（pFallbackIcon 为 FontIcons::FONT_ICON_* 字形）。
+	int DoButton_MenuTab_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator = nullptr, const ColorRGBA *pDefaultColor = nullptr, const ColorRGBA *pActiveColor = nullptr, const ColorRGBA *pHoverColor = nullptr, float EdgeRounding = 10.0f, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr, float FontSize = -1.0f);
 	// feat-004: modern menu tab. No lift / height-grow; default hover/active
 	// states are tinted by ui_color via the v2 anim runtime.
 	int DoMenuTabV2(CButtonContainer *pButtonContainer, const char *pText, bool Active, const CUIRect *pRect, int Corners = IGraphics::CORNER_T, const ColorRGBA *pCustomDefault = nullptr, const ColorRGBA *pCustomActive = nullptr, const ColorRGBA *pCustomHover = nullptr, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr, float ContentScale = 1.0f);
+	// 图集优先、字形回退（pFallbackIcon 为 FontIcons::FONT_ICON_* 字形）。
+	int DoMenuTabV2_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, bool Active, const CUIRect *pRect, int Corners = IGraphics::CORNER_T, const ColorRGBA *pCustomDefault = nullptr, const ColorRGBA *pCustomActive = nullptr, const ColorRGBA *pCustomHover = nullptr, const CCommunityIcon *pCommunityIcon = nullptr, CUIElement *pTextUiElement = nullptr, float ContentScale = 1.0f);
 	ColorRGBA MenuPanelColor(float AlphaScale = 1.0f) const;
 	ColorRGBA MenuPanelElevatedColor(float AlphaScale = 1.0f) const;
 	ColorRGBA BrowserPanelColor(float AlphaScale = 1.0f) const;
@@ -134,6 +141,9 @@ public:
 	bool DoLine_KeyReader(CUIRect &View, CButtonContainer &ReaderButton, CButtonContainer &ClearButton, const char *pName, const char *pCommand);
 
 private:
+	int DoButton_MenuInternal(CButtonContainer *pButtonContainer, const char *pText, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, unsigned Flags, const char *pImageName, int Corners, float Rounding, float FontFactor, ColorRGBA Color, CUIElement *pTextUiElement, float TextFontSize);
+	int DoMenuTabV2Internal(CButtonContainer *pButtonContainer, const char *pText, EQmIcon Icon, const char *pFallbackIcon, bool Active, const CUIRect *pRect, int Corners, const ColorRGBA *pCustomDefault, const ColorRGBA *pCustomActive, const ColorRGBA *pCustomHover, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float ContentScale);
+	int DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const char *pText, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, int Corners, SUIAnimator *pAnimator, const ColorRGBA *pDefaultColor, const ColorRGBA *pActiveColor, const ColorRGBA *pHoverColor, float EdgeRounding, const CCommunityIcon *pCommunityIcon, CUIElement *pTextUiElement, float FontSize);
 	IUiContext SettingsUiContext(const char *pScope, float UiScale = 1.0f);
 	int DoSettingsDropDown(CUIRect *pRect, int CurSelection, const char *const *ppStrs, int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties = {});
 	SCardMotionSpec SettingsCardMotionSpec() const;
@@ -1915,6 +1925,7 @@ protected:
 	std::vector<SMenuSnapshotTextKey> m_SnapshotTextPending;
 	struct SMenuTextContainerBuildRequest
 	{
+		bool m_IngameScope = false;
 		CUIElement *m_pElement = nullptr;
 		std::string m_Text;
 		CUIRect m_Rect;
@@ -1964,7 +1975,6 @@ protected:
 	bool IngameMotdParagraphCacheMatches(CUIRect Motd, float FontSize) const;
 	void DrainIngameMotdParagraphCache(CUIRect Motd, float FontSize, bool AllowCurrentFrame = false);
 	bool RenderIngameMotdStableParagraphCache(CUIRect Motd, float FontSize, CUIRect MotdTextArea);
-	void RenderIngameMotdFallbackText(CUIRect MotdTextArea, float FontSize);
 	void DrainIngameUiSnapshotTextRuntime();
 	void DrainIngameUiTextRuntime(bool AllowCurrentFrame = false);
 	void RenderServerControl(CUIRect MainView);
@@ -2292,10 +2302,11 @@ public:
 		int m_Time;
 		int m_Slot;
 		bool m_Own;
+		bool m_RankGhost;
 		time_t m_Date;
 
 		CGhostItem() :
-			m_Slot(-1), m_Own(false) { m_aFilename[0] = 0; }
+			m_Slot(-1), m_Own(false), m_RankGhost(false) { m_aFilename[0] = 0; }
 
 		bool operator<(const CGhostItem &Other) const { return m_Time < Other.m_Time; }
 
@@ -2314,6 +2325,10 @@ public:
 	std::vector<CGhostItem> m_vGhosts;
 
 	std::chrono::nanoseconds m_GhostPopulateStartTime{0};
+
+	// QmClient: 当前正在扫描的影子目录（ghosts 根目录或其 rank_ghost 子目录）
+	char m_aGhostScanDir[IO_MAX_PATH_LENGTH] = "";
+	bool m_GhostScanIsRankDir = false;
 
 	void GhostlistPopulate();
 	CGhostItem *GetOwnGhost();
@@ -2543,6 +2558,7 @@ private:
 	int m_SettingsPerfLastQmClientTab = -1;
 	uint64_t m_IngameEscOpenFrame = 0;
 	bool m_IngameServerInfoBackgroundPrepareRequested = false;
+	bool m_IngameServerInfoRenderActive = false;
 
 	class CScopedSettingsTextPerfStats
 	{
@@ -2649,7 +2665,7 @@ private:
 	SSettingsAdaptiveBudgetOutput BeginSettingsUiFrameScheduler(EFrameSchedulerConsumer Consumer, const char *pSource, SSettingsAdaptiveBudgetInput Input);
 	bool MenuTextContainerNeedsBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, int StrLen, const CTextCursor *pReadCursor);
 	bool RequestMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, int StrLen, const CTextCursor *pReadCursor);
-	void QueueMenuTextContainerBuild(CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
+	void QueueMenuTextContainerBuild(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps, int StrLen, const CTextCursor *pReadCursor);
 	void DrainMenuTextContainerBuildRequests();
 	void RemoveMenuTextContainerBuildRequest(const CUIElement &Element);
 	int TrimMenuTextPoolForInsert(uint64_t CurrentFrame);
@@ -2850,7 +2866,10 @@ private:
 	void RenderDevSkin(vec2 RenderPos, float Size, const char *pSkinName, const char *pBackupSkin, bool CustomColors, int FeetColor, int BodyColor, int Emote, bool Rainbow, bool Cute,
 		ColorRGBA ColorFeet = ColorRGBA(0, 0, 0, 0), ColorRGBA ColorBody = ColorRGBA(0, 0, 0, 0));
 	void RenderFontIcon(CUIRect Rect, const char *pText, float Size, int Align);
+	// 图集优先、字形回退（pFallbackIcon 为 FontIcons::FONT_ICON_* 字形）。
+	void RenderFontIcon_QmIcon(CUIRect Rect, EQmIcon Icon, const char *pFallbackIcon, float Size, int Align);
 	int DoButtonNoRect_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners = IGraphics::CORNER_ALL);
+	int DoButtonNoRect_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, int Corners = IGraphics::CORNER_ALL);
 
 	ColorHSLA RenderHSLColorPicker(const CUIRect *pRect, unsigned int *pColor, bool Alpha);
 	bool RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alpha, float DarkestLight, const SSettingsContentMetrics &Metrics);

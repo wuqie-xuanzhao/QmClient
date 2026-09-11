@@ -16,6 +16,7 @@
 #include <game/client/components/touch_controls.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/client/ui_rect.h>
@@ -353,7 +354,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		Changed = true;
 	}
 	static CButtonContainer s_OpenBehaviorHelpButton;
-	if(Ui()->DoButton_FontIcon(&s_OpenBehaviorHelpButton, FontIcons::FONT_ICON_QUESTION, 0, &RightButton, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OpenBehaviorHelpButton, EQmIcon::QUESTION, FontIcons::FONT_ICON_QUESTION, 0, &RightButton, BUTTONFLAG_LEFT))
 	{
 		const char *pHelpMessage = HelpMessageForBehaviorType(m_EditBehaviorType);
 		GameClient()->m_Menus.PopupMessage(Localize("Info"), pHelpMessage, Localize("Ok"));
@@ -429,7 +430,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 			Changed = true;
 		}
 		static CButtonContainer s_OpenPredefinedBehaviorHelpButton;
-		if(Ui()->DoButton_FontIcon(&s_OpenPredefinedBehaviorHelpButton, FontIcons::FONT_ICON_QUESTION, 0, &RightButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_OpenPredefinedBehaviorHelpButton, EQmIcon::QUESTION, FontIcons::FONT_ICON_QUESTION, 0, &RightButton, BUTTONFLAG_LEFT))
 		{
 			const char *pHelpMessage = HelpMessageForPredefinedType(m_PredefinedBehaviorType);
 			GameClient()->m_Menus.PopupMessage(Localize("Info"), pHelpMessage, Localize("Ok"));
@@ -443,7 +444,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		EditBox.VSplitMid(&LeftButton, &MiddleButton);
 		EditBox.VSplitLeft(ROWSIZE, &LeftButton, &MiddleButton);
 		static CButtonContainer s_ExtraMenuDecreaseButton;
-		if(Ui()->DoButton_FontIcon(&s_ExtraMenuDecreaseButton, FontIcons::FONT_ICON_MINUS, 0, &LeftButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_ExtraMenuDecreaseButton, EQmIcon::MINUS, FontIcons::FONT_ICON_MINUS, 0, &LeftButton, BUTTONFLAG_LEFT))
 		{
 			if(m_CachedExtraMenuNumber > 0)
 			{
@@ -457,7 +458,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 		MiddleButton.VSplitRight(ROWSIZE, &LeftButton, &MiddleButton);
 		Ui()->DoLabel(&LeftButton, std::to_string(m_CachedExtraMenuNumber + 1).c_str(), FONTSIZE, TEXTALIGN_MC);
 		static CButtonContainer s_ExtraMenuIncreaseButton;
-		if(Ui()->DoButton_FontIcon(&s_ExtraMenuIncreaseButton, FontIcons::FONT_ICON_PLUS, 0, &MiddleButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_ExtraMenuIncreaseButton, EQmIcon::PLUS, FontIcons::FONT_ICON_PLUS, 0, &MiddleButton, BUTTONFLAG_LEFT))
 		{
 			if(m_CachedExtraMenuNumber < CTouchControls::MAX_EXTRA_MENU_NUMBER - 1)
 			{
@@ -487,7 +488,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 				EditBox.VSplitLeft(ROWSIZE, &MiddleButton, &EditBox);
 				EditBox.VSplitLeft(SUBMARGIN, nullptr, &LeftButton);
 				Ui()->DoLabel(&LeftButton, Localize("Add command"), FONTSIZE, TEXTALIGN_ML);
-				if(Ui()->DoButton_FontIcon(&m_vBehaviorElements[CommandIndex]->m_BindToggleAddButtons, FontIcons::FONT_ICON_PLUS, 0, &MiddleButton, BUTTONFLAG_LEFT))
+				if(Ui()->DoButton_QmIcon(&m_vBehaviorElements[CommandIndex]->m_BindToggleAddButtons, EQmIcon::PLUS, FontIcons::FONT_ICON_PLUS, 0, &MiddleButton, BUTTONFLAG_LEFT))
 				{
 					m_vBehaviorElements.emplace(m_vBehaviorElements.begin() + CommandIndex, std::make_unique<CBehaviorElements>());
 					m_vBehaviorElements[CommandIndex]->UpdateInputs();
@@ -497,7 +498,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 				RightButton.VSplitLeft(ROWSIZE, &MiddleButton, &RightButton);
 				RightButton.VSplitLeft(SUBMARGIN, nullptr, &LeftButton);
 				Ui()->DoLabel(&LeftButton, Localize("Delete command"), FONTSIZE, TEXTALIGN_ML);
-				if(Ui()->DoButton_FontIcon(&m_vBehaviorElements[CommandIndex]->m_BindToggleDeleteButtons, FontIcons::FONT_ICON_TRASH, 0, &MiddleButton, BUTTONFLAG_LEFT))
+				if(Ui()->DoButton_QmIcon(&m_vBehaviorElements[CommandIndex]->m_BindToggleDeleteButtons, EQmIcon::TRASH, FontIcons::FONT_ICON_TRASH, 0, &MiddleButton, BUTTONFLAG_LEFT))
 				{
 					if(m_vBehaviorElements.size() > 2)
 					{
@@ -592,7 +593,7 @@ bool CMenusIngameTouchControls::RenderBehaviorSettingBlock(CUIRect Block)
 			EditBox.VSplitLeft(SUBMARGIN, nullptr, &LeftButton);
 			Ui()->DoLabel(&LeftButton, Localize("Add command"), FONTSIZE, TEXTALIGN_ML);
 			static CButtonContainer s_FinalAddButton;
-			if(Ui()->DoButton_FontIcon(&s_FinalAddButton, FontIcons::FONT_ICON_PLUS, 0, &MiddleButton, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_QmIcon(&s_FinalAddButton, EQmIcon::PLUS, FontIcons::FONT_ICON_PLUS, 0, &MiddleButton, BUTTONFLAG_LEFT))
 			{
 				m_vBehaviorElements.emplace_back(std::make_unique<CBehaviorElements>());
 				Changed = true;
@@ -643,7 +644,7 @@ bool CMenusIngameTouchControls::RenderVisibilitySettingBlock(CUIRect Block)
 			if(Current <= (unsigned)CTouchControls::EButtonVisibility::EXTRA_MENU_1)
 			{
 				const char *pHelpMessage = HelpMessageForVisibilityType((CTouchControls::EButtonVisibility)Current);
-				if(Ui()->DoButton_FontIcon(&s_aHelpButtons[Current], FontIcons::FONT_ICON_QUESTION, 0, &HelpButton, BUTTONFLAG_LEFT))
+				if(Ui()->DoButton_QmIcon(&s_aHelpButtons[Current], EQmIcon::QUESTION, FontIcons::FONT_ICON_QUESTION, 0, &HelpButton, BUTTONFLAG_LEFT))
 				{
 					GameClient()->m_Menus.PopupMessage(Localize("Info"), pHelpMessage, Localize("Ok"));
 				}
@@ -705,7 +706,7 @@ void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 	Row.VMargin(5.0f, &Row);
 	Ui()->DoLabel(&Row, Localize("Button browser"), TITLESIZE, TEXTALIGN_MC);
 	static CButtonContainer s_OpenHelpButton;
-	if(Ui()->DoButton_FontIcon(&s_OpenHelpButton, FontIcons::FONT_ICON_QUESTION, 0, &RightButton, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OpenHelpButton, EQmIcon::QUESTION, FontIcons::FONT_ICON_QUESTION, 0, &RightButton, BUTTONFLAG_LEFT))
 	{
 		GameClient()->m_Menus.PopupMessage(Localize("Info"),
 			Localize("You can select buttons directly in the list below, or long press on a touch button on the screen to select it. You can also move and resize buttons by touch."),
@@ -867,7 +868,7 @@ void CMenusIngameTouchControls::RenderTouchButtonBrowser(CUIRect MainView)
 				EditBox.VSplitLeft(ROWSIZE, &LeftButton, &EditBox);
 				TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 				TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
-				Ui()->DoLabel(&LeftButton, m_vpMutableButtons[ButtonIndex]->m_VisibilityCached ? FontIcons::FONT_ICON_EYE : FontIcons::FONT_ICON_EYE_SLASH, FONTSIZE, TEXTALIGN_ML);
+				Ui()->DoLabel_QmIcon(&LeftButton, m_vpMutableButtons[ButtonIndex]->m_VisibilityCached ? EQmIcon::EYE : EQmIcon::EYE_OFF, m_vpMutableButtons[ButtonIndex]->m_VisibilityCached ? FontIcons::FONT_ICON_EYE : FontIcons::FONT_ICON_EYE_SLASH, FONTSIZE, TEXTALIGN_ML);
 				TextRender()->SetRenderFlags(0);
 				TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 				EditBox.VSplitLeft(LabelRect.w, &LeftButton, &EditBox);
@@ -1039,7 +1040,7 @@ void CMenusIngameTouchControls::RenderPreviewSettings(CUIRect MainView)
 	EditBox.VMargin(5.0f, &EditBox);
 	Ui()->DoLabel(&EditBox, Localize("Preview visibilities"), TITLESIZE, TEXTALIGN_MC);
 	static CButtonContainer s_OpenHelpButton;
-	if(Ui()->DoButton_FontIcon(&s_OpenHelpButton, FontIcons::FONT_ICON_QUESTION, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OpenHelpButton, EQmIcon::QUESTION, FontIcons::FONT_ICON_QUESTION, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		GameClient()->m_Menus.PopupMessage(Localize("Info"), Localize("Preview button visibility while the editor is active."), Localize("Ok"));
 	}
@@ -1103,7 +1104,7 @@ void CMenusIngameTouchControls::RenderTouchControlsEditor(CUIRect MainView)
 	Ui()->DoLabel(&Label, Localize("Edit touch controls"), TITLESIZE, TEXTALIGN_MC);
 
 	static CButtonContainer s_OpenHelpButton;
-	if(Ui()->DoButton_FontIcon(&s_OpenHelpButton, FontIcons::FONT_ICON_QUESTION, 0, &Button, BUTTONFLAG_LEFT))
+	if(Ui()->DoButton_QmIcon(&s_OpenHelpButton, EQmIcon::QUESTION, FontIcons::FONT_ICON_QUESTION, 0, &Button, BUTTONFLAG_LEFT))
 	{
 		GameClient()->m_Menus.PopupConfirm(Localize("Info"),
 			Localize("You can manage your touch controls settings on this page. Only changes that are saved will be available after restarting the client. You can share your touch controls with others by exporting them to the clipboard.\n\nYou can find more detailed information about the touch controls on the DDNet Wiki."),

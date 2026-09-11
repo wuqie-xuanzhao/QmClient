@@ -33,7 +33,7 @@ status: active
 ### 非目标
 
 - 不修改 DDNet 协议、snapshot/input、预测、物理、碰撞、地图/demo/skin 格式或 QmClient 私有玩法语义。
-- 不在本计划中改动 MoltenVK、OpenGL ES 绘制语义、iOS 网络/后台恢复逻辑或第三方依赖内容；这些属于 `2026-08-30-DDNet20-iOS运行时适配计划.md` 的边界。
+- 不在本计划中改动 MoltenVK、OpenGL ES 绘制语义、iOS 网络/后台恢复逻辑或第三方依赖内容；这些属于 `docs/superpowers/reports/archive/2026-09-08-upstream-sync-history/2026-08-30-DDNet20-iOS运行时适配计划.md`（已归档）的边界。
 - 不创建 `cmake-build-metal`、`tmp/cmake-ios-metal` 等 Metal 专用目录。允许使用按 SDK/架构隔离的普通构建目录，例如 `cmake-build-release`、`tmp/cmake-ios-sim`、`tmp/cmake-ios-device`；同一目录不得交替 configure 不同 SDK/架构。
 
 ## 3. 当前基线与前置检查

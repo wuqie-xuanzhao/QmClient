@@ -11,6 +11,7 @@
 #include <engine/textrender.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -672,10 +673,11 @@ private:
 	std::vector<float> m_vGaussianBlurScopeAlphas;
 	int m_GaussianBlurSuppressionDepth = 0;
 	IGraphics::CRenderTargetHandle m_GaussianBlurSource;
-	IGraphics::CRenderTargetHandle m_GaussianBlurTemporary;
+	std::array<IGraphics::CRenderTargetHandle, IGraphics::DUAL_KAWASE_PYRAMID_LEVELS> m_aGaussianBlurTemporary;
 	IGraphics::CRenderTargetHandle m_GaussianBlurTarget;
 	int m_GaussianBlurWidth = 0;
 	int m_GaussianBlurHeight = 0;
+	int m_GaussianBlurMode = -1;
 	bool m_GaussianBlurPrepared = false;
 	uint64_t m_GaussianBlurPreparedFrame = 0;
 

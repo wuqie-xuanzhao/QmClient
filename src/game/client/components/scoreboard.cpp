@@ -22,6 +22,7 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/statboard.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 
@@ -197,21 +198,22 @@ namespace
 	struct SSoundMuteButtonDef
 	{
 		int CConfig::*m_pConfig;
+		EQmIcon m_Icon;
 		const char *m_pIcon;
 		const char *m_pTitle;
 		const char *m_pDescription;
 	};
 
 	static const SSoundMuteButtonDef gs_aSoundMuteButtonDefs[] = {
-		{&CConfig::m_ClSndMuteWeapon, FontIcons::FONT_ICON_CIRCLE, "武器音效", "屏蔽主要武器发射与命中相关声音。"},
-		{&CConfig::m_ClSndMuteWeaponSwitch, FontIcons::FONT_ICON_ARROWS_LEFT_RIGHT, "武器切换音效", "屏蔽武器切换及相关切换提示音。"},
-		{&CConfig::m_ClSndMuteWeaponNoAmmo, FontIcons::FONT_ICON_TRIANGLE_EXCLAMATION, "无弹药提示音", "屏蔽武器无弹药时的提示音。"},
-		{&CConfig::m_ClSndMuteHook, FontIcons::FONT_ICON_ARROWS_ROTATE, "钩子音效", "屏蔽钩子发射、收回等相关声音。"},
-		{&CConfig::m_ClSndMuteMovement, FontIcons::FONT_ICON_ARROWS_UP_DOWN, "移动音效", "屏蔽行走与跳跃等移动相关声音。"},
-		{&CConfig::m_ClSndMutePlayerState, FontIcons::FONT_ICON_HEART_CRACK, "玩家状态音效", "屏蔽玩家状态变化相关声音。"},
-		{&CConfig::m_ClSndMutePickup, FontIcons::FONT_ICON_SQUARE_PLUS, "拾取音效", "屏蔽道具与武器拾取相关声音。"},
-		{&CConfig::m_ClSndMuteFlag, FontIcons::FONT_ICON_FLAG_CHECKERED, "旗帜音效", "屏蔽 CTF 旗帜事件相关声音。"},
-		{&CConfig::m_ClSndMuteMapSound, FontIcons::FONT_ICON_MAP, "地图音效", "屏蔽地图环境与脚本触发音效。"},
+		{&CConfig::m_ClSndMuteWeapon, EQmIcon::CIRCLE, FontIcons::FONT_ICON_CIRCLE, "武器音效", "屏蔽主要武器发射与命中相关声音。"},
+		{&CConfig::m_ClSndMuteWeaponSwitch, EQmIcon::ARROWS_LEFT_RIGHT, FontIcons::FONT_ICON_ARROWS_LEFT_RIGHT, "武器切换音效", "屏蔽武器切换及相关切换提示音。"},
+		{&CConfig::m_ClSndMuteWeaponNoAmmo, EQmIcon::TRIANGLE_EXCLAMATION, FontIcons::FONT_ICON_TRIANGLE_EXCLAMATION, "无弹药提示音", "屏蔽武器无弹药时的提示音。"},
+		{&CConfig::m_ClSndMuteHook, EQmIcon::ARROWS_ROTATE, FontIcons::FONT_ICON_ARROWS_ROTATE, "钩子音效", "屏蔽钩子发射、收回等相关声音。"},
+		{&CConfig::m_ClSndMuteMovement, EQmIcon::ARROWS_UP_DOWN, FontIcons::FONT_ICON_ARROWS_UP_DOWN, "移动音效", "屏蔽行走与跳跃等移动相关声音。"},
+		{&CConfig::m_ClSndMutePlayerState, EQmIcon::HEART_CRACK, FontIcons::FONT_ICON_HEART_CRACK, "玩家状态音效", "屏蔽玩家状态变化相关声音。"},
+		{&CConfig::m_ClSndMutePickup, EQmIcon::SQUARE_PLUS, FontIcons::FONT_ICON_SQUARE_PLUS, "拾取音效", "屏蔽道具与武器拾取相关声音。"},
+		{&CConfig::m_ClSndMuteFlag, EQmIcon::FLAG_CHECKERED, FontIcons::FONT_ICON_FLAG_CHECKERED, "旗帜音效", "屏蔽 CTF 旗帜事件相关声音。"},
+		{&CConfig::m_ClSndMuteMapSound, EQmIcon::MAP, FontIcons::FONT_ICON_MAP, "地图音效", "屏蔽地图环境与脚本触发音效。"},
 	};
 	static_assert((sizeof(gs_aSoundMuteButtonDefs) / sizeof(gs_aSoundMuteButtonDefs[0])) == 9, "Sound mute button count mismatch");
 	constexpr float CLIENT_BRAND_LABEL_GAP = 3.0f;
@@ -264,7 +266,7 @@ namespace
 		return ScoreboardUiColorSurface(AlphaScale);
 	}
 
-	int DoScoreboardMediaIconButton(CUi *pUi, ITextRender *pTextRender, CButtonContainer *pButtonContainer, const char *pIcon, const CUIRect *pRect, bool Enabled, ColorRGBA ButtonColor, float ContentAlpha)
+	int DoScoreboardMediaIconButton(CUi *pUi, ITextRender *pTextRender, CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pIcon, const CUIRect *pRect, bool Enabled, ColorRGBA ButtonColor, float ContentAlpha)
 	{
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		const float IconAlpha = std::clamp(ContentAlpha, 0.0f, 1.0f);
@@ -272,24 +274,20 @@ namespace
 
 		const ColorRGBA PreviousTextColor = pTextRender->GetTextColor();
 		const ColorRGBA PreviousOutlineColor = pTextRender->GetTextOutlineColor();
-		pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
-		pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
 		pTextRender->TextOutlineColor(pTextRender->DefaultTextOutlineColor().WithMultipliedAlpha(IconAlpha));
 		pTextRender->TextColor(pTextRender->DefaultTextColor().WithMultipliedAlpha(IconAlpha));
 
 		CUIRect Label;
 		pRect->HMargin(2.0f, &Label);
-		pUi->DoLabel(&Label, pIcon, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		pUi->DoLabel_QmIcon(&Label, Icon, pIcon, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 
 		if(!Enabled)
 		{
 			pTextRender->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, IconAlpha));
 			pTextRender->TextOutlineColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f));
-			pUi->DoLabel(&Label, FontIcons::FONT_ICON_SLASH, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			pUi->DoLabel_QmIcon(&Label, EQmIcon::SLASH, FontIcons::FONT_ICON_SLASH, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 		}
 
-		pTextRender->SetRenderFlags(0);
-		pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		pTextRender->TextOutlineColor(PreviousOutlineColor);
 		pTextRender->TextColor(PreviousTextColor);
 
@@ -845,16 +843,17 @@ void CScoreboard::RenderMediaControls(CUIRect Controls)
 
 	static CButtonContainer s_SmtcPrevButton;
 	const float PrevButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_SmtcPrevButton) * ContentAlpha;
-	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPrevButton, FontIcons::FONT_ICON_BACKWARD_STEP, &PrevButton, CanPrev && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PrevButtonAlpha), ContentAlpha))
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPrevButton, EQmIcon::BACKWARD_STEP, FontIcons::FONT_ICON_BACKWARD_STEP, &PrevButton, CanPrev && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PrevButtonAlpha), ContentAlpha))
 	{
 		GameClient()->m_SystemMediaControls.Previous();
 	}
 	RestoreTextColors();
 
 	static CButtonContainer s_SmtcPlayButton;
+	const EQmIcon PlayIconEnum = MediaState.m_Playing ? EQmIcon::PAUSE : EQmIcon::PLAY;
 	const char *pPlayIcon = MediaState.m_Playing ? FontIcons::FONT_ICON_PAUSE : FontIcons::FONT_ICON_PLAY;
 	const float PlayButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_SmtcPlayButton) * ContentAlpha;
-	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPlayButton, pPlayIcon, &PlayButton, CanToggle && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PlayButtonAlpha), ContentAlpha))
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPlayButton, PlayIconEnum, pPlayIcon, &PlayButton, CanToggle && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PlayButtonAlpha), ContentAlpha))
 	{
 		GameClient()->m_SystemMediaControls.PlayPause();
 	}
@@ -862,7 +861,7 @@ void CScoreboard::RenderMediaControls(CUIRect Controls)
 
 	static CButtonContainer s_SmtcNextButton;
 	const float NextButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_SmtcNextButton) * ContentAlpha;
-	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcNextButton, FontIcons::FONT_ICON_FORWARD_STEP, &NextButton, CanNext && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, NextButtonAlpha), ContentAlpha))
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcNextButton, EQmIcon::FORWARD_STEP, FontIcons::FONT_ICON_FORWARD_STEP, &NextButton, CanNext && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, NextButtonAlpha), ContentAlpha))
 	{
 		GameClient()->m_SystemMediaControls.Next();
 	}
@@ -1033,7 +1032,7 @@ void CScoreboard::RenderSoundMuteBar(CUIRect ScoreboardRect)
 		const ColorRGBA ButtonColor = Active ?
 						      ColorRGBA(1.0f, 0.32f, 0.32f, 0.95f * RenderAlpha) :
 						      ColorRGBA(0.82f, 0.88f, 0.96f, 0.45f * RenderAlpha);
-		if(Ui()->DoButton_FontIcon(&s_aButtons[i], gs_aSoundMuteButtonDefs[i].m_pIcon, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, Clickable, ButtonColor) && Clickable)
+		if(Ui()->DoButton_QmIcon(&s_aButtons[i], gs_aSoundMuteButtonDefs[i].m_Icon, gs_aSoundMuteButtonDefs[i].m_pIcon, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, Clickable, ButtonColor) && Clickable)
 			g_Config.*gs_aSoundMuteButtonDefs[i].m_pConfig ^= 1;
 		RestoreTextColors();
 
@@ -2343,8 +2342,9 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 		ColorRGBA FriendActionColor = Client.m_Friend ? ColorRGBA(0.95f, 0.3f, 0.3f, 0.85f * pUi->ButtonColorMul(&pPopupContext->m_FriendAction)) :
 								ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * pUi->ButtonColorMul(&pPopupContext->m_FriendAction));
+		const EQmIcon FriendActionIconEnum = pUi->HotItem() == &pPopupContext->m_FriendAction && Client.m_Friend ? EQmIcon::HEART_CRACK : EQmIcon::HEART;
 		const char *pFriendActionIcon = pUi->HotItem() == &pPopupContext->m_FriendAction && Client.m_Friend ? FontIcons::FONT_ICON_HEART_CRACK : FontIcons::FONT_ICON_HEART;
-		if(pUi->DoButton_FontIcon(&pPopupContext->m_FriendAction, pFriendActionIcon, Client.m_Friend, &Action, BUTTONFLAG_LEFT, ActionCorners, true, FriendActionColor))
+		if(pUi->DoButton_QmIcon(&pPopupContext->m_FriendAction, FriendActionIconEnum, pFriendActionIcon, Client.m_Friend, &Action, BUTTONFLAG_LEFT, ActionCorners, true, FriendActionColor))
 		{
 			if(Client.m_Friend)
 			{
@@ -2360,7 +2360,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 		Action = CUiV2LegacyAdapter::ToCUIRect(vActions[1].m_Box);
 
-		if(pUi->DoButton_FontIcon(&pPopupContext->m_MuteAction, FontIcons::FONT_ICON_BAN, Client.m_ChatIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
+		if(pUi->DoButton_QmIcon(&pPopupContext->m_MuteAction, EQmIcon::BAN, FontIcons::FONT_ICON_BAN, Client.m_ChatIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
 		{
 			Client.m_ChatIgnore ^= 1;
 		}
@@ -2368,8 +2368,9 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 		Action = CUiV2LegacyAdapter::ToCUIRect(vActions[2].m_Box);
 
+		const EQmIcon EmoticonActionIconEnum = Client.m_EmoticonIgnore ? EQmIcon::COMMENT_SLASH : EQmIcon::COMMENT;
 		const char *EmoticonActionIcon = Client.m_EmoticonIgnore ? FontIcons::FONT_ICON_COMMENT_SLASH : FontIcons::FONT_ICON_COMMENT;
-		if(pUi->DoButton_FontIcon(&pPopupContext->m_EmoticonAction, EmoticonActionIcon, Client.m_EmoticonIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
+		if(pUi->DoButton_QmIcon(&pPopupContext->m_EmoticonAction, EmoticonActionIconEnum, EmoticonActionIcon, Client.m_EmoticonIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
 		{
 			Client.m_EmoticonIgnore ^= 1;
 		}

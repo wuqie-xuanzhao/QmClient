@@ -36,6 +36,7 @@
 #include <game/client/components/tclient/bindwheel.h>
 #include <game/client/components/tclient/trails.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/render.h>
 #include <game/client/skin.h>
 #include <game/client/ui.h>
@@ -1050,6 +1051,12 @@ void CMenus::RenderFontIcon(const CUIRect Rect, const char *pText, float Size, i
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 }
 
+void CMenus::RenderFontIcon_QmIcon(const CUIRect Rect, EQmIcon Icon, const char *pFallbackIcon, float Size, int Align)
+{
+	// 图集优先；图集未就绪时 DoLabel_QmIcon 内部回退到 pFallbackIcon 字形。
+	Ui()->DoLabel_QmIcon(&Rect, Icon, pFallbackIcon, Size, Align);
+}
+
 int CMenus::DoButtonNoRect_FontIcon(CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Corners)
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
@@ -1066,6 +1073,23 @@ int CMenus::DoButtonNoRect_FontIcon(CButtonContainer *pButtonContainer, const ch
 	Ui()->DoLabel(&Temp, pText, CurrentSettingsContentMetrics().m_BodySize, TEXTALIGN_MC);
 	TextRender()->SetRenderFlags(0);
 	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+
+	return Ui()->DoButtonLogic(pButtonContainer, Checked, pRect, BUTTONFLAG_LEFT);
+}
+
+int CMenus::DoButtonNoRect_QmIcon(CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pFallbackIcon, int Checked, const CUIRect *pRect, int Corners)
+{
+	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
+	TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
+	TextRender()->TextColor(TextRender()->DefaultTextSelectionColor());
+	if(Ui()->HotItem() == pButtonContainer)
+	{
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	}
+	CUIRect Temp;
+	pRect->HMargin(0.0f, &Temp);
+	Ui()->DoLabel_QmIcon(&Temp, Icon, pFallbackIcon, CurrentSettingsContentMetrics().m_BodySize, TEXTALIGN_MC);
+	TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 	return Ui()->DoButtonLogic(pButtonContainer, Checked, pRect, BUTTONFLAG_LEFT);
 }
@@ -1300,7 +1324,7 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 			GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 		}
 		static CButtonContainer s_FontDirectoryId;
-		if(Ui()->DoButton_FontIcon(&s_FontDirectoryId, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
+		if(Ui()->DoButton_QmIcon(&s_FontDirectoryId, EQmIcon::FOLDER, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
 		{
 			Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
 			Storage()->CreateFolder("qmclient/fonts", IStorage::TYPE_SAVE);
@@ -1818,7 +1842,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					}
 
 					static CButtonContainer s_FontDirectoryId;
-					if(Ui()->DoButton_FontIcon(&s_FontDirectoryId, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
+					if(Ui()->DoButton_QmIcon(&s_FontDirectoryId, EQmIcon::FOLDER, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
 					{
 						Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
 						Storage()->CreateFolder("qmclient/fonts", IStorage::TYPE_SAVE);
@@ -1928,7 +1952,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 				}
 				static CButtonContainer s_FontDirectoryId;
-				if(Ui()->DoButton_FontIcon(&s_FontDirectoryId, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
+				if(Ui()->DoButton_QmIcon(&s_FontDirectoryId, EQmIcon::FOLDER, FONT_ICON_FOLDER, 0, &FontDirectory, IGraphics::CORNER_ALL))
 				{
 					Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
 					Storage()->CreateFolder("qmclient/fonts", IStorage::TYPE_SAVE);
@@ -4277,7 +4301,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 
 		static CButtonContainer s_ReverseEntries;
 		static bool s_Reversed = true;
-		if(!ReadOnly && Ui()->DoButton_FontIcon(&s_ReverseEntries, s_Reversed ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, 0, &Button, IGraphics::CORNER_ALL))
+		if(!ReadOnly && Ui()->DoButton_QmIcon(&s_ReverseEntries, s_Reversed ? EQmIcon::CHEVRON_UP : EQmIcon::CHEVRON_DOWN, s_Reversed ? FONT_ICON_CHEVRON_UP : FONT_ICON_CHEVRON_DOWN, 0, &Button, IGraphics::CORNER_ALL))
 			s_Reversed = !s_Reversed;
 		Column.HSplitTop(MarginSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize, &EntriesSearch, &Column);
@@ -4342,7 +4366,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			DeleteButton.HMargin(7.5f, &DeleteButton);
 			DeleteButton.VSplitLeft(MarginSmall, nullptr, &DeleteButton);
 			DeleteButton.VSplitRight(MarginExtraSmall, &DeleteButton, nullptr);
-			if(!ReadOnly && Ui()->DoButton_FontIcon(&s_vDeleteButtons[i], FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
+			if(!ReadOnly && Ui()->DoButton_QmIcon(&s_vDeleteButtons[i], EQmIcon::TRASH, FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
 			{
 				pEntryToRemove = pEntry;
 			}
@@ -4362,7 +4386,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			if(!ReadOnly)
 			{
 				if(IsClan)
-					RenderFontIcon(EntryTypeRect, FONT_ICON_USERS, 18.0f, TEXTALIGN_MC);
+					RenderFontIcon_QmIcon(EntryTypeRect, EQmIcon::USERS, FONT_ICON_USERS, 18.0f, TEXTALIGN_MC);
 				else
 					RenderDevSkin(EntryTypeRect.Center(), ListRowHeight, "default", "default", false, 0, 0, 0, false, false);
 			}
@@ -4371,7 +4395,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 			{
 				EntryRect.VSplitRight(20.0f, &EntryRect, &ToolTip);
 				if(!ReadOnly)
-					RenderFontIcon(ToolTip, FONT_ICON_COMMENT, 18.0f, TEXTALIGN_MC);
+					RenderFontIcon_QmIcon(ToolTip, EQmIcon::COMMENT, FONT_ICON_COMMENT, 18.0f, TEXTALIGN_MC);
 				GameClient()->m_Tooltips.DoToolTip(&s_vItemIds[i], &ToolTip, pEntry->m_aReason);
 				GameClient()->m_Tooltips.SetFadeTime(&s_vItemIds[i], 0.0f);
 			}
@@ -4577,7 +4601,7 @@ void CMenus::RenderSettingsTClientWarList(CUIRect MainView, bool PrewarmOnly)
 				TypeRect.VSplitRight(20.0f, &TypeRect, &DeleteButton);
 				DeleteButton.HSplitTop(20.0f, &DeleteButton, nullptr);
 				DeleteButton.Margin(2.0f, &DeleteButton);
-				if(!ReadOnly && DoButtonNoRect_FontIcon(&s_vTypeDeleteButtons[i], FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
+				if(!ReadOnly && DoButtonNoRect_QmIcon(&s_vTypeDeleteButtons[i], EQmIcon::TRASH, FONT_ICON_TRASH, 0, &DeleteButton, IGraphics::CORNER_ALL))
 					m_pRemoveWarType = pType;
 			}
 			TextRender()->TextColor(pType->m_Color);
@@ -5435,7 +5459,7 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView, bool PrewarmOnly)
 			Button.h = LineSize;
 			Button.y = Label.y + (Label.h - Button.h) * 0.5f;
 			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_INFO, s_aDevelopers[Index].m_pName, &Label, s_aDevelopers[Index].m_pName, DeveloperFontSize, TEXTALIGN_ML);
-			if(!ReadOnly && Ui()->DoButton_FontIcon(&s_aLinkButtons[Index], FONT_ICON_ARROW_UP_RIGHT_FROM_SQUARE, 0, &Button, IGraphics::CORNER_ALL))
+			if(!ReadOnly && Ui()->DoButton_QmIcon(&s_aLinkButtons[Index], EQmIcon::ARROW_UP_RIGHT_FROM_SQUARE, FONT_ICON_ARROW_UP_RIGHT_FROM_SQUARE, 0, &Button, IGraphics::CORNER_ALL))
 				Client()->ViewLink(s_aDevelopers[Index].m_pUrl);
 			RenderDevSkin(TeeRect.Center(), TeeSize, s_aDevelopers[Index].m_pSkin, s_aDevelopers[Index].m_pUseCustomColors, s_aDevelopers[Index].m_CustomColors, 0, 0, 0, false, true, s_aDevelopers[Index].m_BodyColor, s_aDevelopers[Index].m_FeetColor);
 		}

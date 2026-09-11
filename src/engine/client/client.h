@@ -120,6 +120,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	};
 
 	std::atomic<int64_t> m_HangLastHeartbeat{0};
+	int64_t m_QmGraphicsLastPumpNetworkNs = 0;
 	std::atomic<bool> m_HangWatchdogStop{false};
 	std::atomic<bool> m_HangReportWritten{false};
 	std::atomic<int> m_HangInfoIndex{0};
@@ -547,7 +548,6 @@ public:
 	static void ConchainNetReset(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainLoglevel(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainStdoutOutputLevel(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	static void ConchainProcessHighPriority(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	static void Con_DemoSlice(IConsole::IResult *pResult, void *pUserData);
 	static void Con_DemoSliceBegin(IConsole::IResult *pResult, void *pUserData);

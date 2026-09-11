@@ -208,7 +208,7 @@ CNetBan::CBan<T> *CNetBan::CBanPool<T, HashCount>::Get(int Index) const
 }
 
 template<class T>
-int CNetBan::Ban(T *pBanPool, const T::CDataType *pData, int Seconds, const char *pReason, bool VerbatimReason)
+int CNetBan::Ban(T *pBanPool, const typename T::CDataType *pData, int Seconds, const char *pReason, bool VerbatimReason)
 {
 	// do not ban localhost
 	if(NetMatch(pData, &m_LocalhostIpV4) || NetMatch(pData, &m_LocalhostIpV6))
@@ -255,7 +255,7 @@ int CNetBan::Ban(T *pBanPool, const T::CDataType *pData, int Seconds, const char
 }
 
 template<class T>
-int CNetBan::Unban(T *pBanPool, const T::CDataType *pData)
+int CNetBan::Unban(T *pBanPool, const typename T::CDataType *pData)
 {
 	CNetHash NetHash(pData);
 	CBan<typename T::CDataType> *pBan = pBanPool->Find(pData, &NetHash);

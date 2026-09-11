@@ -218,7 +218,7 @@
 == 1 星
 
 128 player id <-> 64 player id map update rate
-== 128 player id <-> 64 player id map update rate
+== 128 玩家 ID <-> 64 玩家 ID 地图更新速率
 
 2 stars
 == 2 星
@@ -920,9 +920,6 @@ Audio slots
 AUS
 == 澳洲
 
-Auth level required to send phone to others.
-== 向其他玩家传送所需的身份验证级别
-
 Authed name color in scoreboard
 == 管理权限者名字在计分板上的颜色
 
@@ -1220,6 +1217,9 @@ Axiom scores
 Axis
 == 轴
 
+Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
+== 背景模糊算法：0=高斯，1=Kawase，2=Dual Kawase
+
 Backend to use (e.g. OpenGL or Vulkan)
 == 要使用的后端（例如 OpenGL 或 Vulkan）
 
@@ -1447,6 +1447,9 @@ Blue team
 
 Blue team wins!
 == 蓝队胜利！
+
+Blur mode
+== 模糊模式
 
 Body
 == 身体
@@ -2453,9 +2456,6 @@ Current rescue mode: %s
 Current status
 == 当前状态
 
-Current time: %s
-== 当前时间：%s
-
 Current: Ranks
 == 当前：查分
 
@@ -2567,6 +2567,9 @@ Darken Tee color when frozen (0-100)
 Data
 == 数据
 
+Data source
+== 数据来源
+
 Date
 == 日期
 
@@ -2597,9 +2600,6 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == DDNet 客户端需要重新启动才能完成更新！
 
-DDNet finish totals come from official player data.
-== DDNet 完成总数来自官方玩家数据。
-
 DDNet Memory
 == DDNet 内存
 
@@ -2626,6 +2626,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork 是一款在线合作游戏，你和你团体里的 Tee 的目标是抵达地图的终点。作为新手你应该从有着最简单的地图的简单（Novice）服务器入门。根据延迟来选择离你相近的服务器。
+
+DDRaceNetwork · DDNet
+== DDRaceNetwork · DDNet
 
 ddstats.tw ID stats
 == ddstats.tw ID 统计
@@ -2658,7 +2661,7 @@ Debug group clipping.
 == 调试组裁剪
 
 Debug HTTP
-== Debug HTTP
+== 调试 HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 调试模式已启用。按 Ctrl+Shift+D 禁用调试模式。
@@ -2827,6 +2830,9 @@ Demos directory
 
 Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
 == 根据参数数量，将自己传送到：(0) 当前旁观或瞄准的位置；(1) 指定玩家
+
+Deprecated compatibility alias for qm_graphics_trace (macOS signposts)
+== qm_graphics_trace 的已弃用兼容别名（macOS signpost）
 
 Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
 == 已弃用。使用“muteid <client_id> <秒数> <原因>”或“muteip <ip> <秒数> <原因>”
@@ -3071,6 +3077,9 @@ Download community skins
 Download failed
 == 下载失败
 
+Download rank ghost
+== 下载 Rank 影子
+
 Download skins
 == 下载官方皮肤
 
@@ -3139,6 +3148,9 @@ Drift smoothness
 
 Drop on right canvas to replace one part.
 == 拖到右侧画布可替换一个部件。
+
+Dual Kawase
+== 双重 Kawase
 
 Dummies are not allowed on this server
 == 此服务器不允许分身
@@ -3422,8 +3434,17 @@ Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
 == 启用抗延迟，即更激进的预测
 
+Enable antispoof for vanilla 0.6 clients
+== 为原版 0.6 客户端启用反欺骗
+
 Enable audio output and choose a device
 == 启用音频输出并选择设备
+
+Enable backdrop blur
+== 启用背景模糊
+
+Enable backdrop blur for translucent interface and selected HUD backgrounds
+== 为半透明界面和指定 HUD 背景启用背景模糊
 
 Enable background 3D particle flicker
 == 启用背景 3D 粒子闪烁
@@ -3436,9 +3457,6 @@ Enable background 3D particle pulse scaling
 
 Enable background 3D particle trail
 == 启用背景 3D 粒子拖尾
-
-Enable basic anti-spoof
-== 启用普通反欺骗
 
 Enable camera drift
 == 启用镜头漂移
@@ -3466,6 +3484,9 @@ Enable colored console output
 
 Enable coloring and hearts for friends
 == 为好友启用着色和爱心
+
+Enable connections from vanilla 0.6 clients
+== 允许原版 0.6 客户端连接
 
 Enable controller
 == 启用控制器
@@ -3530,12 +3551,6 @@ Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
 == 启用游戏声音
 
-Enable Gaussian blur
-== 启用高斯模糊
-
-Enable Gaussian blur for translucent interface and selected HUD backgrounds
-== 为半透明界面和指定 HUD 背景启用高斯模糊
-
 Enable ghost
 == 启用影子
 
@@ -3580,9 +3595,6 @@ Enable LLM thinking mode (may increase response time)
 
 Enable lyrics
 == 启用歌词
-
-Enable macOS graphics diagnostics and Instruments signposts
-== 启用 macOS 图形诊断和 Instruments 标记
 
 Enable main thread and render stage performance debug logging
 == 启用主线程与渲染阶段性能调试日志
@@ -3965,6 +3977,9 @@ Fade out
 Fade trail alpha
 == 淡化拖尾
 
+Failed
+== 失败
+
 Failed saving the replay!
 == 保存回放失败！
 
@@ -4024,6 +4039,9 @@ Fast input others
 
 Fast practice
 == 快速练习
+
+Fast, lightweight blur with a softer approximation.
+== 快速、轻量的模糊效果，采用较柔和的近似处理。
 
 Fat skins (DDFat)
 == 胖胖的皮肤（DDFat）
@@ -4207,6 +4225,9 @@ Fraction of players needed to pass a vote
 
 Frags
 == 击杀数
+
+Frame quality
+== 帧质量
 
 Frame rate
 == 帧率
@@ -4421,6 +4442,9 @@ Gap between statusbar items
 Gap between tee and nametag
 == Tee 与铭牌之间的间距
 
+Gaussian
+== 高斯
+
 General
 == 常规
 
@@ -4556,6 +4580,9 @@ Gores Mode
 Gores mode key
 == Gores 模式按键
 
+Gores · Axiom
+== Gores · Axiom
+
 GPU name, chosen by backend (if supported)
 == GPU 的名称，由后端选择。（如果后端支持的话）
 
@@ -4571,9 +4598,6 @@ Gradient color
 Graphics
 == 图像
 
-Graphics backend
-== 图形后端
-
 Graphics card
 == 显卡
 
@@ -4581,7 +4605,7 @@ Graphics display
 == 图像显示
 
 Graphics Error
-== Graphics Error
+== 图形错误
 
 Graphics library major version (0 = auto-detect)
 == 图形库主版本（0 = 自动检测）
@@ -4594,6 +4618,15 @@ Graphics library patch version
 
 Graphics library texture sampling lod bias multiplied by 1000
 == 图形库纹理采样的 lod 偏差乘以 1000
+
+Graphics mode
+== 图形模式
+
+Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)
+== 图形模式：-1 = 使用后端设置，0 = 兼容性，1 = 性能（默认）
+
+Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace
+== 图形跟踪级别：0 = 关闭，1 = 定期摘要，2 = 摘要和慢帧，3 = 详细后端跟踪
 
 Greeting text
 == 打招呼文本
@@ -4819,9 +4852,6 @@ Hide weapon muzzle flashes
 
 High Detail
 == 显示地图细节
-
-High process priority
-== 高进程优先级
 
 High to low
 == 由高到低
@@ -5160,7 +5190,7 @@ Initializing components
 == 正在初始化游戏引擎
 
 Initializing layers
-== Initializing layers
+== 正在初始化地图图层
 
 Initializing map logic
 == 正在初始化地图逻辑
@@ -5369,6 +5399,9 @@ k = Resend loss
 Kaomoji
 == 表情符号
 
+Kawase
+== Kawase
+
 Keep hook when teleporting
 == 传送时保持钩索
 
@@ -5525,6 +5558,9 @@ Last entered
 Last page in console
 == 控制台最后一页
 
+Last successful sync: %s
+== 上次成功同步：%s
+
 Latency
 == 延迟
 
@@ -5606,9 +5642,6 @@ Linear
 Lines %d - %d (%s)
 == 行 %d - %d (%s)
 
-Links below open external ID and map statistics.
-== 下方链接打开外部 ID 统计和过图统计。
-
 List all commands that are available in practice mode
 == 列出练习模式下可用的所有命令
 
@@ -5686,6 +5719,9 @@ Load drawings from a given csv file (defaults to map name)
 
 Load sound files in thread
 == 加载声音文件线程
+
+Load the official rank replay of a map as a ghost (default: current map, rank 1)
+== 将地图的官方 Rank 回放加载为影子（默认：当前地图，Rank 1）
 
 Load with code r. /load to check your existing saves
 == 使用代码 r 载入；可用 /load 查看已有存档
@@ -5765,9 +5801,6 @@ Local + Dummy
 Local game mode statistics
 == 本地游戏模式统计
 
-Local mode statistics are stored on this client.
-== 本地游戏模式统计保存在此客户端。
-
 Local only
 == 仅本地
 
@@ -5803,6 +5836,9 @@ Locked
 
 Log output filename
 == 日志输出文件名
+
+Log predicted event creation/playback and snapshot confirmation to debug double sounds.
+== 记录预测事件的创建/播放和快照确认，以调试重复声音。
 
 Log the network
 == 记录网络
@@ -6033,13 +6069,13 @@ Maximum auto-saves retained per map name (0=unlimited)
 == 每个地图名称保留的最大自动保存数量（0 = 无限制）
 
 Maximum banned addresses sent their ban message per second (0 = unlimited).
-== Maximum banned addresses sent their ban message per second (0 = unlimited).
+== 每秒向被封禁地址发送封禁消息的最大数量（0 = 不限）。
 
 Maximum clients per IP
 == 同一 IP 可连接服务器的客户端最大数量
 
 Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
-== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== 每秒从未连接地址解压的最大压缩数据包数（0 = 不限）。
 
 Maximum cursor distance
 == 最大光标距离
@@ -6072,22 +6108,22 @@ Maximum number of clients on server
 == 服务器上允许的最大客户端数
 
 Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
-== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== 返回主循环前单批接收的数据包最大数量（0 = 不限）。
 
 Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
-== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== 每个 tick、每个客户端向其他客户端发送的预输入最大数量（0 = 不限）
 
 Maximum number of resend requests answered per second (0 for no limit)
-== Maximum number of resend requests answered per second (0 for no limit)
+== 每秒响应重发请求的最大数量（0 = 不限）
 
 Maximum number of server info responses of any size sent per second (0 = unlimited).
-== Maximum number of server info responses of any size sent per second (0 = unlimited).
+== 每秒发送的任意大小服务器信息响应最大数量（0 = 不限）。
 
 Maximum number of skins loaded simultaneously
 == 最多可同时加载皮肤数量
 
 Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
-== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== 每秒响应的原版反欺骗握手最大数量（0 = 不限）。
 
 Maximum players participating in a vote (0 = unlimited)
 == 最多可有多少玩家参与投票（0 = 无限制）
@@ -6331,6 +6367,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == 移动到 x/y 编号 ii 的图块
+
+Multi-resolution blur with a stronger result and balanced GPU cost.
+== 多分辨率模糊，效果更强，并兼顾 GPU 开销。
 
 Multi-View
 == 多人同框视角
@@ -7280,14 +7319,17 @@ Password incorrect
 Password required to use reserved slots.
 == 使用预留插槽所需的密码
 
+Past year
+== 最近一年
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
-== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== 用于验证 MySQL/MariaDB 服务器证书的 CA 证书路径
 
 Path to client certificate for the MySQL/MariaDB SSL connection
-== Path to client certificate for the MySQL/MariaDB SSL connection
+== MySQL/MariaDB SSL 连接的客户端证书路径
 
 Path to client key for the MySQL/MariaDB SSL connection
-== Path to client key for the MySQL/MariaDB SSL connection
+== MySQL/MariaDB SSL 连接的客户端密钥路径
 
 Pause
 == 暂停
@@ -7306,6 +7348,9 @@ Pause/unpause game
 
 Penalty in seconds for saving or swapping positions
 == 保存或交换位置的惩罚时间（秒）
+
+Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
+== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 
 Per-name volume (name=percent)
 == 按名字单独音量（name=percent）
@@ -7644,7 +7689,7 @@ Predict grenade trajectory (only with cl_antiping 1)
 == 预测榴弹轨迹（仅在 cl_antiping 为 1 时）
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
-== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== 预测其他玩家的移动（仅在 cl_antiping 设为 1 时启用）（1 = 始终开启，2 = 仅交互时，3 = 2 且始终预测冻结 Tee）
 
 Predict weapon projectiles (only with cl_antiping 1)
 == 预测武器投射物（仅在 cl_antiping 为 1 时生效）
@@ -8027,6 +8072,72 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == 随机化玩家颜色（0 = 全部、1 = 身体、2 = 脚、3 = 皮肤、4 = 旗帜）示例：0011 = 随机化皮肤和旗帜 [数字是位置]
 
+Rank ghost loaded: %s, %s s. It follows your current run.
+== Rank 影子已加载：%s，%s 秒。正在跟随你当前的跑图进度。
+
+Rank ghost loaded: %s, %s s. It plays when you cross the start line.
+== Rank 影子已加载：%s，%s 秒。跨过起点线后开始播放。
+
+Rank ghost unloaded
+== Rank 影子已卸载
+
+Rank ghost: another task is already running
+== Rank 影子：已有任务正在运行
+
+Rank ghost: converting the replay ...
+== Rank 影子：正在转换回放……
+
+Rank ghost: could not extract the runner's path from the replay
+== Rank 影子：无法从回放中提取跑者轨迹
+
+Rank ghost: downloading the replay ...
+== Rank 影子：正在下载回放……
+
+Rank ghost: failed to download the replay
+== Rank 影子：下载回放失败
+
+Rank ghost: failed to fetch the replay list
+== Rank 影子：获取回放列表失败
+
+Rank ghost: failed to load the generated ghost (join the map first)
+== Rank 影子：加载生成的影子失败（请先进入地图）
+
+Rank ghost: failed to load the replay: %s
+== Rank 影子：加载回放失败：%s
+
+Rank ghost: failed to write the ghost file
+== Rank 影子：写入影子文件失败
+
+Rank ghost: fetching the replay list ...
+== Rank 影子：正在获取回放列表……
+
+Rank ghost: HTTP is not available
+== Rank 影子：HTTP 不可用
+
+Rank ghost: no official replay for '%s' rank %d
+== Rank 影子：没有 '%s' 第 %d 名的官方回放
+
+Rank ghost: replay converted, waiting for the map to load ...
+== Rank 影子：回放已转换，等待地图加载……
+
+Rank ghost: specify a map name when not in a game
+== Rank 影子：不在游戏中时需要指定地图名
+
+Rank ghost: the downloaded replay is not a valid demo
+== Rank 影子：下载的回放不是有效的 demo
+
+Rank ghost: the replay has an invalid run range
+== Rank 影子：回放的跑图区间无效
+
+Rank ghost: the replay has no run start/end markers
+== Rank 影子：回放缺少跑图起止标记
+
+Rank ghost: the replay list is empty or malformed
+== Rank 影子：回放列表为空或格式有误
+
+Rank ghost: timed out waiting for the map to load
+== Rank 影子：等待地图加载超时
+
 Ratio
 == K/D
 
@@ -8035,6 +8146,9 @@ Ratio threshold for local target language detection
 
 Read new feature indicators
 == 将设置界面新功能提示标记为已读
+
+Ready
+== 已就绪
 
 Reason
 == 原因
@@ -9176,9 +9290,6 @@ Set server to singleplayer mode (no player interaction, must be set before loadi
 Set team for a player (spectators = -1, game = 0)
 == 设置玩家队伍（旁观 = -1，游戏 = 0）
 
-Set team for all players (spectators = -1, game = 0)
-== 设置所有玩家队伍（旁观 = -1，游戏 = 0）
-
 Set timeout protection code s
 == 设置超时保护码
 
@@ -9542,8 +9653,8 @@ Show hook strength number indicator
 Show hookable/unhookable tile outlines
 == 显示可钩/不可钩图块轮廓
 
-Show how weapons, shields, hearts, and flags appear in game
-== 显示武器、护盾、爱心和旗帜在游戏中的效果
+Show how weapons, shields, snowflakes, and flags appear in game
+== 显示武器、护盾、雪花和旗帜在游戏中的外观
 
 Show HUD
 == HUD 开关
@@ -10262,6 +10373,9 @@ Smaller tees
 Smart
 == 智能
 
+Smooth and accurate blur with the highest GPU cost.
+== 平滑且准确的模糊效果，但 GPU 开销最高。
+
 Smooth camera switch animation time when spectating (in ms, 0=off)
 == 观看时平滑摄像机切换动画的时间（毫秒）（0 表示关闭）
 
@@ -10748,6 +10862,9 @@ Sync remote stats
 Sync Workshop Assets
 == 同步商店资源
 
+Syncing
+== 正在同步
+
 Syncing remote stats
 == 正在同步远程统计
 
@@ -10758,7 +10875,7 @@ System default
 == 系统默认
 
 System media control and lyrics
-== System media control and lyrics
+== 系统媒体控制和歌词
 
 System media controls
 == 系统媒体控制
@@ -11063,6 +11180,9 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 == 初始化音频设备失败。
 
+The auth level you need to tele others
+== 将其他玩家传送所需的权限等级
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == 额外菜单按钮，用于切换所有具有“额外菜单”可见度的按钮的可见度。长按时也会打开游戏菜单。
 
@@ -11079,7 +11199,7 @@ The FPS at which the recorder should record replay.
 == 录像机应以哪个 FPS 录制回放。
 
 The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== 图形后端意外停止，无法保存安全图形设置。
 
 The name "default" is reserved.
 == “default” 是保留名称。
@@ -11293,9 +11413,6 @@ Toggle auto camera
 
 Toggle between game scene preview and raw texture
 == 在游戏场景预览和原始材质之间切换
-
-Toggle client process normal/high priority on Windows
-== 在 Windows 上切换客户端进程的普通/高优先级
 
 Toggle config value
 == 切换配置值
@@ -11744,6 +11861,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == 未知状态
 
+Unload the rank ghost
+== 卸载 Rank 影子
+
 Unlock a team
 == 解锁队伍
 
@@ -12021,7 +12141,7 @@ Virtual joystick which always uses hook.
 == 始终用于钩索的虚拟摇杆。
 
 Virtual joystick which only aims and moves the mouse pointer relatively.
-== Virtual joystick which only aims and moves the mouse pointer relatively.
+== 仅用于瞄准并相对移动鼠标指针的虚拟摇杆。
 
 Virtual joystick which only aims without using an action.
 == 仅用于瞄准而不执行动作的虚拟摇杆。
@@ -12161,11 +12281,8 @@ Vote yes/no
 Voting
 == 投票
 
-Vulkan API
-== Vulkan API 版本
-
-Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
-== Vulkan API 版本：11=1.1 兼容模式，14=1.4 严格模式
+Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1
+== Vulkan API 版本：14 = 优先使用 1.4、再用 1.3 和 1.1，13 = 优先使用 1.3、再用 1.1，11 = 强制使用 1.1
 
 Wait for current vote to end before calling a new one.
 == 请先等待当前投票结束，再发起新的投票
@@ -12336,7 +12453,7 @@ Whether dummy jumps (requires cl_dummy_control 1)
 == 分身是否跳跃（需要 cl_dummy_control 1）
 
 Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
-== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== 是否忽略不投票的玩家（0），还是将其视为投反对票（1）
 
 Whether players can hammer/grenade/laser each other.
 == 玩家是否可用锤子/榴弹/激光互相攻击
@@ -12927,7 +13044,7 @@ Hook
 
 [Direct touch input]
 Relative aim
-== Relative aim
+== 相对瞄准
 
 [Editor]
 %d new mentions
@@ -13003,7 +13120,7 @@ Relative aim
 
 [Editor]
 [Ctrl+F4] Close the current map.
-== [Ctrl+F4] Close the current map.
+== [Ctrl+F4] 关闭当前地图。
 
 [Editor]
 [Ctrl+F] Find empty slot.
@@ -13523,7 +13640,7 @@ Clip Y
 
 [Editor]
 Close map
-== Close map
+== 关闭地图
 
 [Editor]
 Close this dialog.
@@ -13907,7 +14024,7 @@ Disallow/allow unknown or invalid commands.
 
 [Editor]
 Discard changes
-== Discard changes
+== 放弃更改
 
 [Editor]
 Do not perform quad alignment to other quads/points when moving quads.
@@ -13926,8 +14043,8 @@ Do not select layers when ctrl+right clicking on a tile.
 == Ctrl+右键图块时不选择图层。
 
 [Editor]
-Do not show how weapons, shields, hearts and flags appear ingame.
-== 不显示武器、护盾、爱心和旗帜在游戏中的表现。
+Do not show how weapons, shields, snowflakes and flags appear ingame.
+== 不显示武器、护盾、雪花和旗帜在游戏中的外观。
 
 [Editor]
 Do not show quad bounds when moving quads.
@@ -13939,7 +14056,7 @@ Do not show tile information.
 
 [Editor]
 Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
+== 关闭此地图前要保存更改吗？\n\n如果放弃更改，所有更改都会丢失。
 
 [Editor]
 Done
@@ -14758,10 +14875,6 @@ HEART: Gives player +1 health
 == 心: 给玩家+1生命
 
 [Editor]
-HEART: Works like a FREEZE tile. Freezes tees for 3 seconds by default.
-== 冻结心: 像冻结图块一样工作.默认冻结tee 3秒.
-
-[Editor]
 Height
 == 高度
 
@@ -15307,7 +15420,7 @@ Open the current directory in the file browser.
 
 [Editor]
 Open the directory for automapper rules in the file browser.
-== Open the directory for automapper rules in the file browser.
+== 在文件浏览器中打开自动映射规则目录。
 
 [Editor]
 Open the selected file.
@@ -15711,7 +15824,7 @@ Save as
 
 [Editor]
 Save changes?
-== Save changes?
+== 保存更改吗？
 
 [Editor]
 Save copy
@@ -15927,15 +16040,15 @@ Show Directory
 
 [Editor]
 Show directory
-== Show directory
+== 显示目录
 
 [Editor]
 Show envelope editor history.
 == 显示动画编辑历史。
 
 [Editor]
-Show how weapons, shields, hearts and flags appear ingame.
-== 显示武器、护盾、爱心和旗帜在游戏中的表现。
+Show how weapons, shields, snowflakes and flags appear ingame.
+== 显示武器、护盾、雪花和旗帜在游戏中的外观。
 
 [Editor]
 Show info
@@ -15996,6 +16109,10 @@ Slice
 [Editor]
 Smooth
 == 平滑
+
+[Editor]
+SNOWFLAKE: Works like a FREEZE tile. Freezes tees for 3 seconds by default.
+== 雪花：作用类似冻结砖块，默认将 Tee 冻结 3 秒。
 
 [Editor]
 Softness 
@@ -16074,12 +16191,12 @@ Speed
 == 速度
 
 [Editor]
-SPEEDER: Causes weapons, SHIELD, HEART and SPINNING LASER to move quickly.
-== 速度器: 使武器、盾牌、冻结心和旋转激光快速移动.
+SPEEDER: Causes weapons, SHIELD, SNOWFLAKE and SPINNING LASER to move quickly.
+== 加速器：使武器、护盾、雪花和旋转激光快速移动。
 
 [Editor]
-SPEEDER: Causes weapons, SHIELD, HEART and SPINNING LASER to move slowly.
-== 速度器: 使武器、盾牌、冻结心和旋转激光缓慢移动.
+SPEEDER: Causes weapons, SHIELD, SNOWFLAKE and SPINNING LASER to move slowly.
+== 加速器：使武器、护盾、雪花和旋转激光缓慢移动。
 
 [Editor]
 Speedup
@@ -16910,8 +17027,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 无法初始化当前配置的图形后端，请检查此电脑是否已安装集成显卡的驱动程序。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== 初始化失败。请尝试打开配置目录中的设置文件（qmclient/settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 初始化失败。请尝试打开配置目录中的 settings_ddnet.cfg 文件，将 gfx_backend 改为 OpenGL 或 Vulkan 再重试。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -16926,8 +17043,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 渲染指令提交失败。请尝试更新显卡驱动程序。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== 未知错误。请尝试打开配置目录中的设置文件（qmclient/settings_ddnet.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== 未知错误。请尝试打开配置目录中的 settings_ddnet.cfg 并将 gfx_backend 改为 OpenGL 或 Vulkan 再重试。
 
 [Hammer Mode]
 Normal
@@ -16991,7 +17108,7 @@ Joystick Hook
 
 [Predefined touch button behaviors]
 Joystick Relative Aim
-== Joystick Relative Aim
+== 摇杆相对瞄准
 
 [Predefined touch button behaviors]
 Spectate

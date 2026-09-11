@@ -338,13 +338,30 @@ protected:
 public:
 	static constexpr int MEDIA_ISLAND_SDF_MAX_ITEMS = 12;
 	static constexpr int GAUSSIAN_BLUR_MAX_RADIUS = 10;
+	static constexpr int DUAL_KAWASE_PYRAMID_LEVELS = 2;
+	enum class EBlurMode
+	{
+		GAUSSIAN = 0,
+		KAWASE = 1,
+		DUAL = 2,
+	};
 
 	struct SGaussianBlurParams
 	{
 		// The one-dimensional kernel size is m_Radius * 2 + 1 (3 through 21).
 		int m_Radius = 4;
 		float m_Sigma = 2.0f;
+		EBlurMode m_Mode = EBlurMode::GAUSSIAN;
 	};
+
+	static constexpr int DualKawasePyramidDimension(int SourceDimension, int Level)
+	{
+		if(SourceDimension <= 0 || Level < 0)
+			return 0;
+		for(int CurrentLevel = 0; CurrentLevel <= Level; ++CurrentLevel)
+			SourceDimension = (SourceDimension + 1) / 2;
+		return SourceDimension;
+	}
 
 	static bool CalculateGaussianBlurKernel(const SGaussianBlurParams &Params, std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> &aWeights);
 
@@ -624,9 +641,11 @@ public:
 	// Captures all drawing submitted before this call and scales the current backbuffer
 	// into Target without a CPU readback. Must be called outside an active render target.
 	virtual bool CaptureBackbufferToRenderTarget(CRenderTargetHandle Target) = 0;
-	// Must be called outside an active render target. Source, Temporary and Destination
-	// must be distinct render targets with identical dimensions.
-	virtual bool GaussianBlurRenderTarget(CRenderTargetHandle Source, CRenderTargetHandle Temporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) = 0;
+	// Must be called outside an active render target. Gaussian and Kawase use
+	// the first same-sized temporary target. Dual Kawase uses both temporary
+	// targets as a half/quarter-resolution pyramid before reconstructing the
+	// full-sized destination.
+	virtual bool GaussianBlurRenderTarget(CRenderTargetHandle Source, const std::array<CRenderTargetHandle, DUAL_KAWASE_PYRAMID_LEVELS> &aTemporary, CRenderTargetHandle Destination, const SGaussianBlurParams &Params) = 0;
 	virtual CRenderTargetReadbackHandle BeginRenderTargetReadback(CRenderTargetHandle Target) = 0;
 	virtual ERenderTargetReadbackState PollRenderTargetReadback(CRenderTargetReadbackHandle Handle) = 0;
 	virtual bool ResolveRenderTargetReadback(CRenderTargetReadbackHandle *pHandle, CImageInfo &Image) = 0;
@@ -894,6 +913,11 @@ public:
 		WARNING,
 		INFO,
 	};
+	enum class EMessageBoxStyle
+	{
+		SYSTEM,
+		QM_FESTIVE,
+	};
 	/**
 	 * Description of a message box popup button.
 	 *
@@ -939,6 +963,10 @@ public:
 		 * Type of the message box.
 		 */
 		EMessageBoxType m_Type = EMessageBoxType::ERROR;
+		/**
+		 * Visual style of the message box. Unsupported styles fall back to the system style.
+		 */
+		EMessageBoxStyle m_Style = EMessageBoxStyle::SYSTEM;
 		/**
 		 * Buttons shown in the message box. At least one button is required.
 		 * The buttons are laid out from left to right.

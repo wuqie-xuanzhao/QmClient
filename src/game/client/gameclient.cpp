@@ -346,6 +346,7 @@ namespace
 		Sample.m_ClientId = ClientId;
 		Sample.m_AttackTick = pCurrent->m_AttackTick;
 		Sample.m_Weapon = pCurrent->m_Weapon;
+		Sample.m_PrevWeapon = pPrevious != nullptr ? pPrevious->m_Weapon : pCurrent->m_Weapon;
 		Sample.m_HammerHitEnabled = HammerHitEnabled;
 		Sample.m_PrevPos = pPrevious != nullptr ? vec2(pPrevious->m_X, pPrevious->m_Y) : vec2(pCurrent->m_X, pCurrent->m_Y);
 		Sample.m_CurPos = vec2(pCurrent->m_X, pCurrent->m_Y);
@@ -583,6 +584,7 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_QmChatEmoji, "chat_emoji");
 	AddComponent(&m_QmMonitoring, "monitoring");
 	AddComponent(&m_QmWeaponTrajectory, "weapon_trajectory");
+	AddComponent(&m_RankGhost, "rank_ghost");
 	AddComponent(&m_TClient, "tclient");
 	AddComponent(&m_FastPractice, "fast_practice");
 	AddComponent(&m_Voice, "voice");
@@ -897,6 +899,8 @@ void CGameClient::OnInit()
 	m_RenderTools.Init(Graphics(), TextRender(), this); // TClient
 	m_RenderMap.Init(Graphics(), TextRender());
 	m_QmIconManager.Init(Graphics(), Storage(), Console());
+	// 遗留 UI（CUi）的图标绘制走图集优先、字形回退。
+	m_UI.SetQmIconManager(&m_QmIconManager);
 	m_AppliedQmUiIconWeight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 
 	if(GIT_SHORTREV_HASH)
@@ -3102,8 +3106,11 @@ void CGameClient::RenderShutdownMessage()
 	// This function only gets called after the render loop has already terminated, so we have to call Swap manually.
 	Graphics()->Clear(0.0f, 0.0f, 0.0f);
 	Ui()->MapScreen();
+	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
+	TextRender()->SetRenderFlags(PreviousRenderFlags | TEXT_RENDER_FLAG_FORCE_SYNCHRONOUS);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Ui()->DoLabel(Ui()->Screen(), pMessage, 16.0f, TEXTALIGN_MC);
+	TextRender()->SetRenderFlags(PreviousRenderFlags);
 	Graphics()->Swap();
 	Graphics()->Clear(0.0f, 0.0f, 0.0f);
 }
@@ -3184,10 +3191,17 @@ void CGameClient::ProcessEvents()
 			const CNetEvent_DamageInd *pEvent = (const CNetEvent_DamageInd *)Item.m_pData;
 
 			vec2 DamageIndPos = vec2(pEvent->m_X, pEvent->m_Y);
-			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, DamageIndPos, -1, Client()->GameTick(g_Config.m_ClDummy), pEvent->m_Angle)))
+			bool UnplayedMatch = false;
+			const bool PredictedHandled = m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, DamageIndPos, -1, Client()->GameTick(g_Config.m_ClDummy), pEvent->m_Angle), &UnplayedMatch);
+			if(!PredictedHandled)
 			{
 				m_Effects.DamageIndicator(vec2(pEvent->m_X, pEvent->m_Y), direction(pEvent->m_Angle / 256.0f), Alpha);
 				RememberConfirmedEvent(Item.m_Type, DamageIndPos, pEvent->m_Angle);
+			}
+			else if(UnplayedMatch)
+			{
+				// 确认先于预测播放到达：预测事件被标记但还没真正显示，快照路径代播一次。
+				m_Effects.DamageIndicator(vec2(pEvent->m_X, pEvent->m_Y), direction(pEvent->m_Angle / 256.0f), Alpha);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
@@ -3195,11 +3209,19 @@ void CGameClient::ProcessEvents()
 			const CNetEvent_Explosion *pEvent = (const CNetEvent_Explosion *)Item.m_pData;
 
 			vec2 ExplosionPos = vec2(pEvent->m_X, pEvent->m_Y);
-			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, ExplosionPos, -1, Client()->GameTick(g_Config.m_ClDummy))))
+			bool UnplayedMatch = false;
+			const bool PredictedHandled = m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, ExplosionPos, -1, Client()->GameTick(g_Config.m_ClDummy)), &UnplayedMatch);
+			if(!PredictedHandled)
 			{
 				const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));
 				m_Effects.Explosion(ExplosionPos, ExplosionAlpha);
 				RememberConfirmedEvent(Item.m_Type, ExplosionPos);
+			}
+			else if(UnplayedMatch)
+			{
+				// 确认先于预测播放到达：代播一次，防止爆炸特效/声音丢失。
+				const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));
+				m_Effects.Explosion(ExplosionPos, ExplosionAlpha);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
@@ -3256,10 +3278,19 @@ void CGameClient::ProcessEvents()
 				continue;
 
 			vec2 SoundPos = vec2(pEvent->m_X, pEvent->m_Y);
-			if(!m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, SoundPos, -1, Client()->GameTick(g_Config.m_ClDummy), pEvent->m_SoundId)))
+			bool UnplayedMatch = false;
+			const bool PredictedHandled = m_PredictedWorld.CheckPredictedEventHandled(CGameWorld::CPredictedEvent(Item.m_Type, SoundPos, -1, Client()->GameTick(g_Config.m_ClDummy), pEvent->m_SoundId), &UnplayedMatch);
+			if(g_Config.m_DbgPredictEvents)
+				dbg_msg("pred_event", "snapshot sound=%d snaptick=%d pos=%.1f,%.1f predicted_handled=%d unplayed=%d", pEvent->m_SoundId, EventTick, SoundPos.x, SoundPos.y, PredictedHandled, UnplayedMatch);
+			if(!PredictedHandled)
 			{
 				m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, SoundPos);
 				RememberConfirmedEvent(Item.m_Type, SoundPos, pEvent->m_SoundId);
+			}
+			else if(UnplayedMatch)
+			{
+				// 确认先于预测播放到达：预测事件被标记但从未发声，快照路径代播一次。
+				m_Sounds.PlayAt(CSounds::CHN_WORLD, pEvent->m_SoundId, 1.0f, SoundPos);
 			}
 		}
 		else if(Item.m_Type == NETEVENTTYPE_MAPSOUNDWORLD)
@@ -3304,13 +3335,42 @@ void CGameClient::FinalizeHammerHitEvents()
 		if((IsLocalClientId(Hit.m_AttackerId) || IsLocalClientId(Hit.m_TargetId)) && m_HammerHitTracker.Record(Hit))
 			HandleConfirmedHammerHit(Hit);
 
-		const bool PredictedHandled = Match.m_AttackerId >= 0 && Match.m_TargetId >= 0 && m_PredictedWorld.CheckPredictedHammerHitHandled(CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId));
-		if(Event.m_RenderEffect && !PredictedHandled)
+		// QmClient: 严格匹配需要完整推断出 attacker+target；target 归属推断
+		// 失败时（多目标歧义/目标已飞走/快照样本不足），特效去重退化为
+		// "本地攻击者 + 位置窗口"匹配——预测事件只可能由本地角色产生，
+		// 因此只对本地攻击者做兜底，避免吞掉别人锤击的合法特效。
+		bool PredictedHandled = false;
+		bool UnplayedMatch = false;
+		if(Match.m_AttackerId >= 0 && Match.m_TargetId >= 0)
+			PredictedHandled = m_PredictedWorld.CheckPredictedHammerHitHandled(CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, Event.m_Pos, Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId), &UnplayedMatch);
+		if(!PredictedHandled && Match.m_AttackerId >= 0 && IsLocalClientId(Match.m_AttackerId))
+			PredictedHandled = m_PredictedWorld.CheckPredictedHammerHitHandledLoose(Match.m_AttackerId, Event.m_Pos, Event.m_SnapshotTick);
+		// UnplayedMatch：确认命中"预测已创建但尚未播放"的事件 → 快照路径代播，
+		// 防止特效（含声音）因确认先于预测播放而整体丢失。
+		const int64_t Now = time_get_nanoseconds().count();
+		constexpr int64_t DuplicateDeliveryWindowNs = 100 * 1000 * 1000; // 100ms
+		const bool DuplicateDelivery = (Now - m_LastHammerEffectTime) < DuplicateDeliveryWindowNs &&
+					       Event.m_SnapshotTick >= m_LastHammerEffectTick && Event.m_SnapshotTick - m_LastHammerEffectTick <= 3 &&
+					       distance_squared(m_LastHammerEffectPos, Event.m_Pos) < 32.0f * 32.0f;
+		if(Event.m_RenderEffect && (!PredictedHandled || UnplayedMatch))
 		{
-			const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);
-			m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);
-			if(Match.m_AttackerId >= 0 && Match.m_TargetId >= 0)
-				RememberConfirmedEvent(Event.m_Pos, Match.m_AttackerId, Match.m_TargetId, Event.m_SnapshotTick);
+			if(DuplicateDelivery)
+			{
+				if(g_Config.m_DbgPredictEvents)
+					dbg_msg("pred_event", "hammerhit-effect duplicate-delivery suppressed snaptick=%d pos=%.1f,%.1f", Event.m_SnapshotTick, Event.m_Pos.x, Event.m_Pos.y);
+			}
+			else
+			{
+				m_LastHammerEffectPos = Event.m_Pos;
+				m_LastHammerEffectTick = Event.m_SnapshotTick;
+				m_LastHammerEffectTime = Now;
+				if(g_Config.m_DbgPredictEvents)
+					dbg_msg("pred_event", "hammerhit-effect source=snapshot snaptick=%d pos=%.1f,%.1f attacker=%d target=%d", Event.m_SnapshotTick, Event.m_Pos.x, Event.m_Pos.y, Match.m_AttackerId, Match.m_TargetId);
+				const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);
+				m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);
+				if(Match.m_AttackerId >= 0 && Match.m_TargetId >= 0)
+					RememberConfirmedEvent(Event.m_Pos, Match.m_AttackerId, Match.m_TargetId, Event.m_SnapshotTick);
+			}
 		}
 	}
 	m_vPendingHammerHitEvents.clear();
@@ -5002,13 +5062,27 @@ void CGameClient::OnPredict()
 				}
 			if(g_Config.m_SndGame && !m_SuppressEvents)
 			{
+				// QmClient: 这些本地角色核心事件声音在预测侧立即播放，
+				// 必须同时登记已处理屏障事件，否则快照确认路径会因为
+				// 找不到匹配记录而把同一服务端声音再播一次（双重声音）。
 				if(Events & COREEVENT_GROUND_JUMP)
+				{
 					if(ShouldPlayFocusJumpSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteJumpSounds != 0, g_Config.m_SndGame))
+					{
 						m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
+						m_PredictedWorld.CreateHandledPredictedSound(Pos, SOUND_PLAYER_JUMP, pLocalChar->GetCid());
+					}
+				}
 				if(Events & COREEVENT_HOOK_ATTACH_GROUND)
+				{
 					m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
+					m_PredictedWorld.CreateHandledPredictedSound(Pos, SOUND_HOOK_ATTACH_GROUND, pLocalChar->GetCid());
+				}
 				if(Events & COREEVENT_HOOK_HIT_NOHOOK)
+				{
 					m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
+					m_PredictedWorld.CreateHandledPredictedSound(Pos, SOUND_HOOK_NOATTACH, pLocalChar->GetCid());
+				}
 				if(Events & COREEVENT_HOOK_ATTACH_PLAYER)
 				{
 					m_PredictedWorld.CreatePredictedSound(Pos, SOUND_HOOK_ATTACH_PLAYER, pLocalChar->GetCid());
@@ -5490,7 +5564,10 @@ void CGameClient::CClientData::BuildLocalSkinDescriptor(CSkinDescriptor &SkinDes
 	CTranslationContext::CClientData &TranslatedClient = m_pGameClient->m_pClient->m_TranslationContext.m_aClients[ClientId()];
 	const bool UseServerControlledSkin =
 		m_pGameClient->m_pClient->State() == IClient::STATE_ONLINE && m_pGameClient->ShouldUseServerControlledLocalSkin();
-	if(UseServerControlledSkin && TranslatedClient.m_Active)
+	// 0.7 皮肤部件只有在 0.7 连接且服务器实际下发了部件时才可用；否则退回六部位皮肤。
+	const EServerSkinProtocol Protocol = ResolveServerSkinProtocol(
+		m_pGameClient->m_pClient->IsSixup(), UseServerControlledSkin, TranslatedClient.m_Active);
+	if(Protocol == EServerSkinProtocol::SEVEN)
 	{
 		SkinDescriptor.m_Flags |= CSkinDescriptor::FLAG_SEVEN;
 		for(int SkinDummy = 0; SkinDummy < NUM_DUMMIES; ++SkinDummy)
@@ -5503,7 +5580,7 @@ void CGameClient::CClientData::BuildLocalSkinDescriptor(CSkinDescriptor &SkinDes
 			SkinDescriptor.m_aSixup[SkinDummy].m_BotDecoration = (TranslatedClient.m_PlayerFlags7 & protocol7::PLAYERFLAG_BOT) != 0;
 		}
 	}
-	else if(m_Active)
+	else if(Protocol == EServerSkinProtocol::SIX && m_Active)
 	{
 		SkinDescriptor.m_Flags |= CSkinDescriptor::FLAG_SIX;
 		str_copy(SkinDescriptor.m_aSkinName, UseServerControlledSkin ? m_aSkinName : (Dummy ? g_Config.m_ClDummySkin : g_Config.m_ClPlayerSkin));
@@ -5613,6 +5690,8 @@ namespace
 		}
 	}
 
+	// 兜底皮肤：优先 "default"，其次沿用上游的占位皮肤（其贴图为空，会由渲染层的
+	// IsDrawableTexture 守卫跳过绘制），绝不留下一份「已 Reset 但被当作有效」的渲染信息。
 	bool ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info, unsigned SkinDescriptorFlags)
 	{
 		if(!pGameClient)
@@ -5622,7 +5701,9 @@ namespace
 		bool Ready = false;
 		if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SIX)
 		{
-			if(const CSkin *pSkin = pGameClient->m_Skins.FindOrNullptr("default"))
+			// 用 Find 而非 FindOrNullptr：Find 在 "default" 不可用时还有占位皮肤这一级兜底。
+			const CSkin *pSkin = pGameClient->m_Skins.Find("default");
+			if(pSkin != nullptr)
 			{
 				Info.Apply(pSkin);
 				Ready = Info.SixDescriptorReady();
@@ -5697,9 +5778,24 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	else if(!DescriptorRenderInfoReady)
 	{
 		const float OriginalSize = NewRenderInfo.m_Size;
+		const CTeeRenderInfo PreviousRenderInfo = m_RenderInfo;
 		BuildDefaultSkinDescriptor(RenderSkinDescriptor, SkinDescriptor.m_Flags);
 		if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))
-			NewRenderInfo.Reset();
+		{
+			// 默认皮肤也不可绘制（贴图被卸载或异步任务尚未提交）。此时不能保留一份
+			// 无有效贴图的渲染信息，否则渲染层会把无效句柄当作纹理绘制成白色方块。
+			// 优先沿用上一帧可绘制的渲染信息；否则彻底清空，让渲染层跳过绘制。
+			if(PreviousRenderInfo.Valid())
+			{
+				const CTeeRenderInfo SkinProperties = NewRenderInfo;
+				NewRenderInfo = PreviousRenderInfo;
+				CopySkinColorsOnly(NewRenderInfo, SkinProperties);
+			}
+			else
+			{
+				NewRenderInfo.Reset();
+			}
+		}
 		NewRenderInfo.m_Size = OriginalSize;
 	}
 
@@ -5759,7 +5855,19 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		const bool KeepTeamColors = m_pGameClient->IsTeamPlay();
 
 		if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))
-			NewRenderInfo.Reset();
+		{
+			// 默认皮肤不可绘制时沿用原渲染信息，避免留下无贴图的白色方块。
+			if(OriginalInfo.Valid())
+			{
+				const CTeeRenderInfo SkinProperties = NewRenderInfo;
+				NewRenderInfo = OriginalInfo;
+				CopySkinColorsOnly(NewRenderInfo, SkinProperties);
+			}
+			else
+			{
+				NewRenderInfo.Reset();
+			}
+		}
 		NewRenderInfo.m_Size = OriginalSize;
 
 		if(KeepTeamColors)
@@ -6057,7 +6165,10 @@ CSkinDescriptor CGameClient::CClientData::ToSkinDescriptor() const
 
 	const bool UseServerControlledSkin =
 		m_pGameClient->m_pClient->State() == IClient::STATE_ONLINE && m_pGameClient->ShouldUseServerControlledLocalSkin();
-	if(UseServerControlledSkin && TranslatedClient.m_Active)
+	// 与 BuildLocalSkinDescriptor 同源：协议版本决定可用皮肤部件族，白名单只决定是否采用服务器皮肤。
+	const EServerSkinProtocol Protocol = ResolveServerSkinProtocol(
+		m_pGameClient->m_pClient->IsSixup(), UseServerControlledSkin, TranslatedClient.m_Active);
+	if(Protocol == EServerSkinProtocol::SEVEN)
 	{
 		SkinDescriptor.m_Flags |= CSkinDescriptor::FLAG_SEVEN;
 		for(int Dummy = 0; Dummy < NUM_DUMMIES; Dummy++)
@@ -6070,7 +6181,7 @@ CSkinDescriptor CGameClient::CClientData::ToSkinDescriptor() const
 			SkinDescriptor.m_aSixup[Dummy].m_BotDecoration = (TranslatedClient.m_PlayerFlags7 & protocol7::PLAYERFLAG_BOT) != 0;
 		}
 	}
-	else if(m_Active)
+	else if(Protocol == EServerSkinProtocol::SIX && m_Active)
 	{
 		SkinDescriptor.m_Flags |= CSkinDescriptor::FLAG_SIX;
 		str_copy(SkinDescriptor.m_aSkinName, m_aSkinName);
@@ -6903,6 +7014,8 @@ void CGameClient::HandlePredictedEvents(const int Tick)
 					EventsIterator = m_PredictedWorld.m_PredictedEvents.erase(EventsIterator);
 					continue;
 				}
+				if(g_Config.m_DbgPredictEvents)
+					dbg_msg("pred_event", "predict-play sound=%d tick=%d pos=%.1f,%.1f", EventsIterator->m_ExtraInfo, EventsIterator->m_Tick, EventsIterator->m_Pos.x, EventsIterator->m_Pos.y);
 				m_Sounds.PlayAt(CSounds::CHN_WORLD, EventsIterator->m_ExtraInfo, 1.0f, EventsIterator->m_Pos);
 			}
 			else if(EventsIterator->m_EventId == NETEVENTTYPE_EXPLOSION)
@@ -6911,6 +7024,8 @@ void CGameClient::HandlePredictedEvents(const int Tick)
 			}
 			else if(EventsIterator->m_EventId == NETEVENTTYPE_HAMMERHIT)
 			{
+				if(g_Config.m_DbgPredictEvents)
+					dbg_msg("pred_event", "hammerhit-effect source=predict tick=%d pos=%.1f,%.1f", EventsIterator->m_Tick, EventsIterator->m_Pos.x, EventsIterator->m_Pos.y);
 				m_Effects.HammerHit(EventsIterator->m_Pos, Alpha, 1.0f);
 			}
 			else if(EventsIterator->m_EventId == NETEVENTTYPE_DAMAGEIND)
@@ -7898,6 +8013,11 @@ void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pMan
 	if(SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SIX)
 	{
 		const CSkin *pSkin = m_Skins.FindOrNullptr(CSkin::IsValidName(SkinDescriptor.m_aSkinName) ? SkinDescriptor.m_aSkinName : "default");
+		if(pSkin == nullptr || !CTeeRenderInfo::IsDrawableTexture(pSkin->m_OriginalSkin.m_Body))
+		{
+			// 目标皮肤尚未加载完成或被卸载，先退回 "default"，避免把空贴图提交为可绘制皮肤。
+			pSkin = m_Skins.Find("default");
+		}
 		if(pSkin != nullptr)
 		{
 			TeeInfo.Apply(pSkin);

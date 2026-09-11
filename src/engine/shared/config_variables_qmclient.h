@@ -15,10 +15,14 @@ MACRO_CONFIG_INT(QmPerfDebug, qm_perf_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_S
 MACRO_CONFIG_INT(QmPerfLogfile, qm_perf_logfile, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Write performance debug logs to dedicated file")
 MACRO_CONFIG_INT(QmPerfDebugThresholdMs, qm_perf_debug_threshold_ms, 4, 1, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Performance debug log threshold (ms)")
 MACRO_CONFIG_INT(QmPerfStutterDiagnostics, qm_perf_stutter_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable client stutter diagnostics at startup")
-MACRO_CONFIG_INT(QmMacosGraphicsDiagnostics, qm_macos_graphics_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable macOS graphics diagnostics and Instruments signposts")
+// QmClient: 单帧字形光栅化预算（毫秒）。判定规则：单个文本串的未缓存字形
+// 估算成本 >= 该预算时，该文本串整体推迟到后续帧（当帧不渲染，字形补齐
+// 后下一帧完整出现）；小文本串永远同步完整渲染。0 = 禁用（所有文本同步渲染）。
+MACRO_CONFIG_INT(QmTextRasterizeBudgetMs, qm_text_rasterize_budget_ms, 30, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)")
+MACRO_CONFIG_INT(QmGraphicsTrace, qm_graphics_trace, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace")
+MACRO_CONFIG_INT(QmMacosGraphicsDiagnostics, qm_macos_graphics_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Deprecated compatibility alias for qm_graphics_trace (macOS signposts)")
 MACRO_CONFIG_INT(QmGraphicsMode, qm_graphics_mode, 1, -1, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)")
 MACRO_CONFIG_INT(QmVulkanApiVersion, qm_vulkan_api_version, 14, 11, 14, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1")
-MACRO_CONFIG_INT(QmProcessHighPriority, qm_process_high_priority, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Toggle client process normal/high priority on Windows")
 MACRO_CONFIG_INT(QmNetQos, qm_net_qos, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Prioritize outgoing game traffic on Windows (best effort)")
 MACRO_CONFIG_INT(QmAssetsPreviewBudgetMbOverride, qm_assets_preview_budget_mb_override, 0, 0, 16384, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Resource preview VRAM budget override (MB, 0=auto)")
 MACRO_CONFIG_INT(QmAssetsPreviewBudgetPercent, qm_assets_preview_budget_percent, 8, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Resource preview VRAM budget percentage (based on device local VRAM budget)")
@@ -70,7 +74,8 @@ MACRO_CONFIG_STR(QmReportAppId, qm_report_app_id, 128, "desktop", CFGFLAG_CLIENT
 MACRO_CONFIG_STR(QmReportSecret, qm_report_secret, 128, "SsF-7wLdC9dO-RCb5sGieLII9gVW0v5lPpiK6zitUNo", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Report service signing key")
 
 // UI / 界面
-MACRO_CONFIG_INT(QmGaussianBlur, qm_gaussian_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Gaussian blur for translucent interface and selected HUD backgrounds")
+MACRO_CONFIG_INT(QmGaussianBlur, qm_gaussian_blur, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable backdrop blur for translucent interface and selected HUD backgrounds")
+MACRO_CONFIG_INT(QmBlurMode, qm_blur_mode, 0, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase")
 
 // Scoreboard / 计分板
 MACRO_CONFIG_INT(QmScoreboardPoints, qm_scoreboard_points, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Scoreboard score lookup")

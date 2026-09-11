@@ -33,7 +33,7 @@ namespace
 	constexpr int gs_ButtonIdBase = 4100;
 	constexpr UINT gs_FireworksTimerId = 1;
 	constexpr UINT gs_FireworksTimerPeriodMs = 33;
-	constexpr int gs_FireworksFrameCount = 240;
+	constexpr int gs_FireworksFrameCount = 270;
 	constexpr int gs_FireworksParticleCount = 192;
 	constexpr int gs_FireworksParticlesPerBurst = 24;
 	constexpr int gs_FireworksBurstDuration = 62;

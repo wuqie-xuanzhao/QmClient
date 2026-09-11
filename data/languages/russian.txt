@@ -218,7 +218,7 @@
 == 1 звезда
 
 128 player id <-> 64 player id map update rate
-== 128 player id <-> 64 player id map update rate
+== Частота обновления карты для ID игроков 128 <-> 64
 
 2 stars
 == 2 звезды
@@ -920,9 +920,6 @@ Audio slots
 AUS
 == Австралия
 
-Auth level required to send phone to others.
-== Уровень авторизации, необходимый для отправки телефона другим.
-
 Authed name color in scoreboard
 == Цвет имени авторизованного в таблице лидеров
 
@@ -1220,6 +1217,9 @@ Axiom scores
 Axis
 == Ось
 
+Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
+== Алгоритм размытия фона: 0=Гаусс, 1=Kawase, 2=Dual Kawase
+
 Backend to use (e.g. OpenGL or Vulkan)
 == Используемый бэкенд (например, OpenGL или Vulkan)
 
@@ -1447,6 +1447,9 @@ Blue team
 
 Blue team wins!
 == Синяя команда побеждает!
+
+Blur mode
+== Режим размытия
 
 Body
 == Тело
@@ -2453,9 +2456,6 @@ Current rescue mode: %s
 Current status
 == Текущий статус
 
-Current time: %s
-== Текущее время: %s
-
 Current: Ranks
 == Текущее: Ранги
 
@@ -2567,6 +2567,9 @@ Darken Tee color when frozen (0-100)
 Data
 == Данные
 
+Data source
+== Источник данных
+
 Date
 == Дата
 
@@ -2597,9 +2600,6 @@ DDNet / Total CPU
 DDNet Client needs to be restarted to complete update!
 == Для завершения обновления необходимо перезапустить клиент DDNet!
 
-DDNet finish totals come from official player data.
-== Общее число прохождений DDNet взято из официальных данных игроков.
-
 DDNet Memory
 == Память DDNet
 
@@ -2626,6 +2626,9 @@ DDRace HUD
 
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork — это кооперативная онлайн-игра, где ваша цель и цель вашей группы ти — достичь финиша карты. Новичкам стоит начинать на серверах Novice, где находятся самые простые карты. Учитывайте пинг при выборе ближайшего к вам сервера.
+
+DDRaceNetwork · DDNet
+== DDRaceNetwork · DDNet
 
 ddstats.tw ID stats
 == Статистика ID на ddstats.tw
@@ -2658,7 +2661,7 @@ Debug group clipping.
 == Отладка обрезки групп.
 
 Debug HTTP
-== Debug HTTP
+== Отладка HTTP
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Режим отладки включён. Нажмите Ctrl+Shift+D, чтобы отключить режим отладки.
@@ -2827,6 +2830,9 @@ Demos directory
 
 Depending on the number of supplied arguments, teleport yourself to; (0.) where you are spectating or aiming; (1.) the specified player name
 == В зависимости от количества переданных аргументов, телепортироваться: (0.) туда, куда вы смотрите или за кем наблюдаете; (1.) к указанному игроку
+
+Deprecated compatibility alias for qm_graphics_trace (macOS signposts)
+== Устаревший псевдоним совместимости для qm_graphics_trace (сигнпосты macOS)
 
 Deprecated. Use either 'muteid <client_id> <seconds> <reason>' or 'muteip <ip> <seconds> <reason>'
 == Устарело. Используйте 'muteid <client_id> <seconds> <reason>' или 'muteip <ip> <seconds> <reason>'
@@ -3071,6 +3077,9 @@ Download community skins
 Download failed
 == Скачивание не удалось
 
+Download rank ghost
+== Скачать ghost ранга
+
 Download skins
 == Скачать скины
 
@@ -3139,6 +3148,9 @@ Drift smoothness
 
 Drop on right canvas to replace one part.
 == Перетащите на правое полотно, чтобы заменить одну часть.
+
+Dual Kawase
+== Двойной Kawase
 
 Dummies are not allowed on this server
 == Дамми не разрешены на этом сервере
@@ -3422,8 +3434,17 @@ Enable and calibrate controller input
 Enable antiping (more aggressive prediction)
 == Включить антипинг (более агрессивное предсказание)
 
+Enable antispoof for vanilla 0.6 clients
+== Включить защиту от подмены для ванильных клиентов 0.6
+
 Enable audio output and choose a device
 == Enable audio output and choose a device
+
+Enable backdrop blur
+== Включить размытие фона
+
+Enable backdrop blur for translucent interface and selected HUD backgrounds
+== Включить размытие фона для полупрозрачного интерфейса и выбранных фонов HUD
 
 Enable background 3D particle flicker
 == Включить мерцание фоновых 3D-частиц
@@ -3436,9 +3457,6 @@ Enable background 3D particle pulse scaling
 
 Enable background 3D particle trail
 == Включить шлейф фоновых 3D-частиц
-
-Enable basic anti-spoof
-== Включить базовую анти-спуфинг защиту
 
 Enable camera drift
 == Включить дрейф камеры
@@ -3466,6 +3484,9 @@ Enable colored console output
 
 Enable coloring and hearts for friends
 == Включить раскраску и сердечки для друзей
+
+Enable connections from vanilla 0.6 clients
+== Разрешить подключения от ванильных клиентов 0.6
 
 Enable controller
 == Включить контроллер
@@ -3530,12 +3551,6 @@ Enable FTAPI auto-translate (may overload the service)
 Enable game sounds
 == Включить звуки игры
 
-Enable Gaussian blur
-== Включить размытие по Гауссу
-
-Enable Gaussian blur for translucent interface and selected HUD backgrounds
-== Включить размытие по Гауссу для полупрозрачного интерфейса и выбранных фонов HUD
-
 Enable ghost
 == Включить призрак
 
@@ -3580,9 +3595,6 @@ Enable LLM thinking mode (may increase response time)
 
 Enable lyrics
 == Включить текст песни
-
-Enable macOS graphics diagnostics and Instruments signposts
-== Включить графическую диагностику macOS и метки Instruments
 
 Enable main thread and render stage performance debug logging
 == Включить отладочный лог производительности главного потока и рендеринга
@@ -3965,6 +3977,9 @@ Fade out
 Fade trail alpha
 == Затухание альфа-канала следа
 
+Failed
+== Ошибка
+
 Failed saving the replay!
 == Не удалось сохранить повтор!
 
@@ -4024,6 +4039,9 @@ Fast input others
 
 Fast practice
 == Быстрая тренировка
+
+Fast, lightweight blur with a softer approximation.
+== Быстрое и лёгкое размытие с более мягким приближением.
 
 Fat skins (DDFat)
 == Толстые скины (DDFat)
@@ -4207,6 +4225,9 @@ Fraction of players needed to pass a vote
 
 Frags
 == Фраги
+
+Frame quality
+== Качество кадра
 
 Frame rate
 == Частота кадров
@@ -4421,6 +4442,9 @@ Gap between statusbar items
 Gap between tee and nametag
 == Расстояние между ти и табличкой с именем
 
+Gaussian
+== Гаусс
+
 General
 == Общие
 
@@ -4556,6 +4580,9 @@ Gores Mode
 Gores mode key
 == Клавиша режима Gores
 
+Gores · Axiom
+== Gores · Axiom
+
 GPU name, chosen by backend (if supported)
 == Название GPU, выбранное бэкендом (если поддерживается)
 
@@ -4571,9 +4598,6 @@ Gradient color
 Graphics
 == Графика
 
-Graphics backend
-== Графический бэкенд
-
 Graphics card
 == Видеокарта
 
@@ -4581,7 +4605,7 @@ Graphics display
 == Отображение графики
 
 Graphics Error
-== Graphics Error
+== Ошибка графики
 
 Graphics library major version (0 = auto-detect)
 == Основная версия графической библиотеки (0 = автоопределение)
@@ -4594,6 +4618,15 @@ Graphics library patch version
 
 Graphics library texture sampling lod bias multiplied by 1000
 == Смещение LOD сэмплирования текстур графической библиотеки, умноженное на 1000
+
+Graphics mode
+== Графический режим
+
+Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)
+== Графический режим: -1 = использовать настройку бэкенда, 0 = совместимость, 1 = производительность (по умолчанию)
+
+Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace
+== Уровень трассировки графики: 0 = выкл., 1 = периодическая сводка, 2 = сводка и медленные кадры, 3 = подробная трассировка бэкенда
 
 Greeting text
 == Текст приветствия
@@ -4819,9 +4852,6 @@ Hide weapon muzzle flashes
 
 High Detail
 == Высокая детализация
-
-High process priority
-== Высокий приоритет процесса
 
 High to low
 == От высокого к низкому
@@ -5160,7 +5190,7 @@ Initializing components
 == Инициализация компонентов
 
 Initializing layers
-== Initializing layers
+== Инициализация слоёв
 
 Initializing map logic
 == Инициализация логики карты
@@ -5369,6 +5399,9 @@ k = Resend loss
 Kaomoji
 == Каомодзи
 
+Kawase
+== Kawase
+
 Keep hook when teleporting
 == Сохранять крюк при телепортации
 
@@ -5525,6 +5558,9 @@ Last entered
 Last page in console
 == Последняя страница в консоли
 
+Last successful sync: %s
+== Последняя успешная синхронизация: %s
+
 Latency
 == Задержка
 
@@ -5606,9 +5642,6 @@ Linear
 Lines %d - %d (%s)
 == Строки %d - %d (%s)
 
-Links below open external ID and map statistics.
-== Ссылки ниже открывают внешнюю статистику ID и прохождений карт.
-
 List all commands that are available in practice mode
 == Список всех команд, доступных в режиме практики
 
@@ -5686,6 +5719,9 @@ Load drawings from a given csv file (defaults to map name)
 
 Load sound files in thread
 == Загружать звуковые файлы в потоке
+
+Load the official rank replay of a map as a ghost (default: current map, rank 1)
+== Загрузить официальный реплей ранга карты как ghost (по умолчанию: текущая карта, ранг 1)
 
 Load with code r. /load to check your existing saves
 == Загрузить с кодом r. /load для проверки существующих сохранений
@@ -5765,9 +5801,6 @@ Local + Dummy
 Local game mode statistics
 == Статистика локальных игровых режимов
 
-Local mode statistics are stored on this client.
-== Статистика локальных игровых режимов хранится в этом клиенте.
-
 Local only
 == Только локальный
 
@@ -5803,6 +5836,9 @@ Locked
 
 Log output filename
 == Имя файла вывода лога
+
+Log predicted event creation/playback and snapshot confirmation to debug double sounds.
+== Записывать создание/воспроизведение предсказанных событий и подтверждение снимков для отладки двойных звуков.
 
 Log the network
 == Логировать сеть
@@ -6033,13 +6069,13 @@ Maximum auto-saves retained per map name (0=unlimited)
 == Максимальное количество сохраняемых автосохранений на имя карты (0=без ограничений)
 
 Maximum banned addresses sent their ban message per second (0 = unlimited).
-== Maximum banned addresses sent their ban message per second (0 = unlimited).
+== Максимальное число заблокированных адресов, которым отправляется сообщение о бане в секунду (0 = без ограничений).
 
 Maximum clients per IP
 == Максимальное количество клиентов на IP
 
 Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
-== Maximum compressed packets from unconnected addresses decompressed per second (0 = unlimited).
+== Максимальное число сжатых пакетов от неподключённых адресов, распаковываемых в секунду (0 = без ограничений).
 
 Maximum cursor distance
 == Максимальное расстояние курсора
@@ -6072,22 +6108,22 @@ Maximum number of clients on server
 == Максимальное количество клиентов на сервере
 
 Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
-== Maximum number of packets received in one batch before returning to the main loop (0 = unlimited).
+== Максимальное число пакетов, получаемых за одну пачку до возврата в главный цикл (0 = без ограничений).
 
 Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
-== Maximum number of pre-inputs per tick and client sent to other clients (0 for no limit)
+== Максимальное число предварительных вводов на тик и клиента, отправляемых другим клиентам (0 = без ограничений)
 
 Maximum number of resend requests answered per second (0 for no limit)
-== Maximum number of resend requests answered per second (0 for no limit)
+== Максимальное число отвеченных запросов на повторную отправку в секунду (0 = без ограничений)
 
 Maximum number of server info responses of any size sent per second (0 = unlimited).
-== Maximum number of server info responses of any size sent per second (0 = unlimited).
+== Максимальное число ответов с информацией о сервере любого размера, отправляемых в секунду (0 = без ограничений).
 
 Maximum number of skins loaded simultaneously
 == Максимальное количество одновременно загружаемых скинов
 
 Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
-== Maximum number of vanilla antispoof handshakes answered per second (0 = unlimited).
+== Максимальное число ответов на ванильные рукопожатия защиты от подмены в секунду (0 = без ограничений).
 
 Maximum players participating in a vote (0 = unlimited)
 == Максимальное количество игроков, участвующих в голосовании (0 = без ограничений)
@@ -6331,6 +6367,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == Перемещает на тайл с номером x/y ii
+
+Multi-resolution blur with a stronger result and balanced GPU cost.
+== Многоуровневое размытие с более сильным эффектом и сбалансированной нагрузкой на GPU.
 
 Multi-View
 == Мульти-обзор
@@ -7280,14 +7319,17 @@ Password incorrect
 Password required to use reserved slots.
 == Пароль, необходимый для использования зарезервированных слотов.
 
+Past year
+== За последний год
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
-== Path to CA certificate for verifying the MySQL/MariaDB server certificate
+== Путь к сертификату CA для проверки сертификата сервера MySQL/MariaDB
 
 Path to client certificate for the MySQL/MariaDB SSL connection
-== Path to client certificate for the MySQL/MariaDB SSL connection
+== Путь к сертификату клиента для SSL-соединения MySQL/MariaDB
 
 Path to client key for the MySQL/MariaDB SSL connection
-== Path to client key for the MySQL/MariaDB SSL connection
+== Путь к ключу клиента для SSL-соединения MySQL/MariaDB
 
 Pause
 == Пауза
@@ -7306,6 +7348,9 @@ Pause/unpause game
 
 Penalty in seconds for saving or swapping positions
 == Штраф в секундах за сохранение или обмен позициями
+
+Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
+== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 
 Per-name volume (name=percent)
 == Индивидуальная громкость по имени (name=percent)
@@ -7644,7 +7689,7 @@ Predict grenade trajectory (only with cl_antiping 1)
 == Прогнозировать траекторию гранатомёта (только с cl_antiping 1)
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
-== Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
+== Предсказывать движение других игроков (включается только при cl_antiping = 1) (1 = всегда, 2 = только при взаимодействии, 3 = режим 2 и всегда для замороженных Tee)
 
 Predict weapon projectiles (only with cl_antiping 1)
 == Прогнозировать снаряды оружия (только с cl_antiping 1)
@@ -8027,6 +8072,72 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == Случайный цвет игрока (0 = все, 1 = тело, 2 = ноги, 3 = скин, 4 = флаг) пример: 0011 = случайный скин и флаг [цифра — позиция]
 
+Rank ghost loaded: %s, %s s. It follows your current run.
+== Ghost ранга загружен: %s, %s с. Следует за текущим прохождением.
+
+Rank ghost loaded: %s, %s s. It plays when you cross the start line.
+== Ghost ранга загружен: %s, %s с. Воспроизводится при пересечении стартовой линии.
+
+Rank ghost unloaded
+== Ghost ранга выгружен
+
+Rank ghost: another task is already running
+== Ghost ранга: уже выполняется другая задача
+
+Rank ghost: converting the replay ...
+== Ghost ранга: преобразование реплея…
+
+Rank ghost: could not extract the runner's path from the replay
+== Ghost ранга: не удалось извлечь путь бегуна из реплея
+
+Rank ghost: downloading the replay ...
+== Ghost ранга: загрузка реплея…
+
+Rank ghost: failed to download the replay
+== Ghost ранга: не удалось загрузить реплей
+
+Rank ghost: failed to fetch the replay list
+== Ghost ранга: не удалось получить список реплеев
+
+Rank ghost: failed to load the generated ghost (join the map first)
+== Ghost ранга: не удалось загрузить созданный ghost (сначала войдите на карту)
+
+Rank ghost: failed to load the replay: %s
+== Ghost ранга: не удалось загрузить реплей: %s
+
+Rank ghost: failed to write the ghost file
+== Ghost ранга: не удалось записать файл ghost
+
+Rank ghost: fetching the replay list ...
+== Ghost ранга: получение списка реплеев…
+
+Rank ghost: HTTP is not available
+== Ghost ранга: HTTP недоступен
+
+Rank ghost: no official replay for '%s' rank %d
+== Ghost ранга: нет официального реплея для '%s', ранг %d
+
+Rank ghost: replay converted, waiting for the map to load ...
+== Ghost ранга: реплей преобразован, ожидание загрузки карты…
+
+Rank ghost: specify a map name when not in a game
+== Ghost ранга: укажите название карты, если вы не в игре
+
+Rank ghost: the downloaded replay is not a valid demo
+== Ghost ранга: загруженный реплей не является допустимым демо
+
+Rank ghost: the replay has an invalid run range
+== Ghost ранга: у реплея недопустимый диапазон прохождения
+
+Rank ghost: the replay has no run start/end markers
+== Ghost ранга: в реплее нет маркеров начала/конца прохождения
+
+Rank ghost: the replay list is empty or malformed
+== Ghost ранга: список реплеев пуст или повреждён
+
+Rank ghost: timed out waiting for the map to load
+== Ghost ранга: время ожидания загрузки карты истекло
+
 Ratio
 == Соотношение
 
@@ -8035,6 +8146,9 @@ Ratio threshold for local target language detection
 
 Read new feature indicators
 == Прочитанные новинки
+
+Ready
+== Готово
 
 Reason
 == Причина
@@ -9176,9 +9290,6 @@ Set server to singleplayer mode (no player interaction, must be set before loadi
 Set team for a player (spectators = -1, game = 0)
 == Установить команду для игрока (наблюдатели = -1, игра = 0)
 
-Set team for all players (spectators = -1, game = 0)
-== Установить команду для всех игроков (наблюдатели = -1, игра = 0)
-
 Set timeout protection code s
 == Установить код защиты от тайм-аута s
 
@@ -9542,8 +9653,8 @@ Show hook strength number indicator
 Show hookable/unhookable tile outlines
 == Показывать контуры цепляемых/нецепляемых тайлов
 
-Show how weapons, shields, hearts, and flags appear in game
-== Показывать, как оружие, щиты, сердца и флаги выглядят в игре
+Show how weapons, shields, snowflakes, and flags appear in game
+== Показывать внешний вид оружия, щитов, снежинок и флагов в игре
 
 Show HUD
 == Показать HUD
@@ -10262,6 +10373,9 @@ Smaller tees
 Smart
 == Умный
 
+Smooth and accurate blur with the highest GPU cost.
+== Плавное и точное размытие с самой высокой нагрузкой на GPU.
+
 Smooth camera switch animation time when spectating (in ms, 0=off)
 == Время плавной анимации переключения камеры при наблюдении (в ms, 0 = выкл)
 
@@ -10748,6 +10862,9 @@ Sync remote stats
 Sync Workshop Assets
 == Синхронизировать ресурсы Мастерской
 
+Syncing
+== Синхронизация
+
 Syncing remote stats
 == Синхронизация удаленной статистики
 
@@ -10758,7 +10875,7 @@ System default
 == Системное значение по умолчанию
 
 System media control and lyrics
-== System media control and lyrics
+== Системное управление медиа и текст песен
 
 System media controls
 == Системные медиа-кнопки
@@ -11063,6 +11180,9 @@ Thanks for supporting QmClient
 The audio device couldn't be initialised.
 == Не удалось инициализировать аудиоустройство.
 
+The auth level you need to tele others
+== Уровень прав, необходимый для телепортации других игроков
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == Дополнительная кнопка меню, которая переключает видимость кнопок с видимостью «Дополнительное меню». Также открывает внутриигровое меню при долгом нажатии.
 
@@ -11079,7 +11199,7 @@ The FPS at which the recorder should record replay.
 == FPS, с которым рекордер должен записывать повтор.
 
 The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
+== Графический бэкенд неожиданно остановился, поэтому безопасные графические настройки не удалось сохранить.
 
 The name "default" is reserved.
 == Имя "default" зарезервировано.
@@ -11293,9 +11413,6 @@ Toggle auto camera
 
 Toggle between game scene preview and raw texture
 == Переключение между предпросмотром игровой сцены и сырой текстурой
-
-Toggle client process normal/high priority on Windows
-== Переключить приоритет процесса клиента между обычным и высоким в Windows
 
 Toggle config value
 == Переключить значение настройки
@@ -11744,6 +11861,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == Неизвестный статус
 
+Unload the rank ghost
+== Выгрузить ghost ранга
+
 Unlock a team
 == Разблокировать команду
 
@@ -12021,7 +12141,7 @@ Virtual joystick which always uses hook.
 == Виртуальный джойстик, который всегда использует крюк.
 
 Virtual joystick which only aims and moves the mouse pointer relatively.
-== Virtual joystick which only aims and moves the mouse pointer relatively.
+== Виртуальный джойстик только для прицеливания и относительного перемещения указателя мыши.
 
 Virtual joystick which only aims without using an action.
 == Виртуальный джойстик, который только прицеливается без использования действия.
@@ -12161,11 +12281,8 @@ Vote yes/no
 Voting
 == Голосование
 
-Vulkan API
-== API Vulkan
-
-Vulkan API version: 11=1.1 compatibility, 14=1.4 strict
-== Версия API Vulkan: 11=совместимость 1.1, 14=строгий режим 1.4
+Vulkan API version: 14=prefer 1.4 then 1.3 then 1.1, 13=prefer 1.3 then 1.1, 11=force 1.1
+== Версия Vulkan API: 14 = предпочитать 1.4, затем 1.3 и 1.1; 13 = предпочитать 1.3, затем 1.1; 11 = принудительно 1.1
 
 Wait for current vote to end before calling a new one.
 == Дождитесь окончания текущего голосования, прежде чем начинать новое.
@@ -12336,7 +12453,7 @@ Whether dummy jumps (requires cl_dummy_control 1)
 == Прыгает ли дамми (требуется cl_dummy_control 1)
 
 Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
-== Whether non-voting players are ignored (0) or are considered as votes for "no" (1)
+== Игнорировать ли игроков, не голосующих (0), или считать их голосами «нет» (1)
 
 Whether players can hammer/grenade/laser each other.
 == Могут ли игроки бить друг друга молотом/гранатомётом/лазером.
@@ -12927,35 +13044,7 @@ Hook
 
 [Direct touch input]
 Relative aim
-== Relative aim
-
-[Editor]
-[Ctrl+F4] Close the current map.
-== [Ctrl+F4] Close the current map.
-
-[Editor]
-Close map
-== Close map
-
-[Editor]
-Discard changes
-== Discard changes
-
-[Editor]
-Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-== Do you want to save your changes before closing this map?\n\nYour changes will be lost if you discard them.
-
-[Editor]
-Open the directory for automapper rules in the file browser.
-== Open the directory for automapper rules in the file browser.
-
-[Editor]
-Save changes?
-== Save changes?
-
-[Editor]
-Show directory
-== Show directory
+== Относительное прицеливание
 
 [Editor curve type abbreviation]
 B
@@ -13018,8 +13107,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Не удалось инициализировать указанный графический бэкенд. Вероятно, вы не установили драйвер встроенной видеокарты.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Ошибка инициализации. Попробуйте изменить gfx_backend на OpenGL или Vulkan в файле qmclient/settings_ddnet.cfg в папке конфигурации и повторите попытку.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Ошибка инициализации. Попробуйте изменить gfx_backend на OpenGL или Vulkan в файле settings_ddnet.cfg в папке конфигурации и повторите попытку.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13034,8 +13123,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Ошибка отправки команд рендеринга. Попробуйте обновить драйверы GPU.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings_ddnet.cfg in the config directory and try again.
-== Неизвестная ошибка. Попробуйте изменить gfx_backend на OpenGL или Vulkan в файле qmclient/settings_ddnet.cfg в папке конфигурации и повторите попытку.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+== Неизвестная ошибка. Попробуйте изменить gfx_backend на OpenGL или Vulkan в файле settings_ddnet.cfg в папке конфигурации и повторите попытку.
 
 [Hammer Mode]
 Normal
@@ -13099,7 +13188,7 @@ Joystick Hook
 
 [Predefined touch button behaviors]
 Joystick Relative Aim
-== Joystick Relative Aim
+== Относительное прицеливание джойстиком
 
 [Predefined touch button behaviors]
 Spectate

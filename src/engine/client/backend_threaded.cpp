@@ -180,6 +180,7 @@ void CGraphicsBackend_Threaded::ProcessError(const SGfxErrorContainer &Error)
 			m_FatalError.append(ErrStr.m_Err);
 	}
 	std::string LogMessage = "Graphics Error:\n" + m_FatalError;
+	m_FatalErrorPending.store(true, std::memory_order_release);
 	dbg_assert_failed("%s", LogMessage.c_str());
 }
 

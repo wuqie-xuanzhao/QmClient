@@ -53,7 +53,7 @@ void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect
 	pTextRender->TextColor(IconColor);
 	pTextRender->SetFontPreset(EFontPreset::ICON_FONT_BOLD);
 	pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	Ctx.m_pUi->DoLabel(&ChromeRect, Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
+	Ctx.m_pUi->DoLabel_QmIcon(&ChromeRect, Collapsed ? EQmIcon::CHEVRON_DOWN : EQmIcon::CHEVRON_UP, Collapsed ? FontIcons::FONT_ICON_CHEVRON_DOWN : FontIcons::FONT_ICON_CHEVRON_UP, IconSize, TEXTALIGN_MC);
 	pTextRender->SetRenderFlags(PreviousFlags);
 	pTextRender->SetFontPreset(PreviousPreset);
 	pTextRender->TextOutlineColor(PreviousOutlineColor);

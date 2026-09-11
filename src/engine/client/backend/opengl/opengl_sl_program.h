@@ -200,12 +200,16 @@ public:
 	CGLSLGaussianBlurProgram() :
 		m_LocTexelOffset(-1),
 		m_LocRadius(-1),
+		m_LocMode(-1),
+		m_LocPass(-1),
 		m_LocWeights(-1)
 	{
 	}
 
 	int m_LocTexelOffset;
 	int m_LocRadius;
+	int m_LocMode;
+	int m_LocPass;
 	int m_LocWeights;
 };
 

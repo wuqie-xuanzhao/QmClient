@@ -36,6 +36,9 @@ public:
 
 	virtual CCamera *GetCurCamera();
 
+	// QmClient: 供菜单背景等调用方判断图层是否已经可以渲染，避免加载期间误报渲染成功。
+	bool IsMapLoaded() const { return m_MapLoaded; }
+
 	CEnvelopeState &EnvEvaluator() { return m_EnvEvaluator; }
 
 private:

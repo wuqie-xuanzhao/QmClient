@@ -24,6 +24,7 @@
 #include <game/client/components/qmclient/map_history_ui.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/client/ui_scrollregion.h>
@@ -404,7 +405,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		Headers.VSplitLeft(ms_ListheaderHeight, &ResetBtn, &Headers);
 		ResetBtn.Margin(3.0f, &ResetBtn);
 		static CButtonContainer s_ResetColsButton;
-		if(Ui()->DoButton_FontIcon(&s_ResetColsButton, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ResetBtn, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&s_ResetColsButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ResetBtn, BUTTONFLAG_LEFT))
 		{
 			g_Config.m_BrColWidthName = 120;
 			g_Config.m_BrColWidthGametype = 50;
@@ -610,7 +611,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		{
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ui()->DoLabel(&Col.m_Rect, FONT_ICON_HEART, 14.0f, TEXTALIGN_MC);
+			Ui()->DoLabel_QmIcon(&Col.m_Rect, EQmIcon::HEART, FONT_ICON_HEART, 14.0f, TEXTALIGN_MC);
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		}
@@ -618,7 +619,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		{
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-			Ui()->DoLabel(&Col.m_Rect, FONT_ICON_STAR, 14.0f, TEXTALIGN_MC);
+			Ui()->DoLabel_QmIcon(&Col.m_Rect, EQmIcon::STAR, FONT_ICON_STAR, 14.0f, TEXTALIGN_MC);
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		}
@@ -814,17 +815,25 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	if(FirstVisibleItem > 0)
 		s_ListBox.SkipItems(FirstVisibleItem);
 
-	const auto &&RenderBrowserIcons = [this](CUIElement::SUIElementRect &UIRect, CUIRect *pRect, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, const char *pText, int TextAlign, bool SmallFont = false) {
+	const auto &&RenderBrowserIcons = [this](CUIElement::SUIElementRect &UIRect, CUIRect *pRect, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, EQmIcon Icon, const char *pText, int TextAlign, bool SmallFont = false) {
 		const float FontSize = SmallFont ? 6.0f : 14.0f;
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 		TextRender()->TextColor(TextColor);
 		TextRender()->TextOutlineColor(TextOutlineColor);
-		Ui()->DoLabelStreamed(UIRect, pRect, pText, FontSize, TextAlign);
+		if(Icon != EQmIcon::COUNT)
+		{
+			// 图集优先；pText 为回退字形。
+			Ui()->DoLabel_QmIcon(pRect, Icon, pText, FontSize, TextAlign);
+		}
+		else
+		{
+			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+			Ui()->DoLabelStreamed(UIRect, pRect, pText, FontSize, TextAlign);
+			TextRender()->SetRenderFlags(0);
+			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		}
 		TextRender()->TextOutlineColor(TextRender()->DefaultTextOutlineColor());
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
-		TextRender()->SetRenderFlags(0);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	};
 
 	std::vector<CUIElement *> &vpServerBrowserUiElements = m_avpServerBrowserUiElements[ServerBrowser()->GetCurrentType()];
@@ -883,18 +892,18 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			{
 				if(pItem->m_Flags & SERVER_FLAG_PASSWORD)
 				{
-					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_LOCK_ICON), &Button, ColorRGBA(0.75f, 0.75f, 0.75f, 1.0f), TextRender()->DefaultTextOutlineColor(), FONT_ICON_LOCK, TEXTALIGN_MC);
+					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_LOCK_ICON), &Button, ColorRGBA(0.75f, 0.75f, 0.75f, 1.0f), TextRender()->DefaultTextOutlineColor(), EQmIcon::LOCK, FONT_ICON_LOCK, TEXTALIGN_MC);
 				}
 				else if(pItem->m_RequiresLogin)
 				{
-					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_KEY_ICON), &Button, ColorRGBA(0.75f, 0.75f, 0.75f, 1.0f), TextRender()->DefaultTextOutlineColor(), FONT_ICON_KEY, TEXTALIGN_MC);
+					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_KEY_ICON), &Button, ColorRGBA(0.75f, 0.75f, 0.75f, 1.0f), TextRender()->DefaultTextOutlineColor(), EQmIcon::KEY, FONT_ICON_KEY, TEXTALIGN_MC);
 				}
 			}
 			else if(Id == COL_FLAG_FAV)
 			{
 				if(pItem->m_Favorite != TRISTATE::NONE)
 				{
-					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FAVORITE_ICON), &Button, ColorRGBA(1.0f, 0.85f, 0.3f, 1.0f), TextRender()->DefaultTextOutlineColor(), FONT_ICON_STAR, TEXTALIGN_MC);
+					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FAVORITE_ICON), &Button, ColorRGBA(1.0f, 0.85f, 0.3f, 1.0f), TextRender()->DefaultTextOutlineColor(), EQmIcon::STAR, FONT_ICON_STAR, TEXTALIGN_MC);
 				}
 			}
 			else if(Id == COL_COMMUNITY)
@@ -954,7 +963,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 					if(g_Config.m_BrIndicateFinished && pItem->m_HasRank == CServerInfo::RANK_RANKED)
 					{
 						Icon.Margin(2.0f, &Icon);
-						RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FINISH_ICON), &Icon, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), FONT_ICON_FLAG_CHECKERED, TEXTALIGN_MC);
+						RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FINISH_ICON), &Icon, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), EQmIcon::FLAG_CHECKERED, FONT_ICON_FLAG_CHECKERED, TEXTALIGN_MC);
 					}
 				}
 
@@ -995,7 +1004,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			{
 				if(pItem->m_FriendState != IFriends::FRIEND_NO)
 				{
-					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FRIEND_ICON), &Button, ColorRGBA(0.94f, 0.4f, 0.4f, 1.0f), TextRender()->DefaultTextOutlineColor(), FONT_ICON_HEART, TEXTALIGN_MC);
+					RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FRIEND_ICON), &Button, ColorRGBA(0.94f, 0.4f, 0.4f, 1.0f), TextRender()->DefaultTextOutlineColor(), EQmIcon::HEART, FONT_ICON_HEART, TEXTALIGN_MC);
 
 					if(pItem->m_FriendNum > 1)
 					{
@@ -1115,11 +1124,8 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	}
 
 	const float SearchExcludeAddrStrMax = 130.0f;
-	TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-	const float ExcludeIconWidth = TextRender()->TextWidth(16.0f, FONT_ICON_BAN);
-	TextRender()->SetRenderFlags(0);
-	TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+	// 图集图标按方形绘制，宽度即字号。
+	const float ExcludeIconWidth = 16.0f;
 	const float SearchExcludeAddrInputOffset = SearchExcludeAddrStrMax + 5.0f + ExcludeIconWidth + 5.0f;
 
 	CUIRect SearchInfoAndAddr, ServersAndConnect, ServersPlayersOnline, SearchAndInfo, ServerAddr, ConnectButtons;
@@ -1166,7 +1172,7 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 	{
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ui()->DoLabel(&QuickExclude, FONT_ICON_BAN, 16.0f, TEXTALIGN_ML);
+		Ui()->DoLabel_QmIcon(&QuickExclude, EQmIcon::BAN, FONT_ICON_BAN, 16.0f, TEXTALIGN_ML);
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		CUIRect ExcludeLabel;
@@ -1699,7 +1705,7 @@ void CMenus::RenderServerbrowserCommunitiesFilter(CUIRect View)
 		str_format(aNumPlayersLabel, sizeof(aNumPlayersLabel), "%d", Community.NumPlayers());
 		Ui()->DoLabel(&PlayerCountLabel, aNumPlayersLabel, 7.0f, TEXTALIGN_MR);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		Ui()->DoLabel(&PlayerCountIcon, FONT_ICON_USER, 7.0f, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&PlayerCountIcon, EQmIcon::USER, FONT_ICON_USER, 7.0f, TEXTALIGN_MC);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 
@@ -2346,7 +2352,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		GroupIcon.Margin(2.0f, &GroupIcon);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->TextColor(HeaderHovered ? TextRender()->DefaultTextColor() : ColorRGBA(0.6f, 0.6f, 0.6f, 1.0f));
-		Ui()->DoLabel(&GroupIcon, m_vFriendsCategoryExpanded[CategoryIndex] ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, GroupIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&GroupIcon, m_vFriendsCategoryExpanded[CategoryIndex] ? EQmIcon::SQUARE_MINUS : EQmIcon::SQUARE_PLUS, m_vFriendsCategoryExpanded[CategoryIndex] ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, GroupIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		SplitFriendsCategoryHeaderRects(Header, nullptr, &ManageButton);
@@ -2364,7 +2370,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			const CUIRect Panel = CMenus::SecondaryPanelRect(Ui()->MouseX(), Ui()->MouseY(), 300.0f, CMenus::FriendsCategoryActionsPopupHeight(), *Ui()->Screen());
 			Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Panel.x, Panel.y, Panel.w, Panel.h, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
 		};
-		if(Ui()->DoButton_FontIcon(&m_vFriendsCategoryManageButtons[CategoryIndex], FONT_ICON_GEAR, 0, &ManageButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&m_vFriendsCategoryManageButtons[CategoryIndex], EQmIcon::GEAR, FONT_ICON_GEAR, 0, &ManageButton, BUTTONFLAG_LEFT))
 		{
 			OpenCategoryManagePopup();
 		}
@@ -2539,12 +2545,12 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					if(Friend.ServerInfo())
 					{
 						TextRender()->TextColor(FollowingThisFriend || Ui()->HotItem() == pFollowButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
-						Ui()->DoLabel(&FollowButton, FollowingThisFriend ? FONT_ICON_STOP : FONT_ICON_PLAY, FollowButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+						Ui()->DoLabel_QmIcon(&FollowButton, FollowingThisFriend ? EQmIcon::STOP : EQmIcon::PLAY, FollowingThisFriend ? FONT_ICON_STOP : FONT_ICON_PLAY, FollowButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 					}
 					TextRender()->TextColor(Ui()->HotItem() == pCopyButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
-					Ui()->DoLabel(&CopyButton, FONT_ICON_COPY, CopyButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+					Ui()->DoLabel_QmIcon(&CopyButton, EQmIcon::COPY, FONT_ICON_COPY, CopyButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 					TextRender()->TextColor(Ui()->HotItem() == pRemoveButtonId ? TextRender()->DefaultTextColor() : InactiveIconColor);
-					Ui()->DoLabel(&RemoveButton, FONT_ICON_TRASH, RemoveButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+					Ui()->DoLabel_QmIcon(&RemoveButton, EQmIcon::TRASH, FONT_ICON_TRASH, RemoveButton.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 					TextRender()->SetRenderFlags(0);
 					TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 					TextRender()->TextColor(TextRender()->DefaultTextColor());
@@ -3011,7 +3017,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			DropDownSelection = Ui()->DoDropDown(&CategoryDropDown, DropDownSelection, vpCategories.data(), (int)vpCategories.size(), m_FriendsAddCategoryDropDownState);
 			if(DropDownSelection >= 0 && DropDownSelection < (int)vCategoryIndices.size())
 				m_FriendAddCategoryIndex = vCategoryIndices[DropDownSelection];
-			if(Ui()->DoButton_FontIcon(&m_FriendsAddCategoryCreateButton, FONT_ICON_PLUS, 0, &CreateCategoryButton, BUTTONFLAG_LEFT))
+			if(Ui()->DoButton_QmIcon(&m_FriendsAddCategoryCreateButton, EQmIcon::PLUS, FONT_ICON_PLUS, 0, &CreateCategoryButton, BUTTONFLAG_LEFT))
 			{
 				m_FriendsCategoryPopupContext.m_pMenus = this;
 				m_FriendsCategoryPopupContext.m_CategoryIndex = m_FriendAddCategoryIndex;
@@ -3871,7 +3877,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 				RenderMetric(DeathMetric, Localize("Deaths"), aDeaths, TEXTALIGN_MC);
 				RenderMetric(LastEnteredMetric, Localize("Last entered"), aLastEntered, TEXTALIGN_MR);
 
-				if(Ui()->DoButton_FontIcon(&s_vMapHistoryRemoveButtons[HistoryIndex], FONT_ICON_XMARK, 0, &RemoveButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
+				if(Ui()->DoButton_QmIcon(&s_vMapHistoryRemoveButtons[HistoryIndex], EQmIcon::CLOSE, FONT_ICON_XMARK, 0, &RemoveButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL))
 					RemoveMapId = Record.m_MapId;
 				if(Ui()->HotItem() == &s_vMapHistoryRemoveButtons[HistoryIndex])
 					GameClient()->m_Tooltips.DoToolTip(&s_vMapHistoryRemoveButtons[HistoryIndex], &RemoveButton, Localize("Remove from history"));
@@ -3969,21 +3975,21 @@ void CMenus::RenderServerbrowserTabBar(CUIRect TabBar)
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 
 	static CButtonContainer s_FilterTabButton;
-	if(DoButton_MenuTab(&s_FilterTabButton, FONT_ICON_LIST_UL, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_FILTERS, &FilterTabButton, IGraphics::CORNER_ALL, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_FILTER], &ColorInactive, &ColorActive, &ColorHover))
+	if(DoButton_MenuTab_QmIcon(&s_FilterTabButton, EQmIcon::LIST_UL, FONT_ICON_LIST_UL, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_FILTERS, &FilterTabButton, IGraphics::CORNER_ALL, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_FILTER], &ColorInactive, &ColorActive, &ColorHover))
 	{
 		g_Config.m_UiToolboxPage = UI_TOOLBOX_PAGE_FILTERS;
 	}
 	GameClient()->m_Tooltips.DoToolTip(&s_FilterTabButton, &FilterTabButton, Localize("Server filter"));
 
 	static CButtonContainer s_InfoTabButton;
-	if(DoButton_MenuTab(&s_InfoTabButton, FONT_ICON_INFO, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_INFO, &InfoTabButton, IGraphics::CORNER_ALL, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_INFO], &ColorInactive, &ColorActive, &ColorHover))
+	if(DoButton_MenuTab_QmIcon(&s_InfoTabButton, EQmIcon::INFO, FONT_ICON_INFO, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_INFO, &InfoTabButton, IGraphics::CORNER_ALL, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_INFO], &ColorInactive, &ColorActive, &ColorHover))
 	{
 		g_Config.m_UiToolboxPage = UI_TOOLBOX_PAGE_INFO;
 	}
 	GameClient()->m_Tooltips.DoToolTip(&s_InfoTabButton, &InfoTabButton, Localize("Server info"));
 
 	static CButtonContainer s_FriendsTabButton;
-	if(DoButton_MenuTab(&s_FriendsTabButton, FONT_ICON_HEART, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_FRIENDS, &FriendsTabButton, IGraphics::CORNER_ALL, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_FRIENDS], &ColorInactive, &ColorActive, &ColorHover))
+	if(DoButton_MenuTab_QmIcon(&s_FriendsTabButton, EQmIcon::HEART, FONT_ICON_HEART, g_Config.m_UiToolboxPage == UI_TOOLBOX_PAGE_FRIENDS, &FriendsTabButton, IGraphics::CORNER_ALL, &m_aAnimatorsSmallPage[SMALL_TAB_BROWSER_FRIENDS], &ColorInactive, &ColorActive, &ColorHover))
 	{
 		g_Config.m_UiToolboxPage = UI_TOOLBOX_PAGE_FRIENDS;
 	}

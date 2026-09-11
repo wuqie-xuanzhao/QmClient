@@ -2,6 +2,14 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_MODES_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_MODES_H
 
+#include <cstdint>
+
+struct SQmStatisticsModeDisplay
+{
+	int m_Maps = 0;
+	int64_t m_PlaytimeSeconds = 0;
+};
+
 struct SQmAirJumpEffectDecision
 {
 	bool m_SpawnParticles = false;
@@ -68,6 +76,7 @@ struct SQmFocusConfigOverrideState
 	bool m_WasActive = false;
 	int m_SavedValue = 0;
 	bool m_AutoChangedValue = false;
+	int m_LastValue = 0;
 };
 
 enum EQmHookStrongWeakScope
@@ -108,6 +117,7 @@ enum EQmNameplateTextDemoMode
 };
 
 int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActive, int CurrentValue, int HiddenValue, bool &Changed);
+int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameModeEntered, bool GameModeLeft, bool AutoEnable, int CurrentValue, bool &Changed);
 int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActive, bool AutoToggle, int CurrentValue, bool &Changed);
 int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Changed);
 int ApplyQmGoresDummyHammerOverride(SQmFocusConfigOverrideState &State, bool GoresActive, bool Disable, int CurrentValue, bool &Changed);
@@ -126,8 +136,23 @@ bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool Manual
 bool ShouldRenderGoresDebugRoute(bool Online, bool DebugRouteEnabled, bool GoresMapProgressEnabled);
 bool ShouldEnableQmMovingWaterTiles(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName);
 bool ShouldUseServerControlledLocalSkin(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName);
+bool ServerPrefersTeeMenuSkin(const char *pGameInfoGameType, const char *pServerInfoGameType, const char *pCommunityId, const char *pCommunityName);
+
+// 皮肤描述符应当使用的协议版本。判定必须同时考虑连接协议与服务器白名单：
+// 0.6 连接只能使用六部位皮肤，0.7 连接才允许七部位皮肤。
+enum class EServerSkinProtocol
+{
+	NONE = 0,
+	SIX,
+	SEVEN,
+};
+
+EServerSkinProtocol ResolveServerSkinProtocol(bool Sixup, bool UseServerControlledSkin, bool LocalClientHasServerSkin);
 int ResolveLocalSkinConfigIndex(bool DemoPlayback, int ClientId, int MainClientId, int DummyClientId);
 bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget);
+bool QmStatisticsShouldShowAxiomGores(bool HasLocalAxiomGores, bool IsCurrentAxiomCommunity, bool HasAxiomResult);
+SQmStatisticsModeDisplay ResolveQmStatisticsModeDisplay(int LocalMaps, int64_t LocalPlaytimeSeconds, bool IsAxiomGores, bool HasAxiomStats, int64_t AxiomMaps, int64_t AxiomPlaytimeSeconds, bool IsDdnet, int DdnetFinishes, int64_t DdnetPlaytimeHours = -1);
+int64_t QmStatisticsChartWeight(int Maps, int64_t PlaytimeSeconds, bool UseMaps);
 
 bool ShouldHideFocusHud(bool FocusActive, bool HideHud);
 bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool FocusActive, bool HideHud);

@@ -31,6 +31,7 @@
 #include <game/client/components/camera.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
 #include <game/client/ui_scrollregion.h>
@@ -308,7 +309,7 @@ void CEditor::DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const
 	// play/pause button
 	{
 		View.VSplitLeft(View.h, &Button, &View);
-		if(DoButton_FontIcon(pPlayPauseButtonId, Sound()->IsPlaying(SampleId) ? FONT_ICON_PAUSE : FONT_ICON_PLAY, 0, &Button, BUTTONFLAG_LEFT, Localize("Play/pause audio preview.", "Editor"), IGraphics::CORNER_ALL) ||
+		if(DoButton_QmIcon(pPlayPauseButtonId, Sound()->IsPlaying(SampleId) ? EQmIcon::PAUSE : EQmIcon::PLAY, Sound()->IsPlaying(SampleId) ? FONT_ICON_PAUSE : FONT_ICON_PLAY, 0, &Button, BUTTONFLAG_LEFT, Localize("Play/pause audio preview.", "Editor"), IGraphics::CORNER_ALL) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_SPACE)))
 		{
 			if(Sound()->IsPlaying(SampleId))
@@ -328,7 +329,7 @@ void CEditor::DoAudioPreview(CUIRect View, const void *pPlayPauseButtonId, const
 	{
 		View.VSplitLeft(2.0f, nullptr, &View);
 		View.VSplitLeft(View.h, &Button, &View);
-		if(DoButton_FontIcon(pStopButtonId, FONT_ICON_STOP, 0, &Button, BUTTONFLAG_LEFT, Localize("Stop audio preview.", "Editor"), IGraphics::CORNER_ALL))
+		if(DoButton_QmIcon(pStopButtonId, EQmIcon::STOP, FONT_ICON_STOP, 0, &Button, BUTTONFLAG_LEFT, Localize("Stop audio preview.", "Editor"), IGraphics::CORNER_ALL))
 		{
 			Sound()->Stop(SampleId);
 		}
@@ -427,7 +428,7 @@ void CEditor::DoMapTabs(CUIRect MapTabs)
 		else
 		{
 			const bool ShowCloseIcon = !Map.m_Modified || Ui()->HotItem() == &Map.m_TabCloseButtonId;
-			CloseResult = DoButton_FontIcon(&Map.m_TabCloseButtonId, ShowCloseIcon ? FONT_ICON_XMARK : FONT_ICON_CIRCLE, 0, &CloseButton, BUTTONFLAG_ALL, Map.m_Modified ? "Close the selected map. This map has unsaved changes." : "Close the selected map.", IGraphics::CORNER_R, ShowCloseIcon ? 9.0f : 6.0f);
+			CloseResult = DoButton_QmIcon(&Map.m_TabCloseButtonId, ShowCloseIcon ? EQmIcon::CLOSE : EQmIcon::CIRCLE, ShowCloseIcon ? FONT_ICON_XMARK : FONT_ICON_CIRCLE, 0, &CloseButton, BUTTONFLAG_ALL, Map.m_Modified ? "Close the selected map. This map has unsaved changes." : "Close the selected map.", IGraphics::CORNER_R, ShowCloseIcon ? 9.0f : 6.0f);
 		}
 		if(TabResult == 1)
 		{
@@ -521,7 +522,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// animation buttons
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static char s_JumpStartButton = 0;
-		if(DoButton_FontIcon(&s_JumpStartButton, FONT_ICON_BACKWARD_STEP, false, &Button, BUTTONFLAG_LEFT, Localize("Jump to beginning of animation.", "Editor"), IGraphics::CORNER_L))
+		if(DoButton_QmIcon(&s_JumpStartButton, EQmIcon::BACKWARD_STEP, FONT_ICON_BACKWARD_STEP, false, &Button, BUTTONFLAG_LEFT, Localize("Jump to beginning of animation.", "Editor"), IGraphics::CORNER_L))
 		{
 			Map()->m_EnvelopeEvaluator.m_AnimateTime = 0;
 			Map()->m_EnvelopeEvaluator.m_Animate = false;
@@ -529,7 +530,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static char s_AnimateButton = 0;
-		if(DoButton_FontIcon(&s_AnimateButton, Map()->m_EnvelopeEvaluator.m_Animate ? FONT_ICON_PAUSE : FONT_ICON_PLAY, Map()->m_EnvelopeEvaluator.m_Animate, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+M] Toggle animation.", "Editor"), IGraphics::CORNER_NONE) ||
+		if(DoButton_QmIcon(&s_AnimateButton, Map()->m_EnvelopeEvaluator.m_Animate ? EQmIcon::PAUSE : EQmIcon::PLAY, Map()->m_EnvelopeEvaluator.m_Animate ? FONT_ICON_PAUSE : FONT_ICON_PLAY, Map()->m_EnvelopeEvaluator.m_Animate, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+M] Toggle animation.", "Editor"), IGraphics::CORNER_NONE) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_M) && ModPressed))
 		{
 			Map()->m_EnvelopeEvaluator.m_AnimateStart = Client()->GlobalTime() - Map()->m_EnvelopeEvaluator.m_AnimateTime;
@@ -539,7 +540,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// animation settings button
 		ToolbarTop.VSplitLeft(14.0f, &Button, &ToolbarTop);
 		static char s_AnimateSettingsButton;
-		if(DoButton_FontIcon(&s_AnimateSettingsButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Change the animation settings.", "Editor"), IGraphics::CORNER_R, 8.0f))
+		if(DoButton_QmIcon(&s_AnimateSettingsButton, EQmIcon::CIRCLE_CHEVRON_DOWN, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Change the animation settings.", "Editor"), IGraphics::CORNER_R, 8.0f))
 		{
 			Map()->m_EnvelopeEvaluator.m_AnimateUpdatePopup = true;
 			static SPopupMenuId s_PopupAnimateSettingsId;
@@ -557,7 +558,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 		ToolbarTop.VSplitLeft(14.0f, &Button, &ToolbarTop);
 		static int s_ProofModeButton = 0;
-		if(DoButton_FontIcon(&s_ProofModeButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Select proof mode.", "Editor"), IGraphics::CORNER_R, 8.0f))
+		if(DoButton_QmIcon(&s_ProofModeButton, EQmIcon::CIRCLE_CHEVRON_DOWN, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Select proof mode.", "Editor"), IGraphics::CORNER_R, 8.0f))
 		{
 			static SPopupMenuId s_PopupProofModeId;
 			Ui()->DoPopupMenu(&s_PopupProofModeId, Button.x, Button.y + Button.h, 60.0f, 36.0f, this, PopupProofMode);
@@ -578,7 +579,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// grid button
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static int s_GridButton = 0;
-		if(DoButton_FontIcon(&s_GridButton, FONT_ICON_BORDER_ALL, m_QuickActionToggleGrid.Active(), &Button, BUTTONFLAG_LEFT, m_QuickActionToggleGrid.Description(), IGraphics::CORNER_L) ||
+		if(DoButton_QmIcon(&s_GridButton, EQmIcon::BORDER_ALL, FONT_ICON_BORDER_ALL, m_QuickActionToggleGrid.Active(), &Button, BUTTONFLAG_LEFT, m_QuickActionToggleGrid.Description(), IGraphics::CORNER_L) ||
 			(m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && Input()->KeyPress(KEY_G) && ModPressed && !ShiftPressed))
 		{
 			m_QuickActionToggleGrid.Call();
@@ -587,7 +588,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// grid settings button
 		ToolbarTop.VSplitLeft(14.0f, &Button, &ToolbarTop);
 		static char s_GridSettingsButton;
-		if(DoButton_FontIcon(&s_GridSettingsButton, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Change the grid settings.", "Editor"), IGraphics::CORNER_R, 8.0f))
+		if(DoButton_QmIcon(&s_GridSettingsButton, EQmIcon::CIRCLE_CHEVRON_DOWN, FONT_ICON_CIRCLE_CHEVRON_DOWN, 0, &Button, BUTTONFLAG_LEFT, Localize("Change the grid settings.", "Editor"), IGraphics::CORNER_R, 8.0f))
 		{
 			MapView()->MapGrid()->DoSettingsPopup(vec2(Button.x, Button.y + Button.h));
 		}
@@ -597,21 +598,21 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// zoom group
 		ToolbarTop.VSplitLeft(20.0f, &Button, &ToolbarTop);
 		static int s_ZoomOutButton = 0;
-		if(DoButton_FontIcon(&s_ZoomOutButton, FONT_ICON_MINUS, 0, &Button, BUTTONFLAG_LEFT, m_QuickActionZoomOut.Description(), IGraphics::CORNER_L))
+		if(DoButton_QmIcon(&s_ZoomOutButton, EQmIcon::MINUS, FONT_ICON_MINUS, 0, &Button, BUTTONFLAG_LEFT, m_QuickActionZoomOut.Description(), IGraphics::CORNER_L))
 		{
 			m_QuickActionZoomOut.Call();
 		}
 
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static int s_ZoomNormalButton = 0;
-		if(DoButton_FontIcon(&s_ZoomNormalButton, FONT_ICON_MAGNIFYING_GLASS, 0, &Button, BUTTONFLAG_LEFT, m_QuickActionResetZoom.Description(), IGraphics::CORNER_NONE))
+		if(DoButton_QmIcon(&s_ZoomNormalButton, EQmIcon::SEARCH, FONT_ICON_MAGNIFYING_GLASS, 0, &Button, BUTTONFLAG_LEFT, m_QuickActionResetZoom.Description(), IGraphics::CORNER_NONE))
 		{
 			m_QuickActionResetZoom.Call();
 		}
 
 		ToolbarTop.VSplitLeft(20.0f, &Button, &ToolbarTop);
 		static int s_ZoomInButton = 0;
-		if(DoButton_FontIcon(&s_ZoomInButton, FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT, m_QuickActionZoomIn.Description(), IGraphics::CORNER_R))
+		if(DoButton_QmIcon(&s_ZoomInButton, EQmIcon::PLUS, FONT_ICON_PLUS, 0, &Button, BUTTONFLAG_LEFT, m_QuickActionZoomIn.Description(), IGraphics::CORNER_R))
 		{
 			m_QuickActionZoomIn.Call();
 		}
@@ -621,14 +622,14 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 		// undo/redo group
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static int s_UndoButton = 0;
-		if(DoButton_FontIcon(&s_UndoButton, FONT_ICON_UNDO, Map()->m_EditorHistory.CanUndo() - 1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last action.", "Editor"), IGraphics::CORNER_L))
+		if(DoButton_QmIcon(&s_UndoButton, EQmIcon::UNDO, FONT_ICON_UNDO, Map()->m_EditorHistory.CanUndo() - 1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Z] Undo the last action.", "Editor"), IGraphics::CORNER_L))
 		{
 			Map()->m_EditorHistory.Undo();
 		}
 
 		ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 		static int s_RedoButton = 0;
-		if(DoButton_FontIcon(&s_RedoButton, FONT_ICON_REDO, Map()->m_EditorHistory.CanRedo() - 1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last action.", "Editor"), IGraphics::CORNER_R))
+		if(DoButton_QmIcon(&s_RedoButton, EQmIcon::REDO, FONT_ICON_REDO, Map()->m_EditorHistory.CanRedo() - 1, &Button, BUTTONFLAG_LEFT, Localize("[Ctrl+Y] Redo the last action.", "Editor"), IGraphics::CORNER_R))
 		{
 			Map()->m_EditorHistory.Redo();
 		}
@@ -642,7 +643,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 			// flip buttons
 			ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 			static int s_FlipXButton = 0;
-			if(DoButton_FontIcon(&s_FlipXButton, FONT_ICON_ARROWS_LEFT_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[N] Flip the brush horizontally.", "Editor"), IGraphics::CORNER_L) || (Input()->KeyPress(KEY_N) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_QmIcon(&s_FlipXButton, EQmIcon::ARROWS_LEFT_RIGHT, FONT_ICON_ARROWS_LEFT_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[N] Flip the brush horizontally.", "Editor"), IGraphics::CORNER_L) || (Input()->KeyPress(KEY_N) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushFlipX();
@@ -650,7 +651,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 			ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 			static int s_FlipyButton = 0;
-			if(DoButton_FontIcon(&s_FlipyButton, FONT_ICON_ARROWS_UP_DOWN, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[M] Flip the brush vertically.", "Editor"), IGraphics::CORNER_R) || (Input()->KeyPress(KEY_M) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_QmIcon(&s_FlipyButton, EQmIcon::ARROWS_UP_DOWN, FONT_ICON_ARROWS_UP_DOWN, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[M] Flip the brush vertically.", "Editor"), IGraphics::CORNER_R) || (Input()->KeyPress(KEY_M) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushFlipY();
@@ -671,7 +672,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 				}
 
 			static int s_CcwButton = 0;
-			if(DoButton_FontIcon(&s_CcwButton, FONT_ICON_ARROW_ROTATE_LEFT, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[R] Rotate the brush counter-clockwise.", "Editor"), IGraphics::CORNER_L) || (Input()->KeyPress(KEY_R) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_QmIcon(&s_CcwButton, EQmIcon::ARROW_ROTATE_LEFT, FONT_ICON_ARROW_ROTATE_LEFT, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[R] Rotate the brush counter-clockwise.", "Editor"), IGraphics::CORNER_L) || (Input()->KeyPress(KEY_R) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushRotate(-s_RotationAmount / 360.0f * pi * 2);
@@ -683,7 +684,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 
 			ToolbarTop.VSplitLeft(25.0f, &Button, &ToolbarTop);
 			static int s_CwButton = 0;
-			if(DoButton_FontIcon(&s_CwButton, FONT_ICON_ARROW_ROTATE_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[T] Rotate the brush clockwise.", "Editor"), IGraphics::CORNER_R) || (Input()->KeyPress(KEY_T) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
+			if(DoButton_QmIcon(&s_CwButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, Enabled, &Button, BUTTONFLAG_LEFT, Localize("[T] Rotate the brush clockwise.", "Editor"), IGraphics::CORNER_R) || (Input()->KeyPress(KEY_T) && !ModPressed && m_Dialog == DIALOG_NONE && CLineInput::GetActiveInput() == nullptr && !Ui()->IsPopupOpen()))
 			{
 				for(auto &pLayer : m_pBrush->m_vpLayers)
 					pLayer->BrushRotate(s_RotationAmount / 360.0f * pi * 2);
@@ -704,7 +705,7 @@ void CEditor::DoToolbarLayers(CUIRect ToolBar)
 			static char s_PipetteButton;
 			ColorPalette.VSplitLeft(PipetteButtonWidth, &Button, &ColorPalette);
 			ColorPalette.VSplitLeft(Spacing, nullptr, &ColorPalette);
-			if(DoButton_FontIcon(&s_PipetteButton, FONT_ICON_EYE_DROPPER, m_QuickActionPipette.Active(), &Button, BUTTONFLAG_LEFT, m_QuickActionPipette.Description(), IGraphics::CORNER_ALL) ||
+			if(DoButton_QmIcon(&s_PipetteButton, EQmIcon::EYE_DROPPER, FONT_ICON_EYE_DROPPER, m_QuickActionPipette.Active(), &Button, BUTTONFLAG_LEFT, m_QuickActionPipette.Description(), IGraphics::CORNER_ALL) ||
 				(CLineInput::GetActiveInput() == nullptr && ModPressed && ShiftPressed && Input()->KeyPress(KEY_C)))
 			{
 				m_QuickActionPipette.Call();
@@ -2484,7 +2485,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 		{
 			Slot.VSplitLeft(15.0f, &VisibleToggle, &Slot);
 
-			const int MouseClick = DoButton_FontIcon(&Map()->m_vpGroups[g]->m_Visible, Map()->m_vpGroups[g]->m_Visible ? FONT_ICON_EYE : FONT_ICON_EYE_SLASH, Map()->m_vpGroups[g]->m_Collapse ? 1 : 0, &VisibleToggle, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, Localize("Left click to toggle visibility. Right click to show this group only.", "Editor"), IGraphics::CORNER_L, 8.0f);
+			const int MouseClick = DoButton_QmIcon(&Map()->m_vpGroups[g]->m_Visible, Map()->m_vpGroups[g]->m_Visible ? EQmIcon::EYE : EQmIcon::EYE_OFF, Map()->m_vpGroups[g]->m_Visible ? FONT_ICON_EYE : FONT_ICON_EYE_SLASH, Map()->m_vpGroups[g]->m_Collapse ? 1 : 0, &VisibleToggle, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, Localize("Left click to toggle visibility. Right click to show this group only.", "Editor"), IGraphics::CORNER_L, 8.0f);
 			if(MouseClick == 1)
 			{
 				Map()->m_vpGroups[g]->m_Visible = !Map()->m_vpGroups[g]->m_Visible;
@@ -2643,7 +2644,7 @@ void CEditor::RenderLayers(CUIRect LayersBox)
 			Slot.VSplitLeft(12.0f, nullptr, &Slot);
 			Slot.VSplitLeft(15.0f, &VisibleToggle, &Button);
 
-			const int MouseClick = DoButton_FontIcon(&Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible, Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible ? FONT_ICON_EYE : FONT_ICON_EYE_SLASH, 0, &VisibleToggle, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, Localize("Left click to toggle visibility. Right click to show only this layer within its group.", "Editor"), IGraphics::CORNER_L, 8.0f);
+			const int MouseClick = DoButton_QmIcon(&Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible, Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible ? EQmIcon::EYE : EQmIcon::EYE_OFF, Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible ? FONT_ICON_EYE : FONT_ICON_EYE_SLASH, 0, &VisibleToggle, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT, Localize("Left click to toggle visibility. Right click to show only this layer within its group.", "Editor"), IGraphics::CORNER_L, 8.0f);
 			if(MouseClick == 1)
 			{
 				Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible = !Map()->m_vpGroups[g]->m_vpLayers[i]->m_Visible;
@@ -4107,21 +4108,21 @@ void CEditor::RenderModebar(CUIRect View)
 	{
 		ModeButtons.VSplitLeft(ButtonWidth, &ModeButton, &ModeButtons);
 		static int s_LayersButton = 0;
-		if(DoButton_FontIcon(&s_LayersButton, FONT_ICON_LAYER_GROUP, m_Mode == MODE_LAYERS, &ModeButton, BUTTONFLAG_LEFT, Localize("Go to layers management.", "Editor"), IGraphics::CORNER_L))
+		if(DoButton_QmIcon(&s_LayersButton, EQmIcon::LAYER_GROUP, FONT_ICON_LAYER_GROUP, m_Mode == MODE_LAYERS, &ModeButton, BUTTONFLAG_LEFT, Localize("Go to layers management.", "Editor"), IGraphics::CORNER_L))
 		{
 			m_Mode = MODE_LAYERS;
 		}
 
 		ModeButtons.VSplitLeft(ButtonWidth, &ModeButton, &ModeButtons);
 		static int s_ImagesButton = 0;
-		if(DoButton_FontIcon(&s_ImagesButton, FONT_ICON_IMAGE, m_Mode == MODE_IMAGES, &ModeButton, BUTTONFLAG_LEFT, Localize("Go to images management.", "Editor"), IGraphics::CORNER_NONE))
+		if(DoButton_QmIcon(&s_ImagesButton, EQmIcon::IMAGE, FONT_ICON_IMAGE, m_Mode == MODE_IMAGES, &ModeButton, BUTTONFLAG_LEFT, Localize("Go to images management.", "Editor"), IGraphics::CORNER_NONE))
 		{
 			m_Mode = MODE_IMAGES;
 		}
 
 		ModeButtons.VSplitLeft(ButtonWidth, &ModeButton, &ModeButtons);
 		static int s_SoundsButton = 0;
-		if(DoButton_FontIcon(&s_SoundsButton, FONT_ICON_MUSIC, m_Mode == MODE_SOUNDS, &ModeButton, BUTTONFLAG_LEFT, Localize("Go to sounds management.", "Editor"), IGraphics::CORNER_R))
+		if(DoButton_QmIcon(&s_SoundsButton, EQmIcon::MUSIC, FONT_ICON_MUSIC, m_Mode == MODE_SOUNDS, &ModeButton, BUTTONFLAG_LEFT, Localize("Go to sounds management.", "Editor"), IGraphics::CORNER_R))
 		{
 			m_Mode = MODE_SOUNDS;
 		}
@@ -4244,7 +4245,7 @@ void CEditor::RenderEditorHistory(CUIRect View)
 	// delete button
 	ToolBar.VSplitRight(25.0f, &ToolBar, &Button);
 	ToolBar.VSplitRight(5.0f, &ToolBar, nullptr);
-	if(DoButton_FontIcon(&State.m_DeleteButtonId, FONT_ICON_TRASH, (!pCurrentHistory->m_vpUndoActions.empty() || !pCurrentHistory->m_vpRedoActions.empty()) ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("Clear the history.", "Editor"), IGraphics::CORNER_ALL, 9.0f) || (GotSelection && CLineInput::GetActiveInput() == nullptr && m_Dialog == DIALOG_NONE && Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE)))
+	if(DoButton_QmIcon(&State.m_DeleteButtonId, EQmIcon::TRASH, FONT_ICON_TRASH, (!pCurrentHistory->m_vpUndoActions.empty() || !pCurrentHistory->m_vpRedoActions.empty()) ? 0 : -1, &Button, BUTTONFLAG_LEFT, Localize("Clear the history.", "Editor"), IGraphics::CORNER_ALL, 9.0f) || (GotSelection && CLineInput::GetActiveInput() == nullptr && m_Dialog == DIALOG_NONE && Ui()->ConsumeHotkey(CUi::HOTKEY_DELETE)))
 	{
 		pCurrentHistory->Clear();
 		SelectedActionIndex = 0;
@@ -4435,7 +4436,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	{
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ui()->DoLabel(&ChangedIndicator, FONT_ICON_CIRCLE, 8.0f, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&ChangedIndicator, EQmIcon::CIRCLE, FONT_ICON_CIRCLE, 8.0f, TEXTALIGN_MC);
 		TextRender()->SetRenderFlags(0);
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		static int s_ChangedIndicator;

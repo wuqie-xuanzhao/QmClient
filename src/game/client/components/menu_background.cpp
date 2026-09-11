@@ -671,6 +671,12 @@ bool CMenuBackground::Render()
 	if(RenderBackgroundTexture())
 		return true;
 
+	// QmClient: 地图加载期间菜单背景图层会短暂不可用（CMapLayers::OnRender 直接返回），
+	// 此时必须如实报告未渲染，调用方才会回退到程序化背景；
+	// 否则加载界面背景区域会露出帧清屏的黑色。
+	if(!IsMapLoaded())
+		return false;
+
 	m_Camera.m_Zoom = 0.7f;
 
 	float DistToCenter = distance(m_Camera.m_Center, m_RotationCenter);
