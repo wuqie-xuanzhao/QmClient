@@ -127,7 +127,11 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 	m_GaussianBlurProgramValid = false;
 	m_LastProgramId = 0;
 
-	CGLSLCompiler ShaderCompiler(g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch, m_IsOpenGLES, m_OpenGLTextureLodBIAS / 1000.0f);
+	// gfx_gl_major=0 表示自动探测，必须用已解析的真实上下文版本生成 GLSL。
+	const int ShaderMajor = pCommand->m_RequestedMajor > 0 ? pCommand->m_RequestedMajor : pCommand->m_pCapabilities->m_ContextMajor;
+	const int ShaderMinor = pCommand->m_RequestedMajor > 0 ? pCommand->m_RequestedMinor : pCommand->m_pCapabilities->m_ContextMinor;
+	const int ShaderPatch = pCommand->m_RequestedMajor > 0 ? pCommand->m_RequestedPatch : pCommand->m_pCapabilities->m_ContextPatch;
+	CGLSLCompiler ShaderCompiler(ShaderMajor, ShaderMinor, ShaderPatch, m_IsOpenGLES, m_OpenGLTextureLodBIAS / 1000.0f);
 
 	GLint CapVal;
 	glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &CapVal);
@@ -464,8 +468,12 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 	{
 		CGLSL VertexShader;
 		CGLSL FragmentShader;
+		// QmClient: 图标 MSDF 使用现代 GLSL 输入/输出和导数函数；显式声明
+		// 现代路径，避免 OpenGL 初始化时误走兼容 shader 转换分支。
+		ShaderCompiler.AddDefine("TW_MODERN_GL", "");
 		VertexShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/textured_msdf.vert", GL_VERTEX_SHADER);
 		FragmentShader.LoadShader(&ShaderCompiler, pCommand->m_pStorage, "shader/textured_msdf.frag", GL_FRAGMENT_SHADER);
+		ShaderCompiler.ClearDefines();
 
 		m_pTexturedMsdfProgram->CreateProgram();
 		const bool VertexAdded = m_pTexturedMsdfProgram->AddShader(&VertexShader);
@@ -481,6 +489,17 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 			if(m_TexturedMsdfProgramValid)
 				m_pTexturedMsdfProgram->SetUniform(m_pTexturedMsdfProgram->m_LocTextureSampler, 0);
 		}
+		log_info("gfx/opengl", "Textured MSDF program: vertex=%d fragment=%d linked=%d uniforms=%d/%d/%d valid=%d context=%d.%d.%d",
+			VertexAdded,
+			FragmentAdded,
+			Linked,
+			m_pTexturedMsdfProgram->m_LocPos,
+			m_pTexturedMsdfProgram->m_LocTextureSampler,
+			m_pTexturedMsdfProgram->m_LocParams,
+			m_TexturedMsdfProgramValid,
+			ShaderMajor,
+			ShaderMinor,
+			ShaderPatch);
 		pCommand->m_pCapabilities->m_TexturedMsdf.store(m_TexturedMsdfProgramValid, std::memory_order_release);
 	}
 	{
@@ -1101,6 +1120,12 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTarget_Draw(const CCommandBu
 
 	UseProgram(m_pPrimitiveProgramTextured);
 	SetState(pCommand->m_State, m_pPrimitiveProgramTextured);
+	// Render targets do not have a mipmap chain. Do not inherit a sampler
+	// from the previous textured draw (for example a font/atlas sampler with
+	// a mipmapped minification filter), otherwise the target texture becomes
+	// incomplete and samples as black on OpenGL.
+	glActiveTexture(GL_TEXTURE0);
+	glBindSampler(0, 0);
 	glBindTexture(GL_TEXTURE_2D, Target.m_Texture);
 
 	UploadStreamBufferData(EPrimitiveType::QUADS, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount);

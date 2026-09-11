@@ -6719,6 +6719,16 @@ public:
 
 	void CleanupVulkanSDL()
 	{
+		// 幂等保险：正常路径由 Cmd_Shutdown 排空队列并销毁 swapchain；这里再兜底一次，
+		// 防止任何非标准退出路径带着未排空的队列或残留 swapchain 进入驱动销毁流程
+		// （NVIDIA ICD 在退出期 vkDestroyDevice 上出现过访问违例，见 dumps 里的
+		// 退出期驱动故障记录）。
+		if(m_VKDevice != VK_NULL_HANDLE)
+		{
+			DeviceWaitIdle();
+			DestroySwapChain(true);
+		}
+
 		DestroySurface();
 		if(m_VKDevice != VK_NULL_HANDLE)
 		{

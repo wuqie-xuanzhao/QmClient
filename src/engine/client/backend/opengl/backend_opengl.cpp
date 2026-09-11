@@ -415,6 +415,8 @@ bool CCommandProcessorFragment_OpenGL::InitOpenGL(const SCommand_Init *pCommand)
 		g_Config.m_GfxDriverIsBlocked = 0;
 	}
 
+	// gfx_gl_major=0 means automatic detection. Use the actual context version
+	// for capability selection instead of treating the sentinel as GL 0.0.
 	int MajorV = pCommand->m_pCapabilities->m_ContextMajor;
 
 	if(pCommand->m_RequestedBackend == BACKEND_TYPE_OPENGL)
@@ -446,8 +448,11 @@ bool CCommandProcessorFragment_OpenGL::InitOpenGL(const SCommand_Init *pCommand)
 
 		if(*pCommand->m_pInitError == 0)
 		{
-			MajorV = pCommand->m_RequestedMajor;
-			MinorV = pCommand->m_RequestedMinor;
+			if(pCommand->m_RequestedMajor > 0)
+			{
+				MajorV = pCommand->m_RequestedMajor;
+				MinorV = pCommand->m_RequestedMinor;
+			}
 
 			pCommand->m_pCapabilities->m_2DArrayTexturesAsExtension = false;
 			pCommand->m_pCapabilities->m_NPOTTextures = true;
@@ -1174,6 +1179,13 @@ void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Draw(const CCommandBuffe
 		return;
 
 	SetState(pCommand->m_State);
+	// Render-target textures are allocated without mipmaps. Clear any sampler
+	// inherited from the previous draw before sampling the target.
+	if(IsNewApi())
+	{
+		glActiveTexture(GL_TEXTURE0);
+		glBindSampler(0, 0);
+	}
 
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, Target.m_Texture);

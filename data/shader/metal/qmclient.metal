@@ -81,6 +81,24 @@ float QmClientMedian(float3 Value)
 
 fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant float4 &MsdfParams [[buffer(1)]])
 {
+	if(MsdfParams.x < 0.0)
+	{
+		const float InnerRadius = -MsdfParams.x;
+		const float OuterRadius = MsdfParams.y;
+		const float Sweep = max(MsdfParams.w - MsdfParams.z, 0.0);
+		const float2 Point = Input.m_TexCoord - float2(0.5);
+		const float Radius = length(Point);
+		const float RadialDistance = max(InnerRadius - Radius, Radius - OuterRadius);
+		const float RadialFeather = max(fwidth(Radius), 0.0005);
+		const float RadialCoverage = 1.0 - smoothstep(-RadialFeather * 0.5, RadialFeather * 0.5, RadialDistance);
+		const float Angle = atan2(Point.y, Point.x);
+		float RelativeAngle = fmod(Angle - MsdfParams.z, 6.28318530718);
+		if(RelativeAngle < 0.0)
+			RelativeAngle += 6.28318530718;
+		const float AngularFeather = max(fwidth(Angle), 0.0015);
+		const float AngularCoverage = Sweep >= 6.2830 ? 1.0 : smoothstep(0.0, AngularFeather, RelativeAngle) * smoothstep(0.0, AngularFeather, Sweep - RelativeAngle);
+		return float4(Input.m_Color.rgb, Input.m_Color.a * RadialCoverage * AngularCoverage);
+	}
 	const float SignedDistance = QmClientMedian(Texture.sample(Sampler, Input.m_TexCoord).rgb) - 0.5;
 	const float2 UnitRange = float2(MsdfParams.x) / MsdfParams.yz;
 	const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);
