@@ -4181,11 +4181,30 @@ add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/generated/checksum.cpp
 if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   set_src(TESTS GLOB src/test
     QmAnimTest.cpp
-    QmIconAtlasTest.cpp
+    QmAnimSpringTest.cpp
+    QmAnimCoreTest.cpp
+    qm_anim_contract_test.cpp
+    QmAnimDropdownTest.cpp
+    QmAnimFormsTest.cpp
+    QmAnimScrollTest.cpp
+    QmAnimTreeTest.cpp
+    qm_icon_atlas_contract_test.cpp
+    qm_font_icon_cmap_test.cpp
+    qm_icon_shader_contract_test.cpp
+    qm_icon_loader_contract_test.cpp
+    qm_icon_opengl_contract_test.cpp
+    qm_icon_vulkan_contract_test.cpp
+    qm_icon_glyph_contract_test.cpp
+    qm_phosphor_resource_contract_test.cpp
+    qm_icon_weight_contract_test.cpp
+    qm_font_icon_resource_contract_test.cpp
     QmLayoutTest.cpp
+    qm_afk_presentation_contract_test.cpp
     input_overlay_format_test.cpp
     QmUiTokensTest.cpp
+    qm_ui_presentation_contract_test.cpp
     qm_card_order_model_test.cpp
+    qm_card_order_model_contract_test.cpp
     qm_card_registry_test.cpp
     qm_module_layout_adapter_test.cpp
     aio_test.cpp
@@ -4200,12 +4219,13 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     bytes_be_test.cpp
     chunk_header_test.cpp
     color_test.cpp
+    color_contract_test.cpp
     compression_test.cpp
     console_test.cpp
     csv_test.cpp
     datafile_test.cpp
     dbg_test.cpp
-    ddnet_19_9_sync_test.cpp
+    ddnet_19_9_sync_contract_test.cpp
     demo_player_test.cpp
     editor_test.cpp
     fs_test.cpp
@@ -4215,10 +4235,10 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     graphics_backend_contract_test.cpp
     hash_test.cpp
     huffman_test.cpp
-    http_shutdown_lifecycle_test.cpp
+    http_shutdown_lifecycle_contract_test.cpp
     image_test.cpp
     io_test.cpp
-    ios_runtime_test.cpp
+    ios_runtime_contract_test.cpp
     jobs_test.cpp
     json_test.cpp
     jsonwriter_test.cpp
@@ -4239,6 +4259,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     mutes_test.cpp
     name_ban_test.cpp
     net_test.cpp
+    net_protocol_contract_test.cpp
     netaddr_test.cpp
     network_test.cpp
     os_test.cpp
@@ -4246,13 +4267,74 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     prng_test.cpp
     qm_background_particles_test.cpp
     qm_axiom_scores_test.cpp
+    qm_axiom_scores_contract_test.cpp
     qm_chat_emoji_test.cpp
     qm_chat_interactions_test.cpp
+    qm_red_packet_auto_claim_test.cpp
+    qm_tclient_warlist_test.cpp
+    qm_chat_contract_test.cpp
+    qm_chat_message_merge_contract_test.cpp
+    qm_gores_mode_test.cpp
     qm_hammer_hit_detection_test.cpp
     qm_hud_media_island_logic_test.cpp
-    qm_hud_notifications_test.cpp
+    qm_hud_frozen_tee_state_test.cpp
+    qm_hud_media_island_contract_test.cpp
+    qm_hud_notifications_catalog_test.cpp
+    qm_hud_notifications_formatting_test.cpp
+    qm_hud_notifications_state_test.cpp
+    qm_hud_notifications_presentation_test.cpp
+    qm_hud_notifications_geometry_test.cpp
+    qm_hud_notifications_rules_test.cpp
+    qm_hud_notifications_contract_test.cpp
+    qm_hud_notifications_legacy_contract_test.cpp
+    qm_hud_editor_contract_test.cpp
     qm_ime_platform_test.cpp
     qm_new_ui_menu_branch_test.cpp
+    qm_new_ui_menu_tooltips_contract_test.cpp
+    qm_camera_effects_contract_test.cpp
+    qm_ui_scale_contract_test.cpp
+    qm_camera_aspect_ratio_contract_test.cpp
+    settings_card_translation_contract_test.cpp
+    settings_player_info_contract_test.cpp
+    settings_page_layout_test.cpp
+    qm_plausible_sizes_contract_test.cpp
+    qm_tclient_statusbar_score_contract_test.cpp
+    qm_tclient_statusbar_contract_test.cpp
+    qm_tclient_warlist_contract_test.cpp
+    qm_graphics_shutdown_contract_test.cpp
+    qm_crashdump_shutdown_suppression_test.cpp
+    qm_graphics_backend_fallback_contract_test.cpp
+    qm_graphics_recovery_test.cpp
+    qm_graphics_opengl_probe_contract_test.cpp
+    qm_demo_cut_contract_test.cpp
+    qm_ui_scale_popup_contract_test.cpp
+    qm_localization_contract_test.cpp
+    qm_storage_path_contract_test.cpp
+    qm_new_ui_menu_hitbox_contract_test.cpp
+    qm_new_ui_menu_cards_surface_contract_test.cpp
+    qm_new_ui_menu_cards_deck_contract_test.cpp
+    qm_new_ui_menu_cards_catalogue_contract_test.cpp
+    qm_new_ui_menu_cards_warlist_contract_test.cpp
+    qm_new_ui_menu_gameplay_prediction_contract_test.cpp
+    qm_new_ui_menu_gameplay_hud_contract_test.cpp
+    qm_new_ui_menu_gameplay_scoreboard_contract_test.cpp
+    qm_new_ui_menu_gameplay_blur_contract_test.cpp
+    qm_new_ui_menu_gameplay_social_contract_test.cpp
+    qm_new_ui_menu_localization_contract_test.cpp
+    qm_new_ui_menu_render_engine_contract_test.cpp
+    qm_new_ui_menu_render_browser_contract_test.cpp
+    qm_new_ui_menu_render_dropdown_contract_test.cpp
+    qm_new_ui_menu_render_settings_pages_contract_test.cpp
+    qm_new_ui_menu_render_surface_contract_test.cpp
+    qm_new_ui_menu_settings_colors_contract_test.cpp
+    qm_new_ui_menu_settings_features_contract_test.cpp
+    qm_new_ui_menu_settings_config_contract_test.cpp
+    qm_new_ui_menu_settings_nameplate_contract_test.cpp
+    qm_new_ui_menu_settings_textinput_contract_test.cpp
+    qm_new_ui_menu_shell_chrome_contract_test.cpp
+    qm_new_ui_menu_shell_browser_contract_test.cpp
+    qm_new_ui_menu_shell_settings_contract_test.cpp
+    qm_ui_scale_test.cpp
     qm_update_arguments_test.cpp
     netease_lyric_parser_test.cpp
     netease_lyric_timeline_test.cpp
@@ -4263,12 +4345,26 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     music_lyrics_krc_test.cpp
     music_lyrics_qrc_test.cpp
     qm_modes_test.cpp
+    qm_prediction_contract_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
+    qm_weapon_trajectory_contract_test.cpp
     qmclient_update_version_test.cpp
     qmclient_update_manifest_test.cpp
-    QmUiTokensTest.cpp
-    qmclient_monitoring_test.cpp
+    qmclient_monitoring_assets_contract_test.cpp
+    qmclient_monitoring_card_order_contract_test.cpp
+    qmclient_monitoring_graphics_contract_test.cpp
+    qmclient_monitoring_metrics_contract_test.cpp
+    qmclient_monitoring_misc_contract_test.cpp
+    qmclient_monitoring_persistence_contract_test.cpp
+    qmclient_monitoring_settings_structure_contract_test.cpp
+    qmclient_monitoring_settings_plan_contract_test.cpp
+    qmclient_monitoring_settings_perf_contract_test.cpp
+    qmclient_monitoring_text_plan_contract_test.cpp
+    qmclient_monitoring_frame_budget_contract_test.cpp
+    qmclient_monitoring_text_runtime_contract_test.cpp
+    qmclient_monitoring_motd_contract_test.cpp
+    qmclient_monitoring_runtime_test.cpp
     race_test.cpp
     score_test.cpp
     storage_replace_test.cpp
@@ -4285,13 +4381,42 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     settings_resource_jobs_skin_throughput_test.cpp
     settings_resource_jobs_adaptive_budget_test.cpp
     settings_resource_jobs_background_test.cpp
+    settings_loading_prewarm_test.cpp
+    settings_skin_plan_test.cpp
+    settings_skin_preview_test.cpp
+    settings_card_order_revision_test.cpp
+    settings_card_order_drop_test.cpp
+    settings_card_interaction_test.cpp
+    settings_card_animation_test.cpp
+    settings_card_view_key_test.cpp
+    settings_country_flag_plan_test.cpp
+    settings_resource_budget_test.cpp
+    settings_asset_loading_test.cpp
+    settings_asset_preview_budget_test.cpp
+    settings_asset_preview_lifecycle_test.cpp
+    settings_asset_priority_test.cpp
+    settings_asset_admission_test.cpp
+    settings_resource_visible_range_test.cpp
+    settings_resource_jobs_contract_test.cpp
+    settings_runtime_cache_test.cpp
     settings_warmup_test.cpp
+    settings_warmup_loading_contract_test.cpp
+    settings_warmup_tclient_contract_test.cpp
+    settings_warmup_layout_contract_test.cpp
+    settings_warmup_cleanup_contract_test.cpp
     skin_transition_test.cpp
     skins_test.cpp
-    render_target_test.cpp
+    skins_preview_layers_test.cpp
+    skins_resource_contract_test.cpp
+    skins_render_contract_test.cpp
+    skins_queue_contract_test.cpp
+    skins_preview_contract_test.cpp
+    skins_preset_contract_test.cpp
+    skins_official_index_contract_test.cpp
+    render_target_contract_test.cpp
     windows_test.cpp
     snapshot_test.cpp
-    steam_presence_test.cpp
+    steam_presence_contract_test.cpp
     str_search_test.cpp
     str_utf8_test.cpp
     str_format_test.cpp
@@ -4321,6 +4446,14 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     uuid_test.cpp
     vmath_test.cpp
     voice_core_test.cpp
+    voice_qmclient_contract_test.cpp
+    voice_sequence_test.cpp
+    voice_qmclient_test.cpp
+    voice_packet_utils_test.cpp
+    voice_state_utils_test.cpp
+    voice_processing_utils_test.cpp
+    voice_audio_utils_test.cpp
+    voice_spatial_utils_test.cpp
   )
   set(TESTS_EXTRA
     src/engine/client/backend/graphics_backend_contract.cpp
@@ -4370,7 +4503,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
     src/qm-nmt-hook/qm_netease_cdp.cpp
     src/qm-nmt-hook/qm_netease_cdp_client.cpp
-    src/qm-nmt-hook/qm_netease_bootstrap.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp
@@ -4399,6 +4531,10 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
       src/engine/client/backend/backend_base.cpp
       src/engine/client/backend/metal/backend_metal.mm
     )
+  endif()
+
+  if(TARGET_OS STREQUAL "windows")
+    list(APPEND TESTS_EXTRA src/qm-nmt-hook/qm_netease_bootstrap.cpp)
   endif()
 
   set(TARGET_TESTRUNNER testrunner)
@@ -4448,7 +4584,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
   elseif(TARGET gtest_main)
     set(QM_NMT_GTEST_MAIN_TARGET gtest_main)
   endif()
-  if(QM_NMT_GTEST_MAIN_TARGET)
+  if(QM_NMT_GTEST_MAIN_TARGET AND TARGET_OS STREQUAL "windows")
     add_executable(qm-nmt-tests EXCLUDE_FROM_ALL
       src/test/music_lyrics_krc_test.cpp
       src/test/music_lyrics_qrc_test.cpp
@@ -4477,16 +4613,16 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
       src/engine/external/json-parser/json.c
     )
     target_include_directories(qm-nmt-tests PRIVATE src)
-    target_link_libraries(qm-nmt-tests PRIVATE ${QM_NMT_GTEST_MAIN_TARGET})
+    target_link_libraries(qm-nmt-tests ${QM_NMT_GTEST_MAIN_TARGET})
     if(TARGET_OS STREQUAL "windows")
       target_compile_definitions(qm-nmt-tests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
-      target_link_libraries(qm-nmt-tests PRIVATE bcrypt winhttp ws2_32)
+      target_link_libraries(qm-nmt-tests bcrypt winhttp ws2_32)
     endif()
     if(ZLIB_DEP)
       target_sources(qm-nmt-tests PRIVATE ${ZLIB_DEP})
       target_include_directories(qm-nmt-tests PRIVATE ${ZLIB_INCLUDE_DIRS})
     elseif(ZLIB_LIBRARIES)
-      target_link_libraries(qm-nmt-tests PRIVATE ${ZLIB_LIBRARIES})
+      target_link_libraries(qm-nmt-tests ${ZLIB_LIBRARIES})
     endif()
     list(APPEND TARGETS_OWN qm-nmt-tests)
     enable_testing()

@@ -46,6 +46,7 @@
 - `qmclient_scripts/make_lib_openssl.sh`
 - `qmclient_scripts/cmake-windows-filter.py` — 过滤 Windows/MSVC 构建日志噪音（如"注意: 包含文件:"前缀）
 - `qmclient_scripts/repair_ninja_msvc_prefix.py` — 修复 Ninja + MSVC 下的依赖前缀编码（configure/build 通用）
+- `qmclient_scripts/preview-crash-dialog.cmd [build-dir] [graphics|assertion|fatal|hang]` — 不启动完整客户端、不制造真实崩溃，预览 Windows 喜庆崩溃窗口；默认使用 `cmake-build-release` 和 `graphics`。窗口内的“放烟花”按钮只在预览窗口中播放 GDI 烟花动画，不改变报告结果。
 
 ### 3. 代码卫生与内容生成辅助
 
@@ -64,6 +65,9 @@
 
 与门禁主链无直接关系，按各自职责独立存在：
 
+- `qmclient_scripts/integration/`：QmClient 自有客户端/服务端进程级集成与冒烟测试；不得把 QmClient 特化场景加入根目录上游 `scripts/`
+- `qmclient_scripts/coverage/`：使用独立 clang/Ninja 构建采集 C++ LLVM line/function/region/branch coverage
+
 - `qmclient_scripts/languages_qmclient/`
 - `qmclient_scripts/qmclient_center_server/`
 - `qmclient_scripts/diff_update.py`
@@ -71,6 +75,24 @@
 - `qmclient_scripts/update.zsh`：旧增量更新服务部署脚本；必须显式设置 `QM_UPDATE_SCRIPTS_DIR` 与 `QM_UPDATE_OUTPUT_DIR`，可用 `QM_UPDATE_RELEASE_REPOSITORY` 覆盖发布仓库
 
 `qmclient_scripts/languages_qmclient/` 语言脚本入口：
+
+测试层级与高债务测试统计：
+
+```text
+python qmclient_scripts/test_inventory.py
+python qmclient_scripts/test_inventory.py --json > tmp/test-inventory.json
+```
+
+其中 `python_unit_files` / `python_unit_cases` 只统计单元脚本，`python_integration_files` / `python_integration_cases` 单独统计 `qmclient_scripts/integration/test*.py`；`process_smoke_runners` 表示真实进程 runner 数量，`process_smoke_scenarios` 表示 runner 注册的场景数量；`e2e_scenarios` 只统计独立的完整端到端场景，不能用 smoke 数量替代。该统计按文件命名和测试目录划分层级，源码合同引用与运行时行为必须结合人工审查；统计结果不能替代 line、function 或 branch coverage 报告。
+
+QmClient 真实进程 smoke/E2E（需要已构建的 `DDNet` 与 `DDNet-Server`）可按场景运行：
+
+```text
+python qmclient_scripts/integration/qmclient_smoke.py <build-dir> [plain_connection|focus_configuration|gores_configuration|connection_shutdown]
+python qmclient_scripts/integration/e2e_qmclient.py <build-dir> [connection_failure_recovery|demo_recording|invalid_statistics_preserved|perf_log_persistence|qm_lifecycle_persistence|recording_without_connection]
+```
+
+gate 使用 `--run-qm-smoke` 时会在同一进程测试 check 中顺序执行 smoke 与 E2E。
 
 - `source_keys.py`：共享源码 key 提取器，支持全量扫描与 Git diff 增量合并，提取 `Localize` / `Localizable`、`Register` help 和 QmClient 间接 key
 - `extract_strings.py`：默认按 Git diff 增量更新完整 `extracted_strings.txt`、`extracted_records_cache.json` 和 `extracted_audit_report.json`；传 `--full` 时重扫源码并重建缓存；active key 清单继续只承载 i18n 主链 source key，审计报告另外输出 `must_i18n`、`business_data`、`test_only`、`needs_review`、`violation`

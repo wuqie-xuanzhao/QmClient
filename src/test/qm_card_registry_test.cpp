@@ -397,7 +397,7 @@ TEST(QmCardRegistry, TeeFunctionalSearchTargetsSplitCards)
 	for(const auto &[pQuery, pExpectedId] : {std::pair{"colors", "deck:tee-skin-options"}, std::pair{"eyes", "deck:tee-skin-options"}, std::pair{"search", "deck:tee-skin-list"}, std::pair{"filter", "deck:tee-skin-list"}})
 	{
 		const auto vResults = qm_card_registry::SearchCards(pQuery, Model);
-		const auto It = std::find_if(vResults.begin(), vResults.end(), [pExpectedId](const auto &Result) {
+		const auto It = std::find_if(vResults.begin(), vResults.end(), [pExpectedId = pExpectedId](const auto &Result) {
 			return std::string(Result.m_pStableId) == pExpectedId;
 		});
 		ASSERT_NE(It, vResults.end()) << pQuery;

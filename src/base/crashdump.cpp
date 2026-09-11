@@ -1,8 +1,120 @@
 #include "crashdump.h"
 
 #include "detect.h"
+#include "fs.h"
 #include "str.h"
 #include "system.h"
+
+#include <atomic>
+
+#if defined(CONF_FAMILY_WINDOWS)
+#include <windows.h>
+
+#include <cwchar>
+#include <iterator>
+#endif
+
+static std::atomic<bool> gs_SuppressNextFatalReporter{false};
+
+// QmClient: 退出阶段标记。客户端在销毁图形后端之前置位，用于识别
+// “进程已在退出、异常又落在图形驱动模块内”的已知无害故障（见 crashdump.h）。
+static std::atomic<bool> gs_ShutdownInProgress{false};
+static std::atomic<bool> gs_ShutdownGraphicsFault{false};
+
+// 退出清理期间允许被忽略的图形驱动模块。这些 DLL 内的崩溃发生在驱动释放
+// GPU 对象的过程中，进程已进入退出，重新弹窗既无意义也打扰用户。
+// 与 client.cpp 中 QmCrashTextHasGraphicsDriverFault 的驱动清单保持一致。
+static constexpr const char *gs_apShutdownIgnorableDriverModules[] = {
+	"nvoglv64.dll",
+	"nvoglv32.dll",
+	"nvd3dumx.dll",
+	"nvwgf2umx.dll",
+	"amdvlk64.dll",
+	"atio6axx.dll",
+	"ig9icd64.dll",
+	"igvk64.dll",
+	"opengl32.dll",
+	"vulkan-1.dll",
+	"D3D12Core.dll",
+	"d3d12.dll",
+	"dxgi.dll",
+};
+
+bool crashdump_is_ignorable_shutdown_driver_module(const char *p_module_name)
+{
+	if(p_module_name == nullptr || p_module_name[0] == '\0')
+		return false;
+	for(const char *pCandidate : gs_apShutdownIgnorableDriverModules)
+	{
+		if(str_comp_nocase(p_module_name, pCandidate) == 0)
+			return true;
+	}
+	return false;
+}
+
+void crashdump_suppress_reporter_once()
+{
+	gs_SuppressNextFatalReporter.store(true, std::memory_order_release);
+}
+
+void crashdump_mark_shutdown_begin(const char *p_driver_module)
+{
+	(void)p_driver_module;
+	// 驱动模块清单固定在本文件内；参数保留给将来需要按实际渲染器细分的场景。
+	gs_ShutdownInProgress.store(true, std::memory_order_release);
+}
+
+bool crashdump_is_shutdown_graphics_fault()
+{
+	return gs_ShutdownGraphicsFault.load(std::memory_order_acquire);
+}
+
+void crashdump_mark_shutdown_end()
+{
+	gs_ShutdownInProgress.store(false, std::memory_order_release);
+}
+
+bool crashdump_launch_reporter_if_available(const char *report_path)
+{
+	// 退出阶段的图形驱动故障不再打扰用户，也不启动报告进程。
+	if(crashdump_is_shutdown_graphics_fault())
+		return false;
+#if defined(CONF_FAMILY_WINDOWS)
+	if(report_path == nullptr || report_path[0] == '\0')
+		return false;
+
+	wchar_t aExecutablePath[IO_MAX_PATH_LENGTH];
+	const DWORD ExecutablePathLength = GetModuleFileNameW(nullptr, aExecutablePath, std::size(aExecutablePath));
+	if(ExecutablePathLength == 0 || ExecutablePathLength >= std::size(aExecutablePath))
+		return false;
+
+	wchar_t aReportPath[IO_MAX_PATH_LENGTH];
+	if(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, report_path, -1, aReportPath, std::size(aReportPath)) <= 0)
+		return false;
+
+	// Windows 路径不能包含双引号，因此可以安全地用引号包住自生成的报告路径。
+	wchar_t aCommandLine[IO_MAX_PATH_LENGTH * 2 + 96];
+	const int CommandLength = _snwprintf_s(aCommandLine, std::size(aCommandLine), _TRUNCATE,
+		L"\"%ls\" --qm-crash-reporter \"%ls\"", aExecutablePath, aReportPath);
+	if(CommandLength < 0)
+		return false;
+
+	STARTUPINFOW StartupInfo{};
+	StartupInfo.cb = sizeof(StartupInfo);
+	StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	StartupInfo.wShowWindow = SW_SHOWNORMAL;
+	PROCESS_INFORMATION ProcessInfo{};
+	if(!CreateProcessW(aExecutablePath, aCommandLine, nullptr, nullptr, FALSE, CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &StartupInfo, &ProcessInfo))
+		return false;
+
+	CloseHandle(ProcessInfo.hThread);
+	CloseHandle(ProcessInfo.hProcess);
+	return true;
+#else
+	(void)report_path;
+	return false;
+#endif
+}
 
 #if defined(CONF_CRASHDUMP)
 #if !defined(CONF_FAMILY_WINDOWS)
@@ -17,12 +129,9 @@ void crashdump_init_if_available(const char *log_file_path)
 #include "log.h"
 #include "windows.h"
 
-#include <windows.h>
-
 #include <dbghelp.h>
 #include <tlhelp32.h>
 
-#include <atomic>
 #include <csignal>
 #include <cstdint>
 #include <exception>
@@ -42,6 +151,7 @@ static MiniDumpWriteDumpFunc gs_pMiniDumpWriteDump = nullptr;
 
 static std::atomic<bool> gs_FallbackHandlersInstalled{false};
 static std::atomic_flag gs_FatalReportInProgress = ATOMIC_FLAG_INIT;
+static std::atomic_flag gs_FatalReporterLaunched = ATOMIC_FLAG_INIT;
 
 static PVOID gs_pVectoredExceptionHandler = nullptr;
 static LPTOP_LEVEL_EXCEPTION_FILTER gs_pPreviousUnhandledExceptionFilter = nullptr;
@@ -689,13 +799,70 @@ static bool WriteMiniDumpFile(const char *pFilename, EXCEPTION_POINTERS *pExcept
 	return false;
 }
 
+// QmClient: 判断异常地址是否落在已知图形驱动模块内。
+// 只在退出阶段使用：退出清理销毁图形后端时，个别驱动会在这类模块内部崩溃，
+// 此时进程本就即将结束，写完整转储与弹窗只会打扰用户。
+static bool IsShutdownGraphicsFault(EXCEPTION_POINTERS *pExceptionPointers)
+{
+	if(!gs_ShutdownInProgress.load(std::memory_order_acquire))
+		return false;
+	if(pExceptionPointers == nullptr || pExceptionPointers->ExceptionRecord == nullptr)
+		return false;
+
+	const void *pFaultAddress = pExceptionPointers->ExceptionRecord->ExceptionAddress;
+	if(pFaultAddress == nullptr)
+		return false;
+
+	HMODULE hModule = nullptr;
+	if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		   reinterpret_cast<LPCWSTR>(pFaultAddress), &hModule) ||
+		hModule == nullptr)
+	{
+		return false;
+	}
+
+	char aModulePath[IO_MAX_PATH_LENGTH];
+	const DWORD Length = GetModuleFileNameA(hModule, aModulePath, sizeof(aModulePath));
+	if(Length == 0 || Length >= sizeof(aModulePath))
+		return false;
+
+	return crashdump_is_ignorable_shutdown_driver_module(fs_filename(aModulePath));
+}
+
 static void HandleFatalCrash(const char *pReason, EXCEPTION_POINTERS *pExceptionPointers, int SignalNumber)
 {
 	if(gs_FatalReportInProgress.test_and_set(std::memory_order_acq_rel))
 		return;
 
+	// 退出阶段的已知图形驱动故障：只留日志，不写转储、不生成报告。
+	if(IsShutdownGraphicsFault(pExceptionPointers))
+	{
+		gs_ShutdownGraphicsFault.store(true, std::memory_order_release);
+		log_warn("crashdump", "ignoring graphics driver fault '%s' during shutdown; process is already exiting", pReason);
+		return;
+	}
+
 	const bool DumpWritten = WriteMiniDumpFile(gs_aFallbackDumpPath, pExceptionPointers);
 	WriteMinimalCrashReport(pReason, pExceptionPointers, SignalNumber, DumpWritten);
+}
+
+static void LaunchFatalCrashReporter()
+{
+	if(gs_SuppressNextFatalReporter.exchange(false, std::memory_order_acq_rel))
+		return;
+	if(gs_FatalReporterLaunched.test_and_set(std::memory_order_acq_rel))
+		return;
+
+	char aConfirmedPath[IO_MAX_PATH_LENGTH + 16];
+	str_format(aConfirmedPath, sizeof(aConfirmedPath), "%s.confirmed", gs_aFallbackReportPath);
+	HANDLE ConfirmedFile = CreateFileA(aConfirmedPath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if(ConfirmedFile != INVALID_HANDLE_VALUE)
+	{
+		WriteRaw(ConfirmedFile, "confirmed fatal crash\r\n");
+		FlushFileBuffers(ConfirmedFile);
+		CloseHandle(ConfirmedFile);
+	}
+	crashdump_launch_reporter_if_available(gs_aFallbackReportPath);
 }
 
 static LONG WINAPI FallbackVectoredExceptionHandler(PEXCEPTION_POINTERS pExceptionPointers)
@@ -718,6 +885,7 @@ static LONG WINAPI FallbackVectoredExceptionHandler(PEXCEPTION_POINTERS pExcepti
 static LONG WINAPI FallbackUnhandledExceptionFilter(EXCEPTION_POINTERS *pExceptionPointers)
 {
 	HandleFatalCrash("Unhandled structured exception", pExceptionPointers, 0);
+	LaunchFatalCrashReporter();
 	if(gs_pPreviousUnhandledExceptionFilter != nullptr && gs_pPreviousUnhandledExceptionFilter != FallbackUnhandledExceptionFilter)
 	{
 		const LONG PreviousFilterResult = gs_pPreviousUnhandledExceptionFilter(pExceptionPointers);
@@ -736,14 +904,16 @@ static void TerminateFromFatalHandler()
 static void FallbackTerminateHandler()
 {
 	HandleFatalCrash("Unhandled C++ exception (std::terminate)", nullptr, 0);
+	LaunchFatalCrashReporter();
 	TerminateFromFatalHandler();
 }
 
 static void FallbackSignalHandler(int SignalNumber)
 {
-	// Signal handlers must stay minimal and avoid complex I/O or allocations.
-	// Re-raise with the default handler to preserve normal crash semantics.
+	// 先恢复默认处理，防止报告失败时递归进入信号处理器。
 	std::signal(SignalNumber, SIG_DFL);
+	HandleFatalCrash("Fatal signal", nullptr, SignalNumber);
+	LaunchFatalCrashReporter();
 	std::raise(SignalNumber);
 	TerminateFromFatalHandler();
 }

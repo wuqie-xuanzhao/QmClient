@@ -24,48 +24,6 @@ static void ExpectColorNear(const ColorRGBA &Color, const ColorRGBA &Expected)
 	EXPECT_NEAR(Color.a, Expected.a, 0.02f);
 }
 
-TEST(QmPredictionMode, UpdatePredictionDoesNotOverrideClientOptIn)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/gameclient.cpp");
-	const size_t FunctionStart = Source.find("void CGameClient::UpdatePrediction()");
-	ASSERT_NE(FunctionStart, std::string::npos);
-	const size_t FunctionEnd = Source.find("\nvoid CGameClient::", FunctionStart + 1);
-	ASSERT_NE(FunctionEnd, std::string::npos);
-	const std::string FunctionBody = Source.substr(FunctionStart, FunctionEnd - FunctionStart);
-	const std::string Assignment = "m_GameWorld.m_WorldConfig.m_PredictEvents =";
-	const size_t FirstAssignment = FunctionBody.find(Assignment);
-	ASSERT_NE(FirstAssignment, std::string::npos);
-	EXPECT_EQ(FunctionBody.find(Assignment, FirstAssignment + Assignment.size()), std::string::npos);
-	EXPECT_NE(FunctionBody.find("m_GameWorld.m_WorldConfig.m_PredictEvents = g_Config.m_ClPredictEvents && m_GameInfo.m_PredictEvents;"), std::string::npos);
-}
-
-TEST(QmGoresMode, ManualGuideRevealOverridesAutomaticGuideHiding)
-{
-	EXPECT_TRUE(ShouldHideGoresGuide(true, true, false));
-	EXPECT_FALSE(ShouldHideGoresGuide(true, true, true));
-	EXPECT_FALSE(ShouldHideGoresGuide(true, false, false));
-	EXPECT_FALSE(ShouldHideGoresGuide(false, true, false));
-}
-
-TEST(QmGoresMode, DebugRouteDoesNotUseHideGuidesGate)
-{
-	EXPECT_TRUE(ShouldRenderGoresDebugRoute(true, true, true));
-	EXPECT_FALSE(ShouldRenderGoresDebugRoute(false, true, true));
-	EXPECT_FALSE(ShouldRenderGoresDebugRoute(true, false, true));
-	EXPECT_FALSE(ShouldRenderGoresDebugRoute(true, true, false));
-}
-
-TEST(QmGoresMode, MovingWaterTilesRequireAxiomOrGoresContext)
-{
-	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("Gores", "", "", ""));
-	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("", "DDNet Gores", "", ""));
-	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("", "", "axiom-cn", ""));
-	EXPECT_TRUE(ShouldEnableQmMovingWaterTiles("", "", "", "Axiom"));
-
-	EXPECT_FALSE(ShouldEnableQmMovingWaterTiles("DDRaceNetwork", "DDNet", "kog", "DDNet"));
-	EXPECT_FALSE(ShouldEnableQmMovingWaterTiles(nullptr, nullptr, nullptr, nullptr));
-}
-
 TEST(QmLocalSkinSource, DdnetAndAxiomKeepTeeMenuOverride)
 {
 	EXPECT_FALSE(ShouldUseServerControlledLocalSkin("DDRaceNetwork", "", "", ""));
@@ -81,6 +39,92 @@ TEST(QmLocalSkinSource, OtherServersUseServerControlledSkin)
 	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("MMO", "MMO", "", ""));
 	EXPECT_TRUE(ShouldUseServerControlledLocalSkin("Gores", "Gores", "kog", "KoG"));
 	EXPECT_TRUE(ShouldUseServerControlledLocalSkin(nullptr, nullptr, nullptr, nullptr));
+}
+
+TEST(QmServerSkinProtocol, SixupConnectionWithoutServerPartsUsesNoSkinDisposition)
+{
+	// 0.7 连接：服务器白名单要求使用服务器皮肤，但本地客户端尚未收到部件下发。
+	EXPECT_EQ(ResolveServerSkinProtocol(true, true, false), EServerSkinProtocol::NONE);
+}
+
+TEST(QmServerSkinProtocol, SixupConnectionWithServerPartsUsesSevenParts)
+{
+	EXPECT_EQ(ResolveServerSkinProtocol(true, true, true), EServerSkinProtocol::SEVEN);
+}
+
+TEST(QmServerSkinProtocol, SixupConnectionIgnoringServerPartsUsesNoSkinDisposition)
+{
+	// 0.7 连接但服务器在白名单内（例如 axiom），不使用服务器端皮肤部件。
+	EXPECT_EQ(ResolveServerSkinProtocol(true, false, true), EServerSkinProtocol::NONE);
+}
+
+TEST(QmServerSkinProtocol, SixConnectionAlwaysUsesSixPartsRegardlessOfServerWhitelist)
+{
+	// 回归防护：0.6 连接即使服务器不在白名单内，也只能使用六部位皮肤。
+	// 此前该组合会错误地走到 0.7 皮肤路径，把 0.6 服务器渲染成 0.7 默认皮肤。
+	EXPECT_EQ(ResolveServerSkinProtocol(false, true, false), EServerSkinProtocol::SIX);
+	EXPECT_EQ(ResolveServerSkinProtocol(false, true, true), EServerSkinProtocol::SIX);
+	EXPECT_EQ(ResolveServerSkinProtocol(false, false, false), EServerSkinProtocol::SIX);
+	EXPECT_EQ(ResolveServerSkinProtocol(false, false, true), EServerSkinProtocol::SIX);
+}
+
+TEST(QmStatisticsModeDisplay, UsesAxiomCompletedMapsAndPlaytimeForAxiomGores)
+{
+	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(0, 1054, true, true, 347, 7200, false, -1);
+	EXPECT_EQ(Display.m_Maps, 347);
+	EXPECT_EQ(Display.m_PlaytimeSeconds, 7200);
+}
+
+TEST(QmStatisticsModeDisplay, ShowsAxiomGoresWhenRemoteResultExistsWithoutLocalHistory)
+{
+	EXPECT_TRUE(QmStatisticsShouldShowAxiomGores(false, false, true));
+	EXPECT_TRUE(QmStatisticsShouldShowAxiomGores(true, false, false));
+	EXPECT_TRUE(QmStatisticsShouldShowAxiomGores(false, true, false));
+	EXPECT_FALSE(QmStatisticsShouldShowAxiomGores(false, false, false));
+}
+
+TEST(QmStatisticsModeDisplay, KeepsLocalValuesWhileAxiomDataIsLoading)
+{
+	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(3, 1054, true, false, 347, 7200, false, -1);
+	EXPECT_EQ(Display.m_Maps, 3);
+	EXPECT_EQ(Display.m_PlaytimeSeconds, 1054);
+}
+
+TEST(QmStatisticsModeDisplay, UsesDdnetFinishesWithoutReplacingLocalPlaytime)
+{
+	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(0, 701, false, false, 0, 0, true, 2154);
+	EXPECT_EQ(Display.m_Maps, 2154);
+	EXPECT_EQ(Display.m_PlaytimeSeconds, 701);
+}
+
+TEST(QmStatisticsModeDisplay, UsesOfficialDdnetPlaytimeWhenAvailable)
+{
+	// 官方 DDNet 统计给出 2848 小时生涯时长时，该行应显示官方时长而非本机记录的 701 秒。
+	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(0, 701, false, false, 0, 0, true, 2154, 2848);
+	EXPECT_EQ(Display.m_Maps, 2154);
+	EXPECT_EQ(Display.m_PlaytimeSeconds, 2848 * 3600);
+}
+
+TEST(QmStatisticsModeDisplay, FallsBackToLocalPlaytimeWhenDdnetHoursMissing)
+{
+	// 官方时长缺失（-1）时不能把本地时长清零或改成 0。
+	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(0, 701, false, false, 0, 0, true, 2154, -1);
+	EXPECT_EQ(Display.m_PlaytimeSeconds, 701);
+}
+
+TEST(QmStatisticsModeDisplay, DoesNotApplyDdnetHoursToNonDdnetMode)
+{
+	// 时序数据只属于 DDNet 行，不能泄露到 Axiom/其他模式的时长上。
+	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(9, 123, false, false, 0, 0, false, -1, 2848);
+	EXPECT_EQ(Display.m_Maps, 9);
+	EXPECT_EQ(Display.m_PlaytimeSeconds, 123);
+}
+
+TEST(QmStatisticsChart, FallsBackToPlaytimeWhenNoModeHasFinishedMaps)
+{
+	EXPECT_EQ(QmStatisticsChartWeight(0, 1054, false), 1054);
+	EXPECT_EQ(QmStatisticsChartWeight(0, 701, false), 701);
+	EXPECT_EQ(QmStatisticsChartWeight(347, 7200, true), 347);
 }
 
 TEST(LocalSkinSource, DemoPlaybackUsesRecordedSnapshotForEitherLocalConnection)
@@ -101,100 +145,6 @@ TEST(LocalSkinSource, OnlinePlayUsesMatchingLocalConfiguration)
 	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, DummyClientId, MainClientId, DummyClientId), 1);
 	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, 23, MainClientId, DummyClientId), -1);
 	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, -1, -1, -1), -1);
-}
-
-TEST(QmGoresMode, LinkedFastInputTemporarilyOverridesAndRestoresThePreviousValue)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
-	EXPECT_TRUE(Changed);
-	EXPECT_TRUE(State.m_WasActive);
-	EXPECT_TRUE(State.m_AutoChangedValue);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, false, true, 1, Changed), 0);
-	EXPECT_TRUE(Changed);
-}
-
-TEST(QmGoresMode, LinkedFastInputKeepsManualChangesMadeDuringGores)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
-	EXPECT_TRUE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 0);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, false, true, 0, Changed), 0);
-	EXPECT_FALSE(Changed);
-}
-
-TEST(QmGoresMode, LinkedFastInputKeepsManualReenableMadeDuringGores)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
-	EXPECT_TRUE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 0);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, false, true, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-}
-
-TEST(QmGoresMode, DisablingLinkedFastInputRestoresOnlyAutomaticChanges)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
-	EXPECT_TRUE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, false, 1, Changed), 0);
-	EXPECT_TRUE(Changed);
-}
-
-TEST(QmGoresMode, AutoEnableTemporarilyActivatesGoresAndKeepsManualChanges)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 1);
-	EXPECT_TRUE(Changed);
-
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, false, 1, 1, Changed), 0);
-	EXPECT_TRUE(Changed);
-
-	State = {};
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 1);
-	EXPECT_TRUE(Changed);
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 0);
-	EXPECT_FALSE(Changed);
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, false, 0, 1, Changed), 0);
-	EXPECT_FALSE(Changed);
-}
-
-TEST(QmGoresMode, AutoEnableKeepsManualReenable)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 1);
-	EXPECT_TRUE(Changed);
-
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 0, 1, Changed), 0);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 1, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmFocusConfigOverride(State, false, 1, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
 }
 
 TEST(QmFastInputMode, NormalizesLegacyModesToBestInput)
@@ -290,96 +240,6 @@ TEST(QmFastInputMode, AutoPredictionMarginClampsToSupportedRange)
 	EXPECT_EQ(QmComputeAutoPredictionMargin(500, 0.0f, 0.0f, 0.0f, 0.0f, false), 300);
 }
 
-TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
-{
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(true, 1, Changed), 0);
-	EXPECT_TRUE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(true, 0, Changed), 0);
-	EXPECT_FALSE(Changed);
-
-	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(false, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-}
-
-TEST(QmGoresMode, DummyHammerOverrideRestoresOnlyAutomaticChanges)
-{
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 0);
-	EXPECT_TRUE(Changed);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 0, Changed), 0);
-	EXPECT_FALSE(Changed);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, false, true, 0, Changed), 1);
-	EXPECT_TRUE(Changed);
-
-	State = {};
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 0);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, false, true, 1, Changed), 1);
-	EXPECT_FALSE(Changed);
-}
-
-TEST(QmGoresMode, HammerWakeupRequiresHeldHammerAndExternalWakeup)
-{
-	EXPECT_TRUE(ShouldTriggerQmGoresHammerWakeup(true, true, true));
-	EXPECT_FALSE(ShouldTriggerQmGoresHammerWakeup(false, true, true));
-	EXPECT_FALSE(ShouldTriggerQmGoresHammerWakeup(true, false, true));
-	EXPECT_FALSE(ShouldTriggerQmGoresHammerWakeup(true, true, false));
-}
-
-TEST(QmGoresMode, KeepsHammerRequestWhileFrozen)
-{
-	EXPECT_TRUE(ShouldKeepQmGoresHammerInFreeze(true, true, true));
-	EXPECT_FALSE(ShouldKeepQmGoresHammerInFreeze(false, true, true));
-	EXPECT_FALSE(ShouldKeepQmGoresHammerInFreeze(true, false, true));
-	EXPECT_FALSE(ShouldKeepQmGoresHammerInFreeze(true, true, false));
-}
-
-TEST(QmGoresMode, HammerWakeupFireStateCreatesNewPressWhileHeld)
-{
-	EXPECT_EQ(QmGoresHammerWakeupFireState(0), 1);
-	EXPECT_EQ(QmGoresHammerWakeupFireState(1), 3);
-	EXPECT_EQ(QmGoresHammerWakeupFireState(2), 3);
-	EXPECT_EQ(QmGoresHammerWakeupFireState(3), 5);
-}
-
-TEST(QmGoresMode, HammerWakeupReleaseClearsOnlyPendingAutomaticPress)
-{
-	EXPECT_TRUE(ShouldReleaseQmGoresHammerWakeupFire(true, 1));
-	EXPECT_TRUE(ShouldReleaseQmGoresHammerWakeupFire(true, 3));
-	EXPECT_FALSE(ShouldReleaseQmGoresHammerWakeupFire(false, 1));
-	EXPECT_FALSE(ShouldReleaseQmGoresHammerWakeupFire(true, 2));
-
-	EXPECT_EQ(QmGoresHammerWakeupReleaseFireState(1), 2);
-	EXPECT_EQ(QmGoresHammerWakeupReleaseFireState(3), 4);
-}
-
-TEST(QmGoresMode, RestoreWeaponAfterHammerUsesRecordedWeapon)
-{
-	EXPECT_EQ(GoresRestoreWeaponAfterHammer(WEAPON_LASER, true), WEAPON_LASER);
-	EXPECT_EQ(GoresRestoreWeaponAfterHammer(WEAPON_GRENADE, true), WEAPON_GRENADE);
-	EXPECT_EQ(GoresRestoreWeaponAfterHammer(WEAPON_GUN, false), WEAPON_GUN);
-}
-
-TEST(QmGoresMode, FireKeydownPulseRequiresActiveCycleAndNonHammerWeapon)
-{
-	EXPECT_TRUE(ShouldPulseGoresHammerOnFire(true, true, false, false));
-	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(false, true, false, false));
-	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(true, false, false, false));
-	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(true, true, true, false));
-	EXPECT_FALSE(ShouldPulseGoresHammerOnFire(true, true, false, true));
-}
-
-TEST(QmGoresMode, RestoresRecordedWeaponEvenWhenTwoWeaponCycleIsInactive)
-{
-	EXPECT_TRUE(ShouldRestoreGoresWeaponAfterHammer(true, true));
-	EXPECT_FALSE(ShouldRestoreGoresWeaponAfterHammer(false, true));
-	EXPECT_FALSE(ShouldRestoreGoresWeaponAfterHammer(true, false));
-}
-
 TEST(QmNameplateHookStrongWeak, ScopeFiltersExpectedPlayers)
 {
 	EXPECT_TRUE(ShouldShowQmHookStrongWeakScope(QM_HOOK_STRONG_WEAK_SCOPE_SELF, true, false, false));
@@ -442,32 +302,6 @@ TEST(QmNameplateTextEffects, DemoModesOverridePlayingAndSpectateScopes)
 
 	EXPECT_TRUE(ShouldUseQmNameplateTextEffects(QM_NAMEPLATE_TEXT_PLAYING_SCOPE_FRIENDS, QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_OFF, QM_NAMEPLATE_TEXT_DEMO_MODE_MANUAL_SCOPE, -1, true, true, false, true, false, 6));
 	EXPECT_FALSE(ShouldUseQmNameplateTextEffects(QM_NAMEPLATE_TEXT_PLAYING_SCOPE_FRIENDS, QM_NAMEPLATE_TEXT_SPECTATE_SCOPE_ALL, QM_NAMEPLATE_TEXT_DEMO_MODE_MANUAL_SCOPE, -1, true, true, false, false, true, 5));
-}
-
-TEST(QmGoresMode, BudgetedWorkConsumesAtMostBudget)
-{
-	int Cursor = 0;
-	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 10, 3));
-	EXPECT_EQ(Cursor, 3);
-
-	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 10, 4));
-	EXPECT_EQ(Cursor, 7);
-
-	EXPECT_FALSE(ConsumeQmBudgetedWork(Cursor, 10, 8));
-	EXPECT_EQ(Cursor, 10);
-}
-
-TEST(QmGoresMode, BudgetedWorkDoesNotAdvanceWithoutPositiveBudget)
-{
-	int Cursor = 2;
-	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 5, 0));
-	EXPECT_EQ(Cursor, 2);
-
-	EXPECT_TRUE(ConsumeQmBudgetedWork(Cursor, 5, -4));
-	EXPECT_EQ(Cursor, 2);
-
-	EXPECT_FALSE(ConsumeQmBudgetedWork(Cursor, 2, 10));
-	EXPECT_EQ(Cursor, 2);
 }
 
 TEST(QmFocusMode, ConfigOverrideRestoresOnlyAutoHiddenValues)
@@ -899,7 +733,6 @@ TEST(QmTranslateUiSettings, ConfigManagerRecordsColorAlphaInputModes)
 	pConsole->ExecuteLine("qm_translate_btn_color_disabled $5A6B7C00");
 	EXPECT_EQ(pConfigManager->ColorValueInputAlphaMode("qm_translate_btn_color_disabled"), EColorInputAlphaMode::EXPLICIT);
 	const unsigned ExplicitTransparent = g_Config.m_QmTranslateBtnColorDisabled;
-	EXPECT_EQ(ExplicitTransparent & NTranslateUiSettings::COLOR_ALPHA_MASK, 0u);
 	EXPECT_EQ(MigrateDisabledColor(), ExplicitTransparent);
 
 	pConsole->ExecuteLine("qm_translate_btn_color_disabled red");

@@ -156,6 +156,7 @@ tags
 *.cmd
 !scripts/cmake-windows.cmd
 !qmclient_scripts/cmake-windows.cmd
+!qmclient_scripts/preview-crash-dialog.cmd
 *.csv
 *.dll
 *.dmg

@@ -16,7 +16,7 @@ namespace
 	using TPollRenderTargetReadback = IGraphics::ERenderTargetReadbackState (IGraphics::*)(IGraphics::CRenderTargetReadbackHandle);
 	using TResolveRenderTargetReadback = bool (IGraphics::*)(IGraphics::CRenderTargetReadbackHandle *, CImageInfo &);
 	using TCancelRenderTargetReadback = void (IGraphics::*)(IGraphics::CRenderTargetReadbackHandle *);
-	using TGaussianBlurRenderTarget = bool (IGraphics::*)(IGraphics::CRenderTargetHandle, IGraphics::CRenderTargetHandle, IGraphics::CRenderTargetHandle, const IGraphics::SGaussianBlurParams &);
+	using TGaussianBlurRenderTarget = bool (IGraphics::*)(IGraphics::CRenderTargetHandle, const std::array<IGraphics::CRenderTargetHandle, IGraphics::DUAL_KAWASE_PYRAMID_LEVELS> &, IGraphics::CRenderTargetHandle, const IGraphics::SGaussianBlurParams &);
 	using TCaptureBackbufferToRenderTarget = bool (IGraphics::*)(IGraphics::CRenderTargetHandle);
 	using TDrawRenderTarget = void (IGraphics::*)(IGraphics::CRenderTargetHandle, const IGraphics::SRenderTargetDrawParams &);
 
@@ -101,6 +101,16 @@ TEST(GraphicsRenderTargetGaussianBlur, KernelRejectsInvalidParameters)
 	EXPECT_FALSE(IGraphics::CalculateGaussianBlurKernel(Params, aWeights));
 }
 
+TEST(GraphicsRenderTargetGaussianBlur, DualKawasePyramidUsesHalfAndQuarterResolution)
+{
+	EXPECT_EQ(IGraphics::DualKawasePyramidDimension(1920, 0), 960);
+	EXPECT_EQ(IGraphics::DualKawasePyramidDimension(1920, 1), 480);
+	EXPECT_EQ(IGraphics::DualKawasePyramidDimension(721, 0), 361);
+	EXPECT_EQ(IGraphics::DualKawasePyramidDimension(721, 1), 181);
+	EXPECT_EQ(IGraphics::DualKawasePyramidDimension(0, 0), 0);
+	EXPECT_EQ(IGraphics::DualKawasePyramidDimension(1920, -1), 0);
+}
+
 TEST(GraphicsRenderTargetGaussianBlur, PassCommandCarriesKernelAndDirection)
 {
 	CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Pass;
@@ -113,6 +123,17 @@ TEST(GraphicsRenderTargetGaussianBlur, PassCommandCarriesKernelAndDirection)
 	EXPECT_EQ(Pass.m_Radius, 4);
 	EXPECT_TRUE(Pass.m_Horizontal);
 	EXPECT_FLOAT_EQ(Pass.m_aWeights[0], 0.25f);
+}
+
+TEST(GraphicsRenderTargetGaussianBlur, PassCommandCarriesSelectableModeAndPass)
+{
+	CCommandBuffer::SCommand_RenderTarget_GaussianBlurPass Pass;
+	Pass.m_Mode = IGraphics::EBlurMode::DUAL;
+	Pass.m_Pass = 1;
+	Pass.m_Upsample = true;
+	EXPECT_EQ(Pass.m_Mode, IGraphics::EBlurMode::DUAL);
+	EXPECT_EQ(Pass.m_Pass, 1);
+	EXPECT_TRUE(Pass.m_Upsample);
 }
 
 TEST(GraphicsRenderTarget, CommandStructsExposeExpectedFields)
@@ -338,6 +359,11 @@ TEST(GraphicsRenderTargetBackbufferCapture, OpenGlUsesFramebufferBlitOnlyOnModer
 	EXPECT_NE(Body.find("GL_READ_FRAMEBUFFER_BINDING"), std::string::npos);
 	EXPECT_NE(Body.find("GL_DRAW_FRAMEBUFFER_BINDING"), std::string::npos);
 	EXPECT_NE(Body.find("glBlitFramebuffer"), std::string::npos);
+	EXPECT_NE(Body.find("glCopyTexSubImage2D"), std::string::npos);
+	EXPECT_NE(Body.find("RequiresSeparateResolve"), std::string::npos);
+	EXPECT_NE(Body.find("glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousReadFramebuffer)"), std::string::npos);
+	EXPECT_EQ(Body.find("glBindFramebuffer(GL_READ_FRAMEBUFFER, PreviousDrawFramebuffer)"), std::string::npos);
+	EXPECT_NE(Body.find("PreviousReadFramebuffer == 0"), std::string::npos);
 	EXPECT_NE(Body.find("GL_COLOR_BUFFER_BIT, GL_LINEAR"), std::string::npos);
 	EXPECT_EQ(Body.find("glReadPixels"), std::string::npos);
 }
@@ -408,18 +434,18 @@ TEST(GraphicsRenderTargetBackbufferCapture, VulkanLoadPassSynchronizesAttachment
 	EXPECT_NE(Body.find("VK_PIPELINE_STAGE_TRANSFER_BIT"), std::string::npos);
 }
 
-TEST(GraphicsRenderTargetGaussianBlur, ThreadedFrontendBuildsHorizontalAndVerticalPasses)
+TEST(GraphicsRenderTargetGaussianBlur, ThreadedFrontendBuildsModeSpecificPassChain)
 {
 	const std::string Source = ReadFile("src/engine/client/graphics_threaded.cpp");
 	const std::string Body = ExtractFunctionBody(Source, "bool CGraphics_Threaded::GaussianBlurRenderTarget");
 	ASSERT_FALSE(Body.empty());
 	EXPECT_NE(Body.find("CalculateGaussianBlurKernel"), std::string::npos);
-	EXPECT_NE(Body.find("Source.Id() == Temporary.Id()"), std::string::npos);
+	EXPECT_NE(Body.find("aTemporary[Index].Id() == Source.Id()"), std::string::npos);
 	EXPECT_NE(Body.find("m_vRenderTargetSizes[Source.Id()]"), std::string::npos);
-	EXPECT_NE(Body.find("Horizontal.m_Horizontal = true"), std::string::npos);
-	EXPECT_NE(Body.find("Vertical.m_Horizontal = false"), std::string::npos);
-	EXPECT_NE(Body.find("BeginRenderTarget(Temporary"), std::string::npos);
-	EXPECT_NE(Body.find("BeginRenderTarget(Destination"), std::string::npos);
+	EXPECT_NE(Body.find("DualKawasePyramidDimension"), std::string::npos);
+	EXPECT_NE(Body.find("DUAL_KAWASE_PYRAMID_LEVELS"), std::string::npos);
+	EXPECT_NE(Body.find("AddBlurPass"), std::string::npos);
+	EXPECT_NE(Body.find("Command.m_Upsample = Upsample"), std::string::npos);
 }
 
 TEST(GraphicsRenderTargetGaussianBlur, FrontendRejectsNestedRenderTargets)
@@ -445,6 +471,14 @@ TEST(GraphicsRenderTargetGaussianBlur, ShadersAccumulateRgbaWithBoundedKernel)
 	{
 		const std::string Shader = ReadFile(pShaderPath);
 		EXPECT_NE(Shader.find("GAUSSIAN_BLUR_MAX_RADIUS"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("gMode"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("gPass"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("gMode == 1"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("gMode == 2"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("* 4.0"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("/ 8.0"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("* 2.0"), std::string::npos) << pShaderPath;
+		EXPECT_NE(Shader.find("/ 12.0"), std::string::npos) << pShaderPath;
 		EXPECT_NE(Shader.find("vec4 Result"), std::string::npos) << pShaderPath;
 		EXPECT_NE(Shader.find("gWeights[Offset]"), std::string::npos) << pShaderPath;
 		EXPECT_EQ(Shader.find("vec4(Result.rgb, 1.0)"), std::string::npos) << pShaderPath;

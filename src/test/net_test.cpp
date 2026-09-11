@@ -17,66 +17,9 @@ using namespace std::chrono_literals;
 namespace
 {
 
-	TEST(Net, Ipv6SocketUsesIpv6TrafficClassOutsideWindows)
-	{
-		const std::string Source = ReadTestSourceFile("src/base/system.cpp");
-		const size_t Ipv6Start = Source.find("if(bindaddr.type & NETTYPE_IPV6)");
-		ASSERT_NE(Ipv6Start, std::string::npos);
-		const size_t Ipv6End = Source.find("#if defined(CONF_WEBSOCKETS)", Ipv6Start);
-		ASSERT_NE(Ipv6End, std::string::npos);
-		const std::string Ipv6SocketSetup = Source.substr(Ipv6Start, Ipv6End - Ipv6Start);
-
-		EXPECT_NE(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IPV6, IPV6_TCLASS"), std::string::npos);
-		EXPECT_EQ(Ipv6SocketSetup.find("setsockopt(socket, IPPROTO_IP, IP_TOS"), std::string::npos);
-	}
-
-	TEST(Net, SocketUsesExpeditedForwardingDscp)
-	{
-		// 官方 d3810ba51：IPv4/IPv6 的 DSCP 都改用 EF(0xB8)，本地原先保留 IPTOS_LOWDELAY(0x10)。
-		const std::string Source = ReadTestSourceFile("src/base/system.cpp");
-		EXPECT_NE(Source.find("int iptos = 0xB8; // IPTOS_DSCP_EF, expedited forwarding"), std::string::npos);
-		EXPECT_NE(Source.find("int TrafficClass = 0xB8; // IPTOS_DSCP_EF, expedited forwarding"), std::string::npos);
-		EXPECT_EQ(Source.find("0x10; // IPTOS_LOWDELAY"), std::string::npos);
-	}
-
-	TEST(Net, VanillaAntispoofBoundsPreconnectionChunk)
-	{
-		const std::string Source = ReadTestSourceFile("src/engine/shared/network_server.cpp");
-		const size_t Start = Source.find("else if(!IsCtrl && g_Config.m_SvVanillaAntiSpoof");
-		ASSERT_NE(Start, std::string::npos);
-		// 官方 7131ad28b 把 OnConnCtrlMsg 合并进了 OnTokenCtrlMsg，这里改用新的边界标记
-		const size_t End = Source.find("void CNetServer::OnTokenCtrlMsg", Start);
-		ASSERT_NE(End, std::string::npos);
-		const std::string Handler = Source.substr(Start, End - Start);
-
-		EXPECT_NE(Handler.find("if(Packet.m_DataSize < 2)"), std::string::npos);
-		EXPECT_NE(Handler.find("const int Remaining"), std::string::npos);
-		EXPECT_NE(Handler.find("std::min(Header.m_Size, Remaining)"), std::string::npos);
-	}
-
 	int RejoinCallbackStub(int ClientId, void *pUser, bool Sixup, bool VanillaAuth)
 	{
 		return ClientId + (pUser != nullptr ? 100 : 0) + (Sixup ? 1 : 0) + (VanillaAuth ? 2 : 0);
-	}
-
-	TEST(Net, ClientRejoinCallbackCarriesProtocolAndAuth)
-	{
-		// 官方 7131ad28b：重连回调签名带上协议与认证信息
-		NETFUNC_CLIENTREJOIN pfnRejoin = RejoinCallbackStub;
-		EXPECT_EQ(pfnRejoin(1, nullptr, true, false), 2);
-		EXPECT_EQ(pfnRejoin(1, nullptr, false, true), 3);
-	}
-
-	TEST(Net, RejoiningClientsAreHeldOutsideGameState)
-	{
-		// 官方 7131ad28b/b946fa9a2：重连槽位不发快照，标记在重连、掉线与换图时清理
-		const std::string Header = ReadTestSourceFile("src/engine/shared/network.h");
-		EXPECT_NE(Header.find("typedef int (*NETFUNC_CLIENTREJOIN)(int ClientId, void *pUser, bool Sixup, bool VanillaAuth);"), std::string::npos);
-		const std::string Server = ReadTestSourceFile("src/engine/server/server.cpp");
-		EXPECT_NE(Server.find("m_aClients[i].m_State != CClient::STATE_INGAME || m_aClients[i].m_Rejoining"), std::string::npos);
-		EXPECT_NE(Server.find("m_Rejoining = true;"), std::string::npos);
-		EXPECT_NE(Server.find("m_Rejoining = false;"), std::string::npos);
-		EXPECT_NE(Server.find("GameServer()->OnClientRejoin(ClientId);"), std::string::npos);
 	}
 
 	void InitNetBase()
@@ -112,51 +55,6 @@ namespace
 			&aBuffer[NET_PACKETHEADERSIZE], NET_MAX_PACKETSIZE - NET_PACKETHEADERSIZE);
 		bool Sixup = false;
 		return CNetBase::UnpackPacket(aBuffer, NET_PACKETHEADERSIZE + CompressedSize, pPacket, Sixup, AllowDecompression, nullptr, nullptr, pDecompressed);
-	}
-
-	TEST(Net, UnpackCompressedPacket)
-	{
-		CNetPacketConstruct Packet;
-		bool Decompressed = false;
-		EXPECT_EQ(UnpackCompressedPacket(&Packet, true, &Decompressed), 0);
-		EXPECT_EQ(Packet.m_DataSize, 64);
-		EXPECT_TRUE(Decompressed);
-	}
-
-	TEST(Net, UnpackCompressedPacketWithoutDecompression)
-	{
-		CNetPacketConstruct Packet;
-		bool Decompressed = true;
-		EXPECT_EQ(UnpackCompressedPacket(&Packet, false, &Decompressed), -1);
-		EXPECT_FALSE(Decompressed);
-	}
-
-	TEST(Net, UnpackOversizedCompressedPacket)
-	{
-		CNetPacketConstruct Packet;
-		bool Decompressed = false;
-		EXPECT_EQ(UnpackCompressedPacket(&Packet, true, &Decompressed, (int)sizeof(Packet.m_aChunkData) + 1), -1);
-		EXPECT_TRUE(Decompressed);
-	}
-
-	TEST(Net, UnpackUncompressedPacketWithoutDecompression)
-	{
-		CNetPacketConstruct Packet;
-		EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData), &Packet, false), 0);
-	}
-
-	TEST(Net, UnpackMaximumUncompressedPacket)
-	{
-		CNetPacketConstruct Packet;
-		EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData), &Packet), 0);
-		EXPECT_EQ(Packet.m_DataSize, (int)sizeof(Packet.m_aChunkData));
-		EXPECT_EQ(UnpackUncompressedPacket(NET_MAX_PACKETSIZE, &Packet), 0);
-	}
-
-	TEST(Net, UnpackOversizedUncompressedPacket)
-	{
-		CNetPacketConstruct Packet;
-		EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData) + 1, &Packet), -1);
 	}
 
 	unsigned char *PackTestChunk(CNetPacketConstruct *pPacket, int Flags, int DataSize, const unsigned char *pData, bool Sixup, int Sequence = 17)
@@ -841,4 +739,57 @@ TEST_F(CNetKcpBypassTest, ServerFlushBypassJoinsPendingKcpPacket)
 	EXPECT_EQ(vReceived[0], std::string(reinterpret_cast<const char *>(vVital1.data()), vVital1.size()));
 	EXPECT_EQ(vReceived[1], std::string(reinterpret_cast<const char *>(vVital2.data()), vVital2.size()));
 	EXPECT_EQ(vReceived[2], std::string(reinterpret_cast<const char *>(vSnapshot.data()), vSnapshot.size()));
+}
+
+TEST(Net, ClientRejoinCallbackCarriesProtocolAndAuth)
+{
+	// 官方 7131ad28b：重连回调签名带上协议与认证信息
+	NETFUNC_CLIENTREJOIN pfnRejoin = RejoinCallbackStub;
+	EXPECT_EQ(pfnRejoin(1, nullptr, true, false), 2);
+	EXPECT_EQ(pfnRejoin(1, nullptr, false, true), 3);
+}
+
+TEST(Net, UnpackCompressedPacket)
+{
+	CNetPacketConstruct Packet;
+	bool Decompressed = false;
+	EXPECT_EQ(UnpackCompressedPacket(&Packet, true, &Decompressed), 0);
+	EXPECT_EQ(Packet.m_DataSize, 64);
+	EXPECT_TRUE(Decompressed);
+}
+
+TEST(Net, UnpackCompressedPacketWithoutDecompression)
+{
+	CNetPacketConstruct Packet;
+	bool Decompressed = true;
+	EXPECT_EQ(UnpackCompressedPacket(&Packet, false, &Decompressed), -1);
+	EXPECT_FALSE(Decompressed);
+}
+
+TEST(Net, UnpackOversizedCompressedPacket)
+{
+	CNetPacketConstruct Packet;
+	bool Decompressed = false;
+	EXPECT_EQ(UnpackCompressedPacket(&Packet, true, &Decompressed, (int)sizeof(Packet.m_aChunkData) + 1), -1);
+	EXPECT_TRUE(Decompressed);
+}
+
+TEST(Net, UnpackUncompressedPacketWithoutDecompression)
+{
+	CNetPacketConstruct Packet;
+	EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData), &Packet, false), 0);
+}
+
+TEST(Net, UnpackMaximumUncompressedPacket)
+{
+	CNetPacketConstruct Packet;
+	EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData), &Packet), 0);
+	EXPECT_EQ(Packet.m_DataSize, (int)sizeof(Packet.m_aChunkData));
+	EXPECT_EQ(UnpackUncompressedPacket(NET_MAX_PACKETSIZE, &Packet), 0);
+}
+
+TEST(Net, UnpackOversizedUncompressedPacket)
+{
+	CNetPacketConstruct Packet;
+	EXPECT_EQ(UnpackUncompressedPacket(NET_PACKETHEADERSIZE + (int)sizeof(Packet.m_aChunkData) + 1, &Packet), -1);
 }

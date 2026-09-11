@@ -912,57 +912,6 @@ def kcp_timeout_drops_session(test_env):
 
 
 @test
-def client_focus_settings_smoke_can_start_and_connect(test_env):
-	client = test_env.client([
-		"qm_focus_mode 1",
-		"qm_focus_mode_hide_hud 1",
-		"qm_focus_mode_hide_map_progress 0",
-		"qm_focus_mode_hide_info_messages 1",
-		"qm_focus_mode_hide_names 1",
-		"qm_focus_mode_hide_nameplates 0",
-		"qm_focus_mode_hide_direction_indicators 0",
-		"qm_focus_mode_hide_guide_lines 1",
-		"qm_focus_mode_hide_jump_effects 0",
-		"qm_focus_mode_hide_muzzle_effects 1",
-		"qm_focus_mode_mute_jump_sounds 0",
-		"qm_focus_mode_hide_chat 1",
-		"qm_focus_mode_hide_system_messages 0",
-		"qm_focus_mode_hide_echo 1",
-	])
-	server = test_env.server()
-	wait_for_startup([client, server])
-	client.command(f"connect localhost:{server.port}")
-	server.wait_for_log_prefix("server: player has entered the game", timeout=10)
-	server.exit()
-	client.wait_for_log_exact("client: offline error='Server shutdown'")
-	client.exit()
-	server.wait_for_exit()
-	client.wait_for_exit()
-
-
-@test
-def client_gores_settings_smoke_can_start_and_connect(test_env):
-	client = test_env.client([
-		"qm_gores_auto_enable 1",
-		"qm_gores 0",
-		"qm_gores_fast_input 1",
-		"qm_gores_fast_input_others 1",
-		"qm_gores_hide_guides 1",
-		"tc_fast_input 0",
-		"tc_fast_input_others 0",
-	])
-	server = test_env.server()
-	wait_for_startup([client, server])
-	client.command(f"connect localhost:{server.port}")
-	server.wait_for_log_prefix("server: player has entered the game", timeout=10)
-	server.exit()
-	client.wait_for_log_exact("client: offline error='Server shutdown'")
-	client.exit()
-	server.wait_for_exit()
-	client.wait_for_exit()
-
-
-@test
 def client_can_connect_7(test_env):
 	client = test_env.client()
 	server = test_env.server()

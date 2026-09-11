@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 GATE_DIR = REPO_ROOT / "qmclient_scripts" / "gate"
 sys.path.insert(0, str(GATE_DIR))
 
-from checks import clang_tidy_warn, config_vars, env, identifiers, settings_ui  # noqa: E402
+from checks import clang_tidy_warn, config_vars, env, identifiers, python_tests, settings_ui  # noqa: E402
 import check_gate  # noqa: E402
 from lib import scope  # noqa: E402
 from lib.report import ResultCollector  # noqa: E402
@@ -98,6 +98,11 @@ class GateProcessContractTest(unittest.TestCase):
 
 
 class GateLibraryContractTest(unittest.TestCase):
+	def test_python_gate_discovers_owned_test_roots(self):
+		source = (GATE_DIR / "checks" / "python_tests.py").read_text(encoding="utf-8")
+		for root in ("qmclient_scripts/tests", "qmclient_scripts/gate/tests", "qmclient_scripts/integration"):
+			self.assertIn(root, source)
+
 	def test_mode_contract_keeps_default_tests_and_full_superset(self):
 		default = check_gate._MODE_SPECS["default"]
 		default_checks = {spec.name for spec in check_gate._CHECK_SPECS if "default" in spec.default_modes}
