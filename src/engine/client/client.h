@@ -119,6 +119,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 		char m_aServerAddr[NETADDR_MAXSTRSIZE] = "";
 	};
 
+	// 单调时钟纳秒（time_get_nanoseconds），与主循环 tick 缓存无关。
 	std::atomic<int64_t> m_HangLastHeartbeat{0};
 	int64_t m_QmGraphicsLastPumpNetworkNs = 0;
 	std::atomic<bool> m_HangWatchdogStop{false};

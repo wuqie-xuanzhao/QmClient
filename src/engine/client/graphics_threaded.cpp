@@ -2852,7 +2852,7 @@ void CGraphics_Threaded::DrawRoundedRectAntialias(const float x, const float y, 
 
 void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams &Params)
 {
-	if(!Params.m_Texture.IsValid() || !IsTextureHandleAllocated(Params.m_Texture) || Params.m_Rect.z <= 0.0f || Params.m_Rect.w <= 0.0f || Params.m_PxRange <= 0.0f || Params.m_AtlasWidth <= 0.0f || Params.m_AtlasHeight <= 0.0f || Params.m_Color.a <= 0.0f)
+	if((!Params.m_ProceduralRing && (!Params.m_Texture.IsValid() || !IsTextureHandleAllocated(Params.m_Texture) || Params.m_PxRange <= 0.0f || Params.m_AtlasWidth <= 0.0f || Params.m_AtlasHeight <= 0.0f)) || Params.m_Rect.z <= 0.0f || Params.m_Rect.w <= 0.0f || Params.m_Color.a <= 0.0f)
 		return;
 
 	if(m_NumVertices > 0)
@@ -2868,8 +2868,8 @@ void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams
 	Cmd.m_State = m_State;
 	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
 	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
-	Cmd.m_State.m_Texture = Params.m_Texture.Id();
-	Cmd.m_MsdfParams = vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, 0.0f);
+	Cmd.m_State.m_Texture = Params.m_ProceduralRing ? m_NullTexture.Id() : Params.m_Texture.Id();
+	Cmd.m_MsdfParams = Params.m_ProceduralRing ? vec4(-Params.m_RingInnerRadius, Params.m_RingOuterRadius, Params.m_RingStartAngle, Params.m_RingEndAngle) : vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, 0.0f);
 
 	const float CenterX = Params.m_Rect.x + Params.m_Rect.z * 0.5f;
 	const float CenterY = Params.m_Rect.y + Params.m_Rect.w * 0.5f;
@@ -2886,10 +2886,11 @@ void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams
 	aVertices[1].m_Pos = Rotate(Params.m_Rect.x + Params.m_Rect.z, Params.m_Rect.y);
 	aVertices[2].m_Pos = Rotate(Params.m_Rect.x + Params.m_Rect.z, Params.m_Rect.y + Params.m_Rect.w);
 	aVertices[3].m_Pos = Rotate(Params.m_Rect.x, Params.m_Rect.y + Params.m_Rect.w);
-	aVertices[0].m_Tex = vec2(Params.m_UvRect.x, Params.m_UvRect.y);
-	aVertices[1].m_Tex = vec2(Params.m_UvRect.z, Params.m_UvRect.y);
-	aVertices[2].m_Tex = vec2(Params.m_UvRect.z, Params.m_UvRect.w);
-	aVertices[3].m_Tex = vec2(Params.m_UvRect.x, Params.m_UvRect.w);
+	const vec4 UvRect = Params.m_ProceduralRing ? vec4(0.0f, 0.0f, 1.0f, 1.0f) : Params.m_UvRect;
+	aVertices[0].m_Tex = vec2(UvRect.x, UvRect.y);
+	aVertices[1].m_Tex = vec2(UvRect.z, UvRect.y);
+	aVertices[2].m_Tex = vec2(UvRect.z, UvRect.w);
+	aVertices[3].m_Tex = vec2(UvRect.x, UvRect.w);
 	const CCommandBuffer::SColor Color = ColorRGBAToCommandColor(Params.m_Color);
 	for(auto &Vertex : aVertices)
 		Vertex.m_Color = Color;
@@ -4139,6 +4140,13 @@ void CGraphics_Threaded::Minimize()
 
 	for(auto &PropChangedListener : m_vPropChangeListeners)
 		PropChangedListener();
+}
+
+void CGraphics_Threaded::HideWindow()
+{
+	// QmClient: 退出清理前隐藏窗口。直接转发到后端的 SDL 调用，不经过渲染线程，
+	// 避免渲染队列卡住时窗口无法隐藏。
+	m_pBackend->HideWindow();
 }
 
 void CGraphics_Threaded::WarnPngliteIncompatibleImages(bool Warn)

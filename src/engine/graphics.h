@@ -472,6 +472,13 @@ public:
 		float m_AtlasWidth = 0.0f;
 		float m_AtlasHeight = 0.0f;
 		float m_Rotation = 0.0f;
+		// Procedural ring mode uses the existing MSDF command/shader with a
+		// signed-distance ring encoded as (-inner, outer, start, end).
+		bool m_ProceduralRing = false;
+		float m_RingInnerRadius = 0.0f;
+		float m_RingOuterRadius = 0.5f;
+		float m_RingStartAngle = 0.0f;
+		float m_RingEndAngle = 0.0f;
 	};
 
 	class CRenderTargetHandle
@@ -1026,6 +1033,8 @@ public:
 	void Shutdown() override = 0;
 
 	virtual void Minimize() = 0;
+	// QmClient: 直接隐藏窗口（不经渲染线程），供退出清理前使用。
+	virtual void HideWindow() = 0;
 
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;

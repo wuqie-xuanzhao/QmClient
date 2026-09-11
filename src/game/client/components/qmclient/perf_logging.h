@@ -263,4 +263,17 @@ inline void QmPerfLogStage(const char *pSystem, const char *pStage, double Durat
 	QmPerfLogPayload(pSystem, aPayload, pClient, pPage, pTab);
 }
 
+inline void QmPerfLogStageForce(const char *pSystem, const char *pStage, double DurationMs, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr, const char *pExtra = nullptr)
+{
+	if(!QmPerfShouldLogDuration(DurationMs))
+		return;
+
+	char aPayload[1024];
+	if(pExtra != nullptr && pExtra[0] != '\0')
+		str_format(aPayload, sizeof(aPayload), "stage=%s duration_ms=%.3f %s", pStage, DurationMs, pExtra);
+	else
+		str_format(aPayload, sizeof(aPayload), "stage=%s duration_ms=%.3f", pStage, DurationMs);
+	QmPerfLogPayloadForce(pSystem, aPayload, pClient, pPage, pTab);
+}
+
 #endif

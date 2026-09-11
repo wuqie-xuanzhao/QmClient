@@ -57,8 +57,6 @@ enum ETextRenderFlags
 	TEXT_RENDER_FLAG_NO_AUTOMATIC_QUAD_UPLOAD = 1 << 8,
 	// text is only rendered once and then discarded (a hint for buffer creation)
 	TEXT_RENDER_FLAG_ONE_TIME_USE = 1 << 9,
-	// one-shot UI paths (for example shutdown) must complete synchronously
-	TEXT_RENDER_FLAG_FORCE_SYNCHRONOUS = 1 << 10,
 };
 
 enum class EFontPreset
@@ -453,6 +451,16 @@ public:
 	// 光栅化耗时（FlushQmTextRuntimeBudgetLog 是跨帧累计观测，无法反映单帧
 	// 尖峰；本钩子提供单帧粒度数据用于定位文本渲染卡顿）。
 	virtual void QmTextFrameEnd() {}
+	// QmClient: 预热单个字形（命中缓存时零成本，未命中则光栅化并写入图集）。
+	// 字形光栅化幂等且可中断，菜单可在构建文本容器前分帧调用，避免一次容器
+	// 创建触发 100+ 新字形导致单帧 20–30ms 尖峰。
+	virtual void QmPrewarmGlyph(int Chr, int FontSize) {}
+	// QmClient: 空闲帧预热“最近缺失字形”（菜单关闭时调用），返回本次实际预热数量。
+	virtual int QmPrewarmRecentGlyphs(int MaxCount) { return 0; }
+	virtual int QmRecentGlyphMissCount() const { return 0; }
+	// QmClient: 跨会话持久化缺失字形集合，供下次启动后立即预热（文本格式 "Chr Size"）。
+	virtual void QmLoadRecentGlyphs(class IStorage *pStorage, const char *pPath) {}
+	virtual void QmSaveRecentGlyphs(class IStorage *pStorage, const char *pPath) {}
 
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor) = 0;
 	virtual void RenderTextContainer(STextContainerIndex TextContainerIndex, const ColorRGBA &TextColor, const ColorRGBA &TextOutlineColor, float X, float Y) = 0;

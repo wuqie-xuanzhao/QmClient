@@ -1034,11 +1034,6 @@ void CGameClient::OnInit()
 
 void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoadingCaption, const char *pLoadingMessage)
 {
-	if(g_Config.m_QmSettingsPrewarm == 0)
-		return;
-
-	m_Menus.PrewarmSettingsPages();
-
 	constexpr int TEXT_PREWARM_BUDGET_PER_STEP = 8;
 	// loading 是可阻塞阶段（有 loading 画面），循环 prebuild 直到 plan collection complete
 	// + prebuild remaining=0。原实现只调一次 budget=8，导致运行时 (ESC 打开/切 tab) 首帧
@@ -1046,6 +1041,11 @@ void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoading
 	// 用 WarmupReady (plan items + units 都 <= 0) 或连续无进展检测退出，避免死循环。
 	constexpr int MAX_TEXT_PREWARM_STEPS = 96;
 	constexpr int MAX_NO_PROGRESS_STEPS = 6;
+
+	if(g_Config.m_QmSettingsPrewarm == 0)
+		return;
+
+	m_Menus.PrewarmSettingsPages();
 
 	SSettingsLoadingPrewarmState State;
 	State.m_LastBuiltTextContainers = m_Menus.SettingsTextContainerCount();
@@ -1065,6 +1065,10 @@ void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoading
 	}
 
 	LogSettingsLoadingPrewarmEvent(Client(), "startup_text_prewarm_end", State.m_CompletedSteps, 1, 0, State.m_ConsecutiveNoProgressSteps, 0, 0);
+
+	// ESC 菜单的文本 plan/容器依赖打开后的菜单生命周期，不能在加载阶段预热
+	// （详见 docs/superpowers/plans/2026-09-09-Windows图形掉帧撕裂与连接中断调查.md §14/§16）。
+	// ESC 的字形与 plan 现在改由菜单关闭时的空闲帧预热（CMenus::OnUpdate / OnRender）。
 }
 
 void CGameClient::OnUpdate()
@@ -1901,6 +1905,11 @@ void CGameClient::OnRender()
 		g_Config.m_ClDummy = 0;
 
 	LogPerfStage(this, "gameclient_onrender_total", FrameTimer.ElapsedMs());
+
+	// QmClient: 结算本帧的 stutter 诊断窗口（组件级 on_update/on_render 采样）。
+	// 该函数此前只有声明和定义、没有调用点，导致 qm_perf_stutter_diagnostics
+	// 开启后永远不会产生 perf/stutter 报告；这里在渲染帧末尾统一消费。
+	ProcessQmStutterFrame();
 
 	m_pFrameScheduler->EndFrame();
 	if(QmPerfEnabled())
@@ -2997,6 +3006,13 @@ void CGameClient::OnScreenshotTaken(CImageInfo &&Image)
 
 void CGameClient::OnShutdown()
 {
+	// 退出前结算进行中的 stutter 窗口，避免最后的诊断数据丢失
+	if(m_QmStutterEpisodeTracker.Active())
+	{
+		const SQmStutterFrameDecision Decision = m_QmStutterEpisodeTracker.Flush(EQmStutterFlushReason::SHUTDOWN);
+		FlushQmStutterWindow(Decision, true);
+	}
+
 	for(auto &pComponent : m_vpAll)
 		pComponent->OnShutdown();
 
@@ -3106,11 +3122,8 @@ void CGameClient::RenderShutdownMessage()
 	// This function only gets called after the render loop has already terminated, so we have to call Swap manually.
 	Graphics()->Clear(0.0f, 0.0f, 0.0f);
 	Ui()->MapScreen();
-	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
-	TextRender()->SetRenderFlags(PreviousRenderFlags | TEXT_RENDER_FLAG_FORCE_SYNCHRONOUS);
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Ui()->DoLabel(Ui()->Screen(), pMessage, 16.0f, TEXTALIGN_MC);
-	TextRender()->SetRenderFlags(PreviousRenderFlags);
 	Graphics()->Swap();
 	Graphics()->Clear(0.0f, 0.0f, 0.0f);
 }

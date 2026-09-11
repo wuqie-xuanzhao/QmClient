@@ -124,6 +124,16 @@ packet 的排序必须遵守 DDNet 的视觉语义：layer/group 顺序、透明
 
 保留 CPU 侧文字布局、换行、字形选择和 atlas 管理；GPU 侧统一 MSDF、rounded-rect SDF、media-island SDF 的 material/pipeline key，减少 shader、纹理和 descriptor 切换。不得在第一阶段把文字布局搬到 compute。
 
+## 6.3.1 文本 CPU 成本的实测边界（2026-09-12）
+
+实测（`docs/superpowers/plans/2026-09-09-Windows图形掉帧撕裂与连接中断调查.md` §13–§18）表明，文本路径的可感知卡顿全部来自 CPU 侧：FreeType 字形光栅化（单帧 30–44 ms / 108–210 字形）与 plan 收集布局（单帧 1697 容器创建 / 12.7 ms）；GPU 上传占比不足 1%。这些成本已通过“时机优化”在打开场景消除——字形缺失记录 + 空闲帧预热 + 跨会话持久化（`qmclient/glyph_prewarm.txt`）、ESC 文本 plan 收集提前到菜单关闭时的空闲帧——不依赖本规格的 GPU-driven 改造。
+
+对本规格的约束：
+
+- GPU-driven 批处理不减少 FreeType 光栅化与布局；文本 CPU 成本需按“光栅化 / 布局 / 上传 / 帧时间”四个预算域独立治理，FreeType 工作线程化是独立立项（需先设计 FT_Face 生命周期与字形发布协议，不能直接把现有 FT_Face 调用塞进后台线程）。
+- 字形图集扩容（4096→8192）会触发全量重传，属极端场景（4096 图集约容纳 1.6 万字形）；若未来字形规模显著增长，多页图集应先于 GPU-driven 改造落地。
+- §5 的文本绘制顺序与 clip 语义在文本批处理时同样适用。
+
 # 7. Render graph
 
 现有 `BeginRenderTarget`、`EndRenderTarget`、`CaptureBackbufferToRenderTarget`、`GaussianBlurRenderTarget` 和 readback API 已经构成 render graph 的输入来源。新增的内部 render graph 只负责：

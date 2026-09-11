@@ -106,8 +106,9 @@ namespace
 
 	bool IsStatsDDraceMode(const std::string &Mode)
 	{
-		return str_find_nocase(Mode.c_str(), "ddrace") != nullptr ||
-		       str_find_nocase(Mode.c_str(), "ddnet") != nullptr;
+		// 官方 DDNet 聚合数据只属于主模式，不能套用到 Test/Space 等同名变体。
+		return str_comp_nocase(Mode.c_str(), "DDraceNetwork") == 0 ||
+		       str_comp_nocase(Mode.c_str(), "DDNet") == 0;
 	}
 
 	bool IsStatsGoresMode(const std::string &Mode)
@@ -482,6 +483,7 @@ namespace
 		case CMenus::PAGE_SERVER_INFO: return "server_info";
 		case CMenus::PAGE_NETWORK: return "browser";
 		case CMenus::PAGE_GHOST: return "ghost";
+		case CMenus::PAGE_RANK_DEMO: return "rank_demo";
 		case CMenus::PAGE_CALLVOTE: return "call_vote";
 		case CMenus::PAGE_SETTINGS: return "settings";
 		case CMenus::PAGE_DEMOS: return "demos";
@@ -2082,7 +2084,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		const float IconSide = minimum(Tab.w, Tab.h) * 0.56f;
 		const CUIRect IconRect{Tab.x + (Tab.w - IconSide) * 0.5f, Tab.y + (Tab.h - IconSide) * 0.5f, IconSide, IconSide};
 		const ColorRGBA IconColor = ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-		if(GameClient()->QmIconManager()->RenderIcon(EQmIcon::BOOKMARK, IconRect, IconColor))
+		if(!GameClient()->QmIconManager()->PreferFontFallback() && GameClient()->QmIconManager()->RenderIcon(EQmIcon::BOOKMARK, IconRect, IconColor))
 			return;
 
 		const unsigned OldFlags = TextRender()->GetRenderFlags();
@@ -2392,6 +2394,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float ServerInfoButtonWidth = (CompactOnlineMenuTabs ? 94.0f : 104.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			const float BrowserButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			const float GhostButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
+			const float RankDemoButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			const float CallVoteButtonWidth = (CompactOnlineMenuTabs ? 80.0f : 88.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			const float OnlineTabGap = 4.0f;
 
@@ -2430,6 +2433,13 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				if(DoIngameMenuTab(&s_GhostButton, PAGE_GHOST, "ingame-tab-ghost", Localize("Ghost"), ActivePage == PAGE_GHOST, &Button, IGraphics::CORNER_ALL))
 					NewPage = PAGE_GHOST;
 				MenubarTrackActive(PAGE_GHOST, Button);
+
+				Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
+				Box.VSplitLeft(RankDemoButtonWidth, &Button, &Box);
+				static CButtonContainer s_RankDemoButton;
+				if(DoIngameMenuTab(&s_RankDemoButton, PAGE_RANK_DEMO, "ingame-tab-rank-demo", Localize("Rank 1"), ActivePage == PAGE_RANK_DEMO, &Button, IGraphics::CORNER_ALL))
+					NewPage = PAGE_RANK_DEMO;
+				MenubarTrackActive(PAGE_RANK_DEMO, Button);
 			}
 
 			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
@@ -2681,6 +2691,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float ServerInfoButtonWidth = CompactOnlineMenuTabs ? 112.0f : 130.0f;
 			const float BrowserButtonWidth = CompactOnlineMenuTabs ? 78.0f : 90.0f;
 			const float GhostButtonWidth = CompactOnlineMenuTabs ? 78.0f : 90.0f;
+			const float RankDemoButtonWidth = CompactOnlineMenuTabs ? 78.0f : 90.0f;
 			const float CallVoteButtonWidth = CompactOnlineMenuTabs ? 88.0f : 100.0f;
 			const float CallVoteSpacing = CompactOnlineMenuTabs ? 2.0f : 4.0f;
 
@@ -2710,6 +2721,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				static CButtonContainer s_GhostButton;
 				if(DoIngameMenuTab(&s_GhostButton, PAGE_GHOST, "ingame-tab-ghost", Localize("Ghost"), ActivePage == PAGE_GHOST, &Button, IGraphics::CORNER_NONE))
 					NewPage = PAGE_GHOST;
+
+				Box.VSplitLeft(RankDemoButtonWidth, &Button, &Box);
+				static CButtonContainer s_RankDemoButton;
+				if(DoIngameMenuTab(&s_RankDemoButton, PAGE_RANK_DEMO, "ingame-tab-rank-demo", Localize("Rank 1"), ActivePage == PAGE_RANK_DEMO, &Button, IGraphics::CORNER_NONE))
+					NewPage = PAGE_RANK_DEMO;
 			}
 
 			Box.VSplitLeft(CallVoteButtonWidth, &Button, &Box);
@@ -2918,7 +2934,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	for(const SQmClientLocalModeStats &Stats : vLocalModeStats)
 	{
 		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [&Stats](const SQmClientLocalModeStats &Existing) {
-			return str_comp_nocase(Existing.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0;
+			return str_comp_nocase(Existing.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0 &&
+				Existing.m_CommunityId == Stats.m_CommunityId && Existing.m_IsAxiom == Stats.m_IsAxiom;
 		});
 		if(It == vModeStats.end())
 		{
@@ -2969,7 +2986,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		for(const SQmDdStatsGameType &GameType : *pDdStatsGameTypes)
 		{
 			auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [&GameType](const SQmClientLocalModeStats &Stats) {
-				return str_comp_nocase(Stats.m_GameMode.c_str(), GameType.m_Name.c_str()) == 0;
+			return str_comp_nocase(Stats.m_GameMode.c_str(), GameType.m_Name.c_str()) == 0 && Stats.m_CommunityId == "ddstats";
 			});
 			if(It == vModeStats.end())
 			{
@@ -2980,7 +2997,13 @@ void CMenus::RenderStatistics(CUIRect MainView)
 				vModeStats.push_back(std::move(Stats));
 			}
 			else
-				It->m_PlaytimeSeconds = std::max(It->m_PlaytimeSeconds, GameType.m_PlayTimeSeconds);
+			{
+				// DDStats 是远程模式时长的权威来源；不能用 max 保留
+				// 可能已经异常膨胀的本地累计值。
+				It->m_PlaytimeSeconds = GameType.m_PlayTimeSeconds;
+				It->m_CommunityId = "ddstats";
+				It->m_IsAxiom = false;
+			}
 		}
 	}
 	const SQmAxiomModeResult *pAxiomGoresResult = pAxiomResult ? &pAxiomResult->Mode(EQmAxiomMode::GORES) : nullptr;
@@ -2990,7 +3013,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	if(ShowAxiomGores)
 	{
 		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [](const SQmClientLocalModeStats &Stats) {
-			return IsStatsGoresMode(Stats.m_GameMode);
+			return IsStatsGoresMode(Stats.m_GameMode) && Stats.m_IsAxiom;
 		});
 		if(It == vModeStats.end())
 		{
@@ -3006,6 +3029,20 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			It->m_IsAxiom = true;
 		}
 	}
+	const int64_t RemoteDdnetPlaytimeHours = GameClient()->m_QmClient.QmDdnetPlaytimeHours();
+	if(FinishedMaps >= 0 || RemoteDdnetPlaytimeHours >= 0)
+	{
+		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [](const SQmClientLocalModeStats &Stats) {
+			return IsStatsDDraceMode(Stats.m_GameMode);
+		});
+		if(It == vModeStats.end())
+		{
+			SQmClientLocalModeStats Stats;
+			Stats.m_GameMode = "DDraceNetwork";
+			Stats.m_CommunityId = "ddnet";
+			vModeStats.push_back(std::move(Stats));
+		}
+	}
 	for(SQmClientLocalModeStats &Stats : vModeStats)
 	{
 		const bool IsGores = IsStatsGoresMode(Stats.m_GameMode);
@@ -3013,7 +3050,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(
 			Stats.m_Maps,
 			Stats.m_PlaytimeSeconds,
-			IsGores && ShowAxiomGores,
+			IsGores && Stats.m_IsAxiom && ShowAxiomGores,
 			HasAxiomGoresStats,
 			HasAxiomGoresStats ? pAxiomGoresResult->m_Score.m_TotalMapsCompleted : 0,
 			HasAxiomGoresStats ? pAxiomGoresResult->m_Score.m_TotalPlayTime : 0,
@@ -3022,6 +3059,21 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			IsDdnet ? GameClient()->m_QmClient.QmDdnetPlaytimeHours() : -1);
 		Stats.m_Maps = Display.m_Maps;
 		Stats.m_PlaytimeSeconds = Display.m_PlaytimeSeconds;
+	}
+	// 顶部 Play time 使用完整远程模式集合计算，不能依赖下面为 UI
+	// 截断到最多 5 项的 vDisplayModeStats。
+	int64_t RemotePlaytimeSeconds = 0;
+	bool HasRemotePlaytime = false;
+	for(const SQmClientLocalModeStats &Stats : vModeStats)
+	{
+		const bool IsRemoteDDrace = IsStatsDDraceMode(Stats.m_GameMode) && RemoteDdnetPlaytimeHours >= 0;
+		const bool IsRemoteGores = IsStatsGoresMode(Stats.m_GameMode) && Stats.m_IsAxiom && HasAxiomGoresStats;
+			const bool IsRemoteDdStatsMode = Stats.m_CommunityId == "ddstats";
+			if(IsRemoteDDrace || IsRemoteGores || IsRemoteDdStatsMode)
+			{
+				RemotePlaytimeSeconds = SaturatingAdd(RemotePlaytimeSeconds, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
+				HasRemotePlaytime = true;
+			}
 	}
 	std::vector<SQmClientLocalModeStats> vSortedModeStats = std::move(vModeStats);
 	std::stable_sort(vSortedModeStats.begin(), vSortedModeStats.end(), [](const SQmClientLocalModeStats &Left, const SQmClientLocalModeStats &Right) {
@@ -3066,36 +3118,27 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	const bool AxiomStatsFailed = ShowAxiomGores && pPlayerName && pPlayerName[0] != '\0' && GameClient()->m_QmAxiomScores.IsPlayerFailed(pPlayerName);
 	const bool AxiomGoresMode = ShowAxiomGores;
 
-	const int64_t LocalUptimeSeconds = static_cast<int64_t>(std::max(0.0f, Client()->LocalTime()));
-	int64_t CurrentTimestamp = time_timestamp();
-	int64_t StartupTimestamp = std::max<int64_t>(0, CurrentTimestamp - LocalUptimeSeconds);
-	const bool UsingServerTime = GameClient()->m_QmClient.HasQmServerTime();
-	if(UsingServerTime)
-	{
-		CurrentTimestamp = GameClient()->m_QmClient.QmServerTimeNow();
-		if(GameClient()->m_QmClient.QmServerSessionStartTime() > 0)
-			StartupTimestamp = GameClient()->m_QmClient.QmServerSessionStartTime();
-		else
-			StartupTimestamp = std::max<int64_t>(0, CurrentTimestamp - LocalUptimeSeconds);
-	}
-	int64_t ClientOpenSeconds = std::max<int64_t>(0, CurrentTimestamp - StartupTimestamp);
-	if(GameClient()->m_QmClient.HasQmServerPlaytime())
-		ClientOpenSeconds = GameClient()->m_QmClient.QmServerPlaytimeSeconds();
+	// 客户端打开时长只代表本次客户端进程的实际运行时间，不使用远程
+	// QmClient open_seconds 或服务器时间校正。
+	const int64_t ClientOpenSeconds = static_cast<int64_t>(std::max(0.0f, Client()->LocalTime()));
 
-	int64_t ServerPlaytimeSeconds = 0;
-	for(const SQmClientLocalModeStats &Stats : vDisplayModeStats)
-		ServerPlaytimeSeconds = SaturatingAdd(ServerPlaytimeSeconds, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
+	// 顶部「游玩时间」只汇总主要 ID 的远程统计；本地其它模式时长
+	// 仅用于模式分布，不混入远程账号总时长。
+	const int64_t ServerPlaytimeSeconds = RemotePlaytimeSeconds;
 
 	char aClientOpenTime[64];
 	char aServerPlaytime[64];
 	FormatStatsPlaytime(ClientOpenSeconds, false, aClientOpenTime, sizeof(aClientOpenTime));
-	FormatStatsPlaytime(ServerPlaytimeSeconds, false, aServerPlaytime, sizeof(aServerPlaytime));
 
 	const bool DdnetStatsFetching = GameClient()->m_QmClient.QmDdnetStatsIsFetching();
 	const bool DdnetStatsFailed = GameClient()->m_QmClient.QmDdnetStatsLastRequestFailed();
 	const bool StatisticsFetching = GameClient()->m_QmClient.QmStatisticsIsFetching() || AxiomStatsFetching;
 	const bool StatisticsFailed = GameClient()->m_QmClient.QmStatisticsLastRequestFailed() || AxiomStatsFailed;
 	const char *pDdnetStatsUnavailableText = DdnetStatsFailed ? Localize("Unavailable") : Localize("Loading");
+	if(HasRemotePlaytime)
+		FormatStatsPlaytime(ServerPlaytimeSeconds, false, aServerPlaytime, sizeof(aServerPlaytime));
+	else
+		str_copy(aServerPlaytime, pDdnetStatsUnavailableText, sizeof(aServerPlaytime));
 
 	char aFinishedMapsText[32];
 	if(FinishedMaps >= 0)
@@ -3307,8 +3350,26 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		float MouseAngle = std::atan2(MouseDelta.y, MouseDelta.x);
 		if(MouseAngle < -pi / 2.0f)
 			MouseAngle += 2.0f * pi;
-		Graphics()->TextureClear();
-		Graphics()->QuadsBegin();
+		const bool UseMsdfRing = Graphics()->HasTexturedMsdf();
+		if(!UseMsdfRing)
+		{
+			Graphics()->TextureClear();
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(ColorRGBA(0.96f, 0.96f, 1.0f, 1.0f));
+			IGraphics::CFreeformItem aBaseRing[128];
+			constexpr int BaseRingSegments = 128;
+			for(int Segment = 0; Segment < BaseRingSegments; ++Segment)
+			{
+				const float A0 = -pi / 2.0f + 2.0f * pi * Segment / BaseRingSegments;
+				const float A1 = -pi / 2.0f + 2.0f * pi * (Segment + 1) / BaseRingSegments;
+				const vec2 P0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartRadius;
+				const vec2 P1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartRadius;
+				const vec2 Q0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartInnerRadius;
+				const vec2 Q1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartInnerRadius;
+				aBaseRing[Segment] = IGraphics::CFreeformItem(P0, P1, Q1, Q0);
+			}
+			Graphics()->QuadsDrawFreeform(aBaseRing, BaseRingSegments);
+		}
 		for(size_t Index = 0; Index < vDisplayModeStats.size(); ++Index)
 		{
 			const auto &Stats = vDisplayModeStats[Index];
@@ -3316,38 +3377,44 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			const float Sweep = 2.0f * pi * ChartWeight / (float)TotalChartWeight;
 			if(Sweep <= 0.0f)
 				continue;
-			IGraphics::CFreeformItem aSectors[128];
-			const int Segments = std::clamp((int)std::ceil(Sweep * 20.0f), 1, (int)std::size(aSectors));
-			// 先画一圈浅色边框，再画彩色环段，视觉上接近 DDStats 的环形图。
-			for(int Segment = 0; Segment < Segments; ++Segment)
+			if(UseMsdfRing)
 			{
-				const float A0 = StartAngle + Sweep * Segment / Segments;
-				const float A1 = StartAngle + Sweep * (Segment + 1) / Segments;
-				const vec2 P0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartRadius;
-				const vec2 P1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartRadius;
-				const vec2 Q0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartInnerRadius;
-				const vec2 Q1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartInnerRadius;
-				aSectors[Segment] = IGraphics::CFreeformItem(P0, P1, Q1, Q0);
+				IGraphics::STexturedMsdfParams Params;
+				Params.m_Rect = vec4(ChartCenter.x - ChartRadius, ChartCenter.y - ChartRadius, ChartRadius * 2.0f, ChartRadius * 2.0f);
+				Params.m_Color = aModeColors[Index % std::size(aModeColors)];
+				Params.m_ProceduralRing = true;
+				Params.m_RingInnerRadius = ChartInnerRadius / (ChartRadius * 2.0f);
+				Params.m_RingOuterRadius = 0.5f;
+				// 角度边缘至少覆盖一个像素的导数范围，避免相邻扇区之间出现
+				// 黑色径向缝隙；覆盖只发生在后绘制的扇区上，不改变总比例。
+				const float AngularOverlap = maximum(0.012f, 4.0f / ChartRadius);
+				Params.m_RingStartAngle = StartAngle - AngularOverlap;
+				Params.m_RingEndAngle = StartAngle + Sweep + AngularOverlap;
+				Graphics()->RenderTexturedMsdf(Params);
 			}
-			Graphics()->SetColor(ColorRGBA(0.96f, 0.96f, 1.0f, 1.0f));
-			Graphics()->QuadsDrawFreeform(aSectors, Segments);
-			for(int Segment = 0; Segment < Segments; ++Segment)
+			else
 			{
-				const float A0 = StartAngle + Sweep * Segment / Segments;
-				const float A1 = StartAngle + Sweep * (Segment + 1) / Segments;
-				const vec2 P0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * (ChartRadius - 2.0f);
-				const vec2 P1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * (ChartRadius - 2.0f);
-				const vec2 Q0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * (ChartInnerRadius + 2.0f);
-				const vec2 Q1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * (ChartInnerRadius + 2.0f);
-				aSectors[Segment] = IGraphics::CFreeformItem(P0, P1, Q1, Q0);
+				IGraphics::CFreeformItem aSectors[128];
+				const int Segments = std::clamp((int)std::ceil(Sweep * 20.0f), 1, (int)std::size(aSectors));
+				for(int Segment = 0; Segment < Segments; ++Segment)
+				{
+					const float A0 = StartAngle + Sweep * Segment / Segments;
+					const float A1 = StartAngle + Sweep * (Segment + 1) / Segments;
+					const vec2 P0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartRadius;
+					const vec2 P1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartRadius;
+					const vec2 Q0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartInnerRadius;
+					const vec2 Q1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartInnerRadius;
+					aSectors[Segment] = IGraphics::CFreeformItem(P0, P1, Q1, Q0);
+				}
+				Graphics()->SetColor(aModeColors[Index % std::size(aModeColors)]);
+				Graphics()->QuadsDrawFreeform(aSectors, Segments);
 			}
-			Graphics()->SetColor(aModeColors[Index % std::size(aModeColors)]);
-			Graphics()->QuadsDrawFreeform(aSectors, Segments);
 			if(MouseDistance >= ChartInnerRadius && MouseDistance <= ChartRadius && MouseAngle >= StartAngle && MouseAngle <= StartAngle + Sweep)
 				HoveredMode = (int)Index;
 			StartAngle += Sweep;
 		}
-		Graphics()->QuadsEnd();
+		if(!UseMsdfRing)
+			Graphics()->QuadsEnd();
 	}
 	if(HoveredMode >= 0)
 	{
@@ -3360,10 +3427,13 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		static int s_ModeTooltipIds[5] = {};
 		GameClient()->m_Tooltips.DoToolTip(&s_ModeTooltipIds[HoveredMode], &ModeBody, s_aModeTooltipText[HoveredMode]);
 	}
-	CUIRect Legend = ModeBody;
-	Legend.VSplitLeft(ChartRadius * 2.0f + 28.0f, nullptr, &Legend);
+	CUIRect LegendAndActions = ModeBody;
+	LegendAndActions.VSplitLeft(ChartRadius * 2.0f + 28.0f, nullptr, &LegendAndActions);
+	CUIRect Legend, Actions;
+	const float ActionsWidth = LegendAndActions.w >= 860.0f ? 560.0f : minimum(560.0f, maximum(420.0f, LegendAndActions.w * 0.42f));
+	LegendAndActions.VSplitRight(ActionsWidth, &Legend, &Actions);
 	CUIRect ActionRow;
-	Legend.HSplitTop(26.0f, &ActionRow, &Legend);
+	Actions.HSplitTop(26.0f, &ActionRow, &Actions);
 	const float ButtonWidth = (ActionRow.w - 16.0f) / 3.0f;
 	CUIRect RefreshButton, UseCurrentNameButton, ModeTitleButton;
 	ActionRow.VSplitLeft(ButtonWidth, &RefreshButton, &ActionRow);
@@ -3381,10 +3451,13 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	static CButtonContainer s_TotalHoursButton;
 	if(DoButton_Menu(&s_TotalHoursButton, Localize("Total hours"), s_ShowTotalHours, &ModeTitleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
 		s_ShowTotalHours = !s_ShowTotalHours;
+	Legend.HSplitTop(8.0f, nullptr, &Legend);
 	const int Columns = ModeColumns;
 	const int Rows = (static_cast<int>(vDisplayModeStats.size()) + Columns - 1) / Columns;
 	const float ColumnGap = Columns > 1 ? 10.0f : 0.0f;
 	const float ColumnWidth = (Legend.w - ColumnGap * (Columns - 1)) / Columns;
+	const float LegendRowGap = 8.0f;
+	const float LegendRowHeight = Rows > 0 ? (Legend.h - LegendRowGap * (Rows - 1)) / Rows : 0.0f;
 	for(size_t Index = 0; Index < vDisplayModeStats.size(); ++Index)
 	{
 		const auto &Stats = vDisplayModeStats[Index];
@@ -3396,8 +3469,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		ColumnRect.x += Column * (ColumnWidth + ColumnGap);
 		ColumnRect.w = ColumnWidth;
 		CUIRect Row = ColumnRect;
-		Row.y += RowIndex * (Legend.h / Rows);
-		Row.h = Legend.h / Rows;
+		Row.y += RowIndex * (LegendRowHeight + LegendRowGap);
+		Row.h = LegendRowHeight;
 		const ColorRGBA Color = aModeColors[Index % std::size(aModeColors)];
 		CUIRect Swatch, Label;
 		Row.VSplitLeft(12.0f, &Swatch, &Label);
@@ -3699,6 +3772,10 @@ void CMenus::OnInit()
 
 	m_IsInit = true;
 	LoadSettingsRuntimeCacheMetadata();
+
+	// QmClient: 载入上次会话记录的字形缺失集合；进服后在菜单关闭的空闲帧逐步预热，
+	// 这样打开菜单时容器仍是同步构建、首帧即完整显示，但不会触发大量字形光栅化。
+	TextRender()->QmLoadRecentGlyphs(Storage(), "qmclient/glyph_prewarm.txt");
 
 	// load menu images
 	m_vMenuImages.clear();
@@ -4148,6 +4225,12 @@ void CMenus::Render()
 			{
 				CPerfTimer StageTimer;
 				RenderGhost(MainView);
+				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
+			}
+			else if(m_GamePage == PAGE_RANK_DEMO)
+			{
+				CPerfTimer StageTimer;
+				RenderRankDemo(MainView);
 				LogPerfStage(Client(), "ingame_esc_tab_content", StageTimer.ElapsedMs(), TransitionActive, aEscPerfExtra);
 			}
 			else if(m_GamePage == PAGE_UNFINISHED_MAPS)
@@ -5979,6 +6062,10 @@ void CMenus::OnShutdown()
 	ClearSettingsLanguageRowCache();
 	ResetDemoScreenshotPreview();
 	m_CommunityIcons.Shutdown();
+
+	// QmClient: 保存“最近缺失字形”集合，供下次启动后立即预热（详见 text.cpp）。
+	Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE);
+	TextRender()->QmSaveRecentGlyphs(Storage(), "qmclient/glyph_prewarm.txt");
 }
 
 CUIElement &CMenus::SettingsTextElement(int Page, int Tab, const char *pTextId)
@@ -6849,6 +6936,10 @@ void CMenus::PrepareSettingsMenuTextPlanCollectionUnits(const char *pOperationOv
 	m_SettingsMenuTextPlanMetadataDirty = false;
 	m_SettingsMenuTextPlanCollectionDirty = false;
 	m_SettingsMenuTextPlanCollectionComplete = false;
+	// plan 重建后此前的字形预热队列已失效
+	m_vMenuTextGlyphPrewarmQueue.clear();
+	m_MenuTextGlyphPrewarmCursor = 0;
+	m_MenuTextGlyphPrewarmPlanCursor = static_cast<size_t>(-1);
 
 	if(IngameEscOperation)
 		m_vSettingsMenuTextPlanCollectionUnits.push_back({MENU_TEXT_PLAN_UNIT_INGAME_ESC, -1, -1});
@@ -7146,6 +7237,54 @@ int CMenus::PrebuildSettingsTextPoolForLoading(int Budget, const char *pOperatio
 	{
 		m_SettingsMenuTextPlanGeneration = m_MenuTextPoolGeneration;
 		m_SettingsMenuTextPlanCursor = 0;
+		m_vMenuTextGlyphPrewarmQueue.clear();
+		m_MenuTextGlyphPrewarmCursor = 0;
+		m_MenuTextGlyphPrewarmPlanCursor = static_cast<size_t>(-1);
+	}
+
+	// QmClient: 字形预热。首次构建文本容器时一次可能光栅化 100+ 个新字形
+	// （实测 glyph_rasterize_ms 28.6ms / 160 glyphs，ingame_text_runtime_drain
+	// 单帧 5–33ms）。容器构建无法跨帧续建，但字形光栅化幂等、可中断，因此在
+	// 构建当前 item 之前先把它的字符分帧预热，全部命中后容器构建只剩布局与写顶点。
+	constexpr int GLYPH_PREWARM_PER_FRAME = 24;
+	if(m_SettingsMenuTextPlanCursor < m_vSettingsMenuTextPrebuildPlan.size())
+	{
+		if(m_MenuTextGlyphPrewarmPlanCursor != m_SettingsMenuTextPlanCursor)
+		{
+			const SMenuTextPlanItem &PrewarmItem = m_vSettingsMenuTextPrebuildPlan[m_SettingsMenuTextPlanCursor];
+			m_vMenuTextGlyphPrewarmQueue.clear();
+			m_MenuTextGlyphPrewarmCursor = 0;
+			m_MenuTextGlyphPrewarmPlanCursor = m_SettingsMenuTextPlanCursor;
+			if(SettingsMenuTextPlanItemBuildable(PrewarmItem) && !PrewarmItem.m_Text.empty())
+			{
+				// 与 CTextRender::AppendTextContainerImpl 的 ActualSize 保持同一换算，
+				// 否则预热使用的字号键与运行时不匹配。
+				float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+				Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+				const float FakeToScreenY = ScreenY1 == ScreenY0 ? 1.0f : Graphics()->ScreenHeight() / (ScreenY1 - ScreenY0);
+				const int ActualSize = round_truncate(PrewarmItem.m_FontSize * FakeToScreenY);
+				std::unordered_set<int> SeenChars;
+				for(const char *pCursor = PrewarmItem.m_Text.c_str(); *pCursor != '\0';)
+				{
+					const int Chr = str_utf8_decode(&pCursor);
+					if(Chr > 0 && SeenChars.insert(Chr).second)
+						m_vMenuTextGlyphPrewarmQueue.emplace_back(Chr, ActualSize);
+				}
+			}
+		}
+		int PrewarmedThisFrame = 0;
+		while(m_MenuTextGlyphPrewarmCursor < m_vMenuTextGlyphPrewarmQueue.size() && PrewarmedThisFrame < GLYPH_PREWARM_PER_FRAME)
+		{
+			const std::pair<int, int> &Glyph = m_vMenuTextGlyphPrewarmQueue[m_MenuTextGlyphPrewarmCursor++];
+			TextRender()->QmPrewarmGlyph(Glyph.first, Glyph.second);
+			++PrewarmedThisFrame;
+		}
+		if(m_MenuTextGlyphPrewarmCursor < m_vMenuTextGlyphPrewarmQueue.size())
+		{
+			// 本帧只预热，暂不下发容器构建
+			m_SettingsMenuTextLastPrebuildStats.m_Remaining = CountMissingSettingsMenuTextPlanItems();
+			return RemainingBudget;
+		}
 	}
 
 	while(m_SettingsMenuTextPlanCursor < m_vSettingsMenuTextPrebuildPlan.size())
@@ -7568,6 +7707,16 @@ void CMenus::OnWindowResize()
 	InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::WINDOW_OR_SCALE_CHANGED);
 }
 
+void CMenus::OnUpdate()
+{
+	// QmClient: 游戏中菜单关闭时的空闲帧，提前完成 ESC 文本 plan 收集与预建
+	// （operation 固定为 ingame_esc_open 以命中打开时的缓存），避免打开时同步
+	// 收集造成 20ms 尖峰。放在 OnUpdate 而非 OnRender，遵守“预建与可见渲染分离”
+	// 契约（qmclient_monitoring_text_runtime_contract_test）。
+	if(!IsActive() && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		PrebuildSettingsMenuTextPool(2, "target_settings", "ingame_esc_open");
+}
+
 void CMenus::OnRender()
 {
 	CPerfTimer FrameTimer;
@@ -7598,6 +7747,10 @@ void CMenus::OnRender()
 		else if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		{
 			Ui()->ClearHotkeys();
+			// QmClient: 菜单关闭时的空闲帧预热“最近缺失字形”（每帧少量，约 2ms），
+			// 把下次打开菜单时的字形光栅化成本提前摊掉，不影响渲染完整性。
+			constexpr int GLYPH_IDLE_PREWARM_PER_FRAME = 8;
+			TextRender()->QmPrewarmRecentGlyphs(GLYPH_IDLE_PREWARM_PER_FRAME);
 			return;
 		}
 	}
@@ -7634,11 +7787,24 @@ void CMenus::OnRender()
 				DrainIngameUiTextRuntime(true);
 			else if(m_IngameServerInfoBackgroundPrepareRequested && Client()->PerfFrame() > m_IngameEscOpenFrame)
 			{
-				PrepareIngameServerInfoTextRuntime();
+				// QmClient: 细分计时，定位 ESC 打开时 drain 20ms+ 尖峰的来源（非字形光栅化）
+				{
+					CPerfTimer PrepareTimer;
+					PrepareIngameServerInfoTextRuntime();
+					LogPerfStage(Client(), "ingame_server_info_prepare", PrepareTimer.ElapsedMs());
+				}
 				if(!m_SnapshotTextPending.empty())
+				{
+					CPerfTimer SnapshotTimer;
 					DrainIngameUiSnapshotTextRuntime();
+					LogPerfStage(Client(), "ingame_snapshot_text_drain", SnapshotTimer.ElapsedMs());
+				}
 				else
+				{
+					CPerfTimer UiTextTimer;
 					DrainIngameUiTextRuntime(false);
+					LogPerfStage(Client(), "ingame_ui_text_drain", UiTextTimer.ElapsedMs());
+				}
 				m_IngameServerInfoBackgroundPrepareRequested = !m_SnapshotTextPending.empty() || m_IngameMotdParagraphCache.m_Pending;
 			}
 			else

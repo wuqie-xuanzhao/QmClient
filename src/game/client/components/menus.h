@@ -51,6 +51,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 struct CDataSprite;
 
@@ -1620,6 +1621,8 @@ protected:
 	char m_aRankDemoManifestPath[IO_MAX_PATH_LENGTH] = "";
 	char m_aRankDemoTempPath[IO_MAX_PATH_LENGTH] = "";
 	char m_aRankDemoDestinationPath[IO_MAX_PATH_LENGTH] = "";
+	// Rank 1 页面：待播放的官方回放缓存路径（断线确认后播放）
+	char m_aPendingRankDemoPlayPath[IO_MAX_PATH_LENGTH] = "";
 
 	SDemoSelectionEntry DemoSelectionEntryFromItem(const CDemoItem &Item) const;
 	bool IsDemoItemSelected(const CDemoItem &Item) const;
@@ -2177,6 +2180,7 @@ public:
 	void OnStateChange(int NewState, int OldState) override;
 	void OnWindowResize() override;
 	void OnReset() override;
+	void OnUpdate() override;
 	void OnRender() override;
 	bool OnInput(const IInput::CEvent &Event) override;
 	bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
@@ -2202,6 +2206,7 @@ public:
 		PAGE_SETTINGS,
 		PAGE_NETWORK,
 		PAGE_GHOST,
+		PAGE_RANK_DEMO,
 		PAGE_UNFINISHED_MAPS,
 		PAGE_STATS,
 
@@ -2751,6 +2756,10 @@ private:
 	std::unordered_set<std::string> m_SettingsMenuTextPlannedKeys;
 	size_t m_SettingsMenuTextPlanCursor = 0;
 	size_t m_SettingsMenuTextPlanCollectionCursor = 0;
+	// 字形预热：构建文本容器前，先把当前 plan item 的字符分帧预热（每帧限量）
+	std::vector<std::pair<int, int>> m_vMenuTextGlyphPrewarmQueue;
+	size_t m_MenuTextGlyphPrewarmCursor = 0;
+	size_t m_MenuTextGlyphPrewarmPlanCursor = static_cast<size_t>(-1);
 	uint64_t m_SettingsMenuTextPlanGeneration = 0;
 	uint64_t m_SettingsMenuTextPlanCollectionGeneration = 0;
 	std::string m_SettingsMenuTextPlanCollectionOperation;
@@ -2785,6 +2794,9 @@ private:
 	// found in menus_ingame.cpp
 	void RenderInGameNetwork(CUIRect MainView);
 	void RenderGhost(CUIRect MainView);
+	void RenderRankDemo(CUIRect MainView);
+	void PopupConfirmRankDemoPlay();
+	void PopupConfirmDeleteRankDemoCache();
 
 	// found in menus_settings.cpp
 	void RenderSettingsDDNet(CUIRect MainView);

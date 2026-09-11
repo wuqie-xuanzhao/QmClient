@@ -112,6 +112,13 @@ static constexpr int64_t gs_HangTimeoutSeconds = 10;
 // QmClient: 退出兜底超时（秒）。正常退出通常 1-2 秒，超过该时间视为退出清理挂起。
 static constexpr int64_t gs_ForcedExitTimeoutSeconds = 10;
 static std::atomic<uint64_t> gs_ForcedExitWatchdogGeneration{0};
+static std::atomic<bool> gs_ForcedExitWatchdogArmed{false};
+// QmClient: 测试专用注入开关（--qm-test-main-thread-assert），供进程级回归测试
+// 在真实客户端里触发一次主线程断言，验证弹窗期间看门狗的行为。
+static bool gs_QmTestMainThreadAssert = false;
+// QmClient: 测试专用注入开关（--qm-test-main-thread-stall），供进程级回归测试在
+// 主循环内模拟一次长时间阻塞，验证看门狗使用单调时钟后能真实报告卡死。
+static bool gs_QmTestMainThreadStall = false;
 static constexpr const char *gs_pQmCrashDumpDir = "dumps/QmClient_Crash";
 static constexpr const char *gs_pQmLifecycleMarkerFile = "qmclient/lifecycle_pending.marker";
 static constexpr const char *gs_pQmGraphicsRecoveryStateFile = "qmclient/graphics_recovery.marker";
@@ -165,6 +172,7 @@ static int FindLatestQmCrashReportCallback(const CFsFileInfo *pInfo, int IsDir, 
 // 配置保存完成后启动本看门狗线程：清理若未在超时前解除看门狗，直接强制退出。
 static void StartForcedExitWatchdog()
 {
+	gs_ForcedExitWatchdogArmed.store(true, std::memory_order_release);
 	const uint64_t Generation = gs_ForcedExitWatchdogGeneration.fetch_add(1, std::memory_order_relaxed) + 1;
 	log_info("client", "shutdown watchdog armed: forcing exit if shutdown does not finish within %lld seconds", (long long)gs_ForcedExitTimeoutSeconds);
 	std::thread([Generation]() {
@@ -178,8 +186,11 @@ static void StartForcedExitWatchdog()
 
 static void StopForcedExitWatchdog()
 {
+	// 弹窗路径也会调用本函数（此时看门狗可能并未武装），因此只在真正解除时记录日志。
+	const bool WasArmed = gs_ForcedExitWatchdogArmed.exchange(false, std::memory_order_acq_rel);
 	gs_ForcedExitWatchdogGeneration.fetch_add(1, std::memory_order_release);
-	log_info("client", "shutdown watchdog disarmed after cleanup completed");
+	if(WasArmed)
+		log_info("client", "shutdown watchdog disarmed after cleanup completed");
 }
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -583,6 +594,25 @@ static bool WriteMiniDumpFile(const char *pFilename)
 	CloseHandle(FileHandle);
 	FreeLibrary(pDbgHelp);
 	return Result != FALSE;
+}
+
+// QmClient 测试专用：阻塞主线程指定时长，同时泵窗口消息使窗口保持"响应"状态。
+// 完全不泵消息会触发 Windows 幽灵窗口机制，把交换链带入 NVIDIA ICD 的异常销毁
+// 路径（退出时 vkDestroyDevice 访问违例，见 dumps 里的退出期驱动故障记录）。
+// 看门狗心跳在此期间照旧停滞，不影响被测行为。
+static void QmTestStallPumpWindowMessages(std::chrono::nanoseconds Duration)
+{
+	const auto Deadline = std::chrono::steady_clock::now() + Duration;
+	MSG Message;
+	while(std::chrono::steady_clock::now() < Deadline)
+	{
+		while(PeekMessageW(&Message, nullptr, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&Message);
+			DispatchMessageW(&Message);
+		}
+		std::this_thread::sleep_for(10ms);
+	}
 }
 #endif
 
@@ -3810,28 +3840,69 @@ void CClient::UpdateDemoIntraTimers()
 void CClient::Update()
 {
 	const bool GraphicsTrace = QmGraphicsTraceEnabled(2);
+	const bool PerfRuntime = QmPerfEnabled();
+	// GraphicsTrace 走原有 perf/graphics 通道；常规性能/卡顿诊断下把 client_update 的子阶段
+	// 记录到 perf/main_thread，避免定位 [client_update] 长帧时必须开启 graphics trace。
+	const bool UpdateStagePerf = GraphicsTrace || PerfRuntime;
+	const bool MainThreadStagePerf = PerfRuntime && !GraphicsTrace;
 	const auto PumpStart = GraphicsTrace ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 	const int64_t PumpGapNs = GraphicsTrace && m_QmGraphicsLastPumpNetworkNs != 0 ? PumpStart.count() - m_QmGraphicsLastPumpNetworkNs : 0;
-	PumpNetwork();
-	if(GraphicsTrace)
+	if(UpdateStagePerf)
 	{
-		const double PumpMs = std::chrono::duration<double, std::milli>(time_get_nanoseconds() - PumpStart).count();
-		const double GapMs = PumpGapNs > 0 ? (double)PumpGapNs / 1000000.0 : 0.0;
-		if(PumpMs >= 8.0 || GapMs >= 100.0)
+		CPerfTimer PumpTimer;
+		PumpNetwork();
+		const double PumpMs = PumpTimer.ElapsedMs();
+		if(GraphicsTrace)
 		{
-			char aPayload[256];
-			str_format(aPayload, sizeof(aPayload), "event=network_pump pump_ms=%.3f gap_ms=%.3f state=%d", PumpMs, GapMs, State());
-			QmPerfLogPayloadForce("perf/graphics/network", aPayload, this);
+			const double GapMs = PumpGapNs > 0 ? (double)PumpGapNs / 1000000.0 : 0.0;
+			if(PumpMs >= 8.0 || GapMs >= 100.0)
+			{
+				char aPayload[256];
+				str_format(aPayload, sizeof(aPayload), "event=network_pump pump_ms=%.3f gap_ms=%.3f state=%d", PumpMs, GapMs, State());
+				QmPerfLogPayloadForce("perf/graphics/network", aPayload, this);
+			}
+			m_QmGraphicsLastPumpNetworkNs = time_get_nanoseconds().count();
 		}
-		m_QmGraphicsLastPumpNetworkNs = time_get_nanoseconds().count();
+		else if(MainThreadStagePerf)
+		{
+			char aExtra[96];
+			str_format(aExtra, sizeof(aExtra), "state=%d", State());
+			QmPerfLogStage("perf/main_thread", "pump_network", PumpMs, false, this, nullptr, nullptr, aExtra);
+		}
 	}
+	else
+		PumpNetwork();
 
 	// 官方 178da1ead：在采集/发送输入之前先更新 editor/gameclient，
 	// 低刷新率下输入能早一个循环发出。
 	if(m_EditorActive)
-		m_pEditor->OnUpdate();
+	{
+		if(UpdateStagePerf)
+		{
+			CPerfTimer StageTimer;
+			m_pEditor->OnUpdate();
+			if(GraphicsTrace)
+				QmPerfLogStageForce("perf/graphics/update", "editor_onupdate", StageTimer.ElapsedMs(), this);
+			else
+				QmPerfLogStage("perf/main_thread", "editor_onupdate", StageTimer.ElapsedMs(), false, this);
+		}
+		else
+			m_pEditor->OnUpdate();
+	}
 	else
-		GameClient()->OnUpdate();
+	{
+		if(UpdateStagePerf)
+		{
+			CPerfTimer StageTimer;
+			GameClient()->OnUpdate();
+			if(GraphicsTrace)
+				QmPerfLogStageForce("perf/graphics/update", "gameclient_onupdate", StageTimer.ElapsedMs(), this);
+			else
+				QmPerfLogStage("perf/main_thread", "gameclient_onupdate", StageTimer.ElapsedMs(), false, this);
+		}
+		else
+			GameClient()->OnUpdate();
+	}
 
 	if(State() == IClient::STATE_ONLINE)
 	{
@@ -4126,10 +4197,34 @@ void CClient::Update()
 	}
 
 	// update the server browser
-	m_ServerBrowser.Update();
+	if(UpdateStagePerf)
+	{
+		CPerfTimer StageTimer;
+		m_ServerBrowser.Update();
+		char aExtra[96];
+		str_format(aExtra, sizeof(aExtra), "servers=%d sorted=%d", m_ServerBrowser.NumServers(), m_ServerBrowser.NumSortedServers());
+		if(GraphicsTrace)
+			QmPerfLogStageForce("perf/graphics/update", "serverbrowser_update", StageTimer.ElapsedMs(), this, nullptr, nullptr, aExtra);
+		else
+			QmPerfLogStage("perf/main_thread", "serverbrowser_update", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
+	}
+	else
+		m_ServerBrowser.Update();
 
-	Discord()->Update(g_Config.m_TcDiscordRPC);
-	Steam()->Update();
+	if(MainThreadStagePerf)
+	{
+		CPerfTimer StageTimer;
+		Discord()->Update(g_Config.m_TcDiscordRPC);
+		Steam()->Update();
+		char aExtra[64];
+		str_format(aExtra, sizeof(aExtra), "rpc=%d", g_Config.m_TcDiscordRPC);
+		QmPerfLogStage("perf/main_thread", "discord_steam_update", StageTimer.ElapsedMs(), false, this, nullptr, nullptr, aExtra);
+	}
+	else
+	{
+		Discord()->Update(g_Config.m_TcDiscordRPC);
+		Steam()->Update();
+	}
 	if(Steam()->GetConnectAddress())
 	{
 		HandleConnectAddress(Steam()->GetConnectAddress());
@@ -4352,6 +4447,12 @@ void CClient::Run()
 		AddWarning(Warning);
 	}
 
+	// QmClient: 测试专用注入点（--qm-test-main-thread-assert）。放在主循环之前，
+	// 模拟启动阶段的错误弹窗（网络/图形初始化失败等）阻塞主线程的情形：
+	// 此时看门狗时钟仍在推进，可验证弹窗期间不会误报“客户端卡死”。
+	if(gs_QmTestMainThreadAssert)
+		dbg_assert_failed("qm test main thread assertion (--qm-test-main-thread-assert)");
+
 	bool LastD = false;
 	bool LastE = false;
 
@@ -4371,6 +4472,18 @@ void CClient::Run()
 		++m_PerfFrame;
 		set_new_tick();
 		UpdateHangHeartbeat();
+
+		// QmClient: 测试专用注入点（--qm-test-main-thread-stall）。主循环内阻塞一次，
+		// 验证看门狗使用单调时钟后能在主线程阻塞期间真实写出卡死报告。
+		if(gs_QmTestMainThreadStall)
+		{
+			gs_QmTestMainThreadStall = false;
+#if defined(CONF_FAMILY_WINDOWS)
+			QmTestStallPumpWindowMessages(12s); // 必须超过 gs_HangTimeoutSeconds(10s)
+#else
+			std::this_thread::sleep_for(12s);
+#endif
+		}
 
 		if(m_pGraphics->HasFatalError())
 		{
@@ -4695,29 +4808,46 @@ void CClient::Run()
 	// 图形设备丢失弹出的错误框）挂起，超时后强制结束进程，避免用户手动杀进程。
 	StartForcedExitWatchdog();
 
+	// QmClient: 退出清理可能因驱动/GPU 挂起长时间无响应，窗口会停留在最后一次
+	// present 的旧帧上（实测为游戏画面），看起来像卡死。这里不经渲染线程直接隐藏
+	// 窗口；即便后续步骤挂起并最终由兜底看门狗强杀，用户看到的也是干净的退出。
+	Graphics()->HideWindow();
+	dbg_msg("perf/client", "event=shutdown_step step=window_hidden");
+
 	m_ServerBrowser.Shutdown();
+	dbg_msg("perf/client", "event=shutdown_step step=server_browser");
 	m_Fifo.Shutdown();
+	dbg_msg("perf/client", "event=shutdown_step step=fifo");
 	m_pHttp->Shutdown();
+	dbg_msg("perf/client", "event=shutdown_step step=http");
 	Engine()->ShutdownJobs();
+	dbg_msg("perf/client", "event=shutdown_step step=jobs");
 
 	// Stop the hang watchdog AFTER ShutdownJobs() so that hangs occurring
 	// during the shutdown sequence (e.g. a stuck non-abortable job) are
 	// still detected and reported while we wait.
 	StopHangWatchdog();
+	dbg_msg("perf/client", "event=shutdown_step step=hang_watchdog");
 
 	GameClient()->RenderShutdownMessage();
+	dbg_msg("perf/client", "event=shutdown_step step=render_shutdown_message");
 	GameClient()->OnShutdown();
+	dbg_msg("perf/client", "event=shutdown_step step=game_client");
 	delete m_pEditor;
+	dbg_msg("perf/client", "event=shutdown_step step=editor");
 
 	// close sockets
 	for(unsigned int i = 0; i < std::size(m_aNetClient); i++)
 		m_aNetClient[i].Close();
+	dbg_msg("perf/client", "event=shutdown_step step=sockets");
 
 	// shutdown text render while graphics are still available
 	m_pTextRender->Shutdown();
+	dbg_msg("perf/client", "event=shutdown_step step=text_render");
 
 	// 清理已经完成，后续显示的崩溃报告需要保持到用户主动关闭。
 	StopForcedExitWatchdog();
+	dbg_msg("perf/client", "event=shutdown_step step=done");
 }
 
 void CClient::FinishQmConfigMigration()
@@ -5590,15 +5720,18 @@ void CClient::StartHangWatchdog()
 		return;
 
 	m_HangWatchdogThread = std::thread([this]() {
-		const int64_t TimeoutTicks = time_freq() * gs_HangTimeoutSeconds;
+		// 必须使用单调时钟（time_get_nanoseconds）而不是 time_get()：后者只在主循环
+		// set_new_tick() 后刷新一次，主线程卡住时全进程时钟冻结，看门狗将永远无法
+		// 感知心跳停滞。看门狗线程恰恰需要在主线程阻塞时继续计时。
+		const int64_t TimeoutNanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(gs_HangTimeoutSeconds)).count();
 		while(!m_HangWatchdogStop.load(std::memory_order_acquire))
 		{
 			std::this_thread::sleep_for(1s);
 			const int64_t LastHeartbeat = m_HangLastHeartbeat.load(std::memory_order_acquire);
 			if(LastHeartbeat == 0)
 				continue;
-			const int64_t Now = time_get();
-			if(Now - LastHeartbeat >= TimeoutTicks)
+			const int64_t Now = time_get_nanoseconds().count();
+			if(Now - LastHeartbeat >= TimeoutNanoseconds)
 			{
 				if(!m_HangReportWritten.exchange(true, std::memory_order_acq_rel))
 					WriteHangReportAndDump(Now, LastHeartbeat);
@@ -5632,7 +5765,9 @@ void CClient::UpdateHangHeartbeat()
 		str_copy(Info.m_aServerAddr, aAddr, sizeof(Info.m_aServerAddr));
 	}
 	m_HangInfoIndex.store(NextIndex, std::memory_order_release);
-	m_HangLastHeartbeat.store(time_get(), std::memory_order_release);
+	// 心跳使用单调时钟纳秒（time_get_nanoseconds），与主循环 tick 缓存解耦，
+	// 保证主线程阻塞时看门狗仍能度量真实流逝时间。
+	m_HangLastHeartbeat.store(time_get_nanoseconds().count(), std::memory_order_release);
 }
 
 void CClient::WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat)
@@ -5656,7 +5791,7 @@ void CClient::WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat)
 	{
 		const int SnapshotIndex = m_HangInfoIndex.load(std::memory_order_acquire);
 		const SHangInfo Snapshot = m_aHangInfo[SnapshotIndex];
-		const float SecondsSinceHeartbeat = (Now - LastHeartbeat) / (float)time_freq();
+		const float SecondsSinceHeartbeat = (Now - LastHeartbeat) / 1e9f;
 		char aOsVersion[128];
 		if(!os_version_str(aOsVersion, sizeof(aOsVersion)))
 			str_copy(aOsVersion, "unknown");
@@ -5680,7 +5815,7 @@ void CClient::WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat)
 		str_format(aBuf, sizeof(aBuf), "No heartbeat duration: %.1f seconds\n", SecondsSinceHeartbeat);
 		io_write(File, aBuf, str_length(aBuf));
 
-		str_format(aBuf, sizeof(aBuf), "Heartbeat ticks: now=%lld, last=%lld, delta=%lld\n", (long long)Now, (long long)LastHeartbeat, (long long)(Now - LastHeartbeat));
+		str_format(aBuf, sizeof(aBuf), "Heartbeat clock: now=%lld, last=%lld, delta=%lld\n", (long long)Now, (long long)LastHeartbeat, (long long)(Now - LastHeartbeat));
 		io_write(File, aBuf, str_length(aBuf));
 
 		str_format(aBuf, sizeof(aBuf), "Client state: %s (%d)\n", ClientStateToString(Snapshot.m_State), Snapshot.m_State);
@@ -6244,6 +6379,16 @@ int main(int argc, const char **argv)
 	CWindowsComLifecycle WindowsComLifecycle(true);
 #endif
 	CCmdlineFix CmdlineFix(&argc, &argv);
+
+	// QmClient: 测试专用注入开关，供 qmclient_scripts/integration 的进程级回归测试
+	// 在真实客户端里触发主线程断言。正常运行不会传入该参数。
+	for(int i = 1; i < argc; ++i)
+	{
+		if(str_comp(argv[i], "--qm-test-main-thread-assert") == 0)
+			gs_QmTestMainThreadAssert = true;
+		if(str_comp(argv[i], "--qm-test-main-thread-stall") == 0)
+			gs_QmTestMainThreadStall = true;
+	}
 
 #if defined(CONF_FAMILY_WINDOWS)
 	for(int i = 1; i < argc; ++i)
@@ -7330,6 +7475,14 @@ void CClient::ShellUnregister()
 
 std::optional<int> CClient::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)
 {
+	// QmClient: 弹窗在主线程上模态运行，期间主循环不再更新心跳，退出兜底看门狗也可能
+	// 正在倒计时。若不在这里停用两个看门狗，用户阅读弹窗超过 10 秒会被误判为“客户端
+	// 卡死”（写出误导性 hang 报告并叠加第二个弹窗），退出清理阶段的弹窗还会被兜底
+	// 看门狗连窗带进程一起结束，丢失用户正在阅读的诊断信息。
+	// 当前所有进程内弹窗路径在关闭后都会退出或终止进程；若将来出现关闭后继续正常
+	// 运行的弹窗，需要改为暂停/恢复语义。
+	StopHangWatchdog();
+	StopForcedExitWatchdog();
 	std::optional<int> Result = m_pGraphics == nullptr ? std::nullopt : m_pGraphics->ShowMessageBox(MessageBox);
 	if(!Result)
 	{

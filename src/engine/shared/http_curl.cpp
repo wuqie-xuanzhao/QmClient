@@ -253,7 +253,8 @@ void CHttpRequestCurl::OnCompletionInternal(CURL *pHandle, CURLcode Code)
 	if(Code != CURLE_OK)
 	{
 		State = (Code == CURLE_ABORTED_BY_CALLBACK) ? EHttpState::ABORTED : EHttpState::ERROR;
-		if(g_Config.m_DbgHttp || (m_LogProgress >= HTTPLOG::FAILURE && HttpShouldLogFailure(State, m_AbortTriggeredByProgressCallback.load())))
+		const bool IsShutdownAbort = State == EHttpState::ABORTED && str_comp(m_aErr, "Shutting down") == 0;
+		if(!IsShutdownAbort && (g_Config.m_DbgHttp || (m_LogProgress >= HTTPLOG::FAILURE && HttpShouldLogFailure(State, m_AbortTriggeredByProgressCallback.load()))))
 		{
 			log_error("http", "%s failed. libcurl error (%u): %s", m_aUrl, Code, m_aErr[0] != '\0' ? m_aErr : curl_easy_strerror(Code));
 		}

@@ -837,8 +837,11 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	};
 
 	std::vector<CUIElement *> &vpServerBrowserUiElements = m_avpServerBrowserUiElements[ServerBrowser()->GetCurrentType()];
-	if(vpServerBrowserUiElements.size() < (size_t)NumServers)
-		vpServerBrowserUiElements.resize(NumServers, nullptr);
+	// 按服务器稳定索引保存文本容器，而不是按排序后位置保存。排序按延迟/玩家
+	// 数变化时，位置会频繁交换；按位置缓存会让滚动每帧重建可见行的文字。
+	const int ServerCacheSize = maximum(ServerBrowser()->NumServers(), NumServers);
+	if(vpServerBrowserUiElements.size() < (size_t)ServerCacheSize)
+		vpServerBrowserUiElements.resize(ServerCacheSize, nullptr);
 
 	int RowsVisible = 0;
 	int RowsRendered = 0;
@@ -867,9 +870,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		// lookups and allocating the streamed UI element for every hidden row
 		// made the server browser pay an unnecessary per-frame cost.
 		const CCommunity *pCommunity = ServerBrowser()->Community(pItem->m_aCommunityId);
-		if(vpServerBrowserUiElements[i] == nullptr)
-			vpServerBrowserUiElements[i] = Ui()->GetNewUIElement(NUM_UI_ELEMS);
-		CUIElement *pUiElement = vpServerBrowserUiElements[i];
+		const int CacheIndex = pItem->m_ServerIndex >= 0 && pItem->m_ServerIndex < ServerCacheSize ? pItem->m_ServerIndex : i;
+		if(vpServerBrowserUiElements[CacheIndex] == nullptr)
+			vpServerBrowserUiElements[CacheIndex] = Ui()->GetNewUIElement(NUM_UI_ELEMS);
+		CUIElement *pUiElement = vpServerBrowserUiElements[CacheIndex];
 
 		if(PerfListFrameEnabled)
 		{

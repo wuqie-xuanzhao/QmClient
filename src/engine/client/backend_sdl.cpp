@@ -1305,9 +1305,15 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	}
 #endif // !CONF_HEADLESS_CLIENT
 
+	// gfx_gl_major=0 表示自动探测。命令处理器必须使用实际可用的
+	// OpenGL 版本，否则会误选旧版几何后端并跳过现代 shader 初始化。
+	const int EffectiveGLMajor = g_Config.m_GfxGLMajor > 0 ? g_Config.m_GfxGLMajor : GlewMajor;
+	const int EffectiveGLMinor = g_Config.m_GfxGLMajor > 0 ? g_Config.m_GfxGLMinor : GlewMinor;
+	const int EffectiveGLPatch = g_Config.m_GfxGLMajor > 0 ? g_Config.m_GfxGLPatch : GlewPatch;
+
 	// start the command processor
 	dbg_assert(m_pProcessor == nullptr, "Processor was not cleaned up properly.");
-	m_pProcessor = new CCommandProcessor_SDL_GL(m_BackendType, g_Config.m_GfxGLMajor, g_Config.m_GfxGLMinor, g_Config.m_GfxGLPatch);
+	m_pProcessor = new CCommandProcessor_SDL_GL(m_BackendType, EffectiveGLMajor, EffectiveGLMinor, EffectiveGLPatch);
 	StartProcessor(m_pProcessor);
 
 	// issue init commands for OpenGL and SDL
@@ -1349,9 +1355,9 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		CmdGL.m_pStorage = pStorage;
 		CmdGL.m_pCapabilities = &m_Capabilities;
 		CmdGL.m_pInitError = &InitError;
-		CmdGL.m_RequestedMajor = g_Config.m_GfxGLMajor;
-		CmdGL.m_RequestedMinor = g_Config.m_GfxGLMinor;
-		CmdGL.m_RequestedPatch = g_Config.m_GfxGLPatch;
+		CmdGL.m_RequestedMajor = EffectiveGLMajor;
+		CmdGL.m_RequestedMinor = EffectiveGLMinor;
+		CmdGL.m_RequestedPatch = EffectiveGLPatch;
 		CmdGL.m_GlewMajor = GlewMajor;
 		CmdGL.m_GlewMinor = GlewMinor;
 		CmdGL.m_GlewPatch = GlewPatch;
@@ -1500,6 +1506,12 @@ const TTwGraphicsGpuList &CGraphicsBackend_SDL_GL::GetGpus() const
 void CGraphicsBackend_SDL_GL::Minimize()
 {
 	SDL_MinimizeWindow(m_pWindow);
+}
+
+void CGraphicsBackend_SDL_GL::HideWindow()
+{
+	if(m_pWindow != nullptr)
+		SDL_HideWindow(m_pWindow);
 }
 
 void CGraphicsBackend_SDL_GL::SetWindowParams(int FullscreenMode, bool IsBorderless)

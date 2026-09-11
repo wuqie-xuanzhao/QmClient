@@ -310,6 +310,7 @@ public:
 	void GetCurrentVideoMode(CVideoMode &CurMode, float HiDPIScale, int MaxWindowWidth, int MaxWindowHeight, int ScreenId) override;
 
 	void Minimize() override;
+	void HideWindow() override;
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
 	bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) override;
 	bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) override;

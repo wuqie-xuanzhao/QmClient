@@ -845,6 +845,7 @@ public:
 	virtual const char *GetScreenName(int Screen) const = 0;
 
 	virtual void Minimize() = 0;
+	virtual void HideWindow() = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
 	virtual bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) = 0;
 	virtual bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) = 0;
@@ -1462,6 +1463,7 @@ public:
 	const char *GetScreenName(int Screen) const override;
 
 	void Minimize() override;
+	void HideWindow() override;
 	void WarnPngliteIncompatibleImages(bool Warn) override;
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
 	bool SetWindowScreen(int Index, bool MoveToCenter) override;

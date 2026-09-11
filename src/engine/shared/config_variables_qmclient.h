@@ -15,10 +15,6 @@ MACRO_CONFIG_INT(QmPerfDebug, qm_perf_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_S
 MACRO_CONFIG_INT(QmPerfLogfile, qm_perf_logfile, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Write performance debug logs to dedicated file")
 MACRO_CONFIG_INT(QmPerfDebugThresholdMs, qm_perf_debug_threshold_ms, 4, 1, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Performance debug log threshold (ms)")
 MACRO_CONFIG_INT(QmPerfStutterDiagnostics, qm_perf_stutter_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable client stutter diagnostics at startup")
-// QmClient: 单帧字形光栅化预算（毫秒）。判定规则：单个文本串的未缓存字形
-// 估算成本 >= 该预算时，该文本串整体推迟到后续帧（当帧不渲染，字形补齐
-// 后下一帧完整出现）；小文本串永远同步完整渲染。0 = 禁用（所有文本同步渲染）。
-MACRO_CONFIG_INT(QmTextRasterizeBudgetMs, qm_text_rasterize_budget_ms, 30, 0, 1000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)")
 MACRO_CONFIG_INT(QmGraphicsTrace, qm_graphics_trace, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Graphics trace level: 0=off, 1=periodic summary, 2=summary and slow frames, 3=detailed backend trace")
 MACRO_CONFIG_INT(QmMacosGraphicsDiagnostics, qm_macos_graphics_diagnostics, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Deprecated compatibility alias for qm_graphics_trace (macOS signposts)")
 MACRO_CONFIG_INT(QmGraphicsMode, qm_graphics_mode, 1, -1, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Graphics mode: -1=use backend setting, 0=compatibility, 1=performance (default)")
