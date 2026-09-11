@@ -596,10 +596,10 @@ static bool WriteMiniDumpFile(const char *pFilename)
 	return Result != FALSE;
 }
 
-// QmClient 测试专用：阻塞主线程指定时长，同时泵窗口消息使窗口保持"响应"状态。
-// 完全不泵消息会触发 Windows 幽灵窗口机制，把交换链带入 NVIDIA ICD 的异常销毁
-// 路径（退出时 vkDestroyDevice 访问违例，见 dumps 里的退出期驱动故障记录）。
-// 看门狗心跳在此期间照旧停滞，不影响被测行为。
+// QmClient 测试专用：阻塞主线程指定时长，同时泵窗口消息使窗口保持"响应"状态，
+// 避免 Windows 幽灵窗口机制打扰桌面。看门狗心跳在此期间照旧停滞，不影响被测
+// 行为（已实测： pump 不能消除退出清理阶段 NVIDIA ICD 的访问违例，那是驱动
+// 内部问题，由 crashdump 的退出期驱动故障忽略策略兜底）。
 static void QmTestStallPumpWindowMessages(std::chrono::nanoseconds Duration)
 {
 	const auto Deadline = std::chrono::steady_clock::now() + Duration;

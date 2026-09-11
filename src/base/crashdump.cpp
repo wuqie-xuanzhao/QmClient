@@ -80,6 +80,12 @@ bool crashdump_launch_reporter_if_available(const char *report_path)
 	if(crashdump_is_shutdown_graphics_fault())
 		return false;
 #if defined(CONF_FAMILY_WINDOWS)
+	// QmClient 测试专用：设置了 QMCLIENT_TEST_HIDE_DIALOG 的进程级回归测试不拉起
+	// 报告进程——测试直接校验报告文件，避免遗留后台报告进程占用可执行文件。
+	char aSuppressTestReporter[8] = "";
+	if(GetEnvironmentVariableA("QMCLIENT_TEST_HIDE_DIALOG", aSuppressTestReporter, sizeof(aSuppressTestReporter)) > 0)
+		return false;
+
 	if(report_path == nullptr || report_path[0] == '\0')
 		return false;
 

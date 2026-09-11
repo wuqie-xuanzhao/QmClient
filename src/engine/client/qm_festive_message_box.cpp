@@ -135,6 +135,29 @@ namespace
 		}
 	}
 
+	// 测试专用：进程级回归测试通过该环境变量要求隐藏窗口，避免桌面上的真实点击
+	// 提前关闭弹窗、掩盖“弹窗期间看门狗不应触发”的回归。正常运行不会设置它。
+	bool FestiveDialogHiddenForTest()
+	{
+		char aValue[8] = "";
+		return GetEnvironmentVariableA("QMCLIENT_TEST_HIDE_DIALOG", aValue, sizeof(aValue)) > 0;
+	}
+
+	// 报告内容可能被外部工具截断在多字节序列中间。windows_utf8_to_wide 遇到非法
+	// UTF-8 会触发断言并直接终止报告进程，这里必须宽松降级：非法字节按替换字符
+	// 显示，保证弹窗仍能打开并展示可用信息。
+	std::wstring LenientUtf8ToWide(const char *pText)
+	{
+		if(pText == nullptr || pText[0] == '\0')
+			return {};
+		const int WideLength = MultiByteToWideChar(CP_UTF8, 0, pText, -1, nullptr, 0);
+		if(WideLength <= 1)
+			return {};
+		std::wstring Result(static_cast<size_t>(WideLength - 1), L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, pText, -1, Result.data(), WideLength);
+		return Result;
+	}
+
 	enum class EFestiveReportKind
 	{
 		GRAPHICS,
@@ -151,6 +174,14 @@ namespace
 			return EFestiveReportKind::HANG;
 		if(Title.find(L"Assertion") != std::wstring::npos || Original.find(L"assertion error occurred") != std::wstring::npos)
 			return EFestiveReportKind::ASSERTION;
+		// 兜底：报告被截断或缺少 "Report type:" 行时，按 fatal 报告的头部与原因行
+		// 判断，避免把致命崩溃归为图形错误并给出无效的排障建议。
+		if(Original.find(L"QmClient fatal error report") != std::wstring::npos ||
+			Original.find(L"Reason: Unhandled structured exception") != std::wstring::npos ||
+			Original.find(L"Reason: Unhandled C++ exception") != std::wstring::npos ||
+			Original.find(L"Reason: Vectored exception fallback") != std::wstring::npos ||
+			Original.find(L"Reason: Fatal signal") != std::wstring::npos)
+			return EFestiveReportKind::FATAL;
 		return EFestiveReportKind::GRAPHICS;
 	}
 
@@ -234,6 +265,8 @@ namespace
 			return L"无响应判定阈值：" + Line.substr(24);
 		if(Line.starts_with(L"No heartbeat duration: "))
 			return L"未收到心跳的时长：" + Line.substr(23);
+		if(Line.starts_with(L"Heartbeat clock: "))
+			return L"心跳时钟：" + Line.substr(17);
 		if(Line.starts_with(L"Client state: "))
 			return L"客户端状态：" + Line.substr(14);
 		if(Line.starts_with(L"Current map: "))
@@ -403,7 +436,7 @@ namespace
 			return L"平安退出";
 		if(strcmp(pLabel, "Close report") == 0)
 			return L"关闭报告";
-		return windows_utf8_to_wide(pLabel);
+		return LenientUtf8ToWide(pLabel);
 	}
 
 	struct SFestiveDialogState
@@ -696,6 +729,18 @@ namespace
 		HRGN Outer = CreateRoundRectRgn(0, 0, Width + 1, Height + 1, OuterRadius, OuterRadius);
 		HRGN Inner = CreateRoundRectRgn(InnerInset, InnerInset, Width - InnerInset, Height - InnerInset, InnerRadius, InnerRadius);
 		HRGN Border = CreateRectRgn(0, 0, 0, 0);
+		if(Outer == nullptr || Inner == nullptr || Border == nullptr)
+		{
+			// 任一区域创建失败时跳过本帧：Border 为 NULL 会让 InvalidateRgn
+			// 失效整个客户区，在 GDI 资源紧张的崩溃场景里造成 33ms 一次的全窗重绘。
+			if(Border != nullptr)
+				DeleteObject(Border);
+			if(Inner != nullptr)
+				DeleteObject(Inner);
+			if(Outer != nullptr)
+				DeleteObject(Outer);
+			return;
+		}
 		CombineRgn(Border, Outer, Inner, RGN_DIFF);
 		InvalidateRgn(Window, Border, FALSE);
 		DeleteObject(Border);
@@ -984,8 +1029,8 @@ std::optional<int> ShowQmFestiveMessageBox(const IGraphics::CMessageBox &Message
 
 	SFestiveDialogState State;
 	const SLocalizedCrashReport LocalizedReport = LocalizeCrashReport(
-		windows_utf8_to_wide(MessageBox.m_pTitle != nullptr ? MessageBox.m_pTitle : ""),
-		windows_utf8_to_wide(MessageBox.m_pMessage != nullptr ? MessageBox.m_pMessage : ""));
+		LenientUtf8ToWide(MessageBox.m_pTitle != nullptr ? MessageBox.m_pTitle : ""),
+		LenientUtf8ToWide(MessageBox.m_pMessage != nullptr ? MessageBox.m_pMessage : ""));
 	State.m_Title = LocalizedReport.m_Title;
 	State.m_Subtitle = LocalizedReport.m_Subtitle;
 	State.m_DetailsText = LocalizedReport.m_Details;
@@ -1056,15 +1101,19 @@ std::optional<int> ShowQmFestiveMessageBox(const IGraphics::CMessageBox &Message
 	PrepareFireworkParticles(State);
 	State.m_FireworksFrame = 0;
 	SetTimer(State.m_Window, gs_FireworksTimerId, gs_FireworksTimerPeriodMs, nullptr);
-	ShowWindow(State.m_Window, SW_SHOWNORMAL);
+	const bool HiddenForTest = FestiveDialogHiddenForTest();
+	ShowWindow(State.m_Window, HiddenForTest ? SW_HIDE : SW_SHOWNORMAL);
 	// 首次显示后再应用一次，确保 WM_SIZE/工作区裁剪已经给出最终客户区尺寸。
 	UpdateWindowCornerRegion(State.m_Window, State.m_Dpi);
-	// 崩溃报告通常由已经退出或失去前台资格的客户端进程启动。
-	// 先短暂置顶再恢复普通层级，确保窗口初次出现即可接收鼠标输入。
-	SetWindowPos(State.m_Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-	SetWindowPos(State.m_Window, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-	SetForegroundWindow(State.m_Window);
-	SetActiveWindow(State.m_Window);
+	if(!HiddenForTest)
+	{
+		// 崩溃报告通常由已经退出或失去前台资格的客户端进程启动。
+		// 先短暂置顶再恢复普通层级，确保窗口初次出现即可接收鼠标输入。
+		SetWindowPos(State.m_Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		SetWindowPos(State.m_Window, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+		SetForegroundWindow(State.m_Window);
+		SetActiveWindow(State.m_Window);
+	}
 	UpdateWindow(State.m_Window);
 	StartFestiveMusic();
 	if(State.m_ConfirmButtonId >= gs_ButtonIdBase)
@@ -1089,6 +1138,10 @@ std::optional<int> ShowQmFestiveMessageBox(const IGraphics::CMessageBox &Message
 			DispatchMessageW(&Message);
 		}
 	}
+	// GetMessageW 返回 0（WM_QUIT）或 -1 时窗口可能仍然存在，而 State 马上析构，
+	// 必须销毁窗口，否则 GWLP_USERDATA 会悬垂指向已释放的栈对象。
+	if(IsWindow(State.m_Window))
+		DestroyWindow(State.m_Window);
 	return State.m_Result >= 0 ? std::optional<int>(State.m_Result) : std::nullopt;
 }
 
