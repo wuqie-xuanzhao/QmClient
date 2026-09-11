@@ -4426,6 +4426,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     skins_official_index_contract_test.cpp
     render_target_contract_test.cpp
     windows_test.cpp
+    netobj_secure_unpack_test.cpp
     snapshot_test.cpp
     steam_presence_contract_test.cpp
     str_search_test.cpp
