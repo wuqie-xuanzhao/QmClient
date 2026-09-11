@@ -6,6 +6,7 @@
 #include <engine/http.h>
 #include <engine/shared/json.h>
 
+#include <algorithm>
 #include <limits>
 
 namespace
@@ -18,6 +19,7 @@ namespace
 	constexpr unsigned MAX_AXIOM_DIFFICULTIES = 128;
 	constexpr size_t MAX_AXIOM_PLAYER_NAME_BYTES = 256;
 	constexpr size_t MAX_AXIOM_DIFFICULTY_NAME_BYTES = 192;
+	constexpr size_t MAX_DDSTATS_GAMETYPE_NAME_BYTES = 256;
 
 	const json_value *JsonField(const json_value *pObject, const char *pName)
 	{
@@ -195,6 +197,44 @@ namespace
 		OutScore = std::move(Score);
 		return EQmAxiomParseResult::SUCCESS;
 	}
+
+	EQmAxiomParseResult ParseDdStatsRoot(const json_value *pRoot, const char *pPlayerName, std::vector<SQmDdStatsGameType> &OutGameTypes)
+	{
+		if(!pRoot || pRoot->type != json_object || !pPlayerName || pPlayerName[0] == '\0' || !str_utf8_check(pPlayerName))
+			return EQmAxiomParseResult::INVALID_RESPONSE;
+
+		const json_value *pProfile = JsonField(pRoot, "profile");
+		std::string ProfileName;
+		if(!ReadString(pProfile, "name", ProfileName, MAX_AXIOM_PLAYER_NAME_BYTES) || str_comp_nocase(ProfileName.c_str(), pPlayerName) != 0)
+			return EQmAxiomParseResult::INVALID_RESPONSE;
+
+		const json_value *pGameTypes = JsonField(pRoot, "most_played_gametypes");
+		if(pGameTypes->type != json_array)
+			return EQmAxiomParseResult::INVALID_RESPONSE;
+
+		OutGameTypes.clear();
+		OutGameTypes.reserve(pGameTypes->u.array.length);
+		for(unsigned Index = 0; Index < pGameTypes->u.array.length; ++Index)
+		{
+			const json_value *pGameType = pGameTypes->u.array.values[Index];
+			std::string Name;
+			int64_t Seconds = 0;
+			if(!ReadString(pGameType, "key", Name, MAX_DDSTATS_GAMETYPE_NAME_BYTES) || !ReadNonNegativeInteger(pGameType, "seconds_played", Seconds))
+				return EQmAxiomParseResult::INVALID_RESPONSE;
+			SQmDdStatsGameType GameType;
+			GameType.m_Name = std::move(Name);
+			GameType.m_PlayTimeSeconds = Seconds;
+			const auto Existing = std::find_if(OutGameTypes.begin(), OutGameTypes.end(), [&GameType](const SQmDdStatsGameType &Candidate) {
+				return str_comp_nocase(Candidate.m_Name.c_str(), GameType.m_Name.c_str()) == 0;
+			});
+			if(Existing == OutGameTypes.end())
+				OutGameTypes.push_back(std::move(GameType));
+			else
+				Existing->m_PlayTimeSeconds = Seconds;
+		}
+
+		return EQmAxiomParseResult::SUCCESS;
+	}
 }
 
 const char *QmAxiomModeName(EQmAxiomMode Mode)
@@ -207,6 +247,24 @@ const char *QmAxiomModeName(EQmAxiomMode Mode)
 		return "AXRace";
 	}
 	return "Gores";
+}
+
+const char *QmAxiomParseResultLabel(EQmAxiomParseResult Result)
+{
+	switch(Result)
+	{
+	case EQmAxiomParseResult::SUCCESS:
+		return "";
+	case EQmAxiomParseResult::NOT_FOUND:
+		return "player not found";
+	case EQmAxiomParseResult::AMBIGUOUS:
+		return "ambiguous player name";
+	case EQmAxiomParseResult::API_ERROR:
+		return "api error";
+	case EQmAxiomParseResult::INVALID_RESPONSE:
+		return "invalid response";
+	}
+	return "";
 }
 
 std::string QmBuildAxiomSearchUrl(const char *pPlayerName)
@@ -222,6 +280,15 @@ std::string QmBuildAxiomInfoUrl(int64_t UserId, EQmAxiomMode Mode)
 {
 	char aUrl[256];
 	str_format(aUrl, sizeof(aUrl), "https://api.axiom.teeworlds.cn/v1/query/user/info?user_id=%lld&mode=%s", (long long)UserId, QmAxiomModeName(Mode));
+	return aUrl;
+}
+
+std::string QmBuildDdStatsPlayerUrl(const char *pPlayerName)
+{
+	char aEncodedName[1024];
+	EscapeUrl(aEncodedName, sizeof(aEncodedName), pPlayerName ? pPlayerName : "");
+	char aUrl[1400];
+	str_format(aUrl, sizeof(aUrl), "https://ddstats.tw/player/json?player=%s", aEncodedName);
 	return aUrl;
 }
 
@@ -245,6 +312,18 @@ EQmAxiomParseResult QmParseAxiomInfoResponse(const char *pData, size_t DataSize,
 	if(!pRoot)
 		return EQmAxiomParseResult::INVALID_RESPONSE;
 	const EQmAxiomParseResult Result = ParseInfoRoot(pRoot, OutScore);
+	json_value_free(pRoot);
+	return Result;
+}
+
+EQmAxiomParseResult QmParseDdStatsPlayerResponse(const char *pData, size_t DataSize, const char *pPlayerName, std::vector<SQmDdStatsGameType> &OutGameTypes)
+{
+	if(!pData || DataSize == 0 || DataSize > MAX_AXIOM_JSON_BYTES)
+		return EQmAxiomParseResult::INVALID_RESPONSE;
+	json_value *pRoot = JsonParse(pData, DataSize);
+	if(!pRoot)
+		return EQmAxiomParseResult::INVALID_RESPONSE;
+	const EQmAxiomParseResult Result = ParseDdStatsRoot(pRoot, pPlayerName, OutGameTypes);
 	json_value_free(pRoot);
 	return Result;
 }

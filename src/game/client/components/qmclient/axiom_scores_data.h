@@ -55,6 +55,12 @@ struct SQmAxiomModeScore
 	std::vector<SQmAxiomDifficultyStats> m_vDifficulties;
 };
 
+struct SQmDdStatsGameType
+{
+	std::string m_Name;
+	int64_t m_PlayTimeSeconds = 0;
+};
+
 struct SQmAxiomPopupSize
 {
 	float m_Width = 0.0f;
@@ -62,10 +68,14 @@ struct SQmAxiomPopupSize
 };
 
 const char *QmAxiomModeName(EQmAxiomMode Mode);
+// 把解析结果翻成可显示的简短原因；SUCCESS 返回空串。
+const char *QmAxiomParseResultLabel(EQmAxiomParseResult Result);
 std::string QmBuildAxiomSearchUrl(const char *pPlayerName);
 std::string QmBuildAxiomInfoUrl(int64_t UserId, EQmAxiomMode Mode);
+std::string QmBuildDdStatsPlayerUrl(const char *pPlayerName);
 EQmAxiomParseResult QmParseAxiomSearchResponse(const char *pData, size_t DataSize, const char *pPlayerName, SQmAxiomSearchMatch &OutMatch);
 EQmAxiomParseResult QmParseAxiomInfoResponse(const char *pData, size_t DataSize, SQmAxiomModeScore &OutScore);
+EQmAxiomParseResult QmParseDdStatsPlayerResponse(const char *pData, size_t DataSize, const char *pPlayerName, std::vector<SQmDdStatsGameType> &OutGameTypes);
 bool QmAxiomResponseIsCurrent(uint64_t CurrentGeneration, uint64_t ResponseGeneration, std::string_view CurrentPlayerName, std::string_view ResponsePlayerName);
 SQmAxiomPopupSize QmAxiomPopupSize(float ScreenWidth, float ScreenHeight);
 

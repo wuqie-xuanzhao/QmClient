@@ -264,6 +264,8 @@ namespace
 			int m_TotalFinishes = -1;
 			int64_t m_Points = -1;
 			int64_t m_PointsTotal = -1;
+			int64_t m_PlaytimeHours = -1;
+			int64_t m_PlaytimeHoursPastYear = -1;
 		};
 
 	private:
@@ -373,6 +375,40 @@ namespace
 						}
 						Result.m_TotalFinishes = (int)TotalFinishes;
 					}
+
+					// 官方 json2 直接提供两种口径的游玩小时数：
+					//   activity[] 逐日 hours_played 求和 = 生涯累计；
+					//   hours_played_past_365_days        = 最近一年。
+					// 两者都只作为显示用的可选数据，缺失时不置 m_Parsed，避免影响既有解析成功判定。
+					const json_value *pActivity = JsonObjectField(pRoot, "activity");
+					if(pActivity->type == json_array)
+					{
+						int64_t TotalHours = 0;
+						bool AnyEntry = false;
+						bool Overflow = false;
+						for(unsigned i = 0; i < pActivity->u.array.length; ++i)
+						{
+							const json_value &Entry = (*pActivity)[i];
+							if(Entry.type != json_object)
+								continue;
+							const json_value *pHours = JsonObjectField(&Entry, "hours_played");
+							if(pHours->type != json_integer || pHours->u.integer < 0)
+								continue;
+							AnyEntry = true;
+							if(TotalHours > std::numeric_limits<int64_t>::max() - pHours->u.integer)
+							{
+								Overflow = true;
+								break;
+							}
+							TotalHours += pHours->u.integer;
+						}
+						if(AnyEntry && !Overflow)
+							Result.m_PlaytimeHours = TotalHours;
+					}
+					const json_value *pPastYearHours = JsonObjectField(pRoot, "hours_played_past_365_days");
+					if(pPastYearHours->type == json_integer && pPastYearHours->u.integer >= 0)
+						Result.m_PlaytimeHoursPastYear = pPastYearHours->u.integer;
+
 					json_value_free(pRoot);
 				}
 			}
@@ -895,6 +931,14 @@ void CQmClient::LoadQmClientLocalModeStats()
 			if(!JsonReadNonNegativeInt64(pFinishes, Finishes) || Finishes > std::numeric_limits<int>::max())
 				continue;
 			Stats.m_TotalFinishes = (int)Finishes;
+			const json_value *pPlaytimeHours = JsonObjectField(pPlayer, "playtime_hours");
+			int64_t PlaytimeHours = 0;
+			if(JsonReadNonNegativeInt64(pPlaytimeHours, PlaytimeHours))
+				Stats.m_PlaytimeHours = PlaytimeHours;
+			const json_value *pPlaytimeHoursPastYear = JsonObjectField(pPlayer, "playtime_hours_past_year");
+			int64_t PlaytimeHoursPastYear = 0;
+			if(JsonReadNonNegativeInt64(pPlaytimeHoursPastYear, PlaytimeHoursPastYear))
+				Stats.m_PlaytimeHoursPastYear = PlaytimeHoursPastYear;
 			m_vQmClientDdnetPlayerStats.push_back(std::move(Stats));
 		}
 	}
@@ -902,6 +946,13 @@ void CQmClient::LoadQmClientLocalModeStats()
 	if(GameClient() != nullptr)
 		GameClient()->m_QmAxiomScores.LoadPersistentCache(pRoot);
 	json_value_free(pRoot);
+}
+
+int64_t CQmClient::QmStatisticsLastSuccessfulSyncTimestamp() const
+{
+	const int64_t DdnetTimestamp = m_QmDdnetPlayerState.LastSuccessfulSyncTimestamp();
+	const int64_t AxiomTimestamp = GameClient() != nullptr ? GameClient()->m_QmAxiomScores.LastSuccessfulSyncTimestamp() : 0;
+	return std::max(DdnetTimestamp, std::max(m_QmClientPlaytimeLastSuccessfulSyncTimestamp, AxiomTimestamp));
 }
 
 bool CQmClient::SaveQmClientStatistics() const
@@ -993,6 +1044,20 @@ bool CQmClient::SaveQmClientStatistics() const
 			Writer.WriteStrValue(aPointsTotal);
 			Writer.WriteAttribute("finishes");
 			Writer.WriteIntValue(Stats.m_TotalFinishes);
+			if(Stats.m_PlaytimeHours >= 0)
+			{
+				Writer.WriteAttribute("playtime_hours");
+				char aPlaytimeHours[64];
+				str_format(aPlaytimeHours, sizeof(aPlaytimeHours), "%" PRId64, Stats.m_PlaytimeHours);
+				Writer.WriteStrValue(aPlaytimeHours);
+			}
+			if(Stats.m_PlaytimeHoursPastYear >= 0)
+			{
+				Writer.WriteAttribute("playtime_hours_past_year");
+				char aPlaytimeHoursPastYear[64];
+				str_format(aPlaytimeHoursPastYear, sizeof(aPlaytimeHoursPastYear), "%" PRId64, Stats.m_PlaytimeHoursPastYear);
+				Writer.WriteStrValue(aPlaytimeHoursPastYear);
+			}
 			Writer.EndObject();
 		}
 		Writer.EndArray();
@@ -1040,7 +1105,7 @@ const SQmClientDdnetPlayerStats *CQmClient::FindQmDdnetPlayerStats(const char *p
 	return nullptr;
 }
 
-void CQmClient::StoreQmDdnetPlayerStats(const char *pPlayerName, const std::string &FavoritePartner, int TotalFinishes, int64_t Points, int64_t PointsTotal)
+void CQmClient::StoreQmDdnetPlayerStats(const char *pPlayerName, const std::string &FavoritePartner, int TotalFinishes, int64_t Points, int64_t PointsTotal, int64_t PlaytimeHours, int64_t PlaytimeHoursPastYear)
 {
 	if(!pPlayerName || pPlayerName[0] == '\0' || TotalFinishes < 0 || Points < 0 || PointsTotal < 0)
 		return;
@@ -1052,6 +1117,8 @@ void CQmClient::StoreQmDdnetPlayerStats(const char *pPlayerName, const std::stri
 		Stats.m_TotalFinishes = TotalFinishes;
 		Stats.m_Points = Points;
 		Stats.m_PointsTotal = PointsTotal;
+		Stats.m_PlaytimeHours = PlaytimeHours;
+		Stats.m_PlaytimeHoursPastYear = PlaytimeHoursPastYear;
 		return;
 	}
 	SQmClientDdnetPlayerStats Stats;
@@ -1060,6 +1127,8 @@ void CQmClient::StoreQmDdnetPlayerStats(const char *pPlayerName, const std::stri
 	Stats.m_TotalFinishes = TotalFinishes;
 	Stats.m_Points = Points;
 	Stats.m_PointsTotal = PointsTotal;
+	Stats.m_PlaytimeHours = PlaytimeHours;
+	Stats.m_PlaytimeHoursPastYear = PlaytimeHoursPastYear;
 	m_vQmClientDdnetPlayerStats.push_back(std::move(Stats));
 }
 
@@ -1077,6 +1146,8 @@ void CQmClient::SelectQmDdnetPlayerStats(const char *pFallbackPlayerName)
 		m_QmDdnetTotalFinishes = -1;
 		m_QmDdnetPoints = -1;
 		m_QmDdnetPointsTotal = -1;
+		m_QmDdnetPlaytimeHours = -1;
+		m_QmDdnetPlaytimeHoursPastYear = -1;
 		return;
 	}
 
@@ -1088,12 +1159,16 @@ void CQmClient::SelectQmDdnetPlayerStats(const char *pFallbackPlayerName)
 		m_QmDdnetTotalFinishes = -1;
 		m_QmDdnetPoints = -1;
 		m_QmDdnetPointsTotal = -1;
+		m_QmDdnetPlaytimeHours = -1;
+		m_QmDdnetPlaytimeHoursPastYear = -1;
 		return;
 	}
 	str_copy(m_aQmDdnetFavoritePartner, pStats->m_FavoritePartner.c_str(), sizeof(m_aQmDdnetFavoritePartner));
 	m_QmDdnetTotalFinishes = pStats->m_TotalFinishes;
 	m_QmDdnetPoints = pStats->m_Points;
 	m_QmDdnetPointsTotal = pStats->m_PointsTotal;
+	m_QmDdnetPlaytimeHours = pStats->m_PlaytimeHours;
+	m_QmDdnetPlaytimeHoursPastYear = pStats->m_PlaytimeHoursPastYear;
 }
 
 void CQmClient::RecordQmClientLocalMapFinish(const char *pGameMode, int Score)
@@ -1487,6 +1562,8 @@ void CQmClient::SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<IH
 
 	std::string Body = JsonWriter.GetOutputString();
 	pTaskSlot = HttpPostJson(pUrl, Body.c_str());
+	if(!pTaskSlot)
+		return;
 	pTaskSlot->AllowInsecureProtocol();
 	pTaskSlot->Timeout(CTimeout{3000, 0, 250, 6});
 	pTaskSlot->IpResolve(IPRESOLVE::V4);
@@ -1532,6 +1609,27 @@ bool CQmClient::FinishQmClientPlaytimeTask(std::shared_ptr<IHttpRequest> &pTaskS
 
 	pTaskSlot = nullptr;
 	return Ok;
+}
+
+void CQmClient::FinishQmClientPlaytimeQuery()
+{
+	if(!m_pQmClientPlaytimeQueryTask || !m_pQmClientPlaytimeQueryTask->Done())
+		return;
+
+	const EHttpState State = m_pQmClientPlaytimeQueryTask->State();
+	const int StatusCode = m_pQmClientPlaytimeQueryTask->StatusCode();
+	const bool ManualRefresh = m_QmClientPlaytimeManualRefreshActive;
+	const bool Ok = FinishQmClientPlaytimeTask(m_pQmClientPlaytimeQueryTask, false);
+	m_QmClientPlaytimeLastSync = time_get();
+	if(ManualRefresh)
+	{
+		m_QmClientPlaytimeManualRefreshActive = false;
+		m_QmClientPlaytimeManualRefreshFailed = !Ok;
+	}
+	if(Ok)
+		m_QmClientPlaytimeLastSuccessfulSyncTimestamp = time_timestamp();
+	else
+		log_warn("qmclient", "playtime query failed: state=%d status=%d", (int)State, StatusCode);
 }
 
 void CQmClient::FinishQmClientServerTimeTask()
@@ -1591,10 +1689,7 @@ void CQmClient::UpdateQmClientLifecycleAndServerTime()
 	if(m_pQmClientLifecycleStopTask && m_pQmClientLifecycleStopTask->Done())
 		FinishQmClientPlaytimeTask(m_pQmClientLifecycleStopTask, false);
 	if(m_pQmClientPlaytimeQueryTask && m_pQmClientPlaytimeQueryTask->Done())
-	{
-		FinishQmClientPlaytimeTask(m_pQmClientPlaytimeQueryTask, false);
-		m_QmClientPlaytimeLastSync = time_get();
-	}
+		FinishQmClientPlaytimeQuery();
 
 	if(m_pQmClientServerTimeTask && m_pQmClientServerTimeTask->Done())
 		FinishQmClientServerTimeTask();
@@ -1631,7 +1726,14 @@ void CQmClient::UpdateQmClientLifecycleAndServerTime()
 
 	const int64_t PlaytimeIntervalTicks = (int64_t)QMCLIENT_PLAYTIME_QUERY_INTERVAL_SECONDS * time_freq();
 	if(!m_pQmClientPlaytimeQueryTask && (m_QmClientPlaytimeLastSync == 0 || Now - m_QmClientPlaytimeLastSync >= PlaytimeIntervalTicks))
+	{
 		SendQmClientPlaytimeRequest(QMCLIENT_PLAYTIME_QUERY_URL, m_pQmClientPlaytimeQueryTask);
+		if(!m_pQmClientPlaytimeQueryTask)
+		{
+			m_QmClientPlaytimeLastSync = Now;
+			log_warn("qmclient", "playtime query could not be started");
+		}
+	}
 
 	const int64_t IntervalTicks = (int64_t)QMCLIENT_SERVER_TIME_SYNC_INTERVAL_SECONDS * time_freq();
 	if(m_pQmClientServerTimeTask || (m_QmClientServerTimeLastSync != 0 && Now - m_QmClientServerTimeLastSync < IntervalTicks))
@@ -1731,16 +1833,18 @@ void CQmClient::FinishQmDdnetPlayerStats()
 		CQmDdnetPlayerStatsParseJob::SResult Result = pParseJob->TakeResult();
 		m_pQmDdnetPlayerParseJob = nullptr;
 		bool StartRefresh = false;
-		if(!m_QmDdnetPlayerState.CompleteParse(ParsePlayerName, Result.m_Parsed, time_get(), (int64_t)QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS * time_freq(), StartRefresh))
+		if(!m_QmDdnetPlayerState.CompleteParse(ParsePlayerName, Result.m_Parsed, time_get(), time_timestamp(), (int64_t)QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS * time_freq(), StartRefresh))
 			return;
 
 		if(Result.m_Parsed)
 		{
-			StoreQmDdnetPlayerStats(ParsePlayerName.c_str(), Result.m_FavoritePartner, Result.m_TotalFinishes, Result.m_Points, Result.m_PointsTotal);
+			StoreQmDdnetPlayerStats(ParsePlayerName.c_str(), Result.m_FavoritePartner, Result.m_TotalFinishes, Result.m_Points, Result.m_PointsTotal, Result.m_PlaytimeHours, Result.m_PlaytimeHoursPastYear);
 			SelectQmDdnetPlayerStats(g_Config.m_PlayerName);
 			if(SaveQmClientStatistics() && GameClient() != nullptr)
 				GameClient()->m_QmAxiomScores.ClearPersistentCacheDirty();
 		}
+		else
+			log_warn("qmclient", "DDNet statistics response could not be parsed for '%s'", ParsePlayerName.c_str());
 		if(StartRefresh && !m_QmDdnetPlayerState.PlayerName().empty())
 			FetchQmDdnetPlayerStats(m_QmDdnetPlayerState.PlayerName().c_str());
 		return;
@@ -1751,6 +1855,8 @@ void CQmClient::FinishQmDdnetPlayerStats()
 
 	if(m_pQmDdnetPlayerTask->State() != EHttpState::DONE || m_pQmDdnetPlayerTask->StatusCode() != 200)
 	{
+		log_warn("qmclient", "DDNet statistics request failed for '%s': state=%d status=%d",
+			m_QmDdnetPlayerState.RequestPlayerName().c_str(), (int)m_pQmDdnetPlayerTask->State(), m_pQmDdnetPlayerTask->StatusCode());
 		m_QmDdnetPlayerState.CompleteHttp(false, time_get(), (int64_t)QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS * time_freq());
 		m_pQmDdnetPlayerTask = nullptr;
 		return;
@@ -1782,6 +1888,31 @@ void CQmClient::RefreshQmDdnetPlayerStats()
 		FetchQmDdnetPlayerStats(m_QmDdnetPlayerState.PlayerName().c_str());
 }
 
+void CQmClient::RefreshQmClientPlaytime()
+{
+	if(m_pQmClientPlaytimeQueryTask)
+	{
+		m_QmClientPlaytimeManualRefreshActive = true;
+		m_QmClientPlaytimeManualRefreshFailed = false;
+		if(!m_pQmClientPlaytimeQueryTask->Done())
+			return;
+		FinishQmClientPlaytimeQuery();
+		if(!m_QmClientPlaytimeManualRefreshFailed)
+			return;
+	}
+
+	m_QmClientPlaytimeLastSync = 0;
+	m_QmClientPlaytimeManualRefreshActive = true;
+	m_QmClientPlaytimeManualRefreshFailed = false;
+	SendQmClientPlaytimeRequest(QMCLIENT_PLAYTIME_QUERY_URL, m_pQmClientPlaytimeQueryTask);
+	if(!m_pQmClientPlaytimeQueryTask)
+	{
+		m_QmClientPlaytimeManualRefreshActive = false;
+		m_QmClientPlaytimeManualRefreshFailed = true;
+		log_warn("qmclient", "manual playtime query could not be started");
+	}
+}
+
 void CQmClient::UseCurrentQmDdnetPlayerName()
 {
 	const char *pPlayerName = g_Config.m_PlayerName;
@@ -1795,6 +1926,7 @@ void CQmClient::UseCurrentQmDdnetPlayerName()
 
 void CQmClient::RefreshQmClientStatistics()
 {
+	RefreshQmClientPlaytime();
 	RefreshQmDdnetPlayerStats();
 	if(GameClient() != nullptr && m_aQmDdnetPlayerName[0] != '\0')
 		GameClient()->m_QmAxiomScores.Refresh(m_aQmDdnetPlayerName);
@@ -1829,6 +1961,9 @@ void CQmClient::InitQmClientLifecycle()
 	m_QmClientServerTimeLastSync = 0;
 	m_QmClientServerPlaytimeSeconds = -1;
 	m_QmClientPlaytimeLastSync = 0;
+	m_QmClientPlaytimeLastSuccessfulSyncTimestamp = 0;
+	m_QmClientPlaytimeManualRefreshActive = false;
+	m_QmClientPlaytimeManualRefreshFailed = false;
 
 	if(HadPendingMarker)
 	{

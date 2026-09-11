@@ -49,6 +49,7 @@
 #include <game/client/components/console.h>
 #include <game/client/components/key_binder.h>
 #include <game/client/components/menu_background.h>
+#include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
@@ -2921,6 +2922,88 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			vDominantMaps[Index] = CandidateMaps;
 		}
 	}
+
+	const int FinishedMaps = GameClient()->m_QmClient.QmDdnetTotalFinishes();
+	const char *pPlayerName = GameClient()->m_QmClient.QmDdnetPlayerName();
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		pPlayerName = g_Config.m_PlayerName;
+	const bool AxiomCommunity = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
+	bool HasLocalAxiomGores = false;
+	for(const SQmClientLocalModeStats &Stats : vModeStats)
+	{
+		if(IsStatsGoresMode(Stats.m_GameMode) && (Stats.m_IsAxiom || str_find_nocase(Stats.m_CommunityId.c_str(), "axiom") != nullptr))
+		{
+			HasLocalAxiomGores = true;
+			break;
+		}
+	}
+	const SQmAxiomPlayerResult *pAxiomResult = pPlayerName && pPlayerName[0] != '\0' ? GameClient()->m_QmAxiomScores.GetResult(pPlayerName) : nullptr;
+	const bool ShowAxiomGores = QmStatisticsShouldShowAxiomGores(HasLocalAxiomGores, AxiomCommunity, pAxiomResult != nullptr);
+	if(ShowAxiomGores && pPlayerName && pPlayerName[0] != '\0')
+	{
+		GameClient()->m_QmAxiomScores.EnsureQueried(pPlayerName);
+		pAxiomResult = GameClient()->m_QmAxiomScores.GetResult(pPlayerName);
+	}
+	const std::vector<SQmDdStatsGameType> *pDdStatsGameTypes = pPlayerName && pPlayerName[0] != '\0' ? GameClient()->m_QmAxiomScores.GetDdStatsGameTypes(pPlayerName) : nullptr;
+	if(pDdStatsGameTypes)
+	{
+		for(const SQmDdStatsGameType &GameType : *pDdStatsGameTypes)
+		{
+			auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [&GameType](const SQmClientLocalModeStats &Stats) {
+				return str_comp_nocase(Stats.m_GameMode.c_str(), GameType.m_Name.c_str()) == 0;
+			});
+			if(It == vModeStats.end())
+			{
+				SQmClientLocalModeStats Stats;
+				Stats.m_GameMode = GameType.m_Name;
+				Stats.m_CommunityId = "ddstats";
+				Stats.m_PlaytimeSeconds = GameType.m_PlayTimeSeconds;
+				vModeStats.push_back(std::move(Stats));
+			}
+			else
+				It->m_PlaytimeSeconds = std::max(It->m_PlaytimeSeconds, GameType.m_PlayTimeSeconds);
+		}
+	}
+	const SQmAxiomModeResult *pAxiomGoresResult = pAxiomResult ? &pAxiomResult->Mode(EQmAxiomMode::GORES) : nullptr;
+	// READY 只是状态，不能单独证明聚合分数已经写入。只用完整数据替换本地 Gores 统计，
+	// 避免缓存/失败路径留下 READY 时把地图数、时长和表现分误显示成 0。
+	const bool HasAxiomGoresStats = pAxiomGoresResult && pAxiomGoresResult->m_HasData && pAxiomGoresResult->m_Status == EQmAxiomScoreStatus::READY;
+	if(ShowAxiomGores)
+	{
+		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [](const SQmClientLocalModeStats &Stats) {
+			return IsStatsGoresMode(Stats.m_GameMode);
+		});
+		if(It == vModeStats.end())
+		{
+			SQmClientLocalModeStats Stats;
+			Stats.m_GameMode = "Gores";
+			Stats.m_CommunityId = "axiom";
+			Stats.m_IsAxiom = true;
+			vModeStats.push_back(std::move(Stats));
+		}
+		else
+		{
+			It->m_CommunityId = "axiom";
+			It->m_IsAxiom = true;
+		}
+	}
+	for(SQmClientLocalModeStats &Stats : vModeStats)
+	{
+		const bool IsGores = IsStatsGoresMode(Stats.m_GameMode);
+		const bool IsDdnet = IsStatsDDraceMode(Stats.m_GameMode);
+		const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(
+			Stats.m_Maps,
+			Stats.m_PlaytimeSeconds,
+			IsGores && ShowAxiomGores,
+			HasAxiomGoresStats,
+			HasAxiomGoresStats ? pAxiomGoresResult->m_Score.m_TotalMapsCompleted : 0,
+			HasAxiomGoresStats ? pAxiomGoresResult->m_Score.m_TotalPlayTime : 0,
+			IsDdnet,
+			FinishedMaps,
+			IsDdnet ? GameClient()->m_QmClient.QmDdnetPlaytimeHours() : -1);
+		Stats.m_Maps = Display.m_Maps;
+		Stats.m_PlaytimeSeconds = Display.m_PlaytimeSeconds;
+	}
 	std::vector<SQmClientLocalModeStats> vSortedModeStats = std::move(vModeStats);
 	std::stable_sort(vSortedModeStats.begin(), vSortedModeStats.end(), [](const SQmClientLocalModeStats &Left, const SQmClientLocalModeStats &Right) {
 		if(Left.m_Maps != Right.m_Maps)
@@ -2958,34 +3041,11 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		vDisplayModeStats.push_back(std::move(Other));
 	}
 
-	const char *pPlayerName = GameClient()->m_QmClient.QmDdnetPlayerName();
-	if(!pPlayerName || pPlayerName[0] == '\0')
-		pPlayerName = g_Config.m_PlayerName;
-	const bool AxiomCommunity = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
-	bool AxiomGoresMode = false;
-	for(const SQmClientLocalModeStats &Stats : vDisplayModeStats)
-	{
-		if(!IsStatsGoresMode(Stats.m_GameMode))
-			continue;
-		AxiomGoresMode = Stats.m_IsAxiom || str_find_nocase(Stats.m_CommunityId.c_str(), "axiom") != nullptr || (Stats.m_CommunityId.empty() && AxiomCommunity);
-		break;
-	}
-	const SQmAxiomPlayerResult *pAxiomResult = nullptr;
-	const SQmAxiomModeResult *pAxiomGoresResult = nullptr;
-	if(AxiomGoresMode && pPlayerName && pPlayerName[0] != '\0')
-	{
-		for(const auto &Stats : vDisplayModeStats)
-		{
-			if(IsStatsGoresMode(Stats.m_GameMode))
-			{
-				GameClient()->m_QmAxiomScores.EnsureQueried(pPlayerName);
-				pAxiomResult = GameClient()->m_QmAxiomScores.GetResult(pPlayerName);
-				if(pAxiomResult)
-					pAxiomGoresResult = &pAxiomResult->Mode(EQmAxiomMode::GORES);
-				break;
-			}
-		}
-	}
+	// 首次查询时缓存条目可能刚建立，不能再用 pAxiomResult 非空来判定「同步中」，
+	// 否则搜索请求在飞时按钮仍显示「同步远程统计」，用户以为没在同步。
+	const bool AxiomStatsFetching = ShowAxiomGores && pPlayerName && pPlayerName[0] != '\0' && GameClient()->m_QmAxiomScores.IsFetchingPlayer(pPlayerName);
+	const bool AxiomStatsFailed = ShowAxiomGores && pPlayerName && pPlayerName[0] != '\0' && GameClient()->m_QmAxiomScores.IsPlayerFailed(pPlayerName);
+	const bool AxiomGoresMode = ShowAxiomGores;
 
 	const int64_t LocalUptimeSeconds = static_cast<int64_t>(std::max(0.0f, Client()->LocalTime()));
 	int64_t CurrentTimestamp = time_timestamp();
@@ -3004,7 +3064,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		ClientOpenSeconds = GameClient()->m_QmClient.QmServerPlaytimeSeconds();
 
 	int64_t ServerPlaytimeSeconds = 0;
-	for(const SQmClientLocalModeStats &Stats : GameClient()->m_QmClient.QmClientLocalModeStats())
+	for(const SQmClientLocalModeStats &Stats : vDisplayModeStats)
 		ServerPlaytimeSeconds = SaturatingAdd(ServerPlaytimeSeconds, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
 
 	char aClientOpenTime[64];
@@ -3012,9 +3072,10 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	FormatStatsPlaytime(ClientOpenSeconds, false, aClientOpenTime, sizeof(aClientOpenTime));
 	FormatStatsPlaytime(ServerPlaytimeSeconds, false, aServerPlaytime, sizeof(aServerPlaytime));
 
-	const int FinishedMaps = GameClient()->m_QmClient.QmDdnetTotalFinishes();
 	const bool DdnetStatsFetching = GameClient()->m_QmClient.QmDdnetStatsIsFetching();
 	const bool DdnetStatsFailed = GameClient()->m_QmClient.QmDdnetStatsLastRequestFailed();
+	const bool StatisticsFetching = GameClient()->m_QmClient.QmStatisticsIsFetching() || AxiomStatsFetching;
+	const bool StatisticsFailed = GameClient()->m_QmClient.QmStatisticsLastRequestFailed() || AxiomStatsFailed;
 	const char *pDdnetStatsUnavailableText = DdnetStatsFailed ? Localize("Unavailable") : Localize("Loading");
 
 	char aFinishedMapsText[32];
@@ -3129,50 +3190,35 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	ModePanel.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.23f), IGraphics::CORNER_ALL, 8.0f);
 	CUIRect ModeTitle, ModeBody;
 	ModePanel.Margin(10.0f, &ModePanel);
-	const bool NarrowModeActions = ModePanel.w < 500.0f;
-	ModePanel.HSplitTop(NarrowModeActions ? 68.0f : 44.0f, &ModeTitle, &ModeBody);
+	ModePanel.HSplitTop(44.0f, &ModeTitle, &ModeBody);
 	static bool s_ShowTotalHours = false;
-	CUIRect ModeTitleLabel, ModeTitleActions;
-	ModeTitle.HSplitTop(20.0f, &ModeTitleLabel, &ModeTitleActions);
+	CUIRect ModeTitleLabel;
+	ModeTitle.HSplitTop(20.0f, &ModeTitleLabel, nullptr);
 	Ui()->DoLabel(&ModeTitleLabel, Localize("Local game mode statistics"), 14.0f, TEXTALIGN_ML);
-	ModeTitleActions.HSplitTop(2.0f, nullptr, &ModeTitleActions);
-	CUIRect RefreshButton, UseCurrentNameButton, ModeTitleButton;
-	if(NarrowModeActions)
-	{
-		CUIRect FirstActionRow;
-		ModeTitleActions.HSplitTop(22.0f, &FirstActionRow, &ModeTitleActions);
-		FirstActionRow.VSplitMid(&RefreshButton, &UseCurrentNameButton, 8.0f);
-		ModeTitleActions.HSplitTop(2.0f, nullptr, &ModeTitleActions);
-		ModeTitleButton = ModeTitleActions;
-	}
-	else
-	{
-		const float ButtonWidth = (ModeTitleActions.w - 16.0f) / 3.0f;
-		ModeTitleActions.VSplitLeft(ButtonWidth, &RefreshButton, &ModeTitleActions);
-		ModeTitleActions.VSplitLeft(8.0f, nullptr, &ModeTitleActions);
-		ModeTitleActions.VSplitLeft(ButtonWidth, &UseCurrentNameButton, &ModeTitleActions);
-		ModeTitleActions.VSplitLeft(8.0f, nullptr, &ModeTitleActions);
-		ModeTitleButton = ModeTitleActions;
-	}
-	static CButtonContainer s_StatisticsRefreshButton;
-	const char *pRefreshStatsLabel = DdnetStatsFetching ? Localize("Syncing remote stats") : (DdnetStatsFailed ? Localize("Retry remote stats") : Localize("Sync remote stats"));
-	if(DoButton_Menu(&s_StatisticsRefreshButton, pRefreshStatsLabel, 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
-		GameClient()->m_QmClient.RefreshQmClientStatistics();
-	static CButtonContainer s_StatisticsUseCurrentNameButton;
-	if(DoButton_Menu(&s_StatisticsUseCurrentNameButton, Localize("Use current name"), 0, &UseCurrentNameButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
-		GameClient()->m_QmClient.UseCurrentQmDdnetPlayerName();
-	static CButtonContainer s_TotalHoursButton;
-	if(DoButton_Menu(&s_TotalHoursButton, Localize("Total hours"), s_ShowTotalHours, &ModeTitleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
-		s_ShowTotalHours = !s_ShowTotalHours;
 	ModeBody.HSplitTop(6.0f, nullptr, &ModeBody);
 	const float ChartRadius = minimum(ModeBody.h * 0.37f, 82.0f);
+	const float ChartInnerRadius = ChartRadius * 0.48f;
 	const vec2 ChartCenter(ModeBody.x + ChartRadius + 8.0f, ModeBody.y + ModeBody.h * 0.5f);
 	const ColorRGBA aModeColors[] = {ColorRGBA(0.22f, 0.70f, 0.95f, 1.0f), ColorRGBA(0.37f, 0.85f, 0.52f, 1.0f), ColorRGBA(0.98f, 0.66f, 0.24f, 1.0f), ColorRGBA(0.86f, 0.38f, 0.62f, 1.0f), ColorRGBA(0.60f, 0.48f, 0.94f, 1.0f)};
 	int64_t TotalMaps = 0;
+	int64_t TotalModePlaytime = 0;
 	for(const auto &Stats : vDisplayModeStats)
 	{
 		TotalMaps += maximum(0, Stats.m_Maps);
+		TotalModePlaytime = SaturatingAdd(TotalModePlaytime, maximum<int64_t>(0, Stats.m_PlaytimeSeconds));
 	}
+	// DDStats 的原图按各模式累计游玩时间分配比例；只有没有任何时长时才退回地图数。
+	const bool ChartUsesMaps = TotalModePlaytime <= 0 && TotalMaps > 0;
+	const int64_t TotalChartWeight = ChartUsesMaps ? TotalMaps : TotalModePlaytime;
+	auto ModeSourceText = [&](const SQmClientLocalModeStats &Stats) {
+		if(IsStatsGoresMode(Stats.m_GameMode) && AxiomGoresMode)
+			return "Axiom";
+		if(IsStatsDDraceMode(Stats.m_GameMode))
+			return "DDNet";
+		if(Stats.m_CommunityId == "ddstats")
+			return "DDStats";
+		return "";
+	};
 	auto FormatModeScore = [&](const SQmClientLocalModeStats &Stats, char *pBuf, size_t BufSize) {
 		if(IsStatsGoresMode(Stats.m_GameMode))
 		{
@@ -3181,9 +3227,11 @@ void CMenus::RenderStatistics(CUIRect MainView)
 				pBuf[0] = '\0';
 				return;
 			}
-			if(pAxiomGoresResult && (pAxiomGoresResult->m_HasData || pAxiomGoresResult->m_Status == EQmAxiomScoreStatus::READY))
+			if(pAxiomGoresResult && pAxiomGoresResult->m_HasData && pAxiomGoresResult->m_Status == EQmAxiomScoreStatus::READY)
 			{
-				str_format(pBuf, BufSize, "%" PRId64, pAxiomGoresResult->m_Score.m_Points);
+				// Axiom 的 points 是总积分；performance_points 是单独的表现分。
+				// 显式带标签，避免统计页只显示两个无法区分的数字。
+				str_format(pBuf, BufSize, "%s: %" PRId64 " · %s: %" PRId64, Localize("Points"), pAxiomGoresResult->m_Score.m_Points, Localize("Performance points"), pAxiomGoresResult->m_Score.m_PerformancePoints);
 			}
 			else
 			{
@@ -3192,7 +3240,16 @@ void CMenus::RenderStatistics(CUIRect MainView)
 					Status = pAxiomResult->m_SearchStatus;
 				else if(pAxiomGoresResult)
 					Status = pAxiomGoresResult->m_Status;
-				str_copy(pBuf, AxiomStatsStatusText(Status), BufSize);
+				// 失败时带出具体原因（超时 / 非 200 / 解析错误），避免只显示笼统的失败态。
+				const char *pDetail = nullptr;
+				if(pAxiomResult && Status == pAxiomResult->m_SearchStatus && !pAxiomResult->m_SearchErrorDetail.empty())
+					pDetail = pAxiomResult->m_SearchErrorDetail.c_str();
+				else if(pAxiomGoresResult && !pAxiomGoresResult->m_ErrorDetail.empty())
+					pDetail = pAxiomGoresResult->m_ErrorDetail.c_str();
+				if(pDetail)
+					str_format(pBuf, BufSize, "%s (%s)", AxiomStatsStatusText(Status), pDetail);
+				else
+					str_copy(pBuf, AxiomStatsStatusText(Status), BufSize);
 			}
 			return;
 		}
@@ -3208,17 +3265,21 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		}
 		pBuf[0] = '\0';
 	};
-	auto FormatModeTooltip = [&](const SQmClientLocalModeStats &Stats, const char *pModeName, const char *pDuration, char *pBuf, size_t BufSize) {
+	auto FormatModeTooltip = [&](const SQmClientLocalModeStats &Stats, const char *pModeName, const char *pModeSource, const char *pDuration, char *pBuf, size_t BufSize) {
 		char aScoreText[128];
 		FormatModeScore(Stats, aScoreText, sizeof(aScoreText));
-		if(aScoreText[0])
+		if(aScoreText[0] && pModeSource[0])
+			str_format(pBuf, BufSize, "%s: %s\n%s: %s\n%s: %d\n%s: %s\n%s: %s", Localize("Game mode"), pModeName, Localize("Server"), pModeSource, Localize("Maps finished"), Stats.m_Maps, Localize("Score earned"), aScoreText, Localize("Total play time"), pDuration);
+		else if(aScoreText[0])
 			str_format(pBuf, BufSize, "%s: %s\n%s: %d\n%s: %s\n%s: %s", Localize("Game mode"), pModeName, Localize("Maps finished"), Stats.m_Maps, Localize("Score earned"), aScoreText, Localize("Total play time"), pDuration);
+		else if(pModeSource[0])
+			str_format(pBuf, BufSize, "%s: %s\n%s: %s\n%s: %d\n%s: %s", Localize("Game mode"), pModeName, Localize("Server"), pModeSource, Localize("Maps finished"), Stats.m_Maps, Localize("Total play time"), pDuration);
 		else
 			str_format(pBuf, BufSize, "%s: %s\n%s: %d\n%s: %s", Localize("Game mode"), pModeName, Localize("Maps finished"), Stats.m_Maps, Localize("Total play time"), pDuration);
 	};
 	static char s_aModeTooltipText[5][512] = {};
 	int HoveredMode = -1;
-	if(TotalMaps > 0)
+	if(TotalChartWeight > 0)
 	{
 		float StartAngle = -pi / 2.0f;
 		const vec2 MousePos(Ui()->MouseX(), Ui()->MouseY());
@@ -3232,22 +3293,38 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		for(size_t Index = 0; Index < vDisplayModeStats.size(); ++Index)
 		{
 			const auto &Stats = vDisplayModeStats[Index];
-			const float Sweep = 2.0f * pi * maximum(0, Stats.m_Maps) / (float)TotalMaps;
+			const int64_t ChartWeight = QmStatisticsChartWeight(Stats.m_Maps, Stats.m_PlaytimeSeconds, ChartUsesMaps);
+			const float Sweep = 2.0f * pi * ChartWeight / (float)TotalChartWeight;
 			if(Sweep <= 0.0f)
 				continue;
 			IGraphics::CFreeformItem aSectors[128];
 			const int Segments = std::clamp((int)std::ceil(Sweep * 20.0f), 1, (int)std::size(aSectors));
+			// 先画一圈浅色边框，再画彩色环段，视觉上接近 DDStats 的环形图。
 			for(int Segment = 0; Segment < Segments; ++Segment)
 			{
 				const float A0 = StartAngle + Sweep * Segment / Segments;
 				const float A1 = StartAngle + Sweep * (Segment + 1) / Segments;
 				const vec2 P0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartRadius;
 				const vec2 P1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartRadius;
-				aSectors[Segment] = IGraphics::CFreeformItem(ChartCenter, ChartCenter, P1, P0);
+				const vec2 Q0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * ChartInnerRadius;
+				const vec2 Q1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * ChartInnerRadius;
+				aSectors[Segment] = IGraphics::CFreeformItem(P0, P1, Q1, Q0);
+			}
+			Graphics()->SetColor(ColorRGBA(0.96f, 0.96f, 1.0f, 1.0f));
+			Graphics()->QuadsDrawFreeform(aSectors, Segments);
+			for(int Segment = 0; Segment < Segments; ++Segment)
+			{
+				const float A0 = StartAngle + Sweep * Segment / Segments;
+				const float A1 = StartAngle + Sweep * (Segment + 1) / Segments;
+				const vec2 P0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * (ChartRadius - 2.0f);
+				const vec2 P1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * (ChartRadius - 2.0f);
+				const vec2 Q0 = ChartCenter + vec2(std::cos(A0), std::sin(A0)) * (ChartInnerRadius + 2.0f);
+				const vec2 Q1 = ChartCenter + vec2(std::cos(A1), std::sin(A1)) * (ChartInnerRadius + 2.0f);
+				aSectors[Segment] = IGraphics::CFreeformItem(P0, P1, Q1, Q0);
 			}
 			Graphics()->SetColor(aModeColors[Index % std::size(aModeColors)]);
 			Graphics()->QuadsDrawFreeform(aSectors, Segments);
-			if(MouseDistance <= ChartRadius && MouseAngle >= StartAngle && MouseAngle <= StartAngle + Sweep)
+			if(MouseDistance >= ChartInnerRadius && MouseDistance <= ChartRadius && MouseAngle >= StartAngle && MouseAngle <= StartAngle + Sweep)
 				HoveredMode = (int)Index;
 			StartAngle += Sweep;
 		}
@@ -3257,14 +3334,34 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	{
 		const auto &Stats = vDisplayModeStats[HoveredMode];
 		const char *pModeName = Stats.m_GameMode == "__other__" ? Localize("Other modes") : Stats.m_GameMode.c_str();
+		const char *pModeSource = ModeSourceText(Stats);
 		char aDuration[64];
 		FormatStatsPlaytime(Stats.m_PlaytimeSeconds, s_ShowTotalHours, aDuration, sizeof(aDuration));
-		FormatModeTooltip(Stats, pModeName, aDuration, s_aModeTooltipText[HoveredMode], sizeof(s_aModeTooltipText[HoveredMode]));
+		FormatModeTooltip(Stats, pModeName, pModeSource, aDuration, s_aModeTooltipText[HoveredMode], sizeof(s_aModeTooltipText[HoveredMode]));
 		static int s_ModeTooltipIds[5] = {};
 		GameClient()->m_Tooltips.DoToolTip(&s_ModeTooltipIds[HoveredMode], &ModeBody, s_aModeTooltipText[HoveredMode]);
 	}
 	CUIRect Legend = ModeBody;
 	Legend.VSplitLeft(ChartRadius * 2.0f + 28.0f, nullptr, &Legend);
+	CUIRect ActionRow;
+	Legend.HSplitTop(26.0f, &ActionRow, &Legend);
+	const float ButtonWidth = (ActionRow.w - 16.0f) / 3.0f;
+	CUIRect RefreshButton, UseCurrentNameButton, ModeTitleButton;
+	ActionRow.VSplitLeft(ButtonWidth, &RefreshButton, &ActionRow);
+	ActionRow.VSplitLeft(8.0f, nullptr, &ActionRow);
+	ActionRow.VSplitLeft(ButtonWidth, &UseCurrentNameButton, &ActionRow);
+	ActionRow.VSplitLeft(8.0f, nullptr, &ActionRow);
+	ModeTitleButton = ActionRow;
+	static CButtonContainer s_StatisticsRefreshButton;
+	const char *pRefreshStatsLabel = StatisticsFetching ? Localize("Syncing remote stats") : (StatisticsFailed ? Localize("Retry remote stats") : Localize("Sync remote stats"));
+	if(DoButton_Menu(&s_StatisticsRefreshButton, pRefreshStatsLabel, 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
+		GameClient()->m_QmClient.RefreshQmClientStatistics();
+	static CButtonContainer s_StatisticsUseCurrentNameButton;
+	if(DoButton_Menu(&s_StatisticsUseCurrentNameButton, Localize("Use current name"), 0, &UseCurrentNameButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
+		GameClient()->m_QmClient.UseCurrentQmDdnetPlayerName();
+	static CButtonContainer s_TotalHoursButton;
+	if(DoButton_Menu(&s_TotalHoursButton, Localize("Total hours"), s_ShowTotalHours, &ModeTitleButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
+		s_ShowTotalHours = !s_ShowTotalHours;
 	const int Columns = ModeColumns;
 	const int Rows = (static_cast<int>(vDisplayModeStats.size()) + Columns - 1) / Columns;
 	const float ColumnGap = Columns > 1 ? 10.0f : 0.0f;
@@ -3273,6 +3370,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	{
 		const auto &Stats = vDisplayModeStats[Index];
 		const char *pModeName = Stats.m_GameMode == "__other__" ? Localize("Other modes") : Stats.m_GameMode.c_str();
+		const char *pModeSource = ModeSourceText(Stats);
 		const int Column = static_cast<int>(Index) % Columns;
 		const int RowIndex = static_cast<int>(Index) / Columns;
 		CUIRect ColumnRect = Legend;
@@ -3290,6 +3388,8 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		FormatStatsPlaytime(Stats.m_PlaytimeSeconds, s_ShowTotalHours, aDuration, sizeof(aDuration));
 		char aScoreText[128];
 		FormatModeScore(Stats, aScoreText, sizeof(aScoreText));
+		const int64_t ChartWeight = QmStatisticsChartWeight(Stats.m_Maps, Stats.m_PlaytimeSeconds, ChartUsesMaps);
+		const double ChartPercent = TotalChartWeight > 0 ? 100.0 * ChartWeight / TotalChartWeight : 0.0;
 		CUIRect ModeName, MapDetails, ScoreDetails, DurationDetails;
 		Label.HSplitTop(17.0f, &ModeName, &Label);
 		Label.HSplitTop(16.0f, &MapDetails, &Label);
@@ -3302,10 +3402,19 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		char aMapDetails[256];
 		char aScoreDetails[256];
 		char aDurationDetails[128];
-		str_format(aModeName, sizeof(aModeName), "%s：%s", Localize("Game mode"), pModeName);
-		str_format(aMapDetails, sizeof(aMapDetails), "%s：%d", Localize("Maps finished"), Stats.m_Maps);
+		if(pModeSource[0])
+			str_format(aModeName, sizeof(aModeName), "%s：%s · %s", Localize("Game mode"), pModeName, pModeSource);
+		else
+			str_format(aModeName, sizeof(aModeName), "%s：%s", Localize("Game mode"), pModeName);
+		if(ChartUsesMaps)
+			str_format(aMapDetails, sizeof(aMapDetails), "%s：%d (%.1f%%)", Localize("Maps finished"), Stats.m_Maps, ChartPercent);
+		else
+			str_format(aMapDetails, sizeof(aMapDetails), "%s：%d", Localize("Maps finished"), Stats.m_Maps);
 		str_format(aScoreDetails, sizeof(aScoreDetails), "%s：%s", Localize("Score earned"), aScoreText);
-		str_format(aDurationDetails, sizeof(aDurationDetails), "%s：%s", Localize("Total play time"), aDuration);
+		if(ChartUsesMaps)
+			str_format(aDurationDetails, sizeof(aDurationDetails), "%s：%s", Localize("Total play time"), aDuration);
+		else
+			str_format(aDurationDetails, sizeof(aDurationDetails), "%s：%s (%.1f%%)", Localize("Total play time"), aDuration, ChartPercent);
 		SLabelProperties LabelProps;
 		LabelProps.m_MaxWidth = static_cast<int>(ModeName.w);
 		Ui()->DoLabel(&ModeName, aModeName, 11.0f, TEXTALIGN_ML, LabelProps);
@@ -3320,7 +3429,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		Ui()->DoLabel(&DurationDetails, aDurationDetails, 10.0f, TEXTALIGN_ML, LabelProps);
 		if(Ui()->MouseInside(&Row))
 		{
-			FormatModeTooltip(Stats, pModeName, aDuration, s_aModeTooltipText[Index], sizeof(s_aModeTooltipText[Index]));
+			FormatModeTooltip(Stats, pModeName, pModeSource, aDuration, s_aModeTooltipText[Index], sizeof(s_aModeTooltipText[Index]));
 			static int s_ModeTooltipIds[5] = {};
 			GameClient()->m_Tooltips.DoToolTip(&s_ModeTooltipIds[Index], &Row, s_aModeTooltipText[Index]);
 		}
@@ -3379,17 +3488,84 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	RightBody.HSplitBottom(32.0f, &NotesBody, &LinksBody);
 	LinksBody.HSplitTop(8.0f, nullptr, &LinksBody);
 
-	char aNowTime[64];
-	str_timestamp_ex((time_t)CurrentTimestamp, aNowTime, sizeof(aNowTime), FORMAT_SPACE);
-	char aCurrentTimeText[128];
-	str_format(aCurrentTimeText, sizeof(aCurrentTimeText), Localize("Current time: %s"), aNowTime);
-	char aInfoText[512];
+	char aInfoText[768];
+	// 分别播报两个来源的同步状态，避免任一来源失败或超时时被另一来源的成功掩盖。
+	char aDdnetSourceText[256];
+	{
+		// 官方同时提供生涯累计（activity[] 求和）与最近一年两个口径，两者都展示。
+		const int64_t Hours = GameClient()->m_QmClient.QmDdnetPlaytimeHours();
+		const int64_t HoursPastYear = GameClient()->m_QmClient.QmDdnetPlaytimeHoursPastYear();
+		char aPlaytime[128];
+		if(Hours >= 0 || HoursPastYear >= 0)
+		{
+			char aTotal[64];
+			if(Hours >= 0)
+				str_format(aTotal, sizeof(aTotal), "%s %" PRId64 " h", Localize("Total play time"), Hours);
+			else
+				str_copy(aTotal, Localize("Unavailable"), sizeof(aTotal));
+			char aPastYear[64];
+			if(HoursPastYear >= 0)
+				str_format(aPastYear, sizeof(aPastYear), "%s %" PRId64 " h", Localize("Past year"), HoursPastYear);
+			else
+				str_copy(aPastYear, Localize("Unavailable"), sizeof(aPastYear));
+			str_format(aPlaytime, sizeof(aPlaytime), "%s / %s", aTotal, aPastYear);
+		}
+		else
+		{
+			str_copy(aPlaytime, Localize("Unavailable"), sizeof(aPlaytime));
+		}
+		char aStatus[64];
+		if(DdnetStatsFetching)
+			str_copy(aStatus, Localize("Syncing"), sizeof(aStatus));
+		else if(DdnetStatsFailed)
+			str_copy(aStatus, Localize("Failed"), sizeof(aStatus));
+		else
+			str_copy(aStatus, Localize("Ready"), sizeof(aStatus));
+		str_format(aDdnetSourceText, sizeof(aDdnetSourceText), "%s (%s)", aPlaytime, aStatus);
+	}
+	char aAxiomSourceText[192];
+	{
+		char aStatus[64];
+		if(AxiomStatsFetching)
+			str_copy(aStatus, Localize("Syncing"), sizeof(aStatus));
+		else if(!ShowAxiomGores)
+			str_copy(aStatus, Localize("Not requested"), sizeof(aStatus));
+		else if(pAxiomGoresResult && pAxiomGoresResult->m_HasData && pAxiomGoresResult->m_Status == EQmAxiomScoreStatus::READY)
+			str_copy(aStatus, Localize("Ready"), sizeof(aStatus));
+		else if(AxiomStatsFailed)
+			str_copy(aStatus, Localize("Failed"), sizeof(aStatus));
+		else
+			str_copy(aStatus, Localize("Loading"), sizeof(aStatus));
+		// 状态必须以 Gores 模式的真实数据为准，不能仅因缓存条目存在就显示 Ready。
+		const char *pDetail = nullptr;
+		if(pAxiomResult && !pAxiomResult->m_SearchErrorDetail.empty())
+			pDetail = pAxiomResult->m_SearchErrorDetail.c_str();
+		else if(pAxiomGoresResult && !pAxiomGoresResult->m_ErrorDetail.empty())
+			pDetail = pAxiomGoresResult->m_ErrorDetail.c_str();
+		if(pDetail)
+			str_format(aAxiomSourceText, sizeof(aAxiomSourceText), "%s (%s: %s)", Localize("Gores · Axiom"), aStatus, pDetail);
+		else
+			str_format(aAxiomSourceText, sizeof(aAxiomSourceText), "%s (%s)", Localize("Gores · Axiom"), aStatus);
+	}
+	char aLastSyncText[128];
+	const int64_t LastSuccessfulSyncTimestamp = GameClient()->m_QmClient.QmStatisticsLastSuccessfulSyncTimestamp();
+	if(LastSuccessfulSyncTimestamp > 0)
+	{
+		char aLastSyncTime[64];
+		str_timestamp_ex((time_t)LastSuccessfulSyncTimestamp, aLastSyncTime, sizeof(aLastSyncTime), FORMAT_SPACE);
+		str_format(aLastSyncText, sizeof(aLastSyncText), Localize("Last successful sync: %s"), aLastSyncTime);
+	}
+	else
+	{
+		str_format(aLastSyncText, sizeof(aLastSyncText), Localize("Last successful sync: %s"), Localize("Not requested"));
+	}
 	str_format(aInfoText, sizeof(aInfoText),
-		"%s\n%s\n%s\n%s",
-		aCurrentTimeText,
-		Localize("Local mode statistics are stored on this client."),
-		Localize("DDNet finish totals come from official player data."),
-		Localize("Links below open external ID and map statistics."));
+		"%s\n%s：%s\n%s：%s\n%s\n%s",
+		aLastSyncText,
+		Localize("Data source"), Localize("DDRaceNetwork · DDNet"),
+		Localize("Data source"), Localize("Gores · Axiom"),
+		aDdnetSourceText,
+		aAxiomSourceText);
 
 	SLabelProperties InfoProps;
 	InfoProps.m_MaxWidth = static_cast<int>(NotesBody.w);

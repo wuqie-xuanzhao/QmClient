@@ -20,9 +20,14 @@ namespace
 	constexpr int64_t AXIOM_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 	constexpr size_t AXIOM_MAX_QUERY_NAME_BYTES = 256;
 	constexpr size_t AXIOM_MAX_DIFFICULTY_NAME_BYTES = 192;
+	constexpr size_t DDSTATS_MAX_GAMETYPE_NAME_BYTES = 256;
 	constexpr int AXIOM_CONNECT_TIMEOUT_MS = 5000;
 	constexpr int AXIOM_SEARCH_TIMEOUT_MS = 10000;
-	constexpr int AXIOM_INFO_TIMEOUT_MS = 45000;
+	constexpr int DDSTATS_TIMEOUT_MS = 30000;
+	// Axiom 的 Gores 模式 user/info 要现算全难度逐图统计，实测服务端耗时 35-47 秒；
+	// 原先 45 秒的阈值紧贴实测上界，会把正常响应判成超时（libcurl error 28）。
+	// 放宽到 90 秒覆盖服务端慢响应，避免统计页抽风。
+	constexpr int AXIOM_INFO_TIMEOUT_MS = 90000;
 
 	const json_value *JsonField(const json_value *pObject, const char *pName)
 	{
@@ -112,6 +117,31 @@ namespace
 			*ppData = pData;
 		}
 		void Abort() override { m_pRequest->Abort(); }
+		const char *ErrorDetail() const override
+		{
+			// 传输失败时把可读原因暂存在成员里，供 UI 显示具体错误。
+			switch(m_pRequest->State())
+			{
+			case EHttpState::DONE:
+				if(m_pRequest->StatusCode() == 200)
+					return "";
+				str_format(m_aErrorDetail, sizeof(m_aErrorDetail), "HTTP %d", m_pRequest->StatusCode());
+				return m_aErrorDetail;
+			case EHttpState::ERROR:
+				str_copy(m_aErrorDetail, "network error", sizeof(m_aErrorDetail));
+				return m_aErrorDetail;
+			case EHttpState::ABORTED:
+				str_copy(m_aErrorDetail, "aborted", sizeof(m_aErrorDetail));
+				return m_aErrorDetail;
+			default:
+				str_copy(m_aErrorDetail, "pending", sizeof(m_aErrorDetail));
+				return m_aErrorDetail;
+			}
+		}
+
+	private:
+		// mutable：ErrorDetail() 为 const，但需要惰性生成错误文本。
+		mutable char m_aErrorDetail[64] = "";
 	};
 }
 
@@ -143,7 +173,43 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 		const json_value *pModes = JsonField(pPlayer, "modes");
 		if(pModes->type != json_array)
 			continue;
+		const json_value *pDdStatsGameTypes = JsonField(pPlayer, "ddstats_gametypes");
+		if(pDdStatsGameTypes->type == json_array && pDdStatsGameTypes->u.array.length <= 64)
+		{
+			for(unsigned GameTypeIndex = 0; GameTypeIndex < pDdStatsGameTypes->u.array.length; ++GameTypeIndex)
+			{
+				const json_value *pGameType = pDdStatsGameTypes->u.array.values[GameTypeIndex];
+				const json_value *pGameTypeName = JsonField(pGameType, "name");
+				int64_t PlayTimeSeconds = 0;
+				if(pGameTypeName->type != json_string || !json_string_get(pGameTypeName) || json_string_get(pGameTypeName)[0] == '\0' || static_cast<size_t>(str_length(json_string_get(pGameTypeName))) > DDSTATS_MAX_GAMETYPE_NAME_BYTES || !str_utf8_check(json_string_get(pGameTypeName)) || !ReadNonNegativeInt64(pGameType, "play_time_seconds", PlayTimeSeconds))
+					continue;
+				SQmDdStatsGameType GameType;
+				GameType.m_Name = json_string_get(pGameTypeName);
+				GameType.m_PlayTimeSeconds = PlayTimeSeconds;
+				const auto Existing = std::find_if(Entry.m_vDdStatsGameTypes.begin(), Entry.m_vDdStatsGameTypes.end(), [&GameType](const SQmDdStatsGameType &Candidate) {
+					return str_comp_nocase(Candidate.m_Name.c_str(), GameType.m_Name.c_str()) == 0;
+				});
+				if(Existing == Entry.m_vDdStatsGameTypes.end())
+					Entry.m_vDdStatsGameTypes.push_back(std::move(GameType));
+				else
+					Existing->m_PlayTimeSeconds = PlayTimeSeconds;
+			}
+		}
+		for(const SQmDdStatsGameType &GameType : Entry.m_vDdStatsGameTypes)
+		{
+			if(str_comp_nocase(GameType.m_Name.c_str(), "Gores") == 0)
+			{
+				Entry.m_aDdStatsPlayTime[0] = GameType.m_PlayTimeSeconds;
+				Entry.m_aHasDdStatsPlayTime[0] = true;
+			}
+			else if(str_comp_nocase(GameType.m_Name.c_str(), "AXRace") == 0)
+			{
+				Entry.m_aDdStatsPlayTime[1] = GameType.m_PlayTimeSeconds;
+				Entry.m_aHasDdStatsPlayTime[1] = true;
+			}
+		}
 		bool HasMode = false;
+		std::array<bool, 2> SeenModes{};
 		for(unsigned ModeIndex = 0; ModeIndex < pModes->u.array.length; ++ModeIndex)
 		{
 			const json_value *pMode = pModes->u.array.values[ModeIndex];
@@ -158,6 +224,8 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 			else
 				continue;
 			const int Index = Mode == EQmAxiomMode::AXRACE ? 1 : 0;
+			if(SeenModes[Index])
+				continue;
 			SQmAxiomModeScore &Score = Entry.m_Result.m_aModes[Index].m_Score;
 			int64_t Value = 0;
 			if(!ReadNonNegativeInt64(pMode, "points", Value) ||
@@ -166,6 +234,7 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 				!ReadNonNegativeInt64(pMode, "performance_points", Score.m_PerformancePoints) ||
 				!ReadNonNegativeInt64(pMode, "mileage", Score.m_Mileage))
 				continue;
+			SeenModes[Index] = true;
 			Score.m_Points = Value;
 			Value = 0;
 			ReadNonNegativeInt64(pMode, "global_rank", Value);
@@ -176,6 +245,11 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 			if(Value > 0)
 				Score.m_TeamRank = Value;
 			Score.m_PlayerName = Entry.m_Result.m_Match.m_PlayerName;
+			const int64_t PersistedAxiomPlayTime = Score.m_TotalPlayTime;
+			Entry.m_aAxiomPlayTime[Index] = PersistedAxiomPlayTime;
+			Entry.m_aHasAxiomPlayTime[Index] = true;
+			if(Entry.m_aHasDdStatsPlayTime[Index])
+				Score.m_TotalPlayTime = Entry.m_aDdStatsPlayTime[Index];
 			const json_value *pDifficulties = JsonField(pMode, "difficulties");
 			if(pDifficulties->type == json_array && pDifficulties->u.array.length <= 128)
 			{
@@ -213,7 +287,7 @@ void CQmAxiomScores::LoadPersistentCache(const json_value *pRoot)
 			Entry.m_Result.m_aModes[Index].m_HasData = true;
 			HasMode = true;
 		}
-		if(!HasMode)
+		if(!HasMode && Entry.m_vDdStatsGameTypes.empty())
 			continue;
 		// Persisted data remains visible, but is refreshed in the background on startup.
 		Entry.m_LastSearchSuccessTick = 0;
@@ -236,7 +310,7 @@ void CQmAxiomScores::WritePersistentCache(CJsonFileWriter &Writer) const
 		bool HasReadyMode = false;
 		for(const SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
 			HasReadyMode |= ModeResult.m_HasData;
-		if(!HasReadyMode)
+		if(!HasReadyMode && Entry.m_vDdStatsGameTypes.empty())
 			continue;
 		Writer.BeginObject();
 		Writer.WriteAttribute("name");
@@ -246,6 +320,20 @@ void CQmAxiomScores::WritePersistentCache(CJsonFileWriter &Writer) const
 		Writer.WriteStrValue(Entry.m_Result.m_Match.m_PlayerName.c_str());
 		Writer.WriteAttribute("dummy_name");
 		Writer.WriteStrValue(Entry.m_Result.m_Match.m_DummyName.c_str());
+		if(!Entry.m_vDdStatsGameTypes.empty())
+		{
+			Writer.WriteAttribute("ddstats_gametypes");
+			Writer.BeginArray();
+			for(const SQmDdStatsGameType &GameType : Entry.m_vDdStatsGameTypes)
+			{
+				Writer.BeginObject();
+				Writer.WriteAttribute("name");
+				Writer.WriteStrValue(GameType.m_Name.c_str());
+				WriteInt64(Writer, "play_time_seconds", GameType.m_PlayTimeSeconds);
+				Writer.EndObject();
+			}
+			Writer.EndArray();
+		}
 		Writer.WriteAttribute("modes");
 		Writer.BeginArray();
 		for(int Index = 0; Index < 2; ++Index)
@@ -363,9 +451,15 @@ void CQmAxiomScores::AbortActiveRequests(bool ResetFetchingStates)
 		if(ResetFetchingStates && pEntry && pEntry->m_Result.m_aModes[Index].m_Status == EQmAxiomScoreStatus::FETCHING)
 			pEntry->m_Result.m_aModes[Index].m_Status = EQmAxiomScoreStatus::NOT_REQUESTED;
 	}
+	if(m_DdStatsRequest.m_pRequest)
+	{
+		m_DdStatsRequest.m_pRequest->Abort();
+		m_DdStatsRequest.m_pRequest.reset();
+	}
 	m_SearchRequest.m_PlayerName.clear();
 	for(SRequestSlot &Slot : m_aModeRequests)
 		Slot.m_PlayerName.clear();
+	m_DdStatsRequest.m_PlayerName.clear();
 	m_ActivePlayerName.clear();
 	++m_Generation;
 }
@@ -392,6 +486,7 @@ void CQmAxiomScores::StartSearchRequest(const char *pPlayerName, SCacheEntry &En
 	if(Url.empty())
 	{
 		Entry.m_Result.m_SearchStatus = EQmAxiomScoreStatus::INVALID_RESPONSE;
+		Entry.m_Result.m_SearchErrorDetail = "invalid query name";
 		Entry.m_LastSearchFailureTick = CurrentTick();
 		return;
 	}
@@ -400,6 +495,7 @@ void CQmAxiomScores::StartSearchRequest(const char *pPlayerName, SCacheEntry &En
 	if(!m_SearchRequest.m_pRequest)
 	{
 		Entry.m_Result.m_SearchStatus = EQmAxiomScoreStatus::HTTP_ERROR;
+		Entry.m_Result.m_SearchErrorDetail = "request could not start";
 		Entry.m_LastSearchFailureTick = CurrentTick();
 		return;
 	}
@@ -416,6 +512,7 @@ void CQmAxiomScores::StartModeRequest(const char *pPlayerName, SCacheEntry &Entr
 	if(Entry.m_Result.m_Match.m_UserId <= 0)
 	{
 		ModeResult.m_Status = EQmAxiomScoreStatus::HTTP_ERROR;
+		ModeResult.m_ErrorDetail = "missing user id";
 		Entry.m_aLastModeFailureTick[Index] = CurrentTick();
 		return;
 	}
@@ -432,11 +529,36 @@ void CQmAxiomScores::StartModeRequest(const char *pPlayerName, SCacheEntry &Entr
 	if(!Slot.m_pRequest)
 	{
 		ModeResult.m_Status = EQmAxiomScoreStatus::HTTP_ERROR;
+		ModeResult.m_ErrorDetail = "request could not start";
 		Entry.m_aLastModeFailureTick[Index] = CurrentTick();
 		return;
 	}
 	Slot.m_Generation = m_Generation;
 	Slot.m_PlayerName = pPlayerName;
+}
+
+void CQmAxiomScores::StartDdStatsRequest(const char *pPlayerName, SCacheEntry &Entry)
+{
+	if(!m_DdStatsEnabled || m_DdStatsRequest.m_pRequest)
+		return;
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return;
+
+	const std::string Url = QmBuildDdStatsPlayerUrl(pPlayerName);
+	if(Url.empty())
+	{
+		Entry.m_LastDdStatsFailureTick = CurrentTick();
+		return;
+	}
+
+	m_DdStatsRequest.m_pRequest = StartRequest(Url.c_str(), DDSTATS_TIMEOUT_MS);
+	if(!m_DdStatsRequest.m_pRequest)
+	{
+		Entry.m_LastDdStatsFailureTick = CurrentTick();
+		return;
+	}
+	m_DdStatsRequest.m_Generation = m_Generation;
+	m_DdStatsRequest.m_PlayerName = pPlayerName;
 }
 
 void CQmAxiomScores::ProcessSearchRequest()
@@ -459,6 +581,7 @@ void CQmAxiomScores::ProcessSearchRequest()
 	if(!pRequest->TransportSucceeded() || pRequest->StatusCode() != 200)
 	{
 		Entry.m_Result.m_SearchStatus = EQmAxiomScoreStatus::HTTP_ERROR;
+		Entry.m_Result.m_SearchErrorDetail = pRequest->ErrorDetail();
 		Entry.m_LastSearchFailureTick = Now;
 		return;
 	}
@@ -471,9 +594,11 @@ void CQmAxiomScores::ProcessSearchRequest()
 	Entry.m_Result.m_SearchStatus = ParseStatus(ParseResult);
 	if(ParseResult != EQmAxiomParseResult::SUCCESS)
 	{
+		Entry.m_Result.m_SearchErrorDetail = QmAxiomParseResultLabel(ParseResult);
 		Entry.m_LastSearchFailureTick = Now;
 		return;
 	}
+	Entry.m_Result.m_SearchErrorDetail.clear();
 
 	const bool MatchChanged = Entry.m_Result.m_Match.m_UserId != Match.m_UserId;
 	Entry.m_Result.m_Match = std::move(Match);
@@ -482,11 +607,19 @@ void CQmAxiomScores::ProcessSearchRequest()
 		m_PersistentCacheDirty = true;
 		for(SQmAxiomModeResult &ModeResult : Entry.m_Result.m_aModes)
 			ModeResult = {};
+		Entry.m_aDdStatsPlayTime.fill(0);
+		Entry.m_aHasDdStatsPlayTime.fill(false);
+		Entry.m_aAxiomPlayTime.fill(0);
+		Entry.m_aHasAxiomPlayTime.fill(false);
+		Entry.m_vDdStatsGameTypes.clear();
+		Entry.m_LastDdStatsSuccessTick = 0;
+		Entry.m_LastDdStatsFailureTick = 0;
 	}
 	Entry.m_LastSearchSuccessTick = Now;
 	Entry.m_LastSearchFailureTick = 0;
 	StartModeRequest(ResponsePlayerName.c_str(), Entry, EQmAxiomMode::GORES);
 	StartModeRequest(ResponsePlayerName.c_str(), Entry, EQmAxiomMode::AXRACE);
+	StartDdStatsRequest(ResponsePlayerName.c_str(), Entry);
 }
 
 void CQmAxiomScores::ProcessModeRequests()
@@ -513,6 +646,7 @@ void CQmAxiomScores::ProcessModeRequests()
 		if(!pRequest->TransportSucceeded() || pRequest->StatusCode() != 200)
 		{
 			ModeResult.m_Status = EQmAxiomScoreStatus::HTTP_ERROR;
+			ModeResult.m_ErrorDetail = pRequest->ErrorDetail();
 			Entry.m_aLastModeFailureTick[Index] = Now;
 			continue;
 		}
@@ -527,16 +661,89 @@ void CQmAxiomScores::ProcessModeRequests()
 		{
 			if(ParseResult == EQmAxiomParseResult::SUCCESS)
 				ModeResult.m_Status = EQmAxiomScoreStatus::INVALID_RESPONSE;
+			ModeResult.m_ErrorDetail = ParseResult == EQmAxiomParseResult::SUCCESS ? "player name mismatch" : QmAxiomParseResultLabel(ParseResult);
 			Entry.m_aLastModeFailureTick[Index] = Now;
 			continue;
 		}
+		ModeResult.m_ErrorDetail.clear();
 
 		ModeResult.m_Score = std::move(Score);
+		Entry.m_aAxiomPlayTime[Index] = ModeResult.m_Score.m_TotalPlayTime;
+		Entry.m_aHasAxiomPlayTime[Index] = true;
+		if(Entry.m_aHasDdStatsPlayTime[Index])
+			ModeResult.m_Score.m_TotalPlayTime = Entry.m_aDdStatsPlayTime[Index];
 		ModeResult.m_HasData = true;
 		Entry.m_aLastModeSuccessTick[Index] = Now;
 		Entry.m_aLastModeFailureTick[Index] = 0;
+		m_LastSuccessfulSyncTimestamp = time_timestamp();
 		m_PersistentCacheDirty = true;
 	}
+}
+
+void CQmAxiomScores::ProcessDdStatsRequest()
+{
+	if(!m_DdStatsRequest.m_pRequest || !m_DdStatsRequest.m_pRequest->Done())
+		return;
+
+	std::shared_ptr<IQmAxiomHttpRequest> pRequest = std::move(m_DdStatsRequest.m_pRequest);
+	const uint64_t ResponseGeneration = m_DdStatsRequest.m_Generation;
+	const std::string ResponsePlayerName = std::move(m_DdStatsRequest.m_PlayerName);
+	if(!QmAxiomResponseIsCurrent(m_Generation, ResponseGeneration, m_ActivePlayerName, ResponsePlayerName))
+		return;
+
+	const auto CacheIt = m_Cache.find(ResponsePlayerName);
+	if(CacheIt == m_Cache.end())
+		return;
+	SCacheEntry &Entry = CacheIt->second;
+	const int64_t Now = CurrentTick();
+	if(!pRequest->TransportSucceeded() || pRequest->StatusCode() != 200)
+	{
+		Entry.m_LastDdStatsFailureTick = Now;
+		return;
+	}
+
+	const unsigned char *pData = nullptr;
+	size_t DataSize = 0;
+	pRequest->Result(&pData, &DataSize);
+	std::vector<SQmDdStatsGameType> vGameTypes;
+	const EQmAxiomParseResult ParseResult = QmParseDdStatsPlayerResponse(reinterpret_cast<const char *>(pData), DataSize, ResponsePlayerName.c_str(), vGameTypes);
+	if(ParseResult != EQmAxiomParseResult::SUCCESS)
+	{
+		Entry.m_LastDdStatsFailureTick = Now;
+		return;
+	}
+
+	Entry.m_vDdStatsGameTypes = std::move(vGameTypes);
+	Entry.m_aDdStatsPlayTime.fill(0);
+	Entry.m_aHasDdStatsPlayTime.fill(false);
+	std::array<int64_t, 2> aPlayTimes{};
+	std::array<bool, 2> aHasPlayTimes{};
+	for(const SQmDdStatsGameType &GameType : Entry.m_vDdStatsGameTypes)
+	{
+		if(str_comp_nocase(GameType.m_Name.c_str(), "Gores") == 0)
+		{
+			aPlayTimes[0] = GameType.m_PlayTimeSeconds;
+			aHasPlayTimes[0] = true;
+		}
+		else if(str_comp_nocase(GameType.m_Name.c_str(), "AXRace") == 0)
+		{
+			aPlayTimes[1] = GameType.m_PlayTimeSeconds;
+			aHasPlayTimes[1] = true;
+		}
+	}
+	for(int Index = 0; Index < 2; ++Index)
+	{
+		Entry.m_aDdStatsPlayTime[Index] = aPlayTimes[Index];
+		Entry.m_aHasDdStatsPlayTime[Index] = aHasPlayTimes[Index];
+		if(Entry.m_Result.m_aModes[Index].m_HasData && aHasPlayTimes[Index])
+			Entry.m_Result.m_aModes[Index].m_Score.m_TotalPlayTime = aPlayTimes[Index];
+		else if(Entry.m_Result.m_aModes[Index].m_HasData && Entry.m_aHasAxiomPlayTime[Index])
+			Entry.m_Result.m_aModes[Index].m_Score.m_TotalPlayTime = Entry.m_aAxiomPlayTime[Index];
+	}
+	Entry.m_LastDdStatsSuccessTick = Now;
+	Entry.m_LastDdStatsFailureTick = 0;
+	m_LastSuccessfulSyncTimestamp = time_timestamp();
+	m_PersistentCacheDirty = true;
 }
 
 void CQmAxiomScores::FinishActiveQueryIfIdle()
@@ -548,6 +755,8 @@ void CQmAxiomScores::FinishActiveQueryIfIdle()
 		if(Slot.m_pRequest)
 			return;
 	}
+	if(m_DdStatsRequest.m_pRequest)
+		return;
 	m_ActivePlayerName.clear();
 }
 
@@ -571,6 +780,7 @@ void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 
 		BeginActiveQuery(pPlayerName);
 		StartSearchRequest(pPlayerName, Entry);
+		StartDdStatsRequest(pPlayerName, Entry);
 		FinishActiveQueryIfIdle();
 		return;
 	}
@@ -589,6 +799,11 @@ void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 		aNeedsRequest[Index] = true;
 		AnyRequestNeeded = true;
 	}
+	const bool DdStatsFresh = !m_DdStatsEnabled || IsWithinWindow(Entry.m_LastDdStatsSuccessTick, Now, AXIOM_SCORE_CACHE_TTL_MS);
+	const bool DdStatsFetching = m_DdStatsRequest.m_pRequest && m_ActivePlayerName == pPlayerName;
+	const bool DdStatsRetryBlocked = IsWithinWindow(Entry.m_LastDdStatsFailureTick, Now, AXIOM_FAILURE_RETRY_MS);
+	const bool NeedDdStats = m_DdStatsEnabled && !DdStatsFresh && !DdStatsFetching && !DdStatsRetryBlocked;
+	AnyRequestNeeded |= NeedDdStats;
 	if(!AnyRequestNeeded)
 		return;
 
@@ -598,6 +813,8 @@ void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 		if(aNeedsRequest[Index])
 			StartModeRequest(pPlayerName, Entry, ModeFromIndex(Index));
 	}
+	if(NeedDdStats)
+		StartDdStatsRequest(pPlayerName, Entry);
 	FinishActiveQueryIfIdle();
 }
 
@@ -614,6 +831,8 @@ void CQmAxiomScores::Refresh(const char *pPlayerName)
 		It->second.m_LastSearchFailureTick = 0;
 		It->second.m_aLastModeSuccessTick.fill(0);
 		It->second.m_aLastModeFailureTick.fill(0);
+		It->second.m_LastDdStatsSuccessTick = 0;
+		It->second.m_LastDdStatsFailureTick = 0;
 	}
 	EnsureQueried(pPlayerName);
 }
@@ -626,10 +845,65 @@ const SQmAxiomPlayerResult *CQmAxiomScores::GetResult(const char *pPlayerName) c
 	return It == m_Cache.end() ? nullptr : &It->second.m_Result;
 }
 
+const std::vector<SQmDdStatsGameType> *CQmAxiomScores::GetDdStatsGameTypes(const char *pPlayerName) const
+{
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return nullptr;
+	const auto It = m_Cache.find(pPlayerName);
+	return It == m_Cache.end() || It->second.m_vDdStatsGameTypes.empty() ? nullptr : &It->second.m_vDdStatsGameTypes;
+}
+
+bool CQmAxiomScores::IsFetchingPlayer(const char *pPlayerName) const
+{
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return false;
+	// 有在飞的请求就直接算「同步中」，无需等待缓存条目出现。
+	if(m_SearchRequest.m_pRequest && m_SearchRequest.m_PlayerName == pPlayerName)
+		return true;
+	for(const SRequestSlot &Slot : m_aModeRequests)
+	{
+		if(Slot.m_pRequest && Slot.m_PlayerName == pPlayerName)
+			return true;
+	}
+	if(m_DdStatsRequest.m_pRequest && m_DdStatsRequest.m_PlayerName == pPlayerName)
+		return true;
+	const auto It = m_Cache.find(pPlayerName);
+	if(It == m_Cache.end())
+		return false;
+	const SQmAxiomPlayerResult &Result = It->second.m_Result;
+	if(Result.m_SearchStatus == EQmAxiomScoreStatus::FETCHING)
+		return true;
+	for(const SQmAxiomModeResult &ModeResult : Result.m_aModes)
+	{
+		if(ModeResult.m_Status == EQmAxiomScoreStatus::FETCHING)
+			return true;
+	}
+	return false;
+}
+
+bool CQmAxiomScores::IsPlayerFailed(const char *pPlayerName) const
+{
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return false;
+	const auto It = m_Cache.find(pPlayerName);
+	if(It == m_Cache.end())
+		return false;
+	const SQmAxiomPlayerResult &Result = It->second.m_Result;
+	if(IsFailureStatus(Result.m_SearchStatus))
+		return true;
+	for(const SQmAxiomModeResult &ModeResult : Result.m_aModes)
+	{
+		if(IsFailureStatus(ModeResult.m_Status))
+			return true;
+	}
+	return false;
+}
+
 void CQmAxiomScores::OnUpdate()
 {
 	ProcessSearchRequest();
 	ProcessModeRequests();
+	ProcessDdStatsRequest();
 	FinishActiveQueryIfIdle();
 }
 

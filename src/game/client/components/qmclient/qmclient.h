@@ -34,6 +34,11 @@ struct SQmClientDdnetPlayerStats
 	int m_TotalFinishes = -1;
 	int64_t m_Points = -1;
 	int64_t m_PointsTotal = -1;
+	// 官方 json2 的 activity[] 逐日 hours_played 求和，即生涯累计游玩小时数。
+	// -1 表示该玩家数据里没有可用的 activity 记录。
+	int64_t m_PlaytimeHours = -1;
+	// 官方 hours_played_past_365_days，最近一年游玩小时数，-1 表示缺失。
+	int64_t m_PlaytimeHoursPastYear = -1;
 };
 
 class CQmClient : public CComponent
@@ -73,6 +78,7 @@ class CQmClient : public CComponent
 	int64_t m_QmClientServerTimeLastSync = 0;
 	int64_t m_QmClientServerPlaytimeSeconds = -1;
 	int64_t m_QmClientPlaytimeLastSync = 0;
+	int64_t m_QmClientPlaytimeLastSuccessfulSyncTimestamp = 0;
 	int64_t m_QmClientRecoveryStopAt = 0;
 	int64_t m_QmClientRecoveryNextRetry = 0;
 	int64_t m_QmClientStartupNextRetry = 0;
@@ -84,6 +90,8 @@ class CQmClient : public CComponent
 	int m_QmDdnetTotalFinishes = -1;
 	int64_t m_QmDdnetPoints = -1;
 	int64_t m_QmDdnetPointsTotal = -1;
+	int64_t m_QmDdnetPlaytimeHours = -1;
+	int64_t m_QmDdnetPlaytimeHoursPastYear = -1;
 	mutable bool m_QmStatisticsFileExists = false;
 	mutable bool m_QmStatisticsFileInvalid = false;
 	mutable int64_t m_QmStatisticsNextSaveRetryTick = 0;
@@ -92,6 +100,8 @@ class CQmClient : public CComponent
 	bool m_QmClientShutdownReported = false;
 	bool m_QmClientAwaitingRecoveryStop = false;
 	bool m_QmClientStartupSent = false;
+	bool m_QmClientPlaytimeManualRefreshActive = false;
+	bool m_QmClientPlaytimeManualRefreshFailed = false;
 	std::vector<SQmClientServerDistribution> m_vQmClientServerDistribution;
 	std::vector<SQmClientLocalModeStats> m_vQmClientLocalModeStats;
 	std::vector<SQmClientDdnetPlayerStats> m_vQmClientDdnetPlayerStats;
@@ -106,6 +116,7 @@ class CQmClient : public CComponent
 	void UpdateQmClientLifecycleAndServerTime();
 	void SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<IHttpRequest> &pTaskSlot);
 	bool FinishQmClientPlaytimeTask(std::shared_ptr<IHttpRequest> &pTaskSlot, bool UpdateSessionStart);
+	void FinishQmClientPlaytimeQuery();
 	void FinishQmClientServerTimeTask();
 	void SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<IHttpRequest> &pTaskSlot, int64_t StopAt = 0);
 	void EnsureQmClientPlaytimeClientId();
@@ -137,7 +148,7 @@ class CQmClient : public CComponent
 	void UpdateQmDdnetPlayerStats();
 	void FetchQmDdnetPlayerStats(const char *pPlayerName);
 	void FinishQmDdnetPlayerStats();
-	void StoreQmDdnetPlayerStats(const char *pPlayerName, const std::string &FavoritePartner, int TotalFinishes, int64_t Points, int64_t PointsTotal);
+	void StoreQmDdnetPlayerStats(const char *pPlayerName, const std::string &FavoritePartner, int TotalFinishes, int64_t Points, int64_t PointsTotal, int64_t PlaytimeHours, int64_t PlaytimeHoursPastYear);
 	void SelectQmDdnetPlayerStats(const char *pFallbackPlayerName = nullptr);
 	const SQmClientDdnetPlayerStats *FindQmDdnetPlayerStats(const char *pPlayerName) const;
 	void LoadQmClientLocalModeStats();
@@ -145,6 +156,7 @@ class CQmClient : public CComponent
 	void AccumulateQmClientLocalModePlaytime(int64_t Now);
 	void EndQmClientLocalModePlaytime();
 	void RefreshQmDdnetPlayerStats();
+	void RefreshQmClientPlaytime();
 
 public:
 	int Sizeof() const override { return sizeof(*this); }
@@ -165,11 +177,18 @@ public:
 	int QmDdnetTotalFinishes() const { return m_QmDdnetTotalFinishes; }
 	int64_t QmDdnetPoints() const { return m_QmDdnetPoints; }
 	int64_t QmDdnetPointsTotal() const { return m_QmDdnetPointsTotal; }
+	// 官方 DDNet 统计给出的游玩时长，单位小时。-1 表示尚未取得。
+	int64_t QmDdnetPlaytimeHours() const { return m_QmDdnetPlaytimeHours; }
+	int64_t QmDdnetPlaytimeHoursPastYear() const { return m_QmDdnetPlaytimeHoursPastYear; }
 	const char *QmDdnetPlayerName() const { return m_aQmDdnetPlayerName; }
 	const char *QmDdnetPrimaryPlayerName() const { return m_QmDdnetPrimaryPlayerName.c_str(); }
 	const char *QmDdnetFavoritePartner() const { return m_aQmDdnetFavoritePartner; }
 	bool QmDdnetStatsIsFetching() const { return m_QmDdnetPlayerState.IsFetching(); }
 	bool QmDdnetStatsLastRequestFailed() const { return m_QmDdnetPlayerState.LastRequestFailed(); }
+	int64_t QmDdnetStatsLastSuccessfulSyncTimestamp() const { return m_QmDdnetPlayerState.LastSuccessfulSyncTimestamp(); }
+	bool QmStatisticsIsFetching() const { return m_QmDdnetPlayerState.IsFetching() || m_QmClientPlaytimeManualRefreshActive; }
+	bool QmStatisticsLastRequestFailed() const { return m_QmDdnetPlayerState.LastRequestFailed() || m_QmClientPlaytimeManualRefreshFailed; }
+	int64_t QmStatisticsLastSuccessfulSyncTimestamp() const;
 	const std::vector<SQmClientLocalModeStats> &QmClientLocalModeStats() const { return m_vQmClientLocalModeStats; }
 	const std::vector<SQmClientDdnetPlayerStats> &QmClientDdnetPlayerStats() const { return m_vQmClientDdnetPlayerStats; }
 	bool SaveQmClientStatistics() const;

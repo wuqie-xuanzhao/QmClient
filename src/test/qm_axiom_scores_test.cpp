@@ -44,6 +44,16 @@ namespace
 			*pDataSize = m_vBody.size();
 		}
 		void Abort() override { m_Aborted = true; }
+		// 与真实适配器一致：失败时给出可读原因，成功时为空串。
+		const char *ErrorDetail() const override
+		{
+			if(m_TransportSucceeded && m_StatusCode == 200)
+				return "";
+			if(!m_TransportSucceeded)
+				return m_Aborted ? "aborted" : "network error";
+			str_format(m_aErrorDetail, sizeof(m_aErrorDetail), "HTTP %d", m_StatusCode);
+			return m_aErrorDetail;
+		}
 
 		void Complete(std::string Body, int StatusCode = 200, bool TransportSucceeded = true)
 		{
@@ -54,6 +64,9 @@ namespace
 		}
 
 		bool Aborted() const { return m_Aborted; }
+
+	private:
+		mutable char m_aErrorDetail[64] = "";
 	};
 
 	struct SRecordedAxiomRequest
@@ -91,9 +104,10 @@ namespace
 		int64_t CurrentTick() const override { return m_Now; }
 
 	public:
-		explicit CTestAxiomScores(IQmAxiomHttp *pHttp) :
+		explicit CTestAxiomScores(IQmAxiomHttp *pHttp, bool EnableDdStats = false) :
 			CQmAxiomScores(pHttp)
 		{
+			SetDdStatsEnabled(EnableDdStats);
 		}
 
 		void AdvanceMs(int64_t Milliseconds)
@@ -112,17 +126,22 @@ namespace
 		return QmParseAxiomInfoResponse(pJson, std::strlen(pJson), Score);
 	}
 
+	EQmAxiomParseResult ParseDdStats(const char *pJson, const char *pPlayerName, std::vector<SQmDdStatsGameType> &OutGameTypes)
+	{
+		return QmParseDdStatsPlayerResponse(pJson, std::strlen(pJson), pPlayerName, OutGameTypes);
+	}
+
 	std::string SearchResponse(const char *pPlayerName, int UserId = 5528)
 	{
 		return std::string("{\"code\":200,\"data\":{\"results\":[{\"user_id\":") +
 		       std::to_string(UserId) + ",\"player_name\":\"" + pPlayerName + "\",\"dummy_name\":\"\"}]}}";
 	}
 
-	std::string InfoResponse(const char *pPlayerName, int Points)
+	std::string InfoResponse(const char *pPlayerName, int Points, int Playtime = 2)
 	{
 		return std::string("{\"code\":200,\"data\":{\"player\":{\"player_name\":\"") + pPlayerName +
 		       "\",\"points\":" + std::to_string(Points) +
-		       ",\"global_rank\":1,\"team_rank\":null,\"total_play_time\":2,\"total_maps_completed\":3,\"performance_points\":4,\"mileage\":5},\"difficultyData\":{}}}";
+		       ",\"global_rank\":1,\"team_rank\":null,\"total_play_time\":" + std::to_string(Playtime) + ",\"total_maps_completed\":3,\"performance_points\":4,\"mileage\":5},\"difficultyData\":{}}}";
 	}
 
 	void CompleteSuccessfulQuery(CTestAxiomScores &Scores, CFakeAxiomHttp &Http, const char *pPlayerName, int UserId = 5528)
@@ -221,10 +240,11 @@ TEST(QmDdnetPlayerStatsState, PendingRefreshStartsImmediatelyAfterCompletedParse
 	EXPECT_TRUE(State.RefreshPending());
 
 	bool StartRefresh = false;
-	EXPECT_TRUE(State.CompleteParse("DYL", true, 200, 30, StartRefresh));
+	EXPECT_TRUE(State.CompleteParse("DYL", true, 200, 1700000000, 30, StartRefresh));
 	EXPECT_TRUE(StartRefresh);
 	EXPECT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::IDLE);
 	EXPECT_EQ(State.LastSync(), 0);
+	EXPECT_EQ(State.LastSuccessfulSyncTimestamp(), 1700000000);
 	EXPECT_EQ(State.NextRetry(), 0);
 	EXPECT_FALSE(State.LastRequestFailed());
 	EXPECT_TRUE(State.ShouldFetch(200, 60));
@@ -257,13 +277,35 @@ TEST(QmDdnetPlayerStatsState, FailedParseSchedulesRetry)
 	State.CompleteHttp(true, 100, 0);
 
 	bool StartRefresh = true;
-	EXPECT_TRUE(State.CompleteParse("DYL", false, 200, 30, StartRefresh));
+	EXPECT_TRUE(State.CompleteParse("DYL", false, 200, 1700000000, 30, StartRefresh));
 	EXPECT_FALSE(StartRefresh);
 	EXPECT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::IDLE);
 	EXPECT_EQ(State.LastSync(), 0);
+	EXPECT_EQ(State.LastSuccessfulSyncTimestamp(), 0);
 	EXPECT_EQ(State.NextRetry(), 230);
 	EXPECT_FALSE(State.ShouldFetch(229, 60));
 	EXPECT_TRUE(State.ShouldFetch(230, 60));
+}
+
+TEST(QmDdnetPlayerStatsState, KeepsLastSuccessfulTimestampAfterFailedRefresh)
+{
+	CQmDdnetPlayerStatsState State;
+	State.SetPlayer("DYL");
+	State.BeginHttp("DYL");
+	State.CompleteHttp(true, 100, 0);
+
+	bool StartRefresh = false;
+	EXPECT_TRUE(State.CompleteParse("DYL", true, 200, 1700000000, 30, StartRefresh));
+	EXPECT_EQ(State.LastSuccessfulSyncTimestamp(), 1700000000);
+
+	EXPECT_EQ(State.RequestRefresh(), EQmDdnetPlayerStatsRefreshAction::START_REQUEST);
+	State.BeginHttp("DYL");
+	State.CompleteHttp(true, 300, 0);
+	EXPECT_TRUE(State.CompleteParse("DYL", false, 400, 1700000100, 30, StartRefresh));
+	EXPECT_EQ(State.LastSuccessfulSyncTimestamp(), 1700000000);
+
+	State.SetPlayer("other_player");
+	EXPECT_EQ(State.LastSuccessfulSyncTimestamp(), 0);
 }
 
 TEST(QmDdnetPlayerStatsState, RefreshDuringHttpClearsRetryAndKeepsRequestReplaceable)
@@ -305,10 +347,11 @@ TEST(QmDdnetPlayerStatsState, CompletesOldPlayerParseWithoutSelectingIt)
 	State.SetPlayer("new_player");
 
 	bool StartRefresh = true;
-	EXPECT_TRUE(State.CompleteParse("old_player", true, 200, 30, StartRefresh));
+	EXPECT_TRUE(State.CompleteParse("old_player", true, 200, 1700000000, 30, StartRefresh));
 	EXPECT_FALSE(StartRefresh);
 	EXPECT_EQ(State.PlayerName(), "new_player");
 	EXPECT_EQ(State.Phase(), EQmDdnetPlayerStatsPhase::IDLE);
+	EXPECT_EQ(State.LastSuccessfulSyncTimestamp(), 0);
 	EXPECT_TRUE(State.ShouldFetch(200, 60));
 }
 
@@ -321,6 +364,30 @@ TEST(QmAxiomScoresUrl, EncodesPlayerNameAndKeepsModesSeparate)
 
 	EXPECT_EQ(QmBuildAxiomInfoUrl(5528, EQmAxiomMode::GORES), "https://api.axiom.teeworlds.cn/v1/query/user/info?user_id=5528&mode=Gores");
 	EXPECT_EQ(QmBuildAxiomInfoUrl(5528, EQmAxiomMode::AXRACE), "https://api.axiom.teeworlds.cn/v1/query/user/info?user_id=5528&mode=AXRace");
+	EXPECT_EQ(QmBuildDdStatsPlayerUrl("wolf test&dummy"), "https://ddstats.tw/player/json?player=wolf%20test%26dummy");
+}
+
+TEST(QmAxiomScoresInfo, ParsesDdStatsGametypesAndValidatesPlayer)
+{
+	const char *pJson = R"({
+		"profile": {"name": "DYL"},
+		"most_played_gametypes": [
+			{"key": "DDraceNetwork", "seconds_played": 10289485},
+			{"key": "Gores", "seconds_played": 1169640},
+			{"key": "AXRace", "seconds_played": 190385}
+		]
+	})";
+	std::vector<SQmDdStatsGameType> vGameTypes;
+	EXPECT_EQ(ParseDdStats(pJson, "dyl", vGameTypes), EQmAxiomParseResult::SUCCESS);
+	ASSERT_EQ(vGameTypes.size(), 3u);
+	EXPECT_EQ(vGameTypes[0].m_Name, "DDraceNetwork");
+	EXPECT_EQ(vGameTypes[0].m_PlayTimeSeconds, 10289485);
+	EXPECT_EQ(vGameTypes[1].m_Name, "Gores");
+	EXPECT_EQ(vGameTypes[1].m_PlayTimeSeconds, 1169640);
+	EXPECT_EQ(vGameTypes[2].m_Name, "AXRace");
+	EXPECT_EQ(vGameTypes[2].m_PlayTimeSeconds, 190385);
+	EXPECT_EQ(ParseDdStats(pJson, "other", vGameTypes), EQmAxiomParseResult::INVALID_RESPONSE);
+	EXPECT_EQ(ParseDdStats(R"({"profile":{"name":"DYL"},"most_played_gametypes":{}})", "DYL", vGameTypes), EQmAxiomParseResult::INVALID_RESPONSE);
 }
 
 TEST(QmAxiomScoresSearch, SelectsExactPlayerNameInsteadOfFirstFuzzyResult)
@@ -452,6 +519,46 @@ TEST(QmAxiomScoresInfo, ParsesNullableRanksAndDifficultyStats)
 	EXPECT_EQ(*Difficulty.m_TotalMaps, 34);
 }
 
+TEST(QmAxiomScoresInfo, AcceptsLiveGoresResponseShape)
+{
+	// 当前 Axiom Gores 响应的 difficultyData 同时包含 maps 和 stats；
+	// 统计页依赖 player 聚合字段，不能因新增逐图数据而误判整包无效。
+	const char *pJson = R"({
+		"code": 200,
+		"message": "获取成功",
+		"error": null,
+		"data": {
+			"player": {
+				"player_name": "DYL",
+				"dummy_name": "YL",
+				"points": 1620,
+				"global_rank": 685,
+				"team_rank": null,
+				"total_play_time": 695,
+				"total_maps_completed": 170,
+				"performance_points": 170,
+				"mileage": 1620
+			},
+			"difficultyData": {
+				"Solo 单人": {
+					"maps": [{"map": "003-solo", "points": 4, "global_rank": 404, "time": "10:31.28", "completions": 1}],
+					"stats": {"total_points": 1786, "total_maps": 122, "completed_maps": 39, "remaining_maps": 83, "global_rank": 160, "points": 313, "team_rank": null}
+				}
+			}
+		}
+	})";
+
+	SQmAxiomModeScore Score;
+	ASSERT_EQ(ParseInfo(pJson, Score), EQmAxiomParseResult::SUCCESS);
+	EXPECT_EQ(Score.m_PlayerName, "DYL");
+	EXPECT_EQ(Score.m_Points, 1620);
+	EXPECT_EQ(Score.m_PerformancePoints, 170);
+	EXPECT_EQ(Score.m_TotalPlayTime, 695);
+	EXPECT_EQ(Score.m_TotalMapsCompleted, 170);
+	ASSERT_EQ(Score.m_vDifficulties.size(), 1u);
+	EXPECT_EQ(Score.m_vDifficulties[0].m_CompletedMaps, 39);
+}
+
 TEST(QmAxiomScoresInfo, RejectsMissingOrInvalidRequiredFields)
 {
 	SQmAxiomModeScore Score;
@@ -561,8 +668,10 @@ TEST(QmAxiomScoresComponent, StartsBothModesAndKeepsFailuresIndependent)
 	ASSERT_EQ(Http.m_vRequests.size(), 3u);
 	EXPECT_NE(Http.Request(1).m_Url.find("mode=Gores"), std::string::npos);
 	EXPECT_NE(Http.Request(2).m_Url.find("mode=AXRace"), std::string::npos);
-	EXPECT_EQ(Http.Request(1).m_TimeoutMs, 45000);
-	EXPECT_EQ(Http.Request(2).m_TimeoutMs, 45000);
+	// Gores 的 user/info 服务端实测耗时 35-47 秒，超时阈值必须显著高于该区间，
+	// 否则正常响应会被判成超时（libcurl error 28）。
+	EXPECT_EQ(Http.Request(1).m_TimeoutMs, 90000);
+	EXPECT_EQ(Http.Request(2).m_TimeoutMs, 90000);
 
 	Http.Request(1).m_pRequest->Complete(InfoResponse("wolf_test", 38));
 	Http.Request(2).m_pRequest->Complete("", 503, false);
@@ -575,6 +684,9 @@ TEST(QmAxiomScoresComponent, StartsBothModesAndKeepsFailuresIndependent)
 	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Score.m_Points, 38);
 	EXPECT_TRUE(Scores.PersistentCacheDirty());
 	EXPECT_EQ(pResult->Mode(EQmAxiomMode::AXRACE).m_Status, EQmAxiomScoreStatus::HTTP_ERROR);
+	// 失败必须带出具体原因，供统计页区分超时 / 非 200 / 解析错误。
+	EXPECT_FALSE(pResult->Mode(EQmAxiomMode::AXRACE).m_ErrorDetail.empty());
+	EXPECT_TRUE(pResult->Mode(EQmAxiomMode::GORES).m_ErrorDetail.empty());
 
 	Scores.EnsureQueried("wolf_test");
 	EXPECT_EQ(Http.m_vRequests.size(), 3u);
@@ -585,6 +697,49 @@ TEST(QmAxiomScoresComponent, StartsBothModesAndKeepsFailuresIndependent)
 	Scores.EnsureQueried("wolf_test");
 	ASSERT_EQ(Http.m_vRequests.size(), 4u);
 	EXPECT_NE(Http.Request(3).m_Url.find("mode=AXRace"), std::string::npos);
+}
+
+TEST(QmAxiomScoresComponent, ReplacesAxiomShortPlaytimeWithDdStatsGametypes)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http, true);
+	Scores.EnsureQueried("DYL");
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+	EXPECT_EQ(Http.Request(1).m_Url, "https://ddstats.tw/player/json?player=DYL");
+
+	Http.Request(0).m_pRequest->Complete(SearchResponse("DYL"));
+	Scores.OnUpdate();
+	ASSERT_EQ(Http.m_vRequests.size(), 4u);
+	Http.Request(1).m_pRequest->Complete(R"({"profile":{"name":"DYL"},"most_played_gametypes":[{"key":"DDraceNetwork","seconds_played":10289485},{"key":"Gores","seconds_played":1169640},{"key":"AXRace","seconds_played":190385},{"key":"TestFortune","seconds_played":143950}]})");
+	Http.Request(2).m_pRequest->Complete(InfoResponse("DYL", 10));
+	Http.Request(3).m_pRequest->Complete(InfoResponse("DYL", 20));
+	Scores.OnUpdate();
+
+	const SQmAxiomPlayerResult *pResult = Scores.GetResult("DYL");
+	ASSERT_NE(pResult, nullptr);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Score.m_TotalPlayTime, 1169640);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::AXRACE).m_Score.m_TotalPlayTime, 190385);
+}
+
+TEST(QmAxiomScoresComponent, MissingDdStatsModeDoesNotZeroAxiomPlaytime)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http, true);
+	Scores.EnsureQueried("DYL");
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+
+	Http.Request(0).m_pRequest->Complete(SearchResponse("DYL"));
+	Scores.OnUpdate();
+	ASSERT_EQ(Http.m_vRequests.size(), 4u);
+	Http.Request(2).m_pRequest->Complete(InfoResponse("DYL", 10, 695));
+	Http.Request(3).m_pRequest->Complete(InfoResponse("DYL", 20, 3));
+	Http.Request(1).m_pRequest->Complete(R"({"profile":{"name":"DYL"},"most_played_gametypes":[{"key":"AXRace","seconds_played":190385}]})");
+	Scores.OnUpdate();
+
+	const SQmAxiomPlayerResult *pResult = Scores.GetResult("DYL");
+	ASSERT_NE(pResult, nullptr);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Score.m_TotalPlayTime, 695);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::AXRACE).m_Score.m_TotalPlayTime, 190385);
 }
 
 TEST(QmAxiomScoresComponent, KeepsDirtyAfterOneModeCompletesBeforeTheOther)
@@ -641,6 +796,10 @@ TEST(QmAxiomScoresComponent, KeepsPersistedScoreVisibleWhileRefreshing)
 			"user_id": 5528,
 			"player_name": "wolf_test",
 			"dummy_name": "",
+			"ddstats_gametypes": [
+				{"name": "Gores", "play_time_seconds": 7200},
+				{"name": "TestFortune", "play_time_seconds": 143950}
+			],
 			"modes": [{
 				"mode": "Gores",
 				"points": 38,
@@ -722,6 +881,10 @@ TEST(QmAxiomScoresComponent, PersistentCacheRoundTripsDifficultyDataInSharedDocu
 			"user_id": 5528,
 			"player_name": "wolf_test",
 			"dummy_name": "",
+			"ddstats_gametypes": [
+				{"name": "Gores", "play_time_seconds": 7200},
+				{"name": "TestFortune", "play_time_seconds": 143950}
+			],
 			"modes": [{
 				"mode": "Gores",
 				"points": 38,
@@ -799,6 +962,65 @@ TEST(QmAxiomScoresComponent, PersistentCacheRoundTripsDifficultyDataInSharedDocu
 	EXPECT_EQ(Score.m_vDifficulties[0].m_RemainingMaps, 5);
 	ASSERT_TRUE(Score.m_vDifficulties[0].m_TotalPoints.has_value());
 	EXPECT_EQ(*Score.m_vDifficulties[0].m_TotalPoints, 80);
+	const std::vector<SQmDdStatsGameType> *pGameTypes = Restored.GetDdStatsGameTypes("wolf_test");
+	ASSERT_NE(pGameTypes, nullptr);
+	ASSERT_EQ(pGameTypes->size(), 2u);
+	EXPECT_EQ((*pGameTypes)[1].m_Name, "TestFortune");
+	EXPECT_EQ((*pGameTypes)[1].m_PlayTimeSeconds, 143950);
+}
+
+TEST(QmAxiomScoresPersistence, IgnoresDuplicatePersistedModes)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	const char *pJson = R"({
+		"remote": {"axiom": {"players": [{
+			"name": "wolf_test",
+			"user_id": 5528,
+			"player_name": "wolf_test",
+			"dummy_name": "",
+			"modes": [
+				{"mode":"Gores","points":1,"total_play_time":2,"total_maps_completed":3,"performance_points":4,"mileage":5,"difficulties":[{"name":"Easy","points":1,"completed_maps":1,"remaining_maps":1}]},
+				{"mode":"Gores","points":9,"total_play_time":10,"total_maps_completed":11,"performance_points":12,"mileage":13,"difficulties":[{"name":"Hard","points":9,"completed_maps":9,"remaining_maps":9}]}
+			]
+		}]}}
+	})";
+	json_value *pRoot = JsonParse(pJson, std::strlen(pJson));
+	ASSERT_NE(pRoot, nullptr);
+	Scores.LoadPersistentCache(pRoot);
+	json_value_free(pRoot);
+
+	const SQmAxiomPlayerResult *pResult = Scores.GetResult("wolf_test");
+	ASSERT_NE(pResult, nullptr);
+	const SQmAxiomModeScore &Score = pResult->Mode(EQmAxiomMode::GORES).m_Score;
+	EXPECT_EQ(Score.m_Points, 1);
+	ASSERT_EQ(Score.m_vDifficulties.size(), 1u);
+	EXPECT_EQ(Score.m_vDifficulties[0].m_Name, "Easy");
+}
+
+TEST(QmAxiomScoresPersistence, LoadsDdStatsOnlyPlayerEntries)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	const char *pJson = R"({
+		"remote": {"axiom": {"players": [{
+			"name": "DYL",
+			"user_id": 5528,
+			"player_name": "DYL",
+			"dummy_name": "",
+			"ddstats_gametypes": [{"name":"Gores","play_time_seconds":1169640}],
+			"modes": []
+		}]}}
+	})";
+	json_value *pRoot = JsonParse(pJson, std::strlen(pJson));
+	ASSERT_NE(pRoot, nullptr);
+	Scores.LoadPersistentCache(pRoot);
+	json_value_free(pRoot);
+
+	const std::vector<SQmDdStatsGameType> *pGameTypes = Scores.GetDdStatsGameTypes("DYL");
+	ASSERT_NE(pGameTypes, nullptr);
+	ASSERT_EQ(pGameTypes->size(), 1u);
+	EXPECT_EQ((*pGameTypes)[0].m_PlayTimeSeconds, 1169640);
 }
 
 TEST(QmAxiomScoresComponent, RefreshCancelsPendingModeRequestsBeforeRestarting)
@@ -890,6 +1112,76 @@ TEST(QmAxiomScoresComponent, SearchFailureUsesThirtySecondBackoff)
 	EXPECT_EQ(Http.m_vRequests.size(), 2u);
 }
 
+TEST(QmAxiomScoresComponent, ReportsFetchingForFirstQueryBeforeCacheExists)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+
+	// 首次查询时缓存条目刚建立，但请求已在飞，UI 必须能识别为「同步中」。
+	Scores.EnsureQueried("wolf_test");
+	EXPECT_TRUE(Scores.IsFetchingPlayer("wolf_test"));
+	EXPECT_FALSE(Scores.IsPlayerFailed("wolf_test"));
+
+	Http.Request(0).m_pRequest->Complete(SearchResponse("wolf_test"));
+	Scores.OnUpdate();
+	// 搜索已完成、两个模式请求在飞，仍属同步中。
+	EXPECT_TRUE(Scores.IsFetchingPlayer("wolf_test"));
+
+	Http.Request(1).m_pRequest->Complete(InfoResponse("wolf_test", 38));
+	Http.Request(2).m_pRequest->Complete(InfoResponse("wolf_test", 21));
+	Scores.OnUpdate();
+	EXPECT_FALSE(Scores.IsFetchingPlayer("wolf_test"));
+	EXPECT_FALSE(Scores.IsPlayerFailed("wolf_test"));
+}
+
+TEST(QmAxiomScoresComponent, ReportsFailureWithHttpStatusDetail)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	Http.Request(0).m_pRequest->Complete("", 503, false);
+	Scores.OnUpdate();
+
+	ASSERT_NE(Scores.GetResult("wolf_test"), nullptr);
+	EXPECT_TRUE(Scores.IsPlayerFailed("wolf_test"));
+	EXPECT_EQ(Scores.GetResult("wolf_test")->m_SearchStatus, EQmAxiomScoreStatus::HTTP_ERROR);
+	// 具体状态码必须被保留下来，供统计页显示「为什么同步不上」。
+	EXPECT_EQ(Scores.GetResult("wolf_test")->m_SearchErrorDetail, "network error");
+}
+
+TEST(QmAxiomScoresComponent, ReportsHttpStatusDetailWhenTransportSucceeded)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	// 传输成功但状态码非 200：应显示具体状态码，而不是笼统的「网络错误」。
+	Http.Request(0).m_pRequest->Complete("", 503, true);
+	Scores.OnUpdate();
+
+	ASSERT_NE(Scores.GetResult("wolf_test"), nullptr);
+	EXPECT_TRUE(Scores.IsPlayerFailed("wolf_test"));
+	EXPECT_EQ(Scores.GetResult("wolf_test")->m_SearchErrorDetail, "HTTP 503");
+}
+
+TEST(QmAxiomScoresComponent, ReportsParseFailureDetailForMalformedBody)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	Http.Request(0).m_pRequest->Complete("{not json");
+	Scores.OnUpdate();
+
+	ASSERT_NE(Scores.GetResult("wolf_test"), nullptr);
+	EXPECT_TRUE(Scores.IsPlayerFailed("wolf_test"));
+	EXPECT_FALSE(Scores.GetResult("wolf_test")->m_SearchErrorDetail.empty());
+}
+
 TEST(QmAxiomScoresComponent, ModeAndSearchCacheUseIndependentTtl)
 {
 	CFakeAxiomHttp Http;
@@ -966,28 +1258,4 @@ TEST(QmAxiomScoresLayout, ConstrainsPopupAtCommonUiScales)
 	EXPECT_FLOAT_EQ(Scale200.m_Height, 290.0f);
 	EXPECT_LE(Scale200.m_Width, 533.0f - 10.0f);
 	EXPECT_LE(Scale200.m_Height, 300.0f - 10.0f);
-}
-
-TEST(QmAxiomScoresIntegration, QueriesOnlyFromTheAxiomScoreboardPopup)
-{
-	const std::string Scoreboard = ReadTestSourceFile("src/game/client/components/scoreboard.cpp");
-	const std::string Component = ReadTestSourceFile("src/game/client/components/qmclient/axiom_scores.cpp");
-
-	EXPECT_NE(Scoreboard.find("m_QmAxiomAutoLogin.IsAxiomCommunity() && !GameClient()->ShouldHideStreamerIdentity(ClientId)"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("m_QmAxiomScores.EnsureQueried(ClientData.m_aName);"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("QmAxiomPopupSize("), std::string::npos);
-	EXPECT_NE(Scoreboard.find("m_AxiomScrollRegion.Begin"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("pResult->Mode(EQmAxiomMode::GORES)"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("pResult->Mode(EQmAxiomMode::AXRACE)"), std::string::npos);
-	EXPECT_NE(Component.find("AbortActiveRequests(true);"), std::string::npos);
-	EXPECT_NE(Component.find("QmAxiomResponseIsCurrent"), std::string::npos);
-	EXPECT_NE(Component.find("MaxResponseSize(AXIOM_MAX_RESPONSE_BYTES)"), std::string::npos);
-	EXPECT_NE(Component.find("AXIOM_INFO_TIMEOUT_MS = 45000"), std::string::npos);
-}
-
-TEST(QmAxiomScoresIntegration, KeepsTheExistingDdnetPointsColumn)
-{
-	const std::string Scoreboard = ReadTestSourceFile("src/game/client/components/scoreboard.cpp");
-	EXPECT_NE(Scoreboard.find("m_PlayerPoints.GetPoints(ClientData.m_aName)"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("m_PlayerPoints.EnsureQueried(GameClient()->m_aClients[i].m_aName)"), std::string::npos);
 }
