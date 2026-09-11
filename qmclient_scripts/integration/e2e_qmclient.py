@@ -19,6 +19,11 @@ except ModuleNotFoundError:
 	from process_harness import ProcessEnvironment  # type: ignore[no-redef]
 
 
+# 与 src/engine/client/client.cpp 的 gs_HangTimeoutSeconds 保持一致：
+# 心跳停滞超过该阈值时 hang 看门狗会写出报告并拉起第二个报告进程。
+HANG_WATCHDOG_TIMEOUT = 10.0
+
+
 def _wait_for_file(path: Path, description: str, timeout: float = 10.0) -> Path:
 	deadline = time.monotonic() + timeout
 	while time.monotonic() < deadline:
@@ -146,7 +151,62 @@ def scenario_recording_without_connection(env: ProcessEnvironment) -> None:
 	_quit_client(env)
 
 
+def scenario_assert_dialog_no_false_hang(env: ProcessEnvironment) -> None:
+	"""验证进程内弹窗阻塞主线程时看门狗不会误报“客户端卡死”。
+
+	`--qm-test-main-thread-assert` 让真实客户端在主循环之前触发一次主线程断言，
+	等价于启动阶段的网络/图形初始化错误弹窗：主线程停在模态弹窗里，心跳停滞。
+	`QMCLIENT_TEST_HIDE_DIALOG` 只隐藏窗口，避免桌面上的点击提前关闭弹窗干扰断言，
+	弹窗仍会正常创建并运行消息循环。修复前看门狗会在 10 秒后写出 hang 报告与转储
+	并拉起第二个报告进程；这里断言弹窗阻塞期间不产生 hang 产物，且进程保持存活。
+	"""
+	env.start_client(["--qm-test-main-thread-assert"], connect=False, env={"QMCLIENT_TEST_HIDE_DIALOG": "1"})
+	env.client.wait_for(lambda line: "qm test main thread assertion" in line, "injected main thread assertion", 30)
+	time.sleep(HANG_WATCHDOG_TIMEOUT + 3.0)
+	dump_dir = env.path("dumps", "QmClient_Crash")
+	hang_artifacts = sorted(dump_dir.glob("*hang_report_*.txt")) + sorted(dump_dir.glob("*hang_dump_*.dmp"))
+	if hang_artifacts:
+		raise AssertionError(f"hang watchdog reported while the modal assert dialog was open: {hang_artifacts}")
+	if not env.client.is_alive():
+		raise AssertionError("client exited while the modal assert dialog was open")
+	# 弹窗阻塞主线程，控制台命令无法送达，直接结束测试进程。
+	env.client.kill()
+
+
+def scenario_hang_watchdog_reports_stall(env: ProcessEnvironment) -> None:
+	"""验证主线程真实卡死时 hang 看门狗会写出报告（单调时钟的正向回归）。
+
+	`--qm-test-main-thread-stall` 让客户端在主循环内阻塞 12 秒（超过 10 秒阈值）。
+	看门狗必须使用单调时钟在主线程阻塞期间写出 hang 报告；时钟若退回主循环
+	tick 缓存（修复前的行为），报告永远不会出现，本场景失败。
+	"""
+	env.start_client(["--qm-test-main-thread-stall"], connect=False, env={"QMCLIENT_TEST_HIDE_DIALOG": "1"})
+	dump_dir = env.path("dumps", "QmClient_Crash")
+	deadline = time.monotonic() + HANG_WATCHDOG_TIMEOUT + 20.0
+	hang_report = None
+	while time.monotonic() < deadline:
+		reports = sorted(dump_dir.glob("*hang_report_*.txt"))
+		if reports:
+			hang_report = reports[0]
+			break
+		if not env.client.is_alive():
+			raise AssertionError("client exited before the hang watchdog reported the injected stall")
+		time.sleep(0.25)
+	if hang_report is None:
+		raise AssertionError("hang watchdog did not report the injected main thread stall")
+	if "Report type: hang" not in hang_report.read_text(encoding="utf-8", errors="replace"):
+		raise AssertionError(f"unexpected hang report content: {hang_report}")
+
+	# 主线程仍处于注入的阻塞中，直接结束进程、不校验退出码：卡死后退出清理里
+	# NVIDIA ICD（nvoglv64.dll）在销毁阶段可能访问违例，属于项目按已知驱动故障
+	# 忽略的范畴（crashdump_mark_shutdown_begin），与被测的看门狗行为无关。
+	# 报告进程已被 QMCLIENT_TEST_HIDE_DIALOG 抑制，不会遗留后台进程。
+	env.client.kill()
+
+
 E2E_TESTS: dict[str, Callable[[ProcessEnvironment], None]] = {
+	"assert_dialog_no_false_hang": scenario_assert_dialog_no_false_hang,
+	"hang_watchdog_reports_stall": scenario_hang_watchdog_reports_stall,
 	"connection_failure_recovery": scenario_connection_failure_recovery,
 	"demo_recording": scenario_demo_recording,
 	"invalid_statistics_preserved": scenario_invalid_statistics_preserved,

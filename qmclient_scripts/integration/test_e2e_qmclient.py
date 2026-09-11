@@ -11,8 +11,10 @@ class QmClientE2ERunnerTest(unittest.TestCase):
 		self.assertEqual(
 			set(E2E_TESTS),
 			{
+				"assert_dialog_no_false_hang",
 				"connection_failure_recovery",
 				"demo_recording",
+				"hang_watchdog_reports_stall",
 				"invalid_statistics_preserved",
 				"perf_log_persistence",
 				"qm_lifecycle_persistence",

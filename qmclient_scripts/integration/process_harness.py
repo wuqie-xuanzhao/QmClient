@@ -48,7 +48,7 @@ _format_exit_code = format_exit_code
 
 
 class Process:
-	def __init__(self, name: str, args: list[str], cwd: Path, fifo_command: str | None = None, pipe_prefix: str = DEFAULT_TEMP_PREFIX):
+	def __init__(self, name: str, args: list[str], cwd: Path, fifo_command: str | None = None, pipe_prefix: str = DEFAULT_TEMP_PREFIX, env: dict[str, str] | None = None):
 		self.name = name
 		self._fifo_path: str | None = None
 		self._fifo = None
@@ -58,6 +58,7 @@ class Process:
 		self._process = subprocess.Popen(
 			args,
 			cwd=cwd,
+			env={**os.environ, **env} if env else None,
 			stdin=subprocess.DEVNULL,
 			stdout=subprocess.PIPE,
 			stderr=subprocess.STDOUT,
@@ -138,6 +139,10 @@ class Process:
 			if self._process.poll() is not None:
 				raise RuntimeError(f"{self.name}: exited with {format_exit_code(self._process.returncode)} while waiting for {description}")
 
+	def is_alive(self) -> bool:
+		"""进程是否仍在运行（用于断言弹窗阻塞期间进程没有被看门狗结束）。"""
+		return self._process.poll() is None
+
 	def stop(self) -> None:
 		if self._fifo is not None:
 			self._fifo.close()
@@ -199,12 +204,12 @@ class ProcessEnvironment:
 		self._server_port = int(line.removeprefix("server: using port "))
 		return self._server_port
 
-	def start_client(self, config: list[str], connect: bool = True, connect_address: str | None = None) -> Process:
+	def start_client(self, config: list[str], connect: bool = True, connect_address: str | None = None, env: dict[str, str] | None = None) -> Process:
 		"""启动客户端。
 
 		`connect=True` 时追加 `connect localhost:<port>`（需要已启动服务端）；
 		也可以通过 `connect_address` 指定连接目标；`connect=False` 时只启动进程，
-		用于连接失败回退等场景。
+		用于连接失败回退等场景。`env` 传入额外的进程环境变量（如测试专用开关）。
 		"""
 		arguments = [
 			str(self._client_binary),
@@ -218,7 +223,7 @@ class ProcessEnvironment:
 				assert self._server_port is not None
 				connect_address = f"localhost:{self._server_port}"
 			arguments.append(f"connect {connect_address}")
-		self._client = Process("client", arguments, self._temp_dir, fifo_command="cl_input_fifo", pipe_prefix=self._temp_prefix)
+		self._client = Process("client", arguments, self._temp_dir, fifo_command="cl_input_fifo", pipe_prefix=self._temp_prefix, env=env)
 		self._client.wait_for(lambda line: line.startswith("client: version"), "client startup", 15)
 		return self._client
 
