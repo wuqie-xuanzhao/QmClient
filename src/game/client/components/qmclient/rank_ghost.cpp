@@ -8,6 +8,7 @@
 
 #include <engine/client.h>
 #include <engine/client/ghost.h>
+#include <engine/map.h>
 #include <engine/shared/compression.h>
 #include <engine/shared/json.h>
 #include <engine/shared/network.h>
@@ -63,6 +64,8 @@ namespace
 		int m_Cid = 0;
 		bool m_FoundClientInfo = false;
 		bool m_FoundCharacter = false;
+		// 是否在解析中看到过 run 终点之后的快照，用于识别被截断的回放
+		bool m_ReachedRunEnd = false;
 
 		SParseContext();
 	};
@@ -359,9 +362,15 @@ namespace
 
 		CUnpacker Unpacker;
 		Unpacker.Reset(pSnapshot->GetItem(Index)->Data(), pSnapshot->GetItemSize(Index));
+		// SecureUnpackObj 返回的是处理器内部共享的暂存缓冲区；
+		// 后面再解包 DDNetCharacter 会覆盖前 11 个 int（X/Y/VelX/Angle/Direction/HookState 等），
+		// 因此必须先把 Character 完整拷贝出来再继续解包，否则位置字段全部错乱。
 		const void *pRawChar = Parse.m_NetObjHandler.SecureUnpackObj(NETOBJTYPE_CHARACTER, &Unpacker);
 		if(!pRawChar)
 			return;
+
+		CNetObj_Character Char;
+		mem_copy(&Char, pRawChar, sizeof(Char));
 
 		const CNetObj_DDNetCharacter *pDDNetChar = nullptr;
 		const int ExtIndex = FindObjItemIndex(pSnapshot, NETOBJTYPE_DDNETCHARACTER, Parse.m_Cid);
@@ -373,7 +382,7 @@ namespace
 		}
 
 		CGhostCharacter GhostChar;
-		CopyGhostCharacter(GhostChar, *(const CNetObj_Character *)pRawChar, pDDNetChar, Tick - Parse.m_RunStart);
+		CopyGhostCharacter(GhostChar, Char, pDDNetChar, Tick - Parse.m_RunStart);
 		Parse.m_vPath.push_back(GhostChar);
 		Parse.m_FoundCharacter = true;
 	}
@@ -413,7 +422,13 @@ struct CRankGhost::SParseState
 };
 
 CRankGhost::CRankGhost() = default;
-CRankGhost::~CRankGhost() = default;
+
+CRankGhost::~CRankGhost()
+{
+	// 兜底：OnShutdown 未走到时也不能让 CDemoPlayer 带着打开的文件析构
+	if(m_pParse && m_pParse->m_Context.m_pPlayer)
+		m_pParse->m_Context.m_pPlayer->Stop();
+}
 
 void CRankGhost::RequestCurrentMapGhost(int Rank)
 {
@@ -509,7 +524,13 @@ void CRankGhost::OnUpdate()
 	if(m_RetryLoadPending)
 	{
 		const int64_t Now = time_get();
-		if(Client()->GetCurrentMap()[0] != '\0' && str_comp_nocase(Client()->GetCurrentMap(), m_PendingMap.c_str()) == 0 && Now >= m_RetryLoadNextAttempt)
+		// 地图名匹配不代表地图数据已就绪，未加载完成时不尝试，
+		// 避免把刚生成的有效 ghost 当作损坏文件删除
+		const auto *pMap = GameClient()->Map();
+		const bool MapReady = pMap != nullptr && pMap->IsLoaded();
+		// 按 demo 名发起的请求没有登记地图名，改用条目自带的地图名
+		const std::string &TargetMap = !m_PendingMap.empty() ? m_PendingMap : m_ActiveEntry.m_Map;
+		if(MapReady && Client()->GetCurrentMap()[0] != '\0' && str_comp_nocase(Client()->GetCurrentMap(), TargetMap.c_str()) == 0 && Now >= m_RetryLoadNextAttempt)
 		{
 			if(LoadGhostFile(m_aGhostStoragePath))
 			{
@@ -547,6 +568,7 @@ void CRankGhost::OnUpdate()
 		UpdateManifestStage();
 		break;
 	case EStage::FETCH_DEMO:
+	case EStage::FETCH_DEMO_ONLY:
 		UpdateDemoStage();
 		break;
 	case EStage::PARSE:
@@ -571,11 +593,21 @@ void CRankGhost::OnReset()
 	m_StartPending = false;
 	m_RetryLoadPending = KeepRetryLoad;
 	m_RetryLoadDeadline = KeepRetryLoad ? time_get() + time_freq() * 30 : 0;
-	m_RetryLoadNextAttempt = 0;
+	// 地图切换后稍等片刻再尝试加载，避开地图数据尚未就绪的窗口
+	m_RetryLoadNextAttempt = KeepRetryLoad ? time_get() + time_freq() / 2 : 0;
 	// 地图切换/断线会清空 CGhost 的全部槽位，这里同步失效本地记录，
 	// 避免之后误卸载别的影子。
 	m_LoadedSlot = -1;
 	m_LastAlignedRaceTick = -1;
+}
+
+void CRankGhost::OnShutdown()
+{
+	// 下载/解析未收尾时必须先停掉 CDemoPlayer，否则析构断言会在 Release 下 abort
+	if(m_StartPending || m_Stage != EStage::IDLE)
+		AbortTask();
+	m_StartPending = false;
+	UnloadGhost();
 }
 
 void CRankGhost::StartLookup(const char *pMap, int Rank)
@@ -604,8 +636,155 @@ void CRankGhost::StartLookup(const char *pMap, int Rank)
 	m_RetryLoadNextAttempt = 0;
 	m_PendingMap = aMap;
 	m_PendingRank = std::clamp(Rank, 1, 9999);
+	m_PendingDemo.clear();
+	m_PendingMode = EPendingMode::GHOST;
 	m_StartPending = true;
 	log_info("rank_ghost", "lookup queued: map='%s' rank=%d", aMap, m_PendingRank);
+}
+
+void CRankGhost::StartPendingLookup(const char *pDemoName, EPendingMode Mode)
+{
+	if(pDemoName == nullptr || pDemoName[0] == '\0')
+		return;
+	if(m_Stage != EStage::IDLE || m_StartPending)
+	{
+		Echo(Localize("Rank ghost: another task is already running"));
+		return;
+	}
+
+	m_RetryLoadPending = false;
+	m_RetryLoadDeadline = 0;
+	m_RetryLoadNextAttempt = 0;
+	m_PendingMap.clear();
+	m_PendingDemo = pDemoName;
+	m_PendingMode = Mode;
+	m_StartPending = true;
+	log_info("rank_ghost", "request queued: demo='%s' mode=%s", pDemoName, Mode == EPendingMode::DEMO_ONLY ? "demo" : "ghost");
+}
+
+CRankGhost::EManifestState CRankGhost::ManifestState() const
+{
+	if(m_Stage == EStage::FETCH_MANIFEST)
+		return EManifestState::LOADING;
+	if(m_ManifestLoaded)
+		return EManifestState::READY;
+	if(m_ManifestFailed)
+		return EManifestState::FAILED;
+	return EManifestState::UNKNOWN;
+}
+
+void CRankGhost::EnsureManifest()
+{
+	if(m_Stage != EStage::IDLE || m_StartPending)
+		return;
+	if(m_ManifestLoaded && time_get() - m_ManifestLoadedAt < time_freq() * MANIFEST_CACHE_TTL_SECONDS)
+		return;
+	// 失败后冷却一段时间再自动重试，避免页面每帧都发起请求
+	if(m_ManifestFailed && time_get() - m_ManifestFailedAt < time_freq() * 60)
+		return;
+	StartManifestFetch();
+}
+
+void CRankGhost::RefreshManifest()
+{
+	if(m_Stage != EStage::IDLE)
+		AbortTask();
+	m_ManifestLoaded = false;
+	m_ManifestFailed = false;
+	StartManifestFetch();
+}
+
+std::vector<qmclient::rank_demo::SEntry> CRankGhost::CollectRankEntries(const char *pMap, int Rank) const
+{
+	std::vector<SEntry> Out;
+	if(m_ManifestLoaded)
+		qmclient::rank_demo::CollectRankEntries(m_vEntries, pMap, Rank, Out);
+	return Out;
+}
+
+void CRankGhost::RequestGhostForDemo(const char *pDemoName)
+{
+	StartPendingLookup(pDemoName, EPendingMode::GHOST);
+}
+
+void CRankGhost::RequestGhostOff()
+{
+	m_UnloadPending = true;
+}
+
+void CRankGhost::RequestDemoDownload(const char *pDemoName)
+{
+	StartPendingLookup(pDemoName, EPendingMode::DEMO_ONLY);
+}
+
+bool CRankGhost::IsBusy() const
+{
+	return m_Stage != EStage::IDLE || m_StartPending;
+}
+
+void CRankGhost::BuildEntryCachePaths(const SEntry &Entry, char *pDemoPath, size_t DemoPathSize, char *pGhostPath, size_t GhostPathSize)
+{
+	char aSafeMap[64];
+	str_copy(aSafeMap, Entry.m_Map.c_str(), sizeof(aSafeMap));
+	str_sanitize_filename(aSafeMap);
+
+	char aSafeTime[32];
+	str_copy(aSafeTime, Entry.m_Time.c_str(), sizeof(aSafeTime));
+	str_sanitize_filename(aSafeTime);
+
+	// demo 标识：manifest 的 uuid 前 8 位（缺失时回退 demo 名前 8 位）
+	char aUuid8[9] = "";
+	const char *pUuid = Entry.m_Uuid.c_str();
+	if(pUuid[0] == '\0')
+		pUuid = Entry.m_Demo.c_str();
+	for(int i = 0, j = 0; i < 8 && pUuid[j] != '\0'; j++)
+	{
+		if(pUuid[j] == '-')
+			continue;
+		aUuid8[i++] = pUuid[j];
+	}
+
+	str_format(pDemoPath, DemoPathSize, "%s/%s_rank%d_%s_%ss_%s.demo",
+		DEMO_CACHE_DIR, aSafeMap, Entry.m_Rank,
+		IsTeamEntry(Entry) ? "team" : "solo", aSafeTime, aUuid8);
+	str_format(pGhostPath, GhostPathSize, "%s/%s/%s_rank%d_%s_%ss_%s.gho",
+		GHOST_ROOT, GHOST_SUBDIR, aSafeMap, Entry.m_Rank,
+		IsTeamEntry(Entry) ? "team" : "solo", aSafeTime, aUuid8);
+}
+
+bool CRankGhost::IsEntryDemoCached(const SEntry &Entry, char *pDemoPath, size_t DemoPathSize) const
+{
+	char aGhostPath[IO_MAX_PATH_LENGTH];
+	BuildEntryCachePaths(Entry, pDemoPath, DemoPathSize, aGhostPath, sizeof(aGhostPath));
+	return Storage()->FileExists(pDemoPath, IStorage::TYPE_SAVE);
+}
+
+bool CRankGhost::IsEntryGhostCached(const SEntry &Entry, char *pGhostPath, size_t GhostPathSize) const
+{
+	char aDemoPath[IO_MAX_PATH_LENGTH];
+	BuildEntryCachePaths(Entry, aDemoPath, sizeof(aDemoPath), pGhostPath, GhostPathSize);
+	return Storage()->FileExists(pGhostPath, IStorage::TYPE_SAVE);
+}
+
+bool CRankGhost::IsEntryGhostActive(const SEntry &Entry) const
+{
+	if(m_LoadedSlot < 0)
+		return false;
+	char aDemoPath[IO_MAX_PATH_LENGTH];
+	char aGhostPath[IO_MAX_PATH_LENGTH];
+	BuildEntryCachePaths(Entry, aDemoPath, sizeof(aDemoPath), aGhostPath, sizeof(aGhostPath));
+	return str_comp(aGhostPath, m_aGhostStoragePath) == 0;
+}
+
+void CRankGhost::DeleteEntryCache(const SEntry &Entry)
+{
+	char aDemoPath[IO_MAX_PATH_LENGTH];
+	char aGhostPath[IO_MAX_PATH_LENGTH];
+	BuildEntryCachePaths(Entry, aDemoPath, sizeof(aDemoPath), aGhostPath, sizeof(aGhostPath));
+	if(m_LoadedSlot >= 0 && str_comp(aGhostPath, m_aGhostStoragePath) == 0)
+		UnloadGhost();
+	Storage()->RemoveFile(aDemoPath, IStorage::TYPE_SAVE);
+	Storage()->RemoveFile(aGhostPath, IStorage::TYPE_SAVE);
 }
 
 void CRankGhost::StartManifestFetch()
@@ -643,6 +822,8 @@ void CRankGhost::UpdateManifestStage()
 	if(!Ok || pResult == nullptr || ResultLength == 0)
 	{
 		m_pManifestRequest = nullptr;
+		m_ManifestFailed = true;
+		m_ManifestFailedAt = time_get();
 		Fail(Localize("Rank ghost: failed to fetch the replay list"));
 		return;
 	}
@@ -653,11 +834,14 @@ void CRankGhost::UpdateManifestStage()
 
 	if(!Parsed)
 	{
+		m_ManifestFailed = true;
+		m_ManifestFailedAt = time_get();
 		Fail(Localize("Rank ghost: the replay list is empty or malformed"));
 		return;
 	}
 
 	m_ManifestLoaded = true;
+	m_ManifestFailed = false;
 	m_ManifestLoadedAt = time_get();
 	m_Stage = EStage::IDLE;
 	log_info("rank_ghost", "manifest loaded: %d entries", (int)m_vEntries.size());
@@ -666,47 +850,51 @@ void CRankGhost::UpdateManifestStage()
 
 bool CRankGhost::ParseManifest(const unsigned char *pData, size_t DataSize)
 {
-	std::vector<qmclient::rank_demo::SEntry> ParsedEntries;
+	std::vector<SEntry> ParsedEntries;
 	if(!qmclient::rank_demo::ParseManifest(pData, DataSize, ParsedEntries))
 	{
 		m_vEntries.clear();
 		return false;
 	}
-
-	m_vEntries.clear();
-	m_vEntries.reserve(ParsedEntries.size());
-	for(const qmclient::rank_demo::SEntry &Parsed : ParsedEntries)
-	{
-		SEntry Entry;
-		Entry.m_Map = Parsed.m_Map;
-		Entry.m_Rank = Parsed.m_Rank;
-		Entry.m_Time = Parsed.m_Time;
-		Entry.m_Demo = Parsed.m_Demo;
-		Entry.m_Names = Parsed.m_Names;
-		Entry.m_Cid = Parsed.m_Cid;
-		Entry.m_Ts = Parsed.m_Ts == std::numeric_limits<int64_t>::min() ? 0 : Parsed.m_Ts;
-		m_vEntries.push_back(std::move(Entry));
-	}
+	m_vEntries = std::move(ParsedEntries);
 	return true;
-}
-
-const CRankGhost::SEntry *CRankGhost::FindEntry(const char *pMap, int Rank) const
-{
-	const SEntry *pBest = nullptr;
-	for(const SEntry &Entry : m_vEntries)
-	{
-		if(Entry.m_Rank != Rank || str_comp_nocase(Entry.m_Map.c_str(), pMap) != 0)
-			continue;
-		// 同一名次可能有历史记录，取最新完成的一条
-		if(pBest == nullptr || Entry.m_Ts > pBest->m_Ts)
-			pBest = &Entry;
-	}
-	return pBest;
 }
 
 void CRankGhost::LookupInManifest()
 {
-	const SEntry *pEntry = FindEntry(m_PendingMap.c_str(), m_PendingRank);
+	// 仅预热清单的浏览请求（Rank 1 页面 EnsureManifest）没有待执行目标
+	if(m_PendingMap.empty() && m_PendingDemo.empty())
+	{
+		m_Stage = EStage::IDLE;
+		return;
+	}
+
+	// 精确匹配：Rank 1 页面按 manifest 的 demo 名发起（同一 demo 可能有
+	// 多条成员记录，任取其一即可，缓存路径与内容都相同）
+	const SEntry *pEntry = nullptr;
+	if(!m_PendingDemo.empty())
+	{
+		for(const SEntry &Entry : m_vEntries)
+		{
+			if(Entry.m_Demo == m_PendingDemo)
+			{
+				pEntry = &Entry;
+				break;
+			}
+		}
+		if(pEntry == nullptr)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), Localize("Rank ghost: no official replay found for '%s'"), m_PendingDemo.c_str());
+			Fail(aBuf);
+			return;
+		}
+	}
+	else
+	{
+		// 同一名次可能有历史记录，取最新完成的一条
+		pEntry = qmclient::rank_demo::FindLatest(m_vEntries, m_PendingMap.c_str(), m_PendingRank);
+	}
 	if(pEntry == nullptr)
 	{
 		char aBuf[256];
@@ -719,18 +907,20 @@ void CRankGhost::LookupInManifest()
 	m_ActiveEntry = *pEntry;
 	log_info("rank_ghost", "entry found: demo='%s' time='%s' cid=%d", m_ActiveEntry.m_Demo.c_str(), m_ActiveEntry.m_Time.c_str(), m_ActiveEntry.m_Cid);
 
-	char aSafeName[IO_MAX_PATH_LENGTH];
-	MakeSafeCacheName(m_ActiveEntry.m_Demo.c_str(), aSafeName, sizeof(aSafeName));
+	// manifest 缺 ts 字段时用 0 兜底，避免生成异常的文件名
+	const int64_t DemoModifiedAt = m_ActiveEntry.m_Ts == std::numeric_limits<int64_t>::min() ? 0 : m_ActiveEntry.m_Ts;
 
-	// 影子文件放在 ghosts/rank_ghost 子目录，与玩家自己的影子分开存放；
-	// 文件名带地图名前缀，便于文件管理器里辨认。Ghost 页会单独扫描该子目录。
-	char aSafeMap[64];
+	// 可读缓存命名：<map>_rank<N>_<kind>_<time>s_<uuid8>
+	BuildEntryCachePaths(m_ActiveEntry, m_aDemoStoragePath, sizeof(m_aDemoStoragePath), m_aGhostStoragePath, sizeof(m_aGhostStoragePath));
+
+	// 旧命名的 demo 缓存（uuid-hash_ts.demo）仍然有效，重命名复用避免重复下载；
+	// 旧命名的 ghost 全部是解析缺陷的产物，不迁移，重新生成覆盖。
 	char aSafeDemo[256];
-	str_copy(aSafeMap, m_PendingMap.c_str(), sizeof(aSafeMap));
-	str_sanitize_filename(aSafeMap);
 	MakeSafeCacheName(m_ActiveEntry.m_Demo.c_str(), aSafeDemo, sizeof(aSafeDemo));
-	str_format(m_aDemoStoragePath, sizeof(m_aDemoStoragePath), "%s/%s_%lld.demo", DEMO_CACHE_DIR, aSafeDemo, (long long)m_ActiveEntry.m_Ts);
-	str_format(m_aGhostStoragePath, sizeof(m_aGhostStoragePath), "%s/%s/%s_rank%d_%lld_%s.gho", GHOST_ROOT, GHOST_SUBDIR, aSafeMap, m_PendingRank, (long long)m_ActiveEntry.m_Ts, aSafeDemo);
+	char aLegacyDemo[IO_MAX_PATH_LENGTH];
+	str_format(aLegacyDemo, sizeof(aLegacyDemo), "%s/%s_%lld.demo", DEMO_CACHE_DIR, aSafeDemo, (long long)DemoModifiedAt);
+	if(!Storage()->FileExists(m_aDemoStoragePath, IStorage::TYPE_SAVE) && Storage()->FileExists(aLegacyDemo, IStorage::TYPE_SAVE))
+		Storage()->RenameFile(aLegacyDemo, m_aDemoStoragePath, IStorage::TYPE_SAVE);
 
 	Storage()->CreateFolder(DEMO_CACHE_DIR, IStorage::TYPE_SAVE);
 	char aRankGhostDir[IO_MAX_PATH_LENGTH];
@@ -745,7 +935,7 @@ void CRankGhost::LookupInManifest()
 			NotifyLoaded(m_ActiveEntry.m_Names.c_str(), m_ActiveEntry.m_Time.c_str());
 			return;
 		}
-		if(Client()->GetCurrentMap()[0] != '\0' && str_comp_nocase(Client()->GetCurrentMap(), m_PendingMap.c_str()) == 0)
+		if(Client()->GetCurrentMap()[0] != '\0' && str_comp_nocase(Client()->GetCurrentMap(), m_ActiveEntry.m_Map.c_str()) == 0)
 		{
 			Storage()->RemoveFile(m_aGhostStoragePath, IStorage::TYPE_SAVE);
 			if(Storage()->FileExists(m_aDemoStoragePath, IStorage::TYPE_SAVE))
@@ -757,7 +947,7 @@ void CRankGhost::LookupInManifest()
 		{
 			m_RetryLoadPending = true;
 			m_RetryLoadDeadline = time_get() + time_freq() * 30;
-			m_RetryLoadNextAttempt = 0;
+			m_RetryLoadNextAttempt = time_get() + time_freq() / 2;
 			m_PendingNotify = Localize("Rank ghost: replay converted, waiting for the map to load ...");
 		}
 		return;
@@ -781,7 +971,9 @@ void CRankGhost::OnGhostsUnloaded()
 
 void CRankGhost::OnGhostLoaded(const char *pStoragePath, int Slot)
 {
-	if(Slot < 0 || pStoragePath == nullptr || !str_startswith(pStoragePath, "ghosts/rank_ghost/") || (m_LoadedSlot >= 0 && str_comp(pStoragePath, m_aGhostStoragePath) != 0))
+	char aRankGhostPrefix[IO_MAX_PATH_LENGTH];
+	str_format(aRankGhostPrefix, sizeof(aRankGhostPrefix), "%s/%s/", GHOST_ROOT, GHOST_SUBDIR);
+	if(Slot < 0 || pStoragePath == nullptr || !str_startswith(pStoragePath, aRankGhostPrefix) || (m_LoadedSlot >= 0 && str_comp(pStoragePath, m_aGhostStoragePath) != 0))
 		return;
 	m_LoadedSlot = Slot;
 	m_LastAlignedRaceTick = -1;
@@ -841,6 +1033,17 @@ void CRankGhost::UpdateDemoStage()
 		return;
 	}
 
+	// 仅下载请求到此结束（Rank 1 页面的“下载回放”），不解析成影子
+	if(m_PendingMode == EPendingMode::DEMO_ONLY)
+	{
+		m_Stage = EStage::IDLE;
+		char aBuf[320];
+		str_format(aBuf, sizeof(aBuf), Localize("Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser."), m_aDemoStoragePath);
+		Echo(aBuf);
+		log_info("rank_ghost", "demo cached: '%s'", m_aDemoStoragePath);
+		return;
+	}
+
 	StartParse();
 }
 
@@ -862,6 +1065,8 @@ void CRankGhost::StartParse()
 	{
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), Localize("Rank ghost: failed to load the replay: %s"), Parse.m_pPlayer->ErrorMessage());
+		// CDemoPlayer 析构要求文件已关闭，否则 dbg_assert 在 Release 下也会 abort
+		Parse.m_pPlayer->Stop();
 		m_pParse.reset();
 		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(aBuf);
@@ -873,6 +1078,7 @@ void CRankGhost::StartParse()
 	const int NumMarkers = bytes_be_to_uint(pInfo->m_TimelineMarkers.m_aNumTimelineMarkers);
 	if(NumMarkers < 2)
 	{
+		Parse.m_pPlayer->Stop();
 		m_pParse.reset();
 		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(Localize("Rank ghost: the replay has no run start/end markers"));
@@ -882,6 +1088,7 @@ void CRankGhost::StartParse()
 	Parse.m_RunEnd = (int)bytes_be_to_uint(pInfo->m_TimelineMarkers.m_aTimelineMarkers[1]);
 	if(Parse.m_RunEnd <= Parse.m_RunStart)
 	{
+		Parse.m_pPlayer->Stop();
 		m_pParse.reset();
 		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(Localize("Rank ghost: the replay has an invalid run range"));
@@ -962,7 +1169,8 @@ void CRankGhost::FinishParse()
 	const int NumTicks = (int)Parse.m_vPath.size();
 	const int RunTicks = Parse.m_RunEnd - Parse.m_RunStart;
 	const int TimeMs = RunTicks * 1000 / SERVER_TICK_SPEED;
-	if(!Parse.m_FoundCharacter || NumTicks < MIN_PATH_TICKS || TimeMs <= 0)
+	// m_ReachedRunEnd 为假说明回放在 run 结束前就被截断，避免写出不完整的影子
+	if(!Parse.m_FoundCharacter || !Parse.m_ReachedRunEnd || NumTicks < MIN_PATH_TICKS || TimeMs <= 0)
 	{
 		Storage()->RemoveFile(m_aDemoStoragePath, IStorage::TYPE_SAVE);
 		Fail(Localize("Rank ghost: could not extract the runner's path from the replay"));
@@ -994,7 +1202,17 @@ void CRankGhost::FinishParse()
 
 	if(!LoadGhostFile(m_aGhostStoragePath))
 	{
-		log_error("rank_ghost", "ghost written to '%s' (%d ticks) but loading failed (no map loaded?)", m_aGhostStoragePath, NumTicks);
+		// 生成成功但当前地图还不是目标地图：保留文件，等地图加载后由 OnUpdate 重试
+		const std::string &TargetMap = !m_PendingMap.empty() ? m_PendingMap : m_ActiveEntry.m_Map;
+		if(Client()->GetCurrentMap()[0] == '\0' || str_comp_nocase(Client()->GetCurrentMap(), TargetMap.c_str()) != 0)
+		{
+			m_RetryLoadPending = true;
+			m_RetryLoadDeadline = time_get() + time_freq() * 30;
+			m_RetryLoadNextAttempt = time_get() + time_freq() / 2;
+			m_PendingNotify = Localize("Rank ghost: replay converted, waiting for the map to load ...");
+			return;
+		}
+		log_error("rank_ghost", "ghost written to '%s' (%d ticks) but loading failed (map is loaded)", m_aGhostStoragePath, NumTicks);
 		Fail(Localize("Rank ghost: failed to load the generated ghost (join the map first)"));
 		return;
 	}
@@ -1110,6 +1328,8 @@ void CRankGhost::OnDemoPlayerSnapshot(void *pData, int Size)
 
 	if(Tick < Parse.m_RunStart)
 		return;
+	if(Tick >= Parse.m_RunEnd)
+		Parse.m_ReachedRunEnd = true;
 	if(Tick > Parse.m_RunEnd)
 	{
 		Parse.m_pPlayer->Pause();

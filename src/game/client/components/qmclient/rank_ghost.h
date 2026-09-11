@@ -10,6 +10,8 @@
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_RANK_GHOST_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_RANK_GHOST_H
 
+#include "rank_demo_manifest.h"
+
 #include <engine/console.h>
 #include <engine/http.h>
 #include <engine/shared/demo.h>
@@ -32,6 +34,7 @@ public:
 	void OnUpdate() override;
 	void OnMapLoad() override;
 	void OnReset() override;
+	void OnShutdown() override;
 	void OnGhostsUnloaded();
 	void OnGhostLoaded(const char *pStoragePath, int Slot);
 	void OnGhostUnloaded(int Slot);
@@ -39,22 +42,47 @@ public:
 	// 供菜单按钮调用：请求当前地图的官方 rank 影子
 	void RequestCurrentMapGhost(int Rank = 1);
 
+	// ===== Rank 1 页面接口 =====
+	// 清单加载状态（页面据此显示加载中/失败）
+	enum class EManifestState
+	{
+		UNKNOWN,
+		LOADING,
+		READY,
+		FAILED,
+	};
+	EManifestState ManifestState() const;
+	// 幂等：清单缺失或过期时自动拉取（不打断进行中的任务）
+	void EnsureManifest();
+	// 强制重新拉取清单（显式刷新操作，可打断当前任务）
+	void RefreshManifest();
+	// 收集指定地图与名次的条目：同一 demo 的多条成员记录合并为一条，solo 在前
+	std::vector<qmclient::rank_demo::SEntry> CollectRankEntries(const char *pMap, int Rank) const;
+	// 按 manifest 的 demo 文件名请求：下载并转换为影子（不退出服务器）
+	void RequestGhostForDemo(const char *pDemoName);
+	// 卸载当前加载的 rank 影子（qm_rank_ghost_off 的编程接口）
+	void RequestGhostOff();
+	// 按 manifest 的 demo 文件名仅下载回放到缓存（供回放播放/分享）
+	void RequestDemoDownload(const char *pDemoName);
+	// 影子/下载任务是否进行中
+	bool IsBusy() const;
+	// 条目缓存状态查询（路径出参返回可读缓存路径）
+	bool IsEntryDemoCached(const qmclient::rank_demo::SEntry &Entry, char *pDemoPath, size_t DemoPathSize) const;
+	bool IsEntryGhostCached(const qmclient::rank_demo::SEntry &Entry, char *pGhostPath, size_t GhostPathSize) const;
+	// 该条目的影子是否已加载激活
+	bool IsEntryGhostActive(const qmclient::rank_demo::SEntry &Entry) const;
+	// 删除该条目的 demo 与 ghost 缓存（激活中的影子会先卸载）
+	void DeleteEntryCache(const qmclient::rank_demo::SEntry &Entry);
+	// 由条目构建可读的缓存路径：<map>_rank<N>_<kind>_<time>s_<uuid8>.demo/.gho
+	static void BuildEntryCachePaths(const qmclient::rank_demo::SEntry &Entry, char *pDemoPath, size_t DemoPathSize, char *pGhostPath, size_t GhostPathSize);
+
 	// rank 影子统一存放在 ghosts/rank_ghost 子目录，Ghost 页列表据此识别这些条目
 	static constexpr const char *GHOST_ROOT = "ghosts";
 	static constexpr const char *GHOST_SUBDIR = "rank_ghost";
 
 private:
-	// watchable.jsonl 中的一条预生成回放记录
-	struct SEntry
-	{
-		std::string m_Map;
-		int m_Rank = 0;
-		std::string m_Time; // 完成时间（秒），保留服务端字符串形式
-		std::string m_Demo; // 回放文件名（服务端以 .demo.gz 命名，实际传输已解压）
-		std::string m_Names; // 完成玩家，逗号分隔
-		int m_Cid = 0; // 录制时完成玩家的 client id
-		int64_t m_Ts = 0; // 完成时间戳，用于同名次多条记录时取最新
-	};
+	// watchable.jsonl 中的一条预生成回放记录（解析实现与 demo 浏览器共用）
+	using SEntry = qmclient::rank_demo::SEntry;
 
 	enum class EStage
 	{
@@ -62,6 +90,15 @@ private:
 		FETCH_MANIFEST,
 		FETCH_DEMO,
 		PARSE,
+		// 仅下载回放（Rank 1 页面的“下载回放”动作），完成后不解析
+		FETCH_DEMO_ONLY,
+	};
+
+	// 本次请求的目标：按地图名次自动挑选，或按 manifest 的 demo 名精确匹配
+	enum class EPendingMode
+	{
+		GHOST,
+		DEMO_ONLY,
 	};
 
 	// 解析期间的状态，定义在 cpp（避免头文件依赖 ghost/snapshot 数据结构）
@@ -76,6 +113,9 @@ private:
 	// 本次请求
 	std::string m_PendingMap;
 	int m_PendingRank = 1;
+	// 按 manifest 的 demo 名精确请求时非空（优先于地图名次匹配）
+	std::string m_PendingDemo;
+	EPendingMode m_PendingMode = EPendingMode::GHOST;
 	// 命令可能在 autoexec / 客户端初始化早期执行，此时不触碰网络与聊天组件，
 	// 只登记请求，实际任务在主循环里启动
 	bool m_StartPending = false;
@@ -86,6 +126,8 @@ private:
 	std::vector<SEntry> m_vEntries;
 	bool m_ManifestLoaded = false;
 	int64_t m_ManifestLoadedAt = 0;
+	bool m_ManifestFailed = false;
+	int64_t m_ManifestFailedAt = 0;
 	std::shared_ptr<IHttpRequest> m_pManifestRequest;
 
 	// 当前阶段输入
@@ -110,6 +152,7 @@ private:
 	static void ConRankGhostOff(IConsole::IResult *pResult, void *pUserData);
 
 	void StartLookup(const char *pMap, int Rank);
+	void StartPendingLookup(const char *pDemoName, EPendingMode Mode);
 	void LookupInManifest();
 
 	void StartManifestFetch();
@@ -122,7 +165,6 @@ private:
 	void UpdateParseStage();
 
 	bool ParseManifest(const unsigned char *pData, size_t DataSize);
-	const SEntry *FindEntry(const char *pMap, int Rank) const;
 
 	bool LoadGhostFile(const char *pStoragePath);
 	void UnloadGhost();

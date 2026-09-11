@@ -82,7 +82,10 @@ namespace
 		rust::Box<CSnapshotDelta> pDelta = CSnapshotDelta::New();
 		rust::Box<CSnapshotDelta> pDeltaSixup = CSnapshotDelta::New();
 		CDemoPlayer DemoPlayer(&*pDelta, &*pDeltaSixup, false);
-		return DemoPlayer.Load(pStorage, nullptr, pPath, IStorage::TYPE_SAVE) == 0;
+		const int Result = DemoPlayer.Load(pStorage, nullptr, pPath, IStorage::TYPE_SAVE);
+		// CDemoPlayer 析构要求文件已关闭，否则 dbg_assert 在 Release 下也会 abort
+		DemoPlayer.Stop();
+		return Result == 0;
 	}
 
 	bool UnpackRankDemo(IStorage *pStorage, const char *pSourcePath, const char *pDestinationPath)

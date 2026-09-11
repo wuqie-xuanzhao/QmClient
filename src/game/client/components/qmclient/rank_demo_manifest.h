@@ -5,9 +5,11 @@
 
 #include <engine/shared/json.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -22,7 +24,21 @@ namespace qmclient::rank_demo
 		std::string m_Names;
 		int m_Cid = 0;
 		int64_t m_Ts = std::numeric_limits<int64_t>::min();
+		// watchable.jsonl 的补充字段：模式（solo/team）、队伍号、完成者、标识
+		std::string m_Kind;
+		int m_Team = 0;
+		std::vector<int> m_vFinishers;
+		std::string m_Uuid;
+		std::string m_Rev;
 	};
+
+	// 条目是否为 team 模式记录
+	inline bool IsTeamEntry(const SEntry &Entry)
+	{
+		if(Entry.m_Kind.empty())
+			return Entry.m_vFinishers.size() > 1;
+		return Entry.m_Kind == "team";
+	}
 
 	inline const json_value *Field(const json_value *pObject, const char *pName)
 	{
@@ -106,8 +122,30 @@ namespace qmclient::rank_demo
 			Entry.m_Time.clear();
 		if(ReadInt(pRoot, "cid", Value) && Value >= 0 && Value <= 63)
 			Entry.m_Cid = static_cast<int>(Value);
+		if(ReadInt(pRoot, "team", Value) && Value >= 0 && Value <= 255)
+			Entry.m_Team = static_cast<int>(Value);
 		if(ReadInt(pRoot, "ts", Value))
 			Entry.m_Ts = Value;
+
+		// 模式与标识字段都是可选的（老记录或 error 行可能缺失）
+		if(!ReadString(pRoot, "kind", Entry.m_Kind, 16))
+			Entry.m_Kind.clear();
+		if(!ReadString(pRoot, "uuid", Entry.m_Uuid, 64))
+			Entry.m_Uuid.clear();
+		if(!ReadString(pRoot, "rev", Entry.m_Rev, 32))
+			Entry.m_Rev.clear();
+
+		const json_value *pFinishers = Field(pRoot, "finishers");
+		if(pFinishers != nullptr && pFinishers->type == json_array)
+		{
+			for(unsigned i = 0; i < pFinishers->u.array.length; ++i)
+			{
+				const json_value *pFinisher = pFinishers->u.array.values[i];
+				if(pFinisher == nullptr || pFinisher->type != json_integer || pFinisher->u.integer < 0 || pFinisher->u.integer > 63)
+					continue;
+				Entry.m_vFinishers.push_back(static_cast<int>(pFinisher->u.integer));
+			}
+		}
 
 		const json_value *pNames = Field(pRoot, "names");
 		if(pNames != nullptr && pNames->type == json_array)
@@ -179,6 +217,81 @@ namespace qmclient::rank_demo
 				pBest = &Entry;
 		}
 		return pBest;
+	}
+
+	// 把成员名合并进逗号分隔的名字列表（已存在则跳过）
+	inline void AppendUniqueName(std::string &Names, const std::string &Name)
+	{
+		if(Name.empty())
+			return;
+		if(!Names.empty())
+		{
+			if(Names == Name)
+				return;
+			// 已作为整项或列表中间项出现时跳过
+			if(Names.size() >= Name.size() &&
+				(Names.compare(0, Name.size(), Name) == 0 ||
+					Names.compare(Names.size() - Name.size(), Name.size(), Name) == 0 ||
+					Names.find(", " + Name + ", ") != std::string::npos))
+				return;
+			Names += ", ";
+		}
+		Names += Name;
+	}
+
+	// 收集指定地图与名次的全部条目：同一 demo 的多条成员记录合并为一条
+	// （成员名并集、时间取最新），solo 在前、team 在后，各自按时间倒序。
+	// 同一地图经常同时存在 solo rank1 与 team rank1，且 team 成绩的每个
+	// 成员各有一条指向同一 demo 的记录。
+	inline void CollectRankEntries(const std::vector<SEntry> &Entries, const char *pMap, int Rank, std::vector<SEntry> &Out)
+	{
+		Out.clear();
+		if(pMap == nullptr || pMap[0] == '\0')
+			return;
+
+		std::map<std::string, size_t> DemoToIndex;
+		for(const SEntry &Entry : Entries)
+		{
+			if(Entry.m_Rank != Rank || str_comp_nocase(Entry.m_Map.c_str(), pMap) != 0)
+				continue;
+
+			auto It = DemoToIndex.find(Entry.m_Demo);
+			if(It != DemoToIndex.end())
+			{
+				SEntry &Existing = Out[It->second];
+				// 同一 demo 的其他成员记录：合并名字与完成者
+				std::string Copy = Entry.m_Names;
+				size_t Start = 0;
+				while(Start < Copy.size())
+				{
+					size_t End = Copy.find(", ", Start);
+					const size_t Len = End == std::string::npos ? Copy.size() - Start : End - Start;
+					AppendUniqueName(Existing.m_Names, Copy.substr(Start, Len));
+					if(End == std::string::npos)
+						break;
+					Start = End + 2;
+				}
+				for(int Finisher : Entry.m_vFinishers)
+				{
+					if(std::find(Existing.m_vFinishers.begin(), Existing.m_vFinishers.end(), Finisher) == Existing.m_vFinishers.end())
+						Existing.m_vFinishers.push_back(Finisher);
+				}
+				if(Entry.m_Ts > Existing.m_Ts)
+					Existing.m_Ts = Entry.m_Ts;
+				continue;
+			}
+
+			Out.push_back(Entry);
+			DemoToIndex[Entry.m_Demo] = Out.size() - 1;
+		}
+
+		std::stable_sort(Out.begin(), Out.end(), [](const SEntry &Left, const SEntry &Right) {
+			const bool LeftTeam = IsTeamEntry(Left);
+			const bool RightTeam = IsTeamEntry(Right);
+			if(LeftTeam != RightTeam)
+				return !LeftTeam; // solo 在前
+			return Right.m_Ts < Left.m_Ts;
+		});
 	}
 } // namespace qmclient::rank_demo
 
