@@ -103,6 +103,7 @@ bool crashdump_launch_reporter_if_available(const char *report_path)
 	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 	StartupInfo.wShowWindow = SW_SHOWNORMAL;
+	AllowSetForegroundWindow(ASFW_ANY);
 	PROCESS_INFORMATION ProcessInfo{};
 	if(!CreateProcessW(aExecutablePath, aCommandLine, nullptr, nullptr, FALSE, CREATE_NEW_PROCESS_GROUP, nullptr, nullptr, &StartupInfo, &ProcessInfo))
 		return false;

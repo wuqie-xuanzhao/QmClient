@@ -48,6 +48,20 @@ namespace
 		return MulDiv(Value, static_cast<int>(Dpi), 96);
 	}
 
+	void UpdateWindowCornerRegion(HWND Window, unsigned Dpi)
+	{
+		RECT ClientRect{};
+		if(Window == nullptr || !GetClientRect(Window, &ClientRect) || ClientRect.right <= 0 || ClientRect.bottom <= 0)
+			return;
+		const int Radius = ScaleDip(24, Dpi);
+		HRGN Region = CreateRoundRectRgn(0, 0, ClientRect.right + 1, ClientRect.bottom + 1, Radius, Radius);
+		if(Region != nullptr)
+		{
+			if(SetWindowRgn(Window, Region, TRUE) == 0)
+				DeleteObject(Region);
+		}
+	}
+
 	unsigned GetWindowDpiCompat(HWND Window)
 	{
 		using TGetDpiForWindow = UINT(WINAPI *)(HWND);
@@ -872,6 +886,7 @@ namespace
 			RecreateFonts(*pState);
 			return 0;
 		case WM_SIZE:
+			UpdateWindowCornerRegion(Window, pState->m_Dpi);
 			LayoutDialog(*pState);
 			InvalidateRect(Window, nullptr, FALSE);
 			return 0;
@@ -881,6 +896,7 @@ namespace
 			const RECT *pSuggestedRect = reinterpret_cast<const RECT *>(LParam);
 			SetWindowPos(Window, nullptr, pSuggestedRect->left, pSuggestedRect->top, pSuggestedRect->right - pSuggestedRect->left, pSuggestedRect->bottom - pSuggestedRect->top, SWP_NOACTIVATE | SWP_NOZORDER);
 			RecreateFonts(*pState);
+			UpdateWindowCornerRegion(Window, pState->m_Dpi);
 			LayoutDialog(*pState);
 			InvalidateRect(Window, nullptr, TRUE);
 			return 0;
@@ -982,7 +998,8 @@ std::optional<int> ShowQmFestiveMessageBox(const IGraphics::CMessageBox &Message
 	const unsigned InitialDpi = GetWindowDpiCompat(nullptr);
 	// WS_CLIPCHILDREN: 父窗口不把 EDIT/按钮所在位置再刷一遍深红，避免动画时
 	// EDIT/按钮被父窗口覆盖-重画造成的 30Hz 闪烁。
-	const DWORD Style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN;
+	// 无系统标题栏/边框，窗口内的“关闭报告”按钮是唯一关闭入口。
+	const DWORD Style = WS_POPUP | WS_CLIPCHILDREN;
 	const DWORD ExtendedStyle = WS_EX_APPWINDOW | WS_EX_CONTROLPARENT;
 	RECT WindowRect{0, 0, ScaleDip(940, InitialDpi), ScaleDip(650, InitialDpi)};
 	AdjustWindowRectForDpiCompat(WindowRect, Style, ExtendedStyle, InitialDpi);
@@ -1032,10 +1049,17 @@ std::optional<int> ShowQmFestiveMessageBox(const IGraphics::CMessageBox &Message
 	}
 
 	LayoutDialog(State);
+	UpdateWindowCornerRegion(State.m_Window, State.m_Dpi);
 	PrepareFireworkParticles(State);
 	State.m_FireworksFrame = 0;
 	SetTimer(State.m_Window, gs_FireworksTimerId, gs_FireworksTimerPeriodMs, nullptr);
 	ShowWindow(State.m_Window, SW_SHOWNORMAL);
+	// 崩溃报告通常由已经退出或失去前台资格的客户端进程启动。
+	// 先短暂置顶再恢复普通层级，确保窗口初次出现即可接收鼠标输入。
+	SetWindowPos(State.m_Window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	SetWindowPos(State.m_Window, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+	SetForegroundWindow(State.m_Window);
+	SetActiveWindow(State.m_Window);
 	UpdateWindow(State.m_Window);
 	StartFestiveMusic();
 	if(State.m_ConfirmButtonId >= gs_ButtonIdBase)
