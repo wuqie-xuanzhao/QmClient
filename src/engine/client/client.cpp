@@ -339,7 +339,10 @@ static void ShowPendingQmCrashReport(IStorage *pStorage)
 
 	char aAbsolutePath[IO_MAX_PATH_LENGTH];
 	pStorage->GetCompletePath(IStorage::TYPE_SAVE, Search.m_aPath, aAbsolutePath, sizeof(aAbsolutePath));
-	ShowQmCrashReporterDialog(aAbsolutePath);
+	// 启动阶段只负责拉起独立报告进程，不能在这里进入报告窗口的消息循环，
+	// 否则用户必须先关闭报告窗口，客户端才会继续启动。
+	if(!crashdump_launch_reporter_if_available(aAbsolutePath))
+		log_warn("crash_reporter", "failed to launch pending report '%s'; client startup will continue", aAbsolutePath);
 }
 #endif
 
