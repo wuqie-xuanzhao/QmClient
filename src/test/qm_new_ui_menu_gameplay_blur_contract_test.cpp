@@ -107,17 +107,20 @@ TEST(QmNewUiMenuGameplayBlurContract, GaussianBlurCoversRequestedHudAndVoteBackg
 	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
 	const std::string VotingSource = ReadTextFile("src/game/client/components/voting.cpp");
 	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
+	const std::string StatusBarSource = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
 	const std::string MovementInfo = FunctionBody(HudSource, "void CHud::RenderMovementInformation()");
 	const std::string KeyStatus = FunctionBody(HudSource, "void CHud::RenderKeyStatus()");
 	const std::string ScoreHud = FunctionBody(HudSource, "void CHud::RenderScoreHud()");
 	const std::string Vote = FunctionBody(VotingSource, "void CVoting::Render()");
 	const std::string MiniVote = FunctionBody(TClientSource, "void CTClient::RenderMiniVoteHud(");
+	const std::string StatusBar = FunctionBody(StatusBarSource, "void CStatusBar::OnRender()");
 
 	EXPECT_NE(MovementInfo.find("RenderGaussianBlur"), std::string::npos);
 	EXPECT_NE(KeyStatus.find("RenderGaussianBlur"), std::string::npos);
 	EXPECT_NE(ScoreHud.find("RenderGaussianBlur"), std::string::npos);
 	EXPECT_NE(Vote.find("RenderGaussianBlur"), std::string::npos);
 	EXPECT_NE(MiniVote.find("RenderGaussianBlur"), std::string::npos);
+	EXPECT_NE(StatusBar.find("RenderGaussianBlur"), std::string::npos);
 	EXPECT_NE(Vote.find("View.Draw(ui_token::color::SURFACE_GLASS"), std::string::npos);
 	EXPECT_NE(MiniVote.find("View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f)"), std::string::npos);
 }
