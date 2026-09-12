@@ -4311,8 +4311,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_gores_mode_test.cpp
     qm_hammer_hit_detection_test.cpp
     qm_hud_media_island_logic_test.cpp
-    qm_hud_frozen_tee_state_test.cpp
-    qm_hud_media_island_contract_test.cpp
     qm_hud_notifications_catalog_test.cpp
     qm_hud_notifications_formatting_test.cpp
     qm_hud_notifications_state_test.cpp
@@ -4368,7 +4366,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_new_ui_menu_shell_chrome_contract_test.cpp
     qm_new_ui_menu_shell_browser_contract_test.cpp
     qm_new_ui_menu_shell_settings_contract_test.cpp
-    qm_ui_scale_test.cpp
     qm_update_arguments_test.cpp
     netease_lyric_parser_test.cpp
     netease_lyric_timeline_test.cpp

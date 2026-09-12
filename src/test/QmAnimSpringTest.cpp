@@ -111,33 +111,6 @@ TEST(UiV2AnimSpring, MergeTargetPreservesVelocity)
 	EXPECT_FALSE(Runtime.HasActiveAnimation(301, EUiAnimProperty::POS_X));
 }
 
-TEST(UiV2AnimSpring, ResolveSpringValueUsesRuntimeSpringTrack)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	CUiV2AnimationRuntime Runtime;
-	Runtime.SetValue(401, EUiAnimProperty::POS_X, 0.0f);
-
-	SUiSpringConfig Spring;
-	Spring.m_Stiffness = 280.0f;
-	Spring.m_Damping = 18.0f;
-	Spring.m_RestEpsilon = 0.01f;
-	Spring.m_RestVelocity = 0.05f;
-
-	EXPECT_NEAR(ResolveUiAnimSpringValue(Runtime, 401, EUiAnimProperty::POS_X, 100.0f, Spring), 0.0f, 1e-6f);
-	EXPECT_TRUE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
-
-	AdvanceFor(Runtime, 0.15f);
-	const float BeforeMerge = Runtime.GetValue(401, EUiAnimProperty::POS_X);
-	EXPECT_GT(BeforeMerge, 0.0f);
-	EXPECT_TRUE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
-
-	EXPECT_NEAR(ResolveUiAnimSpringValue(Runtime, 401, EUiAnimProperty::POS_X, -50.0f, Spring), BeforeMerge, 1e-3f);
-	EXPECT_TRUE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
-
-	AdvanceFor(Runtime, 3.0f);
-	EXPECT_NEAR(Runtime.GetValue(401, EUiAnimProperty::POS_X), -50.0f, 0.5f);
-	EXPECT_FALSE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
-}
 
 TEST(UiV2AnimSpring, ResolveSpringRectXYAnimatesOnlyPosition)
 {

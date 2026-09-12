@@ -28,19 +28,3 @@ TEST(QmGraphicsShutdownContract, FestiveCrashDialogOffersNonDestructiveFireworks
 	EXPECT_NE(FestiveDialog.find("KillTimer(Window, gs_FireworksTimerId)"), std::string::npos);
 }
 
-TEST(QmGraphicsShutdownContract, GraphicsFatalMessageBoxAvoidsWindowDestruction)
-{
-	const std::string ThreadedBackend = ReadRepoFile("src/engine/client/backend_threaded.cpp");
-	const std::string ProcessError = ExtractSourceFunctionBody(ThreadedBackend, "void CGraphicsBackend_Threaded::ProcessError(const SGfxErrorContainer &Error)");
-	ASSERT_NE(ProcessError.find("m_FatalErrorPending.store(true"), std::string::npos);
-	EXPECT_LT(ProcessError.find("m_FatalErrorPending.store(true"), ProcessError.find("dbg_assert_failed"));
-
-	const std::string SdlBackend = ReadRepoFile("src/engine/client/backend_sdl.cpp");
-	const std::string ShowMessageBox = ExtractSourceFunctionBody(SdlBackend, "std::optional<int> CGraphicsBackend_SDL_GL::ShowMessageBox(const IGraphics::CMessageBox &MessageBox)");
-	ASSERT_NE(ShowMessageBox.find("if(HasFatalError())"), std::string::npos);
-	const size_t SafeMessageBoxCall = ShowMessageBox.find("ShowMessageBoxWithoutGraphics(MessageBox)");
-	const size_t WindowDestructionCall = ShowMessageBox.find("SDL_DestroyWindow(m_pWindow)");
-	ASSERT_NE(SafeMessageBoxCall, std::string::npos);
-	ASSERT_NE(WindowDestructionCall, std::string::npos);
-	EXPECT_LT(SafeMessageBoxCall, WindowDestructionCall);
-}

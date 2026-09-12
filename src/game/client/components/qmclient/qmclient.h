@@ -46,9 +46,9 @@ class CQmClient : public CComponent
 	std::shared_ptr<IHttpRequest> m_pQmClientAuthTokenTask = nullptr;
 	std::shared_ptr<IHttpRequest> m_pQmClientUsersTask = nullptr;
 	std::shared_ptr<IHttpRequest> m_pQmClientUsersSendTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pTitleOperation;
-	std::shared_ptr<CHttpRequest> m_pTitleReport;
-	std::shared_ptr<CHttpRequest> m_pTitleList;
+	std::shared_ptr<IHttpRequest> m_pTitleOperation;
+	std::shared_ptr<IHttpRequest> m_pTitleReport;
+	std::shared_ptr<IHttpRequest> m_pTitleList;
 	char m_aTitleToken[65] = "";
 	char m_aTitleText[64] = "";
 	char m_aTitleBoundName[64] = "";
@@ -63,11 +63,8 @@ class CQmClient : public CComponent
 	void InitTitleAuthentication();
 	void UpdateTitleAuthentication();
 	void ResetTitlePresences();
-	void StartTitleRequest(const char *pPath, const char *pBody, std::shared_ptr<CHttpRequest> &pTask);
+	void StartTitleRequest(const char *pPath, const char *pBody, std::shared_ptr<IHttpRequest> &pTask);
 
-	std::shared_ptr<CHttpRequest> m_pQmClientAuthTokenTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientUsersTask = nullptr;
-	std::shared_ptr<CHttpRequest> m_pQmClientUsersSendTask = nullptr;
 	std::shared_ptr<IJob> m_pQmClientUsersParseJob = nullptr;
 	std::shared_ptr<IHttpRequest> m_pQmDeveloperPresenceTask = nullptr;
 	std::shared_ptr<IHttpRequest> m_pQmDeveloperPresencesTask = nullptr;

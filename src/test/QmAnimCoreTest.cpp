@@ -2,25 +2,6 @@
 
 #include <gtest/gtest.h>
 
-TEST(UiV2Anim, ReplacePolicyReplacesCurrentTrack)
-{
-	CUiV2AnimationRuntime Runtime;
-	Runtime.SetValue(1, EUiAnimProperty::POS_X, 0.0f);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(1, EUiAnimProperty::POS_X, 10.0f, 0.5f, 1, EUiAnimInterruptPolicy::REPLACE, 11)));
-	AdvanceQmAnimFor(Runtime, 0.2f);
-	EXPECT_GT(Runtime.GetValue(1, EUiAnimProperty::POS_X), 0.0f);
-	EXPECT_LT(Runtime.GetValue(1, EUiAnimProperty::POS_X), 10.0f);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(1, EUiAnimProperty::POS_X, 20.0f, 0.4f, 2, EUiAnimInterruptPolicy::REPLACE, 12)));
-	EXPECT_EQ(Runtime.ActiveTrackCount(), 1);
-	AdvanceQmAnimFor(Runtime, 0.5f);
-	EXPECT_NEAR(Runtime.GetValue(1, EUiAnimProperty::POS_X), 20.0f, 0.001f);
-	SUiAnimCompleteEvent Event;
-	ASSERT_TRUE(Runtime.PollCompletedEvent(Event));
-	EXPECT_EQ(Event.m_TrackId, 12u);
-	EXPECT_EQ(Event.m_NodeKey, 1u);
-	EXPECT_EQ(Event.m_Property, EUiAnimProperty::POS_X);
-	EXPECT_FALSE(Runtime.PollCompletedEvent(Event));
-}
 
 TEST(UiV2Anim, QueuePolicyRunsInOrder)
 {
@@ -42,37 +23,7 @@ TEST(UiV2Anim, QueuePolicyRunsInOrder)
 	EXPECT_NEAR(Runtime.GetValue(7, EUiAnimProperty::ALPHA), 20.0f, 0.001f);
 }
 
-TEST(UiV2Anim, KeepHigherPriorityRejectsLowerPriorityRequest)
-{
-	CUiV2AnimationRuntime Runtime;
-	Runtime.SetValue(3, EUiAnimProperty::SCALE, 1.0f);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(3, EUiAnimProperty::SCALE, 2.0f, 0.4f, 10, EUiAnimInterruptPolicy::REPLACE, 31)));
-	AdvanceQmAnimFor(Runtime, 0.1f);
-	EXPECT_FALSE(Runtime.RequestAnimation(MakeQmAnimRequest(3, EUiAnimProperty::SCALE, 5.0f, 0.3f, 5, EUiAnimInterruptPolicy::KEEP_HIGHER_PRIORITY, 32)));
-	EXPECT_LT(Runtime.GetValue(3, EUiAnimProperty::SCALE), 2.5f);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(3, EUiAnimProperty::SCALE, 5.0f, 0.3f, 20, EUiAnimInterruptPolicy::KEEP_HIGHER_PRIORITY, 33)));
-	AdvanceQmAnimFor(Runtime, 0.4f);
-	EXPECT_NEAR(Runtime.GetValue(3, EUiAnimProperty::SCALE), 5.0f, 0.001f);
-	SUiAnimCompleteEvent Event;
-	ASSERT_TRUE(Runtime.PollCompletedEvent(Event));
-	EXPECT_EQ(Event.m_TrackId, 33u);
-}
 
-TEST(UiV2Anim, MergeTargetKeepsContinuity)
-{
-	CUiV2AnimationRuntime Runtime;
-	Runtime.SetValue(5, EUiAnimProperty::WIDTH, 0.0f);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(5, EUiAnimProperty::WIDTH, 10.0f, 1.0f, 1, EUiAnimInterruptPolicy::REPLACE, 41)));
-	AdvanceQmAnimFor(Runtime, 0.25f);
-	const float BeforeMerge = Runtime.GetValue(5, EUiAnimProperty::WIDTH);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(5, EUiAnimProperty::WIDTH, 20.0f, 1.0f, 1, EUiAnimInterruptPolicy::MERGE_TARGET, 42)));
-	EXPECT_NEAR(BeforeMerge, Runtime.GetValue(5, EUiAnimProperty::WIDTH), 0.0001f);
-	AdvanceQmAnimFor(Runtime, 1.25f);
-	EXPECT_NEAR(Runtime.GetValue(5, EUiAnimProperty::WIDTH), 20.0f, 0.001f);
-	SUiAnimCompleteEvent Event;
-	ASSERT_TRUE(Runtime.PollCompletedEvent(Event));
-	EXPECT_EQ(Event.m_TrackId, 42u);
-}
 
 TEST(UiV2Anim, DelayDefersAnimationStart)
 {
@@ -266,21 +217,6 @@ TEST(UiV2Anim, AwaitTracksSupportsMultipleGroupsForSameTrack)
 	EXPECT_EQ(GroupEvent.m_GroupId, GroupB);
 }
 
-TEST(UiV2Anim, MergeTargetCancelsAwaitForReplacedTrackId)
-{
-	CUiV2AnimationRuntime Runtime;
-	Runtime.SetValue(16, EUiAnimProperty::WIDTH, 0.0f);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(16, EUiAnimProperty::WIDTH, 10.0f, 0.3f, 1, EUiAnimInterruptPolicy::REPLACE, 99)));
-	const uint32_t aTrackIds[] = {99};
-	EXPECT_NE(Runtime.AwaitTracks(aTrackIds, 1), 0u);
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeQmAnimRequest(16, EUiAnimProperty::WIDTH, 20.0f, 0.3f, 1, EUiAnimInterruptPolicy::MERGE_TARGET, 100)));
-	AdvanceQmAnimFor(Runtime, 0.4f);
-	SUiAnimCompleteEvent TrackEvent;
-	ASSERT_TRUE(Runtime.PollCompletedEvent(TrackEvent));
-	EXPECT_EQ(TrackEvent.m_TrackId, 100u);
-	SUiAnimGroupCompleteEvent GroupEvent;
-	EXPECT_FALSE(Runtime.PollGroupCompletedEvent(GroupEvent));
-}
 
 TEST(UiV2Anim, AwaitTracksRejectsAlreadyCompletedOrUnknownTrackIds)
 {

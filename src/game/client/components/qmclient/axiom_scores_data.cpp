@@ -11,6 +11,9 @@
 
 namespace
 {
+	constexpr float AXIOM_POPUP_HEIGHT = 390.0f;
+	constexpr float AXIOM_POPUP_WIDTH = 360.0f;
+	constexpr float AXIOM_POPUP_SCREEN_MARGIN = 5.0f;
 	constexpr size_t MAX_AXIOM_JSON_BYTES = 8 * 1024 * 1024;
 	constexpr unsigned MAX_AXIOM_SEARCH_RESULTS = 64;
 	constexpr unsigned MAX_AXIOM_DIFFICULTIES = 128;
@@ -354,5 +357,13 @@ EQmAxiomParseResult QmParseDdStatsPlayerResponse(const char *pData, size_t DataS
 
 bool QmAxiomResponseIsCurrent(uint64_t CurrentGeneration, uint64_t ResponseGeneration, std::string_view CurrentPlayerName, std::string_view ResponsePlayerName)
 {
-	return CurrentGeneration == ResponseGeneration && CurrentMode == ResponseMode;
+	return CurrentGeneration == ResponseGeneration && CurrentPlayerName == ResponsePlayerName;
 }
+
+SQmAxiomPopupSize QmAxiomPopupSize(float ScreenWidth, float ScreenHeight)
+{
+	const float MaxWidth = maximum(0.0f, ScreenWidth - AXIOM_POPUP_SCREEN_MARGIN * 2.0f);
+	const float MaxHeight = maximum(0.0f, ScreenHeight - AXIOM_POPUP_SCREEN_MARGIN * 2.0f);
+	return {minimum(AXIOM_POPUP_WIDTH, MaxWidth), minimum(AXIOM_POPUP_HEIGHT, MaxHeight)};
+}
+

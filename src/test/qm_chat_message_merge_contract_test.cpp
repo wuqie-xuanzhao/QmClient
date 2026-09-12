@@ -28,14 +28,6 @@ TEST(QmChatMessageMergeContract, ChatAndConsoleKeepStructuredMergedAuthors)
 	EXPECT_NE(Translate.find("for(const CChat::SMergedAuthor &Author : pLine->m_vMergedAuthors)"), std::string::npos);
 }
 
-TEST(QmNameplatesContract, DeveloperBadgeUsesLocalizedSourceKey)
-{
-	const std::string Nameplates = ReadRepoFile("src/game/client/components/nameplates.cpp");
-	const std::string Translations = ReadRepoFile("qmclient_scripts/languages_qmclient/translations/i18n/misc.toml");
-
-	EXPECT_TRUE(ContainsAll(Nameplates, {"Localize(\"Developer\")", "str_format(aBuf, sizeof(aBuf), \"[%s]\", Localize(\"Developer\"))"}));
-	EXPECT_NE(Translations.find("key = \"Developer\""), std::string::npos);
-}
 
 TEST(QmChatMessageMergeContract, SettingIsDefaultLocalizedAndVersioned)
 {

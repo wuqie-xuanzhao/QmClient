@@ -22,7 +22,6 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/statboard.h>
 #include <game/client/gameclient.h>
-#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 
@@ -34,98 +33,8 @@
 
 namespace
 {
-	const char *AxiomScoreStatusText(EQmAxiomScoreStatus Status)
-	{
-		switch(Status)
-		{
-		case EQmAxiomScoreStatus::NOT_REQUESTED: return Localize("Not requested");
-		case EQmAxiomScoreStatus::FETCHING: return Localize("Loading Axiom scores...");
-		case EQmAxiomScoreStatus::READY: return "";
-		case EQmAxiomScoreStatus::NOT_FOUND: return Localize("Player not found on Axiom");
-		case EQmAxiomScoreStatus::AMBIGUOUS: return Localize("Multiple exact Axiom players found");
-		case EQmAxiomScoreStatus::HTTP_ERROR: return Localize("Axiom score request failed");
-		case EQmAxiomScoreStatus::API_ERROR: return Localize("Axiom API returned an error");
-		case EQmAxiomScoreStatus::INVALID_RESPONSE: return Localize("Invalid Axiom API response");
-		}
-		return Localize("Axiom score request failed");
-	}
-
-	void RenderAxiomLabel(CUi *pUi, CScrollRegion &ScrollRegion, const CUIRect &Rect, const char *pText, float FontSize, int Align)
-	{
-		if(!ScrollRegion.AddRect(Rect))
-			return;
-		SLabelProperties Props;
-		Props.m_MaxWidth = Rect.w;
-		Props.m_EllipsisAtEnd = true;
-		pUi->DoLabel(&Rect, pText, FontSize, Align, Props);
-	}
-
-	void RenderAxiomValueRow(CUi *pUi, CScrollRegion &ScrollRegion, CUIRect &Column, const char *pLabel, const char *pValue)
-	{
-		CUIRect Row, Label, Value;
-		Column.HSplitTop(13.0f, &Row, &Column);
-		Row.VSplitLeft(Row.w * 0.58f, &Label, &Value);
-		RenderAxiomLabel(pUi, ScrollRegion, Label, pLabel, 8.5f, TEXTALIGN_ML);
-		RenderAxiomLabel(pUi, ScrollRegion, Value, pValue, 9.5f, TEXTALIGN_MR);
-	}
-
-	void FormatAxiomRank(char *pBuffer, int BufferSize, const std::optional<int64_t> &Rank)
-	{
-		if(Rank.has_value())
-			str_format(pBuffer, BufferSize, "#%lld", (long long)*Rank);
-		else
-			str_copy(pBuffer, Localize("Not ranked"), BufferSize);
-	}
-
-	void RenderAxiomModeColumn(CUi *pUi, CScrollRegion &ScrollRegion, CUIRect Column, const char *pModeName, const SQmAxiomModeResult &ModeResult)
-	{
-		CUIRect Row;
-		Column.HSplitTop(17.0f, &Row, &Column);
-		RenderAxiomLabel(pUi, ScrollRegion, Row, pModeName, 12.0f, TEXTALIGN_ML);
-		Column.HSplitTop(3.0f, nullptr, &Column);
-
-		if(!ModeResult.m_HasData)
-		{
-			Column.HSplitTop(28.0f, &Row, &Column);
-			RenderAxiomLabel(pUi, ScrollRegion, Row, AxiomScoreStatusText(ModeResult.m_Status), 9.0f, TEXTALIGN_ML);
-			return;
-		}
-
-		const SQmAxiomModeScore &Score = ModeResult.m_Score;
-		char aValue[128];
-		str_format(aValue, sizeof(aValue), "%lld", (long long)Score.m_Points);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Points"), aValue);
-		FormatAxiomRank(aValue, sizeof(aValue), Score.m_GlobalRank);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Global rank"), aValue);
-		FormatAxiomRank(aValue, sizeof(aValue), Score.m_TeamRank);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Team rank"), aValue);
-		str_format(aValue, sizeof(aValue), "%lld", (long long)Score.m_TotalMapsCompleted);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Completed maps"), aValue);
-		str_format(aValue, sizeof(aValue), "%lld", (long long)Score.m_PerformancePoints);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Performance points"), aValue);
-		str_format(aValue, sizeof(aValue), "%lld", (long long)Score.m_TotalPlayTime);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Play time"), aValue);
-		str_format(aValue, sizeof(aValue), "%lld", (long long)Score.m_Mileage);
-		RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Mileage"), aValue);
-
-		for(const SQmAxiomDifficultyStats &Difficulty : Score.m_vDifficulties)
-		{
-			Column.HSplitTop(7.0f, nullptr, &Column);
-			Column.HSplitTop(15.0f, &Row, &Column);
-			RenderAxiomLabel(pUi, ScrollRegion, Row, Difficulty.m_Name.c_str(), 10.0f, TEXTALIGN_ML);
-			str_format(aValue, sizeof(aValue), "%lld", (long long)Difficulty.m_Points);
-			RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Points"), aValue);
-			FormatAxiomRank(aValue, sizeof(aValue), Difficulty.m_GlobalRank);
-			RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Global rank"), aValue);
-			FormatAxiomRank(aValue, sizeof(aValue), Difficulty.m_TeamRank);
-			RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Team rank"), aValue);
-			if(Difficulty.m_TotalMaps.has_value())
-				str_format(aValue, sizeof(aValue), "%lld / %lld", (long long)Difficulty.m_CompletedMaps, (long long)*Difficulty.m_TotalMaps);
-			else
-				str_format(aValue, sizeof(aValue), "%lld (+%lld)", (long long)Difficulty.m_CompletedMaps, (long long)Difficulty.m_RemainingMaps);
-			RenderAxiomValueRow(pUi, ScrollRegion, Column, Localize("Maps"), aValue);
-		}
-	}
+	// 记分板未打开时每帧预热的 Axiom 分数条数：够让打开时立刻有数据，又不会无谓刷接口。
+	constexpr int AXIOM_SCOREBOARD_PREFETCH_BUDGET = 12;
 
 	uint64_t ScoreboardPresentationNodeKey(const char *pScope)
 	{
@@ -198,22 +107,21 @@ namespace
 	struct SSoundMuteButtonDef
 	{
 		int CConfig::*m_pConfig;
-		EQmIcon m_Icon;
 		const char *m_pIcon;
 		const char *m_pTitle;
 		const char *m_pDescription;
 	};
 
 	static const SSoundMuteButtonDef gs_aSoundMuteButtonDefs[] = {
-		{&CConfig::m_ClSndMuteWeapon, EQmIcon::CIRCLE, FontIcons::FONT_ICON_CIRCLE, "武器音效", "屏蔽主要武器发射与命中相关声音。"},
-		{&CConfig::m_ClSndMuteWeaponSwitch, EQmIcon::ARROWS_LEFT_RIGHT, FontIcons::FONT_ICON_ARROWS_LEFT_RIGHT, "武器切换音效", "屏蔽武器切换及相关切换提示音。"},
-		{&CConfig::m_ClSndMuteWeaponNoAmmo, EQmIcon::TRIANGLE_EXCLAMATION, FontIcons::FONT_ICON_TRIANGLE_EXCLAMATION, "无弹药提示音", "屏蔽武器无弹药时的提示音。"},
-		{&CConfig::m_ClSndMuteHook, EQmIcon::ARROWS_ROTATE, FontIcons::FONT_ICON_ARROWS_ROTATE, "钩子音效", "屏蔽钩子发射、收回等相关声音。"},
-		{&CConfig::m_ClSndMuteMovement, EQmIcon::ARROWS_UP_DOWN, FontIcons::FONT_ICON_ARROWS_UP_DOWN, "移动音效", "屏蔽行走与跳跃等移动相关声音。"},
-		{&CConfig::m_ClSndMutePlayerState, EQmIcon::HEART_CRACK, FontIcons::FONT_ICON_HEART_CRACK, "玩家状态音效", "屏蔽玩家状态变化相关声音。"},
-		{&CConfig::m_ClSndMutePickup, EQmIcon::SQUARE_PLUS, FontIcons::FONT_ICON_SQUARE_PLUS, "拾取音效", "屏蔽道具与武器拾取相关声音。"},
-		{&CConfig::m_ClSndMuteFlag, EQmIcon::FLAG_CHECKERED, FontIcons::FONT_ICON_FLAG_CHECKERED, "旗帜音效", "屏蔽 CTF 旗帜事件相关声音。"},
-		{&CConfig::m_ClSndMuteMapSound, EQmIcon::MAP, FontIcons::FONT_ICON_MAP, "地图音效", "屏蔽地图环境与脚本触发音效。"},
+		{&CConfig::m_ClSndMuteWeapon, FontIcons::FONT_ICON_CIRCLE, "武器音效", "屏蔽主要武器发射与命中相关声音。"},
+		{&CConfig::m_ClSndMuteWeaponSwitch, FontIcons::FONT_ICON_ARROWS_LEFT_RIGHT, "武器切换音效", "屏蔽武器切换及相关切换提示音。"},
+		{&CConfig::m_ClSndMuteWeaponNoAmmo, FontIcons::FONT_ICON_TRIANGLE_EXCLAMATION, "无弹药提示音", "屏蔽武器无弹药时的提示音。"},
+		{&CConfig::m_ClSndMuteHook, FontIcons::FONT_ICON_ARROWS_ROTATE, "钩子音效", "屏蔽钩子发射、收回等相关声音。"},
+		{&CConfig::m_ClSndMuteMovement, FontIcons::FONT_ICON_ARROWS_UP_DOWN, "移动音效", "屏蔽行走与跳跃等移动相关声音。"},
+		{&CConfig::m_ClSndMutePlayerState, FontIcons::FONT_ICON_HEART_CRACK, "玩家状态音效", "屏蔽玩家状态变化相关声音。"},
+		{&CConfig::m_ClSndMutePickup, FontIcons::FONT_ICON_SQUARE_PLUS, "拾取音效", "屏蔽道具与武器拾取相关声音。"},
+		{&CConfig::m_ClSndMuteFlag, FontIcons::FONT_ICON_FLAG_CHECKERED, "旗帜音效", "屏蔽 CTF 旗帜事件相关声音。"},
+		{&CConfig::m_ClSndMuteMapSound, FontIcons::FONT_ICON_MAP, "地图音效", "屏蔽地图环境与脚本触发音效。"},
 	};
 	static_assert((sizeof(gs_aSoundMuteButtonDefs) / sizeof(gs_aSoundMuteButtonDefs[0])) == 9, "Sound mute button count mismatch");
 	constexpr float CLIENT_BRAND_LABEL_GAP = 3.0f;
@@ -266,7 +174,7 @@ namespace
 		return ScoreboardUiColorSurface(AlphaScale);
 	}
 
-	int DoScoreboardMediaIconButton(CUi *pUi, ITextRender *pTextRender, CButtonContainer *pButtonContainer, EQmIcon Icon, const char *pIcon, const CUIRect *pRect, bool Enabled, ColorRGBA ButtonColor, float ContentAlpha)
+	int DoScoreboardMediaIconButton(CUi *pUi, ITextRender *pTextRender, CButtonContainer *pButtonContainer, const char *pIcon, const CUIRect *pRect, bool Enabled, ColorRGBA ButtonColor, float ContentAlpha)
 	{
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(pUi);
 		const float IconAlpha = std::clamp(ContentAlpha, 0.0f, 1.0f);
@@ -274,20 +182,24 @@ namespace
 
 		const ColorRGBA PreviousTextColor = pTextRender->GetTextColor();
 		const ColorRGBA PreviousOutlineColor = pTextRender->GetTextOutlineColor();
+		pTextRender->SetFontPreset(EFontPreset::ICON_FONT);
+		pTextRender->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING);
 		pTextRender->TextOutlineColor(pTextRender->DefaultTextOutlineColor().WithMultipliedAlpha(IconAlpha));
 		pTextRender->TextColor(pTextRender->DefaultTextColor().WithMultipliedAlpha(IconAlpha));
 
 		CUIRect Label;
 		pRect->HMargin(2.0f, &Label);
-		pUi->DoLabel_QmIcon(&Label, Icon, pIcon, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		pUi->DoLabel(&Label, pIcon, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 
 		if(!Enabled)
 		{
 			pTextRender->TextColor(ColorRGBA(1.0f, 0.0f, 0.0f, IconAlpha));
 			pTextRender->TextOutlineColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f));
-			pUi->DoLabel_QmIcon(&Label, EQmIcon::SLASH, FontIcons::FONT_ICON_SLASH, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+			pUi->DoLabel(&Label, FontIcons::FONT_ICON_SLASH, Label.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 		}
 
+		pTextRender->SetRenderFlags(0);
+		pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		pTextRender->TextOutlineColor(PreviousOutlineColor);
 		pTextRender->TextColor(PreviousTextColor);
 
@@ -355,44 +267,28 @@ bool CScoreboard::HasQmAxiomScoreMode()
 
 void CScoreboard::QmAxiomScorePoints(const char *pPlayerName, bool Visible, char *pBuffer, int BufferSize) const
 {
-	pBuffer[0] = ' ';
+	pBuffer[0] = '\0';
 	if(!Visible)
 		return;
 
-	// 上游记分板积分列：基于 v1 查询缓存的只读视图，不发起请求。
-	const SQmAxiomPlayerResult *pResult = GameClient()->m_QmAxiomScores.GetResult(pPlayerName);
-	if(pResult == nullptr || m_QmAxiomScoreModeFrame == EQmAxiomMode::NONE)
-	{
-		str_copy(pBuffer, "...", BufferSize);
-		return;
-	}
-
-	EQmAxiomScoreStatus Status = pResult->m_SearchStatus;
-	int64_t Points = 0;
-	if(Status == EQmAxiomScoreStatus::READY)
-	{
-		const SQmAxiomModeResult &ModeResult = pResult->Mode(m_QmAxiomScoreModeFrame);
-		Status = ModeResult.m_Status;
-		Points = ModeResult.m_Score.m_Points;
-	}
-
-	switch(Status)
+	const SQmAxiomLookupResult Lookup = GameClient()->m_QmAxiomScores.GetLookup(pPlayerName);
+	switch(Lookup.m_Status)
 	{
 	case EQmAxiomScoreStatus::READY:
-		str_format(pBuffer, BufferSize, "%lld", (long long)Points);
+		str_format(pBuffer, BufferSize, "%lld", (long long)Lookup.m_Points);
 		break;
 	case EQmAxiomScoreStatus::FETCHING:
 	case EQmAxiomScoreStatus::NOT_REQUESTED:
 		str_copy(pBuffer, "...", BufferSize);
 		break;
-	case EQmAxiomScoreStatus::NOT_FOUND:
-	case EQmAxiomScoreStatus::AMBIGUOUS:
-		str_copy(pBuffer, "-", BufferSize);
-		break;
 	case EQmAxiomScoreStatus::HTTP_ERROR:
 	case EQmAxiomScoreStatus::API_ERROR:
 	case EQmAxiomScoreStatus::INVALID_RESPONSE:
 		str_copy(pBuffer, "?", BufferSize);
+		break;
+	case EQmAxiomScoreStatus::NOT_FOUND:
+	case EQmAxiomScoreStatus::AMBIGUOUS:
+		str_copy(pBuffer, "-", BufferSize);
 		break;
 	}
 }
@@ -434,35 +330,6 @@ void CScoreboard::OnConsoleInit()
 void CScoreboard::OnInit()
 {
 	m_DeadTeeTexture = Graphics()->LoadTexture("deadtee.png", IStorage::TYPE_ALL);
-}
-
-void CScoreboard::ResetTexts()
-{
-	for(CPlayerElement &Player : m_aPlayers)
-	{
-		Player.m_Score.Reset(TextRender());
-		Player.m_ScoreMillis.Reset(TextRender());
-		Player.m_Name.Reset(TextRender());
-		Player.m_ReadyMark.Reset(TextRender());
-		Player.m_Clan.Reset(TextRender());
-		Player.m_Ping.Reset(TextRender());
-	}
-	m_TitleScore.Reset(TextRender());
-	m_TitleScoreMillis.Reset(TextRender());
-	m_HeadlineScore.Reset(TextRender());
-	m_HeadlineName.Reset(TextRender());
-	m_HeadlineClan.Reset(TextRender());
-	m_HeadlinePing.Reset(TextRender());
-}
-
-void CScoreboard::OnShutdown()
-{
-	ResetTexts();
-}
-
-void CScoreboard::OnWindowResize()
-{
-	ResetTexts();
 }
 
 void CScoreboard::OnReset()
@@ -593,8 +460,7 @@ void CScoreboard::RenderTitleScore(CUIRect ScoreLabel, int Team, float TitleFont
 				GameClient()->m_MapBestTimeSeconds,
 				GameClient()->m_MapBestTimeSeconds == FinishTime::NOT_FINISHED_MILLIS,
 				GameClient()->m_MapBestTimeMillis,
-				GameClient()->m_ReceivedDDNetPlayerFinishTimesMillis,
-				m_TitleScore, m_TitleScoreMillis, TextRender()->DefaultTextColor());
+				GameClient()->m_ReceivedDDNetPlayerFinishTimesMillis);
 			return;
 		}
 	}
@@ -911,17 +777,16 @@ void CScoreboard::RenderMediaControls(CUIRect Controls)
 
 	static CButtonContainer s_SmtcPrevButton;
 	const float PrevButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_SmtcPrevButton) * ContentAlpha;
-	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPrevButton, EQmIcon::BACKWARD_STEP, FontIcons::FONT_ICON_BACKWARD_STEP, &PrevButton, CanPrev && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PrevButtonAlpha), ContentAlpha))
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPrevButton, FontIcons::FONT_ICON_BACKWARD_STEP, &PrevButton, CanPrev && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PrevButtonAlpha), ContentAlpha))
 	{
 		GameClient()->m_SystemMediaControls.Previous();
 	}
 	RestoreTextColors();
 
 	static CButtonContainer s_SmtcPlayButton;
-	const EQmIcon PlayIconEnum = MediaState.m_Playing ? EQmIcon::PAUSE : EQmIcon::PLAY;
 	const char *pPlayIcon = MediaState.m_Playing ? FontIcons::FONT_ICON_PAUSE : FontIcons::FONT_ICON_PLAY;
 	const float PlayButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_SmtcPlayButton) * ContentAlpha;
-	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPlayButton, PlayIconEnum, pPlayIcon, &PlayButton, CanToggle && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PlayButtonAlpha), ContentAlpha))
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPlayButton, pPlayIcon, &PlayButton, CanToggle && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PlayButtonAlpha), ContentAlpha))
 	{
 		GameClient()->m_SystemMediaControls.PlayPause();
 	}
@@ -929,7 +794,7 @@ void CScoreboard::RenderMediaControls(CUIRect Controls)
 
 	static CButtonContainer s_SmtcNextButton;
 	const float NextButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_SmtcNextButton) * ContentAlpha;
-	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcNextButton, EQmIcon::FORWARD_STEP, FontIcons::FONT_ICON_FORWARD_STEP, &NextButton, CanNext && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, NextButtonAlpha), ContentAlpha))
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcNextButton, FontIcons::FONT_ICON_FORWARD_STEP, &NextButton, CanNext && m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, NextButtonAlpha), ContentAlpha))
 	{
 		GameClient()->m_SystemMediaControls.Next();
 	}
@@ -1100,7 +965,7 @@ void CScoreboard::RenderSoundMuteBar(CUIRect ScoreboardRect)
 		const ColorRGBA ButtonColor = Active ?
 						      ColorRGBA(1.0f, 0.32f, 0.32f, 0.95f * RenderAlpha) :
 						      ColorRGBA(0.82f, 0.88f, 0.96f, 0.45f * RenderAlpha);
-		if(Ui()->DoButton_QmIcon(&s_aButtons[i], gs_aSoundMuteButtonDefs[i].m_Icon, gs_aSoundMuteButtonDefs[i].m_pIcon, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, Clickable, ButtonColor) && Clickable)
+		if(Ui()->DoButton_FontIcon(&s_aButtons[i], gs_aSoundMuteButtonDefs[i].m_pIcon, 0, &Button, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, Clickable, ButtonColor) && Clickable)
 			g_Config.*gs_aSoundMuteButtonDefs[i].m_pConfig ^= 1;
 		RestoreTextColors();
 
@@ -1424,12 +1289,8 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	CUIRect Headline;
 	Scoreboard.HSplitTop(HeadlineFontsize * 2.0f, &Headline, &Scoreboard);
 	const float HeadlineY = Headline.y + Headline.h / 2.0f - HeadlineFontsize / 2.0f;
-	const ColorRGBA HeadlineColor = TextRender()->DefaultTextColor();
-	m_HeadlineScore.Update(TextRender(), TimeScore ? Localize("Time") : Localize("Score"), HeadlineFontsize);
-	m_HeadlineName.Update(TextRender(), Localize("Name"), HeadlineFontsize);
-	m_HeadlineClan.Update(TextRender(), Localize("Clan"), HeadlineFontsize);
-	m_HeadlinePing.Update(TextRender(), Localize("Ping"), HeadlineFontsize);
-	m_HeadlineScore.Render(TextRender(), vec2(ScoreOffset + ScoreLength - m_HeadlineScore.Width(), HeadlineY), HeadlineColor);
+	const char *pScore = TimeScore ? Localize("Time") : Localize("Score");
+	TextRender()->Text(ScoreOffset + ScoreLength - TextRender()->TextWidth(HeadlineFontsize, pScore), HeadlineY, HeadlineFontsize, pScore);
 	// Points column header: only render when enabled
 	if(ShowPoints)
 	{
@@ -1437,19 +1298,21 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		const char *pPointsLabel = AxiomScoreColumn ? QmAxiomModeName(m_QmAxiomScoreModeFrame) : Localize("Points");
 		TextRender()->Text(PointsOffset + PointsLength - TextRender()->TextWidth(HeadlineFontsize, pPointsLabel), HeadlineY, HeadlineFontsize, pPointsLabel);
 	}
-	m_HeadlineName.Render(TextRender(), vec2(NameOffset, HeadlineY), HeadlineColor);
+	TextRender()->Text(NameOffset, HeadlineY, HeadlineFontsize, Localize("Name"));
 	if(RowDetail.m_ShowClan)
 	{
-		m_HeadlineClan.Render(TextRender(), vec2(ClanOffset + (ClanLength - m_HeadlineClan.Width()) / 2.0f, HeadlineY), HeadlineColor);
+		const char *pClanLabel = Localize("Clan");
+		TextRender()->Text(ClanOffset + (ClanLength - TextRender()->TextWidth(HeadlineFontsize, pClanLabel)) / 2.0f, HeadlineY, HeadlineFontsize, pClanLabel);
 	}
-	m_HeadlinePing.Render(TextRender(), vec2(PingOffset + PingLength - m_HeadlinePing.Width(), HeadlineY), HeadlineColor);
+	const char *pPingLabel = Localize("Ping");
+	TextRender()->Text(PingOffset + PingLength - TextRender()->TextWidth(HeadlineFontsize, pPingLabel), HeadlineY, HeadlineFontsize, pPingLabel);
 
 	// render player entries
 	int PrevDDTeam = -1;
 	int &CurrentDDTeamSize = State.m_CurrentDDTeamSize;
 
 	char aBuf[64];
-	int MaxTeamSize = GameClient()->MaxTeamSize();
+	int MaxTeamSize = Config()->m_SvMaxTeamSize;
 	const CAnimState *pIdleState = CAnimState::GetIdle();
 	const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
 	const char *pLocalClan = LocalClientId >= 0 ? GameClient()->m_aClients[LocalClientId].m_aClan : "";
@@ -1501,7 +1364,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 
 			if(EndsDDTeam)
 			{
-				if(DDTeam == GameClient()->m_Teams.TeamSuper())
+				if(DDTeam == TEAM_SUPER)
 					str_copy(aBuf, Localize("Super"));
 				else if(CurrentDDTeamSize > 1)
 					str_format(aBuf, sizeof(aBuf), Localize("Team %d (%d/%d)"), DDTeam, CurrentDDTeamSize, MaxTeamSize);
@@ -2419,9 +2282,8 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 		ColorRGBA FriendActionColor = Client.m_Friend ? ColorRGBA(0.95f, 0.3f, 0.3f, 0.85f * pUi->ButtonColorMul(&pPopupContext->m_FriendAction)) :
 								ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * pUi->ButtonColorMul(&pPopupContext->m_FriendAction));
-		const EQmIcon FriendActionIconEnum = pUi->HotItem() == &pPopupContext->m_FriendAction && Client.m_Friend ? EQmIcon::HEART_CRACK : EQmIcon::HEART;
 		const char *pFriendActionIcon = pUi->HotItem() == &pPopupContext->m_FriendAction && Client.m_Friend ? FontIcons::FONT_ICON_HEART_CRACK : FontIcons::FONT_ICON_HEART;
-		if(pUi->DoButton_QmIcon(&pPopupContext->m_FriendAction, FriendActionIconEnum, pFriendActionIcon, Client.m_Friend, &Action, BUTTONFLAG_LEFT, ActionCorners, true, FriendActionColor))
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_FriendAction, pFriendActionIcon, Client.m_Friend, &Action, BUTTONFLAG_LEFT, ActionCorners, true, FriendActionColor))
 		{
 			if(Client.m_Friend)
 			{
@@ -2437,7 +2299,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 		Action = CUiV2LegacyAdapter::ToCUIRect(vActions[1].m_Box);
 
-		if(pUi->DoButton_QmIcon(&pPopupContext->m_MuteAction, EQmIcon::BAN, FontIcons::FONT_ICON_BAN, Client.m_ChatIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_MuteAction, FontIcons::FONT_ICON_BAN, Client.m_ChatIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
 		{
 			Client.m_ChatIgnore ^= 1;
 		}
@@ -2445,9 +2307,8 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 		Action = CUiV2LegacyAdapter::ToCUIRect(vActions[2].m_Box);
 
-		const EQmIcon EmoticonActionIconEnum = Client.m_EmoticonIgnore ? EQmIcon::COMMENT_SLASH : EQmIcon::COMMENT;
 		const char *EmoticonActionIcon = Client.m_EmoticonIgnore ? FontIcons::FONT_ICON_COMMENT_SLASH : FontIcons::FONT_ICON_COMMENT;
-		if(pUi->DoButton_QmIcon(&pPopupContext->m_EmoticonAction, EmoticonActionIconEnum, EmoticonActionIcon, Client.m_EmoticonIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
+		if(pUi->DoButton_FontIcon(&pPopupContext->m_EmoticonAction, EmoticonActionIcon, Client.m_EmoticonIgnore, &Action, BUTTONFLAG_LEFT, ActionCorners))
 		{
 			Client.m_EmoticonIgnore ^= 1;
 		}
@@ -2499,43 +2360,6 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 				pScoreboard->Console()->ExecuteLine(aEscapedCommand);
 			}
 		}
-	}
-
-	if(pPopupContext->m_ShowAxiomScores)
-	{
-		CUIRect Title, ScoresView;
-		View.HSplitTop(8.0f, nullptr, &View);
-		View.HSplitTop(17.0f, &Title, &ScoresView);
-		pUi->DoLabel(&Title, Localize("Axiom scores"), 12.0f, TEXTALIGN_ML);
-		ScoresView.HSplitTop(3.0f, nullptr, &ScoresView);
-
-		CScrollRegionParams ScrollParams = QmScrollRegionParamsForSize(EQmScrollSize::SMALL);
-		ScrollParams.m_ScrollUnit = 32.0f;
-		ScrollParams.m_ScrollbarAlwaysReserved = true;
-		ScrollParams.m_WheelOwnerPriority = EUiWheelOwnerPriority::POPUP;
-		ScrollParams.m_pWheelOwnerId = pPopupContext;
-		vec2 ScrollOffset;
-		pPopupContext->m_AxiomScrollRegion.Begin(&ScoresView, &ScrollOffset, &ScrollParams);
-		CUIRect Content = ScoresView;
-		Content.y += ScrollOffset.y;
-
-		const SQmAxiomPlayerResult *pResult = pScoreboard->GameClient()->m_QmAxiomScores.GetResult(pPopupContext->m_aAxiomPlayerName);
-		const bool HasModeData = pResult != nullptr && (pResult->Mode(EQmAxiomMode::GORES).m_HasData || pResult->Mode(EQmAxiomMode::AXRACE).m_HasData);
-		if(pResult == nullptr || (pResult->m_SearchStatus != EQmAxiomScoreStatus::READY && !HasModeData))
-		{
-			CUIRect Status;
-			Content.HSplitTop(30.0f, &Status, &Content);
-			const EQmAxiomScoreStatus StatusValue = pResult ? pResult->m_SearchStatus : EQmAxiomScoreStatus::NOT_REQUESTED;
-			RenderAxiomLabel(pUi, pPopupContext->m_AxiomScrollRegion, Status, AxiomScoreStatusText(StatusValue), 10.0f, TEXTALIGN_ML);
-		}
-		else
-		{
-			CUIRect GoresColumn, AxRaceColumn;
-			Content.VSplitMid(&GoresColumn, &AxRaceColumn, 10.0f);
-			RenderAxiomModeColumn(pUi, pPopupContext->m_AxiomScrollRegion, GoresColumn, QmAxiomModeName(EQmAxiomMode::GORES), pResult->Mode(EQmAxiomMode::GORES));
-			RenderAxiomModeColumn(pUi, pPopupContext->m_AxiomScrollRegion, AxRaceColumn, QmAxiomModeName(EQmAxiomMode::AXRACE), pResult->Mode(EQmAxiomMode::AXRACE));
-		}
-		pPopupContext->m_AxiomScrollRegion.End();
 	}
 
 	return CUi::POPUP_KEEP_OPEN;

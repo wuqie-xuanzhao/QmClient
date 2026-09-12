@@ -1282,7 +1282,7 @@ void CQmClient::OnShutdown()
 		SendQmClientLifecyclePing("shutdown", m_pQmClientLifecycleStopTask);
 	}
 
-	auto AbortTask = [](std::shared_ptr<IHttpRequest> &pTask) {
+	auto AbortTask = [](auto &pTask) {
 		if(pTask)
 		{
 			pTask->Abort();
@@ -2175,7 +2175,7 @@ void CQmClient::UpdateQmDeveloperPresence()
 
 void CQmClient::ResetQmClientRecognitionTasks()
 {
-	auto AbortTask = [](std::shared_ptr<IHttpRequest> &pTask) {
+	auto AbortTask = [](auto &pTask) {
 		if(pTask)
 		{
 			pTask->Abort();
@@ -2649,7 +2649,7 @@ void CQmClient::InitTitleAuthentication()
 		RefreshTitleProfile();
 }
 
-void CQmClient::StartTitleRequest(const char *pPath, const char *pBody, std::shared_ptr<CHttpRequest> &pTask)
+void CQmClient::StartTitleRequest(const char *pPath, const char *pBody, std::shared_ptr<IHttpRequest> &pTask)
 {
 	char aUrl[512];
 	str_format(aUrl, sizeof(aUrl), "https://qmclient.icu/api/v1/titles/%s", pPath);

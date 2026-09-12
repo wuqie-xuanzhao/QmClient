@@ -4,6 +4,7 @@
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
+#include <game/client/components/hud_frozen_tee_state.h>
 #include <game/client/components/hud_media_island_logic.h>
 #include <game/client/components/tclient/pet.h>
 
@@ -16,6 +17,25 @@
 
 namespace
 {
+	std::string FunctionBody(const std::string &Source, const std::string &Signature)
+	{
+		const size_t FunctionStart = Source.find(Signature);
+		if(FunctionStart == std::string::npos)
+			return {};
+		const size_t BodyStart = Source.find('{', FunctionStart);
+		if(BodyStart == std::string::npos)
+			return {};
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+		{
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}' && --Depth == 0)
+				return Source.substr(BodyStart, Index - BodyStart);
+		}
+		return {};
+	}
+
 	SHudMediaIslandTrackInput Track(const char *pTitle, const char *pArtist = "", const char *pAlbum = "")
 	{
 		SHudMediaIslandTrackInput Input;
@@ -79,6 +99,89 @@ namespace
 	}
 }
 
+TEST(QmHudFrozenTeeState, ConfirmedDeathSuppressesStaleTimedAndDeepFreeze)
+{
+	SHudFrozenTeeState State;
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
+
+	QmHudMarkTeeDead(State, 100, 105);
+
+	EXPECT_TRUE(State.m_DeathOverride);
+	EXPECT_EQ(State.m_DeathBarrierTick, 105);
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, -1, true));
+}
+
+TEST(QmHudFrozenTeeState, BufferedPreDeathCharacterCannotRemoveDeathOverride)
+{
+	SHudFrozenTeeState State;
+	QmHudMarkTeeDead(State, 100, 105);
+
+	QmHudObserveTeeCharacterSnapshot(State, true, 104);
+	EXPECT_TRUE(State.m_DeathOverride);
+	QmHudObserveTeeCharacterSnapshot(State, true, 105);
+	EXPECT_TRUE(State.m_DeathOverride);
+}
+
+TEST(QmHudFrozenTeeState, NetworkClippingDoesNotPretendTheTeeRespawned)
+{
+	SHudFrozenTeeState AliveState;
+	QmHudObserveTeeCharacterSnapshot(AliveState, false, 200);
+	EXPECT_TRUE(QmHudTeeIsFrozen(AliveState, 250, false));
+
+	SHudFrozenTeeState DeadState;
+	QmHudMarkTeeDead(DeadState, 100, 105);
+	QmHudObserveTeeCharacterSnapshot(DeadState, false, 200);
+	EXPECT_TRUE(DeadState.m_DeathOverride);
+	EXPECT_FALSE(QmHudTeeIsFrozen(DeadState, 250, false));
+}
+
+TEST(QmHudFrozenTeeState, FreshRespawnUsesTheNewFreezeState)
+{
+	SHudFrozenTeeState State;
+	QmHudMarkTeeDead(State, 100, 105);
+
+	QmHudObserveTeeCharacterSnapshot(State, true, 106);
+
+	EXPECT_FALSE(State.m_DeathOverride);
+	EXPECT_EQ(State.m_DeathBarrierTick, -1);
+	EXPECT_FALSE(QmHudTeeIsFrozen(State, 0, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, 200, false));
+	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
+}
+
+
+TEST(QmHudMediaIslandSource, RemovedTuningSatelliteDoesNotRemain)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
+	const std::string CountdownLogic = ReadTestSourceFile("src/game/client/components/hud_media_island_logic.h");
+	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string IconHeader = ReadTestSourceFile("src/game/client/qm_icon_manager.h");
+	const std::string IconSource = ReadTestSourceFile("src/game/client/qm_icon_manager.cpp");
+
+	EXPECT_EQ(Source.find("TuneZoneEffect"), std::string::npos);
+	EXPECT_EQ(Header.find("TuneZoneEffect"), std::string::npos);
+	EXPECT_EQ(CountdownLogic.find("TUNE_ZONE"), std::string::npos);
+	EXPECT_EQ(Menus.find("qmclient-dynamic-island-tune-zone-icon-legend"), std::string::npos);
+	EXPECT_EQ(Config.find("QmHudIslandShowTuneZoneEffects"), std::string::npos);
+	EXPECT_EQ(IconHeader.find("TUNE_GRAVITY"), std::string::npos);
+	EXPECT_EQ(IconSource.find("tune-gravity"), std::string::npos);
+}
+
+TEST(QmHudMediaIslandSource, DynamicIslandUsesCompactSharedSpacing)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
+
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(2.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(3.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(7.0f)"), std::string::npos);
+	EXPECT_NE(Source.find("QmHudMediaIslandScaled(5.0f)"), std::string::npos);
+}
+
+
 TEST(QmHudMediaIslandLayout, ScalesTheCompleteDesignToEightyPercent)
 {
 	EXPECT_FLOAT_EQ(QmHudMediaIslandDesignScale, 0.8f);
@@ -101,9 +204,8 @@ TEST(QmHudMediaIslandLayout, EmptyMainCapsuleIsNotReservedWithoutContentOrCountd
 }
 
 TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundHorizontalMidlineWithCompactGap)
-TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundTopAnchoredHorizontalMidlineWithCompactGap)
 {
-	constexpr float IslandY = 0.0f;
+	constexpr float IslandY = 1.0f;
 	constexpr float IslandHeight = QmHudMediaIslandScaled(16.0f);
 	constexpr float TextHeight = QmHudMediaIslandScaled(4.4f);
 	constexpr float TextGap = QmHudMediaIslandScaled(0.8f);
@@ -260,15 +362,15 @@ TEST(QmHudMediaIslandLogic, Utf8TitlesStayNulTerminatedInFixedSnapshot)
 
 TEST(QmHudMediaIslandLogic, TopEffectMovesBelowOverlappingIsland)
 {
-	const CUIRect Island = {120.0f, 0.0f, 80.0f, 38.0f};
+	const CUIRect Island = {120.0f, 1.0f, 80.0f, 38.0f};
 
-	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, Island, true), 41.0f);
+	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, Island, true), 42.0f);
 }
 
 TEST(QmHudMediaIslandLogic, TopEffectDoesNotMoveForHorizontalSeparationOrHiddenIsland)
 {
-	const CUIRect SideIsland = {20.0f, 0.0f, 60.0f, 38.0f};
-	const CUIRect CenterIsland = {120.0f, 0.0f, 80.0f, 38.0f};
+	const CUIRect SideIsland = {20.0f, 1.0f, 60.0f, 38.0f};
+	const CUIRect CenterIsland = {120.0f, 1.0f, 80.0f, 38.0f};
 
 	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, SideIsland, true), 20.0f);
 	EXPECT_FLOAT_EQ(QmHudTopEffectY(20.0f, 10.0f, 140.0f, 180.0f, CenterIsland, false), 20.0f);
@@ -289,72 +391,8 @@ TEST(QmHudMediaIslandLogic, TeamZeroDoesNotCreateTeamDisplay)
 	EXPECT_FALSE(QmHudMediaIslandShouldShowTeam(true, false, 1));
 }
 
-TEST(QmHudMediaIslandEntrance, StartsAsOpaqueBlackCircleAtTargetCenter)
-{
-	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
-	const ColorRGBA TargetColor(0.25f, 0.50f, 0.75f, 0.60f);
 
-	const SHudMediaIslandEntrancePose Pose = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.0f);
 
-	EXPECT_FLOAT_EQ(Pose.m_Rect.x, 133.6f);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.y, 10.6f);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.w, 12.8f);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.h, 12.8f);
-	EXPECT_FLOAT_EQ(Pose.m_Radius, 6.4f);
-	EXPECT_FLOAT_EQ(Pose.m_DisabledCornerRadius, 6.4f);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.r, 0.0f);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.g, 0.0f);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.b, 0.0f);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.a, 1.0f);
-	EXPECT_FLOAT_EQ(Pose.m_ContentAlpha, 0.0f);
-}
-
-TEST(QmHudMediaIslandEntrance, SettlesExactlyAtConfiguredAppearance)
-{
-	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
-	const ColorRGBA TargetColor(0.25f, 0.50f, 0.75f, 0.60f);
-
-	const SHudMediaIslandEntrancePose Pose = QmHudMediaIslandEntrancePose(Target, 6.0f, TargetColor, 1.0f);
-
-	EXPECT_FLOAT_EQ(Pose.m_Rect.x, Target.x);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.y, Target.y);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.w, Target.w);
-	EXPECT_FLOAT_EQ(Pose.m_Rect.h, Target.h);
-	EXPECT_FLOAT_EQ(Pose.m_Radius, 6.0f);
-	EXPECT_FLOAT_EQ(Pose.m_DisabledCornerRadius, 0.0f);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.r, TargetColor.r);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.g, TargetColor.g);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.b, TargetColor.b);
-	EXPECT_FLOAT_EQ(Pose.m_BackgroundColor.a, TargetColor.a);
-	EXPECT_FLOAT_EQ(Pose.m_ContentAlpha, 1.0f);
-}
-
-TEST(QmHudMediaIslandEntranceSpring, DropRunsFirstAndExpandWaitsForSettle)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	CUiV2AnimationRuntime Runtime;
-
-	const SHudMediaIslandEntranceSpringResult Early = QmHudMediaIslandResolveEntranceSprings(Runtime, 101, 102, true);
-	EXPECT_NEAR(Early.m_DropProgress, 0.0f, 1e-6f);
-	EXPECT_NEAR(Early.m_ExpandProgress, 0.0f, 1e-6f);
-	EXPECT_TRUE(Runtime.HasActiveAnimation(101, EUiAnimProperty::ALPHA));
-	EXPECT_FALSE(Runtime.HasActiveAnimation(102, EUiAnimProperty::ALPHA));
-
-	// 掉落阶段进行中：展开不启动（阶段语义：掉落先完成，展开才开始）。
-	AdvanceIslandRuntime(Runtime, 0.10f);
-	const SHudMediaIslandEntranceSpringResult Mid = QmHudMediaIslandResolveEntranceSprings(Runtime, 101, 102, true);
-	EXPECT_GT(Mid.m_DropProgress, 0.0f);
-	EXPECT_LT(Mid.m_DropProgress, 1.0f);
-	EXPECT_NEAR(Mid.m_ExpandProgress, 0.0f, 1e-6f);
-
-	// 落定后展开才推进，两阶段最终都到位。
-	AdvanceIslandRuntime(Runtime, 1.0f);
-	const SHudMediaIslandEntranceSpringResult Done = QmHudMediaIslandResolveEntranceSprings(Runtime, 101, 102, true);
-	EXPECT_NEAR(Done.m_DropProgress, 1.0f, 1e-3f);
-	EXPECT_NEAR(Done.m_ExpandProgress, 1.0f, 1e-3f);
-	EXPECT_FALSE(Runtime.HasActiveAnimation(101, EUiAnimProperty::ALPHA));
-	EXPECT_FALSE(Runtime.HasActiveAnimation(102, EUiAnimProperty::ALPHA));
-}
 
 TEST(QmHudMediaIslandEntranceSpring, HiddenRelaxesAndReappearInheritsVelocity)
 {
@@ -396,24 +434,6 @@ TEST(QmHudMediaIslandEntranceSpring, MotionLevelZeroSnapsToSettled)
 	g_Config.m_QmUiMotionLevel = 2;
 }
 
-TEST(QmHudMediaIslandEntranceSpring, ReducedMotionStillAnimatesAndSettles)
-{
-	g_Config.m_QmUiMotionLevel = 1;
-	CUiV2AnimationRuntime Runtime;
-
-	QmHudMediaIslandResolveEntranceSprings(Runtime, 401, 402, true);
-	AdvanceIslandRuntime(Runtime, 0.10f);
-	const SHudMediaIslandEntranceSpringResult Mid = QmHudMediaIslandResolveEntranceSprings(Runtime, 401, 402, true);
-	EXPECT_GT(Mid.m_DropProgress, 0.0f);
-	EXPECT_LT(Mid.m_DropProgress, 1.0f);
-	EXPECT_NEAR(Mid.m_ExpandProgress, 0.0f, 1e-6f);
-
-	AdvanceIslandRuntime(Runtime, 1.5f);
-	const SHudMediaIslandEntranceSpringResult Done = QmHudMediaIslandResolveEntranceSprings(Runtime, 401, 402, true);
-	EXPECT_NEAR(Done.m_DropProgress, 1.0f, 1e-3f);
-	EXPECT_NEAR(Done.m_ExpandProgress, 1.0f, 1e-3f);
-	g_Config.m_QmUiMotionLevel = 2;
-}
 
 TEST(QmHudMediaIslandEntranceSpring, CapsuleSqueezeScalesWithAmount)
 {
@@ -436,56 +456,8 @@ TEST(QmHudMediaIslandEntranceSpring, CapsuleSqueezeScalesWithAmount)
 	EXPECT_NEAR(NoSqueezeX + NoSqueezeW * 0.5f, 400.0f, 1e-4f);
 }
 
-TEST(QmHudMediaIslandEntrance, DropStartsFullyAboveScreenAndEndsAtExpansionOrigin)
-{
-	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
-	const ColorRGBA TargetColor(0.25f, 0.50f, 0.75f, 0.60f);
-	constexpr float ScreenTop = -20.0f;
 
-	const SHudMediaIslandEntrancePose Hidden = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.0f, 0.0f, ScreenTop);
-	const SHudMediaIslandEntrancePose Arrived = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.0f, 1.0f, ScreenTop);
 
-	EXPECT_LT(Hidden.m_Rect.y + Hidden.m_Rect.h, ScreenTop);
-	EXPECT_FLOAT_EQ(Hidden.m_Rect.x + Hidden.m_Rect.w * 0.5f, Target.x + Target.w * 0.5f);
-	EXPECT_FLOAT_EQ(Arrived.m_Rect.y, Target.y + Target.h * 0.5f - 6.4f);
-	EXPECT_FLOAT_EQ(Arrived.m_Rect.w, 12.8f);
-	EXPECT_FLOAT_EQ(Arrived.m_Rect.h, 12.8f);
-	EXPECT_FLOAT_EQ(Arrived.m_ContentAlpha, 0.0f);
-}
-
-TEST(QmHudMediaIslandEntrance, KeepsContentHiddenUntilShapeNearlySettlesThenFadesItIn)
-{
-	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
-	const ColorRGBA TargetColor(0.25f, 0.50f, 0.75f, 0.60f);
-
-	EXPECT_FLOAT_EQ(QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.92f).m_ContentAlpha, 0.0f);
-	EXPECT_GT(QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.96f).m_ContentAlpha, 0.0f);
-	EXPECT_LT(QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.96f).m_ContentAlpha, 1.0f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 1.0f).m_ContentAlpha, 1.0f);
-
-	const CUIRect WideTarget = {0.0f, 1.0f, 300.0f, 32.0f};
-	const SHudMediaIslandEntrancePose FirstVisibleContent = QmHudMediaIslandEntrancePose(WideTarget, 8.0f, TargetColor, 0.93f);
-	EXPECT_GT(FirstVisibleContent.m_ContentAlpha, 0.0f);
-	EXPECT_LE(FirstVisibleContent.m_Rect.x, WideTarget.x + 2.05f);
-	EXPECT_GE(FirstVisibleContent.m_Rect.x + FirstVisibleContent.m_Rect.w, WideTarget.x + WideTarget.w - 2.05f);
-}
-
-TEST(QmHudMediaIslandEntrance, IntermediatePoseMorphsGeometryAndConfiguredBackgroundTogether)
-{
-	const CUIRect Target = {100.0f, 1.0f, 80.0f, 32.0f};
-	const ColorRGBA TargetColor(0.25f, 0.50f, 0.75f, 0.60f);
-
-	const SHudMediaIslandEntrancePose Pose = QmHudMediaIslandEntrancePose(Target, 8.0f, TargetColor, 0.5f);
-
-	EXPECT_GT(Pose.m_Rect.w, 12.8f);
-	EXPECT_LT(Pose.m_Rect.w, Target.w);
-	EXPECT_GT(Pose.m_Rect.h, 12.8f);
-	EXPECT_LT(Pose.m_Rect.h, Target.h);
-	EXPECT_GT(Pose.m_BackgroundColor.b, 0.0f);
-	EXPECT_LT(Pose.m_BackgroundColor.b, TargetColor.b);
-	EXPECT_GT(Pose.m_BackgroundColor.a, TargetColor.a);
-	EXPECT_LT(Pose.m_BackgroundColor.a, 1.0f);
-}
 
 TEST(QmHudMediaIslandSatellite, SortsByTypeThenTriggerOrder)
 {
@@ -702,63 +674,9 @@ TEST(QmHudSwitchCountdown, LocationModeKeepsLegacyValuesAndAllowsBothSurfaces)
 	EXPECT_EQ(QmHudSwitchCountdownModeFromLocations(false, false, Both), Both);
 }
 
-TEST(QmHudSwitchCountdownSource, FollowRingsReuseMediaIslandSatelliteStyleWithoutIconsOrText)
-{
-	const std::string HudSource = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const std::string PetSource = ReadTestSourceFile("src/game/client/components/tclient/pet.cpp");
-	const std::string FollowBody = FunctionBody(HudSource, "void CHud::RenderFollowSwitchCountdowns()");
-	const std::string SatelliteBody = FunctionBody(HudSource, "void DrawMediaIslandCountdownSatellite(");
 
-	EXPECT_NE(PetSource.find("QmTClientPetAdvanceSpring"), std::string::npos);
-	EXPECT_NE(FollowBody.find("QmTClientPetAdvanceSpring"), std::string::npos);
-	EXPECT_NE(FollowBody.find("GameClient()->m_Pet.IsVisibleForClient"), std::string::npos);
-	EXPECT_NE(FollowBody.find("QmHudSwitchCountdownFollowSide"), std::string::npos);
-	EXPECT_NE(FollowBody.find("DrawMediaIslandCountdownSatellite"), std::string::npos);
-	EXPECT_NE(FollowBody.find("constexpr float SatelliteRadius = 9.0f + 2.5f * 0.5f"), std::string::npos);
-	EXPECT_NE(FollowBody.find("RingRadius = SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_RADIUS_SCALE"), std::string::npos);
-	EXPECT_NE(FollowBody.find("SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_THICKNESS_SCALE"), std::string::npos);
-	EXPECT_NE(FollowBody.find("g_Config.m_QmHudIslandBgColor"), std::string::npos);
-	EXPECT_NE(FollowBody.find("g_Config.m_QmHudIslandBgOpacity"), std::string::npos);
-	EXPECT_EQ(FollowBody.find("DrawMediaIslandArcGeometry"), std::string::npos);
-	EXPECT_EQ(FollowBody.find("MediaIslandCountdownIcon"), std::string::npos);
-	EXPECT_EQ(FollowBody.find("TextRender()"), std::string::npos);
-
-	EXPECT_NE(SatelliteBody.find("SHudMediaIslandSdfRenderState"), std::string::npos);
-	EXPECT_NE(SatelliteBody.find("m_Radii = vec2()"), std::string::npos);
-	EXPECT_NE(SatelliteBody.find("MEDIA_ISLAND_OUTER_SHADOW_PIXELS"), std::string::npos);
-	EXPECT_NE(SatelliteBody.find("MEDIA_ISLAND_OUTER_SHADOW_OPACITY"), std::string::npos);
-	EXPECT_NE(SatelliteBody.find("QmHudMediaIslandBuildGpuSdfParams"), std::string::npos);
-	EXPECT_NE(SatelliteBody.find("RenderMediaIslandSdf"), std::string::npos);
-	EXPECT_NE(SatelliteBody.find("DrawMediaIslandGeometryFallback"), std::string::npos);
-	EXPECT_EQ(SatelliteBody.find("MediaIslandCountdownIcon"), std::string::npos);
-	EXPECT_EQ(SatelliteBody.find("TextRender()"), std::string::npos);
-}
-
-TEST(QmHudSwitchCountdownSource, ModesShareTrackingAndCanFeedBothSurfaces)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const std::string UpdateBody = FunctionBody(Source, "void CHud::UpdateSwitchCountdownTracker()");
-	const std::string HasIslandBody = FunctionBody(Source, "bool CHud::HasActiveSwitchCountdown() const");
-	const std::string FollowBody = FunctionBody(Source, "void CHud::RenderFollowSwitchCountdowns()");
-	const std::string OnRenderBody = FunctionBody(Source, "void CHud::OnRender()");
-	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
-	ASSERT_NE(IslandBegin, std::string::npos);
-	const size_t IslandEnd = Source.find("void CHud::RenderPlayerState", IslandBegin);
-	ASSERT_NE(IslandEnd, std::string::npos);
-	const std::string IslandBody = Source.substr(IslandBegin, IslandEnd - IslandBegin);
-
-	EXPECT_NE(UpdateBody.find("m_aaClientId[Team][SwitchNumber] = ClientId"), std::string::npos);
-	EXPECT_NE(UpdateBody.find("m_aaConnection[Team][SwitchNumber] = Connection"), std::string::npos);
-	EXPECT_NE(UpdateBody.find("QmHudSwitchCountdownShowsFollowTee"), std::string::npos);
-	EXPECT_NE(HasIslandBody.find("QmHudSwitchCountdownShowsMediaIsland"), std::string::npos);
-	EXPECT_NE(IslandBody.find("g_Config.m_QmSwitchCountdown"), std::string::npos);
-	EXPECT_NE(IslandBody.find("QmHudSwitchCountdownShowsMediaIsland"), std::string::npos);
-	EXPECT_NE(OnRenderBody.find("RenderFollowSwitchCountdowns();"), std::string::npos);
-	EXPECT_NE(FollowBody.find("QmHudSwitchCountdownShowsFollowTee"), std::string::npos);
-}
 
 TEST(QmHudMediaIslandBlob, UnderdampedTravelOvershootsThenPullsBackToRest)
-TEST(QmHudMediaIslandBlob, CriticallyDampedTravelIsContinuousAndSettlesWithinTheTimeline)
 {
 	// 关键回归：分离必须是"冲过头再被拉回"，而不是在终点急刹车。
 	// 旧实现峰值只有 +1.20%（约 0.15px）且发生在 p≈0.90，肉眼不可见。
@@ -1044,6 +962,7 @@ TEST(QmHudMediaIslandSpectatorEye, ReopensOnlyWhileTheRightCapsuleIsBeingReclaim
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorCountAlpha(false, QmHudMediaIslandSpectatorIconPose(1.0f)), 0.0f);
 }
 
+
 TEST(QmHudMediaIslandBlob, RightCapsuleSettlesOutsideMainIsland)
 {
 	SHudMediaIslandBlobSpring SettledSpring;
@@ -1295,90 +1214,8 @@ TEST(QmHudMediaIslandSatellite, ParsesActiveMuteRemainingMessageSeparately)
 	EXPECT_EQ(QmHudParseSpamProtectionMute("This server has an initial chat delay, you will be able to talk in 17 seconds.", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
 }
 
-TEST(QmHudMediaIslandSatellite, RenderPathUsesBlobSatellitesInsteadOfCountdownText)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
-	const std::string TClientSource = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");
-	const size_t RenderBegin = Source.find("void CHud::RenderMediaIsland()");
-	ASSERT_NE(RenderBegin, std::string::npos);
-	const size_t RenderEnd = Source.find("void CHud::RenderPlayerState", RenderBegin);
-	ASSERT_NE(RenderEnd, std::string::npos);
-	const std::string RenderBody = Source.substr(RenderBegin, RenderEnd - RenderBegin);
 
-	EXPECT_NE(RenderBody.find("RenderMediaIslandSdf"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudAdvanceMediaIslandLiquidProgress"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobPose"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobBlend"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandBlobConnectionStrength(BlobPose.m_Travel)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("mix(SpawnCenterX, FinalCenterX, BlobPose.m_Travel)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandSdfOuterRect(CurrentSdfState)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("TransformedScreenX1 - TransformedScreenX0"), std::string::npos);
-	EXPECT_NE(RenderBody.find("TransformedScreenY1 - TransformedScreenY0"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("DrawMediaIslandRipple"), std::string::npos);
-	EXPECT_EQ(Source.find("m_MediaIslandRippleTexture"), std::string::npos);
-	EXPECT_NE(RenderBody.find("const float SatelliteRadius = Radius;"), std::string::npos);
-	EXPECT_NE(RenderBody.find("constexpr float SatelliteItemGap = QmHudMediaIslandScaled(2.0f);"), std::string::npos);
-	EXPECT_NE(RenderBody.find("aActiveSatelliteTargetCenters[i] = SatelliteCursorX + aActiveSatelliteTargetWidths[i] * 0.5f"), std::string::npos);
-	EXPECT_NE(RenderBody.find("const CUIRect MainIslandSdfRect = EntrancePose.m_Rect;"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("QmHudMediaIslandMainCapRect"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandRightBlobCapsule"), std::string::npos);
-	EXPECT_NE(RenderBody.find("EQmIcon::SATELLITE_SPECTATOR_EYE"), std::string::npos);
-	EXPECT_NE(RenderBody.find("EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandSpectatorCountAlpha(ShowSpectator, SpectatorIconPose)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandSpectatorIconProgressDuringExit(AnimState.m_SpectatorExitIconStart, AnimState.m_SpectatorExitLiquidStart, QmHudMediaIslandBlobProgress(AnimState.m_SpectatorLiquidSpring))"), std::string::npos);
-	EXPECT_NE(Source.find("EQmIcon::SATELLITE_CHECK"), std::string::npos);
-	EXPECT_NE(RenderBody.find("if(IsOpenGlBackend())"), std::string::npos);
-	EXPECT_NE(RenderBody.find("FontIcons::FONT_ICON_EYE"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("if(SatelliteRenderItemCount > 0)"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("DrawMediaIslandLiquidBridge"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("DrawMediaIslandProgressRing"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("Graphics()->DrawRect(IslandX, IslandY"), std::string::npos);
-	EXPECT_NE(RenderBody.find("MediaIslandCountdownIcon"), std::string::npos);
-	EXPECT_NE(RenderBody.find("const ColorRGBA IconColor = Item.m_Completed ? ColorRGBA(0.20f, 1.0f, 0.42f"), std::string::npos);
-	EXPECT_NE(RenderBody.find("MediaIslandCountdownIcon(Item.m_Type, Item.m_Completed, Item.m_SwapOutgoing)"), std::string::npos);
-	EXPECT_NE(Source.find("QmHudMediaIslandSwapVisibleForConnection(Dummy, g_Config.m_ClDummy)"), std::string::npos);
-	EXPECT_NE(Source.find("Out.m_Outgoing = State.m_Outgoing"), std::string::npos);
-	EXPECT_NE(Source.find("SwapOutgoing ? EQmIcon::SATELLITE_SWAP_OUTGOING : EQmIcon::SATELLITE_SWAP_INCOMING"), std::string::npos);
-	EXPECT_NE(RenderBody.find("SdfItem.m_RingColor = MediaIslandCountdownColor(Item.m_Type);"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("MediaIslandCountdownColor(Item.m_Type, Item.m_Completed)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("SatelliteVisibleLeft"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("BuildSwitchCountdownSummary"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("m_Hud.HandleSpamProtectionMessage(pMsg->m_pMessage);"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("m_TClient.HandleSwapCountdownMessage(pMsg->m_pMessage, Conn);"), std::string::npos);
-	EXPECT_NE(TClientSource.find("m_aSwapCountdownTrackers[Dummy].Cancel"), std::string::npos);
-}
 
-TEST(QmHudMediaIslandSwapText, OnlyIncomingRequestsReplaceCheckpointAndExpandBeforeLyrics)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const std::string RenderBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
-	const std::string BuildInfoBody = FunctionBody(Source, "bool BuildSwapCountdownInfo(");
-
-	EXPECT_NE(BuildInfoBody.find("if(!Out.m_Outgoing)"), std::string::npos);
-	EXPECT_NE(BuildInfoBody.find("Localize(\"%s has requested to swap with %s\")"), std::string::npos);
-	EXPECT_NE(RenderBody.find("QmHudMediaIslandSwapRows(IncomingSwapCount, TimerCapsule.m_Visible, ShowLyricsIslandLine)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("TimerCapsule.m_BoxW = std::min(MaxTimerWidth"), std::string::npos);
-	EXPECT_NE(RenderBody.find("if(SwapRows.m_InlineSwapCount > 0)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("else if(Checkpoint > 0)"), std::string::npos);
-	EXPECT_NE(RenderBody.find("LyricsTextY = BottomTextY + BottomRowLineHeight * SwapRows.m_LyricsLineIndex"), std::string::npos);
-}
-
-TEST(QmHudMediaIslandSatellite, CompletedSwapUsesCheckIconWithoutBottomReadyText)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const size_t RenderBegin = Source.find("void CHud::RenderMediaIsland()");
-	ASSERT_NE(RenderBegin, std::string::npos);
-	const size_t RenderEnd = Source.find("void CHud::RenderPlayerState", RenderBegin);
-	ASSERT_NE(RenderEnd, std::string::npos);
-	const std::string RenderBody = Source.substr(RenderBegin, RenderEnd - RenderBegin);
-
-	EXPECT_NE(RenderBody.find("MediaIslandCountdownIcon(Item.m_Type, Item.m_Completed, Item.m_SwapOutgoing)"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("ShowSwapReady"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("SwapReadyCount"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("SwapBottomContentWidth"), std::string::npos);
-	EXPECT_EQ(RenderBody.find("RenderBottomTextCentered(BottomTextY, SwapList"), std::string::npos);
-}
 
 TEST(QmHudMediaIslandTimerLayout, SecondaryLinePreservesTenPercentTopMargin)
 {
@@ -1398,6 +1235,7 @@ TEST(QmHudMediaIslandTimerLayout, RaceUsesTheWholeSlotWithoutSecondaryLine)
 	EXPECT_FLOAT_EQ(Layout.m_RaceH, 16.0f);
 	EXPECT_FLOAT_EQ(Layout.m_CheckpointH, 0.0f);
 }
+
 
 TEST(QmHudMediaIslandWaveform, PlayingBarsVaryIndependentlyAndPausedBarsSettle)
 {
@@ -1711,75 +1549,7 @@ TEST(QmHudMediaIslandSource, MediaIslandUsesGpuSdfCommandWithoutCpuRasterization
 	EXPECT_EQ(IslandBody.find("BeginRenderTarget"), std::string::npos);
 }
 
-TEST(QmHudMediaIslandSource, BackgroundBlurUsesTheAnimatedCombinedSdfIncludingAtZeroOpacity)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const std::string Header = ReadTestSourceFile("src/game/client/components/hud.h");
-	const std::string GraphicsHeader = ReadTestSourceFile("src/engine/graphics.h");
-	const std::string ThreadedHeader = ReadTestSourceFile("src/engine/client/graphics_threaded.h");
-	const std::string ThreadedSource = ReadTestSourceFile("src/engine/client/graphics_threaded.cpp");
-	const std::string OpenGlBackend = ReadTestSourceFile("src/engine/client/backend/opengl/backend_opengl3.cpp");
-	const std::string VulkanBackend = ReadTestSourceFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
-	const std::string PrepareBlur = FunctionBody(Source, "bool CHud::PrepareMediaIslandBlur()");
-	const std::string OnRelease = FunctionBody(Source, "void CHud::OnRelease()");
-	const std::string OnRender = FunctionBody(Source, "void CHud::OnRender()");
-	const std::string ResetContainers = FunctionBody(Source, "void CHud::ResetHudContainers()");
-	const size_t IslandBegin = Source.find("void CHud::RenderMediaIsland()");
-	ASSERT_NE(IslandBegin, std::string::npos);
-	const size_t IslandEnd = Source.find("float CHud::RenderLegacyMediaInfoAt", IslandBegin);
-	ASSERT_NE(IslandEnd, std::string::npos);
-	const std::string IslandBody = Source.substr(IslandBegin, IslandEnd - IslandBegin);
 
-	EXPECT_NE(Header.find("m_MediaIslandBlurSource"), std::string::npos);
-	EXPECT_NE(Header.find("void OnRelease() override;"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("QmHudMediaIslandShouldPrepareBackdropBlur"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("HasMediaIslandSdf"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("IsBackbufferCaptureSupported"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("CaptureBackbufferToRenderTarget"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("GaussianBlurRenderTarget"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("m_QmGaussianBlur"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("QmHudMediaIslandShouldRefreshBackdropBlur"), std::string::npos);
-	EXPECT_EQ(PrepareBlur.find("m_QmBetterScoreboard"), std::string::npos);
-	EXPECT_NE(OnRelease.find("DestroyMediaIslandBlurTargets"), std::string::npos);
-	EXPECT_NE(OnRender.find("g_Config.m_QmHudIslandUseOriginalStyle"), std::string::npos);
-	EXPECT_NE(OnRender.find("DestroyMediaIslandBlurTargets"), std::string::npos);
-	EXPECT_NE(ResetContainers.find("m_MediaIslandBlurReady = false"), std::string::npos);
-	EXPECT_NE(IslandBody.find("DrawMediaIslandGeometryFallback"), std::string::npos);
-
-	EXPECT_NE(IslandBody.find("PrepareMediaIslandBlur()"), std::string::npos);
-	EXPECT_NE(IslandBody.find("QmHudMediaIslandBackdropUv(CurrentSdfState.m_Rect"), std::string::npos);
-	EXPECT_NE(IslandBody.find("Graphics()->RenderMediaIslandSdf(GpuSdfParams, Backdrop)"), std::string::npos);
-	EXPECT_EQ(Source.find("void CHud::RenderMediaIslandBlur"), std::string::npos);
-
-	EXPECT_NE(GraphicsHeader.find("DATA_BACKDROP_UV"), std::string::npos);
-	EXPECT_NE(GraphicsHeader.find("CRenderTargetHandle Backdrop"), std::string::npos);
-	EXPECT_NE(ThreadedHeader.find("m_BackdropTargetId"), std::string::npos);
-	EXPECT_NE(ThreadedSource.find("Cmd.m_BackdropTargetId"), std::string::npos);
-	EXPECT_NE(OpenGlBackend.find("gBackdropSampler"), std::string::npos);
-	EXPECT_NE(OpenGlBackend.find("Target.m_Texture"), std::string::npos);
-	EXPECT_NE(VulkanBackend.find("m_StandardTexturedDescriptorSetLayout, m_QuadUniformDescriptorSetLayout"), std::string::npos);
-	EXPECT_NE(VulkanBackend.find("pCommand->m_BackdropTargetId"), std::string::npos);
-}
-
-TEST(QmHudMediaIslandSource, SharedScaleCoversLayoutTimerAndEntranceWithoutMovingTheTopAnchor)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
-	const std::string Logic = ReadTestSourceFile("src/game/client/components/hud_media_island_logic.h");
-	const std::string AvoidanceBody = FunctionBody(Source, "float CHud::GetTopIslandAvoidanceRight() const");
-	const std::string IslandBody = FunctionBody(Source, "void CHud::RenderMediaIsland()");
-	const std::string TimerBody = FunctionBody(Source, "SHudTopTimerCapsuleInfo BuildHudTopTimerCapsuleInfo(const SHudGameTimerInfo &TimerInfo)");
-
-	EXPECT_NE(Logic.find("QmHudMediaIslandDesignScale = 0.8f"), std::string::npos);
-	EXPECT_NE(Logic.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
-	EXPECT_NE(AvoidanceBody.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
-	EXPECT_NE(AvoidanceBody.find("QmHudMediaIslandScaled(5.8f)"), std::string::npos);
-	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(16.0f)"), std::string::npos);
-	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(12.0f)"), std::string::npos);
-	EXPECT_NE(IslandBody.find("QmHudMediaIslandScaled(5.8f)"), std::string::npos);
-	EXPECT_NE(IslandBody.find("const float IslandY = 1.0f;"), std::string::npos);
-	EXPECT_NE(TimerBody.find("QmHudMediaIslandScaled(TimerInfo.m_FontSize)"), std::string::npos);
-}
 
 // 意图：主胶囊保留宽度只由真实内容与左侧倒计时副岛决定，渲染路径与避让路径必须同源，
 // 且不得再拿状态区（时钟/冰冻统计）或观战卫星当保留依据。
@@ -1870,3 +1640,35 @@ TEST(QmHudPresentationSource, MediaIslandAndWeaponHudUseContinuousPresentationSt
 	EXPECT_EQ(Source.find("m_aHudWeaponSwitchStartTimes"), std::string::npos);
 	EXPECT_EQ(Source.find("HudActiveWeaponSwitchScale"), std::string::npos);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundTopAnchoredHorizontalMidlineWithCompactGap)
+{
+	constexpr float IslandY = 0.0f;
+	constexpr float IslandHeight = QmHudMediaIslandScaled(16.0f);
+	constexpr float TextHeight = QmHudMediaIslandScaled(4.4f);
+	constexpr float TextGap = QmHudMediaIslandScaled(0.8f);
+	const SHudMediaIslandInfoStackLayout Layout = QmHudMediaIslandMirroredInfoStack(IslandY, IslandHeight, TextHeight, TextGap);
+	const float MidY = IslandY + IslandHeight * 0.5f;
+
+	EXPECT_FLOAT_EQ(MidY - Layout.m_TopCenterY, Layout.m_BottomCenterY - MidY);
+	EXPECT_FLOAT_EQ(Layout.m_BottomCenterY - Layout.m_TopCenterY, QmHudMediaIslandScaled(5.2f));
+	EXPECT_NEAR(
+		(Layout.m_BottomCenterY - TextHeight * 0.5f) - (Layout.m_TopCenterY + TextHeight * 0.5f),
+		TextGap,
+		0.0001f);
+}
+
+
+

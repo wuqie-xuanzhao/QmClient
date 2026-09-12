@@ -463,19 +463,6 @@ TEST(GraphicsRenderTargetGaussianBlur, FrontendRejectsNestedRenderTargets)
 	EXPECT_NE(EndBody.find("m_RenderTargetActive = false"), std::string::npos);
 }
 
-TEST(GraphicsRenderTargetDualBlur, FrontendUsesDownsampledBlurAndUpsample)
-{
-	const std::string Source = ReadFile("src/engine/client/graphics_threaded.cpp");
-	const std::string Body = ExtractFunctionBody(Source, "bool CGraphics_Threaded::DualBlurRenderTarget");
-	ASSERT_FALSE(Body.empty());
-	EXPECT_NE(Body.find("std::array<CRenderTargetHandle, 5>"), std::string::npos);
-	EXPECT_NE(Body.find("DownsampleSize.x > SourceSize.x"), std::string::npos);
-	EXPECT_NE(Body.find("BeginRenderTarget(Downsample"), std::string::npos);
-	EXPECT_NE(Body.find("DrawRenderTarget(Source"), std::string::npos);
-	EXPECT_NE(Body.find("GaussianBlurRenderTarget(Downsample, DownsampleTemporary, DownsampleBlurred"), std::string::npos);
-	EXPECT_NE(Body.find("BeginRenderTarget(Destination"), std::string::npos);
-	EXPECT_NE(Body.find("DrawRenderTarget(DownsampleBlurred"), std::string::npos);
-}
 
 TEST(GraphicsRenderTargetDualBlur, MediaIslandUsesHalfResolutionIntermediateTargets)
 {

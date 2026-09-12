@@ -51,6 +51,12 @@ enum class EQmAxiomScoreStatus
 struct SQmAxiomLookupResult
 {
 	EQmAxiomScoreStatus m_Status = EQmAxiomScoreStatus::NOT_REQUESTED;
+	int64_t m_Points = 0;
+};
+
+struct SQmAxiomModeResult
+{
+	EQmAxiomScoreStatus m_Status = EQmAxiomScoreStatus::NOT_REQUESTED;
 	bool m_HasData = false;
 	SQmAxiomModeScore m_Score;
 	// 最近一次失败的具体原因（HTTP 超时 / 非 200 / 解析错误），成功时清空。
@@ -72,6 +78,7 @@ class CQmAxiomScores : public CComponent
 {
 	struct SCacheEntry
 	{
+		SQmAxiomPlayerResult m_Result;
 		SQmAxiomSearchMatch m_Match;
 		EQmAxiomScoreStatus m_SearchStatus = EQmAxiomScoreStatus::NOT_REQUESTED;
 		EQmAxiomScoreStatus m_PointsStatus = EQmAxiomScoreStatus::NOT_REQUESTED;
@@ -87,6 +94,8 @@ class CQmAxiomScores : public CComponent
 		std::vector<SQmDdStatsGameType> m_vDdStatsGameTypes;
 		int64_t m_LastDdStatsSuccessTick = 0;
 		int64_t m_LastDdStatsFailureTick = 0;
+		// 上游调度器使用的最近访问时间(缓存淘汰)。
+		int64_t m_LastAccessTick = 0;
 	};
 
 	struct SRequestSlot
@@ -102,6 +111,11 @@ class CQmAxiomScores : public CComponent
 	std::array<SRequestSlot, 2> m_aModeRequests;
 	SRequestSlot m_DdStatsRequest;
 	std::string m_ActivePlayerName;
+	// 上游 v2 调度器的多玩家请求槽与模式状态(与 dyl 固定槽位流程并存)。
+	std::map<std::string, SRequestSlot> m_SearchRequests;
+	std::map<std::string, SRequestSlot> m_ModeRequests;
+	EQmAxiomMode m_Mode = EQmAxiomMode::NONE;
+	int m_SearchStartsThisFrame = 0;
 	uint64_t m_Generation = 0;
 	IQmAxiomHttp *m_pHttpOverride = nullptr;
 	bool m_PersistentCacheDirty = false;
@@ -109,7 +123,8 @@ class CQmAxiomScores : public CComponent
 	int64_t m_LastSuccessfulSyncTimestamp = 0;
 
 	static bool IsFailureStatus(EQmAxiomScoreStatus Status);
-	static EQmAxiomScoreStatus ParseStatus(EQmAxiomParseResult Result);
+	static int ModeIndex(EQmAxiomMode Mode);
+	static EQmAxiomMode ModeFromIndex(int Index);
 	static bool IsWithinWindow(int64_t Timestamp, int64_t Now, int64_t WindowMs);
 
 	void AbortActiveRequests(bool ResetFetchingStates);
@@ -144,6 +159,7 @@ public:
 
 	// 本帧为记分板上这个玩家准备分数，必要时发起请求。必须早于 GetLookup。
 	void EnsureQueried(const char *pPlayerName);
+	SQmAxiomLookupResult GetLookup(const char *pPlayerName) const;
 	void Refresh(const char *pPlayerName);
 	// 测试可关闭外部 DDStats 请求，避免旧的 Axiom 请求断言被额外请求干扰。
 	void SetDdStatsEnabled(bool Enabled) { m_DdStatsEnabled = Enabled; }

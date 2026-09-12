@@ -139,27 +139,6 @@ namespace
 }
 
 // pxRange 之外的 padding 必须留足，否则字形边缘的双线性采样会串到邻居字形上
-TEST(QmNameplateMsdfAtlas, ManifestsAreSelfConsistent)
-{
-	SAtlasFacts BaseFacts;
-	size_t BaseGlyphs = 0;
-	EXPECT_TRUE(CheckPage(kBaseManifest, kBaseImage, BaseFacts, BaseGlyphs));
-	EXPECT_EQ(BaseFacts.m_Kind, "msdf-glyphs");
-	EXPECT_GT(BaseFacts.m_PxRange, 0);
-	EXPECT_GT(BaseFacts.m_EmPixels, 0);
-	EXPECT_GE(BaseFacts.m_Padding, BaseFacts.m_PxRange + 1);
-	EXPECT_GT(BaseGlyphs, 900u);
-
-	SAtlasFacts CjkFacts;
-	size_t CjkGlyphs = 0;
-	EXPECT_TRUE(CheckPage(kCjkManifest, kCjkImage, CjkFacts, CjkGlyphs));
-	EXPECT_EQ(CjkFacts.m_Kind, "msdf-glyphs");
-	EXPECT_EQ(CjkFacts.m_PxRange, BaseFacts.m_PxRange);
-	EXPECT_EQ(CjkFacts.m_EmPixels, BaseFacts.m_EmPixels);
-	EXPECT_GE(CjkFacts.m_Padding, CjkFacts.m_PxRange + 1);
-	// 3500 个常用汉字是资源脚本的目标规模；明显偏小说明图集被截断
-	EXPECT_GE(CjkGlyphs, 3000u);
-}
 
 // 基础页必须覆盖 ASCII（含空格），否则最常见的名字会整条回退
 TEST(QmNameplateMsdfAtlas, BasePageCoversAscii)

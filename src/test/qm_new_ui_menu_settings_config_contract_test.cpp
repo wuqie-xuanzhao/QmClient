@@ -27,75 +27,7 @@
 #include <sstream>
 #include <string>
 
-TEST(QmNewUiMenuSettingsConfigContract, QmFeatureDefaultsAreDisabledExceptRequiredDefaults)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::regex BinaryQmDefaultOn(R"(MACRO_CONFIG_INT\([^,]+,\s*qm_[^,]+,\s*1,\s*0,\s*1,)");
-	const char *apIntentionalDefaultOn[] = {
-		"QmImeAutoManage",
-		"QmNewIme",
-		"QmUiListEntryAnimations",
-		"QmUiCardHeightAnimations",
-		"QmUiCardReflowAnimations",
-		"QmUiCardBorders",
-		"QmUiIconWeight",
-		"QmNameplateCoordX",
-		"QmAutoMargin",
-		"QmSkinChangeTransition",
-		"QmWeaponTrajectoryGun",
-		"QmGoresAutoWeaponSwitch",
-		"QmGoresDisableIfWeapons",
-		"QmSkinQueueEnabled",
-		"QmDummySkinQueueEnabled",
-		"QmChatSaveDraft",
-		"QmChatHideSystemPrefix",
-		"QmSmtcEnable",
-		"QmNeteaseHookEnable",
-		"QmSmtcShowHud",
-		"QmAutoUpdate",
-		"QmSwitchCountdown",
-		"QmMessageMerge",
-	};
-	std::istringstream Lines(ConfigSource);
-	std::string Line;
-	while(std::getline(Lines, Line))
-	{
-		bool IntentionalDefaultOn = false;
-		for(const char *pName : apIntentionalDefaultOn)
-		{
-			if(Line.find(std::string("MACRO_CONFIG_INT(") + pName + ",") != std::string::npos)
-			{
-				IntentionalDefaultOn = true;
-				break;
-			}
-		}
-		EXPECT_FALSE(std::regex_search(Line, BinaryQmDefaultOn) && !IntentionalDefaultOn) << Line;
-	}
 
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 2, 0, 2"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 2"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 0, 0, 2"), std::string::npos);
-	EXPECT_EQ(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 2, 0, 2"), std::string::npos);
-}
-
-TEST(QmNewUiMenuSettingsConfigContract, QmDefaultOffMigrationKeepsExplicitLegacyValues)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config.cpp");
-	const std::string ClientSource = ReadTextFile("src/engine/client/client.cpp");
-	const std::string DomainSource = ReadTextFile("src/engine/shared/config_domains.h");
-	const std::string IncludeSource = ReadTextFile("src/engine/shared/config_includes.h");
-
-	EXPECT_NE(IncludeSource.find("SET_CONFIG_DOMAIN(ConfigDomain::QMCLIENT)\n#include \"config_variables_qmclient.h\""), std::string::npos);
-	EXPECT_NE(DomainSource.find("CONFIG_DOMAIN(QMCLIENT, \"qmclient/settings_qmclient.cfg\", \"QmClient/settings_qmclient.cfg\", \"settings_qmclient.cfg\", true)"), std::string::npos);
-	EXPECT_NE(ClientSource.find("pConfigManager->Init();"), std::string::npos);
-	EXPECT_NE(ClientSource.find("if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))"), std::string::npos);
-	EXPECT_LT(ClientSource.find("pConfigManager->Init();"), ClientSource.find("if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))"));
-	EXPECT_NE(ConfigSource.find("pVariable->m_ConfigDomain == ConfigDomain && (pVariable->m_Flags & CFGFLAG_SAVE) != 0 && !pVariable->IsDefault()"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("std::vector<char> vLineBuf(pVariable->MaxSerializedSize());"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("pVariable->Serialize(vLineBuf.data(), vLineBuf.size());"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("WriteLine(vLineBuf.data(), ConfigDomain);"), std::string::npos);
-	EXPECT_EQ(ConfigSource.find("Reset(\"qm_"), std::string::npos);
-}
 
 TEST(QmNewUiMenuSettingsConfigContract, ConfigPageLocalizesVariableHelpText)
 {

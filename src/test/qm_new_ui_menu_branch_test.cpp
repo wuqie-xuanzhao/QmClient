@@ -1,12 +1,114 @@
+#include <engine/client/backend/vulkan/backend_vulkan.h>
+#include <engine/client/backend_sdl.h>
+#include <engine/client/plausible_sizes.h>
+#include <engine/client/rounded_rect_geometry.h>
 #include <engine/storage.h>
 
 #include <game/client/QmUi/UiNavigation.h>
 #include <game/client/QmUi/UiSurface.h>
 #include <game/client/components/camera.h>
+#include <game/client/components/controls.h>
+#include <game/client/components/menus.h>
+#include <game/client/components/nameplate_text_effects.h>
+#include <game/client/components/nameplates.h>
+#include <game/client/components/qmclient/axiom_auto_login.h>
+#include <game/client/components/tclient/statusbar.h>
 #include <game/client/components/tooltips.h>
+#include <game/client/prediction/gameworld.h>
+#include <game/client/ui.h>
 #include <game/localization.h>
 
+#include <regex>
+
 #include <gtest/gtest.h>
+#include <test/test.h>
+
+#include <algorithm>
+
+namespace
+{
+
+	std::string ReadTextFile(const char *pPath)
+	{
+		std::string Content = ReadTestSourceFile(pPath);
+		// menus_settings.cpp ships with CRLF line terminators; normalize so the
+		// multi-line BlockBodyAfter anchors below match regardless of source EOL.
+		Content.erase(std::remove(Content.begin(), Content.end(), '\r'), Content.end());
+		return Content;
+	}
+
+	std::string FunctionBody(const std::string &Source, const std::string &Signature)
+	{
+		const size_t FunctionStart = Source.find(Signature);
+		EXPECT_NE(FunctionStart, std::string::npos) << Signature;
+		const size_t BodyStart = Source.find("{", FunctionStart);
+		EXPECT_NE(BodyStart, std::string::npos) << Signature;
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+		{
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Source.substr(BodyStart, Index - BodyStart);
+			}
+		}
+		ADD_FAILURE() << Signature;
+		return {};
+	}
+
+	std::string BlockBodyAfter(const std::string &Source, const std::string &Anchor)
+	{
+		const size_t AnchorPos = Source.find(Anchor);
+		EXPECT_NE(AnchorPos, std::string::npos) << Anchor;
+		const size_t BodyStart = Source.find("{", AnchorPos);
+		EXPECT_NE(BodyStart, std::string::npos) << Anchor;
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+		{
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Source.substr(BodyStart, Index - BodyStart);
+			}
+		}
+		ADD_FAILURE() << Anchor;
+		return {};
+	}
+
+	size_t MatchingBrace(const std::string &Source, size_t BodyStart)
+	{
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+		{
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Index;
+			}
+		}
+		return std::string::npos;
+	}
+
+	size_t CountRoundedRectDirectCalls(const std::string &Source)
+	{
+		const std::regex CallRegex("Graphics\\(\\)->DrawRect(Ext|Ext4|4)?\\([^;]{0,260}IGraphics::CORNER_(ALL|TL|TR|BL|BR|L|R|T|B)");
+		size_t Count = 0;
+		for(std::sregex_iterator It(Source.begin(), Source.end(), CallRegex), End; It != End; ++It)
+			++Count;
+		return Count;
+	}
+
+} // namespace
+
 
 TEST(QmTooltips, OwnsCallerTextAndBoundsFriendNotes)
 {
@@ -38,20 +140,6 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 	EXPECT_NE(UpdateScheme.find("pScheme[Index++] = pItem->m_aLetters[0];"), std::string::npos);
 }
 
-TEST(TClientStatusBarNetworkMetrics, PreservesSnapshotLatencyAndSeparatesRoundTripTime)
-{
-	const std::string Header = ReadTextFile("src/game/client/components/tclient/statusbar.h");
-	const std::string Source = ReadTextFile("src/game/client/components/tclient/statusbar.cpp");
-	const std::string SnapshotLatencyRender = FunctionBody(Source, "void CStatusBar::DownstreamRender()");
-	const std::string RoundTripTimeRender = FunctionBody(Source, "void CStatusBar::RttRender()");
-
-	EXPECT_NE(Header.find("\"u\", \"Snapshot Latency\", \"Latency\", \"Displays server snapshot latency\""), std::string::npos);
-	EXPECT_NE(Header.find("\"t\", \"Round-trip time\", \"RTT\", \"Displays the game connection round-trip time\""), std::string::npos);
-	EXPECT_NE(Header.find("m_Score, m_Downstream, m_Rtt, m_Upstream"), std::string::npos);
-	EXPECT_NE(SnapshotLatencyRender.find("Client()->GetServerInfo(&CurrentServerInfo)"), std::string::npos);
-	EXPECT_NE(SnapshotLatencyRender.find("CurrentServerInfo.m_Latency"), std::string::npos);
-	EXPECT_NE(RoundTripTimeRender.find("m_PingMs"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)
 {
@@ -103,139 +191,7 @@ TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
 	EXPECT_NE(Body.find("CardDeck.RenderCached("), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, MenubarUsesExplicitQmNewUiColorBranch)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string DoMenuTabV2 = FunctionBody(Source, "int CMenus::DoMenuTabV2(");
-	const std::string RenderMenubar = FunctionBody(Source, "void CMenus::RenderMenubar(");
-	const size_t UseNewUiIfPos = RenderMenubar.find("if(UseNewUi)");
-	ASSERT_NE(UseNewUiIfPos, std::string::npos);
-	const size_t UseNewUiBodyStart = RenderMenubar.find("{", UseNewUiIfPos);
-	ASSERT_NE(UseNewUiBodyStart, std::string::npos);
-	const size_t UseNewUiBodyEnd = MatchingBrace(RenderMenubar, UseNewUiBodyStart);
-	ASSERT_NE(UseNewUiBodyEnd, std::string::npos);
-	const std::string UseNewUiBlock = RenderMenubar.substr(UseNewUiBodyStart, UseNewUiBodyEnd - UseNewUiBodyStart);
-	const size_t OldUiElsePos = RenderMenubar.find("else", UseNewUiBodyEnd);
-	ASSERT_NE(OldUiElsePos, std::string::npos);
-	const size_t OldUiBodyStart = RenderMenubar.find("{", OldUiElsePos);
-	ASSERT_NE(OldUiBodyStart, std::string::npos);
-	const size_t OldUiBodyEnd = MatchingBrace(RenderMenubar, OldUiBodyStart);
-	ASSERT_NE(OldUiBodyEnd, std::string::npos);
-	const std::string OldUiBlock = RenderMenubar.substr(OldUiBodyStart, OldUiBodyEnd - OldUiBodyStart);
-	const size_t HoverBranch = DoMenuTabV2.find("if(Hover)");
-	const size_t ActiveBranch = DoMenuTabV2.find("else if(Active)");
 
-	EXPECT_NE(Source.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
-	EXPECT_NE(Source.find("MenuTabDefaultColor("), std::string::npos);
-	EXPECT_NE(Source.find("MenuTabActiveColor("), std::string::npos);
-	EXPECT_NE(Source.find("MenuTabHoverColor("), std::string::npos);
-	EXPECT_NE(Source.find("MenuIconButtonDefaultColor("), std::string::npos);
-	ASSERT_NE(HoverBranch, std::string::npos);
-	ASSERT_NE(ActiveBranch, std::string::npos);
-	EXPECT_LT(HoverBranch, ActiveBranch);
-	EXPECT_NE(DoMenuTabV2.find("Target = pCustomHover != nullptr ? *pCustomHover : HoverColor;"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("Target = pCustomActive != nullptr ? *pCustomActive : ActiveColor;"), std::string::npos);
-	EXPECT_NE(Source.find("return UseNewUi ? MenuTabDefaultColor() : ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);"), std::string::npos);
-	EXPECT_NE(Source.find("const ColorRGBA DefaultColor = UseNewUi ? MenuTabDefaultColor() : ms_ColorTabbarInactive;"), std::string::npos);
-	EXPECT_NE(Source.find("const ColorRGBA ActiveColor = UseNewUi ? MenuTabActiveColor() : ms_ColorTabbarActive;"), std::string::npos);
-	EXPECT_NE(Source.find("const ColorRGBA HoverColor = UseNewUi ? MenuTabHoverColor() : ms_ColorTabbarHover;"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("DrawRoundedSurface(Ui(), *pRect, Resolved, ColorRGBA(), UseNewUi ? 7.0f * ContentScale : 10.0f, 0.0f, Corners);"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("const float LabelFontSize = UseNewUi ? ui_token::settings::TAB_FONT_SIZE * ContentScale : Label.h * CUi::ms_FontmodHeight;"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);"), std::string::npos);
-	EXPECT_NE(Source.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
-	// 新 UI 菜单栏页签的表面色统一由胶囊 Tabbar 样式给出，页签自己不再各自算一套色。
-	EXPECT_NE(Source.find("ui_widget::SCapsuleTabBarStyle MenuCapsuleTabBarStyle()"), std::string::npos);
-	EXPECT_NE(Source.find("Style.m_CapsuleColor = MenuTabDefaultColor();"), std::string::npos);
-	EXPECT_NE(Source.find("Style.m_IndicatorColor = MenuCapsuleTabIndicatorColor();"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA InactiveColor = ms_ColorTabbarInactive;"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA ActiveColor = ms_ColorTabbarActive;"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA HoverColor = ms_ColorTabbarHover;"), std::string::npos);
-	// 胶囊 Tabbar：新 UI 的激活位置由滑块胶囊表达，页签下方的下划线小块必须消失。
-	EXPECT_EQ(Source.find("const ColorRGBA IndicatorColor = g_Config.m_QmNewUi != 0 ? MenuUiColorAccent(1.0f) : ui_token::color::ACCENT_PRIMARY;"), std::string::npos);
-	EXPECT_EQ(RenderMenubar.find("if(UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash(\"menubar_capsule_ingame_tabs\")"), std::string::npos);
-	EXPECT_LT(UseNewUiBlock.find("ui_widget::CapsuleTabBarChrome("), UseNewUiBlock.find("DoIngameMenuTab(&s_aOnlineTabButtons[DrawnOnlineTabs]"));
-	EXPECT_NE(RenderMenubar.find("if(!UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())"), std::string::npos);
-	EXPECT_NE(RenderMenubar.find("if(UseNewUi)"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f)"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.VMargin(MenubarOuterInsetX, &Box);"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.HMargin(MenubarOuterInsetY, &Box);"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float BrowserButtonWidth = 58.0f * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float GameButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float ServerInfoButtonWidth = (CompactOnlineMenuTabs ? 94.0f : 104.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float OnlineTabGap = 4.0f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("{PAGE_GAME, \"ingame-tab-game\", Localize(\"Game\"), GameButtonWidth, true},"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("DoIngameMenuTab(&s_aOnlineTabButtons[DrawnOnlineTabs], Tab.m_Page, Tab.m_pTextId, Tab.m_pText, ActivePage == Tab.m_Page, &TabRect, IGraphics::CORNER_ALL)"), std::string::npos);
-	EXPECT_EQ(UseNewUiBlock.find("IGraphics::CORNER_TL"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_SettingsButton"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash(\"menubar_capsule_start_tabs\")"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2(&s_aStartTabButtons[TabIndex], Tab.m_pIcon, TabActive, &aStartTabSlots[TabIndex], IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, Tab.m_pCommunityIcon, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW, true))"), std::string::npos);
-	EXPECT_LT(UseNewUiBlock.find("ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash(\"menubar_capsule_start_tabs\")"), UseNewUiBlock.find("if(DoMenuTabV2(&s_aStartTabButtons[TabIndex]"));
-	EXPECT_EQ(UseNewUiBlock.find("DoButton_MenuTab(&s_SettingsButton"), std::string::npos);
-	EXPECT_EQ(UseNewUiBlock.find("DoButton_MenuTab(&s_aStartTabButtons"), std::string::npos);
-	EXPECT_EQ(UseNewUiBlock.find("static CButtonContainer s_InternetButton;"), std::string::npos);
-	EXPECT_EQ(OldUiBlock.find("Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f)"), std::string::npos);
-	EXPECT_EQ(OldUiBlock.find("Box.VMargin(MenubarOuterInsetX, &Box);"), std::string::npos);
-	EXPECT_EQ(OldUiBlock.find("Box.HMargin(MenubarOuterInsetY, &Box);"), std::string::npos);
-	EXPECT_NE(OldUiBlock.find("if(DoButton_MenuTab(&s_SettingsButton"), std::string::npos);
-	EXPECT_NE(OldUiBlock.find("if(DoButton_MenuTab(&s_InternetButton"), std::string::npos);
-	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_SettingsButton"), std::string::npos);
-	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_InternetButton"), std::string::npos);
-	EXPECT_NE(OldUiBlock.find("DoIngameMenuTab(&s_GameButton, PAGE_GAME, \"ingame-tab-game\", Localize(\"Game\"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_TL)"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, MenubarScalesOnlyNewUiInternalElementsByTenPercent)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
-	const std::string DoMenuTabV2 = FunctionBody(Source, "int CMenus::DoMenuTabV2(");
-	const std::string RenderMenubar = FunctionBody(Source, "void CMenus::RenderMenubar(");
-	const std::string DoIngameMenuTab = FunctionBody(Source, "int CMenus::DoIngameMenuTab(");
-	const size_t UseNewUiIfPos = RenderMenubar.find("if(UseNewUi)");
-	ASSERT_NE(UseNewUiIfPos, std::string::npos);
-	const size_t UseNewUiBodyStart = RenderMenubar.find("{", UseNewUiIfPos);
-	ASSERT_NE(UseNewUiBodyStart, std::string::npos);
-	const size_t UseNewUiBodyEnd = MatchingBrace(RenderMenubar, UseNewUiBodyStart);
-	ASSERT_NE(UseNewUiBodyEnd, std::string::npos);
-	const std::string UseNewUiBlock = RenderMenubar.substr(UseNewUiBodyStart, UseNewUiBodyEnd - UseNewUiBodyStart);
-	const size_t OldUiElsePos = RenderMenubar.find("else", UseNewUiBodyEnd);
-	ASSERT_NE(OldUiElsePos, std::string::npos);
-	const size_t OldUiBodyStart = RenderMenubar.find("{", OldUiElsePos);
-	ASSERT_NE(OldUiBodyStart, std::string::npos);
-	const size_t OldUiBodyEnd = MatchingBrace(RenderMenubar, OldUiBodyStart);
-	ASSERT_NE(OldUiBodyEnd, std::string::npos);
-	const std::string OldUiBlock = RenderMenubar.substr(OldUiBodyStart, OldUiBodyEnd - OldUiBodyStart);
-
-	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_HEIGHT_NEW = 24.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("constexpr float MENU_MENUBAR_CONTENT_SCALE_NEW = 1.10f;"), std::string::npos);
-	EXPECT_NE(Header.find("float ContentScale = 1.0f);"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float MenubarOuterInsetX = 6.0f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float MenubarBaseOuterInsetY = 2.5f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float MenubarOuterInsetY = (Box.h - (Box.h - 2.0f * MenubarBaseOuterInsetY) * MENU_MENUBAR_CONTENT_SCALE_NEW) * 0.5f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float MenubarIconGap = 6.0f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float MenubarItemGap = 4.0f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float BrowserButtonWidth = 58.0f * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float GameButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float ServerInfoButtonWidth = (CompactOnlineMenuTabs ? 94.0f : 104.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float BrowserButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float GhostButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float CallVoteButtonWidth = (CompactOnlineMenuTabs ? 80.0f : 88.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("const float OnlineTabGap = 4.0f;"), std::string::npos);
-	// 右侧图标簇（Quit / Settings / Editor / 进服后的 Demo）必须共用同一个槽位尺寸与间隔，
-	// 否则 Demo 两侧会各多出一段空白，整排图标看上去被隔开。
-	EXPECT_EQ(UseNewUiBlock.find("Box.VSplitRight(10.0f, &Box, nullptr);"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.VSplitRight(MenubarIconGap, &Box, nullptr);"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("Box.VSplitRight(MenubarIconButtonSize, &Box, &Button);"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("pRect->Margin(2.0f * ContentScale, &IconRect);"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("pRect->HMargin(2.0f * ContentScale, &Label);"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("UseNewUi ? 7.0f * ContentScale : 10.0f"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("const float LabelFontSize = UseNewUi ? ui_token::settings::TAB_FONT_SIZE * ContentScale : Label.h * CUi::ms_FontmodHeight;"), std::string::npos);
-	EXPECT_NE(DoIngameMenuTab.find("const float ContentScale = g_Config.m_QmNewUi != 0 ? MENU_MENUBAR_CONTENT_SCALE_NEW : 1.0f;"), std::string::npos);
-	EXPECT_NE(DoIngameMenuTab.find("Text.HMargin(2.0f * ContentScale, &Text);"), std::string::npos);
-	EXPECT_NE(DoIngameMenuTab.find("const float FontSize = g_Config.m_QmNewUi != 0 ? ui_token::settings::TAB_FONT_SIZE * ContentScale : Text.h * CUi::ms_FontmodHeight;"), std::string::npos);
-	EXPECT_NE(DoIngameMenuTab.find("return DoMenuTabV2(pButtonContainer, pText, Checked != 0, pRect, Corners, nullptr, nullptr, nullptr, nullptr, &TextElement, ContentScale, true);"), std::string::npos);
-	EXPECT_EQ(OldUiBlock.find("MENU_MENUBAR_CONTENT_SCALE_NEW"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, CapsuleTabBarRowRectSpansSlotsAndGaps)
 {
@@ -289,53 +245,7 @@ TEST(QmNewUiMenuBranches, CapsuleTabBarChromeDrawsContainerThenSpringIndicatorUn
 	EXPECT_NE(Header.find("inline ColorRGBA CapsuleTabBarInactiveLabelColor(const ColorRGBA &SurfaceColor)"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, CapsuleTabKeepsHoverOnlyAndFlipsLabelColor)
-{
-	// 意图：胶囊 Tab 自己不再画分块底色（激活外观由滑块承担），但 hover 反馈与
-	// 激活文字转深色必须保留。
-	const std::string Source = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string DoMenuTabV2 = FunctionBody(Source, "int CMenus::DoMenuTabV2(");
-	const std::string DoIngameMenuTab = FunctionBody(Source, "int CMenus::DoIngameMenuTab(");
-	ASSERT_FALSE(DoMenuTabV2.empty());
 
-	EXPECT_NE(Source.find("const bool InCapsule = CapsuleTab && UseNewUi;"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("if(InCapsule)\n\t{\n\t\tif(Hover)\n\t\t\tDrawRoundedSurface(Ui(), *pRect, MenuCapsuleTabHoverColor(), ColorRGBA(), ui_token::radius::PILL, 0.0f, Corners);\n\t}\n\telse\n\t\tDrawRoundedSurface(Ui(), *pRect, Resolved, ColorRGBA(), UseNewUi ? 7.0f * ContentScale : 10.0f, 0.0f, Corners);"), std::string::npos);
-	EXPECT_NE(DoMenuTabV2.find("TextRender()->TextColor(Active ? MenuCapsuleTabActiveLabelColor() : MenuCapsuleTabInactiveLabelColor());"), std::string::npos);
-	EXPECT_LT(DoMenuTabV2.find("TextRender()->TextColor(Active ? MenuCapsuleTabActiveLabelColor()"), DoMenuTabV2.find("DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, *pTextUiElement"));
-	EXPECT_NE(DoMenuTabV2.find("TextRender()->TextColor(PreviousLabelColor);"), std::string::npos);
-	EXPECT_NE(DoIngameMenuTab.find("ContentScale, true);"), std::string::npos);
-	EXPECT_NE(Source.find("ColorRGBA MenuCapsuleTabIndicatorColor()"), std::string::npos);
-	EXPECT_NE(Source.find("return ui_widget::CapsuleTabBarIndicatorColor(MenuTabDefaultColor());"), std::string::npos);
-	// DoButton_MenuTab 也要支持胶囊模式：设置页左栏等竖向 Tabbar 走同一条路径。
-	const std::string DoButtonMenuTab = FunctionBody(Source, "int CMenus::DoButton_MenuTab(");
-	ASSERT_FALSE(DoButtonMenuTab.empty());
-	EXPECT_NE(DoButtonMenuTab.find("if(CapsuleTab)\n\t{\n\t\t// 胶囊 Tab 的激活外观由滑块胶囊承担，Tab 自己不再画分块底色，只保留 hover 反馈。\n\t\tif(MouseInside)\n\t\t\tDrawRoundedSurface(Ui(), *pRect, MenuCapsuleTabHoverColor(), ColorRGBA(), ui_token::radius::PILL, 0.0f, Corners);\n\t}\n\telse if(Checked)"), std::string::npos);
-	EXPECT_NE(DoButtonMenuTab.find("TextRender()->TextColor(Checked ? MenuCapsuleTabActiveLabelColor() : MenuCapsuleTabInactiveLabelColor());"), std::string::npos);
-	EXPECT_NE(DoButtonMenuTab.find("TextRender()->TextColor(PreviousLabelColor);"), std::string::npos);
-	EXPECT_NE(ReadTextFile("src/game/client/components/menus.h").find("CUIElement *pTextUiElement = nullptr, float FontSize = -1.0f, bool CapsuleTab = false);"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, SettingsSidebarKeepsPerTabFillInsteadOfCapsule)
-{
-	// 意图：设置页左栏是**竖排**页签，保持原来的分块选中/悬停底色，不做胶囊滑块；
-	// 横向子 Tab 行才走胶囊（见 SettingsSubTabRowsUseCapsuleTabBar）。
-	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string RenderSettings = FunctionBody(Source, "void CMenus::RenderSettings(CUIRect MainView)");
-	ASSERT_FALSE(RenderSettings.empty());
-
-	EXPECT_EQ(RenderSettings.find("ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash(\"settings_tabbar_capsule\")"), std::string::npos);
-	EXPECT_EQ(RenderSettings.find("aSettingsTabSlots"), std::string::npos);
-	EXPECT_NE(RenderSettings.find("const ColorRGBA SettingsNavigationSelected = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.42f);"), std::string::npos);
-	EXPECT_NE(RenderSettings.find("const ColorRGBA SettingsNavigationHover = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.20f);"), std::string::npos);
-	const size_t TabDrawPos = RenderSettings.find("if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_ALL, &m_aAnimatorsSettingsTab[i], nullptr, &SettingsNavigationSelected, &SettingsNavigationHover, 10.0f, nullptr, &m_aSettingsTabLabelElements[i]))");
-	ASSERT_NE(TabDrawPos, std::string::npos);
-	// 页面切换仍要在卡片组装开始之前发生。
-	EXPECT_LT(TabDrawPos, RenderSettings.find("m_SettingsCardDeck.BeginDisplayCycle("));
-	// 旧 UI 仍走 CORNER_R 的贴边分支。
-	EXPECT_NE(RenderSettings.find("if(DoButton_MenuTab(&m_aSettingsTabButtons[i], m_apSettingsTabs[i], Active, &Button, IGraphics::CORNER_R"), std::string::npos);
-	// 设置页的胶囊配色零件仍供横向子 Tab 使用。
-	EXPECT_NE(Source.find("ui_widget::SCapsuleTabBarStyle CMenus::SettingsCapsuleTabBarStyle() const"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, SettingsSubTabRowsUseCapsuleTabBar)
 {
@@ -714,30 +624,7 @@ TEST(QmNewUiMenuBranches, SettingsInputFieldsReserveTrailingActionsAndKeepQueueU
 	EXPECT_EQ(SkinRenderList.find("Ui()->DoLabel(&IntervalUnit"), std::string::npos);
 }
 
-TEST(QmUiScale, VirtualHeightUsesClampedPercentage)
-{
-	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(50), 1200.0f);
-	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(100), 600.0f);
-	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(200), 300.0f);
-	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(0), 1200.0f);
-	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(300), 300.0f);
-}
 
-TEST(QmUiScale, CenteredPopupMarginKeepsUsableContentAtTwoHundredPercent)
-{
-	const CUIRect DefaultScreen = {0.0f, 0.0f, 1066.0f, 600.0f};
-	const CUIRect ScaledScreen = {0.0f, 0.0f, 533.0f, 300.0f};
-	const CUIRect NarrowScaledScreen = {0.0f, 0.0f, 375.0f, 300.0f};
-
-	EXPECT_FLOAT_EQ(QmUiCenteredMargin(DefaultScreen, 150.0f, 300.0f, 180.0f), 150.0f);
-	EXPECT_FLOAT_EQ(QmUiCenteredMargin(ScaledScreen, 150.0f, 300.0f, 180.0f), 60.0f);
-	EXPECT_FLOAT_EQ(QmUiCenteredMargin(NarrowScaledScreen, 150.0f, 300.0f, 180.0f), 37.5f);
-	EXPECT_FLOAT_EQ(QmUiCenteredMargin({0.0f, 0.0f, 200.0f, 120.0f}, 150.0f, 300.0f, 180.0f), 0.0f);
-	EXPECT_FLOAT_EQ(QmUiCenteredMargin(ScaledScreen, 150.0f, 300.0f, 300.0f), 0.0f);
-	EXPECT_EQ(QmUiVisibleRows(52.0f, 20.0f, 20.0f, 4, 4), 1);
-	EXPECT_EQ(QmUiVisibleRows(126.0f, 20.0f, 20.0f, 8, 4), 4);
-	EXPECT_EQ(QmUiVisibleRows(19.0f, 20.0f, 20.0f, 4, 4), 0);
-}
 
 TEST(QmUiScaleSource, TouchMenusRespectCallerProvidedScaledHeight)
 {
@@ -767,51 +654,6 @@ TEST(QmDemoCutRender, UsesExportedCutAsRenderSource)
 	EXPECT_EQ(SlicePopup.find("str_copy(m_aPendingDemoRenderSelectionName, m_aCurrentDemoSelectionName"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, BrowserUsesExplicitQmNewUiShellBranch)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const std::string RenderServerbrowser = FunctionBody(Source, "void CMenus::RenderServerbrowser(");
-	const size_t TopUseNewUiIfPos = RenderServerbrowser.find("if(UseNewUi)\n\t\tView.Margin(6.0f, &View);");
-	ASSERT_NE(TopUseNewUiIfPos, std::string::npos);
-	const size_t TopOldUiElsePos = RenderServerbrowser.find("else\n\t{", TopUseNewUiIfPos);
-	ASSERT_NE(TopOldUiElsePos, std::string::npos);
-	const size_t TopOldUiBodyStart = RenderServerbrowser.find("{", TopOldUiElsePos);
-	ASSERT_NE(TopOldUiBodyStart, std::string::npos);
-	const size_t TopOldUiBodyEnd = MatchingBrace(RenderServerbrowser, TopOldUiBodyStart);
-	ASSERT_NE(TopOldUiBodyEnd, std::string::npos);
-	const std::string TopOldUiBlock = RenderServerbrowser.substr(TopOldUiBodyStart, TopOldUiBodyEnd - TopOldUiBodyStart);
-
-	const size_t UseNewUiIfPos = RenderServerbrowser.find("if(UseNewUi)", TopOldUiBodyEnd);
-	ASSERT_NE(UseNewUiIfPos, std::string::npos);
-	const size_t UseNewUiBodyStart = RenderServerbrowser.find("{", UseNewUiIfPos);
-	ASSERT_NE(UseNewUiBodyStart, std::string::npos);
-	const size_t UseNewUiBodyEnd = MatchingBrace(RenderServerbrowser, UseNewUiBodyStart);
-	ASSERT_NE(UseNewUiBodyEnd, std::string::npos);
-	const size_t OldUiElsePos = RenderServerbrowser.find("else", UseNewUiBodyEnd);
-	ASSERT_NE(OldUiElsePos, std::string::npos);
-	const size_t OldUiBodyStart = RenderServerbrowser.find("{", OldUiElsePos);
-	ASSERT_NE(OldUiBodyStart, std::string::npos);
-	const size_t OldUiBodyEnd = MatchingBrace(RenderServerbrowser, OldUiBodyStart);
-	ASSERT_NE(OldUiBodyEnd, std::string::npos);
-	const std::string OldUiBlock = RenderServerbrowser.substr(OldUiBodyStart, OldUiBodyEnd - OldUiBodyStart);
-
-	EXPECT_NE(Source.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
-	EXPECT_NE(Source.find("if(UseNewUi)"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListBase.Draw(BrowserPanelColor()"), std::string::npos);
-	EXPECT_NE(Source.find("(void)DrawBackground;"), std::string::npos);
-	EXPECT_NE(Source.find("const float ToolBoxWidth = UseNewUi ? 205.0f : 188.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float ColumnGap = UseNewUi ? 10.0f : 6.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float StatusHeight = UseNewUi ? 84.0f : 76.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("CUIRect ServerListStackBase = ServerListBase;"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListStackBase.HSplitBottom(StatusHeight, &ServerListBase, &StatusBox);"), std::string::npos);
-	EXPECT_NE(Source.find("StatusBox.y = ServerListStackBase.y + ServerListStackBase.h - StatusHeight;"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListBase.h = maximum(StatusBox.y - ColumnGap - ServerListBase.y, 0.0f);"), std::string::npos);
-	EXPECT_EQ(Source.find("ServerListBase.HSplitBottom(ColumnGap, &ServerListBase, nullptr);"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListBase.Margin(std::clamp(ServerListBase.w * 0.006f, 1.0f, 4.0f), &ServerListBase);"), std::string::npos);
-	EXPECT_NE(TopOldUiBlock.find("View.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);"), std::string::npos);
-	EXPECT_NE(TopOldUiBlock.find("View.Margin(10.0f, &View);"), std::string::npos);
-	EXPECT_EQ(TopOldUiBlock.find("View.Margin(std::clamp(View.w * 0.008f, 4.0f, 8.0f), &View);"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 {
@@ -915,18 +757,6 @@ TEST(QmNewUiMenuBranches, DemoBrowserUsesExplicitLegacyShellBranches)
 	EXPECT_EQ(RenderDemoBrowser.find("MainView.Draw(MenuPanelColor()"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, BrowserFavoriteMapsEarlyReturnAvoidsLegacyDoubleInset)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const std::string RenderServerbrowser = FunctionBody(Source, "void CMenus::RenderServerbrowser(");
-	const size_t FavoriteMapsPos = RenderServerbrowser.find("if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)");
-	ASSERT_NE(FavoriteMapsPos, std::string::npos);
-	const size_t DrawPos = RenderServerbrowser.find("View.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);");
-	ASSERT_NE(DrawPos, std::string::npos);
-	EXPECT_LT(FavoriteMapsPos, DrawPos);
-	EXPECT_NE(RenderServerbrowser.find("RenderServerbrowserFavoriteMaps(MainView);"), std::string::npos);
-	EXPECT_NE(RenderServerbrowser.find("View.Margin(6.0f, &View);\n\t\t\tRenderServerbrowserFavoriteMaps(View);"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
 {
@@ -1145,39 +975,7 @@ TEST(QmNewUiMenuBranches, AssetsPreviewUsesInnerFrameRectForPreviewImage)
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureWidth);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, GaussianBlurSettingReplacesBetterScoreboardAndIsVersioned)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string MiniFeaturesContent = FunctionBody(MenusSource, "void CMenus::RenderQmFunctionMiniFeaturesContent(");
-	const std::string MenusToml = ReadTextFile("qmclient_scripts/languages_qmclient/translations/i18n/menus.toml");
-	const std::string VersionSource = ReadTextFile("src/game/version.h");
 
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmBetterScoreboard, qm_better_scoreboard, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE"), std::string::npos);
-	EXPECT_NE(MiniFeaturesContent.find("RenderCheckbox(&g_Config.m_QmBetterScoreboard, \"Better scoreboard\", &g_Config.m_QmBetterScoreboard);"), std::string::npos);
-	EXPECT_NE(MiniFeaturesContent.find("RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);"), std::string::npos);
-	EXPECT_NE(MenusSource.find("case EQmModuleId::MiniFeatures: return Rows(19.0f);"), std::string::npos);
-	EXPECT_NE(MenusToml.find("key = \"Better scoreboard\""), std::string::npos);
-	EXPECT_NE(MenusToml.find("simplified_chinese = \"更好的计分板\""), std::string::npos);
-	EXPECT_NE(VersionSource.find("#define QMCLIENT_VERSION \""), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, NewSettingsUseToggleAndExposeAccentAndBlurControls)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-
-	EXPECT_NE(ConfigSource.find("QmUiAccentColor, qm_ui_accent_color"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("QmUiSelectedColor, qm_ui_selected_color"), std::string::npos);
-	const std::string SettingsCheckbox = FunctionBody(MenusSource, "int CMenus::DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, const bool ProcessInput, const float RequestedFontSize)");
-	EXPECT_NE(SettingsCheckbox.find("if(g_Config.m_QmNewUi)"), std::string::npos);
-	EXPECT_NE(SettingsCheckbox.find("ui_widget::Toggle(Context, pId, &ToggleValue, ToggleRect, false, ProcessInput)"), std::string::npos);
-	EXPECT_NE(SettingsCheckbox.find("Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_LEFT)"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("Localize(\"Interface accent color\")"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("Localize(\"Selected item color\")"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("Localize(\"Enable Gaussian blur\")"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 {
@@ -1522,56 +1320,6 @@ TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 30"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmFeatureDefaultsAreDisabledExceptRequiredDefaults)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::regex BinaryQmDefaultOn(R"(MACRO_CONFIG_INT\([^,]+,\s*qm_[^,]+,\s*1,\s*0,\s*1,)");
-	const char *apIntentionalDefaultOn[] = {
-		"QmImeAutoManage",
-		"QmNewIme",
-		"QmUiListEntryAnimations",
-		"QmUiCardHeightAnimations",
-		"QmUiCardReflowAnimations",
-		"QmUiCardBorders",
-		"QmUiIconWeight",
-		"QmNameplateCoordX",
-		"QmAutoMargin",
-		"QmSkinChangeTransition",
-		"QmWeaponTrajectoryGun",
-		"QmGoresAutoWeaponSwitch",
-		"QmGoresDisableIfWeapons",
-		"QmSkinQueueEnabled",
-		"QmDummySkinQueueEnabled",
-		"QmChatSaveDraft",
-		"QmChatHideSystemPrefix",
-		"QmSmtcEnable",
-		"QmNeteaseHookEnable",
-		"QmSmtcShowHud",
-		"QmAutoUpdate",
-		"QmSwitchCountdown",
-		"QmMessageMerge",
-	};
-	std::istringstream Lines(ConfigSource);
-	std::string Line;
-	while(std::getline(Lines, Line))
-	{
-		bool IntentionalDefaultOn = false;
-		for(const char *pName : apIntentionalDefaultOn)
-		{
-			if(Line.find(std::string("MACRO_CONFIG_INT(") + pName + ",") != std::string::npos)
-			{
-				IntentionalDefaultOn = true;
-				break;
-			}
-		}
-		EXPECT_FALSE(std::regex_search(Line, BinaryQmDefaultOn) && !IntentionalDefaultOn) << Line;
-	}
-
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiMotionLevel, qm_ui_motion_level, 2, 0, 2"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 2"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 0, 0, 2"), std::string::npos);
-	EXPECT_EQ(ConfigSource.find("MACRO_CONFIG_INT(QmVoiceNoiseSuppressEnable, qm_voice_noise_suppress_enable, 2, 0, 2"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, WeaponTrajectoryExposesDefaultOnPistolGuideToggle)
 {
@@ -1611,64 +1359,6 @@ TEST(QmNewUiMenuBranches, QmDefaultOffMigrationKeepsExplicitLegacyValues)
 	EXPECT_EQ(ConfigSource.find("Reset(\"qm_"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SkinTransitionAnimationToggleOwnsAdvancedControls)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string CardRegistrySource = ReadTextFile("src/game/client/QmUi/QmCardRegistry.cpp");
-	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
-	const std::string PlayersSource = ReadTextFile("src/game/client/components/players.cpp");
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string LanguageSource = ReadTextFile("data/languages/simplified_chinese.txt");
-	const std::string SkinTransitionContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
-
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransition, qm_skin_change_transition, 1, 0, 1"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionScope, qm_skin_change_transition_scope, 1, 0, 2"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionEasing, qm_skin_change_transition_easing"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmSkinChangeTransitionIntensity, qm_skin_change_transition_intensity"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmCycleTeeHueDummy, qm_cycle_tee_hue_dummy, 0, 0, 1"), std::string::npos);
-	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId = \"qm_2_72_0_skin_transition_animation_toggle\""), std::string::npos);
-	EXPECT_NE(MenusSource.find("pSkinTransitionAnimationFeatureId,\n						\"qm_2_62_8_weapon_animation\""), std::string::npos);
-	EXPECT_NE(CardRegistrySource.find("\"qm:skin_transition\", \"visual\", ECardColumn::Left, 1, \"Skin transition\", \"皮肤切换 pifu qiehuan skin transition"), std::string::npos);
-	EXPECT_NE(SkinTransitionContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmCycleTeeHueDummy, \"Also apply to dummy\""), std::string::npos);
-	EXPECT_NE(PlayersSource.find("LocalDummy == 0 || g_Config.m_QmCycleTeeHueDummy != 0"), std::string::npos);
-	EXPECT_NE(PlayersSource.find("LocalDummy != 0 ? g_Config.m_ClDummyUseCustomColor != 0 : g_Config.m_ClPlayerUseCustomColor != 0"), std::string::npos);
-
-	EXPECT_EQ(SkinTransitionContent.find("RenderSkinQueueRotationRow"), std::string::npos);
-	EXPECT_NE(SkinTransitionContent.find("m_QmSkinChangeTransition"), std::string::npos);
-
-	const size_t Toggle = SkinTransitionContent.find("DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, &g_Config.m_QmSkinChangeTransition");
-	ASSERT_NE(Toggle, std::string::npos);
-	const size_t AdvancedIf = SkinTransitionContent.find("if(!g_Config.m_QmSkinChangeTransition)\n\t\treturn;", Toggle);
-	const size_t TypeLabel = SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-type\", \"Skin transition type\"", Toggle);
-	const size_t ScopeLabel = SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-range\", \"Animation range\"", Toggle);
-	const size_t DurationLabel = SkinTransitionContent.find("Localize(\"Skin transition duration\")", Toggle);
-	const size_t EasingLabel = SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-easing\", \"Skin transition easing\"", Toggle);
-	const size_t IntensityLabel = SkinTransitionContent.find("Localize(\"Skin transition intensity\")", Toggle);
-	ASSERT_NE(AdvancedIf, std::string::npos);
-	ASSERT_NE(TypeLabel, std::string::npos);
-	ASSERT_NE(ScopeLabel, std::string::npos);
-	ASSERT_NE(DurationLabel, std::string::npos);
-	ASSERT_NE(EasingLabel, std::string::npos);
-	ASSERT_NE(IntensityLabel, std::string::npos);
-	EXPECT_LT(Toggle, AdvancedIf);
-	EXPECT_LT(AdvancedIf, TypeLabel);
-	EXPECT_LT(TypeLabel, ScopeLabel);
-	EXPECT_LT(ScopeLabel, DurationLabel);
-	EXPECT_LT(DurationLabel, EasingLabel);
-	EXPECT_LT(EasingLabel, IntensityLabel);
-	EXPECT_NE(SkinTransitionContent.find("s_SkinTransitionScopeDropDownNames = {Localize(\"Self only\"), Localize(\"Local\"), Localize(\"All players\")};"), std::string::npos);
-	EXPECT_NE(SkinTransitionContent.find("RenderDropDown(\"qmclient-skin-transition-range\", \"Animation range\", &g_Config.m_QmSkinChangeTransitionScope, 2"), std::string::npos);
-
-	EXPECT_NE(GameClientSource.find("QM_SKIN_CHANGE_TRANSITION_SCOPE_OWN"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("bool CGameClient::ShouldRunSkinChangeTransition(int ClientId) const"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_SkinTransitionStart.has_value()"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("m_pGameClient->ShouldRunSkinChangeTransition(m_ClientId)"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0)"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("if(!g_Config.m_QmSkinChangeTransition || g_Config.m_QmSkinChangeTransitionMs <= 0 || !m_StartTime.has_value()"), std::string::npos);
-	EXPECT_NE(LanguageSource.find("Skin transition animation\n== 皮肤切换动画"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 {
@@ -1716,39 +1406,7 @@ TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 	EXPECT_NE(RegistrySource.find("装填动画 zhuangtian donghua reload animation"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, ProcessPriorityAndImeHaveVisibleSettings)
-{
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string ClientSource = ReadTextFile("src/engine/client/client.cpp");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmProcessHighPriority, qm_process_high_priority, 0, 0, 1"), std::string::npos);
-	EXPECT_NE(ClientSource.find("ApplyProcessPriorityConfig();"), std::string::npos);
-	EXPECT_NE(ClientSource.find("m_pConsole->Chain(\"qm_process_high_priority\", ConchainProcessHighPriority, this);"), std::string::npos);
-	const std::string MiniFeaturesBody = FunctionBody(MenusSource, "void CMenus::RenderQmFunctionMiniFeaturesContent(");
-	ASSERT_FALSE(MiniFeaturesBody.empty());
-	EXPECT_NE(MiniFeaturesBody.find("&g_Config.m_QmProcessHighPriority"), std::string::npos);
-	EXPECT_NE(MiniFeaturesBody.find("&g_Config.m_QmImeAutoManage"), std::string::npos);
-	EXPECT_NE(MiniFeaturesBody.find("&g_Config.m_QmNewIme"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, ConfigPageLocalizesVariableHelpText)
-{
-	const std::string ConfigHeader = ReadTextFile("src/engine/shared/config.h");
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config.cpp");
-	const std::string TClientMenusSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-
-	EXPECT_NE(ConfigHeader.find("const char *m_pHelpLocalizeKey;"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_INT, Flags, pHelp, Desc"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_COLOR, Flags, pHelp, Desc"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("SConfigVariable::VAR_STRING, Flags, pHelp, Desc"), std::string::npos);
-	EXPECT_NE(TClientMenusSource.find("BuildLocalizedConfigHelpText"), std::string::npos);
-	EXPECT_NE(TClientMenusSource.find("pVar->m_pHelpLocalizeKey ? pVar->m_pHelpLocalizeKey"), std::string::npos);
-	EXPECT_NE(TClientMenusSource.find("Localize(pHelpKey)"), std::string::npos);
-	EXPECT_NE(TClientMenusSource.find("s_CachedConfigLanguageHash"), std::string::npos);
-	EXPECT_NE(TClientMenusSource.find("str_quickhash(g_Config.m_ClLanguagefile)"), std::string::npos);
-	EXPECT_EQ(TClientMenusSource.find("Ui()->DoLabel(&Help, pVar->m_pHelp ? pVar->m_pHelp : \"\""), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 {
@@ -1952,16 +1610,6 @@ TEST(QmNewUiMenuBranches, NameplateGameUsesFullScopeReferenceFrame)
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowDirection = pPlayerInfo->m_Local;"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, MediaIslandLyricsUsesNeteaseIntegration)
-{
-	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
-	const std::string RenderMediaIsland = FunctionBody(HudSource, "void CHud::RenderMediaIsland()");
-	const std::string IntegrationSource = ReadTextFile("src/game/client/components/qmclient/netease/netease_integration.cpp");
-	EXPECT_NE(RenderMediaIsland.find("GameClient()->m_NeteaseIntegration.GetCurrentLyric"), std::string::npos);
-	EXPECT_EQ(RenderMediaIsland.find("m_QmLyrics"), std::string::npos);
-	EXPECT_NE(IntegrationSource.find("qm_lyrics"), std::string::npos);
-	EXPECT_NE(IntegrationSource.find("qm_lyrics_in_media_island"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, HudNotificationsKeepEdgeGeometryStableDuringSlide)
 {
@@ -1996,150 +1644,8 @@ TEST(QmNewUiMenuBranches, SpectatorSpecTeeDoesNotFallbackToMissingSkin)
 	EXPECT_NE(Render.find("continue;\n\t\tRenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo()"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, WeaponImpactEventsUseInferredOwnerAlpha)
-{
-	const std::string Source = ReadTextFile("src/game/client/gameclient.cpp");
-	const std::string ProcessEvents = FunctionBody(Source, "void CGameClient::ProcessEvents()");
-	const std::string FinalizeHammerHitEvents = FunctionBody(Source, "void CGameClient::FinalizeHammerHitEvents()");
 
-	EXPECT_NE(Source.find("float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)"), std::string::npos);
-	EXPECT_NE(Source.find("int QmInferExplosionOwner(CGameClient *pGameClient, vec2 Pos)"), std::string::npos);
-	EXPECT_NE(Source.find("SQmHammerHitMatch QmInferHammerHit(CGameClient *pGameClient, vec2 Pos, int EventTick)"), std::string::npos);
-	EXPECT_NE(ProcessEvents.find("const float ExplosionAlpha = QmKnownOwnerEventAlpha(this, QmInferExplosionOwner(this, ExplosionPos));"), std::string::npos);
-	EXPECT_NE(ProcessEvents.find("m_Effects.Explosion(ExplosionPos, ExplosionAlpha);"), std::string::npos);
-	EXPECT_NE(ProcessEvents.find("m_vPendingHammerHitEvents.push_back({"), std::string::npos);
-	EXPECT_EQ(ProcessEvents.find("CheckPredictedHammerHitHandled("), std::string::npos);
-	EXPECT_EQ(ProcessEvents.find("QmInferHammerHit(this"), std::string::npos);
-	EXPECT_EQ(ProcessEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
-	EXPECT_EQ(ProcessEvents.find("m_Effects.HammerHit("), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("const SQmHammerHitMatch Match = QmInferHammerHit(this, Event.m_Pos, Event.m_SnapshotTick);"), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("m_PredictedWorld.CheckPredictedHammerHitHandled("), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("Match.m_AttackerId, Event.m_SnapshotTick, Match.m_TargetId"), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("const float HammerHitAlpha = QmKnownOwnerEventAlpha(this, Match.m_AttackerId);"), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("m_Effects.HammerHit(Event.m_Pos, HammerHitAlpha, 1.0f);"), std::string::npos);
-	EXPECT_EQ(ProcessEvents.find("m_Effects.Explosion(vec2(pEvent->m_X, pEvent->m_Y), Alpha);"), std::string::npos);
-}
 
-TEST(QmNewUiMenuBranches, HammerHitPredictionMatchingUsesOwnerDistanceAndOneToOneConsumption)
-{
-	std::vector<CGameWorld::CPredictedEvent> vPredictedEvents;
-	CGameWorld::CPredictedEvent Near(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 100, 4);
-	Near.m_Handled = true;
-	vPredictedEvents.push_back(Near);
-	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(124.0f, 100.0f), 4, 102, 4)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(132.0f, 100.0f), 3, 102, 4)));
-	EXPECT_TRUE(vPredictedEvents.empty());
-
-	CGameWorld::CPredictedEvent First(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 100, 4);
-	CGameWorld::CPredictedEvent Second(NETEVENTTYPE_HAMMERHIT, vec2(130.0f, 100.0f), 3, 100, 5);
-	First.m_Handled = true;
-	Second.m_Handled = true;
-	vPredictedEvents = {First, Second};
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(101.0f, 100.0f), 3, 102, 4)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(131.0f, 100.0f), 3, 102, 5)));
-	EXPECT_TRUE(vPredictedEvents.empty());
-
-	CGameWorld::CPredictedEvent TargetA(NETEVENTTYPE_HAMMERHIT, vec2(200.0f, 100.0f), 3, 200, 4);
-	CGameWorld::CPredictedEvent TargetB(NETEVENTTYPE_HAMMERHIT, vec2(202.0f, 100.0f), 3, 200, 5);
-	TargetA.m_Handled = true;
-	TargetB.m_Handled = true;
-	vPredictedEvents = {TargetA, TargetB};
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(201.0f, 100.0f), 3, 202, 5)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
-	EXPECT_EQ(vPredictedEvents.front().m_ExtraInfo, 4);
-	vPredictedEvents.clear();
-
-	CGameWorld::CPredictedEvent Far(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 100, 4);
-	Far.m_Handled = true;
-	vPredictedEvents.push_back(Far);
-	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(133.0f, 100.0f), 3, 102, 4)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
-	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(100.0f, 100.0f), 3, 100 + SERVER_TICK_SPEED + 1, 4)));
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(132.0f, 100.0f), 3, 102, 4)));
-	EXPECT_TRUE(vPredictedEvents.empty());
-
-	vPredictedEvents.clear();
-	CGameWorld::CPredictedEvent UnknownOwner(NETEVENTTYPE_HAMMERHIT, vec2(200.0f, 100.0f), 7, 200, 8);
-	UnknownOwner.m_Handled = true;
-	vPredictedEvents.push_back(UnknownOwner);
-	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(201.0f, 100.0f), -1, 202, 8)));
-
-	CGameWorld::CPredictedEvent AmbiguousA(NETEVENTTYPE_HAMMERHIT, vec2(300.0f, 100.0f), 7, 300, 9);
-	CGameWorld::CPredictedEvent AmbiguousB(NETEVENTTYPE_HAMMERHIT, vec2(302.0f, 100.0f), 8, 300, 9);
-	AmbiguousA.m_Handled = true;
-	AmbiguousB.m_Handled = true;
-	vPredictedEvents = {AmbiguousA, AmbiguousB};
-	EXPECT_FALSE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(301.0f, 100.0f), -1, 302, 9)));
-	EXPECT_EQ(vPredictedEvents.size(), 2u);
-
-	vPredictedEvents.clear();
-	CGameWorld::CPredictedEvent Boundary(NETEVENTTYPE_HAMMERHIT, vec2(400.0f, 100.0f), 3, 400, 4);
-	Boundary.m_Handled = true;
-	vPredictedEvents.push_back(Boundary);
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(432.0f, 100.0f), 3, 402, 4)));
-
-	CGameWorld::CPredictedEvent Earlier(NETEVENTTYPE_HAMMERHIT, vec2(500.0f, 100.0f), 3, 500, 4);
-	CGameWorld::CPredictedEvent Later(NETEVENTTYPE_HAMMERHIT, vec2(520.0f, 100.0f), 3, 516, 4);
-	Earlier.m_Handled = true;
-	Later.m_Handled = true;
-	vPredictedEvents = {Earlier, Later};
-	EXPECT_TRUE(QmCheckPredictedHammerHitHandled(vPredictedEvents, CGameWorld::CPredictedEvent(NETEVENTTYPE_HAMMERHIT, vec2(501.0f, 100.0f), 3, 517, 4)));
-	EXPECT_EQ(vPredictedEvents.size(), 1u);
-	EXPECT_EQ(vPredictedEvents.front().m_Tick, 500);
-}
-
-TEST(QmNewUiMenuBranches, HammerHitConsumersUseDeferredServerEvidenceOnly)
-{
-	const std::string CharacterSource = ReadTextFile("src/game/client/prediction/entities/character.cpp");
-	const std::string GameClientSource = ReadTextFile("src/game/client/gameclient.cpp");
-	const std::string GameWorldSource = ReadTextFile("src/game/client/prediction/gameworld.cpp");
-	const std::string FastPracticeSource = ReadTextFile("src/game/client/components/tclient/fast_practice.cpp");
-	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
-	const std::string InferHammerHit = FunctionBody(GameClientSource, "SQmHammerHitMatch QmInferHammerHit(");
-	const std::string FinalizeHammerHitEvents = FunctionBody(GameClientSource, "void CGameClient::FinalizeHammerHitEvents()");
-	const std::string OnNewSnapshot = FunctionBody(GameClientSource, "void CGameClient::OnNewSnapshot()");
-	const std::string WakeupActions = FunctionBody(TClientSource, "void CTClient::CheckHammerWakeupActions()");
-
-	EXPECT_EQ(CharacterSource.find("CreateHammerHitEvent"), std::string::npos);
-	EXPECT_EQ(GameWorldSource.find("HammerHitEvents"), std::string::npos);
-	EXPECT_EQ(GameWorldSource.find("BeginHammerHitEventBatch"), std::string::npos);
-	EXPECT_EQ(GameClientSource.find("RecordPredictedHammerHits"), std::string::npos);
-	EXPECT_EQ(GameClientSource.find("ConfirmPredictedEvent"), std::string::npos);
-	EXPECT_EQ(GameClientSource.find("MatchPredictedEvent"), std::string::npos);
-	EXPECT_EQ(InferHammerHit.find("m_PredictedWorld"), std::string::npos);
-	EXPECT_NE(InferHammerHit.find("QmIsHammerSuperTeam(DDTeam, pGameClient->m_Teams.m_IsDDRace16)"), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("m_HammerHitTracker.Record(Hit)"), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("QmIsHammerWakeupTransition("), std::string::npos);
-	EXPECT_NE(FinalizeHammerHitEvents.find("HandleConfirmedHammerHit(Hit);"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("const bool Online = Client()->State() == IClient::STATE_ONLINE;"), std::string::npos);
-	EXPECT_NE(GameClientSource.find("if(Online)\n\t\tHandleHammerSkinSwap(Hit);"), std::string::npos);
-	EXPECT_NE(FastPracticeSource.find("void CFastPractice::MaybePlayHammerHitEffect(CCharacter *pChar)"), std::string::npos);
-	EXPECT_NE(FastPracticeSource.find("closest_point_on_line(StartPos, EndPos"), std::string::npos);
-	EXPECT_EQ(FastPracticeSource.find("HammerHitTracker"), std::string::npos);
-	EXPECT_NE(TClientSource.find("FindTargetHitsAtTick("), std::string::npos);
-	EXPECT_NE(TClientSource.find("if(!Hit.m_TargetWoke)"), std::string::npos);
-	EXPECT_NE(TClientSource.find("CheckHammerWakeupActions();"), std::string::npos);
-	EXPECT_NE(TClientSource.find("m_aaComboLastHammerHitSnapshotTick[Dummy][TargetId]"), std::string::npos);
-	EXPECT_EQ(GameClientSource.find("QmJellyHammerHitRadius"), std::string::npos);
-
-	const size_t FinalizePos = OnNewSnapshot.find("FinalizeHammerHitEvents();");
-	const size_t ComponentSnapshotPos = OnNewSnapshot.find("pComponent->OnNewSnapshot();");
-	ASSERT_NE(FinalizePos, std::string::npos);
-	ASSERT_NE(ComponentSnapshotPos, std::string::npos);
-	EXPECT_LT(FinalizePos, ComponentSnapshotPos);
-
-	const size_t UnspecPos = WakeupActions.find("Client()->SendPackMsg(Input.m_ActiveConnection");
-	const size_t CloseChatPos = WakeupActions.find("GameClient()->m_Chat.DisableMode();");
-	const size_t SwitchPos = WakeupActions.find("Console()->ExecuteLine(aCommand);");
-	ASSERT_NE(UnspecPos, std::string::npos);
-	ASSERT_NE(CloseChatPos, std::string::npos);
-	ASSERT_NE(SwitchPos, std::string::npos);
-	EXPECT_LT(UnspecPos, CloseChatPos);
-	EXPECT_LT(CloseChatPos, SwitchPos);
-}
 
 TEST(QmNewUiMenuBranches, SettingsCardMigrationsKeepVersionPendingWhenExactMigrationFails)
 {
@@ -2262,57 +1768,6 @@ TEST(QmNewUiMenuBranches, ScoreboardUsesOneRowPlanAndDenseTeeLod)
 	EXPECT_NE(RenderScoreboard.find("m_PlayerPoints.GetPoints"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, GaussianBlurUsesSharedUiBackdropWithTransparentFallback)
-{
-	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string UiRectSource = ReadTextFile("src/game/client/ui_rect.cpp");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string ScoreboardSource = ReadTextFile("src/game/client/components/scoreboard.cpp");
-	const std::string TooltipsSource = ReadTextFile("src/game/client/components/tooltips.cpp");
-	const std::string ImeSource = ReadTextFile("src/game/client/qm_ime_manager.cpp");
-	const std::string CachedRectDraw = FunctionBody(UiSource, "void CUIElement::SUIElementRect::Draw(");
-	const std::string BatchableRectDraw = FunctionBody(UiSource, "void CUi::RenderBatchableRect(");
-	const std::string MenuButtonDraw = FunctionBody(UiSource, "int CUi::DoButton_Menu(");
-	const std::string RectDraw = FunctionBody(UiRectSource, "void CUIRect::Draw(");
-	const std::string RectDraw4 = FunctionBody(UiRectSource, "void CUIRect::Draw4(");
-	const std::string MenuRender = FunctionBody(MenusSource, "void CMenus::Render()");
-	const std::string LoadingRender = FunctionBody(MenusSource, "void CMenus::RenderLoading(");
-
-	EXPECT_NE(UiHeader.find("CUiScopedGaussianBlur(CUi *pUi, float Alpha = 1.0f)"), std::string::npos);
-	EXPECT_NE(UiHeader.find("GaussianBlurScopeAlpha() const"), std::string::npos);
-	EXPECT_NE(UiHeader.find("RenderGaussianBlur(const CUIRect &Rect, float Alpha"), std::string::npos);
-	EXPECT_NE(UiSource.find("IsBackbufferCaptureSupported"), std::string::npos);
-	EXPECT_NE(UiSource.find("IsRenderTargetGaussianBlurSupported"), std::string::npos);
-	EXPECT_NE(UiSource.find("CaptureBackbufferToRenderTarget"), std::string::npos);
-	EXPECT_NE(UiSource.find("GaussianBlurRenderTarget"), std::string::npos);
-	const std::string PrepareBlur = FunctionBody(UiSource, "bool CUi::PrepareGaussianBlur()");
-	EXPECT_NE(PrepareBlur.find("m_GaussianBlurPrepared && m_GaussianBlurPreparedFrame == PerfFrame"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("m_GaussianBlurPreparedFrame = PerfFrame"), std::string::npos);
-	EXPECT_NE(PrepareBlur.find("m_GaussianBlurPrepared = true"), std::string::npos);
-	EXPECT_NE(UiSource.find("Graphics()->GetScreen"), std::string::npos);
-	EXPECT_NE(UiSource.find("UiGaussianBlurTargetDimension"), std::string::npos);
-	EXPECT_NE(CachedRectDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
-	EXPECT_NE(BatchableRectDraw.find("GaussianBlurScopeAlpha()"), std::string::npos);
-	EXPECT_NE(MenuButtonDraw.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_EQ(CachedRectDraw.find("RenderGaussianBlur(*pRect, Color.a)"), std::string::npos);
-	EXPECT_EQ(BatchableRectDraw.find("RenderGaussianBlur(*pRect, Color.a)"), std::string::npos);
-	EXPECT_EQ(MenuButtonDraw.find("RenderGaussianBlur(*pRect, BackgroundColor.a)"), std::string::npos);
-	EXPECT_NE(RectDraw.find("DrawRectBackdrop(Corners, Rounding)"), std::string::npos);
-	EXPECT_NE(RectDraw4.find("DrawRectBackdrop(Corners, Rounding)"), std::string::npos);
-	EXPECT_NE(MenuRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
-	EXPECT_NE(LoadingRender.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
-	EXPECT_NE(ScoreboardSource.find("const float GaussianBlurAlpha = WantActive ? 1.0f : m_AnimContentAlpha;"), std::string::npos);
-	EXPECT_NE(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), GaussianBlurAlpha);"), std::string::npos);
-	EXPECT_EQ(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui());"), std::string::npos);
-	EXPECT_EQ(ScoreboardSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), BackgroundAlphaFinal);"), std::string::npos);
-	EXPECT_NE(TooltipsSource.find("CUiScopedGaussianBlur GaussianBlurScope(Ui(), AlphaFactor);"), std::string::npos);
-	EXPECT_NE(ImeSource.find("CUiScopedGaussianBlur GaussianBlurScope(m_pGameClient->Ui());"), std::string::npos);
-	EXPECT_EQ(ScoreboardSource.find("BetterScoreboardBlur"), std::string::npos);
-
-	// Existing translucent surfaces remain the unsupported-backend fallback.
-	EXPECT_NE(ScoreboardSource.find("Scoreboard.Draw(ScoreboardGlassSurface(BackgroundAlphaFinal)"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, GaussianBlurCoversRequestedHudAndVoteBackgroundsOnly)
 {
@@ -2334,116 +1789,7 @@ TEST(QmNewUiMenuBranches, GaussianBlurCoversRequestedHudAndVoteBackgroundsOnly)
 	EXPECT_NE(MiniVote.find("View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f)"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, GaussianBlurSkipsPageSwitchTransitionOverlays)
-{
-	const std::string MenusHeader = ReadTextFile("src/game/client/components/menus.h");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const std::string IngameSource = ReadTextFile("src/game/client/components/menus_ingame.cpp");
-	const std::string TouchControlsSource = ReadTextFile("src/game/client/components/menus_ingame_touch_controls.cpp");
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string Settings7Source = ReadTextFile("src/game/client/components/menus_settings7.cpp");
-	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string TransitionSources = MenusSource + BrowserSource + IngameSource + SettingsSource + Settings7Source + QmClientSource + TClientSource;
-	const std::string TransitionOverlay = FunctionBody(MenusSource, "void CMenus::DrawUiSwitchTransitionOverlay(");
-	const std::string TouchButtonEditor = FunctionBody(TouchControlsSource, "void CMenusIngameTouchControls::RenderTouchButtonEditor(");
-	const std::regex DirectTransitionOverlayDraw(R"(\b[A-Za-z_][A-Za-z0-9_]*\.Draw\([^\n]*(TransitionAlpha|TabTransitionAlpha))");
 
-	EXPECT_NE(MenusHeader.find("void DrawUiSwitchTransitionOverlay(const CUIRect &Rect, ColorRGBA Color);"), std::string::npos);
-	EXPECT_NE(TransitionOverlay.find("CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());"), std::string::npos);
-	EXPECT_NE(TransitionOverlay.find("Rect.Draw(Color, IGraphics::CORNER_NONE, 0.0f);"), std::string::npos);
-	EXPECT_FALSE(std::regex_search(TransitionSources, DirectTransitionOverlayDraw));
-	EXPECT_NE(TouchButtonEditor.find("CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());"), std::string::npos);
-	EXPECT_NE(TouchButtonEditor.find("BlockClip.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, TransitionAlpha)"), std::string::npos);
-	EXPECT_NE(BrowserSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_NE(IngameSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_EQ(SettingsSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_EQ(Settings7Source.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_EQ(QmClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-	EXPECT_EQ(TClientSource.find("DrawUiSwitchTransitionOverlay("), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, GaussianBlurSkipsButtonsAndKeepsSurfaceRounding)
-{
-	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string UiListboxHeader = ReadTextFile("src/game/client/ui_listbox.h");
-	const std::string UiListboxSource = ReadTextFile("src/game/client/ui_listbox.cpp");
-	const std::string UiRectSource = ReadTextFile("src/game/client/ui_rect.cpp");
-	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string BrowserSource = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const std::string DemoSource = ReadTextFile("src/game/client/components/menus_demo.cpp");
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string SettingsAssetsSource = ReadTextFile("src/game/client/components/menus_settings_assets.cpp");
-	const std::string StartSource = ReadTextFile("src/game/client/components/menus_start.cpp");
-	const std::string QmClientSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string ButtonsSource = ReadTextFile("src/game/client/QmUi/UiButtons.cpp");
-	const std::string FormsSource = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string NavigationSource = ReadTextFile("src/game/client/QmUi/UiNavigation.cpp");
-	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
-	const std::string VotingSource = ReadTextFile("src/game/client/components/voting.cpp");
-	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/tclient.cpp");
-	const std::string BrowserServerList = FunctionBody(BrowserSource, "void CMenus::RenderServerbrowserServerList(");
-	const std::string BrowserFade = BlockBodyAfter(BrowserServerList, "if(NumServers * ms_ListheaderHeight > ListView.h)");
-	const std::string StartMenu = FunctionBody(StartSource, "void CMenusStart::RenderStartMenuImpl(");
-
-	EXPECT_NE(UiHeader.find("class CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(UiHeader.find("RenderGaussianBlur(const CUIRect &Rect, float Alpha = 1.0f, int Corners = IGraphics::CORNER_NONE, float Rounding = 0.0f)"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiRectSource, "void CUIRect::DrawRectBackdrop(").find("Corners, Rounding"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "void CUIElement::SUIElementRect::Draw(").find("Corners, Rounding"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "void CUi::RenderBatchableRect(").find("Corners, Rounding"), std::string::npos);
-
-	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_FontIcon(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, const SEditBoxRenderOptions &RenderOptions)").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiSource, "SEditResult<int64_t> CUi::DoValueSelectorWithState(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_Menu(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_MenuTab(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_Toggle(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoButton_CheckBox_Common_WithLabelElement(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(MenusSource, "ColorHSLA CMenus::DoButton_ColorPicker(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(MenusSource, "int CMenus::DoMenuTabV2(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(ButtonsSource, "bool DoStyledButton(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(ButtonsSource, "bool IconButton(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(FormsSource, "bool Toggle(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(NavigationSource, "bool ListItem(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(FunctionBody(BrowserSource, "void CMenus::RenderServerbrowserServerList(").find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(StartMenu.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_EQ(StartMenu.find("CUiScopedGaussianBlur GaussianBlurScope"), std::string::npos);
-
-	EXPECT_NE(UiListboxHeader.find("SuppressGaussianBlur() const"), std::string::npos);
-	EXPECT_NE(FunctionBody(UiListboxSource, "CListboxItem CListBox::DoNextItem(").find("Item.m_GaussianBlurSuppressed = true;"), std::string::npos);
-	EXPECT_NE(DemoSource.find("auto GaussianBlurSuppression = ListItem.SuppressGaussianBlur();"), std::string::npos);
-	EXPECT_NE(BrowserSource.find("auto GaussianBlurSuppression = Item.SuppressGaussianBlur();"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("auto GaussianBlurSuppression = Item.SuppressGaussianBlur();"), std::string::npos);
-	EXPECT_NE(SettingsAssetsSource.find("auto GaussianBlurSuppression = Item.SuppressGaussianBlur();"), std::string::npos);
-	EXPECT_NE(BrowserFade.find("CUiScopedGaussianBlurSuppression"), std::string::npos);
-	EXPECT_NE(BrowserFade.find("Fade.Draw4("), std::string::npos);
-
-	const size_t PreviewSuppression = QmClientSource.find("CUiScopedGaussianBlurSuppression PreviewBlurSuppression(Ui());");
-	ASSERT_NE(PreviewSuppression, std::string::npos);
-	const size_t PreviewBlockStart = QmClientSource.rfind('{', PreviewSuppression);
-	ASSERT_NE(PreviewBlockStart, std::string::npos);
-	const size_t PreviewBlockEnd = MatchingBrace(QmClientSource, PreviewBlockStart);
-	ASSERT_NE(PreviewBlockEnd, std::string::npos);
-	const size_t PreviewDraw = QmClientSource.find("PreviewFrame.Draw(", PreviewSuppression);
-	const size_t PreviewMargin = QmClientSource.find("PreviewRect.Margin(maximum", PreviewSuppression);
-	const size_t PreviewButtonLogic = QmClientSource.find("Ui()->DoButtonLogic(&s_ColorPreviewButton", PreviewSuppression);
-	ASSERT_NE(PreviewDraw, std::string::npos);
-	ASSERT_NE(PreviewMargin, std::string::npos);
-	ASSERT_NE(PreviewButtonLogic, std::string::npos);
-	EXPECT_LT(PreviewDraw, PreviewBlockEnd);
-	EXPECT_GT(PreviewMargin, PreviewBlockEnd);
-	EXPECT_GT(PreviewButtonLogic, PreviewBlockEnd);
-
-	EXPECT_NE(HudSource.find("ScoreHudCorners, 5.0f"), std::string::npos);
-	EXPECT_NE(HudSource.find("IGraphics::CORNER_ALL, ui_token::radius::BASE"), std::string::npos);
-	EXPECT_NE(HudSource.find("HudEditorScope.m_Corners, ui_token::radius::BASE"), std::string::npos);
-	EXPECT_NE(VotingSource.find("HudEditorScope.m_Corners, ui_token::radius::BASE"), std::string::npos);
-	EXPECT_NE(TClientSource.find("HudEditorScope.m_Corners, 3.0f"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, IngameMenuPrimaryActionLabelsUseEnglishKeys)
 {
@@ -2594,88 +1940,10 @@ TEST(QmNewUiMenuBranches, FriendAddPopupExposesCreateCategoryAction)
 	EXPECT_NE(Source.find("Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, FriendCategoryHeaderActionExcludesManageButton)
-{
-	const CUIRect Header{10.0f, 20.0f, 180.0f, 24.0f};
-	CUIRect HeaderAction;
-	CUIRect ManageButton;
 
-	CMenus::SplitFriendsCategoryHeaderRects(Header, &HeaderAction, &ManageButton);
 
-	EXPECT_FLOAT_EQ(HeaderAction.x, Header.x);
-	EXPECT_FLOAT_EQ(HeaderAction.y, Header.y);
-	EXPECT_FLOAT_EQ(HeaderAction.w, Header.w - Header.h);
-	EXPECT_FLOAT_EQ(HeaderAction.h, Header.h);
-	EXPECT_FLOAT_EQ(ManageButton.x, Header.x + Header.w - Header.h + 2.0f);
-	EXPECT_FLOAT_EQ(ManageButton.y, Header.y + 2.0f);
-	EXPECT_FLOAT_EQ(ManageButton.w, Header.h - 4.0f);
-	EXPECT_FLOAT_EQ(ManageButton.h, Header.h - 4.0f);
-	EXPECT_LE(HeaderAction.x + HeaderAction.w, ManageButton.x);
-}
 
-TEST(QmNewUiMenuBranches, FriendCategoryEditPopupHasRoomForInputAndActions)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	constexpr float RequiredHeight = 5.0f * 2.0f + 12.0f + 3.0f + 18.0f + 6.0f + 20.0f;
 
-	EXPECT_FLOAT_EQ(CMenus::FriendsCategoryEditPopupHeight(), RequiredHeight);
-	EXPECT_GT(CMenus::FriendsCategoryActionsPopupHeight(), 60.0f);
-	EXPECT_NE(Source.find("CMenus::FriendsCategoryEditPopupHeight()"), std::string::npos);
-	EXPECT_NE(Source.find("CMenus::SecondaryPanelRect("), std::string::npos);
-	EXPECT_EQ(Source.find("250.0f, 62.0f"), std::string::npos);
-	EXPECT_EQ(Source.find("250.0f, 110.0f"), std::string::npos);
-	EXPECT_EQ(Source.find("280.0f, CMenus::FriendsCategoryEditPopupHeight()"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, SecondaryPanelRectClampsNearScreenEdges)
-{
-	const CUIRect Screen{0.0f, 0.0f, 800.0f, 600.0f};
-	const CUIRect Panel = CMenus::SecondaryPanelRect(780.0f, 590.0f, 300.0f, 140.0f, Screen);
-
-	EXPECT_FLOAT_EQ(Panel.w, 300.0f);
-	EXPECT_FLOAT_EQ(Panel.h, 140.0f);
-	EXPECT_LE(Panel.x + Panel.w, 792.0f);
-	EXPECT_LE(Panel.y + Panel.h, 592.0f);
-	EXPECT_GE(Panel.x, 8.0f);
-	EXPECT_GE(Panel.y, 8.0f);
-}
-
-TEST(QmNewUiMenuBranches, FriendAutoFollowDelaysAndStopsAfterTwoJumps)
-{
-	CMenus::SFriendAutoFollowState State;
-	char aConnect[NETADDR_MAXSTRSIZE] = "";
-
-	CMenus::StartFriendAutoFollow(State, "Alice", "Clan", "127.0.0.1:8303");
-	EXPECT_TRUE(State.m_Active);
-	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8303", 10.0f, 3, 2, aConnect, sizeof(aConnect)));
-
-	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 11.0f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_TRUE(State.m_HasPendingAddress);
-	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 13.9f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_TRUE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 14.0f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_STREQ(aConnect, "127.0.0.1:8304");
-	EXPECT_TRUE(State.m_Active);
-	EXPECT_EQ(State.m_JumpCount, 1);
-
-	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8305", 20.0f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_TRUE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8305", 23.0f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_STREQ(aConnect, "127.0.0.1:8305");
-	EXPECT_FALSE(State.m_Active);
-	EXPECT_EQ(State.m_JumpCount, 2);
-}
-
-TEST(QmNewUiMenuBranches, FriendAutoFollowCancelsWhenTargetGoesOffline)
-{
-	CMenus::SFriendAutoFollowState State;
-	char aConnect[NETADDR_MAXSTRSIZE] = "";
-
-	CMenus::StartFriendAutoFollow(State, "Alice", "Clan", "127.0.0.1:8303");
-	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, true, "127.0.0.1:8304", 11.0f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_TRUE(State.m_HasPendingAddress);
-	EXPECT_FALSE(CMenus::FriendAutoFollowStep(State, false, "", 12.0f, 3, 2, aConnect, sizeof(aConnect)));
-	EXPECT_FALSE(State.m_Active);
-	EXPECT_FALSE(State.m_HasPendingAddress);
-}
 
 TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnects)
 {
@@ -2694,103 +1962,6 @@ TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnect
 	EXPECT_NE(FriendNotifyBody.find("&g_Config.m_QmFriendAutoFollowDelay, 0, 30, \"s\""), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, ShortServerNamesCoverKnownFamilies)
-{
-	CServerInfo Info{};
-	char aBuf[sizeof(Info.m_aName)];
-
-	str_copy(Info.m_aName, "KoG | China #12 - HappyHook [kog.tw]");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "China - HappyHook");
-
-	str_copy(Info.m_aName, "Axiom 北京 普通 - CHN1O 钩累死");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN1O 钩累死");
-
-	str_copy(Info.m_aName, "DDNet CHN7 西安 - Moderate 中阶");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - CHN7 西安");
-
-	str_copy(Info.m_aName, "DDNet CHN2 上海 - Brutal 高阶");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN2 上海");
-
-	str_copy(Info.m_aName, "Axiom Novice - CHN12 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN12 钩累死");
-
-	str_copy(Info.m_aName, "Axiom Insane - CHN7 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "疯狂 - CHN7 钩累死");
-
-	str_copy(Info.m_aName, "Axiom Axiom ◇ 广州 ✦ 困难 - CHN9 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN9 钩累死");
-
-	str_copy(Info.m_aName, "Axiom Axiom ◇ 北京 ✦ 困难 - CHN10 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN10 钩累死");
-
-	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 活动 - CHN9 AXRace");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动 - CHN9 AXRace");
-
-	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 极限 - CHN9 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "极限 - CHN9 钩累死");
-
-	str_copy(Info.m_aName, "Axiom ◇ 上海 ✦ 训练 - CHN2 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "训练 - CHN2 钩累死");
-
-	str_copy(Info.m_aName, "Axiom ◇ 成都 ✦ 娱乐 - CHN12 钩累死");
-	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "娱乐 - CHN12 钩累死");
-
-	str_copy(Info.m_aName, "DDNet Moderate - CHN7 西安");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - CHN7 西安");
-
-	str_copy(Info.m_aName, "DDNet CHN2 上海 - DDmaX.Easy 古典");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Easy 古典 - CHN2 上海");
-
-	str_copy(Info.m_aName, "DDNet CHN7 西安 - DDmaX.Next");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Next 古典 - CHN7 西安");
-
-	str_copy(Info.m_aName, "DDNet CHN3 宁波 - DDmaX.Pro 古典");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Pro 古典 - CHN3 宁波");
-
-	str_copy(Info.m_aName, "DDNet CHN6 上海 - Oldschool 传统");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 - CHN6 上海");
-
-	str_copy(Info.m_aName, "DDNet CHN6 上海 - Solo 单人");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "单人 - CHN6 上海");
-
-	str_copy(Info.m_aName, "DDNet CHN5 上海 - Dummy 分身");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "分身 - CHN5 上海");
-
-	str_copy(Info.m_aName, "DDNet Taiwan - Moderate");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "中阶图 - Taiwan");
-
-	str_copy(Info.m_aName, "DDNet Taiwan - Brutal");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - Taiwan");
-
-	str_copy(Info.m_aName, "Brutal - CHN5 上海");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN5 上海");
-
-	str_copy(Info.m_aName, "Plain Server Name");
-	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "Plain Server Name");
-}
 
 TEST(QmNewUiMenuBranches, ShortServerNamesKeepDisplayNameHighlightPath)
 {
@@ -2801,21 +1972,6 @@ TEST(QmNewUiMenuBranches, ShortServerNamesKeepDisplayNameHighlightPath)
 	EXPECT_EQ(Source.find("!g_Config.m_QmShortServerNames && g_Config.m_BrFilterString"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, CallVoteMapListShowsFinishedIcon)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_ingame.cpp");
-	const size_t RenderPos = Source.find("bool CMenus::RenderServerControlServer(CUIRect MainView, bool UpdateScroll)");
-	ASSERT_NE(RenderPos, std::string::npos);
-	const size_t EndPos = Source.find("bool CMenus::RenderServerControlKick(CUIRect MainView", RenderPos);
-	ASSERT_NE(EndPos, std::string::npos);
-	const std::string Body = Source.substr(RenderPos, EndPos - RenderPos);
-
-	EXPECT_NE(Body.find("ExtractMapName(pOption->m_aDescription"), std::string::npos);
-	EXPECT_NE(Body.find("g_Config.m_BrIndicateFinished"), std::string::npos);
-	EXPECT_NE(Body.find("pCurrentCommunity->HasRank(aMapName) == CServerInfo::RANK_RANKED"), std::string::npos);
-	EXPECT_NE(Body.find("RenderFontIcon(Icon, FONT_ICON_FLAG_CHECKERED"), std::string::npos);
-	EXPECT_NE(Body.find("GameClient()->m_TClient.IsFavoriteMap(aMapName)"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, ClientSourceDoesNotUseChineseLocalizeKeys)
 {
@@ -3056,20 +2212,6 @@ TEST(QmNewUiMenuBranches, NameplatePreviewRebuildsTextContainerInsteadOfAppendin
 	EXPECT_NE(Body.find("QmNameplateTextEffectPadding"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, NameplateTextEffectsReserveTheirRenderedExtent)
-{
-	EXPECT_FLOAT_EQ(QmNameplateTextEffectPadding(0, 4, 12), 0.0f);
-	EXPECT_FLOAT_EQ(QmNameplateTextEffectPadding(QM_TEXT_EFFECT_BORDER, 1, 12), 1.0f);
-	EXPECT_FLOAT_EQ(QmNameplateTextEffectPadding(QM_TEXT_EFFECT_BORDER, 8, 12), 4.0f);
-	EXPECT_FLOAT_EQ(QmNameplateTextEffectPadding(QM_TEXT_EFFECT_GLOW, 4, 0), 1.0f);
-	EXPECT_FLOAT_EQ(QmNameplateTextEffectPadding(QM_TEXT_EFFECT_GLOW, 4, 7), 7.0f);
-	EXPECT_FLOAT_EQ(QmNameplateTextEffectPadding(QM_TEXT_EFFECT_BORDER | QM_TEXT_EFFECT_GLOW, 3, 7), 7.0f);
-
-	const std::string QmConfigHeader = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string AppearanceSettings = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
-	EXPECT_NE(QmConfigHeader.find("QmNameplateTextGlowRange, qm_nameplate_text_glow_range, 4, 1, 12"), std::string::npos);
-	EXPECT_NE(AppearanceSettings.find("Localize(\"Glow range\"), 1, 12"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 {
@@ -3114,98 +2256,6 @@ TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserDraggerOutlineColor, LaserDraggerInnerColor, LASERTYPE_DRAGGER);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmSettingsCardsUseSharedStyleHelpers)
-{
-	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
-	EXPECT_NE(HeaderSource.find("struct SQmSettingsCardStyle"), std::string::npos);
-	EXPECT_NE(HeaderSource.find("SQmSettingsCardStyle QmSettingsCardStyle(float UiScale) const;"), std::string::npos);
-	EXPECT_NE(HeaderSource.find("CScrollRegionParams QmSettingsScrollRegionParams(float UiScale) const;"), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("RenderQmSettingsGlassCard"), std::string::npos);
-
-	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
-	EXPECT_NE(MenuSource.find("CMenus::SQmSettingsCardStyle CMenus::QmSettingsCardStyle(float UiScale) const"), std::string::npos);
-	EXPECT_NE(MenuSource.find("const SQmScrollContainerStyle ScrollStyle = QmScrollContainerStyleForSize(EQmScrollSize::MEDIUM, 1.0f);"), std::string::npos);
-	EXPECT_NE(MenuSource.find("Style.m_ScrollbarWidth = ScrollStyle.m_ScrollbarWidth;"), std::string::npos);
-	EXPECT_NE(MenuSource.find("Request.m_Profile = EQmScrollProfile::SETTINGS_OUTER;"), std::string::npos);
-	EXPECT_NE(MenuSource.find("return QmScrollRegionParamsFromPolicy(QmResolveScrollPolicy(Request, UiScale, 0.0f));"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("QmScrollRegionParamsForSize(EQmScrollSize::LARGE, UiScale)"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("Params.m_ScrollUnit = 60.0f * UiScale;"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("Params.m_ScrollbarThickness = Style.m_ScrollbarWidth;"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("Params.m_ScrollbarMargin = Style.m_ScrollbarMargin;"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
-
-	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string VisualDeck = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly)");
-	const std::string FunctionDeck = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly)");
-	const std::string HudDeck = FunctionBody(QmSource, "void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(VisualDeck.empty());
-	ASSERT_FALSE(FunctionDeck.empty());
-	ASSERT_FALSE(HudDeck.empty());
-	EXPECT_NE(HudDeck.find("const bool DummyMiniViewExpanded = g_Config.m_QmDummyMiniView != 0;"), std::string::npos);
-	EXPECT_NE(HudDeck.find("ResolveQmHudDummyMiniViewHeight(Metrics, DummyMiniViewExpanded)"), std::string::npos);
-	EXPECT_NE(HudDeck.find("case EQmModuleId::Coords: return ResolveQmHudCoordsHeight(Metrics);"), std::string::npos);
-	EXPECT_NE(HudDeck.find("ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0)"), std::string::npos);
-	EXPECT_EQ(HudDeck.find("case EQmModuleId::Coords: return Rows(8.0f) + LineHeight;"), std::string::npos);
-	EXPECT_EQ(HudDeck.find("case EQmModuleId::HudNotifications: return g_Config.m_QmHudNotificationsShowAdvanced ? Rows(15.0f) + LineHeight * 3.0f : Rows(4.0f);"), std::string::npos);
-	EXPECT_NE(HudDeck.find("const bool DynamicIslandOriginalStyle = g_Config.m_QmHudIslandUseOriginalStyle != 0;"), std::string::npos);
-	EXPECT_NE(HudDeck.find("ResolveQmHudDynamicIslandHeight(Metrics, DynamicIslandOriginalStyle, ContentWidth)"), std::string::npos);
-	EXPECT_NE(HudDeck.find("RenderQmHudDummyMiniViewContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, DummyMiniViewExpanded, ReadOnly)"), std::string::npos);
-	EXPECT_NE(HudDeck.find("RenderQmHudDynamicIslandContent(Content, LineHeight, LineSpacing, DynamicIslandOriginalStyle)"), std::string::npos);
-	EXPECT_NE(HudDeck.find("BuildHudPreLayoutInput"), std::string::npos);
-	EXPECT_NE(HudDeck.find("Definition.m_PreLayoutInput = BuildHudPreLayoutInput(Id);"), std::string::npos);
-	EXPECT_NE(HudDeck.find("HandleQmHudCheckboxInput(Content"), std::string::npos);
-	EXPECT_NE(HudDeck.find("case EQmModuleId::SpeedrunTimer:"), std::string::npos);
-	EXPECT_NE(HudDeck.find("case EQmModuleId::SystemMediaControls:"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("BuildVisualPreLayoutInput"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("Definition.m_PreLayoutInput = BuildVisualPreLayoutInput(Id);"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("case EQmModuleId::ChatBubble:"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("case EQmModuleId::CameraView:"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("case EQmModuleId::SkinTransition:"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("case EQmModuleId::WeaponAnimation:"), std::string::npos);
-	EXPECT_NE(VisualDeck.find("case EQmModuleId::CollisionHitbox:"), std::string::npos);
-	EXPECT_NE(HudDeck.find("ConsumeQmHudRow(Content); // push radius"), std::string::npos);
-	EXPECT_NE(HudDeck.find("ResolveSettingsRadioRowLayout(Content, 2, Metrics)"), std::string::npos);
-	EXPECT_NE(QmSource.find("const int NoiseSuppressModeForLayout = std::clamp(g_Config.m_QmVoiceNoiseSuppressEnable, 0, 2);"), std::string::npos);
-	EXPECT_NE(QmSource.find("g_Config.m_QmLyricsInMediaIsland"), std::string::npos);
-	EXPECT_EQ(QmSource.find("EQmModuleId::Lyrics"), std::string::npos);
-	EXPECT_NE(QmSource.find("if(!PrewarmOnly && !Ui()->RenderOnly())"), std::string::npos);
-
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string NamePlateBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
-	ASSERT_FALSE(NamePlateBranch.empty());
-	EXPECT_NE(NamePlateBranch.find("AddMeasuredCard(5,"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("AddCard(6, NamePlatePreviewMinCardHeight"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("const auto NamePlateStrongEnabled = [] { return g_Config.m_ClNamePlatesStrong != 0; };"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("ResolveSettingsRadioRowLayout"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("if(NamePlateStrongEnabled())"), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("vCards.back().m_MeasureRevision ="), std::string::npos);
-	EXPECT_NE(NamePlateBranch.find("m_PreLayoutInput = [this, LineSize, MarginSmall, AppearanceMetrics, NamePlateSectionHeaderHeight, NamePlateColorPickerHeight, NamePlateStrongEnabled]"), std::string::npos);
-	EXPECT_EQ(NamePlateBranch.find("LeftView.HSplitTop(NamePlateContentPaddingY"), std::string::npos);
-	EXPECT_EQ(NamePlateBranch.find("RightView.HSplitTop(NamePlateContentPaddingY"), std::string::npos);
-	EXPECT_EQ(NamePlateBranch.find("NamePlateSettingsShadow.Draw"), std::string::npos);
-	EXPECT_EQ(NamePlateBranch.find("NamePlatePreviewShadow.Draw"), std::string::npos);
-
-	const std::string LaserBranch = BlockBodyAfter(SettingsSource, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_LASER)");
-	ASSERT_FALSE(LaserBranch.empty());
-	EXPECT_NE(LaserBranch.find("AddCard(10, ResolveLaserEnhancedMinCardHeight()"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("AddCard(11, LaserColorMinCardHeight"), std::string::npos);
-	EXPECT_NE(LaserBranch.find("AddCard(12, LaserPreviewMinCardHeight"), std::string::npos);
-	EXPECT_EQ(LaserBranch.find("auto RenderQmSettingsGlassCard ="), std::string::npos);
-	EXPECT_EQ(LaserBranch.find("80.0f * UiScale"), std::string::npos);
-
-	for(const std::string *pDeck : {&VisualDeck, &FunctionDeck, &HudDeck})
-	{
-		EXPECT_NE(pDeck->find("ResolveSettingsContentMetrics(MainView.w)"), std::string::npos);
-		EXPECT_NE(pDeck->find("CardDeck.RenderCached("), std::string::npos);
-		EXPECT_NE(pDeck->find("ResolveSettingsCardDefinitionsRevision("), std::string::npos);
-		EXPECT_NE(pDeck->find("static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;"), std::string::npos);
-		EXPECT_NE(pDeck->find("Ui()->DoButtonLogic(&CollapseButtons[Index]"), std::string::npos);
-		EXPECT_NE(pDeck->find("RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed)"), std::string::npos);
-		EXPECT_EQ(pDeck->find("Ui()->DoButtonLogic(&Collapsed[Index]"), std::string::npos);
-		EXPECT_EQ(pDeck->find("BeginSettingsQmScrollContainer("), std::string::npos);
-		EXPECT_EQ(pDeck->find("s_GlassCards"), std::string::npos);
-	}
-}
 
 TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 {
@@ -3257,30 +2307,6 @@ TEST(QmNewUiMenuBranches, EditBoxesActivateFromTheirConfiguredHitRect)
 	EXPECT_EQ(Body.find("else if(HotItem() == pLineInput)"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, InputTrailingActionsDoNotStealTextEditingHitArea)
-{
-	const std::string Source = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string Header = ReadTextFile("src/game/client/QmUi/UiForms.h");
-	const std::string Body = FunctionBody(Source, "SInputFieldResult InputField(const IUiContext &Ctx, CLineInput *pInput, const CUIRect &Rect, const SInputFieldOptions &Options)");
-	ASSERT_FALSE(Body.empty());
-
-	EXPECT_NE(Header.find("m_pTrailingActionId"), std::string::npos);
-	EXPECT_NE(Header.find("m_pTrailingActionIcon"), std::string::npos);
-	EXPECT_NE(Header.find("m_TrailingActionQmIcon"), std::string::npos);
-	EXPECT_NE(Body.find("const bool HasTrailingAction"), std::string::npos);
-	EXPECT_NE(Body.find("CUIRect InputHitRect = Layout.m_ShellRect;"), std::string::npos);
-	EXPECT_NE(Body.find("InputHitRect.VSplitRight(Layout.m_ClearRect.w, &InputHitRect, nullptr);"), std::string::npos);
-	EXPECT_NE(Body.find("InputHitRect.VSplitRight(TrailingRect.w, &InputHitRect, nullptr);"), std::string::npos);
-	EXPECT_NE(Body.find("RenderOptions.m_pHitRect = &InputHitRect;"), std::string::npos);
-	EXPECT_NE(Body.find("DoButtonLogic(Options.m_pTrailingActionId"), std::string::npos);
-	EXPECT_NE(Body.find("Search ? static_cast<int>(EQmIcon::SEARCH) : -1"), std::string::npos);
-	EXPECT_NE(Body.find("static_cast<int>(EQmIcon::CLOSE)"), std::string::npos);
-	EXPECT_NE(Source.find("Ctx.m_pIconManager->RenderIcon"), std::string::npos);
-	EXPECT_NE(Source.find("const float EyeOffScale = QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight) ? 1.25f : 1.15f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float IconScale = QmIcon == static_cast<int>(EQmIcon::EYE_OFF) ? EyeOffScale : 1.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float IconSide = minimum(Rect.w, Rect.h) * 0.58f * IconScale;"), std::string::npos);
-	EXPECT_NE(Source.find("Ctx.m_pUi->DoLabel(&Rect, pIcon, Rect.h * 0.65f * IconScale, TEXTALIGN_MC);"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
 {
@@ -3537,35 +2563,6 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckResetsStateWhenDefinitionViewChanges)
 	EXPECT_NE(SettingsDeck.find("m_ProjectionCache = {};"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsCardDeckPreLayoutUsesTheLastVisibleAnimatedFrame)
-{
-	const std::string SettingsDeck = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string ButtonLogic = FunctionBody(UiSource, "int CUi::DoButtonLogic(");
-	ASSERT_FALSE(SettingsDeck.empty());
-	ASSERT_FALSE(ButtonLogic.empty());
-	EXPECT_NE(SettingsDeck.find("const SSettingsCardFrame PreLayoutFrame = ResolveSettingsCardDrawFrame(Card.m_Frame, Runtime.m_LastDrawOffsetX, Runtime.m_LastDrawOffsetY);"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader)"), std::string::npos);
-	const size_t CardLoop = SettingsDeck.find("for(const SPreparedCard &Card : m_vPreparedCards)");
-	const size_t ActiveHeaderContinuation = SettingsDeck.find("const bool HasActiveHeaderContinuation = SettingsCardDeckHasActiveItemContinuation", CardLoop);
-	const size_t ActiveContentContinuation = SettingsDeck.find("const bool HasActiveContentContinuation = SettingsCardDeckHasActiveItemContinuation", ActiveHeaderContinuation);
-	ASSERT_NE(CardLoop, std::string::npos);
-	ASSERT_NE(ActiveHeaderContinuation, std::string::npos);
-	ASSERT_NE(ActiveContentContinuation, std::string::npos);
-	EXPECT_LT(CardLoop, ActiveHeaderContinuation);
-	EXPECT_LT(ActiveHeaderContinuation, ActiveContentContinuation);
-	EXPECT_NE(SettingsDeck.find("(ControllerVisible || HasActiveHeaderContinuation) && Card.m_pDefinition->m_PreLayoutHeaderInput"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("SettingsCardDeckShouldRunPreLayoutInput(HasPointerInput, HasPendingPreLayoutInput, HasActiveContentContinuation"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput))"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("Card.m_pDefinition->m_HeaderAction"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("m_PreLayoutInput(PreLayoutFrame.m_ContentRect)"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("Runtime.m_LastDrawOffsetY = State.m_DrawOffsetY;"), std::string::npos);
-	EXPECT_NE(ButtonLogic.find("if(PreLayoutInput() && Inside && !IsPopupOpen())"), std::string::npos);
-	EXPECT_NE(ButtonLogic.find("m_pHotItem = pId;"), std::string::npos);
-	EXPECT_NE(ButtonLogic.find("m_pBecomingHotItem = pId;"), std::string::npos);
-	EXPECT_NE(ButtonLogic.find("PreLayoutCurrentFramePress && MouseButtonClicked(Button)"), std::string::npos);
-	EXPECT_LT(ButtonLogic.find("m_pHotItem = pId;"), ButtonLogic.find("SetActiveItem(pId);"));
-}
 
 TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)
 {
@@ -3715,263 +2712,6 @@ TEST(QmNewUiMenuBranches, DDNetSettingsPageUsesSharedQmCards)
 	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(GameplayHeight, &Gameplay, &MainView);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsCardDeckSharedComponentMigratesSoundBindWheelStatusBar)
-{
-	const std::string HeaderSource = ReadTextFile("src/game/client/components/menus.h");
-	EXPECT_EQ(HeaderSource.find("struct SSettingsCardDeckLayout"), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("struct SSettingsCardDeckCard"), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("BeginSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("BeginSettingsCardDeckCard("), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("RenderSettingsCardDragHandle("), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("RenderSettingsCardDeckDragOverlay("), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("m_SettingsCardDeckOrders"), std::string::npos);
-	EXPECT_EQ(HeaderSource.find("m_SettingsCardDeckColumnPrefs"), std::string::npos);
-	EXPECT_NE(HeaderSource.find("qm_card_order::CModel m_SettingsCardOrderModel;"), std::string::npos);
-	EXPECT_NE(HeaderSource.find("CSettingsCardDeck m_SettingsCardDeck;"), std::string::npos);
-
-	const std::string MenuSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string TClientSource = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string SettingsDeck = ReadTextFile("src/game/client/QmUi/SettingsCardDeck.cpp");
-	EXPECT_EQ(MenuSource.find("RenderQmSettingsGlassCard"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("SettingsCardDeckStableId"), std::string::npos);
-	EXPECT_EQ(MenuSource.find("LoadSettingsCardDeckOrdersFromGlobalConfig"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("CommitSettingsCardDeckDrop(Model, pTab, pStableId"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("SettingsCard(Ctx, Card.m_Frame"), std::string::npos);
-
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string FormatBackendDisplayName = FunctionBody(SettingsSource, "void FormatQmGraphicsBackendDisplayName(");
-	ASSERT_FALSE(FormatBackendDisplayName.empty());
-	EXPECT_NE(FormatBackendDisplayName.find("\"OpenGL %d.%d\""), std::string::npos);
-	EXPECT_EQ(FormatBackendDisplayName.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
-	const std::string RenderSettingsSound = FunctionBody(SettingsSource, "void CMenus::RenderSettingsSound(CUIRect MainView)");
-	ASSERT_FALSE(RenderSettingsSound.empty());
-	EXPECT_NE(RenderSettingsSound.find("SettingsPageLayout("), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("QmResolveScrollPolicy("), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("CQmScrollState"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("SettingsCardDeckForRenderPass().RenderCached(SoundCardCtx, SoundPage, \"sound\""), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("AddCard(ToggleSpec"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("AddCard(VolumeSpec"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("AddCard(AudioPackSpec"), std::string::npos);
-	EXPECT_LT(RenderSettingsSound.find("AddCard(VolumeSpec"), RenderSettingsSound.find("AddCard(AudioPackSpec"));
-	EXPECT_NE(RenderSettingsSound.find("DoSoundNumericField(\"sound-volume\""), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("DoSoundNumericField(\"sound-background-music-volume\""), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("BeginSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("DoSliderWithValueInput("), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("Ui()->DoButton_FontIcon(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("str_format(aBadge, sizeof(aBadge), \"%d\", Entry.m_FileCount);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("str_copy(aBadge, Localize(\"Built-in\"), sizeof(aBadge));"), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("Localize(\"Selected pack\")"), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("\"audio_packs_title\""), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("EndSettingsCardDeck("), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("Definition.m_IsVisible = std::move(IsVisible);"), std::string::npos);
-	const size_t ToggleCard = RenderSettingsSound.find("AddCard(ToggleSpec");
-	const size_t VolumeCard = RenderSettingsSound.find("AddCard(VolumeSpec");
-	const size_t AudioPackCard = RenderSettingsSound.find("AddCard(AudioPackSpec");
-	ASSERT_NE(ToggleCard, std::string::npos);
-	ASSERT_NE(VolumeCard, std::string::npos);
-	ASSERT_NE(AudioPackCard, std::string::npos);
-	EXPECT_NE(RenderSettingsSound.substr(ToggleCard, VolumeCard - ToggleCard).find("}, {}, true, ProcessSoundToggleInput, g_Config.m_SndEnable);"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.substr(VolumeCard, AudioPackCard - VolumeCard).find("[]() { return g_Config.m_SndEnable != 0; }"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.substr(AudioPackCard).find("[]() { return g_Config.m_SndEnable != 0; }"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("Definition.m_PreLayoutInput = std::move(PreLayoutInput);"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("ProcessSoundToggleInput"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("vCards.back().m_Measure = [LineHeight, LineSpacing]"), std::string::npos);
-	EXPECT_NE(RenderSettingsSound.find("SLabelProperties{}, false"), std::string::npos);
-	EXPECT_EQ(RenderSettingsSound.find("AudioPackView.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f)"), std::string::npos);
-
-	const size_t RebuildActiveStateIndices = SettingsDeck.find("RebuildActiveStateIndices");
-	const size_t InitialBuild = SettingsDeck.find("BuildPreparedCards(*pColumns);");
-	const size_t PreLayoutInput = SettingsDeck.find("m_pDefinition->m_PreLayoutInput");
-	const size_t PreLayoutClipCheck = SettingsDeck.find("pScrollRegion == nullptr || !pScrollRegion->RectClipped", InitialBuild);
-	const size_t ActiveStateRebuild = SettingsDeck.find("RebuildActiveStateIndices();", PreLayoutInput);
-	const size_t FinalBuild = SettingsDeck.find("BuildPreparedCards(*pColumns);", ActiveStateRebuild);
-	const size_t ScrollRegistration = SettingsDeck.find("pScrollRegion->AddRect", FinalBuild);
-	const size_t SettingsCardRender = SettingsDeck.find("SettingsCard(Ctx, Card.m_Frame", FinalBuild);
-	const size_t VisibleDropCommit = SettingsDeck.find("CommitSettingsCardDeckDrop(Model, pTab, pStableId, m_Drag.m_TargetColumn, m_Drag.m_TargetOrder, &m_vActiveStateIndices)");
-	const size_t ViewportHeightInvalidation = SettingsDeck.find("std::abs(m_LastViewportHeight - ScrollViewport.h) > 0.01f");
-	const size_t HeightCacheReset = SettingsDeck.find("std::fill(m_vContentHeights.begin(), m_vContentHeights.end(), -1.0f);", ViewportHeightInvalidation);
-	EXPECT_NE(RebuildActiveStateIndices, std::string::npos);
-	EXPECT_NE(SettingsDeck.find("PreLayoutGeometryChanged"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("m_vContentHeights[Card.m_StateIndex] = -1.0f;"), std::string::npos);
-	ASSERT_NE(InitialBuild, std::string::npos);
-	ASSERT_NE(PreLayoutInput, std::string::npos);
-	ASSERT_NE(PreLayoutClipCheck, std::string::npos);
-	ASSERT_NE(ActiveStateRebuild, std::string::npos);
-	ASSERT_NE(FinalBuild, std::string::npos);
-	ASSERT_NE(ViewportHeightInvalidation, std::string::npos);
-	ASSERT_NE(HeightCacheReset, std::string::npos);
-	EXPECT_LT(ViewportHeightInvalidation, HeightCacheReset);
-	EXPECT_EQ(SettingsDeck.find("std::array<std::vector<int>, 3> aColumns ="), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("const std::array<std::vector<int>, 3> *pColumns ="), std::string::npos);
-	ASSERT_NE(ScrollRegistration, std::string::npos);
-	ASSERT_NE(SettingsCardRender, std::string::npos);
-	ASSERT_NE(VisibleDropCommit, std::string::npos);
-	EXPECT_LT(InitialBuild, PreLayoutInput);
-	EXPECT_LT(PreLayoutClipCheck, PreLayoutInput);
-	EXPECT_LT(PreLayoutInput, ActiveStateRebuild);
-	EXPECT_LT(ActiveStateRebuild, FinalBuild);
-	EXPECT_LT(FinalBuild, ScrollRegistration);
-	EXPECT_LT(FinalBuild, SettingsCardRender);
-	EXPECT_EQ(SettingsDeck.find("PrioritizeVisibilityControllers"), std::string::npos);
-	EXPECT_EQ(SettingsDeck.find("vRenderedStates"), std::string::npos);
-
-	const std::string RenderSettingsTClientSettings = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)");
-	const std::string RenderSettingsTClientBindWheel = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientBindWheel(CUIRect MainView, bool PrewarmOnly)");
-	const std::string RenderSettingsTClientChatBinds = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientChatBinds(CUIRect MainView, bool PrewarmOnly)");
-	const std::string RenderSettingsTClientStatusBar = FunctionBody(TClientSource, "void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)");
-	const std::string StatusBarHeader = ReadTextFile("src/game/client/components/tclient/statusbar.h");
-	ASSERT_FALSE(RenderSettingsTClientSettings.empty());
-	ASSERT_FALSE(RenderSettingsTClientBindWheel.empty());
-	ASSERT_FALSE(RenderSettingsTClientChatBinds.empty());
-	ASSERT_FALSE(RenderSettingsTClientStatusBar.empty());
-	EXPECT_EQ(TClientSource.find("void CMenus::HandleSettingsCardDeckDrag("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientSettings.find("RenderSettingsCardDragHandle(CardBoxRect, &HandleRect, QmSettingsCardStyle(1.0f));"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientSettings.find("SettingsCardDeckItemFromSection(SectionMeta, ColumnId, (int)i, CardRect, HandleRect);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientSettings.find("m_SettingsCardDeck.RenderCached(SettingsUiContext(\"settings_tclient_main\""), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("SettingsPageLayout(MainView, UiScale)"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-editor"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("deck:tclient-bind-wheel-preview"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_BindWheelPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("CardDeck.RenderCached("), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("SettingsCardOrderModel()"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeckCard("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("EndSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("MainView.VSplitLeft(MainView.w / 2.1f"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("BeginSettingsCardDeck(MainView, s_BindWheelSettingsScrollRegion, s_BindWheelSettingsScrollY, 1.0f, \"tclient-bind-wheel\", SETTINGS_TCLIENT, nullptr)"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-settings"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-items"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("deck:tclient-status-bar-preview"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_StatusBarPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("CardDeck.RenderCached("), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("const int Rows = ResolveSettingsStatusCodeRows(StatusBarCodeCount, ContentWidth);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("const float StatusBarPreviewHeight = LineSize + MarginSmall * 2.0f;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("const auto MeasurePreview = [&MeasureItems, StatusBarCodeCount, StatusBarItemCount, StatusBarPreviewHeight]"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("s_TypeSelectedOld < StatusBarCodeCount"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(s_SelectedItem >= 0 && s_TypeSelectedOld >= 0)"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("RenderStatusBarCodes(Content);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("Definition.m_MeasureRevision = StatusLayoutRevision;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("PreviewContentHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("static char s_aCodeLanguage[sizeof(g_Config.m_ClLanguagefile)]"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("static char s_aDropDownLanguage[sizeof(g_Config.m_ClLanguagefile)]"), std::string::npos);
-	EXPECT_NE(StatusBarHeader.find("\"g\", \"Snapshot Age\""), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(View.w > 360.0f)"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("CTClientSettingsRowAllocator Rows(View);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("MarginSmall * 10.0f"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("View.HSplitTop(LineSize, &Label, &View);"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(!ReadOnly && DoSettingsButton_Menu"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(!ReadOnly && DoSettingsButton_CheckBox"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientStatusBar.find("if(!ReadOnly && DoButtonLineSize_Menu"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("BeginSettingsCardDeckCard("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("EndSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("MainView.HSplitBottom(100.0f, &MainView, &StatusBar);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("LeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("tclient-statusbar-seconds\", Localize(\"Show seconds on clock\"), g_Config.m_TcStatusBarLocalTimeSeconds, &CheckBoxRect))\n\t\t\tg_Config.m_TcStatusBarLocalTimeSeconds ^= 1;\n\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);\n\t\t{\n\t\t\tLeftView.HSplitTop(HeadlineHeight, &Label, &LeftView);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("s_StatusBarSettingsCardHeight"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientStatusBar.find("s_StatusBarSettingsScrollY"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("const float EditorContentHeight = LineSize * 7.0f + SmallSize + MarginSmall * 4.0f;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("320.0f - CardChromeHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("const auto RenderPreview = [this, ReadOnly](CUIRect RightView) {\n\t\tif(ReadOnly)\n\t\t\treturn;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientBindWheel.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientBindWheel.find("s_BindWheelEditorCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("deck:tclient-chat-binds-kaomoji"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("deck:tclient-chat-binds-warlist"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("deck:tclient-chat-binds-other"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("CSettingsCardDeck &CardDeck = ReadOnly ? s_ChatBindsPrewarmDeck : m_SettingsCardDeck;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("CardDeck.RenderCached("), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("InputState.m_AllowHeaderDrag = !ReadOnly;"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("if(!ReadOnly && ui_widget::InputField"), std::string::npos);
-	EXPECT_NE(RenderSettingsTClientChatBinds.find("return CBindChat::BIND_DEFAULTS[Index].second.size() * (MarginSmall + LineSize);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientChatBinds.find("Content.HSplitTop(HeadlineHeight, &Label, &Content);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientChatBinds.find("BeginSettingsScrollRegion("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientChatBinds.find("FinishSettingsScrollRegion("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientChatBinds.find("TClientCacheSectionBoxRect("), std::string::npos);
-	EXPECT_EQ(RenderSettingsTClientChatBinds.find("s_PrevChatBindsScrollY"), std::string::npos);
-	const std::string CardRegistry = ReadTextFile("src/game/client/QmUi/QmCardRegistry.cpp");
-	EXPECT_NE(CardRegistry.find("{\"deck:tclient-chat-binds-kaomoji\", \"tclient-chat-binds\", ECardColumn::Left, 0"), std::string::npos);
-	EXPECT_NE(CardRegistry.find("{\"deck:tclient-chat-binds-warlist\", \"tclient-chat-binds\", ECardColumn::Right, 0"), std::string::npos);
-	EXPECT_NE(CardRegistry.find("{\"deck:tclient-chat-binds-other\", \"tclient-chat-binds\", ECardColumn::Left, 1"), std::string::npos);
-
-	const std::string RenderSettingsGraphics = FunctionBody(SettingsSource, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
-	ASSERT_FALSE(RenderSettingsGraphics.empty());
-	EXPECT_NE(RenderSettingsGraphics.find("const SSettingsPageLayoutFrame GraphicsPage = SettingsPageLayout(MainView, UiScale);"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-display\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-visual\")"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-backend\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-modes\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("qm_card_registry::FindByStableId(\"deck:graphics-interaction\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Graphics backend\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiListEntryAnimations, \"settings-card-list-entry-animations\", Localize(\"Card list entry animation\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardHeightAnimations, \"settings-card-height-animations\", Localize(\"Card height animation\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardReflowAnimations, \"settings-card-reflow-animations\", Localize(\"Card reflow animation\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmExtraAnimations, \"presentation-animations\", Localize(\"Presentation animations\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardRainbowTitles, \"rainbow-card-titles\", Localize(\"Rainbow card titles\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("&g_Config.m_QmUiCardBorders, \"show-settings-card-borders\", Localize(\"Show settings card borders\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Settings card border color\"), &g_Config.m_QmUiCardBorderColor"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("DoLine_AlphaColorPicker(&s_UiCardColorResetId, ColorMetrics, &UiCardColorRow, Localize(\"Settings card background\"), &g_Config.m_QmUiCardColor, &g_Config.m_QmUiCardOpacity"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_COL(QmUiCardColor"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmUiCardOpacity, qm_ui_card_opacity, 30"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("DoGraphicsNumericField(\"graphics-card-corner-segments\""), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("RenderQmVisualCardAppearanceContent"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("int RowsRemaining = 6;"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("DoSettingsLabel(SETTINGS_GRAPHICS, -1, \"graphics-ui-motion-level-label\""), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const char *apMotionLabels[] = {Localize(\"Off\"), Localize(\"Reduced\"), Localize(\"Full\")}"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("AddCard(DisplaySpec, GraphicsDisplayMinCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("AddCard(VisualSpec, GraphicsVisualMinCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("AddCard(InteractionSpec, GraphicsInteractionMinCardHeight"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("AddCard(BackendSpec"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("AddCard(ModesSpec, GraphicsModesMinCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsGraphicsModesGeometry("), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const int GraphicsDisplayRowCount = 5 + (Graphics()->GetNumScreens() > 1 ? 1 : 0) + GraphicsBackendRowCount;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsPage.m_ScrollViewport.h - GraphicsPage.m_CardGap"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionContentHeight = ResolveSettingsContentFlowHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsDisplayMeasureRevision ="), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("GraphicsDisplayMeasureRevision"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("GraphicsModesTargetContentHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const uint64_t GraphicsModesMeasureRevision = static_cast<uint64_t>(std::max(0, s_NumNodes));"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("ScreenDropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("WindowModeDropDownProps.m_pPopupViewport = &GraphicsPage.m_ScrollViewport;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("settings-graphics-modes-height"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("GraphicsModesHeightAnimationActive"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("MotionRow.VSplitLeft"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("static CUi::SDropDownState s_BackendDropDownState;"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("static CUi::SDropDownState s_GpuDropDownState;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("static CUi::SDropDownState s_State;"), std::string::npos);
-	const size_t ModesCard = RenderSettingsGraphics.find("AddCard(ModesSpec");
-	const size_t DisplayCard = RenderSettingsGraphics.find("AddCard(DisplaySpec");
-	const size_t DisplayEnd = RenderSettingsGraphics.find("AddCard(VisualSpec", DisplayCard);
-	ASSERT_NE(ModesCard, std::string::npos);
-	ASSERT_NE(DisplayCard, std::string::npos);
-	ASSERT_NE(DisplayEnd, std::string::npos);
-	EXPECT_LT(ModesCard, DisplayCard);
-	const size_t WindowMode = RenderSettingsGraphics.find("s_WindowModeDropDownState", ModesCard);
-	ASSERT_NE(WindowMode, std::string::npos);
-	EXPECT_LT(WindowMode, DisplayCard);
-	EXPECT_EQ(RenderSettingsGraphics.find("UpdateMeasuredCardHeight"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("s_GraphicsInteractionCardHeight"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("SettingsCardDeckForRenderPass().RenderCached("), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("SaveSettingsCardOrderModel();"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("\"graphics-renderer-title\""), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("BeginSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("EndSettingsCardDeck("), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("MainView.VSplitLeft(OptionsBlockWidth"), std::string::npos);
-
-	const std::string RenderSettingsAppearance = FunctionBody(SettingsSource, "void CMenus::RenderSettingsAppearance(CUIRect MainView)");
-	ASSERT_FALSE(RenderSettingsAppearance.empty());
-	EXPECT_NE(RenderSettingsAppearance.find("const char *const aAppearanceIds[]"), std::string::npos);
-	EXPECT_NE(RenderSettingsAppearance.find("qm_card_registry::FindByStableId"), std::string::npos);
-	EXPECT_NE(RenderSettingsAppearance.find("Definition.m_Spec = Spec;"), std::string::npos);
-	EXPECT_EQ(RenderSettingsAppearance.find("UpdateMeasuredCardHeight"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, SettingsDisplayCycleUpdatesAfterTabInputBeforePageRender)
 {
@@ -4290,20 +3030,6 @@ TEST(QmNewUiMenuBranches, TClientProfilesAndStatusBarClampUiIndices)
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("s_SelectedItem < (int)GameClient()->m_StatusBar.m_StatusBarItems.size()"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, SettingsListSelectionsClampBeforeIndexing)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string RenderSettingsPlayer = FunctionBody(Source, "void CMenus::RenderSettingsPlayer(CUIRect MainView)");
-	const std::string RenderSettingsGraphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
-	const std::string PopupMapPicker = FunctionBody(Source, "CUi::EPopupMenuFunctionResult CMenus::PopupMapPicker(void *pContext, CUIRect View, bool Active)");
-
-	EXPECT_NE(RenderSettingsPlayer.find("NewSelected >= 0 && NewSelected < (int)s_vpFilteredFlags.size()"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("NewSelected >= 0 && NewSelected < s_NumNodes"), std::string::npos);
-	EXPECT_NE(PopupMapPicker.find("const int ItemIndex = MapIndex++;"), std::string::npos);
-	EXPECT_NE(PopupMapPicker.find("ItemIndex == pPopupContext->m_Selection"), std::string::npos);
-	EXPECT_NE(PopupMapPicker.find("NewSelected >= 0 && NewSelected < (int)pPopupContext->m_vMaps.size()"), std::string::npos);
-	EXPECT_NE(PopupMapPicker.find("pPopupContext->m_Selection >= 0"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, BackgroundMapPickerUsesMapsRootAndSupportedFiles)
 {
@@ -4330,10 +3056,6 @@ TEST(QmNewUiMenuBranches, EditorSaveFileDialogKeepsFilenameInputInControl)
 	EXPECT_NE(OnRender.find("const bool SyncFilenameInput = !m_SaveAction || (ListChoseItem && m_SelectedFileIndex >= 0);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, QmClientLanguageReadmeDescribesChineseSourceKeys)
-{
-	EXPECT_FALSE(fs_is_dir(TestSourcePath("data/qmclient/languages").c_str()));
-}
 
 TEST(QmNewUiMenuBranches, KcpLogUsesBoundedFormatting)
 {
@@ -4357,90 +3079,8 @@ TEST(QmNewUiMenuBranches, DisplayChangedDoesNotUseDisplayUnionData)
 	EXPECT_NE(Body.find("Graphics()->SwitchWindowScreen(DisplayIndex, false);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
-{
-	const std::string Source = ReadTextFile("src/engine/client/client.cpp");
-	const std::string Detector = FunctionBody(Source, "static bool QmCrashTextHasGraphicsDriverFault");
-	const std::string Recovery = FunctionBody(Source, "static bool ApplyQmSafeGraphicsRecovery");
-	const std::string StartupHook = FunctionBody(Source, "static void RecoverQmGraphicsSettingsAfterDriverCrash");
 
-	EXPECT_NE(Detector.find("Exception module: nvoglv64.dll"), std::string::npos);
-	EXPECT_NE(Detector.find(" in module nvoglv64.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: vulkan-1.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: D3D12Core.dll"), std::string::npos);
-	EXPECT_NE(Detector.find(" in module D3D12Core.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: d3d12.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: dxgi.dll"), std::string::npos);
-	EXPECT_NE(Detector.find(" in module opengl32.dll"), std::string::npos);
 
-	EXPECT_NE(StartupHook.find("gs_pQmLifecycleMarkerFile"), std::string::npos);
-	EXPECT_NE(StartupHook.find("ListDirectoryInfo"), std::string::npos);
-	EXPECT_NE(StartupHook.find("ReadFileStr"), std::string::npos);
-
-	EXPECT_EQ(Recovery.find("str_copy(g_Config.m_GfxBackend, \"OpenGL\");"), std::string::npos);
-	EXPECT_NE(Recovery.find("const int FallbackGLMajor = 0;"), std::string::npos);
-	EXPECT_NE(Recovery.find("const int FallbackGLMinor = 0;"), std::string::npos);
-	EXPECT_EQ(Recovery.find("CONF_PLATFORM_MACOS"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_GfxFsaaSamples = 0;"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_GfxFullscreen = 0;"), std::string::npos);
-	EXPECT_NE(StartupHook.find("resetting safe graphics settings in windowed mode without FSAA"), std::string::npos);
-	EXPECT_EQ(StartupHook.find("CONF_PLATFORM_MACOS"), std::string::npos);
-
-	const size_t HookCall = Source.find("RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);");
-	const size_t CommandLineParse = Source.find("pConsole->ParseArguments(argc - 1, &argv[1]);");
-	ASSERT_NE(HookCall, std::string::npos);
-	ASSERT_NE(CommandLineParse, std::string::npos);
-	EXPECT_LT(HookCall, CommandLineParse);
-}
-
-TEST(QmNewUiMenuBranches, ImplausibleRefreshRatesAreNotPersisted)
-{
-	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");
-	const std::string Graphics = ReadTextFile("src/engine/client/graphics_threaded.cpp");
-
-	// IsPlausible* guards now live in the shared plausible_sizes.h header
-	// (behavior-tested in PlausibleSizes.RefreshRateAndWindowGuardsMatchContract);
-	// both backends include it instead of re-declaring file-static copies.
-	EXPECT_NE(Backend.find("#include <engine/client/plausible_sizes.h>"), std::string::npos);
-	EXPECT_NE(Backend.find("Ignoring implausible configured window size"), std::string::npos);
-	EXPECT_NE(Backend.find("*pWidth = DisplayMode.w;"), std::string::npos);
-	EXPECT_NE(Backend.find("*pHeight = DisplayMode.h;"), std::string::npos);
-	EXPECT_NE(Backend.find("Ignoring implausible configured refresh rate"), std::string::npos);
-	EXPECT_NE(Backend.find("*pRefreshRate = 0;"), std::string::npos);
-	EXPECT_NE(Graphics.find("#include <engine/client/plausible_sizes.h>"), std::string::npos);
-	EXPECT_NE(Graphics.find("Ignoring implausible refresh rate during resize"), std::string::npos);
-	EXPECT_NE(Graphics.find("RefreshRate = m_ScreenRefreshRate;"), std::string::npos);
-	EXPECT_NE(Graphics.find("static int LogicalWindowSizeFromViewport(int ViewportSize, float HiDPIScale)"), std::string::npos);
-	EXPECT_NE(Graphics.find("Ignoring implausible resize dimensions"), std::string::npos);
-	EXPECT_NE(Graphics.find("if(IsPlausibleWindowSize(g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight))"), std::string::npos);
-	EXPECT_EQ(Graphics.find("w = g_Config.m_GfxScreenWidth > 0 ? g_Config.m_GfxScreenWidth : m_ScreenWidth;"), std::string::npos);
-	EXPECT_EQ(Graphics.find("h = g_Config.m_GfxScreenHeight > 0 ? g_Config.m_GfxScreenHeight : m_ScreenHeight;"), std::string::npos);
-	EXPECT_NE(Graphics.find("w = LogicalWindowSizeFromViewport(m_ScreenWidth, m_ScreenHiDPIScale);"), std::string::npos);
-	EXPECT_NE(Graphics.find("h = LogicalWindowSizeFromViewport(m_ScreenHeight, m_ScreenHiDPIScale);"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, UnavailableVulkanFallsBackToAutoDetectedOpenGL)
-{
-	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");
-	const std::string Fallback = FunctionBody(Backend, "static void ResetOpenGLFallbackConfig");
-	const std::string Init = FunctionBody(Backend, "int CGraphicsBackend_SDL_GL::Init");
-
-	EXPECT_NE(Fallback.find("g_Config.m_GfxGLMajor = 0;"), std::string::npos);
-	EXPECT_NE(Fallback.find("g_Config.m_GfxGLMinor = 0;"), std::string::npos);
-	EXPECT_NE(Fallback.find("自动探测"), std::string::npos);
-	EXPECT_NE(Init.find("bool ConfiguredVulkanUnavailable"), std::string::npos);
-	EXPECT_NE(Init.find("if(ConfiguredVulkanUnavailable)"), std::string::npos);
-	EXPECT_NE(Init.find("ResetOpenGLFallbackConfig();"), std::string::npos);
-	EXPECT_NE(Init.find("m_BackendType = DetectBackend();"), std::string::npos);
-	EXPECT_NE(Init.find("m_GpuList = {};"), std::string::npos);
-	EXPECT_NE(Init.find("m_Capabilities.Reset();"), std::string::npos);
-
-	const size_t UnavailableFallback = Init.find("if(ConfiguredVulkanUnavailable)");
-	const size_t ClampVersion = Init.find("ClampDriverVersion(m_BackendType);");
-	ASSERT_NE(UnavailableFallback, std::string::npos);
-	ASSERT_NE(ClampVersion, std::string::npos);
-	EXPECT_LT(UnavailableFallback, ClampVersion);
-}
 
 TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
 {
@@ -4483,80 +3123,6 @@ TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
 	EXPECT_FALSE(ShouldSyncActualOpenGLVersion(EBackendType::BACKEND_TYPE_OPENGL_ES, {1, 0, 0}, {3, 2, 0}));
 }
 
-TEST(QmNewUiMenuBranches, VulkanApiSelectionDefaultsTo11AndTreats14AsStrict)
-{
-	EXPECT_EQ(gs_BackendVulkanMinimumVersion.m_Major, 1);
-	EXPECT_EQ(gs_BackendVulkanMinimumVersion.m_Minor, 1);
-	EXPECT_EQ(gs_BackendVulkanMaximumVersion.m_Major, 1);
-	EXPECT_EQ(gs_BackendVulkanMaximumVersion.m_Minor, 4);
-	EXPECT_TRUE(IsVulkanVersionAtLeast({1, 4, 0}, {1, 1, 0}));
-	EXPECT_FALSE(IsVulkanVersionAtLeast({1, 3, 999}, {1, 4, 0}));
-	EXPECT_EQ(ClampVulkanVersionToSupportedRange({1, 0, 99}).m_Minor, 1);
-	EXPECT_EQ(ClampVulkanVersionToSupportedRange({1, 1, 0}).m_Minor, 1);
-	EXPECT_EQ(ClampVulkanVersionToSupportedRange({1, 2, 37}).m_Minor, 2);
-	EXPECT_EQ(ClampVulkanVersionToSupportedRange({1, 3, 0}).m_Minor, 3);
-	EXPECT_EQ(ClampVulkanVersionToSupportedRange({1, 4, 99}).m_Minor, 4);
-	EXPECT_EQ(ClampVulkanVersionToSupportedRange({2, 0, 0}).m_Minor, 4);
-	EXPECT_EQ(MinVulkanVersion({1, 4, 0}, {1, 2, 37}).m_Minor, 2);
-	EXPECT_EQ(MinVulkanVersion({1, 1, 99}, {1, 4, 0}).m_Minor, 1);
-	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(11).m_Minor, 1);
-	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(12).m_Minor, 1);
-	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(13).m_Minor, 1);
-	EXPECT_EQ(ResolveConfiguredVulkanApiVersion(14).m_Minor, 4);
-
-	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp");
-	const std::string GraphicsThreadedSource = ReadTextFile("src/engine/client/graphics_threaded.cpp");
-	const std::string VulkanSource = ReadTextFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
-	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string ClampDriverVersion = FunctionBody(BackendSource, "void CGraphicsBackend_SDL_GL::ClampDriverVersion(");
-	const std::string DriverVersions = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDriverVersion(");
-	const std::string DetectedVersion = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion(");
-	const std::string ResolveApiVersion = FunctionBody(VulkanSource, "bool ResolveRequestedVulkanApiVersion(");
-	const std::string CreateInstance = FunctionBody(VulkanSource, "bool CreateVulkanInstance(");
-	const std::string SelectGpu = FunctionBody(VulkanSource, "bool SelectGpu(");
-	const std::string InitVulkanSdl = FunctionBody(VulkanSource, "int InitVulkanSDL(");
-
-	EXPECT_NE(DriverVersions.find("Major = 0;"), std::string::npos);
-	EXPECT_NE(DriverVersions.find("Minor = 0;"), std::string::npos);
-	EXPECT_EQ(ClampDriverVersion.find("NormalizeRequestedVulkanVersion"), std::string::npos);
-	EXPECT_EQ(ClampDriverVersion.find("g_Config.m_GfxGLMajor = Version.m_Major"), std::string::npos);
-	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(QmVulkanApiVersion, qm_vulkan_api_version, 11, 11, 14"), std::string::npos);
-	EXPECT_NE(ResolveApiVersion.find("ResolveConfiguredVulkanApiVersion(g_Config.m_QmVulkanApiVersion)"), std::string::npos);
-	EXPECT_EQ(ResolveApiVersion.find("ClampVulkanVersionToSupportedRange(LoaderVersion)"), std::string::npos);
-	EXPECT_NE(VulkanSource.find("SDL_Vulkan_GetVkGetInstanceProcAddr"), std::string::npos);
-	EXPECT_NE(VulkanSource.find("vkEnumerateInstanceVersion"), std::string::npos);
-	EXPECT_NE(VulkanSource.find("FirstCompatibleDeviceIndex"), std::string::npos);
-	EXPECT_NE(VulkanSource.find("configured graphics card is unavailable"), std::string::npos);
-	EXPECT_EQ(GraphicsThreadedSource.find("Trying Vulkan 1.1 instead"), std::string::npos);
-	EXPECT_NE(GraphicsThreadedSource.find("Falling back to automatically detected OpenGL"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("s_GfxBackendChanged = true;"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("s_GfxGpuChanged = true;"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("s_GfxVulkanApiVersionChanged = true;"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("Localize(\"Vulkan API\")"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("g_Config.m_QmVulkanApiVersion"), std::string::npos);
-	EXPECT_NE(CreateInstance.find("VKAppInfo.apiVersion = m_RequestedApiVersion;"), std::string::npos);
-	EXPECT_NE(CreateInstance.find("VkInstance CreatedInstance = VK_NULL_HANDLE;"), std::string::npos);
-	EXPECT_NE(CreateInstance.find("m_LastVulkanInstanceCreateResult = Res;"), std::string::npos);
-	EXPECT_NE(CreateInstance.find("Res == VK_ERROR_INCOMPATIBLE_DRIVER"), std::string::npos);
-	EXPECT_NE(CreateInstance.find("if(Res != VK_SUCCESS)"), std::string::npos);
-	EXPECT_NE(CreateInstance.find("The Vulkan driver rejected the requested Vulkan 1.4 instance"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("const SVulkanVersion RequiredVersion"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("IsVulkanVersionAtLeast(DeviceVersion, RequiredVersion)"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("HasRequiredVersionDevice"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("m_RequiredVulkanVersionUnavailable = true;"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("m_RequiredVulkanVersionUnavailable = !HasRequiredVersionDevice;"), std::string::npos);
-	EXPECT_NE(SelectGpu.find("m_EffectiveApiVersion"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("g_Config.m_QmVulkanApiVersion = 11;"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("falling back to Vulkan 1.1"), std::string::npos);
-	EXPECT_EQ(InitVulkanSdl.find("m_LastVulkanInstanceCreateResult != VK_ERROR_INCOMPATIBLE_DRIVER"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("The selected Vulkan 1.4 instance could not be created"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("FallbackToVulkan11"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("ResetInitializationDiagnostics();"), std::string::npos);
-	EXPECT_NE(InitVulkanSdl.find("DestroyVulkanInstance();"), std::string::npos);
-	EXPECT_NE(DetectedVersion.find("BACKEND_TYPE_VULKAN"), std::string::npos);
-	EXPECT_NE(SettingsSource.find("\"Vulkan (%s)\""), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, GraphicsCurrentModeLabelSanitizesScaleAndAspectRatio)
 {
@@ -4629,128 +3195,8 @@ TEST(QmNewUiMenuBranches, TClientQueuesAspectRefreshFromSnapshots)
 	EXPECT_NE(UpdateBody.find("SetForcedAspect();"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, GraphicsBackendDropdownUsesCleanDisplayNames)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string BackendSource = ReadTextFile("src/engine/client/backend_sdl.cpp");
-	const std::string OpenGLSource = ReadTextFile("src/engine/client/backend/opengl/backend_opengl.cpp");
-	const std::string GraphicsHeader = ReadTextFile("src/engine/graphics.h");
-	const std::string Formatter = FunctionBody(Source, "void FormatQmGraphicsBackendDisplayName(char *pBuf, int BufSize, const char *pBackendName, int Major, int Minor, int Patch, bool IsDefault)");
-	const std::string RenderSettingsGraphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
-	const std::string GetDriverVersion = FunctionBody(BackendSource, "bool CGraphicsBackend_SDL_GL::GetDriverVersion(");
 
-	ASSERT_FALSE(Formatter.empty());
-	ASSERT_FALSE(RenderSettingsGraphics.empty());
-	EXPECT_NE(Formatter.find("\"OpenGL %d.%d\""), std::string::npos);
-	EXPECT_NE(Formatter.find("\"OpenGL (%s)\""), std::string::npos);
-	EXPECT_NE(Formatter.find("Localize(\"auto\")"), std::string::npos);
-	EXPECT_NE(Formatter.find("\"Vulkan\""), std::string::npos);
-	EXPECT_NE(Formatter.find("\"GLES (%s)\""), std::string::npos);
-	EXPECT_NE(Formatter.find("\"GLES %d.%d\""), std::string::npos);
-	EXPECT_EQ(Formatter.find("QmClient"), std::string::npos);
-	EXPECT_EQ(Formatter.find("\"OpenGL_QmClient_%d_%d\""), std::string::npos);
-	EXPECT_EQ(Formatter.find("\"Vulkan_QmClient\""), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Localize(\"Graphics backend\")"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("FormatQmGraphicsBackendDisplayName(aBackendDisplayName"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("ResolveSettingsSelectionWithCustomFallback"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_CustomBackendDisplayName"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vGraphicsBackendInfos"), std::string::npos);
-	EXPECT_NE(BackendSource.find("m_DetectedContextMajor"), std::string::npos);
-	EXPECT_NE(GetDriverVersion.find("Major = 3;\n\t\t\tMinor = 3;"), std::string::npos);
-	EXPECT_NE(GetDriverVersion.find("Major = 3;\n\t\t\tMinor = 0;"), std::string::npos);
-	EXPECT_EQ(GetDriverVersion.find("m_Capabilities.m_DetectedContextMajor"), std::string::npos);
-	EXPECT_EQ(GetDriverVersion.find("m_Capabilities.m_ContextMajor"), std::string::npos);
-	EXPECT_NE(OpenGLSource.find("m_DetectedContextMajor = pCommand->m_pCapabilities->m_ContextMajor"), std::string::npos);
-	EXPECT_NE(GraphicsHeader.find("GetDetectedContextVersion"), std::string::npos);
-	EXPECT_NE(BackendSource.find("bool CGraphicsBackend_SDL_GL::GetDetectedContextVersion"), std::string::npos);
-	EXPECT_NE(BackendSource.find("m_Capabilities.m_DetectedContextMajor"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->GetDetectedContextVersion"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vGraphicsBackendInfos[Selected].m_Major == 0"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("\"%s (%s: %d.%d)\""), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const size_t BackendStartIndex = s_vSupportedBackendInfos.size();"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vSupportedBackendInfos.insert(s_vSupportedBackendInfos.begin() + BackendStartIndex, AutoInfo);"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const SOpenGLVersion PreferredVersion = AutoOpenGLProbeVersion(EBackendType(i));"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vSupportedBackendInfos.begin() + BackendStartIndex + 1, PreferredInfo"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_ActiveBackendDisplayName"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vpGraphicsBackendNames[Selected] = s_ActiveBackendDisplayName.c_str();"), std::string::npos);
-	EXPECT_NE(ReadTextFile("src/engine/client/graphics_threaded.cpp").find("RestoreAutomaticOpenGLConfig"), std::string::npos);
-	EXPECT_NE(Source.find("static std::vector<const CCountryFlags::CCountryFlag *> s_vpFilteredFlags"), std::string::npos);
-	EXPECT_NE(Source.find("s_vpFilteredFlags.reserve(GameClient()->m_CountryFlags.Num());"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_aScreenNamesCacheLanguage"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("const bool RefreshScreenNames"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vSupportedBackendNames"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_BackendListCacheDriverBlocked"), std::string::npos);
-	EXPECT_NE(RenderSettingsGraphics.find("s_vGpuNames"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("s_vpGpuIdNames[i] = aCurDeviceName"), std::string::npos);
-	EXPECT_EQ(RenderSettingsGraphics.find("Localize(\"Renderer\")"), std::string::npos);
-}
 
-TEST(QmNewUiMenuBranches, DropDownPopupFollowsScrolledControlRect)
-{
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
-	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
-	const std::string DoDropDownActive = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, bool Enabled)");
-	const std::string DoPopupMenu = FunctionBody(UiSource, "void CUi::DoPopupMenu(");
-
-	ASSERT_FALSE(DoDropDown.empty());
-	ASSERT_FALSE(DoDropDownActive.empty());
-	ASSERT_FALSE(DoPopupMenu.empty());
-	EXPECT_NE(DoDropDown.find("bool PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("if(PopupOpen)"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("PopupOpen = IsPopupOpen(&State.m_SelectionPopupContext);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("if(State.m_DropDownState.IsOpen() && !PopupOpen)"), std::string::npos);
-	// Popup 以设置页最外层 viewport 定位，并在锚点离开所属容器时关闭。
-	EXPECT_NE(DoDropDown.find("DropDownProps.m_pPopupViewport != nullptr"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("QmDropdownAnchorFullyVisible(*pRect, AnchorViewport)"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("SQmDropdownInput DropDownInput;"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("State.m_DropDownState.Update(DropDownInput, Num);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyUp = ConsumeHotkey(HOTKEY_UP);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyDown = ConsumeHotkey(HOTKEY_DOWN);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyEnter = ConsumeHotkey(HOTKEY_ENTER);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("DropDownInput.m_KeyEscape = ConsumeHotkey(HOTKEY_ESCAPE);"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();"), std::string::npos);
-	const size_t SelectedBranch = DoDropDown.find("if(DropDownResult.m_Selected)");
-	const size_t ClosedBranch = DoDropDown.find("else if(DropDownResult.m_Closed)");
-	ASSERT_NE(SelectedBranch, std::string::npos);
-	ASSERT_NE(ClosedBranch, std::string::npos);
-	EXPECT_LT(SelectedBranch, ClosedBranch);
-	EXPECT_NE(DoPopupMenu.find("std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end()"), std::string::npos);
-	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.x = X;"), std::string::npos);
-	EXPECT_NE(DoPopupMenu.find("ExistingPopupMenu->m_Rect.y = Y;"), std::string::npos);
-	const size_t DisabledBranch = DoDropDown.find("if(!DropDownProps.m_Enabled)");
-	const size_t CloseWhenDisabled = DoDropDown.find("if(DropDownProps.m_ClosePopupWhenDisabled)", DisabledBranch);
-	const size_t CloseDisabledPopup = DoDropDown.find("ClosePopupMenu(&State.m_SelectionPopupContext);", DisabledBranch);
-	ASSERT_NE(DisabledBranch, std::string::npos);
-	ASSERT_NE(CloseWhenDisabled, std::string::npos);
-	ASSERT_NE(CloseDisabledPopup, std::string::npos);
-	EXPECT_LT(CloseWhenDisabled, CloseDisabledPopup);
-	EXPECT_LT(DisabledBranch, CloseDisabledPopup);
-	EXPECT_NE(UiHeader.find("m_ClosePopupWhenDisabled(true),"), std::string::npos);
-	EXPECT_NE(DoDropDownActive.find("DropDownProps.m_ClosePopupWhenDisabled = false;"), std::string::npos);
-}
-
-TEST(QmNewUiMenuBranches, SettingsDropdownsUseTheSharedWrapper)
-{
-	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string ControlsSource = ReadTextFile("src/game/client/components/menus_settings_controls.cpp");
-	const std::string Wrapper = FunctionBody(MenusSource, "int CMenus::DoSettingsDropDown(CUIRect *pRect, const int CurSelection, const char *const *ppStrs, const int Num, CUi::SDropDownState &State, CUi::SDropDownProperties Properties)");
-
-	ASSERT_FALSE(Wrapper.empty());
-	EXPECT_NE(Wrapper.find("Properties.m_pAnchorViewport"), std::string::npos);
-	EXPECT_NE(Wrapper.find("Properties.m_pPopupViewport"), std::string::npos);
-	EXPECT_EQ(ControlsSource.find("Ui()->DoDropDown(&JoystickDropDown"), std::string::npos);
-	EXPECT_NE(ControlsSource.find("GameClient()->m_Menus.DoSettingsDropDown(&JoystickDropDown"), std::string::npos);
-
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
-	ASSERT_FALSE(DoDropDown.empty());
-	EXPECT_EQ(DoDropDown.find("static CScrollRegion"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("State.m_pOwnedScrollRegion = std::make_shared<CScrollRegion>();"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("State.m_pScrollRegion = State.m_SelectionPopupContext.m_pScrollRegion != nullptr"), std::string::npos);
-	EXPECT_NE(DoDropDown.find("pScrollRegion != nullptr ? pScrollRegion : State.m_pScrollRegion"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, SettingsDropdownWrapperAndNestedListsKeepSharedVisualAndScrollContracts)
 {
@@ -4791,16 +3237,6 @@ TEST(QmNewUiMenuBranches, CallVoteSearchSupportsIndependentExclusion)
 	EXPECT_NE(RenderControl.find("const float FilterWidth = std::min(220.0f, std::max(1.0f, (Bottom.w - 5.0f - MapSortWidth - MapSortGap) * 0.5f));"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, BrowserSearchUsesSharedIconAndExcludeKeepsItsOwnIconAndTooltipRect)
-{
-	const std::string Browser = FunctionBody(ReadTextFile("src/game/client/components/menus_browser.cpp"), "void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItemActivated)");
-
-	ASSERT_FALSE(Browser.empty());
-	EXPECT_NE(Browser.find("ui_widget::InputField(ServerBrowserSearchCtx, &s_FilterInput, QuickSearch, SearchOptions)"), std::string::npos);
-	EXPECT_EQ(Browser.find("Ui()->DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS"), std::string::npos);
-	EXPECT_NE(Browser.find("Ui()->DoLabel(&QuickExclude, FONT_ICON_BAN"), std::string::npos);
-	EXPECT_NE(Browser.find("DoToolTip(&s_ExcludeInput, &QuickExclude"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, IngameFavoriteMapsUsesSharedBookmarkIcon)
 {
@@ -4824,35 +3260,6 @@ TEST(QmNewUiMenuBranches, TeePresetListUsesTheSameRowSpacingAsItsMeasuredViewpor
 	EXPECT_NE(Settings.find("s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, PresetRowSpacing)"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, DropDownKeyboardActiveIndexIsRendered)
-{
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string UiHeader = ReadTextFile("src/game/client/ui.h");
-	const std::string SelectionReset = FunctionBody(UiSource, "void CUi::SSelectionPopupContext::Reset()");
-	const std::string PopupSelection = FunctionBody(UiSource, "CUi::EPopupMenuFunctionResult CUi::PopupSelection(void *pContext, CUIRect View, bool Active)");
-	const std::string PopupButton = FunctionBody(UiSource, "int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer");
-	const std::string DoDropDown = FunctionBody(UiSource, "int CUi::DoDropDown(CUIRect *pRect, int CurSelection, const char *const *pStrs, int Num, SDropDownState &State, const SDropDownProperties &DropDownProps)");
-
-	ASSERT_FALSE(SelectionReset.empty());
-	ASSERT_FALSE(PopupSelection.empty());
-	ASSERT_FALSE(PopupButton.empty());
-	ASSERT_FALSE(DoDropDown.empty());
-	EXPECT_NE(UiHeader.find("int m_ActiveIndex;"), std::string::npos);
-	EXPECT_NE(SelectionReset.find("m_ActiveIndex = -1;"), std::string::npos);
-	EXPECT_NE(PopupButton.find("ButtonColor.has_value() || !TransparentInactive"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("const bool ActiveEntry = pSelectionPopup->m_ActiveIndex == static_cast<int>(Index);"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("ActiveEntry ? std::optional<ColorRGBA>"), std::string::npos);
-	EXPECT_EQ(PopupSelection.find("Accent.VSplitLeft(2.0f"), std::string::npos);
-	EXPECT_NE(PopupSelection.find("pSelectionPopup->m_TransparentButtons, true, ActiveColor"), std::string::npos);
-	const size_t UpdateResult = DoDropDown.find("const SQmDropdownUpdateResult DropDownResult = State.m_DropDownState.Update(DropDownInput, Num);");
-	const size_t ActiveIndexSync = DoDropDown.find("State.m_SelectionPopupContext.m_ActiveIndex = State.m_DropDownState.ActiveIndex();");
-	const size_t PopupRender = DoDropDown.find("ShowPopupSelection(pRect->x, pRect->y, &State.m_SelectionPopupContext);");
-	ASSERT_NE(UpdateResult, std::string::npos);
-	ASSERT_NE(ActiveIndexSync, std::string::npos);
-	ASSERT_NE(PopupRender, std::string::npos);
-	EXPECT_LT(UpdateResult, ActiveIndexSync);
-	EXPECT_LT(ActiveIndexSync, PopupRender);
-}
 
 TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 {
@@ -5323,69 +3730,7 @@ TEST(QmNewUiMenuBranches, ShutdownReleasesUiResourcesBeforeRendererProviders)
 	EXPECT_LT(ComponentsShutdown, UiShutdownCall);
 }
 
-TEST(QmNewUiMenuBranches, ValueSelectorUsesOneFittedTextLayoutForDisplayAndEditing)
-{
-	EXPECT_FLOAT_EQ(QmFitSingleLineFontSize(10.0f, 6.0f, 40.0f, 80.0f), 10.0f);
-	EXPECT_FLOAT_EQ(QmFitSingleLineFontSize(10.0f, 6.0f, 100.0f, 80.0f), 8.0f);
-	EXPECT_FLOAT_EQ(QmFitSingleLineFontSize(10.0f, 6.0f, 200.0f, 80.0f), 6.0f);
 
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string Selector = FunctionBody(UiSource, "SEditResult<int64_t> CUi::DoValueSelectorWithState");
-	ASSERT_FALSE(Selector.empty());
-	EXPECT_NE(Selector.find("QmFitSingleLineFontSize("), std::string::npos);
-	EXPECT_NE(Selector.find("pRect->VMargin(2.0f, &Textbox);"), std::string::npos);
-	EXPECT_NE(Selector.find("DoLabel(&Textbox, pDisplayText, ValueFontSize"), std::string::npos);
-	EXPECT_NE(Selector.find("m_ActiveValueSelectorState.m_NumberInput.Render(&Textbox, EditFontSize, Props.m_TextAlign"), std::string::npos);
-	EXPECT_NE(Selector.find("auto RenderValueSelectorDisplay = [&](bool RenderText = true)"), std::string::npos);
-	EXPECT_NE(Selector.find("RenderValueSelectorDisplay(false);"), std::string::npos);
-	EXPECT_EQ(Selector.find("TextRender()->TextColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.0f));"), std::string::npos);
-	EXPECT_NE(Selector.find("const ColorRGBA PreviousTextColor = TextRender()->GetTextColor();"), std::string::npos);
-	EXPECT_NE(Selector.find("TextRender()->TextColor(PreviousTextColor);"), std::string::npos);
-	EXPECT_EQ(Selector.find("m_NumberInput.Render(pRect, 10.0f"), std::string::npos);
-	const std::string EditorSource = ReadTestSourceFile("src/game/editor/editor_ui.cpp");
-	const std::string EditorSelector = FunctionBody(EditorSource, "SEditResult<int> CEditor::UiDoValueSelector");
-	ASSERT_FALSE(EditorSelector.empty());
-	EXPECT_NE(EditorSelector.find("DoEditBox(&s_NumberInput, pRect, 10.0f, Corners);"), std::string::npos);
-	EXPECT_NE(EditorSelector.find("pRect->VMargin(2.0f, &Textbox);"), std::string::npos);
-	EXPECT_NE(EditorSelector.find("Ui()->DoLabel(&Textbox, aBuf, 10, TEXTALIGN_MC);"), std::string::npos);
-	const size_t EditingBranch = Selector.find("if(m_ActiveValueSelectorState.m_pLastTextId == pId)");
-	const size_t DisplayBeforeOverlay = Selector.find("RenderValueSelectorDisplay(false);", EditingBranch);
-	const size_t InputOverlay = Selector.find("m_ActiveValueSelectorState.m_NumberInput.Render(", EditingBranch);
-	ASSERT_NE(DisplayBeforeOverlay, std::string::npos);
-	ASSERT_NE(InputOverlay, std::string::npos);
-	const size_t RestoreAfterInput = Selector.find("TextRender()->TextColor(PreviousTextColor);", InputOverlay);
-	ASSERT_NE(RestoreAfterInput, std::string::npos);
-	EXPECT_LT(DisplayBeforeOverlay, InputOverlay);
-	EXPECT_LT(InputOverlay, RestoreAfterInput);
-	const size_t FormatLambda = Selector.find("auto RenderValueSelectorDisplay = [&](bool RenderText = true)");
-	const size_t FormatCurrent = Selector.find("Props.m_pfnFormatValue(Current", FormatLambda);
-	const size_t ScrollUpdate = Selector.find("Current += Props.m_Step * Count;");
-	const size_t FinalDisplay = Selector.rfind("RenderValueSelectorDisplay();");
-	ASSERT_NE(FormatLambda, std::string::npos);
-	ASSERT_NE(FormatCurrent, std::string::npos);
-	ASSERT_NE(ScrollUpdate, std::string::npos);
-	ASSERT_NE(FinalDisplay, std::string::npos);
-	EXPECT_GT(FormatCurrent, FormatLambda);
-	EXPECT_LT(ScrollUpdate, FinalDisplay);
-}
-
-TEST(QmNewUiMenuBranches, AudioPackRefreshUsesPhosphorFontIconButton)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string Sound = FunctionBody(Source, "void CMenus::RenderSettingsSound(CUIRect MainView)");
-	ASSERT_FALSE(Sound.empty());
-	EXPECT_NE(Sound.find("Ui()->DoButton_FontIcon(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
-	EXPECT_EQ(Sound.find("DoButton_Menu(&s_AudioPackRefreshButton, FONT_ICON_ARROW_ROTATE_RIGHT"), std::string::npos);
-	const std::string UiSource = ReadTextFile("src/game/client/ui.cpp");
-	const std::string FontIconButton = FunctionBody(UiSource, "int CUi::DoButton_FontIcon");
-	EXPECT_NE(FontIconButton.find("ConfiguredQmUiIconColor(TextRender()->DefaultTextColor())"), std::string::npos);
-	EXPECT_NE(FontIconButton.find("QmIconWeightUsesBoldFontFallback(g_Config.m_QmUiIconWeight)"), std::string::npos);
-	EXPECT_NE(FontIconButton.find("SetRenderFlags(PreviousFlags)"), std::string::npos);
-	EXPECT_NE(FontIconButton.find("TextColor(PreviousColor)"), std::string::npos);
-	const std::string TextSource = ReadTextFile("src/engine/client/text.cpp");
-	EXPECT_NE(TextSource.find("m_IconBoldFace = m_IconRegularFace;"), std::string::npos);
-	EXPECT_NE(TextSource.find("falling back to regular"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, GraphicsIconCardSupportsDynamicCustomColorAndFourWeights)
 {
@@ -5411,277 +3756,6 @@ TEST(QmNewUiMenuBranches, GraphicsIconCardSupportsDynamicCustomColorAndFourWeigh
 	EXPECT_NE(Config.find("Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill"), std::string::npos);
 }
 
-TEST(QmNewUiMenuBranches, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)
-{
-	const SRoundedRectGeometry Geometry = ResolveRoundedRectGeometry(0.24f, 0.74f, 10.32f, 4.19f, 3.9f, 0.5f);
-	EXPECT_NEAR(Geometry.m_X, 0.0f, 1e-6f);
-	EXPECT_NEAR(Geometry.m_Y, 0.5f, 1e-6f);
-	EXPECT_NEAR(Geometry.m_W, 10.5f, 1e-6f);
-	EXPECT_NEAR(Geometry.m_H, 4.5f, 1e-6f);
-	EXPECT_NEAR(Geometry.m_Rounding, 2.25f, 1e-6f);
-	const SRoundedRectGeometry SmallGeometry = ResolveRoundedRectGeometry(0.24f, 0.24f, 0.51f, 0.51f, 0.4f, 0.5f);
-	EXPECT_NEAR(SmallGeometry.m_W, 1.0f, 1e-6f);
-	EXPECT_NEAR(SmallGeometry.m_H, 1.0f, 1e-6f);
-	EXPECT_NEAR(SmallGeometry.m_Rounding, 0.5f, 1e-6f);
-	const SRoundedRectGeometry InvalidGeometry = ResolveRoundedRectGeometry(0.5f, 0.5f, 0.0f, 4.0f, 3.0f, 0.5f);
-	EXPECT_FLOAT_EQ(InvalidGeometry.m_X, 0.5f);
-	EXPECT_FLOAT_EQ(InvalidGeometry.m_Y, 0.5f);
-	EXPECT_FLOAT_EQ(InvalidGeometry.m_W, 0.0f);
-	EXPECT_FLOAT_EQ(InvalidGeometry.m_H, 4.0f);
-	EXPECT_FLOAT_EQ(InvalidGeometry.m_Rounding, 0.0f);
-
-	const CUIRect Rect{0.2f, 0.2f, 20.0f, 10.0f};
-	SRoundedSurfaceParams SdfParams;
-	SdfParams.m_Radius = 8.0f;
-	SdfParams.m_BorderWidth = 0.6f;
-	SdfParams.m_PixelSize = 0.5f;
-	const SRoundedSurfacePlan Sdf = ResolveRoundedSurfacePlan(Rect, SdfParams, true);
-	EXPECT_TRUE(Sdf.m_UseSdf);
-	EXPECT_FLOAT_EQ(Sdf.m_Rect.x, 0.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_Rect.y, 0.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_Rect.w, 20.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_Rect.h, 10.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_Radius, 5.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_BorderWidth, 0.5f);
-	EXPECT_FLOAT_EQ(Sdf.m_PixelSize, 0.5f);
-	EXPECT_FLOAT_EQ(Sdf.m_CornerRadii.x, 5.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_CornerRadii.y, 5.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_CornerRadii.z, 5.0f);
-	EXPECT_FLOAT_EQ(Sdf.m_CornerRadii.w, 5.0f);
-	SRoundedSurfaceParams NonIntegerPixelParams;
-	NonIntegerPixelParams.m_Radius = 3.9f;
-	NonIntegerPixelParams.m_BorderWidth = 0.6f;
-	NonIntegerPixelParams.m_PixelSize = 0.5f;
-	const SRoundedSurfacePlan NonIntegerPixelPlan = ResolveRoundedSurfacePlan(CUIRect{0.24f, 0.74f, 10.32f, 4.19f}, NonIntegerPixelParams, true);
-	EXPECT_NEAR(NonIntegerPixelPlan.m_Rect.x, 0.0f, 1e-6f);
-	EXPECT_NEAR(NonIntegerPixelPlan.m_Rect.y, 0.5f, 1e-6f);
-	EXPECT_NEAR(NonIntegerPixelPlan.m_Rect.w, 10.5f, 1e-6f);
-	EXPECT_NEAR(NonIntegerPixelPlan.m_Rect.h, 4.5f, 1e-6f);
-	SRoundedSurfaceParams OnePhysicalPixelParams;
-	OnePhysicalPixelParams.m_Radius = 0.4f;
-	OnePhysicalPixelParams.m_BorderWidth = 0.4f;
-	OnePhysicalPixelParams.m_PixelSize = 0.5f;
-	const SRoundedSurfacePlan OnePhysicalPixelPlan = ResolveRoundedSurfacePlan(CUIRect{0.24f, 0.24f, 0.51f, 0.51f}, OnePhysicalPixelParams, true);
-	EXPECT_NEAR(OnePhysicalPixelPlan.m_Rect.w, 1.0f, 1e-6f);
-	EXPECT_NEAR(OnePhysicalPixelPlan.m_Rect.h, 1.0f, 1e-6f);
-	EXPECT_NEAR(OnePhysicalPixelPlan.m_Radius, 0.5f, 1e-6f);
-	EXPECT_NEAR(OnePhysicalPixelPlan.m_BorderWidth, 0.5f, 1e-6f);
-	const auto ExpectCornerRadii = [](const SRoundedSurfacePlan &Plan, const float Tl, const float Tr, const float Br, const float Bl) {
-		EXPECT_FLOAT_EQ(Plan.m_CornerRadii.x, Tl);
-		EXPECT_FLOAT_EQ(Plan.m_CornerRadii.y, Tr);
-		EXPECT_FLOAT_EQ(Plan.m_CornerRadii.z, Br);
-		EXPECT_FLOAT_EQ(Plan.m_CornerRadii.w, Bl);
-	};
-
-	SRoundedSurfaceParams PartialParams;
-	PartialParams.m_Radius = 4.0f;
-	PartialParams.m_BorderWidth = 1.0f;
-	PartialParams.m_PixelSize = 0.5f;
-	PartialParams.m_Corners = IGraphics::CORNER_R;
-	const SRoundedSurfacePlan Partial = ResolveRoundedSurfacePlan(Rect, PartialParams, true);
-	EXPECT_TRUE(Partial.m_UseSdf);
-	ExpectCornerRadii(Partial, 0.0f, 4.0f, 4.0f, 0.0f);
-	SRoundedSurfaceParams LeftParams;
-	LeftParams.m_Radius = 4.0f;
-	LeftParams.m_BorderWidth = 1.0f;
-	LeftParams.m_PixelSize = 0.5f;
-	LeftParams.m_Corners = IGraphics::CORNER_L;
-	const SRoundedSurfacePlan Left = ResolveRoundedSurfacePlan(Rect, LeftParams, true);
-	EXPECT_TRUE(Left.m_UseSdf);
-	ExpectCornerRadii(Left, 4.0f, 0.0f, 0.0f, 4.0f);
-	const auto ExpectMask = [&](const int Corners, const float Tl, const float Tr, const float Br, const float Bl) {
-		SRoundedSurfaceParams Params;
-		Params.m_Radius = 4.0f;
-		Params.m_BorderWidth = 1.0f;
-		Params.m_PixelSize = 0.5f;
-		Params.m_Corners = Corners;
-		const SRoundedSurfacePlan Plan = ResolveRoundedSurfacePlan(Rect, Params, true);
-		EXPECT_TRUE(Plan.m_UseSdf);
-		ExpectCornerRadii(Plan, Tl, Tr, Br, Bl);
-	};
-	ExpectMask(IGraphics::CORNER_T, 4.0f, 4.0f, 0.0f, 0.0f);
-	ExpectMask(IGraphics::CORNER_B, 0.0f, 0.0f, 4.0f, 4.0f);
-	ExpectMask(IGraphics::CORNER_TL, 4.0f, 0.0f, 0.0f, 0.0f);
-	ExpectMask(IGraphics::CORNER_TR, 0.0f, 4.0f, 0.0f, 0.0f);
-	ExpectMask(IGraphics::CORNER_BR, 0.0f, 0.0f, 4.0f, 0.0f);
-	ExpectMask(IGraphics::CORNER_BL, 0.0f, 0.0f, 0.0f, 4.0f);
-	ExpectMask(IGraphics::CORNER_NONE, 0.0f, 0.0f, 0.0f, 0.0f);
-	SRoundedSurfaceParams WideBorderParams;
-	WideBorderParams.m_Radius = 2.0f;
-	WideBorderParams.m_BorderWidth = 4.0f;
-	WideBorderParams.m_PixelSize = 0.5f;
-	const SRoundedSurfacePlan WideBorder = ResolveRoundedSurfacePlan(Rect, WideBorderParams, true);
-	EXPECT_FLOAT_EQ(WideBorder.m_Radius, 2.0f);
-	EXPECT_FLOAT_EQ(WideBorder.m_BorderWidth, 4.0f);
-	SRoundedSurfaceParams SwallowedInteriorParams;
-	SwallowedInteriorParams.m_Radius = 8.0f;
-	SwallowedInteriorParams.m_BorderWidth = 9.0f;
-	SwallowedInteriorParams.m_PixelSize = 0.5f;
-	const SRoundedSurfacePlan SwallowedInterior = ResolveRoundedSurfacePlan(CUIRect{0.0f, 0.0f, 6.0f, 4.0f}, SwallowedInteriorParams, true);
-	EXPECT_FLOAT_EQ(SwallowedInterior.m_Radius, 2.0f);
-	EXPECT_FLOAT_EQ(SwallowedInterior.m_BorderWidth, 2.0f);
-	SRoundedSurfaceParams UnsupportedParams;
-	UnsupportedParams.m_Radius = 4.0f;
-	UnsupportedParams.m_BorderWidth = 1.0f;
-	UnsupportedParams.m_PixelSize = 0.0f;
-	const SRoundedSurfacePlan Unsupported = ResolveRoundedSurfacePlan(Rect, UnsupportedParams, false);
-	EXPECT_FALSE(Unsupported.m_UseSdf);
-	EXPECT_FLOAT_EQ(Unsupported.m_PixelSize, 0.0001f);
-
-	const std::string Buttons = ReadTextFile("src/game/client/QmUi/UiButtons.cpp");
-	const std::string Forms = ReadTextFile("src/game/client/QmUi/UiForms.cpp");
-	const std::string Surface = ReadTextFile("src/game/client/QmUi/UiSurface.cpp");
-	const std::string SurfaceHeader = ReadTextFile("src/game/client/QmUi/UiSurface.h");
-	const std::string UiRect = ReadTextFile("src/game/client/ui_rect.cpp");
-	const std::string Containers = ReadTextFile("src/game/client/QmUi/UiContainers.h");
-	const std::string Overlays = ReadTextFile("src/game/client/QmUi/UiOverlays.h");
-	const std::string Ui = ReadTextFile("src/game/client/ui.cpp");
-	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string IngameMenus = ReadTextFile("src/game/client/components/menus_ingame.cpp");
-	const std::string QmClientMenus = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string TClientMenus = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
-	const std::string ScrollRegion = ReadTextFile("src/game/client/ui_scrollregion.cpp");
-	const std::string ImePopup = ReadTextFile("src/game/client/qm_ime_candidate_popup.cpp");
-	const std::string Editor = ReadTextFile("src/game/editor/editor_ui.cpp");
-	EXPECT_NE(Buttons.find("DrawRoundedSurface("), std::string::npos);
-	EXPECT_NE(Forms.find("DrawRoundedSurface("), std::string::npos);
-	EXPECT_NE(SurfaceHeader.find("vec4 m_CornerRadii{};"), std::string::npos);
-	EXPECT_NE(SurfaceHeader.find("struct SRoundedSurfaceParams"), std::string::npos);
-	EXPECT_NE(SurfaceHeader.find("const SRoundedSurfaceParams &Params"), std::string::npos);
-	EXPECT_EQ(SurfaceHeader.find("float PixelSize, int Corners"), std::string::npos);
-	EXPECT_NE(SurfaceHeader.find("ResolveRoundedSurfaceCornerRadii"), std::string::npos);
-	EXPECT_NE(SurfaceHeader.find("Plan.m_UseSdf = HasSdf"), std::string::npos);
-	EXPECT_NE(Surface.find("Params.m_CornerRadii = Plan.m_CornerRadii;"), std::string::npos);
-	EXPECT_NE(Surface.find("Params.m_Params = vec4(Plan.m_BorderWidth, Plan.m_PixelSize, Plan.m_PixelSize * 2.0f, 0.0f);"), std::string::npos);
-	EXPECT_NE(UiRect.find("DrawRoundedSurface(ms_pGraphics, *this"), std::string::npos);
-	EXPECT_NE(UiRect.find("const float PixelSize = CurrentPixelSize(ms_pGraphics);"), std::string::npos);
-	EXPECT_NE(UiRect.find("SRoundedSurfaceParams Params;"), std::string::npos);
-	EXPECT_NE(UiRect.find("Params.m_PixelSize = PixelSize;"), std::string::npos);
-	EXPECT_NE(UiRect.find("DrawRoundedSurface(ms_pGraphics, *this, Color, ColorRGBA(), Params)"), std::string::npos);
-	EXPECT_EQ(UiRect.find("Rounding, 0.0f, PixelSize, Corners"), std::string::npos);
-	EXPECT_EQ(UiRect.find("ResolveRoundedRectGeometry(x, y, w, h, Rounding"), std::string::npos);
-	EXPECT_NE(Ui.find("DrawRoundedSurface(this, ClearButton"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions)").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "SEditResult<int64_t> CUi::DoValueSelectorWithState").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "int CUi::DoButton_FontIcon").find("DrawRoundedSurface(this, *pRect"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "void CUi::RenderPopupMenus").find("SPopupMenu::POPUP_BORDER"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "float CUi::DoScrollbarV").find("DrawRoundedSurface(this, Rail"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "void CUi::RenderProgressBar").find("DrawRoundedSurface(this, ProgressBar"), std::string::npos);
-	EXPECT_NE(IngameMenus.find("#include <game/client/QmUi/UiSurface.h>"), std::string::npos);
-	EXPECT_NE(FunctionBody(IngameMenus, "void CMenus::RenderServerControl(CUIRect MainView)").find("DrawRoundedSurface(Ui(), MainView, ms_ColorTabbarActive, ms_ColorTabbarActive, 10.0f, 0.0f, IGraphics::CORNER_B);"), std::string::npos);
-	const std::string ColorPicker = FunctionBody(Ui, "CUi::EPopupMenuFunctionResult CUi::PopupColorPicker");
-	EXPECT_NE(ColorPicker.find("const CUIRect ColorMarker{MarkerX - 4.5f, MarkerY - 4.5f, 9.0f, 9.0f};"), std::string::npos);
-	EXPECT_NE(ColorPicker.find("DrawRoundedSurface(pUI, ColorMarker, PickerColorRGB, MarkerOutline, 4.5f, 1.0f);"), std::string::npos);
-	EXPECT_EQ(ColorPicker.find("DrawCircle(MarkerX"), std::string::npos);
-	EXPECT_NE(ColorPicker.find("DrawRoundedSurface(pUI, HueMarker, HueMarkerColor, HueMarkerOutline, 1.2f, 1.2f);"), std::string::npos);
-	EXPECT_EQ(ColorPicker.find("HueMarker.Draw("), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "int CUi::DoButton_Menu").find("const bool UseRoundedRectSdf = Graphics()->HasRoundedRectSdf();"), std::string::npos);
-	EXPECT_NE(FunctionBody(Ui, "int CUi::DoButton_Menu").find("if(!UseRoundedRectSdf)"), std::string::npos);
-	EXPECT_NE(Menus.find("DrawRoundedSurface(Ui(), *pRect"), std::string::npos);
-	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, Shadow"), std::string::npos);
-	EXPECT_LT(Containers.find("DrawRoundedSurface(Ctx, BorderBg"), Containers.find("DrawRoundedSurface(Ctx, Rect, Props.m_FillColor"));
-	EXPECT_NE(Containers.find("BorderBg.Margin(-1.0f, &BorderBg);"), std::string::npos);
-	EXPECT_NE(Containers.find("DrawRoundedSurface(Ctx, Rect, Props.m_FillColor"), std::string::npos);
-	EXPECT_EQ(Containers.find("BorderBg.Draw"), std::string::npos);
-	EXPECT_NE(Overlays.find("DrawRoundedSurface(Ctx, ShadowRect"), std::string::npos);
-	EXPECT_NE(Overlays.find("DrawRoundedSurface(Ctx, ToastRect"), std::string::npos);
-	EXPECT_NE(FunctionBody(ScrollRegion, "void CScrollRegion::DrawBackground(const CUIRect &ScrollbarBg)").find("DrawRoundedSurface(Ui(), ScrollbarBg"), std::string::npos);
-	EXPECT_NE(FunctionBody(ScrollRegion, "void CScrollRegion::DoSlider()").find("DrawRoundedSurface(Ui(), Slider"), std::string::npos);
-	EXPECT_NE(QmClientMenus.find("DrawRoundedSurface(Ui(), Frame.m_Frame.m_ScrollbarTrackRect"), std::string::npos);
-	EXPECT_NE(QmClientMenus.find("DrawRoundedSurface(Ui(), QrRect"), std::string::npos);
-	EXPECT_NE(QmClientMenus.find("DrawRoundedSurface(Ui(), Preview, PreviewBg"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), PlayerRect, NameButtonColor"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), ClanRect, ClanButtonColor"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("if(!ReadOnly && NameButtonColor.a > 0.0f)"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("if(!ReadOnly && ClanButtonColor.a > 0.0f)"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), PreviewRect"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), StatusBar"), std::string::npos);
-	EXPECT_NE(TClientMenus.find("DrawRoundedSurface(Ui(), Skin"), std::string::npos);
-	EXPECT_NE(ImePopup.find("DrawRoundedSurface(pGraphics, PanelDropA"), std::string::npos);
-	EXPECT_NE(ImePopup.find("DrawRoundedSurface(pGraphics, DrawRect"), std::string::npos);
-	EXPECT_NE(ImePopup.find("SurfaceParams.m_PixelSize = PixelSize;"), std::string::npos);
-	EXPECT_NE(ImePopup.find("PanelTopLine.x += Presentation.m_Radius"), std::string::npos);
-	EXPECT_NE(ImePopup.find("PanelTopLine.w = maximum(0.0f"), std::string::npos);
-	EXPECT_NE(Editor.find("DrawRoundedSurface(Ui(), *pRect"), std::string::npos);
-	EXPECT_NE(FunctionBody(Editor, "SEditResult<int> CEditor::UiDoValueSelector").find("DrawRoundedSurface(Ui(), *pRect"), std::string::npos);
-	EXPECT_EQ(Surface.find("DrawFallbackBorderRing"), std::string::npos);
-	EXPECT_EQ(Surface.find("DrawRoundedRectAntialias"), std::string::npos);
-	EXPECT_NE(Surface.find("pGraphics->DrawRect(Plan.m_Rect.x, Plan.m_Rect.y, Plan.m_Rect.w, Plan.m_Rect.h, Fill, Params.m_Corners, Plan.m_Radius);"), std::string::npos);
-	EXPECT_NE(Surface.find("Inner.Margin(Plan.m_BorderWidth, &Inner);"), std::string::npos);
-	EXPECT_NE(Surface.find("pGraphics->DrawRect(Inner.x, Inner.y, Inner.w, Inner.h, Fill, Params.m_Corners"), std::string::npos);
-	EXPECT_EQ(Surface.find("QuadsDrawFreeform"), std::string::npos);
-	EXPECT_EQ(Surface.find("pUi->ClipEnable(&Clip);"), std::string::npos);
-	const std::string Graphics = ReadTextFile("src/engine/client/graphics_threaded.cpp");
-	const std::string DrawRect = FunctionBody(Graphics, "void CGraphics_Threaded::DrawRect(float x, float y, float w, float h, ColorRGBA Color, int Corners, float Rounding)");
-	const std::string DrawRectExtAntialias = FunctionBody(Graphics, "void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA Color, bool ResolveGeometry)");
-	const std::string DrawRectExt = FunctionBody(Graphics, "void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r, int Corners)");
-	const std::string DrawRectExt4Antialias = FunctionBody(Graphics, "void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float h, float r, int Corners, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, bool ResolveGeometry)");
-	const std::string DrawRectExt4 = FunctionBody(Graphics, "void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorRGBA ColorTopLeft, ColorRGBA ColorTopRight, ColorRGBA ColorBottomLeft, ColorRGBA ColorBottomRight, float r, int Corners)");
-	EXPECT_NE(DrawRect.find("DrawRectExt(x, y, w, h, Rounding, Corners);"), std::string::npos);
-	EXPECT_NE(Graphics.find("#include <engine/client/rounded_rect_geometry.h>"), std::string::npos);
-	EXPECT_NE(DrawRectExtAntialias.find("ResolveRoundedRectGeometry(x, y, w, h, r"), std::string::npos);
-	EXPECT_NE(DrawRectExt.find("ResolveRoundedRectGeometry(x, y, w, h, r"), std::string::npos);
-	EXPECT_NE(DrawRectExt4Antialias.find("ResolveRoundedRectGeometry(x, y, w, h, r"), std::string::npos);
-	EXPECT_NE(DrawRectExt4.find("ResolveRoundedRectGeometry(x, y, w, h, r"), std::string::npos);
-	EXPECT_NE(DrawRectExt.find("DrawRectExtAntialias(x, y, w, h, r, Corners, CommandColorToColorRGBA(m_aColor[0]), false);"), std::string::npos);
-	EXPECT_NE(DrawRectExt4.find("DrawRectExt4Antialias(x, y, w, h, r, Corners, ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight, false);"), std::string::npos);
-	EXPECT_NE(FunctionBody(Graphics, "int CGraphics_Threaded::CreateRectQuadContainer(float x, float y, float w, float h, float r, int Corners)").find("ResolveRoundedRectGeometry(x, y, w, h, r"), std::string::npos);
-	for(const char *pShaderPath : {"data/shader/rounded_rect_sdf.frag", "data/shader/vulkan/rounded_rect_sdf.frag"})
-	{
-		const std::string Shader = ReadTextFile(pShaderPath);
-		EXPECT_NE(Shader.find("gRoundedRectSdfData[5]"), std::string::npos);
-		EXPECT_NE(Shader.find("float CornerRadius(vec2 Point, vec4 CornerRadii)"), std::string::npos);
-		EXPECT_NE(Shader.find("float SdfFeather(float DistanceValue, float PixelSize)"), std::string::npos);
-		EXPECT_NE(Shader.find("return max(PixelSize, length(vec2(dFdx(DistanceValue), dFdy(DistanceValue))));"), std::string::npos);
-		EXPECT_NE(Shader.find("return 1.0 - smoothstep(-Feather * 0.5, Feather * 0.5, DistanceValue);"), std::string::npos);
-		EXPECT_NE(Shader.find("vec4 InnerCornerRadii = max(CornerRadii - vec4(BorderWidth), vec4(0.0));"), std::string::npos);
-		EXPECT_NE(Shader.find("float BorderCoverage = max(OuterCoverage - InnerCoverage, 0.0);"), std::string::npos);
-		EXPECT_NE(Shader.find("float OuterCoverage = Coverage(OuterDistance, Params.y);"), std::string::npos);
-		EXPECT_NE(Shader.find("InnerCoverage = BorderWidth > 0.0 && min(InnerHalfSize.x, InnerHalfSize.y) > 0.0 ? Coverage(InnerDistance, Params.y) : 0.0;"), std::string::npos);
-		EXPECT_EQ(Shader.find("* 0.8"), std::string::npos);
-		EXPECT_EQ(Shader.find("* 0.9"), std::string::npos);
-		EXPECT_NE(Shader.find("Rect.zw + vec2(Params.z * 2.0)"), std::string::npos);
-		EXPECT_NE(Shader.find("float OutputAlpha = FillAlpha + BorderAlpha;"), std::string::npos);
-		EXPECT_NE(Shader.find("vec3 Premultiplied = FillColor.rgb * FillAlpha + BorderColor.rgb * BorderAlpha;"), std::string::npos);
-		EXPECT_EQ(Shader.find("BorderAlpha * (1.0 - FillAlpha)"), std::string::npos);
-		EXPECT_EQ(Shader.find("mix(BorderColor, FillColor, InnerCoverage)"), std::string::npos);
-	}
-	const auto NormalizeSdfCore = [](std::string Shader) {
-		const size_t CoreStart = Shader.find("float RoundedRectSdf");
-		if(CoreStart == std::string::npos)
-			return std::string{};
-		Shader.erase(0, CoreStart);
-		const std::string VulkanDataPrefix = "gSdf.gRoundedRectSdfData";
-		const std::string OpenGlDataPrefix = "gRoundedRectSdfData";
-		size_t Position = 0;
-		while((Position = Shader.find(VulkanDataPrefix, Position)) != std::string::npos)
-		{
-			Shader.replace(Position, VulkanDataPrefix.size(), OpenGlDataPrefix);
-			Position += OpenGlDataPrefix.size();
-		}
-		return Shader;
-	};
-	const std::string OpenGlSdfShader = ReadTextFile("data/shader/rounded_rect_sdf.frag");
-	const std::string VulkanSdfShader = ReadTextFile("data/shader/vulkan/rounded_rect_sdf.frag");
-	EXPECT_EQ(NormalizeSdfCore(OpenGlSdfShader), NormalizeSdfCore(VulkanSdfShader));
-	const std::string GraphicsHeader = ReadTextFile("src/engine/graphics.h");
-	const std::string GraphicsThreaded = ReadTextFile("src/engine/client/graphics_threaded.cpp");
-	const std::string OpenGl = ReadTextFile("src/engine/client/backend/opengl/backend_opengl3.cpp");
-	const std::string Vulkan = ReadTextFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
-	EXPECT_NE(GraphicsHeader.find("static_assert(sizeof(SRoundedRectSdfParams) == sizeof(vec4) * 5);"), std::string::npos);
-	EXPECT_NE(OpenGl.find("SetUniformVec4(m_pRoundedRectSdfProgram->m_LocData, 5"), std::string::npos);
-	EXPECT_NE(FunctionBody(Vulkan, "[[nodiscard]] bool Cmd_RenderRoundedRectSdf").find("&pCommand->m_Params, sizeof(pCommand->m_Params)"), std::string::npos);
-	const std::string RoundedCommand = FunctionBody(GraphicsThreaded, "void CGraphics_Threaded::RenderRoundedRectSdf");
-	EXPECT_NE(RoundedCommand.find("Params.m_Params.z"), std::string::npos);
-	EXPECT_NE(RoundedCommand.find("if(m_NumVertices > 0)"), std::string::npos);
-	EXPECT_NE(RoundedCommand.find("FlushVertices();"), std::string::npos);
-	EXPECT_NE(RoundedCommand.find("m_RoundedRectSdfFlushCount++"), std::string::npos);
-	EXPECT_NE(RoundedCommand.find("m_RoundedRectSdfCommandCount++"), std::string::npos);
-	EXPECT_NE(GraphicsThreaded.find("rounded_sdf_commands_sum"), std::string::npos);
-	EXPECT_NE(GraphicsThreaded.find("rounded_sdf_flushes_sum"), std::string::npos);
-	EXPECT_NE(GraphicsThreaded.find("m_RoundedRectSdfCommandCount = 0;"), std::string::npos);
-	EXPECT_NE(GraphicsThreaded.find("m_RoundedRectSdfFlushCount = 0;"), std::string::npos);
-}
 
 TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 {
@@ -5807,14 +3881,29 @@ TEST(QmNewUiMenuBranches, RoundedSurfaceGeometryCoversUiScaleAndRetinaMatrix)
 	}
 }
 
-TEST(QmNewUiMenuBranches, RetinaNameplatesPreferPhysicalPixelAlignment)
+TEST(QmUiScale, VirtualHeightUsesClampedPercentage)
 {
-	EXPECT_FALSE(QmNameplateUsesPhysicalPixelAlignment(1.0f, true));
-	EXPECT_TRUE(QmNameplateUsesPhysicalPixelAlignment(1.5f, true));
-	EXPECT_TRUE(QmNameplateUsesPhysicalPixelAlignment(2.0f, true));
-	EXPECT_FALSE(QmNameplateUsesPhysicalPixelAlignment(2.0f, false));
-
-	const std::string Source = ReadTextFile("src/game/client/components/nameplates.cpp");
-	EXPECT_NE(Source.find("#if defined(CONF_PLATFORM_MACOS)"), std::string::npos);
-	EXPECT_NE(Source.find("QmNameplateUsesPhysicalPixelAlignment(This.Graphics()->ScreenHiDPIScale(), true)"), std::string::npos);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(50), 1200.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(100), 600.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(200), 300.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(0), 1200.0f);
+	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(300), 300.0f);
 }
+
+
+TEST(QmUiScale, CenteredPopupMarginKeepsUsableContentAtTwoHundredPercent)
+{
+	const CUIRect DefaultScreen = {0.0f, 0.0f, 1066.0f, 600.0f};
+	const CUIRect ScaledScreen = {0.0f, 0.0f, 533.0f, 300.0f};
+	const CUIRect NarrowScaledScreen = {0.0f, 0.0f, 375.0f, 300.0f};
+
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(DefaultScreen, 150.0f, 300.0f, 180.0f), 150.0f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(ScaledScreen, 150.0f, 300.0f, 180.0f), 60.0f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(NarrowScaledScreen, 150.0f, 300.0f, 180.0f), 37.5f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin({0.0f, 0.0f, 200.0f, 120.0f}, 150.0f, 300.0f, 180.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmUiCenteredMargin(ScaledScreen, 150.0f, 300.0f, 300.0f), 0.0f);
+	EXPECT_EQ(QmUiVisibleRows(52.0f, 20.0f, 20.0f, 4, 4), 1);
+	EXPECT_EQ(QmUiVisibleRows(126.0f, 20.0f, 20.0f, 8, 4), 4);
+	EXPECT_EQ(QmUiVisibleRows(19.0f, 20.0f, 20.0f, 4, 4), 0);
+}
+

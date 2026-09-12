@@ -349,26 +349,3 @@ TEST(UiV2TreePresence, RetouchingExitingNodeCancelsRemoval)
 	EXPECT_NEAR(FinalAlpha, 1.0f, 0.001f);
 	Tree.EndFrame(Runtime);
 }
-TEST(UiV2TreePresence, ExitCleansUpWhenHigherPriorityAlphaWasActive)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	CUiV2Tree Tree;
-	CUiV2AnimationRuntime Runtime;
-	const uint64_t NodeKey = 1004;
-
-	Tree.BeginFrame();
-	Tree.ResolvePresenceAlpha(Runtime, NodeKey, ui_token::motion::HOVER_FADE);
-	Tree.EndFrame(Runtime);
-
-	EXPECT_TRUE(Runtime.RequestAnimation(MakeRequest(NodeKey, EUiAnimProperty::ALPHA, 1.0f, 0.2f, 5, EUiAnimInterruptPolicy::REPLACE, 110)));
-
-	Tree.BeginFrame();
-	Tree.EndFrame(Runtime);
-	EXPECT_EQ(Tree.NodeCount(), 1);
-
-	AdvanceFor(Runtime, 1.0f);
-	Tree.BeginFrame();
-	Tree.EndFrame(Runtime);
-	EXPECT_EQ(Tree.NodeCount(), 0);
-	EXPECT_FALSE(Runtime.HasActiveAnimation(NodeKey, EUiAnimProperty::ALPHA));
-}

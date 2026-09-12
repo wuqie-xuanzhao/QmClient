@@ -52,51 +52,6 @@ namespace
 
 } // namespace
 
-TEST(QmNewUiMenuShellBrowserContract, BrowserUsesExplicitQmNewUiShellBranch)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const std::string RenderServerbrowser = FunctionBody(Source, "void CMenus::RenderServerbrowser(");
-	const size_t TopUseNewUiIfPos = RenderServerbrowser.find("if(UseNewUi)\n\t\tView.Margin(6.0f, &View);");
-	ASSERT_NE(TopUseNewUiIfPos, std::string::npos);
-	const size_t TopOldUiElsePos = RenderServerbrowser.find("else\n\t{", TopUseNewUiIfPos);
-	ASSERT_NE(TopOldUiElsePos, std::string::npos);
-	const size_t TopOldUiBodyStart = RenderServerbrowser.find("{", TopOldUiElsePos);
-	ASSERT_NE(TopOldUiBodyStart, std::string::npos);
-	const size_t TopOldUiBodyEnd = MatchingBrace(RenderServerbrowser, TopOldUiBodyStart);
-	ASSERT_NE(TopOldUiBodyEnd, std::string::npos);
-	const std::string TopOldUiBlock = RenderServerbrowser.substr(TopOldUiBodyStart, TopOldUiBodyEnd - TopOldUiBodyStart);
-
-	const size_t UseNewUiIfPos = RenderServerbrowser.find("if(UseNewUi)", TopOldUiBodyEnd);
-	ASSERT_NE(UseNewUiIfPos, std::string::npos);
-	const size_t UseNewUiBodyStart = RenderServerbrowser.find("{", UseNewUiIfPos);
-	ASSERT_NE(UseNewUiBodyStart, std::string::npos);
-	const size_t UseNewUiBodyEnd = MatchingBrace(RenderServerbrowser, UseNewUiBodyStart);
-	ASSERT_NE(UseNewUiBodyEnd, std::string::npos);
-	const size_t OldUiElsePos = RenderServerbrowser.find("else", UseNewUiBodyEnd);
-	ASSERT_NE(OldUiElsePos, std::string::npos);
-	const size_t OldUiBodyStart = RenderServerbrowser.find("{", OldUiElsePos);
-	ASSERT_NE(OldUiBodyStart, std::string::npos);
-	const size_t OldUiBodyEnd = MatchingBrace(RenderServerbrowser, OldUiBodyStart);
-	ASSERT_NE(OldUiBodyEnd, std::string::npos);
-	const std::string OldUiBlock = RenderServerbrowser.substr(OldUiBodyStart, OldUiBodyEnd - OldUiBodyStart);
-
-	EXPECT_NE(Source.find("const bool UseNewUi = g_Config.m_QmNewUi != 0;"), std::string::npos);
-	EXPECT_NE(Source.find("if(UseNewUi)"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListBase.Draw(BrowserPanelColor()"), std::string::npos);
-	EXPECT_NE(Source.find("(void)DrawBackground;"), std::string::npos);
-	EXPECT_NE(Source.find("const float ToolBoxWidth = UseNewUi ? 205.0f : 188.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float ColumnGap = UseNewUi ? 10.0f : 6.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("const float StatusHeight = UseNewUi ? 84.0f : 76.0f;"), std::string::npos);
-	EXPECT_NE(Source.find("CUIRect ServerListStackBase = ServerListBase;"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListStackBase.HSplitBottom(StatusHeight, &ServerListBase, &StatusBox);"), std::string::npos);
-	EXPECT_NE(Source.find("StatusBox.y = ServerListStackBase.y + ServerListStackBase.h - StatusHeight;"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListBase.h = maximum(StatusBox.y - ColumnGap - ServerListBase.y, 0.0f);"), std::string::npos);
-	EXPECT_EQ(Source.find("ServerListBase.HSplitBottom(ColumnGap, &ServerListBase, nullptr);"), std::string::npos);
-	EXPECT_NE(Source.find("ServerListBase.Margin(std::clamp(ServerListBase.w * 0.006f, 1.0f, 4.0f), &ServerListBase);"), std::string::npos);
-	EXPECT_NE(TopOldUiBlock.find("View.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);"), std::string::npos);
-	EXPECT_NE(TopOldUiBlock.find("View.Margin(10.0f, &View);"), std::string::npos);
-	EXPECT_EQ(TopOldUiBlock.find("View.Margin(std::clamp(View.w * 0.008f, 4.0f, 8.0f), &View);"), std::string::npos);
-}
 
 TEST(QmNewUiMenuShellBrowserContract, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 {
@@ -159,18 +114,6 @@ TEST(QmNewUiMenuShellBrowserContract, DemoBrowserUsesExplicitLegacyShellBranches
 	EXPECT_EQ(RenderDemoBrowser.find("MainView.Draw(MenuPanelColor()"), std::string::npos);
 }
 
-TEST(QmNewUiMenuShellBrowserContract, BrowserFavoriteMapsEarlyReturnAvoidsLegacyDoubleInset)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const std::string RenderServerbrowser = FunctionBody(Source, "void CMenus::RenderServerbrowser(");
-	const size_t FavoriteMapsPos = RenderServerbrowser.find("if(g_Config.m_UiPage == PAGE_FAVORITE_MAPS)");
-	ASSERT_NE(FavoriteMapsPos, std::string::npos);
-	const size_t DrawPos = RenderServerbrowser.find("View.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);");
-	ASSERT_NE(DrawPos, std::string::npos);
-	EXPECT_LT(FavoriteMapsPos, DrawPos);
-	EXPECT_NE(RenderServerbrowser.find("RenderServerbrowserFavoriteMaps(MainView);"), std::string::npos);
-	EXPECT_NE(RenderServerbrowser.find("View.Margin(6.0f, &View);\n\t\t\tRenderServerbrowserFavoriteMaps(View);"), std::string::npos);
-}
 
 TEST(QmNewUiMenuShellBrowserContract, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
 {

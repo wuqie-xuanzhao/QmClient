@@ -21,6 +21,9 @@ struct SQmAxiomServerContext
 	const char *m_pServerName;
 };
 
+// 依据服务器社区分类/名称推断 Axiom 积分模式(无法判定返回 NONE)。
+EQmAxiomMode QmResolveAxiomModeFromServerContext(const SQmAxiomServerContext &Context);
+
 enum class EQmAxiomParseResult
 {
 	SUCCESS,

@@ -201,24 +201,9 @@ class CScoreboard : public CComponent
 	public:
 		char m_PlayerButtonId;
 		char m_SpectatorSecondLineButtonId;
-
-		CCachedText m_Score;
-		CCachedText m_ScoreMillis;
-		CCachedText m_Name;
-		CCachedText m_ReadyMark;
-		CCachedText m_Clan;
-		CCachedText m_Ping;
 	};
 	CPlayerElement m_aPlayers[MAX_CLIENTS];
 
-	CCachedText m_TitleScore;
-	CCachedText m_TitleScoreMillis;
-	CCachedText m_HeadlineScore;
-	CCachedText m_HeadlineName;
-	CCachedText m_HeadlineClan;
-	CCachedText m_HeadlinePing;
-
-	void ResetTexts();
 	// 本帧解析出的 Axiom 积分模式（NONE 表示当前服务器不是 Axiom 积分服）。
 	// 每帧在 OnRender 开头刷新一次，渲染期由 HasQmAxiomScoreMode / QmAxiomScorePoints 复用。
 	EQmAxiomMode m_QmAxiomScoreModeFrame = EQmAxiomMode::NONE;
@@ -238,8 +223,6 @@ public:
 	void OnConsoleInit() override;
 	void OnInit() override;
 	void OnReset() override;
-	void OnShutdown() override;
-	void OnWindowResize() override;
 	void OnRender() override;
 	void OnRelease() override;
 	void OnMessage(int MsgType, void *pRawMsg) override;

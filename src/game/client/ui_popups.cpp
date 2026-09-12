@@ -23,6 +23,12 @@
 #include <algorithm>
 #include <cmath>
 
+const CUIRect *CUi::GetPopupMenuRect(const SPopupMenuId *pId) const
+{
+	const auto PopupMenuIt = std::find_if(m_vPopupMenus.begin(), m_vPopupMenus.end(), [pId](const SPopupMenu &PopupMenu) { return PopupMenu.m_pId == pId; });
+	return PopupMenuIt == m_vPopupMenus.end() ? nullptr : &PopupMenuIt->m_Rect;
+}
+
 void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props)
 {
 	if(Props.m_AutoReposition)

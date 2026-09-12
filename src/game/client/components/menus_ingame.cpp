@@ -52,6 +52,9 @@ using namespace std::chrono_literals;
 
 namespace
 {
+	constexpr const char *REPORT_SCAN_PATH = "/v1/scan";
+	constexpr const char *REPORT_CONTENT_TYPE = "application/json; charset=utf-8";
+
 	void LogIngamePerfStage(IClient *pClient, const char *pStage, const double DurationMs, const bool Force = false, const char *pExtra = nullptr)
 	{
 		QmPerfLogStage("perf/menu", pStage, DurationMs, Force, pClient, nullptr, nullptr, pExtra);
@@ -324,8 +327,96 @@ namespace
 	}
 } // namespace
 
+void CMenus::ResetReportScan()
+{
+	if(m_pReportScanRequest)
+		m_pReportScanRequest->Abort();
+	m_pReportScanRequest.reset();
+	m_ReportScanState = EReportScanState::IDLE;
+	m_aReportScanAddress[0] = '\0';
+}
+
+void CMenus::StartReportScan()
+{
+	if(m_ReportScanState != EReportScanState::IDLE)
+	{
+		GameClient()->Echo(Localize("Report request is already in progress"));
+		return;
+	}
+	if(Client()->State() != IClient::STATE_ONLINE)
+	{
+		GameClient()->Echo(Localize("Connect to a server first"));
+		return;
+	}
+	if(GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity())
+	{
+		GameClient()->Echo(Localize("Reports are not available on Axiom servers"));
+		return;
+	}
+	if(g_Config.m_QmReportAppId[0] == '\0' || g_Config.m_QmReportSecret[0] == '\0')
+	{
+		GameClient()->Echo(Localize("Configure qm_report_app_id and qm_report_secret first"));
+		return;
+	}
+
+	const NETADDR *pServerAddr = Client()->ServerAddress();
+	if(pServerAddr)
+		net_addr_str(pServerAddr, m_aReportScanAddress, sizeof(m_aReportScanAddress), true);
+	if(m_aReportScanAddress[0] == '\0')
+	{
+		GameClient()->Echo(Localize("Could not get current server address"));
+		return;
+	}
+
+	char aEscapedAddress[NETADDR_MAXSTRSIZE * 2];
+	EscapeJson(aEscapedAddress, sizeof(aEscapedAddress), m_aReportScanAddress);
+
+	char aBody[256];
+	str_format(aBody, sizeof(aBody), "{\"address\":\"%s\"}", aEscapedAddress);
+
+	m_pReportScanRequest = CreateReportRequest(REPORT_SCAN_PATH, aBody);
+	if(!m_pReportScanRequest)
+	{
+		ResetReportScan();
+		GameClient()->Echo(Localize("Could not create report scan request"));
+		return;
+	}
+
+	m_ReportScanState = EReportScanState::SCANNING;
+	Http()->Run(m_pReportScanRequest);
+	GameClient()->Echo(Localize("Scanning current server..."));
+}
+
+void CMenus::UpdateReportScan()
+{
+	if(m_ReportScanState == EReportScanState::IDLE || !m_pReportScanRequest || !m_pReportScanRequest->Done())
+		return;
+
+	const EHttpState RequestState = m_pReportScanRequest->State();
+	if(RequestState != EHttpState::DONE)
+	{
+		ResetReportScan();
+		GameClient()->Echo(RequestState == EHttpState::ABORTED ? Localize("Report request canceled") : Localize("Report request failed due to network error"));
+		return;
+	}
+
+	const int StatusCode = m_pReportScanRequest->StatusCode();
+	if(StatusCode < 200 || StatusCode >= 300)
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), Localize("Report request failed with HTTP status: %d"), StatusCode);
+		ResetReportScan();
+		GameClient()->Echo(aBuf);
+		return;
+	}
+
+	ResetReportScan();
+	GameClient()->Echo(Localize("Report scan request submitted"));
+}
+
 void CMenus::RenderGame(CUIRect MainView)
 {
+	UpdateReportScan();
 	CUIRect Button, ButtonBars, ButtonBar, ButtonBar2;
 	constexpr float MenuButtonHeight = 25.0f;
 	constexpr float PrimaryButtonSpacing = 5.0f;
@@ -358,6 +449,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	const int LocalTeam = HasLocalInfo ? GameClient()->m_Snap.m_pLocalInfo->m_Team : TEAM_SPECTATORS;
 	const bool Recording = DemoRecorder(RECORDER_MANUAL)->IsRecording();
 	const bool FastPracticeEnabled = GameClient()->m_FastPractice.Enabled();
+	const bool ReportDisabledOnAxiom = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity();
 
 	const char *pDisconnectButtonLabel = Localize("Disconnect");
 	const char *pDummyButtonLabel = Localize("Connect dummy");
@@ -378,6 +470,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	char aSaveReplayButtonLabel[64];
 	str_format(aSaveReplayButtonLabel, sizeof(aSaveReplayButtonLabel), Localize("Save last %d min"), g_Config.m_ClEscReplayLengthMinutes);
 	const char *pDemoMarkerButtonLabel = Localize("Mark demo");
+	const char *pReportButtonLabel = Localize("Report");
 	const char *pSpectateButtonLabel = Localize("Spectate");
 	const char *pJoinRedButtonLabel = Localize("Join red");
 	const char *pJoinBlueButtonLabel = Localize("Join blue");
@@ -408,6 +501,8 @@ void CMenus::RenderGame(CUIRect MainView)
 	const float SaveReplayButtonWidthCompact = CalcMenuButtonWidth(aSaveReplayButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 	const float DemoMarkerButtonWidthNormal = CalcMenuButtonWidth(pDemoMarkerButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
 	const float DemoMarkerButtonWidthCompact = CalcMenuButtonWidth(pDemoMarkerButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
+	const float ReportButtonWidthNormal = CalcMenuButtonWidth(pReportButtonLabel, MenuButtonPaddingNormal, DynamicButtonMinWidth);
+	const float ReportButtonWidthCompact = CalcMenuButtonWidth(pReportButtonLabel, MenuButtonPaddingCompact, DynamicButtonMinWidth);
 
 	const bool ShowGameplayButtons = HasLocalInfo && HasGameInfo && !Paused && !Spec;
 	const bool ShowSpectateButton = ShowGameplayButtons && LocalTeam != TEAM_SPECTATORS && !FastPracticeEnabled;
@@ -422,9 +517,9 @@ void CMenus::RenderGame(CUIRect MainView)
 	const bool ShowSaveReplayButton = g_Config.m_ClReplays != 0;
 
 	const float UtilityButtonWidthNormal =
-		DisconnectButtonWidthNormal + DummyButtonWidthNormal + EditHudButtonWidthNormal + DemoButtonWidthNormal + (ShowSaveReplayButton ? SaveReplayButtonWidthNormal : 0.0f) + DemoMarkerButtonWidthNormal + UtilityButtonSpacingNormal * (ShowSaveReplayButton ? 5.0f : 4.0f);
+		DisconnectButtonWidthNormal + DummyButtonWidthNormal + EditHudButtonWidthNormal + DemoButtonWidthNormal + (ShowSaveReplayButton ? SaveReplayButtonWidthNormal : 0.0f) + DemoMarkerButtonWidthNormal + ReportButtonWidthNormal + UtilityButtonSpacingNormal * (ShowSaveReplayButton ? 6.0f : 5.0f);
 	const float UtilityButtonWidthCompact =
-		DisconnectButtonWidthCompact + DummyButtonWidthCompact + EditHudButtonWidthCompact + DemoButtonWidthCompact + (ShowSaveReplayButton ? SaveReplayButtonWidthCompact : 0.0f) + DemoMarkerButtonWidthCompact + UtilityButtonSpacingCompact * (ShowSaveReplayButton ? 5.0f : 4.0f);
+		DisconnectButtonWidthCompact + DummyButtonWidthCompact + EditHudButtonWidthCompact + DemoButtonWidthCompact + (ShowSaveReplayButton ? SaveReplayButtonWidthCompact : 0.0f) + DemoMarkerButtonWidthCompact + ReportButtonWidthCompact + UtilityButtonSpacingCompact * (ShowSaveReplayButton ? 6.0f : 5.0f);
 	const float PrimaryButtonBarWidth = maximum(0.0f, MainView.w - 20.0f);
 
 	auto CalcPrimaryButtonsWidth = [&](bool IncludeTeamplayDDRaceButtons) {
@@ -533,6 +628,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	const float DemoButtonWidth = UseCompactUtilityButtons ? DemoButtonWidthCompact : DemoButtonWidthNormal;
 	const float SaveReplayButtonWidth = UseCompactUtilityButtons ? SaveReplayButtonWidthCompact : SaveReplayButtonWidthNormal;
 	const float DemoMarkerButtonWidth = UseCompactUtilityButtons ? DemoMarkerButtonWidthCompact : DemoMarkerButtonWidthNormal;
+	const float ReportButtonWidth = UseCompactUtilityButtons ? ReportButtonWidthCompact : ReportButtonWidthNormal;
 
 	// QmClient: 分段计时，定位首次打开 ESC 时按钮列 17ms 尖峰的来源
 	CPerfTimer UtilityButtonsTimer;

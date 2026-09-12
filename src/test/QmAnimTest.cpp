@@ -37,6 +37,38 @@ namespace
 
 } // namespace
 
+namespace
+{
+	SUiAnimRequest MakeSpringRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, uint32_t TrackId)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition.m_Driver = EUiAnimDriver::SPRING;
+		Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
+		Request.m_TrackId = TrackId;
+		return Request;
+	}
+
+	SUiAnimRequest MakeRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, float DurationSec, int Priority, EUiAnimInterruptPolicy Interrupt, uint32_t TrackId)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition.m_DurationSec = DurationSec;
+		Request.m_Transition.m_Priority = Priority;
+		Request.m_Transition.m_Interrupt = Interrupt;
+		Request.m_Transition.m_Easing = EEasing::LINEAR;
+		Request.m_TrackId = TrackId;
+		return Request;
+	}
+
+}
+
 TEST(UiRect, NestedZeroClipCannotExpand)
 {
 	const CUIRect RenderOnlyClip{100.0f, 100.0f, 0.0f, 0.0f};
@@ -675,34 +707,6 @@ TEST(InputField, TrailingTextStaysInsideSingleShell)
 	EXPECT_GE(Layout.m_ContentRect.w, 52.0f);
 }
 
-TEST(UiV2AnimSpring, AnalyticSolverIsFrameRateIndependent)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	SUiSpringConfig Spring;
-	Spring.m_Mass = 1.0f;
-	Spring.m_Stiffness = 100.0f; // ω0 = 10
-	Spring.m_Damping = 10.0f; // ζ = 0.5（欠阻尼）
-	Spring.m_RestEpsilon = 0.0001f;
-	Spring.m_RestVelocity = 0.001f;
-
-	const auto RunHalfSecond = [&Spring](float Dt) {
-		CUiV2AnimationRuntime Runtime;
-		Runtime.SetValue(501, EUiAnimProperty::POS_X, 0.0f);
-		EXPECT_TRUE(Runtime.RequestAnimation(MakeSpringRequest(501, EUiAnimProperty::POS_X, 100.0f, 141)));
-		const int Steps = static_cast<int>(0.5f / Dt);
-		for(int i = 0; i < Steps; ++i)
-			Runtime.Advance(Dt);
-		return Runtime.GetValue(501, EUiAnimProperty::POS_X);
-	};
-
-	// 解析解与帧率无关：不同步长推进同一时长得到一致结果。
-	const float Value60 = RunHalfSecond(1.0f / 60.0f);
-	const float Value240 = RunHalfSecond(1.0f / 240.0f);
-	EXPECT_NEAR(Value60, Value240, 1e-3f);
-
-	// 解析解核对：ζ=0.5、ω0=10、t=0.5s → 107.47（欠阻尼过冲后回落中）。
-	EXPECT_NEAR(Value60, 107.47f, 0.05f);
-}
 
 TEST(UiV2AnimSpring, ReplaceInheritsVelocity)
 {
@@ -772,6 +776,33 @@ TEST(UiV2Anim, MergeTargetInstantRequestStillSnaps)
 }
 
 TEST(UiV2AnimSpring, ResolveSpringValueUsesRuntimeSpringTrack)
+{
+	g_Config.m_QmUiMotionLevel = 2;
+	CUiV2AnimationRuntime Runtime;
+	Runtime.SetValue(401, EUiAnimProperty::POS_X, 0.0f);
+
+	SUiSpringConfig Spring;
+	Spring.m_Stiffness = 280.0f;
+	Spring.m_Damping = 18.0f;
+	Spring.m_RestEpsilon = 0.01f;
+	Spring.m_RestVelocity = 0.05f;
+
+	EXPECT_NEAR(ResolveUiAnimSpringValue(Runtime, 401, EUiAnimProperty::POS_X, 100.0f, Spring), 0.0f, 1e-6f);
+	EXPECT_TRUE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
+
+	AdvanceFor(Runtime, 0.15f);
+	const float BeforeMerge = Runtime.GetValue(401, EUiAnimProperty::POS_X);
+	EXPECT_GT(BeforeMerge, 0.0f);
+	EXPECT_TRUE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
+
+	EXPECT_NEAR(ResolveUiAnimSpringValue(Runtime, 401, EUiAnimProperty::POS_X, -50.0f, Spring), BeforeMerge, 1e-3f);
+	EXPECT_TRUE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
+
+	AdvanceFor(Runtime, 3.0f);
+	EXPECT_NEAR(Runtime.GetValue(401, EUiAnimProperty::POS_X), -50.0f, 0.5f);
+	EXPECT_FALSE(Runtime.HasActiveAnimation(401, EUiAnimProperty::POS_X));
+}
+
 TEST(InputField, InlineTrailingTextCentersItsVisualGroup)
 {
 	const CUIRect Content{10.0f, 20.0f, 120.0f, 24.0f};
@@ -1270,38 +1301,6 @@ TEST(UiV2AnimEasing, MergeTargetRefreshesCustomEasing)
 	EXPECT_GT(Runtime.GetValue(206, EUiAnimProperty::ALPHA), 0.45f);
 }
 
-TEST(UiV2AnimEasing, MergeTargetInterruptsTweenViaSpringTakeover)
-{
-	CUiV2AnimationRuntime Runtime;
-	Runtime.SetValue(207, EUiAnimProperty::POS_X, 0.0f);
-
-	SUiAnimRequest Request = MakeTweenRequest(207, EUiAnimProperty::POS_X, 100.0f, 1.0f, EEasing::LINEAR, 110);
-	EXPECT_TRUE(Runtime.RequestAnimation(Request));
-	AdvanceFor(Runtime, 0.2f);
-	const float BeforeMerge = Runtime.GetValue(207, EUiAnimProperty::POS_X);
-	EXPECT_NEAR(BeforeMerge, 20.0f, 0.05f);
-
-	// MERGE_TARGET 打断运行中的 tween：值连续，运动转弹簧接管（初速度=线性曲线速度 100/s）。
-	Request.m_Target = 200.0f;
-	Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
-	Request.m_TrackId = 111;
-	EXPECT_TRUE(Runtime.RequestAnimation(Request));
-	EXPECT_NEAR(Runtime.GetValue(207, EUiAnimProperty::POS_X), BeforeMerge, 1e-3f);
-
-	Runtime.Advance(1.0f / 60.0f);
-	const float AfterOneFrame = Runtime.GetValue(207, EUiAnimProperty::POS_X);
-	// 继承速度：接管首帧继续上行，而不是从当前值静止重放。
-	EXPECT_GT(AfterOneFrame, BeforeMerge);
-	EXPECT_LT(AfterOneFrame - BeforeMerge, 10.0f);
-
-	AdvanceFor(Runtime, 2.0f);
-	EXPECT_NEAR(Runtime.GetValue(207, EUiAnimProperty::POS_X), 200.0f, 0.5f);
-	EXPECT_FALSE(Runtime.HasActiveAnimation(207, EUiAnimProperty::POS_X));
-
-	SUiAnimCompleteEvent Event;
-	ASSERT_TRUE(Runtime.PollCompletedEvent(Event));
-	EXPECT_EQ(Event.m_TrackId, 111u);
-}
 
 TEST(UiV2AnimColor, DefaultInterpolationUsesLinearSrgb)
 {

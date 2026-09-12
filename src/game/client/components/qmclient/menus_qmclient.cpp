@@ -3483,55 +3483,6 @@ void CMenus::RenderQmHudSystemMediaControlsContent(CUIRect &Content, float LineH
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
-void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
-{
-	// 音乐 Hook 开关:同一时间只能启用一个,点开其中一个时自动关闭其余。
-	// 未来新增 Hook 只需在 QmMusicHookRegistry 注册,这里自动覆盖。
-	size_t HookCount = 0;
-	const SQmMusicHookEntry *apHooks = QmMusicHookRegistry(&HookCount);
-	for(size_t i = 0; i < HookCount; ++i)
-	{
-		const SQmMusicHookEntry &Hook = apHooks[i];
-		const bool Changed = RenderQmHudCheckbox(Content, LineHeight, LineSpacing, Hook.m_pEnableConfig, Hook.m_pSettingsTextId, Localize(Hook.m_pSettingsText), Hook.m_pEnableConfig);
-		if(Changed && *Hook.m_pEnableConfig != 0)
-		{
-			// 互斥:打开一个 Hook 时自动关闭其余 Hook。
-			for(size_t j = 0; j < HookCount; ++j)
-			{
-				if(j != i)
-					*apHooks[j].m_pEnableConfig = 0;
-			}
-		}
-	}
-	// 兜底:配置被外部直接改成多个 Hook 同时开启时,保留第一个,关闭其余。
-	int FirstEnabled = -1;
-	for(size_t i = 0; i < HookCount; ++i)
-	{
-		if(*apHooks[i].m_pEnableConfig != 0)
-		{
-			if(FirstEnabled == -1)
-				FirstEnabled = (int)i;
-			else
-				*apHooks[i].m_pEnableConfig = 0;
-		}
-	}
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, "Enable lyrics", Localize("Enable lyrics"), &g_Config.m_QmLyrics);
-	RenderQmHudCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, "Show lyrics inside Dynamic Island", Localize("Show lyrics inside Dynamic Island"), &g_Config.m_QmLyricsInMediaIsland);
-	// Spotify 纯网络链路需要 sp_dc 登录 cookie(浏览器 DevTools 的 open.spotify.com cookie)。
-	if(g_Config.m_QmSpotifyEnable != 0)
-	{
-		static CLineInput s_SpotifySpDc(g_Config.m_QmSpotifySpDc, sizeof(g_Config.m_QmSpotifySpDc));
-		CUIRect Row, LabelColumn, InputColumn;
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		Row.VSplitLeft(100.0f, &LabelColumn, &InputColumn);
-		// 配置名标签,不参与翻译。
-		RenderQmHudLabel("qmclient-lyrics-spotify-sp-dc", &LabelColumn, "spotify_ck", ui_token::font::BODY);
-		IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_lyrics_spotify_text_inputs");
-		ui_widget::InputField(TextInputCtx, &s_SpotifySpDc, InputColumn, Localize("Paste sp_dc from Spotify web cookies"), ui_token::font::BODY);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	}
-}
-
 void CMenus::RenderQmHudNotificationsBasicContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly)
 {
 	const float LineHeight = Metrics.m_LineHeight;
@@ -4545,14 +4496,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::HudNotifications: return ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0);
 		case EQmModuleId::Voice: return ResolveQmHudVoiceHeight(Metrics, g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return ResolveQmHudDynamicIslandHeight(Metrics, DynamicIslandOriginalStyle, ContentWidth);
-		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(3.0f) : Rows(1.0f);
-		case EQmModuleId::Lyrics:
-		{
-			// Hook 开关(注册表行数)+ 歌词两个开关 + Spotify 启用时的 sp_dc 输入行。
-			size_t HookCount = 0;
-			QmMusicHookRegistry(&HookCount);
-			return Rows((float)HookCount + 2.0f + (g_Config.m_QmSpotifyEnable != 0 ? 1.0f : 0.0f));
-		}
+		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? Rows(7.0f) : Rows(1.0f);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		case EQmModuleId::BindStatusHud: return Rows(6.0f); // 4 个状态开关 + 自定义列表编辑行 + 格式提示行
 		default: return Rows(1.0f);
@@ -4574,8 +4518,12 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		}
 		case EQmModuleId::Voice: return ResolveQmHudVoiceRevision(g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
 		case EQmModuleId::DynamicIsland: return DynamicIslandOriginalStyle ? 1u : 0u;
-		case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? 1u : 0u;
-		case EQmModuleId::Lyrics: return g_Config.m_QmSpotifyEnable ? 1u : 0u; // sp_dc 输入行影响布局高度
+		case EQmModuleId::SystemMediaControls:
+			return (g_Config.m_QmSmtcEnable ? 1u : 0u) |
+			       (g_Config.m_QmNeteaseHookEnable ? 2u : 0u) |
+			       (g_Config.m_QmSodaHookEnable ? 4u : 0u) |
+			       (g_Config.m_QmLyrics ? 8u : 0u) |
+			       (g_Config.m_QmLyricsInMediaIsland ? 16u : 0u);
 		case EQmModuleId::Background3D: return ResolveQmHudBackground3DRevision(g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 		default: return 0u;
 		}
@@ -4687,44 +4635,6 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::SystemMediaControls:
 			return [this, LineHeight, LineSpacing](CUIRect Content) {
 				bool Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSmtcEnable, &g_Config.m_QmSmtcEnable);
-				return Changed;
-			};
-		case EQmModuleId::Lyrics:
-			return [this, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {
-				bool Changed = false;
-				// 音乐 Hook 开关互斥:点开一个时自动关闭其余(见 QmMusicHookRegistry)。
-				size_t HookCount = 0;
-				const SQmMusicHookEntry *apHooks = QmMusicHookRegistry(&HookCount);
-				for(size_t i = 0; i < HookCount; ++i)
-				{
-					const SQmMusicHookEntry &Hook = apHooks[i];
-					const bool HookChanged = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, Hook.m_pEnableConfig, Hook.m_pEnableConfig);
-					if(HookChanged && *Hook.m_pEnableConfig != 0)
-					{
-						for(size_t j = 0; j < HookCount; ++j)
-						{
-							if(j != i)
-								*apHooks[j].m_pEnableConfig = 0;
-						}
-					}
-					Changed = HookChanged || Changed;
-				}
-				// 兜底:配置被外部直接改成多个 Hook 同时开启时,保留第一个,关闭其余。
-				int FirstEnabled = -1;
-				for(size_t i = 0; i < HookCount; ++i)
-				{
-					if(*apHooks[i].m_pEnableConfig != 0)
-					{
-						if(FirstEnabled == -1)
-							FirstEnabled = (int)i;
-						else
-							*apHooks[i].m_pEnableConfig = 0;
-					}
-				}
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyrics, &g_Config.m_QmLyrics) || Changed;
-				Changed = HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmLyricsInMediaIsland, &g_Config.m_QmLyricsInMediaIsland) || Changed;
-				if(g_Config.m_QmSpotifyEnable != 0)
-					ConsumeQmHudRow(Content); // Spotify sp_dc 输入行(与渲染保持一致)
 				return Changed;
 			};
 		case EQmModuleId::Background3D:

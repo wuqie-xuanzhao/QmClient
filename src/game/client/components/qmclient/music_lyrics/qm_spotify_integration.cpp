@@ -6,7 +6,7 @@
 #include <base/system.h>
 
 #include <engine/shared/config.h>
-#include <engine/shared/http.h>
+#include <engine/http.h>
 
 #include <game/client/components/qmclient/netease/netease_lyric_parser.h>
 #include <game/client/components/qmclient/netease/netease_lyric_timeline.h>
@@ -175,9 +175,9 @@ struct CSpotifyIntegration::SImpl
 	std::string m_AccessToken;
 	int64_t m_TokenExpirationMs = 0;
 	bool m_TokenLegacyAttempted = false;
-	std::shared_ptr<CHttpRequest> m_pSecretRequest;
-	std::shared_ptr<CHttpRequest> m_pServerTimeRequest;
-	std::shared_ptr<CHttpRequest> m_pTokenRequest;
+	std::shared_ptr<IHttpRequest> m_pSecretRequest;
+	std::shared_ptr<IHttpRequest> m_pServerTimeRequest;
+	std::shared_ptr<IHttpRequest> m_pTokenRequest;
 	int64_t m_NextTokenRetryTick = 0;
 
 	// 歌曲身份。
@@ -187,14 +187,14 @@ struct CSpotifyIntegration::SImpl
 	uint64_t m_SongId = 0;
 
 	// 歌曲数据请求。
-	std::shared_ptr<CHttpRequest> m_pSearchRequest;
+	std::shared_ptr<IHttpRequest> m_pSearchRequest;
 	int m_SearchAttempt = 0; // 0/1 = pathfinder 双 hash,2 = /v1/search
 	bool m_SearchFailed = false;
-	std::shared_ptr<CHttpRequest> m_pLyricsRequest;
+	std::shared_ptr<IHttpRequest> m_pLyricsRequest;
 	int m_RetryCount = 0; // 本首歌已消耗的 token 刷新重试次数(搜索/歌词共用)
 	std::string m_PendingTrackId;
 	std::string m_PendingIsrc;
-	std::shared_ptr<CHttpRequest> m_pLrclibRequest;
+	std::shared_ptr<IHttpRequest> m_pLrclibRequest;
 
 	// 歌词数据。
 	QmMusicLyrics::SLyricsData m_Lyrics;
@@ -429,7 +429,7 @@ void CSpotifyIntegration::PollTokenPipeline()
 		if(m_pImpl->m_SecretMirrorIndex < 3)
 		{
 			m_pImpl->m_TokenState = SImpl::ETokenState::FetchSecret;
-			auto pRequest = std::make_shared<CHttpRequest>(SECRET_MIRROR_URLS[m_pImpl->m_SecretMirrorIndex]);
+			auto pRequest = std::shared_ptr<IHttpRequest>(HttpGet(SECRET_MIRROR_URLS[m_pImpl->m_SecretMirrorIndex]));
 			pRequest->LogProgress(HTTPLOG::FAILURE);
 			pRequest->FailOnErrorStatus(false);
 			pRequest->Timeout(CTimeout{5000, 10000, 500, 10});
@@ -451,7 +451,7 @@ void CSpotifyIntegration::PollTokenPipeline()
 	}
 	if(m_pImpl->m_TokenState == SImpl::ETokenState::FetchSecret)
 	{
-		std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pSecretRequest;
+		std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pSecretRequest;
 		if(pRequest == nullptr || !pRequest->Done())
 			return;
 		m_pImpl->m_pSecretRequest.reset();
@@ -481,7 +481,7 @@ void CSpotifyIntegration::PollTokenPipeline()
 	// 阶段 2:服务器时间。
 	if(m_pImpl->m_TokenState == SImpl::ETokenState::FetchServerTime)
 	{
-		auto pRequest = std::make_shared<CHttpRequest>(SERVER_TIME_URL);
+		auto pRequest = std::shared_ptr<IHttpRequest>(HttpGet(SERVER_TIME_URL));
 		pRequest->LogProgress(HTTPLOG::FAILURE);
 		pRequest->FailOnErrorStatus(false);
 		pRequest->Timeout(CTimeout{5000, 10000, 500, 10});
@@ -496,7 +496,7 @@ void CSpotifyIntegration::PollTokenPipeline()
 	// 阶段 3:token。
 	if(m_pImpl->m_TokenState == SImpl::ETokenState::FetchToken)
 	{
-		std::shared_ptr<CHttpRequest> pTimeRequest = m_pImpl->m_pServerTimeRequest;
+		std::shared_ptr<IHttpRequest> pTimeRequest = m_pImpl->m_pServerTimeRequest;
 		if(pTimeRequest == nullptr)
 		{
 			// server-time 已完成并发出 token 请求时,等待其完成;否则视为状态异常。
@@ -523,7 +523,7 @@ void CSpotifyIntegration::PollTokenPipeline()
 			return;
 		}
 		const std::string TokenUrl = QmSpotifyToken::BuildTokenUrl(m_pImpl->m_Secret, ServerTime, m_pImpl->m_TokenLegacyAttempted);
-		auto pRequest = std::make_shared<CHttpRequest>(TokenUrl.c_str());
+		auto pRequest = std::shared_ptr<IHttpRequest>(HttpGet(TokenUrl.c_str()));
 		pRequest->LogProgress(HTTPLOG::FAILURE);
 		pRequest->FailOnErrorStatus(false);
 		pRequest->Timeout(CTimeout{5000, 10000, 500, 10});
@@ -542,7 +542,7 @@ void CSpotifyIntegration::PollTokenPipeline()
 	// 阶段 4:token 完成。
 	if(m_pImpl->m_pTokenRequest != nullptr && m_pImpl->m_pTokenRequest->Done())
 	{
-		std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pTokenRequest;
+		std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pTokenRequest;
 		m_pImpl->m_pTokenRequest.reset();
 		const int Status = pRequest->StatusCode();
 		if(pRequest->State() == EHttpState::DONE && Status == 200)
@@ -604,7 +604,7 @@ void CSpotifyIntegration::PollSongPipeline()
 		{
 			Url = "https://api.spotify.com/v1/search?q=" + UrlEncode(Term) + "&type=track&limit=10&market=from_token";
 		}
-		auto pRequest = std::make_shared<CHttpRequest>(Url.c_str());
+		auto pRequest = std::shared_ptr<IHttpRequest>(HttpGet(Url.c_str()));
 		pRequest->LogProgress(HTTPLOG::FAILURE);
 		pRequest->FailOnErrorStatus(false);
 		pRequest->Timeout(CTimeout{5000, 10000, 500, 10});
@@ -618,7 +618,7 @@ void CSpotifyIntegration::PollSongPipeline()
 	}
 	if(!m_pImpl->m_pSearchRequest->Done())
 		return;
-	std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pSearchRequest;
+	std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pSearchRequest;
 	m_pImpl->m_pSearchRequest.reset();
 	const int Status = pRequest->StatusCode();
 	if(pRequest->State() == EHttpState::DONE && Status == 200)
@@ -667,7 +667,7 @@ void CSpotifyIntegration::PollSongPipelineLyrics()
 		if(m_pImpl->m_PendingTrackId.empty())
 			return;
 		const std::string Url = std::string(LYRICS_URL_BASE) + m_pImpl->m_PendingTrackId + "?format=json&market=from_token";
-		auto pRequest = std::make_shared<CHttpRequest>(Url.c_str());
+		auto pRequest = std::shared_ptr<IHttpRequest>(HttpGet(Url.c_str()));
 		pRequest->LogProgress(HTTPLOG::FAILURE);
 		pRequest->FailOnErrorStatus(false);
 		pRequest->Timeout(CTimeout{5000, 10000, 500, 10});
@@ -682,7 +682,7 @@ void CSpotifyIntegration::PollSongPipelineLyrics()
 	}
 	if(!m_pImpl->m_pLyricsRequest->Done())
 		return;
-	std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pLyricsRequest;
+	std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pLyricsRequest;
 	m_pImpl->m_pLyricsRequest.reset();
 	const int Status = pRequest->StatusCode();
 	if(pRequest->State() == EHttpState::DONE && Status == 200)
@@ -736,7 +736,7 @@ void CSpotifyIntegration::StartLrclibFallback()
 		Url = std::string(LRCLIB_SEARCH_URL) + "?track_name=" + UrlEncode(m_pImpl->m_IdentityTitle) +
 		      "&artist_name=" + UrlEncode(m_pImpl->m_IdentityArtist);
 	}
-	auto pRequest = std::make_shared<CHttpRequest>(Url.c_str());
+	auto pRequest = std::shared_ptr<IHttpRequest>(HttpGet(Url.c_str()));
 	pRequest->LogProgress(HTTPLOG::FAILURE);
 	pRequest->FailOnErrorStatus(false);
 	pRequest->Timeout(CTimeout{5000, 10000, 500, 10});
@@ -752,7 +752,7 @@ void CSpotifyIntegration::PollSongPipelineLrclib()
 		return;
 	if(!m_pImpl->m_pLrclibRequest->Done())
 		return;
-	std::shared_ptr<CHttpRequest> pRequest = m_pImpl->m_pLrclibRequest;
+	std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pLrclibRequest;
 	m_pImpl->m_pLrclibRequest.reset();
 	if(pRequest->State() == EHttpState::DONE && pRequest->StatusCode() == 200)
 	{

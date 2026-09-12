@@ -1129,6 +1129,13 @@ public:
 
 	// render time with hundredths or thousands aligned to the right of the UIRect
 	void RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds, CCachedText &SecondsText, CCachedText &MillisText, ColorRGBA Color) const;
+	void RenderTime(CUIRect TimeRect, float FontSize, int Seconds, bool NotFinished, int Millis, bool TrueMilliseconds) const
+	{
+		CCachedText SecondsText;
+		CCachedText MillisText;
+		RenderTime(TimeRect, FontSize, Seconds, NotFinished, Millis, TrueMilliseconds, SecondsText, MillisText, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+
 
 	// progress spinner
 	void RenderProgressSpinner(vec2 Center, float OuterRadius, const SProgressSpinnerProperties &Props = {}) const;

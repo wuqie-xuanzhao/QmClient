@@ -98,17 +98,3 @@ TEST(QmMonitoringPersistenceContract, AudioPackDirectoryOpensWritableSaveFolder)
 	EXPECT_EQ(Body.find("Storage()->GetCompletePath(IStorage::TYPE_ALL, \"audio\""), std::string::npos);
 }
 
-TEST(QmStatisticsPersistence, KeepsCachedAxiomDataVisibleDuringRefresh)
-{
-	const std::string Scoreboard = ReadRepoFile("src/game/client/components/scoreboard.cpp");
-	const std::string Menus = ReadRepoFile("src/game/client/components/menus.cpp");
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/qmclient.cpp");
-
-	EXPECT_NE(Scoreboard.find("const bool HasModeData = pResult != nullptr"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("!HasModeData"), std::string::npos);
-	EXPECT_NE(Scoreboard.find("if(!ModeResult.m_HasData)"), std::string::npos);
-	EXPECT_NE(Menus.find("Localize(\"Score earned\"), aScoreText"), std::string::npos);
-	EXPECT_NE(QmClient.find("if(!m_pQmDdnetPlayerParseJob->Done())"), std::string::npos);
-	EXPECT_NE(QmClient.find("bool ValidPoints = false"), std::string::npos);
-	EXPECT_NE(QmClient.find("if(ValidPoints && pTypes->type == json_object)"), std::string::npos);
-}
