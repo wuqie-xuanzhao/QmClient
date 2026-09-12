@@ -11,15 +11,18 @@
 
 namespace
 {
-	constexpr float AXIOM_POPUP_WIDTH = 360.0f;
-	constexpr float AXIOM_POPUP_HEIGHT = 390.0f;
-	constexpr float AXIOM_POPUP_SCREEN_MARGIN = 5.0f;
 	constexpr size_t MAX_AXIOM_JSON_BYTES = 8 * 1024 * 1024;
 	constexpr unsigned MAX_AXIOM_SEARCH_RESULTS = 64;
 	constexpr unsigned MAX_AXIOM_DIFFICULTIES = 128;
 	constexpr size_t MAX_AXIOM_PLAYER_NAME_BYTES = 256;
 	constexpr size_t MAX_AXIOM_DIFFICULTY_NAME_BYTES = 192;
 	constexpr size_t MAX_DDSTATS_GAMETYPE_NAME_BYTES = 256;
+
+	// DDNet 社区信息里 Axiom 的服务器分类名，正好对应两个积分模式。
+	constexpr const char *AXIOM_COMMUNITY_TYPE_GORES = "Gores";
+	constexpr const char *AXIOM_COMMUNITY_TYPE_OTHER = "Other";
+	// 分类缺失时的兜底：AXRace 服务器的名字里带 AXRace，Gores 服务器不带。
+	constexpr const char *AXIOM_SERVER_NAME_MARKER = "AXRace";
 
 	const json_value *JsonField(const json_value *pObject, const char *pName)
 	{
@@ -40,7 +43,8 @@ namespace
 	bool ReadOptionalNonNegativeInteger(const json_value *pObject, const char *pName, std::optional<int64_t> &Out)
 	{
 		const json_value *pValue = JsonField(pObject, pName);
-		if(pValue == &json_value_none)
+		// Axiom 对没有数据的难度会返回 null，缺失与 null 都表示「没有该统计」。
+		if(pValue == &json_value_none || pValue->type == json_null)
 		{
 			Out.reset();
 			return true;
@@ -241,12 +245,32 @@ const char *QmAxiomModeName(EQmAxiomMode Mode)
 {
 	switch(Mode)
 	{
+	case EQmAxiomMode::NONE:
+		return "";
 	case EQmAxiomMode::GORES:
 		return "Gores";
 	case EQmAxiomMode::AXRACE:
 		return "AXRace";
 	}
-	return "Gores";
+	return "";
+}
+
+EQmAxiomMode QmResolveAxiomModeFromServerContext(const SQmAxiomServerContext &Context)
+{
+	const char *pCommunityType = Context.m_pCommunityType;
+	if(pCommunityType != nullptr && pCommunityType[0] != '\0')
+	{
+		if(str_comp_nocase(pCommunityType, AXIOM_COMMUNITY_TYPE_GORES) == 0)
+			return EQmAxiomMode::GORES;
+		if(str_comp_nocase(pCommunityType, AXIOM_COMMUNITY_TYPE_OTHER) == 0)
+			return EQmAxiomMode::AXRACE;
+	}
+
+	const char *pServerName = Context.m_pServerName;
+	if(pServerName != nullptr && str_find_nocase(pServerName, AXIOM_SERVER_NAME_MARKER) != nullptr)
+		return EQmAxiomMode::AXRACE;
+
+	return EQmAxiomMode::GORES;
 }
 
 const char *QmAxiomParseResultLabel(EQmAxiomParseResult Result)
@@ -330,12 +354,5 @@ EQmAxiomParseResult QmParseDdStatsPlayerResponse(const char *pData, size_t DataS
 
 bool QmAxiomResponseIsCurrent(uint64_t CurrentGeneration, uint64_t ResponseGeneration, std::string_view CurrentPlayerName, std::string_view ResponsePlayerName)
 {
-	return CurrentGeneration == ResponseGeneration && CurrentPlayerName == ResponsePlayerName;
-}
-
-SQmAxiomPopupSize QmAxiomPopupSize(float ScreenWidth, float ScreenHeight)
-{
-	const float MaxWidth = maximum(0.0f, ScreenWidth - AXIOM_POPUP_SCREEN_MARGIN * 2.0f);
-	const float MaxHeight = maximum(0.0f, ScreenHeight - AXIOM_POPUP_SCREEN_MARGIN * 2.0f);
-	return {minimum(AXIOM_POPUP_WIDTH, MaxWidth), minimum(AXIOM_POPUP_HEIGHT, MaxHeight)};
+	return CurrentGeneration == ResponseGeneration && CurrentMode == ResponseMode;
 }

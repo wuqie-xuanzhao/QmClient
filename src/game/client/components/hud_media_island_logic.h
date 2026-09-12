@@ -8,6 +8,7 @@
 
 #include <engine/graphics.h>
 
+#include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/ui_rect.h>
 
 #include <algorithm>
@@ -347,6 +348,15 @@ inline bool QmHudMediaIslandShouldShowTeam(bool ShowTeam, bool EntitiesDDRace, i
 	return ShowTeam && EntitiesDDRace && Team > 0;
 }
 
+// 主胶囊只在"确有内容"或"有会从主岛左边缘长出的倒计时副岛"时保留最小宽度：
+// 后者（换队/开关/禁言倒计时）需要一段空位给液滴生长，否则副岛会压到计时器上。
+// 观战卫星长在主岛右侧，不构成保留依据；既无内容又无副岛时更不能白留空胶囊，
+// 否则药丸左侧会出现一段谁都不画的空槽（看起来就是占位符）。
+inline bool QmHudMediaIslandShouldReserveMainCapsule(bool HasMediaState, bool HasOtherMainContent, bool HasCountdownSatellite)
+{
+	return HasMediaState || HasOtherMainContent || HasCountdownSatellite;
+}
+
 struct SHudMediaIslandTimerRowLayout
 {
 	float m_RaceY = 0.0f;
@@ -447,6 +457,8 @@ inline float QmHudMediaIslandWaveBarSettleProgress(int BarIndex, int BarCount, f
 struct SHudMediaIslandBlobPose
 {
 	float m_Travel = 0.0f;
+	// 真实弹簧速度（单位：行程/秒）。形变通道直接取用，不再另设近似曲线。
+	float m_Velocity = 0.0f;
 	float m_RadiusScale = 0.0f;
 	float m_StretchX = 1.0f;
 	float m_StretchY = 1.0f;
@@ -470,12 +482,6 @@ struct SHudMediaIslandEntrancePose
 	float m_ContentAlpha = 0.0f;
 };
 
-struct SHudMediaIslandEntranceTimeline
-{
-	float m_DropProgress = 0.0f;
-	float m_ExpandProgress = 0.0f;
-};
-
 inline float QmHudMediaIslandLiquidSmoothStep(float Value)
 {
 	Value = std::clamp(Value, 0.0f, 1.0f);
@@ -487,41 +493,6 @@ inline float QmHudMediaIslandLiquidSegment(float Progress, float Start, float En
 	if(End <= Start)
 		return Progress >= End ? 1.0f : 0.0f;
 	return QmHudMediaIslandLiquidSmoothStep((Progress - Start) / (End - Start));
-}
-
-inline float QmHudAdvanceMediaIslandEntranceProgress(float Current, float DeltaSeconds, int MotionLevel)
-{
-	Current = std::clamp(Current, 0.0f, 1.0f);
-	MotionLevel = std::clamp(MotionLevel, 0, 2);
-	if(MotionLevel == 0)
-		return 1.0f;
-	if(DeltaSeconds <= 0.0f)
-		return Current;
-	const float DurationSeconds = 0.55f * (MotionLevel == 1 ? 0.45f : 1.0f);
-	return std::clamp(Current + DeltaSeconds / DurationSeconds, 0.0f, 1.0f);
-}
-
-inline float QmHudAdvanceMediaIslandEntranceDropProgress(float Current, float DeltaSeconds, int MotionLevel)
-{
-	Current = std::clamp(Current, 0.0f, 1.0f);
-	MotionLevel = std::clamp(MotionLevel, 0, 2);
-	if(MotionLevel == 0)
-		return 1.0f;
-	if(DeltaSeconds <= 0.0f)
-		return Current;
-	const float DurationSeconds = 0.18f * (MotionLevel == 1 ? 0.45f : 1.0f);
-	return std::clamp(Current + DeltaSeconds / DurationSeconds, 0.0f, 1.0f);
-}
-
-inline SHudMediaIslandEntranceTimeline QmHudAdvanceMediaIslandEntranceTimeline(SHudMediaIslandEntranceTimeline Timeline, float DeltaSeconds, int MotionLevel)
-{
-	if(MotionLevel <= 0)
-		return {1.0f, 1.0f};
-	if(Timeline.m_DropProgress < 1.0f)
-		Timeline.m_DropProgress = QmHudAdvanceMediaIslandEntranceDropProgress(Timeline.m_DropProgress, DeltaSeconds, MotionLevel);
-	else
-		Timeline.m_ExpandProgress = QmHudAdvanceMediaIslandEntranceProgress(Timeline.m_ExpandProgress, DeltaSeconds, MotionLevel);
-	return Timeline;
 }
 
 inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &TargetRect, float TargetRadius, const ColorRGBA &TargetColor, float Progress, float DropProgress = 1.0f, float ScreenTop = 0.0f)
@@ -559,34 +530,233 @@ inline SHudMediaIslandEntrancePose QmHudMediaIslandEntrancePose(const CUIRect &T
 	return Pose;
 }
 
-inline float QmHudMediaIslandBlobSpringTravel(float Progress)
+// ==== 入场弹簧驱动（可中断 + 速度继承） ====
+// 掉落→展开两阶段各自独立弹簧轨道；展开阶段仅在掉落阶段完成后才开始（阶段语义保留）。
+// 可见时目标为 1，隐藏时目标为 0：隐藏即打断，弹簧以当前速度回落，重现时继承速度继续。
+// motion level 由 RequestAnimation 的 ApplyMotionLevel 统一处理（level 0 瞬移到位）。
+
+// 掉落：临界阻尼，响应≈0.18s（落定不反弹）。
+inline SUiSpringConfig QmHudMediaIslandEntranceDropSpring()
 {
-	Progress = std::clamp(Progress, 0.0f, 1.0f);
-	if(Progress <= 0.0f || Progress >= 1.0f)
-		return Progress;
-	constexpr float Response = 7.0f;
-	const float EndValue = 1.0f - (1.0f + Response) * std::exp(-Response);
-	return (1.0f - (1.0f + Response * Progress) * std::exp(-Response * Progress)) / EndValue;
+	SUiSpringConfig Spring;
+	Spring.m_Mass = 1.0f;
+	Spring.m_Stiffness = 1218.0f;
+	Spring.m_Damping = 69.8f;
+	Spring.m_RestEpsilon = 0.001f;
+	Spring.m_RestVelocity = 0.02f;
+	return Spring;
 }
 
-inline float QmHudMediaIslandBlobSpringVelocity(float Progress)
+// 展开：轻微欠阻尼，响应≈0.66s（形态展开带一丝韧性）。
+inline SUiSpringConfig QmHudMediaIslandEntranceExpandSpring()
 {
-	Progress = std::clamp(Progress, 0.0f, 1.0f);
-	if(Progress <= 0.0f || Progress >= 1.0f)
-		return 0.0f;
-	constexpr float Response = 7.0f;
-	const float EndValue = 1.0f - (1.0f + Response) * std::exp(-Response);
-	return Response * Response * Progress * std::exp(-Response * Progress) / EndValue;
+	SUiSpringConfig Spring;
+	Spring.m_Mass = 1.0f;
+	Spring.m_Stiffness = 90.0f;
+	Spring.m_Damping = 16.0f;
+	Spring.m_RestEpsilon = 0.001f;
+	Spring.m_RestVelocity = 0.02f;
+	return Spring;
 }
 
-inline SHudMediaIslandBlobPose QmHudMediaIslandBlobPose(float Progress)
+struct SHudMediaIslandEntranceSpringResult
 {
-	SHudMediaIslandBlobPose Pose;
-	Pose.m_Travel = QmHudMediaIslandBlobSpringTravel(Progress);
+	float m_DropProgress = 0.0f;
+	float m_ExpandProgress = 0.0f;
+};
+
+inline SHudMediaIslandEntranceSpringResult QmHudMediaIslandResolveEntranceSprings(
+	CUiV2AnimationRuntime &AnimRuntime,
+	uint64_t DropNode,
+	uint64_t ExpandNode,
+	bool Visible,
+	float DropSettledEpsilon = 0.001f)
+{
+	SHudMediaIslandEntranceSpringResult Result;
+	const float DropTarget = Visible ? 1.0f : 0.0f;
+	Result.m_DropProgress = ResolveUiPresentationStateValue(AnimRuntime, DropNode, EUiAnimProperty::ALPHA, DropTarget, QmHudMediaIslandEntranceDropSpring(), 3, DropSettledEpsilon);
+	const float ExpandTarget = Visible && Result.m_DropProgress >= 1.0f - DropSettledEpsilon ? 1.0f : 0.0f;
+	Result.m_ExpandProgress = ResolveUiPresentationStateValue(AnimRuntime, ExpandNode, EUiAnimProperty::ALPHA, ExpandTarget, QmHudMediaIslandEntranceExpandSpring(), 3, DropSettledEpsilon);
+	return Result;
+}
+
+// 胶囊挤压形态：morph 弹簧进度驱动挤压量（SqueezeAmount=1 完全挤压，0 无挤压），
+// 输出挤压后的目标矩形，供胶囊弹簧追赶。
+inline void QmHudMediaIslandApplyCapsuleSqueeze(
+	float FromCenterX, float FromWidth, float FromHeight, float SqueezeAmount,
+	float BaseIslandHeight, float PaddingX, float ScreenPadding, float ScreenWidth,
+	float &EffectiveX, float &EffectiveWidth, float &EffectiveHeight)
+{
+	const float WidthSqueeze = std::clamp(FromWidth * 0.08f, QmHudMediaIslandScaled(2.0f), QmHudMediaIslandScaled(7.0f)) * SqueezeAmount;
+	const float HeightSqueeze = std::clamp(FromHeight * 0.10f, QmHudMediaIslandScaled(1.0f), QmHudMediaIslandScaled(2.4f)) * SqueezeAmount;
+	EffectiveWidth = std::max(PaddingX * 2.0f + QmHudMediaIslandScaled(4.0f), FromWidth - WidthSqueeze);
+	EffectiveHeight = std::max(BaseIslandHeight - QmHudMediaIslandScaled(2.0f), FromHeight - HeightSqueeze);
+	EffectiveX = std::clamp(FromCenterX - EffectiveWidth * 0.5f, ScreenPadding, std::max(ScreenPadding, ScreenWidth - ScreenPadding - EffectiveWidth));
+}
+
+// ==== 副岛分离：解析欠阻尼弹簧 ====
+// 驱动器不再是"进度线性累加 + 手工过冲曲线"，而是一个二阶欠阻尼系统。
+// 这样"脱离瞬间冲过头、再被拉回"是弹簧动力学自然涌现的结果，而不是往缓动曲线上
+// 叠一个正弦鼓包：旧做法峰值只有 +1.20%（约 0.15px）且发生在 p≈0.90，既看不见、
+// 也不带速度，反向时还会产生速度突变（折角）。
+//
+// 取值依据：wn=9.0、zeta=0.60 给出 +9.48% 过冲、峰值在 0.436s —— 与旧曲线原本的
+// 0.44s 响应窗口对齐（旧曲线在 0.44s 走完约 82%），所以"冲过头"发生在原有节奏里，
+// 而不是把动画整体拖慢。按副岛约 12.4px 的分离行程换算，过冲约 1.2px，肉眼可见。
+// wn 与 zeta 保持独立可调（两者共同决定过冲量与时刻）。
+constexpr float QmHudMediaIslandBlobSpringDamping = 0.60f;
+constexpr float QmHudMediaIslandBlobSpringAngularFrequency = 9.0f;
+// 窗口取 12/wn ≈ 1.333s，使末端确实收敛（残差 |x-1| ≈ 8.3e-4、|v| ≈ 1.5e-3）。
+// 过冲峰值仍在 0.436s，即原有节奏之内。
+constexpr float QmHudMediaIslandBlobSpringWindowPeriods = 12.0f;
+// 进入/退出共用同一对 (zeta, wn) 与同一窗口，只是方向相反。
+// 退出不再额外加速：窗口内弹簧自然收敛到 0，加速会带走"被拉回"的过程本身。
+// 速度归一化基准：wn=9.0、zeta=0.60 时速度峰值 4.49，取 4.6 使最大拉伸落在 1.065 附近。
+constexpr float QmHudMediaIslandBlobSpringPeakVelocity = 4.6f;
+// 单帧步长上限：只防超大卡顿导致的跳变，正常帧远小于它。
+constexpr float QmHudMediaIslandBlobStepMaxSeconds = 0.20f;
+// 物理固定子步长。取 1/480s：比 wn=9 的时间尺度小两个数量级，积分的相位误差可忽略，
+// 同时让 60/120/144/240Hz 都恰好落在整数子步上。
+constexpr float QmHudMediaIslandBlobSpringInternalStepSeconds = 1.0f / 480.0f;
+// 单帧最多推进的子步数（对应 0.2s 上限），防极端卡顿后的追帧风暴。
+constexpr int QmHudMediaIslandBlobSpringMaxStepsPerFrame = 96;
+// 停车判据：窗口走完 + 速度归零 + 离目标亚像素。阈值 0.002 对应约 12.4px 行程上的
+// 0.025px，停车本身看不出来。
+constexpr float QmHudMediaIslandBlobRestOffset = 0.002f;
+constexpr float QmHudMediaIslandBlobRestVelocity = 0.002f;
+
+struct SHudMediaIslandBlobSpring
+{
+	// 状态：位移与速度，始终朝"目标"（分离 1、收回 0）收敛。
+	// 目标是常数，所以两个方向共用同一个二阶欠阻尼方程，切换目标不需要任何换算，
+	// 位置与速度天然连续——这就是"带着分离时的速度被拉回"的来源。
+	bool m_Initialized = false;
+	bool m_TargetVisible = false;
+	float m_Value = 0.0f;
+	float m_Velocity = 0.0f;
+	float m_StopSeconds = 0.0f;
+	// 固定子步长累加器：物理只在整数个 InternalStepSeconds 上推进，
+	// 因此帧率与步长都不影响结果（详见 Advance）。
+	float m_Accumulator = 0.0f;
+	// 最近一次求值得到的显示进度（0..1，过冲按 1 处理）。供"是否需要渲染"之类的
+	// 布尔判断复用，不参与动力学。
+	mutable float m_Progress = 0.0f;
+};
+
+// 目标值：分离朝 1，收回朝 0。
+inline float QmHudMediaIslandBlobSpringTarget(bool TargetVisible)
+{
+	return TargetVisible ? 1.0f : 0.0f;
+}
+
+inline float QmHudMediaIslandBlobSpringWindowSeconds()
+{
+	return QmHudMediaIslandBlobSpringAngularFrequency > 0.0f ? QmHudMediaIslandBlobSpringWindowPeriods / QmHudMediaIslandBlobSpringAngularFrequency : 0.0f;
+}
+
+// 半隐式（symplectic）欧拉一步：无条件稳定，且保持欠阻尼的过冲特征。
+inline void QmHudMediaIslandBlobSpringIntegrate(SHudMediaIslandBlobSpring &Spring, float Target, float StepSeconds)
+{
+	const float Displacement = Spring.m_Value - Target;
+	Spring.m_Velocity += (-QmHudMediaIslandBlobSpringAngularFrequency * QmHudMediaIslandBlobSpringAngularFrequency * Displacement -
+				     2.0f * QmHudMediaIslandBlobSpringDamping * QmHudMediaIslandBlobSpringAngularFrequency * Spring.m_Velocity) *
+			     StepSeconds;
+	Spring.m_Value += Spring.m_Velocity * StepSeconds;
+}
+
+// 按帧推进。物理只在整数个 InternalStepSeconds 上跑，所以 60Hz 与 240Hz、
+// 以及一次大 dt 与多次小 dt，都会走完全相同的子步序列，结果逐位一致。
+inline void QmHudMediaIslandBlobSpringAdvance(SHudMediaIslandBlobSpring &Spring, float DeltaSeconds, float PeriodSeconds, bool TargetVisible)
+{
+	if(!Spring.m_Initialized)
+	{
+		Spring.m_Initialized = true;
+		Spring.m_TargetVisible = TargetVisible;
+		// 分离从 0 起步（尚未出现）；收回从 1 起步（已分离）。
+		Spring.m_Value = TargetVisible ? 0.0f : 1.0f;
+		Spring.m_Velocity = 0.0f;
+		Spring.m_StopSeconds = 0.0f;
+		Spring.m_Accumulator = 0.0f;
+		Spring.m_Progress = Spring.m_Value;
+	}
+	const float Target = QmHudMediaIslandBlobSpringTarget(TargetVisible);
+	// 目标翻转：状态原样继续，只是开始朝新目标收敛，并且窗口重新计时。
+	// 位置与速度因此在反转瞬间完全连续——旧实现（线性进度反向）正是在这里突变，
+	// 看起来像被"急刹车"。
+	if(TargetVisible != Spring.m_TargetVisible)
+	{
+		Spring.m_TargetVisible = TargetVisible;
+		Spring.m_StopSeconds = 0.0f;
+	}
+	if(DeltaSeconds > 0.0f)
+	{
+		const float Period = std::max(0.0f, PeriodSeconds);
+		// 把"已消耗的子步时间"累加后再取整，未满一个子步的余量留在累加器里。
+		// 关键是累加器只保存余量（< 一个子步），所以同一总时长无论被切成多少帧，
+		// 走过的子步序列都一样 —— 帧率不影响结果。
+		const float Consumed = Spring.m_Accumulator + DeltaSeconds;
+		int Steps = (int)(Consumed / QmHudMediaIslandBlobSpringInternalStepSeconds);
+		Spring.m_Accumulator = Consumed - Steps * QmHudMediaIslandBlobSpringInternalStepSeconds;
+		if(Steps > QmHudMediaIslandBlobSpringMaxStepsPerFrame)
+			Steps = QmHudMediaIslandBlobSpringMaxStepsPerFrame;
+		for(int i = 0; i < Steps; ++i)
+		{
+			QmHudMediaIslandBlobSpringIntegrate(Spring, Target, QmHudMediaIslandBlobSpringInternalStepSeconds);
+			Spring.m_StopSeconds += QmHudMediaIslandBlobSpringInternalStepSeconds;
+		}
+		// 窗口走完、速度归零、且已贴住目标（亚像素）时停车，
+		// 让静止位姿精确落在 1 / 0（指数尾巴在数学上永远到不了零）。
+		// 判据必须看"离目标的距离"：过冲峰值处速度也为零，只看速度会停在峰值上。
+		if(Spring.m_StopSeconds >= Period && std::abs(Spring.m_Velocity) <= QmHudMediaIslandBlobRestVelocity && std::abs(Spring.m_Value - Target) <= QmHudMediaIslandBlobRestOffset)
+		{
+			Spring.m_Value = Target;
+			Spring.m_Velocity = 0.0f;
+			Spring.m_Accumulator = 0.0f;
+		}
+	}
+	Spring.m_Progress = std::clamp(Spring.m_Value, 0.0f, 1.0f);
+}
+
+// 降级（motion level 0）时直接落到目标位姿，不做插值。
+inline void QmHudMediaIslandBlobSetBinary(SHudMediaIslandBlobSpring &Spring, bool TargetVisible)
+{
+	Spring.m_Initialized = true;
+	Spring.m_TargetVisible = TargetVisible;
+	Spring.m_Value = QmHudMediaIslandBlobSpringTarget(TargetVisible);
+	Spring.m_Velocity = 0.0f;
+	Spring.m_StopSeconds = QmHudMediaIslandBlobSpringWindowSeconds();
+	Spring.m_Accumulator = 0.0f;
+	Spring.m_Progress = Spring.m_Value;
+}
+
+// 显示用分离进度：0 = 仍与主岛相连/未出现，1 = 已完全分离（过冲阶段按 1 处理）。
+// 进入方向下它就是位移本身。
+inline float QmHudMediaIslandBlobProgressOf(float Travel)
+{
+	return std::clamp(Travel, 0.0f, 1.0f);
+}
+
+inline float QmHudMediaIslandBlobProgress(const SHudMediaIslandBlobSpring &Spring)
+{
+	// 由 Sample 维护的显示进度（已 clamp 到 0..1），不重新求值以免方向语义歧义。
+	return QmHudMediaIslandBlobProgressOf(Spring.m_Progress);
+}
+
+inline SHudMediaIslandBlobPose QmHudMediaIslandBlobPose(const SHudMediaIslandBlobSpring &Spring)
+{
+	SHudMediaIslandBlobPose Pose = {};
+	Pose.m_Travel = Spring.m_Value;
+	Pose.m_Velocity = Spring.m_Velocity;
+	// 分离方向的过冲要保留（这正是"冲过头再拉回"），但收回不允许越过生成点，
+	// 否则副岛会反向飞出去。
+	Pose.m_Travel = std::max(0.0f, Pose.m_Travel);
 	Pose.m_RadiusScale = QmHudMediaIslandLiquidSmoothStep(std::clamp(Pose.m_Travel * 1.55f, 0.0f, 1.0f));
-	const float Motion = std::clamp(std::abs(QmHudMediaIslandBlobSpringVelocity(Progress)) * 0.32f, 0.0f, 1.0f);
-	Pose.m_StretchX = 1.0f + Motion * 0.065f;
-	Pose.m_StretchY = 1.0f - Motion * 0.035f;
+	const float Motion = std::clamp(std::abs(Pose.m_Velocity) / QmHudMediaIslandBlobSpringPeakVelocity, 0.0f, 1.0f);
+	// 分离开始/结束时都保留一点横向拉伸，维持液滴被拉断的观感。
+	const float SeparationProgress = std::clamp(Pose.m_Travel / 0.95f, 0.0f, 1.0f);
+	const float SeparationStretch = std::sin(3.14159265f * SeparationProgress);
+	Pose.m_StretchX = 1.0f + Motion * 0.065f + SeparationStretch * 0.018f;
+	Pose.m_StretchY = 1.0f - Motion * 0.035f - SeparationStretch * 0.010f;
 	Pose.m_ContentAlpha = QmHudMediaIslandLiquidSmoothStep(std::clamp((Pose.m_RadiusScale - 0.25f) / 0.75f, 0.0f, 1.0f));
 	return Pose;
 }
@@ -612,10 +782,13 @@ inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainR
 	const float SpawnCenterX = MainRight - Radius * 0.15f;
 	const float FinalCenterX = MainRight + std::max(0.0f, RestGap) + FinalWidth * 0.5f;
 	const auto Lerp = [](float From, float To, float Amount) {
-		return From + (To - From) * std::clamp(Amount, 0.0f, 1.1f);
+		// 上界 1.0 之上留给分离过冲：弹簧峰值约 1.095（zeta=0.60），
+		// 旧的 1.1 上限刚好够用，保留它以免未来调参时被静默削平。
+		return From + (To - From) * std::clamp(Amount, 0.0f, 1.12f);
 	};
 	const float CenterX = Lerp(SpawnCenterX, FinalCenterX, Pose.m_Travel);
-	const float BaseWidth = Lerp(Diameter, FinalWidth, Pose.m_ContentAlpha);
+	// 内容宽度/半径不参与过冲，避免文字被拉伸。
+	const float BaseWidth = Lerp(Diameter, FinalWidth, std::clamp(Pose.m_ContentAlpha, 0.0f, 1.0f));
 	const float Width = std::max(0.0f, BaseWidth * Pose.m_RadiusScale * Pose.m_StretchX);
 	const float Height = std::max(0.0f, Diameter * Pose.m_RadiusScale * Pose.m_StretchY);
 
@@ -627,16 +800,21 @@ inline SHudMediaIslandLiquidCapsule QmHudMediaIslandRightBlobCapsule(float MainR
 	return Capsule;
 }
 
-inline float QmHudAdvanceMediaIslandLiquidProgress(float Current, bool TargetVisible, float DeltaSeconds, bool MotionEnabled)
+// 每帧推进一步：同一 tick 内重复调用不会重复推进（卫星在同帧会被采样两次）。
+inline void QmHudAdvanceMediaIslandLiquidProgress(SHudMediaIslandBlobSpring &Spring, int64_t &LastTick, int64_t Now, bool TargetVisible, bool MotionEnabled)
 {
-	Current = std::clamp(Current, 0.0f, 1.0f);
+	if(LastTick == Now)
+		return;
+	const double RawDelta = LastTick > 0 && Now > LastTick ? (Now - LastTick) / (double)time_freq() : 0.0;
+	LastTick = Now;
 	if(!MotionEnabled)
-		return TargetVisible ? 1.0f : 0.0f;
-	if(DeltaSeconds <= 0.0f)
-		return Current;
-	constexpr float DurationSeconds = 0.440f;
-	const float Delta = DeltaSeconds / DurationSeconds;
-	return std::clamp(Current + (TargetVisible ? Delta : -Delta), 0.0f, 1.0f);
+	{
+		QmHudMediaIslandBlobSetBinary(Spring, TargetVisible);
+		return;
+	}
+	const float PeriodSeconds = QmHudMediaIslandBlobSpringWindowSeconds();
+	const float DeltaSeconds = (float)std::clamp(RawDelta, 0.0, (double)QmHudMediaIslandBlobStepMaxSeconds);
+	QmHudMediaIslandBlobSpringAdvance(Spring, DeltaSeconds, PeriodSeconds, TargetVisible);
 }
 
 struct SHudMediaIslandSpectatorIconPose
@@ -721,6 +899,9 @@ struct SHudMediaIslandSdfCapsule
 
 constexpr uint64_t QmHudMediaIslandBlurRefreshIntervalFrames = 3;
 
+// 模糊底图只在透明度满 100% 时关闭：0% 也照常准备（"亚克力板"语义）。着色器里
+// Background.a 是整块板的不透明度：模糊底图与背景色先按它混合，再整体按它合成，
+// 所以 0% 时整块板连外圈阴影一起消失，中间取值则是"透过带模糊的板看见后面的画面"。
 inline bool QmHudMediaIslandShouldPrepareBackdropBlur(int BackgroundOpacity, bool GaussianBlurEnabled)
 {
 	return GaussianBlurEnabled && BackgroundOpacity < 100;

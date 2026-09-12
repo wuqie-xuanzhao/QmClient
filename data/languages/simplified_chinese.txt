@@ -217,6 +217,9 @@
 1 star
 == 1 星
 
+1% low
+== 1% 最低帧
+
 128 player id <-> 64 player id map update rate
 == 128 玩家 ID <-> 64 玩家 ID 地图更新速率
 
@@ -274,6 +277,9 @@ A vote is currently active.
 
 Abort
 == 取消
+
+Accumulated client launch count (used by the sponsor reminder)
+== 累计启动次数（用于赞助提醒）
 
 Activate
 == 启用
@@ -490,6 +496,9 @@ Adds a specific war entry
 
 Adds default chat binds
 == 添加默认聊天绑定
+
+Adds dummy key, hammer, control and copy status to the HUD, plus your own bind status list.
+== 在 HUD 上显示分身的按键、锤子、控制与同步状态，并支持自定义 bind 状态列表。
 
 Adjust DDNet gameplay indicators and assists
 == 调整 DDNet 游戏指示器和辅助功能
@@ -2150,9 +2159,6 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == 配置玩家身份与国旗
 
-Configure qm_report_app_id and qm_report_secret first
-== 请先设置 qm_report_app_id 和 qm_report_secret
-
 Configure QmClient gameplay helpers
 == 配置栖梦客户端的游戏辅助功能
 
@@ -2209,9 +2215,6 @@ Connect dummy
 
 Connect dummy to enable
 == 连接分身后可启用
-
-Connect to a server first
-== 需要先连接到服务器
 
 Connect to server first to establish voice network link
 == 需要先进入服务器，语音网络链路才会建立
@@ -2272,6 +2275,9 @@ Console command executed after joining server
 
 Console command executed before connecting to server
 == 连接服务器前执行的控制台命令
+
+Contacting title server
+== 正在连接头衔服务器
 
 Continue anyway?
 == 仍要退出？
@@ -2348,9 +2354,6 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == 无法连接分身
 
-Could not create report scan request
-== 创建举报扫描请求失败
-
 Could not find a Tutorial server. Check your internet connection.
 == 未找到教程服务器。请检查你的网络连接。
 
@@ -2359,9 +2362,6 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == 找不到你的队伍
-
-Could not get current server address
-== 无法获取当前服务器地址
 
 Could not get server list from master server
 == 无法从主服务器获取服务器列表
@@ -2386,6 +2386,9 @@ Could not resolve connect address '%s'. See local console for details.
 
 Could not save downloaded map. Try manually deleting this file: %s
 == 地图下载失败，请尝试手动删除此文件：%s
+
+Could not save title credential
+== 无法保存头衔凭证，请检查存储权限
 
 Could not save touch controls to file. See local console for details.
 == 无法将触控设置保存到文件。检查本地控制台以获取详情。
@@ -2480,6 +2483,12 @@ Custom aspect ratio
 Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)
 == 自定义纵横比，按 x100 存储（例如 178=16:9，233=21:9）
 
+Custom bind status HUD entries. Empty: built-in 4 entries (key stuck/hammer/dummy control/dummy copy). Format: var|value=text|value=text;var|text (shown when non-zero);var (shown as var name when non-zero). Entries separated by ';', fields by '|'
+== 自定义 bind 状态 HUD 条目。为空时使用内置四项（卡键/锤子/分身控制/分身同步）。格式：变量名|状态值=文本|状态值=文本；变量名|文本（非零时显示）；变量名（仅填变量名时非零显示变量名本身）。条目用 ';' 分隔，字段用 '|' 分隔
+
+Custom bind status list
+== 自定义 bind 状态列表
+
 Custom colors
 == 自定义颜色
 
@@ -2503,6 +2512,9 @@ Custom Provider endpoint
 
 Custom Provider model name
 == 自定义提供商模型名称
+
+Custom title
+== 自定义头衔
 
 Custom translation prompt (overrides built-in)
 == 自定义翻译提示词（覆盖内置提示词）
@@ -2624,6 +2636,9 @@ DDNet/total CPU
 DDRace HUD
 == DDRace HUD
 
+DDRace HUD Pro
+== DDRace HUD Pro
+
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork 是一款在线合作游戏，你和你团体里的 Tee 的目标是抵达地图的终点。作为新手你应该从有着最简单的地图的简单（Novice）服务器入门。根据延迟来选择离你相近的服务器。
 
@@ -2638,6 +2653,9 @@ Deactivate
 
 Deactivate all
 == 全部停用
+
+Deactivate ghost
+== 停用影子
 
 Death opacity
 == 死亡不透明度
@@ -2662,6 +2680,9 @@ Debug group clipping.
 
 Debug HTTP
 == 调试 HTTP
+
+Debug mode
+== 调试模式
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == 调试模式已启用。按 Ctrl+Shift+D 禁用调试模式。
@@ -2888,9 +2909,6 @@ Detection distance
 Detection time
 == 判定时间
 
-Developer
-== 开发者
-
 DF
 == DF
 
@@ -3080,11 +3098,17 @@ Download failed
 Download rank ghost
 == 下载 Rank 影子
 
+Download replay
+== 下载回放
+
 Download skins
 == 下载官方皮肤
 
 Download skins immediately from cl_skin_download_url
 == 从 cl_skin_download_url 即时下载皮肤
+
+Download the rank 1 demo for this map
+== 下载该地图的 Rank 1 演示
 
 Download this asset?
 == 确定要下载此资源吗？
@@ -3094,6 +3118,9 @@ Downloaded
 
 Downloading map
 == 正在下载地图
+
+Downloading rank 1 demo
+== 正在下载 Rank 1 演示
 
 Downloading update...
 == 正在下载更新……
@@ -3226,6 +3253,9 @@ Dummy is currently connected.
 
 Dummy jump
 == 分身跳
+
+Dummy key/hammer/control/copy status switches and custom bind status list
+== 卡键/锤子/分身控制/分身同步状态开关，以及自定义 bind 状态列表
 
 Dummy marking color
 == 分身标记颜色
@@ -3412,6 +3442,9 @@ Emoticon shadow
 
 Emoticons
 == 表情
+
+Empty: built-in 4 entries. Format: var|0=Off|1=On; var|Text
+== 为空时使用内置四项。格式：var|0=Off|1=On；var|Text
 
 enable
 == 开启
@@ -3623,6 +3656,9 @@ Enable new IME candidate bar
 Enable new settings page UI
 == 启用新版设置页面 UI
 
+Enable performance debug logging and diagnostics
+== 启用性能调试日志与卡顿诊断
+
 Enable Pie Menu
 == 启用饼菜单
 
@@ -3686,6 +3722,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == 启用皮肤切换动画
 
+Enable skin transition animation, then choose the type, scope, duration and easing.
+== 打开皮肤切换动画，再选择类型、作用范围、时长与缓动。
+
 Enable smooth cinematic camera while free spectating
 == 自由观战时启用平滑电影镜头
 
@@ -3706,6 +3745,12 @@ Enable spectator cursor (if available)
 
 Enable speedrun timer
 == 启用速通计时器
+
+Enable Spotify lyric integration
+== 启用 Spotify 歌词集成
+
+Enable Spotify lyrics
+== 启用 Spotify 歌词
 
 Enable squishy Tee deformation
 == 启用 Q 弹 Tee 形变
@@ -3770,6 +3815,9 @@ Enable voice filtering (highpass/compressor/limiter)
 Enable warlist
 == 启用敌对列表
 
+Enable weapon switch animation or reload animation, then tune range, duration, rotation and easing.
+== 打开武器切换动画或装填动画，再调整作用范围、时长、旋转角度与缓动。
+
 Enable word filter list
 == 启用屏蔽词列表
 
@@ -3815,8 +3863,14 @@ Enter /practice mode or restart to avoid the entire team being killed in 60 seco
 Enter Password
 == 输入密码
 
+Enter the sponsor code, press Redeem, then write the title and press Save. Tick "Only show with this nickname" to bind it to one nickname.
+== 填入赞助兑换码并点「兑换」，写下称号后点「保存」。勾选「仅在指定昵称下显示」可把称号绑定到某一个昵称。
+
 Enter Username
 == 输入账号名称
+
+Enter your sponsor code
+== 请输入分发给你的认证码
 
 Entities
 == 实体
@@ -3844,6 +3898,9 @@ Entity wall outline opacity
 
 entity_bg (Workshop)
 == entity_bg（Workshop）
+
+Entry: %s
+== 入口：%s
 
 Erase items on the in game background
 == 擦除游戏背景中的内容
@@ -3889,6 +3946,9 @@ Evaluate an expression
 
 Event
 == 活动
+
+Exact bound nickname
+== 要绑定的完整昵称
 
 Example of usage
 == 用途示例
@@ -3992,6 +4052,9 @@ Failed to copy main asset image.
 Failed to create bgdraw folder
 == 创建 bgdraw 文件夹失败
 
+Failed to download the rank 1 demo
+== 下载 Rank 1 演示失败
+
 Failed to export audio pack file.
 == 导出音频包文件失败
 
@@ -4000,6 +4063,9 @@ Failed to export demo cut
 
 Failed to export skin files.
 == 导出皮肤文件失败。
+
+Failed to fetch the replay list
+== 获取回放列表失败
 
 Failed to load
 == 加载失败
@@ -4214,6 +4280,9 @@ Forms
 Found %d global cards
 == 匹配到 %d 张全局卡片
 
+Four IP addresses are already online
+== 已有 4 个 IP 在线，请等待其他会话离线
+
 FPM
 == 击杀/分
 
@@ -4226,9 +4295,6 @@ Fraction of players needed to pass a vote
 Frags
 == 击杀数
 
-Frame quality
-== 帧质量
-
 Frame rate
 == 帧率
 
@@ -4237,6 +4303,9 @@ Frame time
 
 Frame time p95
 == 帧时间 P95
+
+Frame time p99
+== 帧时间 p99
 
 Framebuffer color bits (only fullscreen)
 == 帧缓冲区的颜色位（仅限全屏）
@@ -4457,6 +4526,12 @@ Getting server list from master server
 Ghost
 == 影子
 
+Ghost active
+== 影子已激活
+
+Ghost ready
+== 影子就绪
+
 Ghost tools
 == 影子工具
 
@@ -4603,9 +4678,6 @@ Graphics card
 
 Graphics display
 == 图像显示
-
-Graphics Error
-== 图形错误
 
 Graphics library major version (0 = auto-detect)
 == 图形库主版本（0 = 自动检测）
@@ -4988,6 +5060,9 @@ How often the broadcast time updates
 How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)
 == 如何处理不活跃玩家（0 = 移到观众，1 = 移到空闲观众槽位/踢出，2 = 踢出）
 
+HTTP is not available
+== HTTP 不可用
+
 HTTP map download: connection phase timeout (in ms, 0=disabled)
 == HTTP 地图下载：连接阶段超时（毫秒）（0 表示禁用）
 
@@ -5237,6 +5312,9 @@ Insane
 Installing update. Please wait...
 == 正在安装更新，请稍等……
 
+Instant zoom reverse
+== 反向缩放立即生效
+
 Interface
 == 界面
 
@@ -5279,6 +5357,9 @@ Interval for auto-saving current editor map copy to "auto" folder (0=off)
 Invalid Axiom API response
 == Axiom API 响应无效
 
+Invalid bound name
+== 绑定昵称无效
+
 Invalid client id to kick
 == 用于踢人的客户端 ID 无效
 
@@ -5296,6 +5377,9 @@ Invalid option
 
 Invalid spectator id used
 == 无效的旁观目标 ID
+
+Invalid sponsor code
+== 认证码无效
 
 Invalid translation backend
 == 无效的翻译后端
@@ -5570,6 +5654,9 @@ Latency compensation
 Latency Jitter
 == 延迟抖动
 
+Launch count threshold for the next sponsor reminder
+== 下次赞助提醒的启动次数阈值
+
 Layout
 == 布局
 
@@ -5714,6 +5801,9 @@ LLM translation default concurrency (smart adjustment)
 Load
 == 加载
 
+Load as ghost
+== 作为影子加载
+
 Load drawings from a given csv file (defaults to map name)
 == 从指定 CSV 文件加载绘图（默认使用地图名）
 
@@ -5849,11 +5939,17 @@ Logout of econ
 Logout of rcon
 == 退出 rcon 登录
 
+Long frames
+== 长帧
+
 Lose weapons when teleporting (useful for race maps)
 == 传送时失去武器（对某些竞速地图有用）
 
 Low to high
 == 由低到高
+
+Lyrics
+== 歌词
 
 Main Asset
 == 主材质
@@ -6187,6 +6283,9 @@ Menu option - selected
 
 Merge consecutive identical player messages within 2 seconds
 == 合并 2 秒内连续出现的相同玩家消息
+
+Merges chat messages repeated within a short time into a single line.
+== 短时间内重复的聊天消息会合并成一条。
 
 Message color
 == 留言颜色
@@ -6635,6 +6734,9 @@ New button
 New category name
 == 新分类名称
 
+New features
+== 新功能
+
 New IME
 == 新版 IME
 
@@ -6793,6 +6895,9 @@ No presets yet
 
 No preview
 == 无预览
+
+No rank 1 replay was found for this map
+== 未找到该地图的 Rank 1 回放
 
 No results
 == 无结果
@@ -7031,6 +7136,9 @@ Only show skins available in Vanilla Teeworlds
 Only show when the other Tee is not on screen
 == 仅当另一个 Tee 不在屏幕上时显示
 
+Only show with this nickname
+== 仅在使用此昵称时显示
+
 Only what you can't imagine, nothing Dream can't do
 == 只有你想不到，没有梦做不到
 
@@ -7069,6 +7177,9 @@ Open pie menu
 
 Open rename dialog
 == 打开重命名弹窗
+
+Open settings
+== 打开设置
 
 Open spectator mode selector
 == 打开旁观者模式选择器
@@ -7322,6 +7433,9 @@ Password required to use reserved slots.
 Past year
 == 最近一年
 
+Paste sp_dc from Spotify web cookies
+== 粘贴浏览器中的 sp_dc cookie
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == 用于验证 MySQL/MariaDB 服务器证书的 CA 证书路径
 
@@ -7349,9 +7463,6 @@ Pause/unpause game
 Penalty in seconds for saving or swapping positions
 == 保存或交换位置的惩罚时间（秒）
 
-Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-
 Per-name volume (name=percent)
 == 按名字单独音量（name=percent）
 
@@ -7360,6 +7471,12 @@ Performance debug log threshold (ms)
 
 Performance points
 == 表现分
+
+Permanent access; up to 4 online IP addresses
+== 永久资格，最多 4 个 IP 同时在线
+
+Permanent sponsor verified
+== 已认证：永久赞助资格
 
 Personal best:
 == 个人最佳：
@@ -7390,6 +7507,9 @@ Pet Skin:
 
 Pick result: %s
 == 抽取结果：%s
+
+Pick the source that matches your music app and keep it playing; the lyrics follow automatically.
+== 选择与你使用的音乐客户端匹配的来源并保持播放，歌词会自动跟随。
 
 Pickup range
 == 拾取物范围
@@ -7429,6 +7549,9 @@ Play back a demo
 
 Play background music
 == 播放背景音乐
+
+Play replay
+== 播放回放
 
 Play slide-in rotation animation when switching weapon
 == 切换武器时播放滑入旋转动画
@@ -7592,6 +7715,9 @@ Players can't hook each other on this server
 Playing effects
 == 播放效果
 
+Plays an animation whenever your skin changes, including skins stolen with the hammer.
+== 皮肤变化时播放动画，包括锤子偷来的皮肤。
+
 Please add a valid cut first
 == 请先添加有效裁剪片段
 
@@ -7687,6 +7813,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == 预测榴弹轨迹（仅在 cl_antiping 为 1 时）
+
+Predict ninja path
+== 预测忍者路径
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 == 预测其他玩家的移动（仅在 cl_antiping 设为 1 时启用）（1 = 始终开启，2 = 仅交互时，3 = 2 且始终预测冻结 Tee）
@@ -7801,6 +7930,9 @@ Preview the composed status bar output
 
 Preview the current chat appearance
 == 预览当前聊天外观
+
+Preview the sponsor reminder without changing the launch count
+== 预览赞助提醒，不影响启动计数
 
 Preview visibilities
 == 预览可见度
@@ -8072,6 +8204,18 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == 随机化玩家颜色（0 = 全部、1 = 身体、2 = 脚、3 = 皮肤、4 = 旗帜）示例：0011 = 随机化皮肤和旗帜 [数字是位置]
 
+Rank 1
+== Rank 1
+
+Rank 1 demo
+== Rank 1 演示
+
+Rank 1 demo downloaded to '%s'
+== Rank 1 演示已下载到 '%s'
+
+Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser.
+== Rank 演示已下载：%s。可从 Rank 1 列表或演示浏览器播放。
+
 Rank ghost loaded: %s, %s s. It follows your current run.
 == Rank 影子已加载：%s，%s 秒。正在跟随你当前的跑图进度。
 
@@ -8117,6 +8261,9 @@ Rank ghost: HTTP is not available
 Rank ghost: no official replay for '%s' rank %d
 == Rank 影子：没有 '%s' 第 %d 名的官方回放
 
+Rank ghost: no official replay found for '%s'
+== Rank 影子：未找到 '%s' 的官方回放
+
 Rank ghost: replay converted, waiting for the map to load ...
 == Rank 影子：回放已转换，等待地图加载……
 
@@ -8144,11 +8291,11 @@ Ratio
 Ratio threshold for local target language detection
 == 本地目标语言识别占比阈值
 
-Read new feature indicators
-== 将设置界面新功能提示标记为已读
-
 Ready
 == 已就绪
+
+Really? Not even a little?
+== 真的？一点都不考虑一下吗？
 
 Reason
 == 原因
@@ -8194,6 +8341,15 @@ Red team
 
 Red team wins!
 == 红队胜利！
+
+Redeem
+== 领取
+
+Redeem your code and customize your title
+== 领取赞助资格并设置头衔
+
+Redeem your sponsor code to unlock a custom title, shown in chat and on your nameplate.
+== 使用赞助兑换码解锁自定义称号，称号会显示在聊天与名牌上。
 
 Reduce antiping and player prediction when frozen
 == 冻结时减少 antiping 和玩家预测
@@ -8534,8 +8690,26 @@ Replacement chars
 Replay
 == 回放
 
+Replay downloaded
+== 回放已下载
+
 Replay feature is disabled!
 == 短时回放功能未启用！
+
+Replay list: failed to load, press Refresh to retry
+== 回放列表：加载失败，按刷新重试
+
+Replay list: loading ...
+== 回放列表：加载中 …
+
+Replay list: not loaded yet
+== 回放列表：尚未加载
+
+Replay list: up to date
+== 回放列表：已是最新
+
+Replays directory
+== 回放目录
 
 Reply
 == 回复
@@ -8546,35 +8720,8 @@ Reply to messages from muted players
 Reply with dummy
 == 使用分身回复
 
-Report
-== 举报
-
-Report request canceled
-== 举报请求已取消
-
-Report request failed due to network error
-== 举报请求失败，网络请求异常
-
-Report request failed with HTTP status: %d
-== 举报请求失败，HTTP 状态码：%d
-
-Report request is already in progress
-== 举报请求正在处理中
-
-Report scan request submitted
-== 举报扫描请求已提交
-
-Report service App ID
-== 举报服务 App ID
-
-Report service signing key
-== 举报服务签名密钥
-
-Report service URL
-== 举报服务地址
-
 Reports are not available on Axiom servers
-== Axiom 服务器内不可使用举报功能
+== Axiom 服务器上不可用举报功能
 
 Request to swap your tee with another team member
 == 请求与另一名队友交换 Tee
@@ -8642,6 +8789,9 @@ Reset mouse position when opening bind wheel
 Reset position of mouse when opening bindwheel
 == 打开快捷绑定轮盘时重置鼠标位置
 
+Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)
+== 将 qm_bind_status_items 重置为内置四项（卡键/锤子/分身控制/分身同步）
+
 Reset stats on server join (0=persistent, 1=reset on join)
 == 进入服务器时重置统计（0=累计统计，1=每次进服重置）
 
@@ -8689,6 +8839,9 @@ Retry remote stats
 
 Retrying…
 == 正在重试…
+
+Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)
+== 反向按键时立即反向缩放（0=保留原有平滑缩放）
 
 Review and edit custom key bindings
 == 查看并编辑自定义按键绑定
@@ -8947,9 +9100,6 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == 正在扫描当前服务器
-
-Scanning current server...
-== 正在扫描当前服务器……
 
 Score
 == 分数
@@ -10097,6 +10247,9 @@ Show the number of frozen tees
 Show the number of tees still alive
 == 显示剩余存活 Tee 的数量
 
+Show the occasional sponsor reminder in the main menu
+== 在主菜单偶尔显示赞助提醒
+
 Show the pet
 == 显示宠物
 
@@ -10204,6 +10357,9 @@ Shows gameplay information for this server
 
 Shows help to command r, general help if left blank
 == 显示命令 r 的帮助，如果留空则显示一般帮助
+
+Shows lyrics from NetEase Cloud Music, Soda Music, Kugou and QQ Music on the dynamic island.
+== 从网易云音乐、汽水音乐、酷狗、QQ 音乐获取歌词，并显示在灵动岛上。
 
 Shows the credits of the DDNet mod
 == 显示 DDNet mod 的制作人员
@@ -10418,9 +10574,6 @@ Snapshot payload
 Snapshot rate
 == 快照速率
 
-Snapshot rate / parts
-== 快照速率/分片
-
 Snapshot tick gap
 == 快照 tick 间隔
 
@@ -10592,11 +10745,26 @@ Sphere
 Spin pop
 == 旋转弹出
 
+Sponsor code
+== 认证码
+
+Sponsor code already claimed
+== 此认证码已被领取
+
+Sponsor reminder
+== 赞助提醒
+
 Sponsor support
 == 赞助支持
 
+Sponsor title
+== 赞助头衔
+
 Sponsors:
 == 赞助者：
+
+Spotify sp_dc cookie (from browser DevTools, long-lived)
+== Spotify sp_dc cookie（来自浏览器 DevTools，长期有效）
 
 Spree
 == 连杀
@@ -10684,6 +10852,9 @@ Status Scheme:
 
 Steam profile name
 ==  Steam 个人资料名称
+
+Still free after %d sponsors. Take a look?
+== 已经靠 %d 位赞助者撑到现在，要看看吗？
 
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == 切换时分身或玩家是否停止按键（0 = 关闭，1 = 分身，2 = 玩家）
@@ -10802,6 +10973,9 @@ Switch failed
 Switch interval
 == 切换间隔
 
+Switch on the status rows you need, then list the binds you want to watch.
+== 打开需要的状态开关，再在自定义列表里填想监控的 bind。
+
 Switch opacity
 == 开关不透明度
 
@@ -10912,6 +11086,9 @@ Target language code (e.g. zh, en, ja, zh-TW)
 
 Target language ratio
 == 目标语言比例
+
+Task running ...
+== 任务执行中 …
 
 TClient
 == TClient
@@ -11183,6 +11360,9 @@ The audio device couldn't be initialised.
 The auth level you need to tele others
 == 将其他玩家传送所需的权限等级
 
+The downloaded file is not a valid demo
+== 下载的文件不是有效的演示
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == 额外菜单按钮，用于切换所有具有“额外菜单”可见度的按钮的可见度。长按时也会打开游戏菜单。
 
@@ -11198,11 +11378,14 @@ The format of texture %s is not RGBA which will cause visual bugs.
 The FPS at which the recorder should record replay.
 == 录像机应以哪个 FPS 录制回放。
 
-The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== 图形后端意外停止，无法保存安全图形设置。
-
 The name "default" is reserved.
 == “default” 是保留名称。
+
+The rank 1 demo is already downloaded
+== Rank 1 演示已下载过
+
+The replay list is empty or malformed
+== 回放列表为空或格式错误
 
 The selected button is not visible. Do you want to deselect it or edit its visibility?
 == 选中的按键在当前可见度下不可见。你想取消选择该按键还是更改它的可见度？
@@ -11401,6 +11584,12 @@ Timer isn't displayed.
 
 Tiny Tee Size
 == 迷你 Tee 大小
+
+Title server unavailable; retry
+== 头衔服务暂不可用，请重试
+
+Title too long or contains unsupported characters
+== 头衔过长或包含不支持的字符
 
 To save all players in your team have to be alive and not in '/spec'
 == 要保存队伍，队内所有玩家都必须存活且不能处于 '/spec'
@@ -11678,6 +11867,9 @@ Tune variable to value
 Tune variable to value or show current value
 == 将变量调到指定值，或显示当前值
 
+Turn on "Message merging" in Dream Features.
+== 在「梦的小功能」里打开「消息合并」。
+
 Tutorial
 == 教学
 
@@ -11900,6 +12092,9 @@ Unregister protocol and file extensions
 Unsaved changes
 == 更改未保存
 
+Up to 6 Chinese or 12 ASCII characters
+== 最多 6 个中文或 12 个英文字符
+
 Update
 == 更新
 
@@ -11929,6 +12124,9 @@ URL for downloading maps (must start with https://)
 
 URL for downloading skins
 == 用于下载皮肤的 URL
+
+Usage: %s
+== 用法：%s
 
 Usage: %s %s
 == 用法：%s %s
@@ -11998,6 +12196,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 启用动态摄像机时使用鼠标灵敏度
+
+Use MSDF text rendering for nameplates (requires TexturedMsdf)
+== 为铭牌启用 MSDF 文字渲染（需要 TexturedMsdf）
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换
@@ -12522,7 +12723,7 @@ White
 == 白色
 
 Why are you slowmo replaying to read this?
-== 所以你为什么要慢速回放来看这个？
+== 为什么不考虑支持一下栖梦呢
 
 Width
 == 宽度
@@ -12880,6 +13081,9 @@ Your team was unlocked by an unlock team tile
 
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == 你的超时保护码已设置。0.7 客户端超时后无法取回自己的 tee，但 0.6 客户端可以接管你的 tee
+
+Your weapon slides and rotates in when you switch, and flips while reloading.
+== 切换武器时滑入旋转，装填时按装填时间翻转。
 
 z = Zoom
 == z = 缩放
@@ -17027,8 +17231,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 无法初始化当前配置的图形后端，请检查此电脑是否已安装集成显卡的驱动程序。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初始化失败。请尝试打开配置目录中的 settings_ddnet.cfg 文件，将 gfx_backend 改为 OpenGL 或 Vulkan 再重试。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== 初始化失败。请尝试打开配置目录中的设置文件（qmclient/settings.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -17043,8 +17247,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == 渲染指令提交失败。请尝试更新显卡驱动程序。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 未知错误。请尝试打开配置目录中的 settings_ddnet.cfg 并将 gfx_backend 改为 OpenGL 或 Vulkan 再重试。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== 未知错误。请尝试打开配置目录中的设置文件（qmclient/settings.cfg）并将 “gfx_backend” 设置为 “gfx_backend OpenGL” 或 “gfx_backend Vulkan” 再重试。
 
 [Hammer Mode]
 Normal

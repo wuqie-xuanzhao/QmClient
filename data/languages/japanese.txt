@@ -217,6 +217,9 @@
 1 star
 == 1 つ星
 
+1% low
+== 1%最低フレーム
+
 128 player id <-> 64 player id map update rate
 == 128 プレイヤーID と 64 プレイヤーID のマップ更新頻度
 
@@ -274,6 +277,9 @@ A vote is currently active.
 
 Abort
 == 中止
+
+Accumulated client launch count (used by the sponsor reminder)
+== クライアントの累計起動回数（スポンサー通知に使用）
 
 Activate
 == 有効化
@@ -490,6 +496,9 @@ Adds a specific war entry
 
 Adds default chat binds
 == デフォルトのチャットバインドを追加
+
+Adds dummy key, hammer, control and copy status to the HUD, plus your own bind status list.
+== 分身のキー、ハンマー、コントロール、コピー状態をHUDに表示し、独自のbind状態リストも使えます。
 
 Adjust DDNet gameplay indicators and assists
 == Adjust DDNet gameplay indicators and assists
@@ -2150,9 +2159,6 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == プレイヤー情報と国旗を設定
 
-Configure qm_report_app_id and qm_report_secret first
-== 最初に qm_report_app_id と qm_report_secret を設定してください
-
 Configure QmClient gameplay helpers
 == QmClient のゲーム補助機能を設定
 
@@ -2209,9 +2215,6 @@ Connect dummy
 
 Connect dummy to enable
 == ダミーに接続すると有効になります
-
-Connect to a server first
-== 最初にサーバーに接続してください
 
 Connect to server first to establish voice network link
 == まずサーバーに接続して音声ネットワークリンクを確立する
@@ -2272,6 +2275,9 @@ Console command executed after joining server
 
 Console command executed before connecting to server
 == サーバー接続前に実行されるコンソールコマンド
+
+Contacting title server
+== 称号サーバーに接続中
 
 Continue anyway?
 == それでも続行しますか？
@@ -2348,9 +2354,6 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == ダミーに接続できませんでした
 
-Could not create report scan request
-== レポートスキャンリクエストを作成できませんでした
-
 Could not find a Tutorial server. Check your internet connection.
 == チュートリアルサーバーが見つかりませんでした。インターネット接続を確認してください。
 
@@ -2359,9 +2362,6 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == あなたのチームが見つかりませんでした
-
-Could not get current server address
-== 現在のサーバーアドレスを取得できませんでした
 
 Could not get server list from master server
 == マスターサーバーからサーバーリストを取得できませんでした
@@ -2386,6 +2386,9 @@ Could not resolve connect address '%s'. See local console for details.
 
 Could not save downloaded map. Try manually deleting this file: %s
 == ダウンロードしたマップを保存できませんでした。このファイルを手動で削除してみてください：%s
+
+Could not save title credential
+== 称号の認証情報を保存できません
 
 Could not save touch controls to file. See local console for details.
 == タッチコントロールをファイルに保存できませんでした。詳細はローカルコンソールを確認してください。
@@ -2480,6 +2483,12 @@ Custom aspect ratio
 Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)
 == カスタムアスペクト比、x100 で保存（例：178=16:9、233=21:9）
 
+Custom bind status HUD entries. Empty: built-in 4 entries (key stuck/hammer/dummy control/dummy copy). Format: var|value=text|value=text;var|text (shown when non-zero);var (shown as var name when non-zero). Entries separated by ';', fields by '|'
+== カスタム bind 状態 HUD エントリ。空の場合は組み込みの4項目（キー固定/ハンマー/分身操作/分身同期）。形式：変数名|状態値=テキスト|状態値=テキスト；変数名|テキスト（非ゼロ時に表示）；変数名（変数名のみの場合は非ゼロ時に変数名を表示）。エントリは ';' で、フィールドは '|' で区切る
+
+Custom bind status list
+== カスタム bind 状態リスト
+
 Custom colors
 == カスタムカラー
 
@@ -2503,6 +2512,9 @@ Custom Provider endpoint
 
 Custom Provider model name
 == カスタム Provider モデル名
+
+Custom title
+== カスタム称号
 
 Custom translation prompt (overrides built-in)
 == カスタム翻訳プロンプト（内蔵プロンプトを上書き）
@@ -2624,6 +2636,9 @@ DDNet/total CPU
 DDRace HUD
 == DDRace HUD
 
+DDRace HUD Pro
+== DDRace HUD Pro（分身ステータス）
+
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork は協力型オンラインゲームで、あなたとあなたのグループの Tee がマップのゴールに到達することを目指します。初心者は最も簡単なマップがある Novice サーバーから始めるべきです。自分に近いサーバーを選ぶために ping を考慮してください。
 
@@ -2638,6 +2653,9 @@ Deactivate
 
 Deactivate all
 == すべて無効化
+
+Deactivate ghost
+== ゴーストを無効化
 
 Death opacity
 == 死亡時の不透明度
@@ -2662,6 +2680,9 @@ Debug group clipping.
 
 Debug HTTP
 == HTTP デバッグ
+
+Debug mode
+== デバッグモード
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == デバッグモードが有効になりました。Ctrl+Shift+D でデバッグモードを無効にできます。
@@ -2888,9 +2909,6 @@ Detection distance
 Detection time
 == 判定時間
 
-Developer
-== 開発者
-
 DF
 == DF
 
@@ -3080,11 +3098,17 @@ Download failed
 Download rank ghost
 == Rankゴーストをダウンロード
 
+Download replay
+== リプレイをダウンロード
+
 Download skins
 == スキンをダウンロード
 
 Download skins immediately from cl_skin_download_url
 == cl_skin_download_url からスキンを即時ダウンロード
+
+Download the rank 1 demo for this map
+== このマップのランク1デモをダウンロード
 
 Download this asset?
 == このアセットをダウンロードしますか？
@@ -3094,6 +3118,9 @@ Downloaded
 
 Downloading map
 == マップをダウンロード中
+
+Downloading rank 1 demo
+== ランク1デモをダウンロード中
 
 Downloading update...
 == アップデートをダウンロード中...
@@ -3226,6 +3253,9 @@ Dummy is currently connected.
 
 Dummy jump
 == ダミージャンプ
+
+Dummy key/hammer/control/copy status switches and custom bind status list
+== キー固定/ハンマー/分身操作/分身同期の状態スイッチとカスタム bind 状態リスト
 
 Dummy marking color
 == ダミーマーキング色
@@ -3412,6 +3442,9 @@ Emoticon shadow
 
 Emoticons
 == エモート
+
+Empty: built-in 4 entries. Format: var|0=Off|1=On; var|Text
+== 空の場合は組み込みの4項目。形式：var|0=Off|1=On；var|Text
 
 enable
 == 有効
@@ -3623,6 +3656,9 @@ Enable new IME candidate bar
 Enable new settings page UI
 == 新しい設定ページ UI を有効化
 
+Enable performance debug logging and diagnostics
+== パフォーマンスデバッグログとカクつき診断を有効化
+
 Enable Pie Menu
 == パイメニューを有効化
 
@@ -3686,6 +3722,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == スキン切り替えアニメーションを有効化
 
+Enable skin transition animation, then choose the type, scope, duration and easing.
+== スキン切り替えアニメを有効にし、種類・範囲・時間・イージングを選びます。
+
 Enable smooth cinematic camera while free spectating
 == フリー観戦中に滑らかなシネマティックカメラを有効にする
 
@@ -3706,6 +3745,12 @@ Enable spectator cursor (if available)
 
 Enable speedrun timer
 == スピードランのタイマーを有効にする
+
+Enable Spotify lyric integration
+== Spotify 歌詞統合を有効化
+
+Enable Spotify lyrics
+== Spotify 歌詞を有効化
 
 Enable squishy Tee deformation
 == 弾む Tee 変形を有効化
@@ -3770,6 +3815,9 @@ Enable voice filtering (highpass/compressor/limiter)
 Enable warlist
 == 敵対リストを有効化
 
+Enable weapon switch animation or reload animation, then tune range, duration, rotation and easing.
+== 武器切り替えアニメかリロードアニメを有効にし、範囲・時間・回転・イージングを調整します。
+
 Enable word filter list
 == フィルターワードリストを有効にする
 
@@ -3815,8 +3863,14 @@ Enter /practice mode or restart to avoid the entire team being killed in 60 seco
 Enter Password
 == パスワードを入力
 
+Enter the sponsor code, press Redeem, then write the title and press Save. Tick "Only show with this nickname" to bind it to one nickname.
+== スポンサーコードを入力して「引き換える」を押し、称号を書いて「保存」を押します。「このニックネームのみ表示」を有効にすると1つのニックネームに紐付けられます。
+
 Enter Username
 == ユーザー名を入力
+
+Enter your sponsor code
+== 配布された認証コードを入力
 
 Entities
 == エンティティ
@@ -3844,6 +3898,9 @@ Entity wall outline opacity
 
 entity_bg (Workshop)
 == entity_bg（Workshop）
+
+Entry: %s
+== 場所：%s
 
 Erase items on the in game background
 == ゲーム内背景のアイテムを消去
@@ -3889,6 +3946,9 @@ Evaluate an expression
 
 Event
 == イベント
+
+Exact bound nickname
+== 紐付ける正確なニックネーム
 
 Example of usage
 == 使用例
@@ -3992,6 +4052,9 @@ Failed to copy main asset image.
 Failed to create bgdraw folder
 == bgdraw フォルダの作成に失敗しました
 
+Failed to download the rank 1 demo
+== ランク1デモのダウンロードに失敗
+
 Failed to export audio pack file.
 == オーディオパックファイルのエクスポートに失敗しました
 
@@ -4000,6 +4063,9 @@ Failed to export demo cut
 
 Failed to export skin files.
 == スキンファイルのエクスポートに失敗しました。
+
+Failed to fetch the replay list
+== リプレイ一覧の取得に失敗
 
 Failed to load
 == ロードに失敗しました
@@ -4214,6 +4280,9 @@ Forms
 Found %d global cards
 == %d 枚のグローバルカードが見つかりました
 
+Four IP addresses are already online
+== すでに4つのIPが接続中です
+
 FPM
 == FPM
 
@@ -4226,9 +4295,6 @@ Fraction of players needed to pass a vote
 Frags
 == フラグ数
 
-Frame quality
-== フレーム品質
-
 Frame rate
 == フレームレート
 
@@ -4237,6 +4303,9 @@ Frame time
 
 Frame time p95
 == フレーム時間 P95
+
+Frame time p99
+== フレーム時間 p99
 
 Framebuffer color bits (only fullscreen)
 == フレームバッファのカラービット（フルスクリーンのみ）
@@ -4457,6 +4526,12 @@ Getting server list from master server
 Ghost
 == ゴースト
 
+Ghost active
+== ゴーストが有効
+
+Ghost ready
+== ゴースト準備完了
+
 Ghost tools
 == ゴーストツール
 
@@ -4603,9 +4678,6 @@ Graphics card
 
 Graphics display
 == グラフィック表示
-
-Graphics Error
-== グラフィックスエラー
 
 Graphics library major version (0 = auto-detect)
 == グラフィックスライブラリのメジャーバージョン（0 = 自動検出）
@@ -4988,6 +5060,9 @@ How often the broadcast time updates
 How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)
 == 非アクティブプレイヤーの処理方法（0 = 観戦者へ移動、1 = 空き観戦スロットへ移動/キック、2 = キック）
 
+HTTP is not available
+== HTTP を利用できません
+
 HTTP map download: connection phase timeout (in ms, 0=disabled)
 == HTTP マップダウンロード：接続フェーズのタイムアウト（ms、0=無効）
 
@@ -5237,6 +5312,9 @@ Insane
 Installing update. Please wait...
 == アップデートをインストールしています。お待ちください...
 
+Instant zoom reverse
+== ズームの逆方向操作を即時反映
+
 Interface
 == インターフェース
 
@@ -5279,6 +5357,9 @@ Interval for auto-saving current editor map copy to "auto" folder (0=off)
 Invalid Axiom API response
 == Axiom API の応答が無効です
 
+Invalid bound name
+== 紐付けるニックネームが無効です
+
 Invalid client id to kick
 == キックするクライアントIDが無効です
 
@@ -5296,6 +5377,9 @@ Invalid option
 
 Invalid spectator id used
 == 無効な観戦対象IDです
+
+Invalid sponsor code
+== 無効な認証コード
 
 Invalid translation backend
 == 無効な翻訳バックエンド
@@ -5570,6 +5654,9 @@ Latency compensation
 Latency Jitter
 == レイテンシジッター
 
+Launch count threshold for the next sponsor reminder
+== 次のスポンサー通知までの起動回数しきい値
+
 Layout
 == レイアウト
 
@@ -5714,6 +5801,9 @@ LLM translation default concurrency (smart adjustment)
 Load
 == ロード
 
+Load as ghost
+== ゴーストとして読み込む
+
 Load drawings from a given csv file (defaults to map name)
 == 指定された CSV ファイルから描画を読み込み（デフォルトはマップ名）
 
@@ -5849,11 +5939,17 @@ Logout of econ
 Logout of rcon
 == rcon からログアウト
 
+Long frames
+== 長いフレーム
+
 Lose weapons when teleporting (useful for race maps)
 == テレポート時に武器を失う（レースマップに便利）
 
 Low to high
 == 低から高へ
+
+Lyrics
+== 歌詞
 
 Main Asset
 == メインアセット
@@ -6187,6 +6283,9 @@ Menu option - selected
 
 Merge consecutive identical player messages within 2 seconds
 == 2 秒以内に連続した同一プレイヤーの同じメッセージを統合
+
+Merges chat messages repeated within a short time into a single line.
+== 短時間に繰り返されたチャットメッセージを1行にまとめます。
 
 Message color
 == メッセージの色
@@ -6635,6 +6734,9 @@ New button
 New category name
 == 新しいカテゴリ名
 
+New features
+== 新機能
+
 New IME
 == 新しいIME
 
@@ -6793,6 +6895,9 @@ No presets yet
 
 No preview
 == プレビューなし
+
+No rank 1 replay was found for this map
+== このマップのランク1リプレイが見つかりません
 
 No results
 == 結果なし
@@ -7031,6 +7136,9 @@ Only show skins available in Vanilla Teeworlds
 Only show when the other Tee is not on screen
 == もう一方のTeeが画面にいない場合のみ表示
 
+Only show with this nickname
+== このニックネーム使用時のみ表示
+
 Only what you can't imagine, nothing Dream can't do
 == 想像できないことだけが、Dreamにできないことです
 
@@ -7069,6 +7177,9 @@ Open pie menu
 
 Open rename dialog
 == 名前変更ダイアログを開く
+
+Open settings
+== 設定を開く
 
 Open spectator mode selector
 == 観戦モードセレクターを開く
@@ -7322,6 +7433,9 @@ Password required to use reserved slots.
 Past year
 == 過去1年間
 
+Paste sp_dc from Spotify web cookies
+== ブラウザの sp_dc クッキーを貼り付け
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB サーバー証明書の検証に使用する CA 証明書のパス
 
@@ -7349,9 +7463,6 @@ Pause/unpause game
 Penalty in seconds for saving or swapping positions
 == 位置の保存または交換に対するペナルティ（秒単位）
 
-Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-
 Per-name volume (name=percent)
 == 名前ごとの個別音量（name=percent）
 
@@ -7360,6 +7471,12 @@ Performance debug log threshold (ms)
 
 Performance points
 == パフォーマンスポイント
+
+Permanent access; up to 4 online IP addresses
+== 永久資格・同時接続は4つのIPまで
+
+Permanent sponsor verified
+== 永久支援資格を認証済み
 
 Personal best:
 == 自己ベスト：
@@ -7390,6 +7507,9 @@ Pet Skin:
 
 Pick result: %s
 == 抽選結果：%s
+
+Pick the source that matches your music app and keep it playing; the lyrics follow automatically.
+== 使用中の音楽アプリに合うソースを選んで再生しておくだけで、歌詞が自動的に追従します。
 
 Pickup range
 == ピックアップ範囲
@@ -7429,6 +7549,9 @@ Play back a demo
 
 Play background music
 == 背景音楽を再生
+
+Play replay
+== リプレイを再生
 
 Play slide-in rotation animation when switching weapon
 == 武器切り替え時にスライドイン回転アニメーションを再生
@@ -7592,6 +7715,9 @@ Players can't hook each other on this server
 Playing effects
 == エフェクトの再生
 
+Plays an animation whenever your skin changes, including skins stolen with the hammer.
+== ハンマーで奪ったスキンも含め、スキンが変わるときにアニメーションを再生します。
+
 Please add a valid cut first
 == 有効なカットを先に追加してください
 
@@ -7687,6 +7813,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == グレネードの軌道を予測（cl_antiping 1 の場合のみ）
+
+Predict ninja path
+== 忍者の経路を予測
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 == 他プレイヤーの移動を予測（cl_antiping が 1 の場合のみ有効）（1 = 常時、2 = インタラクション時のみ、3 = 2 + 凍結 Tee は常時）
@@ -7801,6 +7930,9 @@ Preview the composed status bar output
 
 Preview the current chat appearance
 == Preview the current chat appearance
+
+Preview the sponsor reminder without changing the launch count
+== 起動回数を変えずにスポンサー通知をプレビュー
 
 Preview visibilities
 == 表示状態をプレビュー
@@ -8072,6 +8204,18 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == プレイヤーカラーをランダム化（0 = すべて、1 = ボディ、2 = 足、3 = スキン、4 = フラッグ）例：0011 = スキンとフラッグをランダム化 [数字は位置]
 
+Rank 1
+== ランク1
+
+Rank 1 demo
+== ランク1デモ
+
+Rank 1 demo downloaded to '%s'
+== ランク1デモを '%s' にダウンロードしました
+
+Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser.
+== ランクデモをダウンロードしました：%s。ランク1一覧またはデモブラウザから再生できます。
+
 Rank ghost loaded: %s, %s s. It follows your current run.
 == Rankゴーストを読み込みました：%s、%s 秒。現在の走行に追従します。
 
@@ -8117,6 +8261,9 @@ Rank ghost: HTTP is not available
 Rank ghost: no official replay for '%s' rank %d
 == Rankゴースト：'%s' の Rank %d の公式リプレイがありません
 
+Rank ghost: no official replay found for '%s'
+== Rankゴースト：'%s' の公式リプレイが見つかりません
+
 Rank ghost: replay converted, waiting for the map to load ...
 == Rankゴースト：リプレイを変換しました。マップの読み込みを待機中…
 
@@ -8144,11 +8291,11 @@ Ratio
 Ratio threshold for local target language detection
 == ローカルターゲット言語認識割合しきい値
 
-Read new feature indicators
-== 既読の設定画面新機能マーク
-
 Ready
 == 準備完了
+
+Really? Not even a little?
+== 本当に？少しも考えてくれないんですか？
 
 Reason
 == 理由
@@ -8194,6 +8341,15 @@ Red team
 
 Red team wins!
 == レッドチームの勝利！
+
+Redeem
+== 引き換え
+
+Redeem your code and customize your title
+== コードを引き換えて称号を設定
+
+Redeem your sponsor code to unlock a custom title, shown in chat and on your nameplate.
+== スポンサーコードを引き換えるとカスタム称号を解除できます。称号はチャットとネームプレートに表示されます。
 
 Reduce antiping and player prediction when frozen
 == フリーズ時にアンチピンとプレイヤー予測を軽減
@@ -8534,8 +8690,26 @@ Replacement chars
 Replay
 == リプレイ
 
+Replay downloaded
+== リプレイをダウンロードしました
+
 Replay feature is disabled!
 == リプレイ機能は無効です！
+
+Replay list: failed to load, press Refresh to retry
+== リプレイ一覧：読み込み失敗。更新で再試行
+
+Replay list: loading ...
+== リプレイ一覧：読み込み中…
+
+Replay list: not loaded yet
+== リプレイ一覧：未読み込み
+
+Replay list: up to date
+== リプレイ一覧：最新です
+
+Replays directory
+== リプレイフォルダ
 
 Reply
 == 返信
@@ -8546,35 +8720,8 @@ Reply to messages from muted players
 Reply with dummy
 == ダミーで返信
 
-Report
-== 報告
-
-Report request canceled
-== 報告リクエストがキャンセルされました
-
-Report request failed due to network error
-== ネットワークエラーのため報告リクエストが失敗しました
-
-Report request failed with HTTP status: %d
-== 報告リクエストが HTTP ステータス %d で失敗しました
-
-Report request is already in progress
-== 報告リクエストは既に進行中です
-
-Report scan request submitted
-== 報告スキャンリクエストが送信されました
-
-Report service App ID
-== 通報サービス App ID
-
-Report service signing key
-== 通報サービス署名キー
-
-Report service URL
-== 通報サービスアドレス
-
 Reports are not available on Axiom servers
-== Axiom サーバーではレポート機能は利用できません
+== Axiom サーバーでは報告を利用できません
 
 Request to swap your tee with another team member
 == 別のチームメンバーと Tee を交換するリクエスト
@@ -8642,6 +8789,9 @@ Reset mouse position when opening bind wheel
 Reset position of mouse when opening bindwheel
 == バインドホイールを開くときにマウス位置をリセット
 
+Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)
+== qm_bind_status_items を組み込みの4項目（キー固定/ハンマー/分身操作/分身同期）にリセット
+
 Reset stats on server join (0=persistent, 1=reset on join)
 == サーバー参加時に統計をリセット（0=累積統計、1=参加ごとにリセット）
 
@@ -8689,6 +8839,9 @@ Retry remote stats
 
 Retrying…
 == 再試行中…
+
+Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)
+== 逆方向キーでズームを即座に反転（0=元の滑らかなズームを維持）
 
 Review and edit custom key bindings
 == Review and edit custom key bindings
@@ -8947,9 +9100,6 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == 現在のサーバーをスキャン中
-
-Scanning current server...
-== 現在のサーバーをスキャン中...
 
 Score
 == スコア
@@ -10097,6 +10247,9 @@ Show the number of frozen tees
 Show the number of tees still alive
 == 生存 Tee の数を表示
 
+Show the occasional sponsor reminder in the main menu
+== メインメニューでスポンサー通知を時々表示する
+
 Show the pet
 == ペットを表示
 
@@ -10204,6 +10357,9 @@ Shows gameplay information for this server
 
 Shows help to command r, general help if left blank
 == コマンド r のヘルプを表示、空白の場合は一般ヘルプを表示
+
+Shows lyrics from NetEase Cloud Music, Soda Music, Kugou and QQ Music on the dynamic island.
+== NetEase Cloud Music、Soda Music、Kugou、QQ Musicの歌詞を取得し、ダイナミックアイランドに表示します。
 
 Shows the credits of the DDNet mod
 == DDNet mod のクレジットを表示
@@ -10418,9 +10574,6 @@ Snapshot payload
 Snapshot rate
 == スナップショットレート
 
-Snapshot rate / parts
-== スナップショットレート / パーツ
-
 Snapshot tick gap
 == スナップショット tick 間隔
 
@@ -10592,11 +10745,26 @@ Sphere
 Spin pop
 == スピンポップ
 
+Sponsor code
+== 認証コード
+
+Sponsor code already claimed
+== このコードは使用済みです
+
+Sponsor reminder
+== スポンサー通知
+
 Sponsor support
 == スポンサーサポート
 
+Sponsor title
+== 支援者の称号
+
 Sponsors:
 == スポンサー：
+
+Spotify sp_dc cookie (from browser DevTools, long-lived)
+== Spotify sp_dc クッキー（ブラウザ DevTools から取得、長期有効）
 
 Spree
 == 連続キル
@@ -10684,6 +10852,9 @@ Status Scheme:
 
 Steam profile name
 == Steam プロフィール名
+
+Still free after %d sponsors. Take a look?
+== %d 人のスポンサーに支えられています。見てみますか？
 
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == 切り替え時のキー入力を停止（0 = オフ、1 = ダミー、2 = プレイヤー）
@@ -10802,6 +10973,9 @@ Switch failed
 Switch interval
 == 切り替え間隔
 
+Switch on the status rows you need, then list the binds you want to watch.
+== 必要な状態スイッチをオンにし、監視したいbindをカスタムリストに入力します。
+
 Switch opacity
 == 切り替え不透明度
 
@@ -10912,6 +11086,9 @@ Target language code (e.g. zh, en, ja, zh-TW)
 
 Target language ratio
 == ターゲット言語比率
+
+Task running ...
+== タスク実行中…
 
 TClient
 == TClient
@@ -11183,6 +11360,9 @@ The audio device couldn't be initialised.
 The auth level you need to tele others
 == 他のプレイヤーをテレポートさせるのに必要な権限レベル
 
+The downloaded file is not a valid demo
+== ダウンロードしたファイルは有効なデモではありません
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == 「エクストラメニュー」表示状態のボタンの表示を切り替えるエクストラメニューボタンです。長押しでゲーム内メニューも開きます。
 
@@ -11198,11 +11378,14 @@ The format of texture %s is not RGBA which will cause visual bugs.
 The FPS at which the recorder should record replay.
 == レコーダーがリプレイを録画する FPS
 
-The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== グラフィックスバックエンドが予期せず停止したため、安全なグラフィックス設定を保存できませんでした。
-
 The name "default" is reserved.
 == 「default」という名前は予約されています。
+
+The rank 1 demo is already downloaded
+== ランク1デモは既にダウンロード済みです
+
+The replay list is empty or malformed
+== リプレイ一覧が空か形式が不正です
 
 The selected button is not visible. Do you want to deselect it or edit its visibility?
 == 選択したボタンは表示されていません。選択を解除するか、表示状態を編集しますか？
@@ -11401,6 +11584,12 @@ Timer isn't displayed.
 
 Tiny Tee Size
 == ミニ Tee のサイズ
+
+Title server unavailable; retry
+== 称号サーバーに接続できません。再試行してください
+
+Title too long or contains unsupported characters
+== 称号が長すぎるか使用できない文字を含んでいます
 
 To save all players in your team have to be alive and not in '/spec'
 == 保存するには、チーム内の全プレイヤーが生存し、'/spec' 状態でない必要があります
@@ -11678,6 +11867,9 @@ Tune variable to value
 Tune variable to value or show current value
 == チューン変数を値に設定するか、現在の値を表示
 
+Turn on "Message merging" in Dream Features.
+== 「ドリーム機能」で「Message merging」をオンにします。
+
 Tutorial
 == チュートリアル
 
@@ -11900,6 +12092,9 @@ Unregister protocol and file extensions
 Unsaved changes
 == 未保存の変更
 
+Up to 6 Chinese or 12 ASCII characters
+== 中国語は6文字、ASCIIは12文字まで
+
 Update
 == 更新
 
@@ -11929,6 +12124,9 @@ URL for downloading maps (must start with https://)
 
 URL for downloading skins
 == スキン用ダウンロード URL
+
+Usage: %s
+== 使い方：%s
 
 Usage: %s %s
 == 使用方法: %s %s
@@ -11998,6 +12196,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
+
+Use MSDF text rendering for nameplates (requires TexturedMsdf)
+== ネームプレートにMSDFテキストレンダリングを使用する（TexturedMsdfが必要）
 
 Use multi-char replacement based on word length
 == 単語の長さに基づいて複数文字置換を使用
@@ -12881,6 +13082,9 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == タイムアウトコードが設定されました。0.7 クライアントはタイムアウト時に Tee を取り戻せませんが、0.6 クライアントはあなたの Tee を引き継げます
 
+Your weapon slides and rotates in when you switch, and flips while reloading.
+== 武器切り替え時にスライドしながら回転し、リロード中は回転して裏返ります。
+
 z = Zoom
 == z = ズーム
 
@@ -13107,8 +13311,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == 指定のグラフィックスバックエンドを初期化できませんでした。内蔵グラフィックカードのドライバがインストールされていない可能性があります。
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 初期化中に失敗しました。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、もう一度試してください。
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== 初期化に失敗しました。設定ディレクトリの qmclient/settings.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13123,8 +13327,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == レンダリングコマンドの送信に失敗しました。GPU ドライバーを更新してみてください。
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== 不明なエラーです。設定ディレクトリの settings_ddnet.cfg で gfx_backend を OpenGL または Vulkan に変更して、もう一度試してください。
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== 不明なエラー。設定ディレクトリの qmclient/settings.cfg で gfx_backend を OpenGL または Vulkan に変更して、再試行してください。
 
 [Hammer Mode]
 Normal

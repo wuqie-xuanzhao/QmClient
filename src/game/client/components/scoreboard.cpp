@@ -329,6 +329,74 @@ void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
+void CScoreboard::UpdateQmAxiomScoreMode()
+{
+	m_QmAxiomScoreModeFrameValid = true;
+	m_QmAxiomScoreModeFrame = EQmAxiomMode::NONE;
+
+	if(!GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity())
+		return;
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	CServerInfo ServerInfo;
+	Client()->GetServerInfo(&ServerInfo);
+	// 社区分类优先（Axiom 的 Gores / Other 两分类正好对应两个积分模式），
+	// 分类拿不到时再看服务器名是否带 AXRace。
+	m_QmAxiomScoreModeFrame = QmResolveAxiomModeFromServerContext({ServerInfo.m_aCommunityType, ServerInfo.m_aName});
+}
+
+bool CScoreboard::HasQmAxiomScoreMode()
+{
+	if(!m_QmAxiomScoreModeFrameValid)
+		UpdateQmAxiomScoreMode();
+	return m_QmAxiomScoreModeFrame != EQmAxiomMode::NONE;
+}
+
+void CScoreboard::QmAxiomScorePoints(const char *pPlayerName, bool Visible, char *pBuffer, int BufferSize) const
+{
+	pBuffer[0] = ' ';
+	if(!Visible)
+		return;
+
+	// 上游记分板积分列：基于 v1 查询缓存的只读视图，不发起请求。
+	const SQmAxiomPlayerResult *pResult = GameClient()->m_QmAxiomScores.GetResult(pPlayerName);
+	if(pResult == nullptr || m_QmAxiomScoreModeFrame == EQmAxiomMode::NONE)
+	{
+		str_copy(pBuffer, "...", BufferSize);
+		return;
+	}
+
+	EQmAxiomScoreStatus Status = pResult->m_SearchStatus;
+	int64_t Points = 0;
+	if(Status == EQmAxiomScoreStatus::READY)
+	{
+		const SQmAxiomModeResult &ModeResult = pResult->Mode(m_QmAxiomScoreModeFrame);
+		Status = ModeResult.m_Status;
+		Points = ModeResult.m_Score.m_Points;
+	}
+
+	switch(Status)
+	{
+	case EQmAxiomScoreStatus::READY:
+		str_format(pBuffer, BufferSize, "%lld", (long long)Points);
+		break;
+	case EQmAxiomScoreStatus::FETCHING:
+	case EQmAxiomScoreStatus::NOT_REQUESTED:
+		str_copy(pBuffer, "...", BufferSize);
+		break;
+	case EQmAxiomScoreStatus::NOT_FOUND:
+	case EQmAxiomScoreStatus::AMBIGUOUS:
+		str_copy(pBuffer, "-", BufferSize);
+		break;
+	case EQmAxiomScoreStatus::HTTP_ERROR:
+	case EQmAxiomScoreStatus::API_ERROR:
+	case EQmAxiomScoreStatus::INVALID_RESPONSE:
+		str_copy(pBuffer, "?", BufferSize);
+		break;
+	}
+}
+
 void CScoreboard::ConToggleScoreboardCursor(IConsole::IResult *pResult, void *pUserData)
 {
 	CScoreboard *pSelf = static_cast<CScoreboard *>(pUserData);
@@ -1225,7 +1293,9 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;
 	const int NumPlayers = CountEnd - CountStart;
 	const bool LowScoreboardWidth = Scoreboard.w < 350.0f;
-	const bool ShowPoints = g_Config.m_QmScoreboardPoints != 0;
+	// Axiom 积分服上这一列显示当前模式的 Axiom 分数，取代 DDNet 在线点数。
+	const bool AxiomScoreColumn = HasQmAxiomScoreMode();
+	const bool ShowPoints = AxiomScoreColumn || g_Config.m_QmScoreboardPoints != 0;
 	const float ContentAlpha = m_AnimContentAlpha;
 	const ColorRGBA BaseTextColor = TextRender()->DefaultTextColor().WithMultipliedAlpha(ContentAlpha);
 	const ColorRGBA BaseOutlineColor = TextRender()->DefaultTextOutlineColor().WithMultipliedAlpha(ContentAlpha);
@@ -1363,7 +1433,8 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	// Points column header: only render when enabled
 	if(ShowPoints)
 	{
-		const char *pPointsLabel = Localize("Points");
+		// 表头直接写模式名，让玩家知道这一列是哪个模式的分数。
+		const char *pPointsLabel = AxiomScoreColumn ? QmAxiomModeName(m_QmAxiomScoreModeFrame) : Localize("Points");
 		TextRender()->Text(PointsOffset + PointsLength - TextRender()->TextWidth(HeadlineFontsize, pPointsLabel), HeadlineY, HeadlineFontsize, pPointsLabel);
 	}
 	m_HeadlineName.Render(TextRender(), vec2(NameOffset, HeadlineY), HeadlineColor);
@@ -1474,26 +1545,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 				m_ScoreboardPopupContext.m_ClientId = ClientId;
 				m_ScoreboardPopupContext.m_IsLocal = GameClient()->m_aLocalIds[0] == ClientId ||
 								     (Client()->DummyConnected() && GameClient()->m_aLocalIds[1] == ClientId);
-				const bool ShowAxiomScores = GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity() && !GameClient()->ShouldHideStreamerIdentity(ClientId);
-				m_ScoreboardPopupContext.m_ShowAxiomScores = ShowAxiomScores;
-				if(ShowAxiomScores)
-				{
-					if(str_comp(m_ScoreboardPopupContext.m_aAxiomPlayerName, ClientData.m_aName) != 0)
-						m_ScoreboardPopupContext.m_AxiomScrollRegion.Reset();
-					str_copy(m_ScoreboardPopupContext.m_aAxiomPlayerName, ClientData.m_aName);
-					GameClient()->m_QmAxiomScores.EnsureQueried(ClientData.m_aName);
-				}
-				else
-				{
-					m_ScoreboardPopupContext.m_aAxiomPlayerName[0] = '\0';
-				}
-
-				const SQmAxiomPopupSize AxiomPopupSize = ShowAxiomScores ? QmAxiomPopupSize(Ui()->Screen()->w, Ui()->Screen()->h) : SQmAxiomPopupSize{};
-				const float PopupWidth = ShowAxiomScores ? AxiomPopupSize.m_Width : 110.0f;
-				const float PopupHeight = ShowAxiomScores                    ? AxiomPopupSize.m_Height :
-							  m_ScoreboardPopupContext.m_IsLocal ? 58.5f :
-											       87.5f;
-				Ui()->DoPopupMenu(&m_ScoreboardPopupContext, Ui()->MouseX(), Ui()->MouseY(), PopupWidth, PopupHeight, &m_ScoreboardPopupContext, PopupScoreboard);
+				Ui()->DoPopupMenu(&m_ScoreboardPopupContext, Ui()->MouseX(), Ui()->MouseY(), 110.0f, m_ScoreboardPopupContext.m_IsLocal ? 58.5f : 87.5f, &m_ScoreboardPopupContext, PopupScoreboard);
 			}
 
 			if(Ui()->HotItem() == &ClientData ||
@@ -1564,20 +1616,30 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		if(ShowPoints)
 		{
 			char aPointsValue[16];
-			SPlayerPointsResult PointsResult = GameClient()->m_PlayerPoints.GetPoints(ClientData.m_aName);
-			if(PointsResult.m_Status == EPointsStatus::READY)
+			if(AxiomScoreColumn)
 			{
-				str_format(aPointsValue, sizeof(aPointsValue), "%d", PointsResult.m_Points);
+				// 隐藏主播身份的玩家不暴露 Axiom 分数。
+				const bool PointsVisible = !HideIdentity && !GameClient()->ShouldHideStreamerIdentity(ClientId);
+				QmAxiomScorePoints(ClientData.m_aName, PointsVisible, aPointsValue, sizeof(aPointsValue));
 			}
-			else if(PointsResult.m_Status == EPointsStatus::FETCHING || PointsResult.m_Status == EPointsStatus::NOT_REQUESTED)
+			else
 			{
-				str_copy(aPointsValue, "...");
+				SPlayerPointsResult PointsResult = GameClient()->m_PlayerPoints.GetPoints(ClientData.m_aName);
+				if(PointsResult.m_Status == EPointsStatus::READY)
+				{
+					str_format(aPointsValue, sizeof(aPointsValue), "%d", PointsResult.m_Points);
+				}
+				else if(PointsResult.m_Status == EPointsStatus::FETCHING || PointsResult.m_Status == EPointsStatus::NOT_REQUESTED)
+				{
+					str_copy(aPointsValue, "...");
+				}
+				else // FAILED
+				{
+					str_copy(aPointsValue, "?");
+				}
 			}
-			else // FAILED
-			{
-				str_copy(aPointsValue, "?");
-			}
-			TextRender()->Text(PointsOffset + PointsLength - TextRender()->TextWidth(FontSize, aPointsValue), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aPointsValue);
+			if(aPointsValue[0] != '\0')
+				TextRender()->Text(PointsOffset + PointsLength - TextRender()->TextWidth(FontSize, aPointsValue), Row.y + (Row.h - FontSize) / 2.0f, FontSize, aPointsValue);
 		}
 
 		// CTF flag
@@ -1793,13 +1855,32 @@ void CScoreboard::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 	UpdateTeamModeCache();
+	UpdateQmAxiomScoreMode();
 
 	if(ShouldHideFocusScoreboard(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideScoreboard != 0))
 		return;
 
 	// 当记分板可见时（骗你的,不可见也查），为所有活跃玩家触发查询点
-	if(g_Config.m_QmScoreboardPoints || g_Config.m_QmScoreboardSortMode)
+	if(HasQmAxiomScoreMode())
 	{
+		// Axiom 积分服：查当前 Axiom 模式的分数，不再请求 DDNet 在线点数。
+		GameClient()->m_QmAxiomScores.SetMode(m_QmAxiomScoreModeFrame);
+		// 记分板打开时给足预算铺满一屏，否则只做少量预热；
+		// 真正发请求的速度由组件内每帧搜索上限控制。
+		int Budget = IsActive() ? MAX_CLIENTS : AXIOM_SCOREBOARD_PREFETCH_BUDGET;
+		for(int i = 0; i < MAX_CLIENTS && Budget > 0; i++)
+		{
+			if(!GameClient()->m_Snap.m_apPlayerInfos[i] || !GameClient()->m_aClients[i].m_Active)
+				continue;
+			if(GameClient()->ShouldHideStreamerIdentity(i))
+				continue;
+			Budget--;
+			GameClient()->m_QmAxiomScores.EnsureQueried(GameClient()->m_aClients[i].m_aName);
+		}
+	}
+	else if(g_Config.m_QmScoreboardPoints || g_Config.m_QmScoreboardSortMode)
+	{
+		GameClient()->m_QmAxiomScores.SetMode(EQmAxiomMode::NONE);
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(GameClient()->m_Snap.m_apPlayerInfos[i] && GameClient()->m_aClients[i].m_Active)
@@ -2267,10 +2348,6 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 	if(!Client.m_Active)
 		return CUi::POPUP_CLOSE_CURRENT;
-	if(pPopupContext->m_ShowAxiomScores &&
-		(pScoreboard->GameClient()->ShouldHideStreamerIdentity(pPopupContext->m_ClientId) ||
-			str_comp(Client.m_aName, pPopupContext->m_aAxiomPlayerName) != 0))
-		return CUi::POPUP_CLOSE_CURRENT;
 
 	const float Margin = 5.0f;
 	View.Margin(Margin, &View);
@@ -2395,9 +2472,6 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 		View = CUiV2LegacyAdapter::ToCUIRect(vSectionChildren[2].m_Box);
 	}
 
-	if(pPopupContext->m_ShowAxiomScores)
-		Container.VMargin(maximum(0.0f, (Container.w - 140.0f) * 0.5f), &Container);
-
 	bool IsSpectating = pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_Active && pScoreboard->GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == pPopupContext->m_ClientId;
 	ColorRGBA SpectateButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, (IsSpectating ? 0.25f : 0.5f) * pUi->ButtonColorMul(&pPopupContext->m_SpectateButton));
 	if(pUi->DoButton_PopupMenu(&pPopupContext->m_SpectateButton, Localize("Spectate"), &Container, FontSize, TEXTALIGN_MC, 0.0f, false, true, SpectateButtonColor))
@@ -2466,6 +2540,7 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 
 	return CUi::POPUP_KEEP_OPEN;
 }
+
 CUi::EPopupMenuFunctionResult CScoreboard::CMapTitlePopupContext::Render(void *pContext, CUIRect View, bool Active)
 {
 	CMapTitlePopupContext *pPopupContext = static_cast<CMapTitlePopupContext *>(pContext);

@@ -106,7 +106,7 @@ namespace qm_card_registry
 	{
 		// clang-format off
 		static const std::vector<SCardDefault> s_aDefaults = {
-			// === 栖梦侧栏模块（38）· qm:<key>（显式默认值齐全，来源 s_aQmModuleDefaults）===
+			// === 栖梦侧栏模块（39）· qm:<key>（显式默认值齐全，来源 s_aQmModuleDefaults）===
 			{"qm:info", "visual", ECardColumn::Full, 0, "QmClient", "qmclient info", "QmClient information and project links"},
 			{"qm:chat_bubble", "visual", ECardColumn::Left, 0, "Chat bubble", "消息气泡 liaotian qipao chat bubble typing 预览 yulan 镜头缩放 suofang 持续时间 chixu 透明度 touming 字体大小 ziti 最大宽度 kuandu 垂直偏移 pianyi 圆角 yuanjiao visual", "Show chat messages above players"},
 			{"qm:camera_view", "visual", ECardColumn::Right, 0, "Camera view", "镜头 jingtou camera drift 漂移 piaoyi dynamic fov 动态视野 dongtai shiye 纵横比 zonghengbi aspect ratio preset 预设 yushe 自定义 zidinyi 视野视角 shijiao visual", "Adjust game camera and FOV settings"},
@@ -122,7 +122,7 @@ namespace qm_card_registry
 			{"qm:key_binds", "function", ECardColumn::Left, 5, "Key binds", "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect function", "Common key bindings"},
 			{"qm:mini_features", "function", ECardColumn::Left, 6, "Mini features", "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 自动管理 zidong guanli 进程优先级 jincheng youxianji 协作制图 xiezuo zhitu 多人制图 duoren zhitu function", "Configure Dream-only convenience features"},
 			{"qm:jump_hint", "function", ECardColumn::Left, 7, "Jump hint", "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti function", "Customize the position jump hint"},
-			{"qm:weapon_trajectory", "function", ECardColumn::Left, 8, "Weapon trajectory", "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 手枪辅助线 shouqiang fuzhuxian pistol guide line 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi function", "Show grenade and laser trajectory preview"},
+			{"qm:weapon_trajectory", "function", ECardColumn::Left, 8, "Weapon trajectory", "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 手枪辅助线 shouqiang fuzhuxian pistol guide line 预测忍者路径 yuce renzhe lujing predict ninja path 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi function", "Show grenade and laser trajectory preview"},
 			{"qm:coords", "hud", ECardColumn::Left, 9, "Coordinates", "显示坐标 xianshi zuobiao coords position 自己坐标 ziji 他人坐标 taren 显示x xianshi x 显示y xianshi y 对齐提示 duiqi tishi 严格对齐 yange duiqi hud", "Show coordinates above players"},
 			{"qm:friend_notify", "function", ECardColumn::Left, 11, "Friend notify", "好友提醒 haoyou tixing 好友上线 shangxian 自动刷新 zidong shuaxin 服务器列表 fuwuqi liebiao 刷新间隔 jiange 进图打招呼 jintu dazhaohu 大字显示 dazi xianshi function", "Friend online and join notifications"},
 			{"qm:block_words", "function", ECardColumn::Left, 12, "Block words", "屏蔽词 pingbici block words 控制台显示 kongzhitai 启用列表 qiyong liebiao 按词长替换 cichang tihuan 多字符替换 duozifu tihuan function", "Chat word filtering"},
@@ -141,6 +141,8 @@ namespace qm_card_registry
 			{"qm:dynamic_island", "hud", ECardColumn::Right, 14, "Dynamic island", "灵动岛 lld lingdongdao dynamic island hud 顶部 dingbu 背景 beijing 颜色 yanse 透明度 touming 黑底 heidi 原版 yuanban 默认 moren classic old style", "Configure HUD island appearance"},
 			{"qm:system_media_controls", "hud", ECardColumn::Right, 15, "System media controls", "系统媒体控制 xitong meiti kongzhi smtc media controls 启用系统媒体 qiyong 显示歌曲信息 gequ xinxi 上一个 shangyige 播放暂停 bofang zanting 下一个 xiayige hud", "Expose playback controls to the operating system"},
 			{"qm:background_3d", "hud", ECardColumn::Right, 17, "3D background", "3d背景 3d beijing background particles 粒子 lizi 方块 fangkuai cube 爱心 aixin heart 球体 qiuti sphere 金字塔 jinzita pyramid 钻石 zuanshi diamond 圆环 yuanhuan ring 星形 xingxing star 月牙 yueya crescent 混合 hunhe mixed 数量 shuliang 速度 sudu 尺寸 chicun 深度 shendu 透明度 touming 颜色 yanse 随机 suiji 自定义 zidingyi 辉光 huiguang 拖尾 tuowei trail 脉冲 maichong pulse 闪烁 shanshuo twinkle 推动 tuidong 碰撞 pengzhuang 淡入 danru 淡出 danchu hud", "Configure background 3D particle effects"},
+			{"qm:debug_mode", "hud", ECardColumn::Right, 19, "Debug mode", "调试模式 tiaoshi moshi debug mode 性能日志 xingneng rizhi perf log 性能调试 xingneng tiaoshi 日志文件 rizhi wenjian 采样阈值 caiyang yuzhi threshold 卡顿诊断 kadun zhenduan stutter diagnostics hud", "Enable performance debug logging and diagnostics"},
+			{"qm:bind_status_hud", "hud", ECardColumn::Right, 20, "DDRace HUD Pro", "bind status hud 分身状态 fenshen zhuangtai 卡键 kajian 锤子 chuizi 分身控制 fenshen kongzhi 分身同步 fenshen tongbu 同步 tongbu 自定义 zidingyi 列表 liebiao ddrace hud pro", "Dummy key/hammer/control/copy status switches and custom bind status list"},
 			{"qm:nameplate_text", "hud", ECardColumn::Right, 18, "Nameplate text", "nameplate text hud 名字 mingzi 名牌 mingpai 文字 wenzi", "Customize additional nameplate text"}, // 数据债：原无 tab 归属，B1 补 hud
 			{"qm:laser", "visual", ECardColumn::Right, 3, "Laser", "激光设置 jiguang laser 增强特效 zengqiang texiao 辉光强度 huiguang qiangdu 激光大小 daxiao 半透明 bantouming 圆角端点 yuanjiao duandian 脉冲速度 maichong sudu 脉冲幅度 maichong fudu visual", "Customize laser shape and effects"}, // 数据债：原无 tab 归属，B1 补 visual
 
@@ -167,6 +169,7 @@ namespace qm_card_registry
 
 			// === 设置 deck · deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
 			{"deck:qmclient-contributors-community", "qmclient-contributors", ECardColumn::Left, 0, "QmClient Community", "community links qmclient", "Find QmClient communities and project links"},
+			{"deck:qmclient-contributors-title", "qmclient-contributors", ECardColumn::Left, 1, Localizable("Sponsor title"), "sponsor title code authentication nickname", Localizable("Redeem your code and customize your title")},
 			{"deck:qmclient-contributors-sponsors", "qmclient-contributors", ECardColumn::Right, 0, "Sponsor support", "sponsor support qmclient", "View the people supporting QmClient development"},
 			{"deck:qmclient-contributors-ddnet", "qmclient-contributors", ECardColumn::Full, 0, "DDNet", "ddnet contributors credits ddrace", "Credits"},
 			{"deck:global-search-input", "global-search", ECardColumn::Full, 0, "Feature Search", "global search feature cards", "Search settings by title, feature, or keyword"},

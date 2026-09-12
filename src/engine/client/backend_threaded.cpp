@@ -180,13 +180,29 @@ void CGraphicsBackend_Threaded::ProcessError(const SGfxErrorContainer &Error)
 			m_FatalError.append(ErrStr.m_Err);
 	}
 	std::string LogMessage = "Graphics Error:\n" + m_FatalError;
-	m_FatalErrorPending.store(true, std::memory_order_release);
 	dbg_assert_failed("%s", LogMessage.c_str());
 }
 
 const char *CGraphicsBackend_Threaded::GetFatalError() const
 {
 	return m_FatalError.c_str();
+}
+
+bool CGraphicsBackend_Threaded::HasFatalError() const
+{
+	if(m_pProcessor == nullptr)
+		return false;
+	return m_pProcessor->GetError().m_ErrorType != GFX_ERROR_TYPE_NONE;
+}
+
+bool CGraphicsBackend_Threaded::TakeFatalError()
+{
+	if(m_pProcessor == nullptr)
+		return false;
+	if(m_pProcessor->GetError().m_ErrorType == GFX_ERROR_TYPE_NONE)
+		return false;
+	m_pProcessor->ClearFatalError();
+	return true;
 }
 
 bool CGraphicsBackend_Threaded::GetWarning(std::vector<std::string> &WarningStrings)

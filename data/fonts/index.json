@@ -3,7 +3,8 @@
         "DejaVuSans.ttf",
         "GlowSansJ-Compressed-Book.otf",
         "SourceHanSans.ttc",
-        "NotoEmoji-Regular.ttf"
+        "NotoEmoji-Regular.ttf",
+        "NotoSansThai-Regular.ttf"
     ],
     "default": "DejaVu Sans",
     "language variants": {
@@ -14,6 +15,7 @@
     },
     "fallbacks": [
         "Source Han Sans",
+        "Noto Sans Thai",
         "Noto Emoji"
     ],
     "icon": "Phosphor",

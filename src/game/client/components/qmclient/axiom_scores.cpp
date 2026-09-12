@@ -14,8 +14,8 @@
 
 namespace
 {
-	constexpr int64_t AXIOM_SCORE_CACHE_TTL_MS = 30 * 60 * 1000;
-	constexpr int64_t AXIOM_SEARCH_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
+	constexpr int64_t AXIOM_MATCH_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
+	constexpr int64_t AXIOM_POINTS_CACHE_TTL_MS = 30 * 60 * 1000;
 	constexpr int64_t AXIOM_FAILURE_RETRY_MS = 30 * 1000;
 	constexpr int64_t AXIOM_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 	constexpr size_t AXIOM_MAX_QUERY_NAME_BYTES = 256;
@@ -381,17 +381,15 @@ void CQmAxiomScores::WritePersistentCache(CJsonFileWriter &Writer) const
 
 const SQmAxiomModeResult &SQmAxiomPlayerResult::Mode(EQmAxiomMode Mode) const
 {
-	return m_aModes[Mode == EQmAxiomMode::AXRACE ? 1 : 0];
-}
-
-int CQmAxiomScores::ModeIndex(EQmAxiomMode Mode)
-{
-	return Mode == EQmAxiomMode::AXRACE ? 1 : 0;
-}
-
-EQmAxiomMode CQmAxiomScores::ModeFromIndex(int Index)
-{
-	return Index == 1 ? EQmAxiomMode::AXRACE : EQmAxiomMode::GORES;
+	switch(Result)
+	{
+	case EQmAxiomParseResult::SUCCESS: return EQmAxiomScoreStatus::READY;
+	case EQmAxiomParseResult::NOT_FOUND: return EQmAxiomScoreStatus::NOT_FOUND;
+	case EQmAxiomParseResult::AMBIGUOUS: return EQmAxiomScoreStatus::AMBIGUOUS;
+	case EQmAxiomParseResult::API_ERROR: return EQmAxiomScoreStatus::API_ERROR;
+	case EQmAxiomParseResult::INVALID_RESPONSE: return EQmAxiomScoreStatus::INVALID_RESPONSE;
+	}
+	return EQmAxiomScoreStatus::INVALID_RESPONSE;
 }
 
 bool CQmAxiomScores::IsFailureStatus(EQmAxiomScoreStatus Status)
@@ -428,14 +426,81 @@ std::shared_ptr<IQmAxiomHttpRequest> CQmAxiomScores::StartRequest(const char *pU
 	return std::make_shared<CNativeAxiomHttpRequest>(std::move(pRequest));
 }
 
+bool CQmAxiomScores::StartSearchRequest(const std::string &PlayerName, SCacheEntry &Entry)
+{
+	Entry.m_SearchStatus = EQmAxiomScoreStatus::FETCHING;
+	Entry.m_Match = {};
+	// 保留已有点数：换名字后重新搜索时，旧点数仍可与新 user_id 匹配而继续使用。
+	Entry.m_PointsStatus = EQmAxiomScoreStatus::NOT_REQUESTED;
+	Entry.m_Points = 0;
+	Entry.m_LastPointsSuccessTick = 0;
+	Entry.m_LastPointsFailureTick = 0;
+
+	const std::string Url = QmBuildAxiomSearchUrl(PlayerName.c_str());
+	if(Url.empty())
+	{
+		Entry.m_SearchStatus = EQmAxiomScoreStatus::INVALID_RESPONSE;
+		Entry.m_LastSearchFailureTick = CurrentTick();
+		return false;
+	}
+
+	SRequestSlot Slot;
+	Slot.m_pRequest = StartRequest(Url.c_str(), AXIOM_SEARCH_TIMEOUT_MS);
+	if(!Slot.m_pRequest)
+	{
+		Entry.m_SearchStatus = EQmAxiomScoreStatus::HTTP_ERROR;
+		Entry.m_LastSearchFailureTick = CurrentTick();
+		return false;
+	}
+	Slot.m_Generation = m_Generation;
+	Slot.m_PlayerName = PlayerName;
+	// 搜索结果与模式无关，但仍要记录发起时的模式，避免换模式后旧响应被采纳。
+	Slot.m_Mode = m_Mode;
+	m_SearchRequests[PlayerName] = std::move(Slot);
+	return true;
+}
+
+bool CQmAxiomScores::StartModeRequest(const std::string &PlayerName, SCacheEntry &Entry)
+{
+	Entry.m_PointsStatus = EQmAxiomScoreStatus::FETCHING;
+	Entry.m_Points = 0;
+
+	if(Entry.m_Match.m_UserId <= 0 || m_Mode == EQmAxiomMode::NONE)
+	{
+		Entry.m_PointsStatus = EQmAxiomScoreStatus::HTTP_ERROR;
+		Entry.m_LastPointsFailureTick = CurrentTick();
+		return false;
+	}
+
+	SRequestSlot Slot;
+	const std::string Url = QmBuildAxiomInfoUrl(Entry.m_Match.m_UserId, m_Mode);
+	Slot.m_pRequest = StartRequest(Url.c_str(), AXIOM_INFO_TIMEOUT_MS);
+	if(!Slot.m_pRequest)
+	{
+		Entry.m_PointsStatus = EQmAxiomScoreStatus::HTTP_ERROR;
+		Entry.m_LastPointsFailureTick = CurrentTick();
+		return false;
+	}
+	Slot.m_Generation = m_Generation;
+	Slot.m_PlayerName = PlayerName;
+	Slot.m_Mode = m_Mode;
+	m_ModeRequests[PlayerName] = std::move(Slot);
+	return true;
+}
+
+int CQmAxiomScores::CountRequestsForPlayer(const std::string &PlayerName) const
+{
+	int Count = 0;
+	if(m_SearchRequests.contains(PlayerName))
+		++Count;
+	if(m_ModeRequests.contains(PlayerName))
+		++Count;
+	return Count;
+}
+
 void CQmAxiomScores::AbortActiveRequests(bool ResetFetchingStates)
 {
-	SCacheEntry *pEntry = nullptr;
-	const auto CacheIt = m_Cache.find(m_ActivePlayerName);
-	if(CacheIt != m_Cache.end())
-		pEntry = &CacheIt->second;
-
-	if(m_SearchRequest.m_pRequest)
+	for(auto &[PlayerName, Slot] : m_SearchRequests)
 	{
 		m_SearchRequest.m_pRequest->Abort();
 		m_SearchRequest.m_pRequest.reset();
@@ -473,12 +538,19 @@ void CQmAxiomScores::AbortActiveRequests(bool ResetFetchingStates)
 	++m_Generation;
 }
 
-void CQmAxiomScores::BeginActiveQuery(const char *pPlayerName)
+void CQmAxiomScores::SetMode(EQmAxiomMode Mode)
 {
-	if(m_ActivePlayerName == pPlayerName)
+	if(Mode == m_Mode)
 		return;
+	ResetForMode(Mode);
+}
+
+void CQmAxiomScores::ResetForMode(EQmAxiomMode Mode)
+{
 	AbortActiveRequests(true);
-	m_ActivePlayerName = pPlayerName;
+	m_Mode = Mode;
+	// 两个模式的积分互不相通，切服或换模式后必须丢弃上一模式的分数。
+	m_Cache.clear();
 }
 
 void CQmAxiomScores::StartSearchRequest(const char *pPlayerName, SCacheEntry &Entry)
@@ -587,19 +659,10 @@ void CQmAxiomScores::ProcessSearchRequest()
 	if(!m_SearchRequest.m_pRequest || !m_SearchRequest.m_pRequest->Done())
 		return;
 
-	std::shared_ptr<IQmAxiomHttpRequest> pRequest = std::move(m_SearchRequest.m_pRequest);
-	const uint64_t ResponseGeneration = m_SearchRequest.m_Generation;
-	const std::string ResponsePlayerName = std::move(m_SearchRequest.m_PlayerName);
-	if(!QmAxiomResponseIsCurrent(m_Generation, ResponseGeneration, m_ActivePlayerName, ResponsePlayerName))
-		return;
-
-	const auto CacheIt = m_Cache.find(ResponsePlayerName);
-	if(CacheIt == m_Cache.end())
-		return;
-	SCacheEntry &Entry = CacheIt->second;
 	const int64_t Now = CurrentTick();
-
-	if(!pRequest->TransportSucceeded() || pRequest->StatusCode() != 200)
+	std::string PlayerName(pPlayerName);
+	auto CacheIt = m_Cache.find(PlayerName);
+	if(CacheIt == m_Cache.end())
 	{
 		const bool HadVisibleSearch = Entry.m_Result.m_SearchStatus == EQmAxiomScoreStatus::READY && Entry.m_Result.m_Match.m_UserId > 0;
 		if(!HadVisibleSearch)
@@ -654,25 +717,49 @@ void CQmAxiomScores::ProcessSearchRequest()
 	StartDdStatsRequest(ResponsePlayerName.c_str(), Entry);
 }
 
-void CQmAxiomScores::ProcessModeRequests()
+SQmAxiomLookupResult CQmAxiomScores::GetLookup(const char *pPlayerName) const
 {
-	for(int Index = 0; Index < (int)m_aModeRequests.size(); ++Index)
+	SQmAxiomLookupResult Result;
+	if(!pPlayerName || pPlayerName[0] == '\0')
+		return Result;
+
+	const auto It = m_Cache.find(pPlayerName);
+	if(It == m_Cache.end())
+		return Result;
+
+	const SCacheEntry &Entry = It->second;
+	Result.m_Points = Entry.m_Points;
+	if(Entry.m_SearchStatus != EQmAxiomScoreStatus::READY)
 	{
-		SRequestSlot &Slot = m_aModeRequests[Index];
-		if(!Slot.m_pRequest || !Slot.m_pRequest->Done())
+		Result.m_Status = Entry.m_SearchStatus;
+		return Result;
+	}
+	Result.m_Status = Entry.m_PointsStatus;
+	return Result;
+}
+
+void CQmAxiomScores::ProcessSearchRequests()
+{
+	for(auto It = m_SearchRequests.begin(); It != m_SearchRequests.end();)
+	{
+		const std::string PlayerName = It->first;
+		SRequestSlot &Slot = It->second;
+		if(!Slot.m_pRequest->Done())
+		{
+			++It;
 			continue;
+		}
 
 		std::shared_ptr<IQmAxiomHttpRequest> pRequest = std::move(Slot.m_pRequest);
 		const uint64_t ResponseGeneration = Slot.m_Generation;
-		const std::string ResponsePlayerName = std::move(Slot.m_PlayerName);
-		if(!QmAxiomResponseIsCurrent(m_Generation, ResponseGeneration, m_ActivePlayerName, ResponsePlayerName))
+		It = m_SearchRequests.erase(It);
+		if(!QmAxiomResponseIsCurrent(m_Generation, ResponseGeneration, m_Mode, Slot.m_Mode))
 			continue;
 
-		const auto CacheIt = m_Cache.find(ResponsePlayerName);
+		const auto CacheIt = m_Cache.find(PlayerName);
 		if(CacheIt == m_Cache.end())
 			continue;
 		SCacheEntry &Entry = CacheIt->second;
-		SQmAxiomModeResult &ModeResult = Entry.m_Result.m_aModes[Index];
 		const int64_t Now = CurrentTick();
 
 		if(!pRequest->TransportSucceeded() || pRequest->StatusCode() != 200)
@@ -937,7 +1024,8 @@ bool CQmAxiomScores::IsPlayerFailed(const char *pPlayerName) const
 
 void CQmAxiomScores::OnUpdate()
 {
-	ProcessSearchRequest();
+	m_SearchStartsThisFrame = 0;
+	ProcessSearchRequests();
 	ProcessModeRequests();
 	ProcessDdStatsRequest();
 	FinishActiveQueryIfIdle();

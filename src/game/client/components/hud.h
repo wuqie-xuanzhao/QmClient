@@ -182,9 +182,6 @@ class CHud : public CComponent
 		float m_TargetTrackMetaOutAlpha = 0.0f;
 		float m_TargetTrackMetaInOffset = 0.0f;
 		float m_TargetTrackMetaOutOffset = 0.0f;
-		float m_EntranceDropProgress = 0.0f;
-		float m_EntranceProgress = 0.0f;
-		int64_t m_EntranceLastTick = 0;
 		bool m_WaveformWasPlaying = false;
 		bool m_WaveformSettling = false;
 		int64_t m_WaveformSettleStartTick = 0;
@@ -200,7 +197,6 @@ class CHud : public CComponent
 		float m_NewTrackEnterProgress = 1.0f;
 		bool m_CapsuleMorphActive = false;
 		bool m_CapsuleMorphNeedsCapture = false;
-		int64_t m_CapsuleMorphStartTick = 0;
 		float m_CapsuleMorphFromX = 0.0f;
 		float m_CapsuleMorphFromWidth = 0.0f;
 		float m_CapsuleMorphFromHeight = 0.0f;
@@ -216,9 +212,10 @@ class CHud : public CComponent
 			int m_Id = 0;
 			int64_t m_TriggerTick = 0;
 			int64_t m_ExitStartTick = 0;
-			int64_t m_LiquidLastTick = 0;
 			float m_Progress = 0.0f;
-			float m_LiquidProgress = 0.0f;
+			// 分离弹簧：内部是位移/速度，朝目标（分离 1、收回 0）收敛。
+			SHudMediaIslandBlobSpring m_LiquidSpring;
+			int64_t m_LiquidLastTick = 0;
 			float m_LiquidOriginCenterX = 0.0f;
 			float m_LiquidOriginWidth = 0.0f;
 
@@ -232,7 +229,7 @@ class CHud : public CComponent
 		float m_TargetSatelliteX = 0.0f;
 		float m_TargetSatelliteWidth = 0.0f;
 		float m_TargetSatelliteAlpha = 0.0f;
-		float m_SpectatorLiquidProgress = 0.0f;
+		SHudMediaIslandBlobSpring m_SpectatorLiquidSpring;
 		int64_t m_SpectatorLiquidLastTick = 0;
 		int m_SpectatorDisplayCount = 0;
 		float m_SpectatorIconProgress = 1.0f;
@@ -241,23 +238,27 @@ class CHud : public CComponent
 		float m_SpectatorExitLiquidStart = 0.0f;
 		float m_SpectatorExitIconStart = 1.0f;
 
-		void StartCapsuleMorph(int64_t Now)
+		void StartCapsuleMorph()
 		{
 			m_CapsuleMorphActive = true;
 			m_CapsuleMorphNeedsCapture = true;
-			m_CapsuleMorphStartTick = Now;
 		}
 
-		bool HasVisibleSatellite() const
+		// 换队/开关/禁言倒计时的液滴从主岛左边缘长出，判定主胶囊是否要留出生长空位只认这一种副岛。
+		bool HasVisibleCountdownSatellite() const
 		{
-			if(m_SpectatorLiquidProgress > 0.0f)
-				return true;
 			for(const SSatelliteItem &Item : m_aSatelliteItems)
 			{
 				if(Item.m_Used)
 					return true;
 			}
 			return false;
+		}
+
+		bool HasVisibleSatellite() const
+		{
+			// 观战卫星长在主岛右侧，与左侧倒计时副岛一起算作副岛。
+			return m_SpectatorLiquidSpring.m_Progress > 0.0f || HasVisibleCountdownSatellite();
 		}
 
 		void Reset()
@@ -288,9 +289,6 @@ class CHud : public CComponent
 			m_TargetTrackMetaOutAlpha = 0.0f;
 			m_TargetTrackMetaInOffset = 0.0f;
 			m_TargetTrackMetaOutOffset = 0.0f;
-			m_EntranceDropProgress = 0.0f;
-			m_EntranceProgress = 0.0f;
-			m_EntranceLastTick = 0;
 			m_WaveformWasPlaying = false;
 			m_WaveformSettling = false;
 			m_WaveformSettleStartTick = 0;
@@ -306,7 +304,6 @@ class CHud : public CComponent
 			m_NewTrackEnterProgress = 1.0f;
 			m_CapsuleMorphActive = false;
 			m_CapsuleMorphNeedsCapture = false;
-			m_CapsuleMorphStartTick = 0;
 			m_CapsuleMorphFromX = 0.0f;
 			m_CapsuleMorphFromWidth = 0.0f;
 			m_CapsuleMorphFromHeight = 0.0f;
@@ -316,7 +313,7 @@ class CHud : public CComponent
 			m_TargetSatelliteX = 0.0f;
 			m_TargetSatelliteWidth = 0.0f;
 			m_TargetSatelliteAlpha = 0.0f;
-			m_SpectatorLiquidProgress = 0.0f;
+			m_SpectatorLiquidSpring = {};
 			m_SpectatorLiquidLastTick = 0;
 			m_SpectatorDisplayCount = 0;
 			m_SpectatorIconProgress = 1.0f;
@@ -350,7 +347,9 @@ class CHud : public CComponent
 	};
 	mutable SHudMediaIslandFrameCache m_MediaIslandFrameCache;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurSource;
-	std::array<IGraphics::CRenderTargetHandle, IGraphics::DUAL_KAWASE_PYRAMID_LEVELS> m_aMediaIslandBlurTemporary;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurDownsample;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurDownsampleTemporary;
+	IGraphics::CRenderTargetHandle m_MediaIslandBlurDownsampleTarget;
 	IGraphics::CRenderTargetHandle m_MediaIslandBlurTarget;
 	int m_MediaIslandBlurWidth = 0;
 	int m_MediaIslandBlurHeight = 0;

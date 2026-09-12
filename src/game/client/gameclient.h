@@ -79,8 +79,11 @@
 #include "components/qmclient/hud_notifications/hud_notifications.h"
 #include "components/qmclient/input_overlay.h"
 #include "components/qmclient/monitoring/monitoring.h"
+#include "components/qmclient/music_app_watcher.h"
 #include "components/qmclient/music_lyrics/music_lyrics_integration.h"
+#include "components/qmclient/music_lyrics/qm_spotify_integration.h"
 #include "components/qmclient/netease/netease_integration.h"
+#include "components/qmclient/qm_bind_status_hud.h"
 #include "components/qmclient/qmclient.h"
 #include "components/qmclient/rank_ghost.h"
 #include "components/qmclient/scripting.h"
@@ -259,6 +262,8 @@ public:
 	CSystemMediaControls m_SystemMediaControls;
 	CNeteaseIntegration m_NeteaseIntegration;
 	CMusicLyricsIntegration m_MusicLyricsIntegration;
+	CQmMusicAppWatcher m_MusicAppWatcher;
+	CSpotifyIntegration m_SpotifyIntegration;
 
 	CDamageInd m_DamageInd;
 	CTouchControls m_TouchControls;
@@ -300,6 +305,7 @@ public:
 	CQmChatEmoji m_QmChatEmoji;
 	CQmMonitoring m_QmMonitoring;
 	CQmHudNotifications m_QmHudNotifications;
+	CQmBindStatusHud m_QmBindStatusHud;
 	CQmWeaponTrajectory m_QmWeaponTrajectory;
 	CRankGhost m_RankGhost;
 	CTClient m_TClient;
@@ -353,6 +359,13 @@ private:
 	std::string m_QmStutterPage;
 	std::string m_QmStutterOperation;
 	std::unique_ptr<CQmJelly> m_pJellyTee;
+
+	// 启动赞助提醒：本次启动要展示的启动序号，0 表示不提示。
+	// 只在会话内有效，避免把「还没看」的状态持久化后跨会话重复提示。
+	int m_QmSponsorNudgeLaunchCount = 0;
+	bool m_QmSponsorNudgeVisible = false;
+	// 关闭提醒后的那句问话：同样走灵动岛表现，由 CMenus 读取本标志决定文案。
+	bool m_QmSponsorNudgeFarewell = false;
 
 	CNetObjHandler m_NetObjHandler;
 	protocol7::CNetObjHandler m_NetObjHandler7;
@@ -457,6 +470,7 @@ private:
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneZone(IConsole::IResult *pResult, void *pUserData);
 	static void ConMapbug(IConsole::IResult *pResult, void *pUserData);
+	static void ConQmSponsorNudgePreview(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainMenuMap(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
@@ -496,6 +510,21 @@ public:
 	class IStorage *Storage() const { return m_pStorage; }
 	class IConfigManager *ConfigManager() const { return m_pConfigManager; }
 	class CConfig *Config() const { return m_pConfig; }
+
+	// 本次会话是否应展示启动赞助提醒（供主菜单浮层查询）。
+	bool SponsorNudgeVisible() const { return m_QmSponsorNudgeVisible; }
+	int SponsorNudgeLaunchCount() const { return m_QmSponsorNudgeLaunchCount; }
+	// 用户在「梦的小功能」里关掉赞助提醒后，弹一句同样式的问话（仅本会话，不写盘）。
+	bool SponsorNudgeFarewellActive() const { return m_QmSponsorNudgeFarewell; }
+	void ShowSponsorNudgeFarewell();
+	// 用户又把提醒打开时立刻收回那句问话，避免它滞留在屏幕上。
+	void HideSponsorNudgeFarewell() { m_QmSponsorNudgeFarewell = false; }
+	// 调试预览：不计数、不写盘，仅本次会话强制展示一次浮层。
+	void ShowSponsorNudgePreview();
+	// 关闭本次浮层；Permanent 为真时写入 qm_sponsor_nudge=0 永不再提示。
+	void DismissSponsorNudge(bool Permanent);
+	// 赞助页入口：跳转到 QmClient 设置的赞助者页。
+	void OpenSponsorPage();
 	class IConsole *Console() { return m_pConsole; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
 	class IDemoPlayer *DemoPlayer() const { return m_pDemoPlayer; }
@@ -924,6 +953,11 @@ public:
 	virtual void OnStartRound();
 	virtual void OnFlagGrab(int TeamId);
 	void OnWindowResize() override;
+	// 图形设备重建（例如 Vulkan 设备丢失后重建）后由 IGraphics 广播触发：
+	// 丢弃并重新加载所有 GPU 资源。
+	void OnGraphicsResourcesReset();
+	// 按 g_pData 图片表加载全部初始资源；启动与资源重置后重建共用这一条路径。
+	void LoadInitialGraphicsAssets();
 
 	void InitializeLanguage() override;
 	bool m_LanguageChanged = false;

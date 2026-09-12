@@ -217,6 +217,9 @@
 1 star
 == 1 yıldız
 
+1% low
+== %1 düşük
+
 128 player id <-> 64 player id map update rate
 == 128 <-> 64 oyuncu kimliği harita güncelleme hızı
 
@@ -274,6 +277,9 @@ A vote is currently active.
 
 Abort
 == İptal
+
+Accumulated client launch count (used by the sponsor reminder)
+== Toplam istemci başlatma sayısı (destekçi hatırlatması için)
 
 Activate
 == Etkinleştir
@@ -490,6 +496,9 @@ Adds a specific war entry
 
 Adds default chat binds
 == Varsayılan sohbet bağlantılarını ekler
+
+Adds dummy key, hammer, control and copy status to the HUD, plus your own bind status list.
+== HUD'da kukla tuş, çekiç, kontrol ve kopyalama durumunu ve kendi bind durum listesini gösterir.
 
 Adjust DDNet gameplay indicators and assists
 == Adjust DDNet gameplay indicators and assists
@@ -2150,9 +2159,6 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Oyuncu kimliğini ve ülkesini yapılandır
 
-Configure qm_report_app_id and qm_report_secret first
-== Önce qm_report_app_id ve qm_report_secret ayarla
-
 Configure QmClient gameplay helpers
 == QmClient oyun yardımcılarını yapılandır
 
@@ -2209,9 +2215,6 @@ Connect dummy
 
 Connect dummy to enable
 == Etkinleştirmek için dublör bağla
-
-Connect to a server first
-== Önce bir sunucuya bağlan
 
 Connect to server first to establish voice network link
 == Ses ağ bağlantısını kurmak için önce sunucuya bağlanın
@@ -2272,6 +2275,9 @@ Console command executed after joining server
 
 Console command executed before connecting to server
 == Sunucuya bağlanmadan önce yürütülen konsol komutu
+
+Contacting title server
+== Unvan sunucusuna bağlanılıyor
 
 Continue anyway?
 == Yine de devam edilsin mi?
@@ -2348,9 +2354,6 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Dublör bağlanamadı
 
-Could not create report scan request
-== Rapor tarama isteği oluşturulamadı
-
 Could not find a Tutorial server. Check your internet connection.
 == Bir Eğitim sunucusu bulunamadı. İnternet bağlantınızı kontrol edin.
 
@@ -2359,9 +2362,6 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Takımın bulunamadı
-
-Could not get current server address
-== Geçerli sunucu adresi alınamadı
 
 Could not get server list from master server
 == Ana sunucudan sunucu listesi alınamadı
@@ -2386,6 +2386,9 @@ Could not resolve connect address '%s'. See local console for details.
 
 Could not save downloaded map. Try manually deleting this file: %s
 == İndirilen harita kaydedilemedi. Bu dosyayı manuel olarak silmeyi deneyin: %s
+
+Could not save title credential
+== Unvan kimlik bilgileri kaydedilemedi
 
 Could not save touch controls to file. See local console for details.
 == Dokunmatik kontroller dosyaya kaydedilemedi. Ayrıntılar için yerel konsolu kontrol edin.
@@ -2480,6 +2483,12 @@ Custom aspect ratio
 Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)
 == Özel En Boy Oranı, x100 ile Saklanır (örn. 178=16:9, 233=21:9)
 
+Custom bind status HUD entries. Empty: built-in 4 entries (key stuck/hammer/dummy control/dummy copy). Format: var|value=text|value=text;var|text (shown when non-zero);var (shown as var name when non-zero). Entries separated by ';', fields by '|'
+== Özel bind durumu HUD girdileri. Boş: yerleşik 4 girdi (tuş kilidi/çekiç/dummy kontrolü/dummy senkronizasyonu). Biçim: değişken|değer=metin|değer=metin; değişken|metin (sıfır değilken göster); değişken (yalnızca ad: sıfır değilken adı göster). Girdiler ';' ile, alanlar '|' ile ayrılır
+
+Custom bind status list
+== Özel bind durumu listesi
+
 Custom colors
 == Özel renkler
 
@@ -2503,6 +2512,9 @@ Custom Provider endpoint
 
 Custom Provider model name
 == Özel Sağlayıcı Model Adı
+
+Custom title
+== Özel unvan
 
 Custom translation prompt (overrides built-in)
 == Özel Çeviri İstemi (Yerleşik İstemi Geçersiz Kılar)
@@ -2624,6 +2636,9 @@ DDNet/total CPU
 DDRace HUD
 == DDRace HUD
 
+DDRace HUD Pro
+== DDRace HUD Pro（dummy durumu）
+
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork, sizin ve tee grubunuzun haritanın bitiş çizgisine ulaşmayı hedeflediği işbirlikçi bir çevrimiçi oyundur. Yeni başlayan biri olarak, en kolay haritaları barındıran Novice sunucularında başlamalısınız. Size yakın bir sunucu seçmek için ping'i göz önünde bulundurun.
 
@@ -2638,6 +2653,9 @@ Deactivate
 
 Deactivate all
 == Tümünü devre dışı bırak
+
+Deactivate ghost
+== Hayaleti devre dışı bırak
 
 Death opacity
 == Ölüm opaklığı
@@ -2662,6 +2680,9 @@ Debug group clipping.
 
 Debug HTTP
 == HTTP hata ayıklama
+
+Debug mode
+== Hata ayıklama modu
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Hata ayıklama modu etkin. Hata ayıklama modunu devre dışı bırakmak için Ctrl+Shift+D tuşlarına basın.
@@ -2888,9 +2909,6 @@ Detection distance
 Detection time
 == Algılama süresi
 
-Developer
-== Geliştirici
-
 DF
 == DF
 
@@ -3080,11 +3098,17 @@ Download failed
 Download rank ghost
 == Rank hayaletini indir
 
+Download replay
+== Tekrarı indir
+
 Download skins
 == Görünümleri indir
 
 Download skins immediately from cl_skin_download_url
 == cl_skin_download_url adresinden skinleri hemen indir
+
+Download the rank 1 demo for this map
+== Bu harita için Rank 1 demosunu indir
 
 Download this asset?
 == Bu varlığı indir?
@@ -3094,6 +3118,9 @@ Downloaded
 
 Downloading map
 == Harita indiriliyor
+
+Downloading rank 1 demo
+== Rank 1 demosu indiriliyor
 
 Downloading update...
 == Güncelleme indiriliyor...
@@ -3226,6 +3253,9 @@ Dummy is currently connected.
 
 Dummy jump
 == Kukla zıplaması
+
+Dummy key/hammer/control/copy status switches and custom bind status list
+== Tuş kilidi/çekiç/dummy kontrolü/dummy senkronizasyonu durum anahtarları ve özel bind durumu listesi
 
 Dummy marking color
 == Kukla işaret rengi
@@ -3412,6 +3442,9 @@ Emoticon shadow
 
 Emoticons
 == İfadeler
+
+Empty: built-in 4 entries. Format: var|0=Off|1=On; var|Text
+== Boş: yerleşik 4 girdi. Biçim: var|0=Off|1=On; var|Text
 
 enable
 == etkinleştir
@@ -3623,6 +3656,9 @@ Enable new IME candidate bar
 Enable new settings page UI
 == Yeni ayarlar sayfası UI’ını etkinleştir
 
+Enable performance debug logging and diagnostics
+== Performans hata ayıklama günlüğünü ve takılma teşhisini etkinleştir
+
 Enable Pie Menu
 == Pasta menüsünü etkinleştir
 
@@ -3686,6 +3722,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == Cilt değiştirme animasyonunu etkinleştir
 
+Enable skin transition animation, then choose the type, scope, duration and easing.
+== Skin geçiş animasyonunu aç, ardından tür, menzil, süre ve yumuşatmayı seç.
+
 Enable smooth cinematic camera while free spectating
 == Serbest izlerken akıcı sinematik kamerayı etkinleştir
 
@@ -3706,6 +3745,12 @@ Enable spectator cursor (if available)
 
 Enable speedrun timer
 == Hızlı koşu zamanlayıcısını etkinleştir
+
+Enable Spotify lyric integration
+== Spotify şarkı sözü entegrasyonunu etkinleştir
+
+Enable Spotify lyrics
+== Spotify şarkı sözlerini etkinleştir
 
 Enable squishy Tee deformation
 == Q Esnek Tee Deformasyonu’nu etkinleştir
@@ -3770,6 +3815,9 @@ Enable voice filtering (highpass/compressor/limiter)
 Enable warlist
 == Savaş listesini etkinleştir
 
+Enable weapon switch animation or reload animation, then tune range, duration, rotation and easing.
+== Silah değiştirme veya şarjör doldurma animasyonunu aç, ardından menzil, süre, dönüş ve yumuşatmayı ayarla.
+
 Enable word filter list
 == Kelime filtresi listesini etkinleştir
 
@@ -3815,8 +3863,14 @@ Enter /practice mode or restart to avoid the entire team being killed in 60 seco
 Enter Password
 == Şifre Gir
 
+Enter the sponsor code, press Redeem, then write the title and press Save. Tick "Only show with this nickname" to bind it to one nickname.
+== Sponsor kodunu gir ve "Kullan" düğmesine bas, ardından unvanı yaz ve "Kaydet"e bas. Tek bir takma ada bağlamak için "Yalnızca bu takma adla göster" seçeneğini işaretle.
+
 Enter Username
 == Kullanıcı Adı Gir
+
+Enter your sponsor code
+== Sana verilen destekçi kodunu gir
 
 Entities
 == Varlıklar
@@ -3844,6 +3898,9 @@ Entity wall outline opacity
 
 entity_bg (Workshop)
 == entity_bg（Workshop）
+
+Entry: %s
+== Konum: %s
 
 Erase items on the in game background
 == Oyun arka planındaki öğeleri sil
@@ -3889,6 +3946,9 @@ Evaluate an expression
 
 Event
 == Etkinlik
+
+Exact bound nickname
+== Bağlanacak tam takma ad
 
 Example of usage
 == Kullanım örneği
@@ -3992,6 +4052,9 @@ Failed to copy main asset image.
 Failed to create bgdraw folder
 == bgdraw klasörü oluşturulamadı
 
+Failed to download the rank 1 demo
+== Rank 1 demosu indirilemedi
+
 Failed to export audio pack file.
 == Ses paketi dosyası dışa aktarılamadı.
 
@@ -4000,6 +4063,9 @@ Failed to export demo cut
 
 Failed to export skin files.
 == Skin dosyaları dışa aktarılamadı.
+
+Failed to fetch the replay list
+== Tekrar listesi alınamadı
 
 Failed to load
 == Yüklenemedi
@@ -4214,6 +4280,9 @@ Forms
 Found %d global cards
 == %d küresel kart bulundu
 
+Four IP addresses are already online
+== Zaten 4 IP adresi çevrimiçi
+
 FPM
 == K/D
 
@@ -4226,9 +4295,6 @@ Fraction of players needed to pass a vote
 Frags
 == Öldürme
 
-Frame quality
-== Kare kalitesi
-
 Frame rate
 == Kare hızı
 
@@ -4237,6 +4303,9 @@ Frame time
 
 Frame time p95
 == Kare süresi P95
+
+Frame time p99
+== Kare süresi p99
 
 Framebuffer color bits (only fullscreen)
 == Çerçeve arabelleği renk bitleri (yalnızca tam ekran)
@@ -4457,6 +4526,12 @@ Getting server list from master server
 Ghost
 == Hayalet
 
+Ghost active
+== Hayalet etkin
+
+Ghost ready
+== Hayalet hazır
+
 Ghost tools
 == Hayalet araçları
 
@@ -4603,9 +4678,6 @@ Graphics card
 
 Graphics display
 == Grafik görüntüsü
-
-Graphics Error
-== Grafik hatası
 
 Graphics library major version (0 = auto-detect)
 == Grafik kitaplığının ana sürümü (0 = otomatik algıla)
@@ -4988,6 +5060,9 @@ How often the broadcast time updates
 How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)
 == Aktif olmayan oyuncular nasıl işlenir (0 = izleyiciye taşı, 1 = boş izleyici yuvasına taşı/at, 2 = at)
 
+HTTP is not available
+== HTTP kullanılamıyor
+
 HTTP map download: connection phase timeout (in ms, 0=disabled)
 == HTTP harita indirme: bağlantı aşaması zaman aşımı (ms cinsinden, 0=devre dışı)
 
@@ -5237,6 +5312,9 @@ Insane
 Installing update. Please wait...
 == Güncelleme yükleniyor. Lütfen bekleyin...
 
+Instant zoom reverse
+== Zoom yönünü anında çevir
+
 Interface
 == Arayüz
 
@@ -5279,6 +5357,9 @@ Interval for auto-saving current editor map copy to "auto" folder (0=off)
 Invalid Axiom API response
 == Geçersiz Axiom API yanıtı
 
+Invalid bound name
+== Bağlı takma ad geçersiz
+
 Invalid client id to kick
 == Atılacak istemci kimliği geçersiz
 
@@ -5296,6 +5377,9 @@ Invalid option
 
 Invalid spectator id used
 == Geçersiz izleyici kimliği kullanıldı
+
+Invalid sponsor code
+== Geçersiz destekçi kodu
 
 Invalid translation backend
 == Geçersiz çeviri arka ucu
@@ -5570,6 +5654,9 @@ Latency compensation
 Latency Jitter
 == Gecikme dalgalanması
 
+Launch count threshold for the next sponsor reminder
+== Sonraki hatırlatma için başlatma eşiği
+
 Layout
 == Düzen
 
@@ -5714,6 +5801,9 @@ LLM translation default concurrency (smart adjustment)
 Load
 == Yükle
 
+Load as ghost
+== Hayalet olarak yükle
+
 Load drawings from a given csv file (defaults to map name)
 == Verilen bir csv dosyasından çizimleri yükle (varsayılan harita adı)
 
@@ -5849,11 +5939,17 @@ Logout of econ
 Logout of rcon
 == Rcon'dan çıkış yap
 
+Long frames
+== Uzun kareler
+
 Lose weapons when teleporting (useful for race maps)
 == Işınlanırken silahları kaybet (yarış haritaları için kullanışlıdır)
 
 Low to high
 == Düşükten yükseğe
+
+Lyrics
+== Şarkı sözleri
 
 Main Asset
 == Ana Varlık
@@ -6187,6 +6283,9 @@ Menu option - selected
 
 Merge consecutive identical player messages within 2 seconds
 == 2 saniye içindeki art arda gelen aynı oyuncu mesajlarını birleştir
+
+Merges chat messages repeated within a short time into a single line.
+== Kısa sürede tekrarlanan sohbet mesajlarını tek satırda birleştirir.
 
 Message color
 == Mesaj rengi
@@ -6635,6 +6734,9 @@ New button
 New category name
 == Yeni kategori adı
 
+New features
+== Yeni özellikler
+
 New IME
 == Yeni IME
 
@@ -6793,6 +6895,9 @@ No presets yet
 
 No preview
 == Önizleme yok
+
+No rank 1 replay was found for this map
+== Bu harita için Rank 1 tekrarı bulunamadı
 
 No results
 == Sonuç yok
@@ -7031,6 +7136,9 @@ Only show skins available in Vanilla Teeworlds
 Only show when the other Tee is not on screen
 == Yalnızca diğer Tee ekranda olmadığında göster
 
+Only show with this nickname
+== Yalnızca bu takma adla göster
+
 Only what you can't imagine, nothing Dream can't do
 == Hayal edemediğin şeyler dışında, Dream'in yapamayacağı hiçbir şey yok
 
@@ -7069,6 +7177,9 @@ Open pie menu
 
 Open rename dialog
 == Yeniden adlandırma iletişim kutusunu aç
+
+Open settings
+== Ayarları aç
 
 Open spectator mode selector
 == İzleyici modu seçiciyi aç
@@ -7322,6 +7433,9 @@ Password required to use reserved slots.
 Past year
 == Geçen yıl
 
+Paste sp_dc from Spotify web cookies
+== Tarayıcıdan sp_dc çerezini yapıştırın
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB sunucu sertifikasını doğrulamak için CA sertifikasının yolu
 
@@ -7349,9 +7463,6 @@ Pause/unpause game
 Penalty in seconds for saving or swapping positions
 == Konum kaydetme veya değiştirme için saniye cinsinden ceza
 
-Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-
 Per-name volume (name=percent)
 == İsme göre bireysel ses seviyesi (isim=yüzde)
 
@@ -7360,6 +7471,12 @@ Performance debug log threshold (ms)
 
 Performance points
 == Performans puanları
+
+Permanent access; up to 4 online IP addresses
+== Kalıcı erişim; aynı anda en fazla 4 IP
+
+Permanent sponsor verified
+== Kalıcı destekçi durumu doğrulandı
 
 Personal best:
 == Kişisel en iyi:
@@ -7390,6 +7507,9 @@ Pet Skin:
 
 Pick result: %s
 == Seçim sonucu: %s
+
+Pick the source that matches your music app and keep it playing; the lyrics follow automatically.
+== Müzik uygulamanla eşleşen kaynağı seç ve çalmaya devam et; sözler otomatik olarak takip eder.
 
 Pickup range
 == Toplama aralığı
@@ -7429,6 +7549,9 @@ Play back a demo
 
 Play background music
 == Arka plan müziğini çal
+
+Play replay
+== Tekrarı oynat
 
 Play slide-in rotation animation when switching weapon
 == Silah değiştirirken kayarak dönme animasyonu oynat
@@ -7592,6 +7715,9 @@ Players can't hook each other on this server
 Playing effects
 == Oynatma efektleri
 
+Plays an animation whenever your skin changes, including skins stolen with the hammer.
+== Çekiçle çalınanlar dahil, skinin değiştiğinde bir animasyon oynatır.
+
 Please add a valid cut first
 == Lütfen önce geçerli bir kesim ekleyin
 
@@ -7687,6 +7813,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == Bomba yörüngesini tahmin et (yalnızca cl_antiping 1 ile)
+
+Predict ninja path
+== Ninja yolunu tahmin et
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 == Diğer oyuncuların hareketini tahmin et(cl_antiping yalnızca 1 iken etkin)(1 = her zaman, 2 = yalnızca etkileşimde, 3 = 2 ve donmuş Tee'ler her zaman)
@@ -7801,6 +7930,9 @@ Preview the composed status bar output
 
 Preview the current chat appearance
 == Preview the current chat appearance
+
+Preview the sponsor reminder without changing the launch count
+== Başlatma sayısını değiştirmeden hatırlatmayı önizle
 
 Preview visibilities
 == Önizleme görünürlükleri
@@ -8072,6 +8204,18 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == Oyuncu rengini rastgeleleştir (0 = tümü, 1 = vücut, 2 = ayak, 3 = cilt, 4 = bayrak) örnek: 0011 = cilt ve bayrağı rastgeleleştir [sayı konumdur]
 
+Rank 1
+== Rank 1
+
+Rank 1 demo
+== Rank 1 demosu
+
+Rank 1 demo downloaded to '%s'
+== Rank 1 demosu '%s' konumuna indirildi
+
+Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser.
+== Rank demosu indirildi: %s. Rank 1 listesinden veya demo tarayıcısından oynatın.
+
 Rank ghost loaded: %s, %s s. It follows your current run.
 == Rank hayaleti yüklendi: %s, %s sn. Mevcut koşunu takip ediyor.
 
@@ -8117,6 +8261,9 @@ Rank ghost: HTTP is not available
 Rank ghost: no official replay for '%s' rank %d
 == Rank hayaleti: '%s' için Rank %d resmî tekrarı yok
 
+Rank ghost: no official replay found for '%s'
+== Rank hayaleti: '%s' için resmi tekrar bulunamadı
+
 Rank ghost: replay converted, waiting for the map to load ...
 == Rank hayaleti: tekrar dönüştürüldü, haritanın yüklenmesi bekleniyor…
 
@@ -8144,11 +8291,11 @@ Ratio
 Ratio threshold for local target language detection
 == Yerel hedef dil tanıma oranı eşiği
 
-Read new feature indicators
-== Okunan ayarlar arayüzü yeni özellik göstergeleri
-
 Ready
 == Hazır
+
+Really? Not even a little?
+== Gerçekten mi? Hiç mi düşünmezsin?
 
 Reason
 == Sebep
@@ -8194,6 +8341,15 @@ Red team
 
 Red team wins!
 == Kırmızı takım kazandı!
+
+Redeem
+== Kullan
+
+Redeem your code and customize your title
+== Kodunu kullan ve unvanını özelleştir
+
+Redeem your sponsor code to unlock a custom title, shown in chat and on your nameplate.
+== Özel bir unvan açmak için sponsor kodunu kullan. Unvan sohbette ve isim etiketinde görünür.
 
 Reduce antiping and player prediction when frozen
 == Donduğunda antiping ve oyuncu tahminini azalt
@@ -8534,8 +8690,26 @@ Replacement chars
 Replay
 == Tekrar Oynat
 
+Replay downloaded
+== Tekrar indirildi
+
 Replay feature is disabled!
 == Tekrar oynatma özelliği devre dışı!
+
+Replay list: failed to load, press Refresh to retry
+== Tekrar listesi: yükleme başarısız, yeniden denemek için Yenile'ye basın
+
+Replay list: loading ...
+== Tekrar listesi: yükleniyor…
+
+Replay list: not loaded yet
+== Tekrar listesi: henüz yüklenmedi
+
+Replay list: up to date
+== Tekrar listesi: güncel
+
+Replays directory
+== Tekrar klasörü
 
 Reply
 == Yanıtla
@@ -8546,35 +8720,8 @@ Reply to messages from muted players
 Reply with dummy
 == Dummy ile yanıtla
 
-Report
-== Rapor et
-
-Report request canceled
-== Rapor isteği iptal edildi
-
-Report request failed due to network error
-== Rapor isteği ağ hatası nedeniyle başarısız oldu
-
-Report request failed with HTTP status: %d
-== Rapor isteği HTTP durumuyla başarısız oldu: %d
-
-Report request is already in progress
-== Rapor isteği zaten sürüyor
-
-Report scan request submitted
-== Rapor tarama isteği gönderildi
-
-Report service App ID
-== Rapor hizmeti App ID
-
-Report service signing key
-== Rapor hizmeti imza anahtarı
-
-Report service URL
-== Rapor hizmeti adresi
-
 Reports are not available on Axiom servers
-== Axiom sunucularında rapor kullanılamaz
+== Axiom sunucularında şikayet kullanılamaz
 
 Request to swap your tee with another team member
 == Tee'ni başka bir takım arkadaşıyla takas etmeyi iste
@@ -8642,6 +8789,9 @@ Reset mouse position when opening bind wheel
 Reset position of mouse when opening bindwheel
 == Bind tekerleğini açarken farenin konumunu sıfırla
 
+Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)
+== qm_bind_status_items öğesini yerleşik 4 girdiye sıfırla (tuş kilidi/çekiç/dummy kontrolü/dummy senkronizasyonu)
+
 Reset stats on server join (0=persistent, 1=reset on join)
 == Sunucuya girerken istatistikleri sıfırla (0=Kümülatif istatistikler, 1=Her girişte sıfırla)
 
@@ -8689,6 +8839,9 @@ Retry remote stats
 
 Retrying…
 == Yeniden deneniyor…
+
+Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)
+== Karşı zoom tuşuna basınca yönü anında çevir (0=özgün yumuşak zoom korunur)
 
 Review and edit custom key bindings
 == Review and edit custom key bindings
@@ -8947,9 +9100,6 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Geçerli sunucu taranıyor
-
-Scanning current server...
-== Geçerli sunucu taranıyor...
 
 Score
 == Skor
@@ -10097,6 +10247,9 @@ Show the number of frozen tees
 Show the number of tees still alive
 == Hayatta kalan tee sayısını göster
 
+Show the occasional sponsor reminder in the main menu
+== Ana menüde ara sıra destekçi hatırlatması göster
+
 Show the pet
 == Evcil hayvanı göster
 
@@ -10204,6 +10357,9 @@ Shows gameplay information for this server
 
 Shows help to command r, general help if left blank
 == r komutunun yardımını gösterir, boş bırakılırsa genel yardım
+
+Shows lyrics from NetEase Cloud Music, Soda Music, Kugou and QQ Music on the dynamic island.
+== NetEase Cloud Music, Soda Music, Kugou ve QQ Music'ten şarkı sözlerini alıp dinamik adada gösterir.
 
 Shows the credits of the DDNet mod
 == DDNet modunun jeneriklerini gösterir
@@ -10418,9 +10574,6 @@ Snapshot payload
 Snapshot rate
 == Anlık görüntü hızı
 
-Snapshot rate / parts
-== Anlık görüntü hızı / parçalar
-
 Snapshot tick gap
 == Anlık görüntü tick aralığı
 
@@ -10592,11 +10745,26 @@ Sphere
 Spin pop
 == Döndürerek aç
 
+Sponsor code
+== Destekçi kodu
+
+Sponsor code already claimed
+== Bu kod zaten kullanılmış
+
+Sponsor reminder
+== Destekçi hatırlatması
+
 Sponsor support
 == Sponsor desteği
 
+Sponsor title
+== Destekçi unvanı
+
 Sponsors:
 == Sponsorlar:
+
+Spotify sp_dc cookie (from browser DevTools, long-lived)
+== Spotify sp_dc çerezi (tarayıcı DevTools'tan, uzun ömürlü)
 
 Spree
 == Seri
@@ -10684,6 +10852,9 @@ Status Scheme:
 
 Steam profile name
 == Steam profil adı
+
+Still free after %d sponsors. Take a look?
+== Bizi %d destekçi ayakta tutuyor. Bakmak ister misin?
 
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == Geçişte tuş girişini durdur (0=kapalı, 1=dummy, 2=oyuncu)
@@ -10802,6 +10973,9 @@ Switch failed
 Switch interval
 == Geçiş aralığı
 
+Switch on the status rows you need, then list the binds you want to watch.
+== Gereken durum anahtarlarını aç, ardından izlemek istediğin bind'leri listeye ekle.
+
 Switch opacity
 == Değiştirme opaklığı
 
@@ -10912,6 +11086,9 @@ Target language code (e.g. zh, en, ja, zh-TW)
 
 Target language ratio
 == Hedef dil oranı
+
+Task running ...
+== Görev çalışıyor…
 
 TClient
 == TClient
@@ -11183,6 +11360,9 @@ The audio device couldn't be initialised.
 The auth level you need to tele others
 == Başkalarını ışınlamak için gereken yetki seviyesi
 
+The downloaded file is not a valid demo
+== İndirilen dosya geçerli bir demo değil
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == "Ekstra Menü" görünürlüğüne sahip düğmelerin görünürlüğünü değiştiren ekstra menü düğmesi. Ayrıca uzun basıldığında oyun içi menüyü açar.
 
@@ -11198,11 +11378,14 @@ The format of texture %s is not RGBA which will cause visual bugs.
 The FPS at which the recorder should record replay.
 == Kaydedicinin tekrarı kaydetmesi gereken FPS.
 
-The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== Grafik arka ucu beklenmedik şekilde durdu ve güvenli grafik ayarları kaydedilemedi.
-
 The name "default" is reserved.
 == "default" adı ayrılmıştır.
+
+The rank 1 demo is already downloaded
+== Rank 1 demosu zaten indirildi
+
+The replay list is empty or malformed
+== Tekrar listesi boş veya hatalı
 
 The selected button is not visible. Do you want to deselect it or edit its visibility?
 == Seçili düğme görünmüyor. Seçimini kaldırmak mı yoksa görünürlüğünü düzenlemek mi istersiniz?
@@ -11401,6 +11584,12 @@ Timer isn't displayed.
 
 Tiny Tee Size
 == Minik Tee Boyutu
+
+Title server unavailable; retry
+== Unvan sunucusu kullanılamıyor; tekrar dene
+
+Title too long or contains unsupported characters
+== Unvan çok uzun veya desteklenmeyen karakterler içeriyor
 
 To save all players in your team have to be alive and not in '/spec'
 == Takımdaki tüm oyuncuları kaydetmek için hayatta olmalı ve '/spec' durumunda olmamalıdır
@@ -11678,6 +11867,9 @@ Tune variable to value
 Tune variable to value or show current value
 == Değişkeni değere ayarla veya geçerli değeri göster
 
+Turn on "Message merging" in Dream Features.
+== "Dream Features" bölümünde "Message merging" seçeneğini aç.
+
 Tutorial
 == Eğitim
 
@@ -11900,6 +12092,9 @@ Unregister protocol and file extensions
 Unsaved changes
 == Kaydedilmemiş değişiklikler
 
+Up to 6 Chinese or 12 ASCII characters
+== En fazla 6 Çince veya 12 ASCII karakter
+
 Update
 == Güncelle
 
@@ -11929,6 +12124,9 @@ URL for downloading maps (must start with https://)
 
 URL for downloading skins
 == Skin indirmek için URL
+
+Usage: %s
+== Kullanım: %s
 
 Usage: %s %s
 == Kullanım: %s %s
@@ -11998,6 +12196,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
+
+Use MSDF text rendering for nameplates (requires TexturedMsdf)
+== Ad plakaları için MSDF metin oluşturmayı kullan (TexturedMsdf gerekir)
 
 Use multi-char replacement based on word length
 == Kelime uzunluğuna göre çok karakterli değiştirme kullan
@@ -12881,6 +13082,9 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Zaman aşımı kodunuz ayarlandı. 0.7 istemcileri zaman aşımında teelerini geri alamaz; ancak bir 0.6 istemcisi teenizi alabilir
 
+Your weapon slides and rotates in when you switch, and flips while reloading.
+== Silah değiştirirken kayarak dönerek girer, şarjör doldururken takla atar.
+
 z = Zoom
 == z = Yakınlaştırma
 
@@ -13107,8 +13311,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Verilen grafik arka ucu başlatılamadı, bunun nedeni muhtemelen tümleşik grafik kartının sürücüsünü yüklememiş olmanızdır.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Başlatma sırasında başarısız oldu. Yapılandırma dizinindeki settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== Başlatma sırasında başarısız oldu. Yapılandırma dizinindeki qmclient/settings.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13123,8 +13327,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Render komutlarının gönderilmesi başarısız oldu. GPU sürücülerinizi güncellemeyi deneyin.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Bilinmeyen hata. Yapılandırma dizinindeki settings_ddnet.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== Bilinmeyen hata. Yapılandırma dizinindeki qmclient/settings.cfg dosyasında gfx_backend'i OpenGL veya Vulkan olarak değiştirmeyi ve tekrar denemeyi deneyin.
 
 [Hammer Mode]
 Normal

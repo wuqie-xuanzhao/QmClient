@@ -156,7 +156,7 @@ void CCommandProcessor_SDL_GL::HandleError()
 	switch(m_Error.m_ErrorType)
 	{
 	case GFX_ERROR_TYPE_INIT:
-		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.", "Graphics error")});
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.", "Graphics error")});
 		break;
 	case GFX_ERROR_TYPE_OUT_OF_MEMORY_IMAGE:
 		[[fallthrough]];
@@ -180,7 +180,7 @@ void CCommandProcessor_SDL_GL::HandleError()
 	case GFX_ERROR_TYPE_UNKNOWN:
 		[[fallthrough]];
 	default:
-		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.", "Graphics error")});
+		m_Error.m_vErrors.emplace_back(SGfxErrorContainer::SError{true, Localizable("Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.", "Graphics error")});
 		break;
 	}
 }
@@ -308,6 +308,16 @@ CCommandProcessor_SDL_GL::~CCommandProcessor_SDL_GL()
 const SGfxErrorContainer &CCommandProcessor_SDL_GL::GetError() const
 {
 	return m_Error;
+}
+
+void CCommandProcessor_SDL_GL::ClearFatalError()
+{
+	// 同步约定：m_Error/m_Warning 只由渲染线程在 RunBuffer 内写入，主线程只在
+	// 「提交一次 RunBuffer 之后、下一次提交之前」读取。调用本函数的场景是主循环
+	// 已经消费掉致命错误并准备收尾，此时渲染线程正阻塞等待下一个命令缓冲，
+	// 因此这个写入不会和渲染线程的写入竞争。
+	m_Error = {};
+	m_Warning = {};
 }
 
 void CCommandProcessor_SDL_GL::ErroneousCleanup()

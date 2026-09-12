@@ -147,6 +147,7 @@ namespace
 #include <generated/protocolglue.h>
 
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/sponsor_nudge.h>
 #include <game/client/frame_scheduler.h>
 #include <game/client/projectile_data.h>
 #include <game/localization.h>
@@ -591,6 +592,8 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_SystemMediaControls, "system_media_controls");
 	AddComponent(&m_NeteaseIntegration, "netease_integration");
 	AddComponent(&m_MusicLyricsIntegration, "music_lyrics_integration");
+	AddComponent(&m_SpotifyIntegration, "spotify_integration");
+	AddComponent(&m_MusicAppWatcher, "music_app_watcher");
 	AddComponent(&m_Players, "players");
 	AddComponent(&m_MovingTilesBackground, "moving_tiles_background");
 	AddComponent(&m_MapLayersForeground, "map_layers_foreground");
@@ -618,6 +621,7 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_InfoMessages, "info_messages");
 	AddComponent(&m_Chat, "chat");
 	AddComponent(&m_QmHudNotifications, "hud_notifications");
+	AddComponent(&m_QmBindStatusHud, "qm_bind_status_hud");
 	AddComponent(&m_Broadcast, "broadcast");
 	AddComponent(&m_ImportantAlert, "important_alert");
 	AddComponent(&m_DebugHud, "debug_hud");
@@ -673,6 +677,8 @@ void CGameClient::OnConsoleInit()
 	pConsole->Register("team", "i[team-id]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	pConsole->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself to restart");
 	pConsole->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange7, this, "Change ready state (0.7 only)");
+	// 调试用：不计数、不写盘，直接预览启动赞助提醒浮层。
+	pConsole->Register("qm_sponsor_nudge_preview", "", CFGFLAG_CLIENT, ConQmSponsorNudgePreview, this, "Preview the sponsor reminder without changing the launch count");
 
 	// register game commands to allow the client prediction to load settings from the map
 	pConsole->Register("tune", "s[tuning] ?f[value]", CFGFLAG_GAME, ConTuneParam, this, "Tune variable to value");
@@ -848,6 +854,18 @@ void CGameClient::OnInit()
 	MigrateJumpHintConfig();
 	MigrateTranslateUiColorAlphaConfig(ConfigManager());
 
+	// 启动赞助提醒：跨过阈值才写盘，避免每次启动都重写配置文件。
+	{
+		const int NudgeLaunchCount = qm_sponsor_nudge::OnLaunch(
+			&g_Config.m_QmLaunchCount, &g_Config.m_QmSponsorNudgeAt, qm_sponsor_nudge::RandomFirstExtraOffset());
+		if(NudgeLaunchCount > 0)
+		{
+			m_QmSponsorNudgeLaunchCount = NudgeLaunchCount;
+			m_QmSponsorNudgeVisible = true;
+			ConfigManager()->Save();
+		}
+	}
+
 	// Initialize config tags system
 	InitConfigTags();
 
@@ -878,6 +896,9 @@ void CGameClient::OnInit()
 	});
 
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
+	// 设备重建后引擎会广播「图形资源已重置」，这里负责把游戏侧资源重新建起来。
+	// 注意必须早于任何资源加载：需要在 OnInit 的资产加载之前完成注册。
+	Graphics()->AddGraphicsResourcesResetListener([this]() { OnGraphicsResourcesReset(); });
 
 	// propagate pointers
 	m_UI.Init(Kernel());
@@ -973,30 +994,8 @@ void CGameClient::OnInit()
 
 	// setup load amount, load textures
 	const char *pLoadingMessageAssets = Localize("Initializing assets");
-	for(int i = 0; i < g_pData->m_NumImages; i++)
-	{
-		if(i == IMAGE_GAME)
-			LoadGameSkin(g_Config.m_ClAssetGame);
-		else if(i == IMAGE_CURSOR)
-			LoadNamedSingleFileImage(this, i, "gui_cursor", g_Config.m_ClAssetGuiCursor);
-		else if(i == IMAGE_ARROW)
-			LoadNamedSingleFileImage(this, i, "arrow", g_Config.m_ClAssetArrow);
-		else if(i == IMAGE_EMOTICONS)
-			LoadEmoticonsSkin(g_Config.m_ClAssetEmoticons);
-		else if(i == IMAGE_PARTICLES)
-			LoadParticlesSkin(g_Config.m_ClAssetParticles);
-		else if(i == IMAGE_HUD)
-			LoadHudSkin(g_Config.m_ClAssetHud);
-		else if(i == IMAGE_EXTRAS)
-			LoadExtrasSkin(g_Config.m_ClAssetExtras);
-		else if(i == IMAGE_STRONGWEAK)
-			LoadNamedSingleFileImage(this, i, "strong_weak", g_Config.m_ClAssetStrongWeak);
-		else if(g_pData->m_aImages[i].m_pFilename[0] == '\0') // handle special null image without filename
-			g_pData->m_aImages[i].m_Id = IGraphics::CTextureHandle();
-		else
-			g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL);
-		m_Menus.RenderLoading(pLoadingDDNetCaption, pLoadingMessageAssets, 1);
-	}
+	LoadInitialGraphicsAssets();
+	m_Menus.RenderLoading(pLoadingDDNetCaption, pLoadingMessageAssets, 1);
 
 	m_GameWorld.Init(Collision(), m_aTuningList, &m_MapBugs);
 	if(!m_pJellyTee)
@@ -1030,6 +1029,39 @@ void CGameClient::OnInit()
 
 	m_Menus.FinishLoading();
 	log_trace("gameclient", "initialization finished after %.2fms", (time_get() - OnInitStart) * 1000.0f / (float)time_freq());
+}
+
+void CGameClient::ShowSponsorNudgePreview()
+{
+	// 预览只驱动浮层显示，不动 qm_launch_count / qm_sponsor_nudge_at，
+	// 所以反复预览不会影响真实的提醒节奏。
+	m_QmSponsorNudgeLaunchCount = g_Config.m_QmSponsorNudgeAt;
+	m_QmSponsorNudgeVisible = true;
+}
+
+void CGameClient::ShowSponsorNudgeFarewell()
+{
+	// 只在本会话提示一次；总开关已经落盘，这是「问一句」而不是「拦一次」。
+	m_QmSponsorNudgeFarewell = true;
+}
+
+void CGameClient::DismissSponsorNudge(bool Permanent)
+{
+	m_QmSponsorNudgeVisible = false;
+	m_QmSponsorNudgeLaunchCount = 0;
+	m_QmSponsorNudgeFarewell = false;
+	if(!Permanent)
+		return;
+
+	g_Config.m_QmSponsorNudge = 0;
+	ConfigManager()->Save();
+}
+
+void CGameClient::OpenSponsorPage()
+{
+	g_Config.m_UiSettingsPage = CMenus::SETTINGS_QMCLIENT;
+	m_Menus.m_QmClientSettingsTab = CMenus::QMCLIENT_SETTINGS_TAB_CONTRIBUTORS;
+	m_Menus.SetMenuPage(CMenus::PAGE_SETTINGS);
 }
 
 void CGameClient::PrewarmSettingsRuntimeCachesDuringLoading(const char *pLoadingCaption, const char *pLoadingMessage)
@@ -6461,6 +6493,11 @@ void CGameClient::ConReadyChange7(IConsole::IResult *pResult, void *pUserData)
 		pClient->SendReadyChange7();
 }
 
+void CGameClient::ConQmSponsorNudgePreview(IConsole::IResult *pResult, void *pUserData)
+{
+	static_cast<CGameClient *>(pUserData)->ShowSponsorNudgePreview();
+}
+
 void CGameClient::ConchainLanguageUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	CGameClient *pThis = static_cast<CGameClient *>(pUserData);
@@ -7375,6 +7412,62 @@ void CGameClient::ReloadNamedSingleFileAssetImage(int ImageId, const char *pCate
 	LoadNamedSingleFileImage(this, ImageId, pCategoryId, pActiveName);
 	if(ImageId == IMAGE_ARROW || ImageId == IMAGE_STRONGWEAK)
 		m_NamePlates.ResetNamePlates();
+}
+
+void CGameClient::LoadInitialGraphicsAssets()
+{
+	// 按 g_pData 的图片表加载全部初始资源。启动与「图形资源重置后重建」共用这一条路径，
+	// 保证两条路径不会各自漂移。
+	for(int i = 0; i < g_pData->m_NumImages; i++)
+	{
+		if(i == IMAGE_GAME)
+			LoadGameSkin(g_Config.m_ClAssetGame);
+		else if(i == IMAGE_CURSOR)
+			LoadNamedSingleFileImage(this, i, "gui_cursor", g_Config.m_ClAssetGuiCursor);
+		else if(i == IMAGE_ARROW)
+			LoadNamedSingleFileImage(this, i, "arrow", g_Config.m_ClAssetArrow);
+		else if(i == IMAGE_EMOTICONS)
+			LoadEmoticonsSkin(g_Config.m_ClAssetEmoticons);
+		else if(i == IMAGE_PARTICLES)
+			LoadParticlesSkin(g_Config.m_ClAssetParticles);
+		else if(i == IMAGE_HUD)
+			LoadHudSkin(g_Config.m_ClAssetHud);
+		else if(i == IMAGE_EXTRAS)
+			LoadExtrasSkin(g_Config.m_ClAssetExtras);
+		else if(i == IMAGE_STRONGWEAK)
+			LoadNamedSingleFileImage(this, i, "strong_weak", g_Config.m_ClAssetStrongWeak);
+		else if(g_pData->m_aImages[i].m_pFilename[0] == '\0') // handle special null image without filename
+			g_pData->m_aImages[i].m_Id = IGraphics::CTextureHandle();
+		else
+			g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL);
+	}
+}
+
+void CGameClient::OnGraphicsResourcesReset()
+{
+	// 设备重建后所有 GPU 资源都已随设备消失。引擎侧的句柄已经通过纪元自增全部失效，
+	// 这里负责把游戏侧的资源重新建起来。
+	log_info("gfx", "graphics resources were reset, reloading game assets (generation %u)", Graphics()->GraphicsResourcesResetVersion());
+
+	// 先让所有旧句柄显式作废，避免任何一次误用旧句柄的绘制落到新设备上。
+	for(int i = 0; i < g_pData->m_NumImages; i++)
+		g_pData->m_aImages[i].m_Id.Invalidate();
+
+	// 标记为未加载，让各个 Load*Skin 走完整的加载分支（而不是因为“已加载”直接返回）。
+	m_GameSkinLoaded = false;
+	m_EmoticonsSkinLoaded = false;
+	m_ParticlesSkinLoaded = false;
+	m_HudSkinLoaded = false;
+	m_ExtrasSkinLoaded = false;
+
+	m_QmIconManager.OnGraphicsResourcesReset();
+
+	LoadInitialGraphicsAssets();
+
+	// 文本渲染器缓存了字体纹理，必须同样重建。
+	TextRender()->OnGraphicsResourcesReset();
+
+	log_info("gfx", "game assets reloaded after graphics resources reset");
 }
 
 void CGameClient::LoadGameSkin(const char *pPath, bool AsDir)

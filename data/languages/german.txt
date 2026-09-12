@@ -217,6 +217,9 @@
 1 star
 == 1 Stern
 
+1% low
+== 1%-Niedrigwerte
+
 128 player id <-> 64 player id map update rate
 == Aktualisierungsrate der Karte für 128-<->-64-Spieler-IDs
 
@@ -274,6 +277,9 @@ A vote is currently active.
 
 Abort
 == Abbrechen
+
+Accumulated client launch count (used by the sponsor reminder)
+== Kumulierte Client-Starts (für den Unterstützer-Hinweis)
 
 Activate
 == Aktivieren
@@ -490,6 +496,9 @@ Adds a specific war entry
 
 Adds default chat binds
 == Fügt Standard-Chat-Binds hinzu
+
+Adds dummy key, hammer, control and copy status to the HUD, plus your own bind status list.
+== Zeigt Tasten-, Hammer-, Steuer- und Kopierstatus des Dummys im HUD, plus eine eigene Bind-Status-Liste.
 
 Adjust DDNet gameplay indicators and assists
 == Adjust DDNet gameplay indicators and assists
@@ -2150,9 +2159,6 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Spieleridentität und Land konfigurieren
 
-Configure qm_report_app_id and qm_report_secret first
-== Konfiguriere zuerst qm_report_app_id und qm_report_secret
-
 Configure QmClient gameplay helpers
 == QmClient-Spielhilfen konfigurieren
 
@@ -2209,9 +2215,6 @@ Connect dummy
 
 Connect dummy to enable
 == Dummy verbinden, um zu aktivieren
-
-Connect to a server first
-== Verbinde dich zuerst mit einem Server
 
 Connect to server first to establish voice network link
 == Zuerst mit Server verbinden, um das Sprach-Netzwerk-Link herzustellen
@@ -2272,6 +2275,9 @@ Console command executed after joining server
 
 Console command executed before connecting to server
 == Konsolenbefehl vor dem Verbinden zu einem Server ausgeführt
+
+Contacting title server
+== Verbindung zum Titelserver
 
 Continue anyway?
 == Trotzdem fortfahren?
@@ -2348,9 +2354,6 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Dummy konnte nicht verbunden werden
 
-Could not create report scan request
-== Meldungs-Scan-Anfrage konnte nicht erstellt werden
-
 Could not find a Tutorial server. Check your internet connection.
 == Es konnte kein Tutorial-Server gefunden werden. Überprüfe deine Internetverbindung.
 
@@ -2359,9 +2362,6 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Dein Team wurde nicht gefunden
-
-Could not get current server address
-== Aktuelle Serveradresse konnte nicht gelesen werden
 
 Could not get server list from master server
 == Serverliste konnte nicht vom Master-Server abgerufen werden
@@ -2386,6 +2386,9 @@ Could not resolve connect address '%s'. See local console for details.
 
 Could not save downloaded map. Try manually deleting this file: %s
 == Konnte die heruntergeladene Karte nicht speichern. Versuche, diese Datei manuell zu löschen: %s
+
+Could not save title credential
+== Titel-Zugangsdaten konnten nicht gespeichert werden
 
 Could not save touch controls to file. See local console for details.
 == Touch-Steuerungen konnten nicht in Datei gespeichert werden. Siehe lokale Konsole für Details.
@@ -2480,6 +2483,12 @@ Custom aspect ratio
 Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)
 == Benutzerdefiniertes Seitenverhältnis, gespeichert als x100 (z.B. 178=16:9, 233=21:9)
 
+Custom bind status HUD entries. Empty: built-in 4 entries (key stuck/hammer/dummy control/dummy copy). Format: var|value=text|value=text;var|text (shown when non-zero);var (shown as var name when non-zero). Entries separated by ';', fields by '|'
+== Benutzerdefinierte Bind-Status-HUD-Einträge. Leer: die 4 integrierten Einträge (Tastenfixierung/Hammer/Dummy-Steuerung/Dummy-Synchronisation). Format: Variable|Wert=Text|Wert=Text; Variable|Text (bei ungleich 0 anzeigen); Variable (nur Variablenname: bei ungleich 0 den Namen anzeigen). Einträge durch ';' trennen, Felder durch '|'
+
+Custom bind status list
+== Benutzerdefinierte Bind-Status-Liste
+
 Custom colors
 == Benutzerdefinierte Farben
 
@@ -2503,6 +2512,9 @@ Custom Provider endpoint
 
 Custom Provider model name
 == Benutzerdefinierter Provider Modellname
+
+Custom title
+== Eigener Titel
 
 Custom translation prompt (overrides built-in)
 == Benutzerdefinierter Übersetzungs-Prompt (überschreibt den integrierten Prompt)
@@ -2624,6 +2636,9 @@ DDNet/total CPU
 DDRace HUD
 == DDRace-HUD
 
+DDRace HUD Pro
+== DDRace HUD Pro（Dummy-Status）
+
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 == DDraceNetwork ist ein kooperatives Online-Spiel, bei dem du und deine Gruppe von Tees das Ziel der Karte erreichen müsst. Als Neuling solltest du auf Novice-Servern beginnen, die die einfachsten Karten hosten. Wähle einen Server in deiner Nähe basierend auf dem Ping.
 
@@ -2638,6 +2653,9 @@ Deactivate
 
 Deactivate all
 == Alle deaktivieren
+
+Deactivate ghost
+== Geist deaktivieren
 
 Death opacity
 == Todesdeckkraft
@@ -2662,6 +2680,9 @@ Debug group clipping.
 
 Debug HTTP
 == HTTP-Debugging
+
+Debug mode
+== Debug-Modus
 
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 == Debug-Modus aktiviert. Drücke Strg+Umschalt+D, um den Debug-Modus zu deaktivieren.
@@ -2888,9 +2909,6 @@ Detection distance
 Detection time
 == Erkennungszeit
 
-Developer
-== Entwickler
-
 DF
 == DF
 
@@ -3080,11 +3098,17 @@ Download failed
 Download rank ghost
 == Rang-Geist herunterladen
 
+Download replay
+== Wiederholung herunterladen
+
 Download skins
 == Skins herunterladen
 
 Download skins immediately from cl_skin_download_url
 == Skins sofort von `cl_skin_download_url` herunterladen
+
+Download the rank 1 demo for this map
+== Rank-1-Demo für diese Karte herunterladen
 
 Download this asset?
 == Dieses Asset herunterladen?
@@ -3094,6 +3118,9 @@ Downloaded
 
 Downloading map
 == Lade Karte herunter
+
+Downloading rank 1 demo
+== Rank-1-Demo wird heruntergeladen
 
 Downloading update...
 == Update wird heruntergeladen...
@@ -3226,6 +3253,9 @@ Dummy is currently connected.
 
 Dummy jump
 == Dummy-Sprung
+
+Dummy key/hammer/control/copy status switches and custom bind status list
+== Status-Schalter für Tastenfixierung/Hammer/Dummy-Steuerung/Dummy-Synchronisation und benutzerdefinierte Bind-Status-Liste
 
 Dummy marking color
 == Dummy-Markierungsfarbe
@@ -3412,6 +3442,9 @@ Emoticon shadow
 
 Emoticons
 == Emoticons
+
+Empty: built-in 4 entries. Format: var|0=Off|1=On; var|Text
+== Leer: die 4 integrierten Einträge. Format: var|0=Off|1=On; var|Text
 
 enable
 == aktivieren
@@ -3623,6 +3656,9 @@ Enable new IME candidate bar
 Enable new settings page UI
 == Neue Einstellungsseiten-UI aktivieren
 
+Enable performance debug logging and diagnostics
+== Leistungs-Debug-Logging und Ruckel-Diagnose aktivieren
+
 Enable Pie Menu
 == Pie-Menü aktivieren
 
@@ -3686,6 +3722,9 @@ Enable skin queue rotation
 Enable skin switch animation
 == Skin-Wechselanimation aktivieren
 
+Enable skin transition animation, then choose the type, scope, duration and easing.
+== Aktiviere die Skin-Übergangsanimation und wähle Typ, Reichweite, Dauer und Easing.
+
 Enable smooth cinematic camera while free spectating
 == Sanfte Kinokamera beim freien Zuschauen aktivieren
 
@@ -3706,6 +3745,12 @@ Enable spectator cursor (if available)
 
 Enable speedrun timer
 == Speedrun-Timer aktivieren
+
+Enable Spotify lyric integration
+== Spotify-Songtext-Integration aktivieren
+
+Enable Spotify lyrics
+== Spotify-Songtexte aktivieren
 
 Enable squishy Tee deformation
 == Q-förmige Tee-Verformung aktivieren
@@ -3770,6 +3815,9 @@ Enable voice filtering (highpass/compressor/limiter)
 Enable warlist
 == Kriegsliste aktivieren
 
+Enable weapon switch animation or reload animation, then tune range, duration, rotation and easing.
+== Aktiviere die Waffenwechsel- oder Nachladeanimation und stelle dann Reichweite, Dauer, Drehung und Easing ein.
+
 Enable word filter list
 == Wortfilterliste aktivieren
 
@@ -3815,8 +3863,14 @@ Enter /practice mode or restart to avoid the entire team being killed in 60 seco
 Enter Password
 == Passwort eingeben
 
+Enter the sponsor code, press Redeem, then write the title and press Save. Tick "Only show with this nickname" to bind it to one nickname.
+== Gib den Sponsor-Code ein und drücke „Einlösen“, schreibe dann den Titel und drücke „Speichern“. Aktiviere „Nur mit diesem Nicknamen anzeigen“, um den Titel an einen Nicknamen zu binden.
+
 Enter Username
 == Benutzernamen eingeben
+
+Enter your sponsor code
+== Gib deinen Unterstützercode ein
 
 Entities
 == Entitäten
@@ -3844,6 +3898,9 @@ Entity wall outline opacity
 
 entity_bg (Workshop)
 == entity_bg (Workshop)
+
+Entry: %s
+== Fundort: %s
 
 Erase items on the in game background
 == Elemente auf dem Spielhintergrund löschen
@@ -3889,6 +3946,9 @@ Evaluate an expression
 
 Event
 == Event
+
+Exact bound nickname
+== Exakter gebundener Spielername
 
 Example of usage
 == Anwendungsbeispiel
@@ -3992,6 +4052,9 @@ Failed to copy main asset image.
 Failed to create bgdraw folder
 == Erstellen des bgdraw-Ordners fehlgeschlagen
 
+Failed to download the rank 1 demo
+== Herunterladen der Rank-1-Demo fehlgeschlagen
+
 Failed to export audio pack file.
 == Audio-Paket-Datei konnte nicht exportiert werden.
 
@@ -4000,6 +4063,9 @@ Failed to export demo cut
 
 Failed to export skin files.
 == Skin-Dateien konnten nicht exportiert werden.
+
+Failed to fetch the replay list
+== Abrufen der Wiederholungsliste fehlgeschlagen
 
 Failed to load
 == Laden fehlgeschlagen
@@ -4214,6 +4280,9 @@ Forms
 Found %d global cards
 == %d globale Karten gefunden
 
+Four IP addresses are already online
+== Bereits 4 IP-Adressen online
+
 FPM
 == FPM
 
@@ -4226,9 +4295,6 @@ Fraction of players needed to pass a vote
 Frags
 == Kills
 
-Frame quality
-== Framequalität
-
 Frame rate
 == Bildrate
 
@@ -4237,6 +4303,9 @@ Frame time
 
 Frame time p95
 == Frame-Zeit P95
+
+Frame time p99
+== Framezeit p99
 
 Framebuffer color bits (only fullscreen)
 == Framebuffer-Farbbits (nur Vollbild)
@@ -4457,6 +4526,12 @@ Getting server list from master server
 Ghost
 == Geist
 
+Ghost active
+== Geist aktiv
+
+Ghost ready
+== Geist bereit
+
 Ghost tools
 == Geister-Werkzeuge
 
@@ -4603,9 +4678,6 @@ Graphics card
 
 Graphics display
 == Grafikanzeige
-
-Graphics Error
-== Grafikfehler
 
 Graphics library major version (0 = auto-detect)
 == Hauptversion der Grafikbibliothek (0 = automatisch erkennen)
@@ -4988,6 +5060,9 @@ How often the broadcast time updates
 How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)
 == Wie mit inaktiven Spielern umgegangen wird (0 = zu Zuschauern verschieben, 1 = zu freiem Zuschauerplatz verschieben/kicken, 2 = kicken)
 
+HTTP is not available
+== HTTP ist nicht verfügbar
+
 HTTP map download: connection phase timeout (in ms, 0=disabled)
 == HTTP-Karten-Download: Timeout der Verbindungsphase (in ms, 0=deaktiviert)
 
@@ -5237,6 +5312,9 @@ Insane
 Installing update. Please wait...
 == Update wird installiert. Bitte warten...
 
+Instant zoom reverse
+== Zoomrichtung sofort umkehren
+
 Interface
 == Oberfläche
 
@@ -5279,6 +5357,9 @@ Interval for auto-saving current editor map copy to "auto" folder (0=off)
 Invalid Axiom API response
 == Ungültige Antwort der Axiom-API
 
+Invalid bound name
+== Ungültiger gebundener Name
+
 Invalid client id to kick
 == Ungültige Client-ID zum Kicken
 
@@ -5296,6 +5377,9 @@ Invalid option
 
 Invalid spectator id used
 == Ungültige Zuschauer-ID verwendet
+
+Invalid sponsor code
+== Ungültiger Unterstützercode
 
 Invalid translation backend
 == Ungültiges Übersetzungs-Backend
@@ -5570,6 +5654,9 @@ Latency compensation
 Latency Jitter
 == Latenz-Jitter
 
+Launch count threshold for the next sponsor reminder
+== Startschwelle für den nächsten Unterstützer-Hinweis
+
 Layout
 == Layout
 
@@ -5714,6 +5801,9 @@ LLM translation default concurrency (smart adjustment)
 Load
 == Laden
 
+Load as ghost
+== Als Geist laden
+
 Load drawings from a given csv file (defaults to map name)
 == Zeichnungen aus einer bestimmten CSV-Datei laden (Standard: Kartenname)
 
@@ -5849,11 +5939,17 @@ Logout of econ
 Logout of rcon
 == Von Rcon abmelden
 
+Long frames
+== Lange Frames
+
 Lose weapons when teleporting (useful for race maps)
 == Waffen beim Teleportieren verlieren (nützlich für Rennkarten)
 
 Low to high
 == Niedrig zu hoch
+
+Lyrics
+== Songtext
 
 Main Asset
 == Haupt-Asset
@@ -6187,6 +6283,9 @@ Menu option - selected
 
 Merge consecutive identical player messages within 2 seconds
 == Aufeinanderfolgende identische Spielernachrichten innerhalb von 2 Sekunden zusammenführen
+
+Merges chat messages repeated within a short time into a single line.
+== Fasst innerhalb kurzer Zeit wiederholte Chatnachrichten zu einer Zeile zusammen.
 
 Message color
 == Nachrichtenfarbe
@@ -6635,6 +6734,9 @@ New button
 New category name
 == Neuer Kategoriename
 
+New features
+== Neue Funktionen
+
 New IME
 == Neue IME
 
@@ -6793,6 +6895,9 @@ No presets yet
 
 No preview
 == Keine Vorschau
+
+No rank 1 replay was found for this map
+== Kein Rank-1-Replay für diese Karte gefunden
 
 No results
 == Keine Ergebnisse
@@ -7031,6 +7136,9 @@ Only show skins available in Vanilla Teeworlds
 Only show when the other Tee is not on screen
 == Nur anzeigen, wenn der andere Tee nicht auf dem Bildschirm ist
 
+Only show with this nickname
+== Nur mit diesem Namen anzeigen
+
 Only what you can't imagine, nothing Dream can't do
 == Nur was du dir nicht vorstellen kannst, nichts, was Dream nicht kann
 
@@ -7069,6 +7177,9 @@ Open pie menu
 
 Open rename dialog
 == Umbenennungsdialog öffnen
+
+Open settings
+== Einstellungen öffnen
 
 Open spectator mode selector
 == Zuschauermodus-Auswahl öffnen
@@ -7322,6 +7433,9 @@ Password required to use reserved slots.
 Past year
 == Letztes Jahr
 
+Paste sp_dc from Spotify web cookies
+== sp_dc-Cookie aus dem Browser einfügen
+
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Pfad zum CA-Zertifikat zur Überprüfung des MySQL/MariaDB-Serverzertifikats
 
@@ -7349,9 +7463,6 @@ Pause/unpause game
 Penalty in seconds for saving or swapping positions
 == Strafe in Sekunden für das Speichern oder Tauschen von Positionen
 
-Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-== Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
-
 Per-name volume (name=percent)
 == Individuelle Lautstärke nach Name (name=Prozent)
 
@@ -7360,6 +7471,12 @@ Performance debug log threshold (ms)
 
 Performance points
 == Leistungspunkte
+
+Permanent access; up to 4 online IP addresses
+== Dauerhaft; bis zu 4 IPs gleichzeitig
+
+Permanent sponsor verified
+== Dauerhafter Unterstützerstatus bestätigt
 
 Personal best:
 == Persönliche Bestzeit:
@@ -7390,6 +7507,9 @@ Pet Skin:
 
 Pick result: %s
 == Ziehungsergebnis: %s
+
+Pick the source that matches your music app and keep it playing; the lyrics follow automatically.
+== Wähle die zu deiner Musik-App passende Quelle und lass sie laufen; der Text folgt automatisch.
 
 Pickup range
 == Aufnahmebereich
@@ -7429,6 +7549,9 @@ Play back a demo
 
 Play background music
 == Hintergrundmusik abspielen
+
+Play replay
+== Wiederholung abspielen
 
 Play slide-in rotation animation when switching weapon
 == Einschwenk-Rotationsanimation beim Waffenwechsel abspielen
@@ -7592,6 +7715,9 @@ Players can't hook each other on this server
 Playing effects
 == Spieleffekte
 
+Plays an animation whenever your skin changes, including skins stolen with the hammer.
+== Spielt eine Animation ab, wenn sich dein Skin ändert, auch bei mit dem Hammer gestohlenen Skins.
+
 Please add a valid cut first
 == Bitte fügen Sie zuerst einen gültigen Schnitt hinzu
 
@@ -7687,6 +7813,9 @@ Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when fr
 
 Predict grenade trajectory (only with cl_antiping 1)
 == Granatenflugbahn vorhersagen (nur mit cl_antiping 1)
+
+Predict ninja path
+== Ninja-Pfad vorhersagen
 
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 == Bewegung anderer Spieler vorhersagen (nur aktiv, wenn cl_antiping auf 1 steht) (1 = immer, 2 = nur bei Interaktion, 3 = 2 und eingefrorene Tees immer)
@@ -7801,6 +7930,9 @@ Preview the composed status bar output
 
 Preview the current chat appearance
 == Preview the current chat appearance
+
+Preview the sponsor reminder without changing the launch count
+== Unterstützer-Hinweis ohne Änderung der Startzahl ansehen
 
 Preview visibilities
 == Vorschau-Sichtbarkeiten
@@ -8072,6 +8204,18 @@ Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
 == Spielerfarbe randomisieren (0 = alle, 1 = Körper, 2 = Füße, 3 = Skin, 4 = Flagge) Beispiel: 0011 = randomisiert Skin und Flagge [Zahl ist Position]
 
+Rank 1
+== Rang 1
+
+Rank 1 demo
+== Rank-1-Demo
+
+Rank 1 demo downloaded to '%s'
+== Rank-1-Demo heruntergeladen nach '%s'
+
+Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser.
+== Rank-Demo heruntergeladen: %s. Über die Rank-1-Liste oder den Demo-Browser abspielbar.
+
 Rank ghost loaded: %s, %s s. It follows your current run.
 == Rang-Geist geladen: %s, %s s. Folgt deinem aktuellen Lauf.
 
@@ -8117,6 +8261,9 @@ Rank ghost: HTTP is not available
 Rank ghost: no official replay for '%s' rank %d
 == Rang-Geist: Keine offizielle Wiederholung für '%s', Rang %d
 
+Rank ghost: no official replay found for '%s'
+== Rang-Geist: keine offizielle Wiederholung für '%s' gefunden
+
 Rank ghost: replay converted, waiting for the map to load ...
 == Rang-Geist: Wiederholung umgewandelt, warte auf das Laden der Karte…
 
@@ -8144,11 +8291,11 @@ Ratio
 Ratio threshold for local target language detection
 == Schwellwert für lokale Zielsprachenerkennung in Prozent
 
-Read new feature indicators
-== Neue-Feature-Marker gelesen
-
 Ready
 == Bereit
+
+Really? Not even a little?
+== Wirklich? Nicht mal ein bisschen?
 
 Reason
 == Grund
@@ -8194,6 +8341,15 @@ Red team
 
 Red team wins!
 == Rotes Team gewinnt!
+
+Redeem
+== Einlösen
+
+Redeem your code and customize your title
+== Code einlösen und Titel anpassen
+
+Redeem your sponsor code to unlock a custom title, shown in chat and on your nameplate.
+== Löse deinen Sponsor-Code ein, um einen eigenen Titel freizuschalten. Der Titel erscheint im Chat und am Namensschild.
 
 Reduce antiping and player prediction when frozen
 == Antiping und Spielervorhersage bei eingefrorenem Zustand reduzieren
@@ -8534,8 +8690,26 @@ Replacement chars
 Replay
 == Wiederholung
 
+Replay downloaded
+== Wiederholung heruntergeladen
+
 Replay feature is disabled!
 == Wiederholungsfunktion ist deaktiviert!
+
+Replay list: failed to load, press Refresh to retry
+== Wiederholungsliste: Laden fehlgeschlagen, zum Wiederholen aktualisieren
+
+Replay list: loading ...
+== Wiederholungsliste: wird geladen …
+
+Replay list: not loaded yet
+== Wiederholungsliste: noch nicht geladen
+
+Replay list: up to date
+== Wiederholungsliste: aktuell
+
+Replays directory
+== Wiederholungsordner
 
 Reply
 == Antworten
@@ -8546,35 +8720,8 @@ Reply to messages from muted players
 Reply with dummy
 == Mit Dummy antworten
 
-Report
-== Melden
-
-Report request canceled
-== Meldungsanfrage abgebrochen
-
-Report request failed due to network error
-== Meldungsanfrage wegen Netzwerkfehler fehlgeschlagen
-
-Report request failed with HTTP status: %d
-== Meldungsanfrage fehlgeschlagen, HTTP-Status: %d
-
-Report request is already in progress
-== Meldungsanfrage läuft bereits
-
-Report scan request submitted
-== Meldungs-Scan-Anfrage gesendet
-
-Report service App ID
-== Meldedienst-App-ID
-
-Report service signing key
-== Meldedienst-Signaturschlüssel
-
-Report service URL
-== Meldedienst-Adresse
-
 Reports are not available on Axiom servers
-== Meldungen sind auf Axiom-Servern nicht verfügbar
+== Auf Axiom-Servern sind Meldungen nicht verfügbar
 
 Request to swap your tee with another team member
 == Fordere an, deinen Tee mit einem anderen Teammitglied zu tauschen
@@ -8642,6 +8789,9 @@ Reset mouse position when opening bind wheel
 Reset position of mouse when opening bindwheel
 == Mausposition beim Öffnen des Bindwheels zurücksetzen
 
+Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)
+== qm_bind_status_items auf die 4 integrierten Einträge zurücksetzen (Tastenfixierung/Hammer/Dummy-Steuerung/Dummy-Synchronisation)
+
 Reset stats on server join (0=persistent, 1=reset on join)
 == Statistiken beim Betreten des Servers zurücksetzen (0 = kumulierte Statistiken, 1 = Zurücksetzen bei jedem Serverbeitritt)
 
@@ -8689,6 +8839,9 @@ Retry remote stats
 
 Retrying…
 == Erneuter Versuch…
+
+Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)
+== Zoomrichtung beim Drücken der Gegentaste sofort umkehren (0=ursprüngliches weiches Zoomen beibehalten)
 
 Review and edit custom key bindings
 == Review and edit custom key bindings
@@ -8947,9 +9100,6 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Aktueller Server wird gescannt
-
-Scanning current server...
-== Aktueller Server wird gescannt...
 
 Score
 == Punktzahl
@@ -10097,6 +10247,9 @@ Show the number of frozen tees
 Show the number of tees still alive
 == Anzahl noch lebender Tees anzeigen
 
+Show the occasional sponsor reminder in the main menu
+== Gelegentlichen Unterstützer-Hinweis im Hauptmenü zeigen
+
 Show the pet
 == Das Haustier anzeigen
 
@@ -10204,6 +10357,9 @@ Shows gameplay information for this server
 
 Shows help to command r, general help if left blank
 == Zeigt Hilfe zu Befehl r, allgemeine Hilfe, wenn leer gelassen
+
+Shows lyrics from NetEase Cloud Music, Soda Music, Kugou and QQ Music on the dynamic island.
+== Holt Songtexte aus NetEase Cloud Music, Soda Music, Kugou und QQ Music und zeigt sie auf der Dynamic Island.
 
 Shows the credits of the DDNet mod
 == Zeigt die Credits des DDNet-Mods an
@@ -10418,9 +10574,6 @@ Snapshot payload
 Snapshot rate
 == Snapshot-Rate
 
-Snapshot rate / parts
-== Snapshot-Rate / Teile
-
 Snapshot tick gap
 == Snapshot-Tick-Abstand
 
@@ -10592,11 +10745,26 @@ Sphere
 Spin pop
 == Dreh-Popup
 
+Sponsor code
+== Unterstützercode
+
+Sponsor code already claimed
+== Code bereits eingelöst
+
+Sponsor reminder
+== Unterstützer-Hinweis
+
 Sponsor support
 == Sponsoring-Unterstützung
 
+Sponsor title
+== Unterstützertitel
+
 Sponsors:
 == Sponsoren:
+
+Spotify sp_dc cookie (from browser DevTools, long-lived)
+== Spotify-sp_dc-Cookie (aus den Browser-DevTools, langlebig)
 
 Spree
 == Serie
@@ -10684,6 +10852,9 @@ Status Scheme:
 
 Steam profile name
 == Steam-Profilname
+
+Still free after %d sponsors. Take a look?
+== Getragen von %d Unterstützern. Mal ansehen?
 
 Stop key input on switch (0=off, 1=dummy, 2=player)
 == Tasteneingabe beim Wechsel stoppen (0=aus, 1=Dummy, 2=Spieler)
@@ -10802,6 +10973,9 @@ Switch failed
 Switch interval
 == Wechselintervall
 
+Switch on the status rows you need, then list the binds you want to watch.
+== Schalte die benötigten Status-Schalter ein und trage die zu überwachenden Binds in die eigene Liste ein.
+
 Switch opacity
 == Deckkraft des Schalters
 
@@ -10912,6 +11086,9 @@ Target language code (e.g. zh, en, ja, zh-TW)
 
 Target language ratio
 == Verhältnis der Zielsprache
+
+Task running ...
+== Aufgabe läuft …
 
 TClient
 == TClient
@@ -11183,6 +11360,9 @@ The audio device couldn't be initialised.
 The auth level you need to tele others
 == Die benötigte Berechtigungsstufe zum Teleportieren anderer Spieler
 
+The downloaded file is not a valid demo
+== Die heruntergeladene Datei ist keine gültige Demo
+
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 == Der Extra-Menü-Button, der die Sichtbarkeit von Buttons mit „Extra-Menü“-Sichtbarkeiten umschaltet. Öffnet auch das Ingame-Menü bei langem Drücken.
 
@@ -11198,11 +11378,14 @@ The format of texture %s is not RGBA which will cause visual bugs.
 The FPS at which the recorder should record replay.
 == Die FPS, mit der der Rekorder das Replay aufzeichnen soll.
 
-The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
-== Das Grafik-Backend wurde unerwartet beendet, daher konnten sichere Grafikeinstellungen nicht gespeichert werden.
-
 The name "default" is reserved.
 == Der Name "default" ist reserviert.
+
+The rank 1 demo is already downloaded
+== Die Rank-1-Demo ist bereits heruntergeladen
+
+The replay list is empty or malformed
+== Die Wiederholungsliste ist leer oder fehlerhaft
 
 The selected button is not visible. Do you want to deselect it or edit its visibility?
 == Der ausgewählte Button ist nicht sichtbar. Möchtest du ihn abwählen oder seine Sichtbarkeit bearbeiten?
@@ -11401,6 +11584,12 @@ Timer isn't displayed.
 
 Tiny Tee Size
 == Winzige Tee-Größe
+
+Title server unavailable; retry
+== Titelserver nicht verfügbar; erneut versuchen
+
+Title too long or contains unsupported characters
+== Titel zu lang oder mit ungültigen Zeichen
 
 To save all players in your team have to be alive and not in '/spec'
 == Um zu speichern, müssen alle Spieler in deinem Team am Leben sein und nicht in '/spec'
@@ -11678,6 +11867,9 @@ Tune variable to value
 Tune variable to value or show current value
 == Variable auf Wert tunen oder aktuellen Wert anzeigen
 
+Turn on "Message merging" in Dream Features.
+== Aktiviere „Message merging“ in den „Dream Features“.
+
 Tutorial
 == Tutorial
 
@@ -11900,6 +12092,9 @@ Unregister protocol and file extensions
 Unsaved changes
 == Ungespeicherte Änderungen
 
+Up to 6 Chinese or 12 ASCII characters
+== Bis zu 6 chinesische oder 12 ASCII-Zeichen
+
 Update
 == Aktualisieren
 
@@ -11929,6 +12124,9 @@ URL for downloading maps (must start with https://)
 
 URL for downloading skins
 == URL zum Herunterladen von Skins
+
+Usage: %s
+== Verwendung: %s
 
 Usage: %s %s
 == Verwendung: %s %s
@@ -11998,6 +12196,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 
 Use mouse sensitivity when dynamic camera is on
 == Mausempfindlichkeit bei aktivierter dynamischer Kamera verwenden
+
+Use MSDF text rendering for nameplates (requires TexturedMsdf)
+== MSDF-Textrendering für Namensschilder verwenden (benötigt TexturedMsdf)
 
 Use multi-char replacement based on word length
 == Mehrzeichenersatz basierend auf Wortlänge verwenden
@@ -12881,6 +13082,9 @@ Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
 == Dein Timeout-Code wurde gesetzt. 0.7-Clients können ihre Tees bei Timeout nicht zurückfordern; ein 0.6-Client kann jedoch deinen Tee übernehmen
 
+Your weapon slides and rotates in when you switch, and flips while reloading.
+== Beim Waffenwechsel fährt die Waffe mit Drehung ein, beim Nachladen dreht sie sich um.
+
 z = Zoom
 == z = Zoom
 
@@ -13107,8 +13311,8 @@ Could not initialize the given graphics backend, this is probably because you di
 == Konnte das angegebene Grafik-Backend nicht initialisieren. Dies liegt wahrscheinlich daran, dass der Treiber der integrierten Grafikkarte nicht installiert ist.
 
 [Graphics error]
-Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Fehler bei der Initialisierung. Versuche, gfx_backend in settings_ddnet.cfg im Konfigurationsverzeichnis auf OpenGL oder Vulkan zu ändern und versuche es erneut.
+Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== Fehler bei der Initialisierung. Versuche, gfx_backend in qmclient/settings.cfg im Konfigurationsverzeichnis auf OpenGL oder Vulkan zu ändern und versuche es erneut.
 
 [Graphics error]
 Failed to swap framebuffers. Try to update your GPU drivers.
@@ -13123,8 +13327,8 @@ Submitting the render commands failed. Try to update your GPU drivers.
 == Das Senden der Renderbefehle ist fehlgeschlagen. Versuche, deine GPU-Treiber zu aktualisieren.
 
 [Graphics error]
-Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
-== Unbekannter Fehler. Versuche, gfx_backend in settings_ddnet.cfg im Konfigurationsverzeichnis auf OpenGL oder Vulkan zu ändern und versuche es erneut.
+Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
+== Unbekannter Fehler. Versuche, gfx_backend in qmclient/settings.cfg im Konfigurationsverzeichnis auf OpenGL oder Vulkan zu ändern und versuche es erneut.
 
 [Hammer Mode]
 Normal

@@ -10,6 +10,7 @@
 #include <base/crashdump.h>
 #include <base/hash.h>
 #include <base/hash_ctxt.h>
+#include <base/lock.h>
 #include <base/log.h>
 #include <base/logger.h>
 #include <base/math.h>
@@ -76,6 +77,44 @@
 #endif
 
 #include "SDL.h"
+
+// 性能日志文件的运行时开关包装：CFutureLogger 只能 Set 一次，游戏内
+// 开/关文件通过替换内部 logger（文件 logger ↔ noop）实现。旧 logger 在
+// 锁内被析构（CLoggerAsync 析构时关闭文件并等待排空）。
+class CQmPerfFileSwitchLogger : public ILogger
+{
+public:
+	void Set(std::shared_ptr<ILogger> pLogger)
+	{
+		const CLockScope LockScope(m_SwitchLock);
+		m_pLogger = std::move(pLogger);
+	}
+
+	void Log(const CLogMessage *pMessage) override
+	{
+		const CLockScope LockScope(m_SwitchLock);
+		if(m_pLogger)
+			m_pLogger->Log(pMessage);
+	}
+
+	void GlobalFinish() override
+	{
+		const CLockScope LockScope(m_SwitchLock);
+		if(m_pLogger)
+			m_pLogger->GlobalFinish();
+	}
+
+	void OnFilterChange() override
+	{
+		const CLockScope LockScope(m_SwitchLock);
+		if(m_pLogger)
+			m_pLogger->SetFilter(m_Filter);
+	}
+
+private:
+	CLock m_SwitchLock;
+	std::shared_ptr<ILogger> m_pLogger;
+};
 
 namespace
 {
@@ -449,11 +488,24 @@ static bool QmCrashTextHasGraphicsDriverFault(const char *pText)
 	return false;
 }
 
-static bool ApplyQmSafeGraphicsRecovery()
+static bool ApplyQmSafeGraphicsRecovery(bool GraphicsDriverFault)
 {
 	const auto SafeConfig = graphics_backend::SafeBackendConfig();
 	const int RecoveryFullscreen = graphics_backend::RecoveryFullscreenMode(g_Config.m_GfxFullscreen);
 	bool Changed = false;
+	// 崩溃报告指向图形驱动时，继续留在 Vulkan/GLES 上只会重复故障：
+	// 显式切到 OpenGL 并让版本回到自动探测。
+	if(GraphicsDriverFault)
+	{
+#if !defined(CONF_PLATFORM_ANDROID) && !defined(CONF_PLATFORM_EMSCRIPTEN) && (defined(CONF_BACKEND_OPENGL) || defined(CONF_BACKEND_OPENGL_ES) || defined(CONF_BACKEND_OPENGL_ES3))
+		if(str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") != 0 && str_comp_nocase(g_Config.m_GfxBackend, "GLES") != 0)
+		{
+			log_warn("client", "previous graphics driver fault, switching gfx_backend from '%s' to OpenGL", g_Config.m_GfxBackend);
+			str_copy(g_Config.m_GfxBackend, "OpenGL");
+			Changed = true;
+		}
+#endif
+	}
 	// 图形设备已丢失后，下一次启动必须真正绕开触发故障的后端。
 	// 仅重置 OpenGL 版本是不够的：性能模式会在 InitWindow 中再次把
 	// gfx_backend 改回 Vulkan，导致每次启动都在首帧重复 device lost。
@@ -528,7 +580,7 @@ static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 	if(!HasGraphicsDriverFault)
 		return;
 
-	const bool Changed = ApplyQmSafeGraphicsRecovery();
+	const bool Changed = ApplyQmSafeGraphicsRecovery(HasGraphicsDriverFault);
 	if(Changed)
 	{
 		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting safe graphics settings without FSAA while preserving a desktop-sized display mode", Latest.m_aPath);
@@ -3903,6 +3955,12 @@ void CClient::Update()
 		else
 			GameClient()->OnUpdate();
 	}
+	// 上游快照/预测子阶段计时：声明位置保持在上游流程中的同一语义点，
+	// 共享上下文尾部的 update_snapshot_predict 记录会消费它。
+	const bool PerfEnabled = PerfRuntime;
+	std::optional<CPerfTimer> SnapshotPredictTimer;
+	if(PerfEnabled)
+		SnapshotPredictTimer.emplace();
 
 	if(State() == IClient::STATE_ONLINE)
 	{
@@ -4105,6 +4163,9 @@ void CClient::Update()
 
 		m_LastDummy = (bool)g_Config.m_ClDummy;
 	}
+
+	if(PerfEnabled)
+		QmPerfLogStage("perf/main_thread", "update_snapshot_predict", SnapshotPredictTimer->ElapsedMs(), false, this);
 
 	// STRESS TEST: join the server again
 	if(g_Config.m_DbgStress)
@@ -4466,6 +4527,7 @@ void CClient::Run()
 	while(true)
 	{
 		const bool PerfEnabled = QmPerfEnabled();
+		UpdateQmPerfFileLogger(); // 游戏内开关立即开/关性能日志文件（状态无变化时仅几次内存读）
 		std::optional<CPerfTimer> LoopTimer;
 		if(PerfEnabled)
 			LoopTimer.emplace();
@@ -4485,21 +4547,14 @@ void CClient::Run()
 #endif
 		}
 
-		if(m_pGraphics->HasFatalError())
+		// 图形后端已经记录致命错误时，立刻在提交（会断言退出）之前收口。
+		// 这样设备丢失等故障走的是「写诊断 + 干净重启」，而不是弹模态框把
+		// 主线程和心跳一起卡住（那会写出误导性的 hang 报告）。
+		// TakeFatalError 会同时清掉标记，让随后的收尾流程不再重复触发断言。
+		if(Graphics()->TakeFatalError())
 		{
-			const char *pGraphicsError = m_pGraphics->GetFatalError();
-			const bool Changed = ApplyQmSafeGraphicsRecovery();
-			if(!m_pConfigManager->Save(true))
-			{
-				m_vQuittingWarnings.emplace_back(Localize("Graphics Error"), Localize("The graphics backend stopped unexpectedly, and safe graphics settings could not be saved."));
-			}
-			else if(Changed)
-			{
-				log_warn("client", "graphics runtime fatal: persisted safe graphics settings for the next launch");
-			}
-			m_vQuittingWarnings.emplace_back(Localize("Graphics Error"), pGraphicsError);
-			SetState(IClient::STATE_QUITTING);
-			break;
+			if(HandleQmGraphicsFatalError())
+				break;
 		}
 
 		// handle pending connects
@@ -4855,12 +4910,12 @@ void CClient::FinishQmConfigMigration()
 	if(!QmConfigMigrationPending(m_pStorage))
 		return;
 
-	if(!m_pConfigManager->Save(true) || !QmFinalizeConfigMigration(m_pStorage, gs_aLoadedPreviousConfigPath))
+	if(!m_pConfigManager->Save(true) || !QmFinalizeConfigMigration(m_pStorage))
 	{
 		AddWarning(SWarning(Localize("Error saving settings")));
 		return;
 	}
-	log_info("config", "Migrated managed client configs to the qmclient folder");
+	log_info("config", "Merged managed client configs into qmclient/settings.cfg");
 }
 
 bool CClient::InitNetworkClient(char *pError, size_t ErrorSize)
@@ -5855,6 +5910,78 @@ void CClient::WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat)
 		log_warn("hang", "failed to launch crash reporter for '%s'; it will be offered on the next start", aReportPath);
 }
 
+bool CClient::HandleQmGraphicsFatalError()
+{
+	// 图形后端已经记录了致命错误（例如 Vulkan VK_ERROR_DEVICE_LOST）。
+	// 一旦这个错误被提交（CGraphicsBackend_Threaded::ProcessError）就会断言退出，
+	// 而断言弹窗会阻塞主线程、停掉心跳，看门狗随后写出误导性的 hang 报告。
+	// 这里在提交之前主动收口：写诊断报告 -> 干净重启走安全图形设置。
+	if(m_QmGraphicsRecoveryAttempted)
+		return false;
+	m_QmGraphicsRecoveryAttempted = true;
+
+	const char *pFatalError = Graphics()->GetFatalError();
+	char aGpuInfo[512];
+	GetGpuInfoString(aGpuInfo);
+	char aDate[64];
+	str_timestamp(aDate, sizeof(aDate));
+	char aBackend[64];
+	str_copy(aBackend, g_Config.m_GfxBackend);
+	char aServerAddr[NETADDR_MAXSTRSIZE];
+	const NETADDR *pAddr = ServerAddress();
+	if(!pAddr || pAddr->type == NETTYPE_INVALID)
+		str_copy(aServerAddr, "unknown");
+	else
+		net_addr_str(pAddr, aServerAddr, sizeof(aServerAddr), true);
+	char aFilename[IO_MAX_PATH_LENGTH];
+	// 文件名必须与 echndl 的崩溃报告一致，才能在下次启动时被
+	// RecoverQmGraphicsSettingsAfterDriverCrash 识别并做安全图形恢复。
+	str_format(aFilename, sizeof(aFilename), "%s/" GAME_NAME "_%s_crash_log_%s_%d_%s_fatal_report.txt",
+		gs_pQmCrashDumpDir, CONF_PLATFORM_STRING, aDate, pid(), GIT_SHORTREV_HASH != nullptr ? GIT_SHORTREV_HASH : "");
+
+	char aPath[IO_MAX_PATH_LENGTH];
+	Storage()->GetCompletePath(IStorage::TYPE_SAVE, aFilename, aPath, sizeof(aPath));
+	fs_makedir_rec_for(aPath);
+
+	IOHANDLE File = io_open(aPath, IOFLAG_WRITE);
+	if(File)
+	{
+		char aBuf[2048];
+		str_format(aBuf, sizeof(aBuf),
+			"QmClient runtime graphics fault report\n"
+			"Report type: graphics_fatal_error\n"
+			"Timestamp: %s\n"
+			"Process ID: %d\n"
+			"Configured graphics backend: %s\n"
+			"Client state: %s (%d)\n"
+			"Current map: %s\n"
+			"Server address: %s\n"
+			"Game version: %s %s %s\n"
+			"\n"
+			"Graphics error:\n%s\n"
+			"\n"
+			"%s\n",
+			aDate, pid(), aBackend, ClientStateToString(m_State), m_State,
+			m_aCurrentMap[0] != '\0' ? m_aCurrentMap : "(none)",
+			aServerAddr,
+			GAME_NAME, GAME_RELEASE_VERSION, GIT_SHORTREV_HASH != nullptr ? GIT_SHORTREV_HASH : "",
+			pFatalError[0] != '\0' ? pFatalError : "(not reported by the backend)",
+			aGpuInfo);
+		io_write(File, aBuf, str_length(aBuf));
+		io_sync(File);
+		io_close(File);
+	}
+	else
+	{
+		log_error("gfx", "could not write runtime graphics fault report to '%s'", aPath);
+	}
+
+	log_error("gfx", "graphics backend reported a fatal error, restarting the client with safe graphics settings: %s",
+		pFatalError[0] != '\0' ? pFatalError : "(no details)");
+	Restart();
+	return true;
+}
+
 void CClient::UpdateAndSwap()
 {
 	Input()->Update();
@@ -6819,28 +6946,36 @@ int main(int argc, const char **argv)
 	bool LoadedClientConfig = false;
 	for(ConfigDomain ConfigDomain = ConfigDomain::START; ConfigDomain < ConfigDomain::NUM; ++ConfigDomain)
 	{
-		const char *pConfigPath = GetConfigLoadPath(pStorage, s_aConfigDomains[ConfigDomain]);
-		if(pConfigPath == nullptr)
+		std::vector<const char *> vConfigPaths;
+		if(ConfigDomain == ConfigDomain::QMCLIENT)
 		{
-			continue;
+			// 变量域（v3 合并）：优先 qmclient/settings.cfg，否则按 v2 → v1 → v0 回退读取旧文件
+			QmGetVariableConfigLoadPaths(pStorage, vConfigPaths);
 		}
-		LoadedClientConfig = true;
-		if(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath != nullptr && str_comp(pConfigPath, s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath) == 0)
-			gs_aLoadedPreviousConfigPath[ConfigDomain] = true;
+		else if(const char *pConfigPath = GetConfigLoadPath(pStorage, s_aConfigDomains[ConfigDomain]); pConfigPath != nullptr)
+		{
+			vConfigPaths.push_back(pConfigPath);
+		}
+		for(const char *pConfigPath : vConfigPaths)
+		{
+			LoadedClientConfig = true;
+			if(s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath != nullptr && str_comp(pConfigPath, s_aConfigDomains[ConfigDomain].m_aPreviousConfigPath) == 0)
+				gs_aLoadedPreviousConfigPath[ConfigDomain] = true;
 
-		SSaveUnknownCommandContext UnknownCommandContext{pClient, ConfigDomain};
-		pConsole->SetUnknownCommandCallback(SaveUnknownDomainCommandCallback, &UnknownCommandContext);
-		if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))
-		{
+			SSaveUnknownCommandContext UnknownCommandContext{pClient, ConfigDomain};
+			pConsole->SetUnknownCommandCallback(SaveUnknownDomainCommandCallback, &UnknownCommandContext);
+			if(!pConsole->ExecuteFile(pConfigPath, IConsole::CLIENT_ID_UNSPECIFIED))
+			{
+				pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
+				char aError[2048];
+				str_format(aError, sizeof(aError), "Failed to load config from '%s'.", pConfigPath);
+				log_error("client", "%s", aError);
+				pClient->ShowMessageBox({.m_pTitle = "Config File Error", .m_pMessage = aError});
+				PerformAllCleanup();
+				return -1;
+			}
 			pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
-			char aError[2048];
-			str_format(aError, sizeof(aError), "Failed to load config from '%s'.", pConfigPath);
-			log_error("client", "%s", aError);
-			pClient->ShowMessageBox({.m_pTitle = "Config File Error", .m_pMessage = aError});
-			PerformAllCleanup();
-			return -1;
 		}
-		pConsole->SetUnknownCommandCallback(IConsole::EmptyUnknownCommandCallback, nullptr);
 	}
 
 	if(pStorage->FileExists(AUTOEXEC_CLIENT_FILE, IStorage::TYPE_ALL))
@@ -6943,50 +7078,19 @@ int main(int argc, const char **argv)
 		pFutureFileLogger->Set(log_logger_noop());
 	}
 
-	const bool MacosGraphicsDiagnostics = g_Config.m_QmMacosGraphicsDiagnostics != 0 || g_Config.m_QmGraphicsTrace != 0;
-	const bool PerfLoggingConfigured = g_Config.m_QmPerfLogfile || g_Config.m_QmPerfDebug || g_Config.m_QmPerfStutterDiagnostics || g_Config.m_QmGraphicsTrace != 0;
-	if(PerfLoggingConfigured || MacosGraphicsDiagnostics)
+	// 性能日志文件：CFutureLogger 只能 Set 一次，启动时固定到可切换包装；
+	// 游戏内 qm_perf_debug / qm_perf_logfile / qm_perf_stutter_diagnostics 任一
+	// 变化由 CClient::UpdateQmPerfFileLogger 按帧检测，立即打开/关闭文件。
+	std::shared_ptr<CQmPerfFileSwitchLogger> pQmPerfFileSwitchLogger = std::make_shared<CQmPerfFileSwitchLogger>();
+	pFuturePerfFileLogger->Set(pQmPerfFileSwitchLogger);
+	pClient->SetQmPerfFileSwitch(std::move(pQmPerfFileSwitchLogger));
+	pClient->UpdateQmPerfFileLogger();
+	// QmClient: 仅开启 macOS 自动诊断（未配置性能日志）时预创建诊断目录，
+	// 目录按需写入方依赖启动期存在。
+	if(g_Config.m_QmMacosGraphicsDiagnostics != 0 && !g_Config.m_QmPerfLogfile && !g_Config.m_QmPerfDebug && !g_Config.m_QmPerfStutterDiagnostics && g_Config.m_QmGraphicsTrace == 0)
 	{
 		pStorage->CreateFolder("dumps", IStorage::TYPE_SAVE);
-		const char *pDiagnosticsDirectory = MacosGraphicsDiagnostics && !PerfLoggingConfigured ? "dumps/QmClient_AutoDiagnostics" : "dumps/QmClient_Perf";
-		const char *pDiagnosticsPrefix = MacosGraphicsDiagnostics && !PerfLoggingConfigured ? "qm_auto_diag" : "qm_perf";
-		pStorage->CreateFolder(pDiagnosticsDirectory, IStorage::TYPE_SAVE);
-		char aDate[64];
-		str_timestamp(aDate, sizeof(aDate));
-		char aPerfLogPath[128];
-		str_format(aPerfLogPath, sizeof(aPerfLogPath), "%s/%s_%s.log", pDiagnosticsDirectory, pDiagnosticsPrefix, aDate);
-		char aPerfLogCompletePath[IO_MAX_PATH_LENGTH];
-		pStorage->GetCompletePath(IStorage::TYPE_SAVE, aPerfLogPath, aPerfLogCompletePath, sizeof(aPerfLogCompletePath));
-		IOHANDLE PerfLogfile = pStorage->OpenFile(aPerfLogPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-		if(!PerfLogfile)
-		{
-			fs_makedir_rec_for(aPerfLogCompletePath);
-			PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);
-		}
-		if(!PerfLogfile)
-		{
-			char aWorkingDir[IO_MAX_PATH_LENGTH];
-			if(fs_getcwd(aWorkingDir, sizeof(aWorkingDir)))
-			{
-				str_format(aPerfLogCompletePath, sizeof(aPerfLogCompletePath), "%s/%s", aWorkingDir, aPerfLogPath);
-				fs_makedir_rec_for(aPerfLogCompletePath);
-				PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);
-			}
-		}
-		if(PerfLogfile)
-		{
-			pFuturePerfFileLogger->Set(log_logger_prefix_file(PerfLogfile, "perf/"));
-			log_info("client", "writing performance log to '%s'", aPerfLogCompletePath);
-		}
-		else
-		{
-			log_error("client", "failed to open '%s' for performance logging", aPerfLogCompletePath);
-			pFuturePerfFileLogger->Set(log_logger_noop());
-		}
-	}
-	else
-	{
-		pFuturePerfFileLogger->Set(log_logger_noop());
+		pStorage->CreateFolder("dumps/QmClient_AutoDiagnostics", IStorage::TYPE_SAVE);
 	}
 
 	// Register protocol and file extensions
@@ -7547,4 +7651,70 @@ void CClient::SetLoggers(std::shared_ptr<ILogger> &&pFileLogger, std::shared_ptr
 	m_pFileLogger = pFileLogger;
 	m_pStdoutLogger = pStdoutLogger;
 	m_pPerfFileLogger = pPerfFileLogger;
+}
+
+void CClient::SetQmPerfFileSwitch(std::shared_ptr<CQmPerfFileSwitchLogger> pSwitch)
+{
+	m_pQmPerfFileSwitchLogger = std::move(pSwitch);
+	m_pQmPerfFileSwitch = static_cast<CQmPerfFileSwitchLogger *>(m_pQmPerfFileSwitchLogger.get());
+}
+
+// 按配置开/关性能日志文件：任一性能开关开启即打开专用文件并立即落盘，
+// 全部关闭则关闭文件。启动时调用一次建立初始状态，主循环按帧调用处理游戏内切换。
+void CClient::UpdateQmPerfFileLogger()
+{
+	const bool Wanted = g_Config.m_QmPerfLogfile != 0 || g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfStutterDiagnostics != 0;
+	if(Wanted == m_QmPerfFileLoggerActive || m_pQmPerfFileSwitch == nullptr)
+		return;
+	m_QmPerfFileLoggerActive = Wanted;
+
+	if(Wanted)
+	{
+		m_pStorage->CreateFolder("dumps", IStorage::TYPE_SAVE);
+		m_pStorage->CreateFolder("dumps/QmClient_Perf", IStorage::TYPE_SAVE);
+		char aDate[64];
+		str_timestamp(aDate, sizeof(aDate));
+		char aPerfLogPath[128];
+		// 每次开启都新建文件、绝不覆盖旧日志：首次用干净时间戳名，
+		// 之后（同一进程内）追加递增序号。
+		++m_QmPerfLogReopenCounter;
+		if(m_QmPerfLogReopenCounter == 1)
+			str_format(aPerfLogPath, sizeof(aPerfLogPath), "dumps/QmClient_Perf/qm_perf_%s.log", aDate);
+		else
+			str_format(aPerfLogPath, sizeof(aPerfLogPath), "dumps/QmClient_Perf/qm_perf_%s_%d.log", aDate, m_QmPerfLogReopenCounter);
+
+		char aPerfLogCompletePath[IO_MAX_PATH_LENGTH];
+		m_pStorage->GetCompletePath(IStorage::TYPE_SAVE, aPerfLogPath, aPerfLogCompletePath, sizeof(aPerfLogCompletePath));
+		IOHANDLE PerfLogfile = m_pStorage->OpenFile(aPerfLogPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(!PerfLogfile)
+		{
+			fs_makedir_rec_for(aPerfLogCompletePath);
+			PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);
+		}
+		if(!PerfLogfile)
+		{
+			char aWorkingDir[IO_MAX_PATH_LENGTH];
+			if(fs_getcwd(aWorkingDir, sizeof(aWorkingDir)))
+			{
+				str_format(aPerfLogCompletePath, sizeof(aPerfLogCompletePath), "%s/%s", aWorkingDir, aPerfLogPath);
+				fs_makedir_rec_for(aPerfLogCompletePath);
+				PerfLogfile = io_open(aPerfLogCompletePath, IOFLAG_WRITE);
+			}
+		}
+		if(PerfLogfile)
+		{
+			m_pQmPerfFileSwitch->Set(log_logger_prefix_file(PerfLogfile, "perf/"));
+			log_info("client", "writing performance log to '%s'", aPerfLogCompletePath);
+		}
+		else
+		{
+			// 打开失败不重试（避免每帧刷屏），等下次配置变化再尝试。
+			log_error("client", "failed to open '%s' for performance logging", aPerfLogCompletePath);
+		}
+	}
+	else
+	{
+		m_pQmPerfFileSwitch->Set(log_logger_noop());
+		log_info("client", "stopped writing performance log");
+	}
 }

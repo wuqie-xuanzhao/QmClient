@@ -1443,7 +1443,7 @@ bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 bool CUi::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const std::vector<STextColorSplit> &vColorSplits, int Align, const SEditBoxRenderOptions &RenderOptions)
 {
 	const float VSpacing = 2.0f;
-	const float EditBoxRounding = 5.0f;
+	const float EditBoxRounding = ui_token::radius::BASE;
 	const CUIRect *pHitRect = RenderOptions.m_pHitRect != nullptr ? RenderOptions.m_pHitRect : pRect;
 	CUIRect Textbox;
 	pRect->VMargin(VSpacing, &Textbox);
@@ -1647,7 +1647,7 @@ bool CUi::DoEditBoxMultiLine(CLineInput *pLineInput, const CUIRect *pRect, float
 	}
 
 	if(RenderOptions.m_DrawBackground)
-		DrawRoundedSurface(this, *pRect, ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput), ColorRGBA(), 3.0f);
+		DrawRoundedSurface(this, *pRect, ms_LightButtonColorFunction.GetColor(Active, HotItem() == pLineInput), ColorRGBA(), ui_token::radius::TIGHT);
 	ClipEnable(pRect);
 	pLineInput->Render(&Textbox, FontSize, TextAlign, Changed || CursorChanged, LineWidth, LineSpacing);
 	ClipDisable();
@@ -1672,7 +1672,7 @@ bool CUi::DoClearableEditBox(CLineInput *pLineInput, const CUIRect *pRect, float
 	const unsigned PreviousRenderFlags = TextRender()->GetRenderFlags();
 	const EFontPreset PreviousFontPreset = TextRender()->GetFontPreset();
 
-	const float EditBoxRounding = 5.0f;
+	const float EditBoxRounding = ui_token::radius::BASE;
 	CUIRect EditBox, ClearButton;
 	pRect->VSplitRight(pRect->h, &EditBox, &ClearButton);
 
@@ -1984,7 +1984,7 @@ int CUi::DoButton_PopupMenu(CButtonContainer *pButtonContainer, const char *pTex
 {
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(this);
 	if(ButtonColor.has_value() || !TransparentInactive || CheckActiveItem(pButtonContainer) || HotItem() == pButtonContainer)
-		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), ColorRGBA(), 5.0f);
+		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ButtonColor.value_or(Enabled ? ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f * ButtonColorMul(pButtonContainer)) : ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f))), ColorRGBA(), ui_token::radius::BASE);
 
 	CUIRect Label;
 	pRect->Margin(Padding, &Label);
@@ -2039,7 +2039,7 @@ SEditResult<int64_t> CUi::DoValueSelectorWithState(const void *pId, const CUIRec
 			str_format(aBuf, sizeof(aBuf), "%" PRId64, Current);
 		const bool Active = CheckActiveItem(pId) || m_ActiveValueSelectorState.m_pLastTextId == pId;
 		const bool Hovered = HotItem() == pId;
-		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, Hovered)), ColorRGBA(), 5.0f);
+		DrawRoundedSurface(this, *pRect, ScaleBackgroundAlpha(ms_LightButtonColorFunction.GetColor(Active, Hovered)), ColorRGBA(), ui_token::radius::BASE);
 		SLabelProperties ValueLabelProps;
 		ValueLabelProps.m_MaxWidth = Textbox.w;
 		ValueLabelProps.m_DisallowNewline = true;
@@ -2327,9 +2327,9 @@ void CUi::RenderScrollbarH(const void *pId, const CUIRect *pRect, float Current,
 		CUIRect Slider;
 		Handle.VMargin(-2.0f, &Slider);
 		Slider.HMargin(-3.0f, &Slider);
-		DrawRoundedSurface(this, Slider, ScaleBackgroundAlpha(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f).Multiply(HandleColor)), ColorRGBA(), 5.0f);
+		DrawRoundedSurface(this, Slider, ScaleBackgroundAlpha(ColorRGBA(0.15f, 0.15f, 0.15f, 1.0f).Multiply(HandleColor)), ColorRGBA(), ui_token::radius::BASE);
 		Slider.Margin(2.0f, &Slider);
-		DrawRoundedSurface(this, Slider, ScaleBackgroundAlpha(pColorInner->Multiply(HandleColor)), ColorRGBA(), 3.0f);
+		DrawRoundedSurface(this, Slider, ScaleBackgroundAlpha(pColorInner->Multiply(HandleColor)), ColorRGBA(), ui_token::radius::TIGHT);
 	}
 	else
 	{
@@ -2506,7 +2506,7 @@ bool CUi::DoScrollbarOption(const void *pId, int *pOption, const CUIRect *pRect,
 
 void CUi::RenderProgressBar(CUIRect ProgressBar, float Progress)
 {
-	const float Rounding = minimum(5.0f, ProgressBar.h / 2.0f);
+	const float Rounding = minimum(ui_token::radius::TIGHT, ProgressBar.h / 2.0f);
 	DrawRoundedSurface(this, ProgressBar, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f), ColorRGBA(), Rounding);
 	ProgressBar.w = maximum(ProgressBar.w * Progress, 2 * Rounding);
 	DrawRoundedSurface(this, ProgressBar, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), ColorRGBA(), Rounding);

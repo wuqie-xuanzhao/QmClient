@@ -71,6 +71,7 @@
 /times ?s?i shows last 5 times of the server or of a player beginning with name s starting with time i (i = 1 by default, -1 for first)
 0 - Disabled, 1-9999 minutes
 1 star
+1% low
 128 player id <-> 64 player id map update rate
 2 stars
 3 stars
@@ -90,6 +91,7 @@ A screenshot with this name already exists
 A Tee
 A vote is currently active.
 Abort
+Accumulated client launch count (used by the sponsor reminder)
 Activate
 Activate all
 Activate tee history writing full game data to disk (warning: uses lots of disk space)
@@ -162,6 +164,7 @@ Address
 Address to bind the external console. Anything other than "localhost" is dangerous.
 Adds a specific war entry
 Adds default chat binds
+Adds dummy key, hammer, control and copy status to the HUD, plus your own bind status list.
 Adjust DDNet gameplay indicators and assists
 Adjust DDRace-specific HUD indicators
 Adjust game camera and FOV settings
@@ -715,7 +718,6 @@ Configure keyword-based automatic replies
 Configure laser shape, glow, and animation
 Configure nameplate text, badges, and visibility
 Configure player identity and country
-Configure qm_report_app_id and qm_report_secret first
 Configure QmClient gameplay helpers
 Configure QmClient HUD elements
 Configure remaining DDNet client preferences
@@ -735,7 +737,6 @@ Confirm quit after game end (minutes, -1 off, 0 always)
 Connect address error
 Connect dummy
 Connect dummy to enable
-Connect to a server first
 Connect to server first to establish voice network link
 Connect to the specified host/ip
 Connected
@@ -756,6 +757,7 @@ Console
 Console color
 Console command executed after joining server
 Console command executed before connecting to server
+Contacting title server
 Continue anyway?
 Contributors
 Control custom background drawing
@@ -781,11 +783,9 @@ Copy skin
 Copy skin option color
 Could not check for existing player with your name. Check your internet connection.
 Could not connect dummy
-Could not create report scan request
 Could not find a Tutorial server. Check your internet connection.
 Could not find online Tutorial server.\nStarting and connecting to local server…
 Could not find your Team
-Could not get current server address
 Could not get server list from master server
 Could not load default touch controls from file. See local console for details.
 Could not load sponsor QR code. Check the Base64 data
@@ -794,6 +794,7 @@ Could not load touch controls from file. See local console for details.
 Could not preview this image
 Could not resolve connect address '%s'. See local console for details.
 Could not save downloaded map. Try manually deleting this file: %s
+Could not save title credential
 Could not save touch controls to file. See local console for details.
 Count players only
 Countries
@@ -825,6 +826,8 @@ custom
 Custom API key
 Custom aspect ratio
 Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)
+Custom bind status HUD entries. Empty: built-in 4 entries (key stuck/hammer/dummy control/dummy copy). Format: var|value=text|value=text;var|text (shown when non-zero);var (shown as var name when non-zero). Entries separated by ';', fields by '|'
+Custom bind status list
 Custom colors
 Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
@@ -833,6 +836,7 @@ Custom prompt template
 Custom Provider API Key
 Custom Provider endpoint
 Custom Provider model name
+Custom title
 Custom translation prompt (overrides built-in)
 Customize additional nameplate text
 Customize animated rainbow colors
@@ -873,11 +877,13 @@ ddnet-saves.txt not found
 DDNet.org map stats
 DDNet/total CPU
 DDRace HUD
+DDRace HUD Pro
 DDraceNetwork is a cooperative online game where the goal is for you and your group of tees to reach the finish line of the map. As a newcomer you should start on Novice servers, which host the easiest maps. Consider the ping to choose a server close to you.
 DDRaceNetwork · DDNet
 ddstats.tw ID stats
 Deactivate
 Deactivate all
+Deactivate ghost
 Death opacity
 Death tile outline color
 Death tile outline width
@@ -886,6 +892,7 @@ Debug graph
 Debug graph panel opacity (percent)
 Debug group clipping.
 Debug HTTP
+Debug mode
 Debug mode enabled. Press Ctrl+Shift+D to disable debug mode.
 Debug mode.
 Debug performance graph panel
@@ -961,7 +968,6 @@ Detailed reason
 Detect compatible solo prompts from custom servers
 Detection distance
 Detection time
-Developer
 DF
 Diamond
 died
@@ -1025,11 +1031,14 @@ Door laser outline color
 Download community skins
 Download failed
 Download rank ghost
+Download replay
 Download skins
 Download skins immediately from cl_skin_download_url
+Download the rank 1 demo for this map
 Download this asset?
 Downloaded
 Downloading map
+Downloading rank 1 demo
 Downloading update...
 Downscaled (0.78)
 Drag HUD modules with the left mouse button
@@ -1074,6 +1083,7 @@ Dummy hook
 Dummy is allowed on this server.
 Dummy is currently connected.
 Dummy jump
+Dummy key/hammer/control/copy status switches and custom bind status list
 Dummy marking color
 Dummy mini view
 Dummy mini view size (percent)
@@ -1136,6 +1146,7 @@ Emoticon
 Emoticon ID
 Emoticon shadow
 Emoticons
+Empty: built-in 4 entries. Format: var|0=Off|1=On; var|Text
 enable
 Enable /swap
 Enable /team0 mode
@@ -1206,6 +1217,7 @@ Enable Netease music Hook
 Enable Netease Music hook integration
 Enable new IME candidate bar
 Enable new settings page UI
+Enable performance debug logging and diagnostics
 Enable Pie Menu
 Enable pie menu
 Enable pistol sound
@@ -1227,6 +1239,7 @@ Enable shout when holding fire while in water
 Enable Sixup connection.
 Enable skin queue rotation
 Enable skin switch animation
+Enable skin transition animation, then choose the type, scope, duration and easing.
 Enable smooth cinematic camera while free spectating
 Enable SodaMusic Hook
 Enable SodaMusic hook integration
@@ -1234,6 +1247,8 @@ Enable sound
 Enable sound when rendering video
 Enable spectator cursor (if available)
 Enable speedrun timer
+Enable Spotify lyric integration
+Enable Spotify lyrics
 Enable squishy Tee deformation
 Enable status bar
 Enable stereo positioning
@@ -1255,6 +1270,7 @@ Enable voice activation (VAD)
 Enable voice chat
 Enable voice filtering (highpass/compressor/limiter)
 Enable warlist
+Enable weapon switch animation or reload animation, then tune range, duration, rotation and easing.
 Enable word filter list
 Enable Zen Mode
 Enable Zen mode
@@ -1270,7 +1286,9 @@ Endpoint
 Endpoint (optional)
 Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
 Enter Password
+Enter the sponsor code, press Redeem, then write the title and press Save. Tick "Only show with this nickname" to bind it to one nickname.
 Enter Username
+Enter your sponsor code
 Entities
 Entities background color
 Entity assets
@@ -1280,6 +1298,7 @@ Entity overlay
 Entity Preview
 Entity wall outline opacity
 entity_bg (Workshop)
+Entry: %s
 Erase items on the in game background
 Error
 Error checking player name
@@ -1295,6 +1314,7 @@ ESC replay minutes
 EUR
 Evaluate an expression
 Event
+Exact bound nickname
 Example of usage
 Example: name1|name2|name3
 Exclude
@@ -1329,9 +1349,11 @@ Failed saving the replay!
 Failed to check for updates
 Failed to copy main asset image.
 Failed to create bgdraw folder
+Failed to download the rank 1 demo
 Failed to export audio pack file.
 Failed to export demo cut
 Failed to export skin files.
+Failed to fetch the replay list
 Failed to load
 Failed to load main asset: %s
 Failed to prepare main asset image.
@@ -1403,14 +1425,15 @@ Force vote
 Format player names after a finish
 Forms
 Found %d global cards
+Four IP addresses are already online
 FPM
 FPS
 Fraction of players needed to pass a vote
 Frags
-Frame quality
 Frame rate
 Frame time
 Frame time p95
+Frame time p99
 Framebuffer color bits (only fullscreen)
 Frankenstein (drop parts on right)
 Free move
@@ -1484,6 +1507,8 @@ General
 Getting game info
 Getting server list from master server
 Ghost
+Ghost active
+Ghost ready
 Ghost tools
 Ghost visibility (alpha, 0=invisible, 100=visible)
 Ghosts directory
@@ -1533,7 +1558,6 @@ Gradient color
 Graphics
 Graphics card
 Graphics display
-Graphics Error
 Graphics library major version (0 = auto-detect)
 Graphics library minor version (0 = auto-detect)
 Graphics library patch version
@@ -1661,6 +1685,7 @@ How long the server message of the day is displayed
 How many seconds players stay frozen (applies to all except delay freeze in switch layer and deep freeze).
 How often the broadcast time updates
 How to handle inactive players (0 = move to spectators, 1 = move to free spec slot/kick, 2 = kick)
+HTTP is not available
 HTTP map download: connection phase timeout (in ms, 0=disabled)
 HTTP map download: low speed limit (in bytes/s, 0=disabled)
 HTTP map download: low speed limit period (0=disabled)
@@ -1744,6 +1769,7 @@ Input smoothing
 Input switch
 Insane
 Installing update. Please wait...
+Instant zoom reverse
 Interface
 Interface accent color
 Interface animations
@@ -1758,12 +1784,14 @@ Internet (From online source)
 Interpolation
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 Invalid Axiom API response
+Invalid bound name
 Invalid client id to kick
 Invalid client id to move to spectators
 Invalid Demo
 Invalid ID
 Invalid option
 Invalid spectator id used
+Invalid sponsor code
 Invalid translation backend
 Invalid X coordinate.
 Invalid Y coordinate.
@@ -1855,6 +1883,7 @@ Last successful sync: %s
 Latency
 Latency compensation
 Latency Jitter
+Launch count threshold for the next sponsor reminder
 Layout
 Leak IP
 Leaks your IP address to all servers by pinging each of them, also acquiring the latency in the process
@@ -1903,6 +1932,7 @@ LLM Provider (0=ZhipuAI, 1=DeepSeek, 2=OpenAI, 3=Custom)
 LLM translation concurrency (0=auto)
 LLM translation default concurrency (smart adjustment)
 Load
+Load as ghost
 Load drawings from a given csv file (defaults to map name)
 Load sound files in thread
 Load the official rank replay of a map as a ghost (default: current map, rank 1)
@@ -1948,8 +1978,10 @@ Log predicted event creation/playback and snapshot confirmation to debug double 
 Log the network
 Logout of econ
 Logout of rcon
+Long frames
 Lose weapons when teleporting (useful for race maps)
 Low to high
+Lyrics
 Main Asset
 Main menu
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
@@ -2061,6 +2093,7 @@ Menu opened. Press Esc key again to close menu.
 Menu option - normal
 Menu option - selected
 Merge consecutive identical player messages within 2 seconds
+Merges chat messages repeated within a short time into a single line.
 Message color
 Message displayed to players on join.
 Message merging
@@ -2210,6 +2243,7 @@ Network timeout protection
 new
 New button
 New category name
+New features
 New IME
 New name
 New name:
@@ -2263,6 +2297,7 @@ No player nearby
 No player with this name found.
 No presets yet
 No preview
+No rank 1 replay was found for this map
 No results
 No safe position found
 No saved profiles available yet. Save one first.
@@ -2342,6 +2377,7 @@ Only show after joining a team
 Only show outlines in the entities layer
 Only show skins available in Vanilla Teeworlds
 Only show when the other Tee is not on screen
+Only show with this nickname
 Only what you can't imagine, nothing Dream can't do
 Opacity
 Opacity of freeze bars inside freeze
@@ -2355,6 +2391,7 @@ Open map editor
 Open modal
 Open pie menu
 Open rename dialog
+Open settings
 Open spectator mode selector
 Open TClient community and source links
 Open TClient configuration file locations
@@ -2439,6 +2476,7 @@ Password for Axiom main account auto-login
 Password incorrect
 Password required to use reserved slots.
 Past year
+Paste sp_dc from Spotify web cookies
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 Path to client certificate for the MySQL/MariaDB SSL connection
 Path to client key for the MySQL/MariaDB SSL connection
@@ -2448,10 +2486,11 @@ Pause video rendering when demo playback is paused
 Pause voice when window unfocused
 Pause/unpause game
 Penalty in seconds for saving or swapping positions
-Per-frame glyph rasterization budget in milliseconds; text runs whose uncached glyphs would exceed it are deferred whole to following frames (0 = disable deferral)
 Per-name volume (name=percent)
 Performance debug log threshold (ms)
 Performance points
+Permanent access; up to 4 online IP addresses
+Permanent sponsor verified
 Personal best:
 Personal Setting of showing time in either broadcast or game/round timer, timer s, where s = broadcast for broadcast, gametimer for game/round timer, cycle for cycle, both for both, none for no timer and nothing to show current status
 Pet
@@ -2462,6 +2501,7 @@ Pet size relative to normal player
 Pet skin
 Pet Skin:
 Pick result: %s
+Pick the source that matches your music app and keep it playing; the lyrics follow automatically.
 Pickup range
 Pie Menu
 Pie menu
@@ -2475,6 +2515,7 @@ Play a flip animation while reloading weapons
 Play a slide-in rotation animation when switching weapons
 Play back a demo
 Play background music
+Play replay
 Play slide-in rotation animation when switching weapon
 Play the current demo
 Play the selected demo
@@ -2529,6 +2570,7 @@ Players can hook each other on this server
 Players can't collide on this server
 Players can't hook each other on this server
 Playing effects
+Plays an animation whenever your skin changes, including skins stolen with the hammer.
 Please add a valid cut first
 Please balance teams!
 Please enable finished indicator first
@@ -2561,6 +2603,7 @@ Predict events (sounds, particles)
 Predict fire and show predicted weapon physics (requires cl_antiping_grenade 1 and cl_antiping_weapons 1)
 Predict freeze tiles (0 = off, 1 = on, 2 = partial (allow small movement when frozen))
 Predict grenade trajectory (only with cl_antiping 1)
+Predict ninja path
 Predict other player's movement (only enabled if cl_antiping is set to 1) (1 = always on, 2 = interaction only, 3 = 2 and frozen tees always)
 Predict weapon projectiles (only with cl_antiping 1)
 Predicted ghost opacity
@@ -2599,6 +2642,7 @@ Preview selected file
 Preview the bind wheel layout and selection
 Preview the composed status bar output
 Preview the current chat appearance
+Preview the sponsor reminder without changing the launch count
 Preview visibilities
 Previous
 Previous page in console
@@ -2689,6 +2733,10 @@ Random map
 Random pick
 Random unfinished map
 Randomize player color (0 = all, 1 = body, 2 = feet, 3 = skin, 4 = flag) example: 0011 = randomize skin and flag [number is position]
+Rank 1
+Rank 1 demo
+Rank 1 demo downloaded to '%s'
+Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser.
 Rank ghost loaded: %s, %s s. It follows your current run.
 Rank ghost loaded: %s, %s s. It plays when you cross the start line.
 Rank ghost unloaded
@@ -2704,6 +2752,7 @@ Rank ghost: failed to write the ghost file
 Rank ghost: fetching the replay list ...
 Rank ghost: HTTP is not available
 Rank ghost: no official replay for '%s' rank %d
+Rank ghost: no official replay found for '%s'
 Rank ghost: replay converted, waiting for the map to load ...
 Rank ghost: specify a map name when not in a game
 Rank ghost: the downloaded replay is not a valid demo
@@ -2713,8 +2762,8 @@ Rank ghost: the replay list is empty or malformed
 Rank ghost: timed out waiting for the map to load
 Ratio
 Ratio threshold for local target language detection
-Read new feature indicators
 Ready
+Really? Not even a little?
 Reason
 Reason:
 Rebinds the client's listening address and port
@@ -2730,6 +2779,9 @@ Record to a file
 Red
 Red team
 Red team wins!
+Redeem
+Redeem your code and customize your title
+Redeem your sponsor code to unlock a custom title, shown in chat and on your nameplate.
 Reduce antiping and player prediction when frozen
 Reduce prediction while frozen
 Reduced
@@ -2843,19 +2895,16 @@ Replace skin with one having this prefix (e.g. cats, santa)
 Replace video
 Replacement chars
 Replay
+Replay downloaded
 Replay feature is disabled!
+Replay list: failed to load, press Refresh to retry
+Replay list: loading ...
+Replay list: not loaded yet
+Replay list: up to date
+Replays directory
 Reply
 Reply to messages from muted players
 Reply with dummy
-Report
-Report request canceled
-Report request failed due to network error
-Report request failed with HTTP status: %d
-Report request is already in progress
-Report scan request submitted
-Report service App ID
-Report service signing key
-Report service URL
 Reports are not available on Axiom servers
 Request to swap your tee with another team member
 Requesting to join the game
@@ -2879,6 +2928,7 @@ Reset filter
 Reset layout
 Reset mouse position when opening bind wheel
 Reset position of mouse when opening bindwheel
+Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)
 Reset stats on server join (0=persistent, 1=reset on join)
 Reset stats when joining a server
 Reset to defaults
@@ -2895,6 +2945,7 @@ Restarting. Please wait…
 Restore old single-segment hook collision line behavior
 Retry remote stats
 Retrying…
+Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)
 Review and edit custom key bindings
 Review and reset changed configuration values
 Rifle Laser Inner Color
@@ -2981,7 +3032,6 @@ Scale down Tee
 Scale max mouse distance to 1000 for better aim
 Scale uncertainty duration by ping (100=1.0x)
 Scanning current server
-Scanning current server...
 Score
 Score earned
 Score limit
@@ -3364,6 +3414,7 @@ Show text entities
 Show the cursor while free spectating
 Show the number of frozen tees
 Show the number of tees still alive
+Show the occasional sponsor reminder in the main menu
 Show the pet
 Show the screen center line
 Show the server rules
@@ -3400,6 +3451,7 @@ Shows five points of the global point ladder beginning with rank i (1 by default
 Shows five team ranks of the ladder or of a player beginning with rank i (1 by default, -1 for worst)
 Shows gameplay information for this server
 Shows help to command r, general help if left blank
+Shows lyrics from NetEase Cloud Music, Soda Music, Kugou and QQ Music on the dynamic island.
 Shows the credits of the DDNet mod
 Shows the global points of a player beginning with name r (your rank by default)
 Shows the rank of player with name r (your rank by default)
@@ -3471,7 +3523,6 @@ Snapshot age
 Snapshot Latency
 Snapshot payload
 Snapshot rate
-Snapshot rate / parts
 Snapshot tick gap
 Social
 SodaMusic hook heartbeat timeout (milliseconds)
@@ -3529,8 +3580,13 @@ Speedrun timer seconds
 Speedrun timer time (MM:SS, legacy)
 Sphere
 Spin pop
+Sponsor code
+Sponsor code already claimed
+Sponsor reminder
 Sponsor support
+Sponsor title
 Sponsors:
+Spotify sp_dc cookie (from browser DevTools, long-lived)
 Spree
 SQL Server name for record table
 Squishy Tee deformation duration
@@ -3560,6 +3616,7 @@ Status bar text opacity
 Status normal, check details below if still experiencing issues
 Status Scheme:
 Steam profile name
+Still free after %d sponsors. Take a look?
 Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 Stop record
@@ -3599,6 +3656,7 @@ Switch
 Switch countdown position (0=follow Tee, 1=Dynamic Island, 2=both)
 Switch failed
 Switch interval
+Switch on the status rows you need, then list the binds you want to watch.
 Switch opacity
 Switch skin on hammer
 Switch spectator mode
@@ -3636,6 +3694,7 @@ Taper trail width
 Target language
 Target language code (e.g. zh, en, ja, zh-TW)
 Target language ratio
+Task running ...
 TClient
 TClient / Bind Wheel
 TClient / Status Bar
@@ -3726,13 +3785,15 @@ Thank you for your company and trust. This is what gives me the courage to keep 
 Thanks for supporting QmClient
 The audio device couldn't be initialised.
 The auth level you need to tele others
+The downloaded file is not a valid demo
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 The extra menu with the given number is activated.
 The force pause timer is now over, you can exit with /spec
 The format of texture %s is not RGBA which will cause visual bugs.
 The FPS at which the recorder should record replay.
-The graphics backend stopped unexpectedly, and safe graphics settings could not be saved.
 The name "default" is reserved.
+The rank 1 demo is already downloaded
+The replay list is empty or malformed
 The selected button is not visible. Do you want to deselect it or edit its visibility?
 The selected button is overlapping with other buttons.
 The selected part stays highlighted while you adjust its color.
@@ -3799,6 +3860,8 @@ Timeout seed
 Timer is displayed in %s
 Timer isn't displayed.
 Tiny Tee Size
+Title server unavailable; retry
+Title too long or contains unsupported characters
 To save all players in your team have to be alive and not in '/spec'
 Toast uses UiTokens + QmMotion slide
 Toggle auto camera
@@ -3891,6 +3954,7 @@ Tune in zone a variable to value
 Tune layer opacity
 Tune variable to value
 Tune variable to value or show current value
+Turn on "Message merging" in Dream Features.
 Tutorial
 Twinkle strength
 Type
@@ -3965,6 +4029,7 @@ Unpredictable shadow tee transparency (0 invisible, 100 fully visible)
 Unpredicted ghost opacity
 Unregister protocol and file extensions
 Unsaved changes
+Up to 6 Chinese or 12 ASCII characters
 Update
 Update a rcon key
 Update a rcon key with prehashed data
@@ -3975,6 +4040,7 @@ Update Rate
 URL for downloading community skins
 URL for downloading maps (must start with https://)
 URL for downloading skins
+Usage: %s
 Usage: %s %s
 Use 12 hour clock
 Use 12-hour clock for local time
@@ -3998,6 +4064,7 @@ Use enemy list to drive player indicators
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 Use mouse sensitivity when dynamic camera is on
+Use MSDF text rendering for nameplates (requires TexturedMsdf)
 Use multi-char replacement based on word length
 Use native UI for IME (may break IME in fullscreen mode, requires restart)
 Use new smoothing algorithm
@@ -4292,6 +4359,7 @@ Your team is currently saving
 Your team was killed because it couldn't finish anymore and hasn't entered /practice mode
 Your team was unlocked by an unlock team tile
 Your timeout code has been set. 0.7 clients can not reclaim their tees on timeout; however, a 0.6 client can claim your tee
+Your weapon slides and rotates in when you switch, and flips while reloading.
 z = Zoom
 Zen Mode
 Zen mode key
@@ -5333,11 +5401,11 @@ Zoom to current mouse target
 [Graphics error]	An error during command recording occurred. Try to update your GPU drivers.
 [Graphics error]	Could not initialize the given graphics backend, reverting to the default backend now.
 [Graphics error]	Could not initialize the given graphics backend, this is probably because you didn't install the driver of the integrated graphics card.
-[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Failed during initialization. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
 [Graphics error]	Failed to swap framebuffers. Try to update your GPU drivers.
 [Graphics error]	Out of VRAM. Try setting 'cl_skins_loaded_max' to a lower value or remove custom assets (skins, entities, etc.), especially those with high resolution.
 [Graphics error]	Submitting the render commands failed. Try to update your GPU drivers.
-[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in settings_ddnet.cfg in the config directory and try again.
+[Graphics error]	Unknown error. Try to change gfx_backend to OpenGL or Vulkan in qmclient/settings.cfg in the config directory and try again.
 [Hammer Mode]	Normal
 [Hammer Mode]	Rotate with cursor
 [Hammer Mode]	Rotate with cursor like gun

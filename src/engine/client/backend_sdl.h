@@ -56,7 +56,6 @@ private:
 	std::string m_FatalError;
 	SGfxWarningContainer m_Warning;
 	std::atomic_bool m_SubmissionStopped = false;
-	std::atomic_bool m_FatalErrorPending = false;
 
 public:
 	// constructed on the main thread, the rest of the functions is run on the render thread
@@ -69,6 +68,9 @@ public:
 		virtual const SGfxErrorContainer &GetError() const = 0;
 		virtual void ClearError() = 0;
 		virtual void ErroneousCleanup() = 0;
+		// 清除已记录的致命错误。默认什么都不做，只有能安全重置错误状态的后端
+		// 才需要覆写它。@see CGraphicsBackend_Threaded::TakeFatalError
+		virtual void ClearFatalError() {}
 
 		virtual const SGfxWarningContainer &GetWarning() const = 0;
 	};
@@ -110,7 +112,13 @@ private:
 
 public:
 	const char *GetFatalError() const override;
-	bool HasFatalError() const override { return m_FatalErrorPending.load(std::memory_order_acquire); }
+	// 非破坏性查询：图形后端是否已记录致命错误。致命错误一旦被提交处理
+	// （ProcessError）就会断言退出，所以主循环需要提前轮询这个状态，
+	// 才能在设备丢失这类可恢复故障上做恢复，而不是卡在弹出的错误框里。
+	bool HasFatalError() const override;
+	// 原子地「检查并清除」致命错误标记：返回 true 表示刚刚消费掉一个致命错误。
+	// 收尾流程仍会向后端提交清理命令，清掉标记可以让这些提交不再重复断言。
+	bool TakeFatalError();
 	bool GetWarning(std::vector<std::string> &WarningStrings) override;
 };
 
@@ -250,6 +258,9 @@ public:
 	const SGfxErrorContainer &GetError() const override;
 	void ClearError() override { m_Error = {}; }
 	void ErroneousCleanup() override;
+	// 清除已记录的致命错误。只允许在「已经决定不再信任本帧图形输出」时调用，
+	// 目的是让随后的收尾流程（Shutdown 仍会提交清理命令）不再重复触发断言。
+	void ClearFatalError() override;
 
 	const SGfxWarningContainer &GetWarning() const override;
 

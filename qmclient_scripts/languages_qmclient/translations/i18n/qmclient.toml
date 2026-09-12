@@ -4432,6 +4432,22 @@ turkish = "Hata ayıklama performans grafiği paneli"
 polish = "Panel wykresu wydajności debugowania"
 
 [[message]]
+key = "Debug mode"
+[message.translations]
+simplified_chinese = "调试模式"
+traditional_chinese = "調試模式"
+japanese = "デバッグモード"
+korean = "디버그 모드"
+russian = "Режим отладки"
+german = "Debug-Modus"
+spanish = "Modo de depuración"
+french = "Mode de débogage"
+brazilian_portuguese = "Modo de depuração"
+portuguese = "Modo de depuração"
+turkish = "Hata ayıklama modu"
+polish = "Tryb debugowania"
+
+[[message]]
 key = "Deep freeze opacity"
 [message.translations]
 simplified_chinese = "深度冻结不透明度"
@@ -6014,6 +6030,22 @@ brazilian_portuguese = "Ativar menu de torta"
 portuguese = "Ativar menu de pizza"
 turkish = "Pasta menüsünü etkinleştir"
 polish = "Włącz menu kołowe"
+
+[[message]]
+key = "Enable performance debug logging and diagnostics"
+[message.translations]
+simplified_chinese = "启用性能调试日志与卡顿诊断"
+traditional_chinese = "啟用性能調試日誌與卡頓診斷"
+japanese = "パフォーマンスデバッグログとカクつき診断を有効化"
+korean = "성능 디버그 로그 및 끊김 진단 활성화"
+russian = "Включить журнал отладки производительности и диагностику зависаний"
+german = "Leistungs-Debug-Logging und Ruckel-Diagnose aktivieren"
+spanish = "Activar registro de depuración de rendimiento y diagnóstico de tartamudeos"
+french = "Activer les journaux de débogage des performances et le diagnostic des ralentissements"
+brazilian_portuguese = "Ativar log de depuração de desempenho e diagnóstico de engasgos"
+portuguese = "Ativar registo de depuração de desempenho e diagnóstico de gaguejos"
+turkish = "Performans hata ayıklama günlüğünü ve takılma teşhisini etkinleştir"
+polish = "Włącz dziennik debugowania wydajności i diagnostykę przycinań"
 
 [[message]]
 key = "Enable player statistics panel"
@@ -14320,6 +14352,22 @@ turkish = "Tabanca yardımcı çizgisi"
 polish = "Linia pomocnicza pistoletu"
 
 [[message]]
+key = "Predict ninja path"
+[message.translations]
+simplified_chinese = "预测忍者路径"
+traditional_chinese = "預測忍者路徑"
+japanese = "忍者の経路を予測"
+korean = "닌자 경로 예측"
+russian = "Предсказывать путь ниндзя"
+german = "Ninja-Pfad vorhersagen"
+spanish = "Predecir la trayectoria del ninja"
+french = "Prévoir la trajectoire du ninja"
+brazilian_portuguese = "Prever a trajetória do ninja"
+portuguese = "Prever a trajetória do ninja"
+turkish = "Ninja yolunu tahmin et"
+polish = "Przewiduj ścieżkę ninja"
+
+[[message]]
 key = "Playing effects"
 [message.translations]
 simplified_chinese = "播放效果"
@@ -15152,22 +15200,6 @@ turkish = "Yerel hedef dil tanıma oranı eşiği"
 polish = "Lokalny próg rozpoznawania języka docelowego"
 
 [[message]]
-key = "Read new feature indicators"
-[message.translations]
-simplified_chinese = "将设置界面新功能提示标记为已读"
-traditional_chinese = "已讀的設置界面新功能標識"
-japanese = "既読の設定画面新機能マーク"
-korean = "읽은 설정 인터페이스 새 기능 표시"
-russian = "Прочитанные новинки"
-german = "Neue-Feature-Marker gelesen"
-spanish = "Indicadores nuevos leídos"
-french = "Badges nouveautés lus"
-brazilian_portuguese = "Indicadores novos lidos"
-portuguese = "Indicadores novos lidos"
-turkish = "Okunan ayarlar arayüzü yeni özellik göstergeleri"
-polish = "Oznaczenia nowych funkcji w interfejsie ustawień jako przeczytane"
-
-[[message]]
 key = "Receive"
 [message.translations]
 simplified_chinese = "接收"
@@ -15486,54 +15518,6 @@ brazilian_portuguese = "Responder com Dummy"
 portuguese = "Responder com dummy"
 turkish = "Dummy ile yanıtla"
 polish = "Odpowiedz kukłą"
-
-[[message]]
-key = "Report service App ID"
-[message.translations]
-simplified_chinese = "举报服务 App ID"
-traditional_chinese = "舉報服務 App ID"
-japanese = "通報サービス App ID"
-korean = "신고 서비스 App ID"
-russian = "App ID службы жалоб"
-german = "Meldedienst-App-ID"
-spanish = "ID de aplicación del servicio de reportes"
-french = "ID de l'application du service de signalement"
-brazilian_portuguese = "App ID do serviço de denúncia"
-portuguese = "ID da App do serviço de denúncia"
-turkish = "Rapor hizmeti App ID"
-polish = "ID aplikacji usługi raportowania"
-
-[[message]]
-key = "Report service signing key"
-[message.translations]
-simplified_chinese = "举报服务签名密钥"
-traditional_chinese = "舉報服務簽名密鑰"
-japanese = "通報サービス署名キー"
-korean = "신고 서명 키"
-russian = "Ключ подписи службы жалоб"
-german = "Meldedienst-Signaturschlüssel"
-spanish = "Clave de firma del servicio de reportes"
-french = "Clé de signature du service de signalement"
-brazilian_portuguese = "Chave de assinatura do serviço de denúncia"
-portuguese = "Chave de assinatura do serviço de denúncia"
-turkish = "Rapor hizmeti imza anahtarı"
-polish = "Klucz podpisu usługi raportowania"
-
-[[message]]
-key = "Report service URL"
-[message.translations]
-simplified_chinese = "举报服务地址"
-traditional_chinese = "舉報服務地址"
-japanese = "通報サービスアドレス"
-korean = "신고 서비스 주소"
-russian = "Адрес службы жалоб"
-german = "Meldedienst-Adresse"
-spanish = "Dirección del servicio de reportes"
-french = "Adresse du service de signalement"
-brazilian_portuguese = "Endereço do serviço de denúncia"
-portuguese = "Endereço do serviço de denúncia"
-turkish = "Rapor hizmeti adresi"
-polish = "Adres usługi raportowania"
 
 [[message]]
 key = "Requires extra animations"
@@ -26023,6 +26007,38 @@ turkish = "SodaMusic Hook entegrasyonunu etkinleştir"
 polish = "Włącz integrację SodaMusic przez Hook"
 
 [[message]]
+key = "Enable Spotify lyric integration"
+[message.translations]
+simplified_chinese = "启用 Spotify 歌词集成"
+traditional_chinese = "啟用 Spotify 歌詞整合"
+japanese = "Spotify 歌詞統合を有効化"
+korean = "Spotify 가사 통합 활성화"
+russian = "Включить интеграцию текстов песен Spotify"
+german = "Spotify-Songtext-Integration aktivieren"
+spanish = "Habilitar la integración de letras de Spotify"
+french = "Activer l'intégration des paroles de Spotify"
+brazilian_portuguese = "Ativar a integração de letras do Spotify"
+portuguese = "Ativar a integração de letras do Spotify"
+turkish = "Spotify şarkı sözü entegrasyonunu etkinleştir"
+polish = "Włącz integrację tekstów Spotify"
+
+[[message]]
+key = "Spotify sp_dc cookie (from browser DevTools, long-lived)"
+[message.translations]
+simplified_chinese = "Spotify sp_dc cookie（来自浏览器 DevTools，长期有效）"
+traditional_chinese = "Spotify sp_dc cookie（來自瀏覽器 DevTools，長期有效）"
+japanese = "Spotify sp_dc クッキー（ブラウザ DevTools から取得、長期有効）"
+korean = "Spotify sp_dc 쿠키(브라우저 DevTools에서 가져옴, 장기 유효)"
+russian = "Cookie sp_dc Spotify (из DevTools браузера, длительного действия)"
+german = "Spotify-sp_dc-Cookie (aus den Browser-DevTools, langlebig)"
+spanish = "Cookie sp_dc de Spotify (desde DevTools del navegador, de larga duración)"
+french = "Cookie sp_dc Spotify (depuis les DevTools du navigateur, longue durée)"
+brazilian_portuguese = "Cookie sp_dc do Spotify (dos DevTools do navegador, longa duração)"
+portuguese = "Cookie sp_dc do Spotify (dos DevTools do navegador, longa duração)"
+turkish = "Spotify sp_dc çerezi (tarayıcı DevTools'tan, uzun ömürlü)"
+polish = "Ciasteczko sp_dc Spotify (z DevTools przeglądarki, długoterminowe)"
+
+[[message]]
 key = "Netease hook heartbeat timeout (milliseconds)"
 [message.translations]
 simplified_chinese = "网易云音乐 Hook 心跳超时时间（毫秒）"
@@ -26181,6 +26197,54 @@ brazilian_portuguese = "Ativar o Hook do SodaMusic"
 portuguese = "Ativar o Hook do SodaMusic"
 turkish = "SodaMusic Hook'u etkinleştir"
 polish = "Włącz SodaMusic Hook"
+
+[[message]]
+key = "Enable Spotify lyrics"
+[message.translations]
+simplified_chinese = "启用 Spotify 歌词"
+traditional_chinese = "啟用 Spotify 歌詞"
+japanese = "Spotify 歌詞を有効化"
+korean = "Spotify 가사 활성화"
+russian = "Включить тексты Spotify"
+german = "Spotify-Songtexte aktivieren"
+spanish = "Activar letras de Spotify"
+french = "Activer les paroles de Spotify"
+brazilian_portuguese = "Ativar letras do Spotify"
+portuguese = "Ativar letras do Spotify"
+turkish = "Spotify şarkı sözlerini etkinleştir"
+polish = "Włącz teksty Spotify"
+
+[[message]]
+key = "Configure lyrics sources and display"
+[message.translations]
+simplified_chinese = "配置歌词来源与显示"
+traditional_chinese = "設定歌詞來源與顯示"
+japanese = "歌詞のソースと表示を設定"
+korean = "가사 소스 및 표시 구성"
+russian = "Настройка источников и отображения текстов"
+german = "Songtext-Quellen und Anzeige konfigurieren"
+spanish = "Configurar fuentes de letras y visualización"
+french = "Configurer les sources et l'affichage des paroles"
+brazilian_portuguese = "Configurar fontes de letras e exibição"
+portuguese = "Configurar fontes de letras e exibição"
+turkish = "Şarkı sözü kaynaklarını ve görünümünü yapılandır"
+polish = "Skonfiguruj źródła tekstów i wyświetlanie"
+
+[[message]]
+key = "Paste sp_dc from Spotify web cookies"
+[message.translations]
+simplified_chinese = "粘贴浏览器中的 sp_dc cookie"
+traditional_chinese = "貼上瀏覽器中的 sp_dc cookie"
+japanese = "ブラウザの sp_dc クッキーを貼り付け"
+korean = "브라우저의 sp_dc 쿠키 붙여넣기"
+russian = "Вставьте sp_dc cookie из браузера"
+german = "sp_dc-Cookie aus dem Browser einfügen"
+spanish = "Pegar la cookie sp_dc del navegador"
+french = "Coller le cookie sp_dc du navigateur"
+brazilian_portuguese = "Cole o cookie sp_dc do navegador"
+portuguese = "Cole o cookie sp_dc do navegador"
+turkish = "Tarayıcıdan sp_dc çerezini yapıştırın"
+polish = "Wklej ciasteczko sp_dc z przeglądarki"
 
 [[message]]
 key = "Format: QmClient input overlay v3"
@@ -26805,3 +26869,1395 @@ brazilian_portuguese = "Versão da API Vulkan: 14 = preferir 1.4, depois 1.3 e 1
 portuguese = "Versão da API Vulkan: 14 = preferir 1.4, depois 1.3 e 1.1; 13 = preferir 1.3, depois 1.1; 11 = forçar 1.1"
 turkish = "Vulkan API sürümü: 14 = önce 1.4, sonra 1.3 ve 1.1'i tercih et; 13 = önce 1.3, sonra 1.1'i tercih et; 11 = 1.1'i zorla"
 polish = "Wersja API Vulkan: 14 = preferuj 1.4, potem 1.3 i 1.1; 13 = preferuj 1.3, potem 1.1; 11 = wymuś 1.1"
+
+[[message]]
+key = "Custom bind status HUD entries. Empty: built-in 4 entries (key stuck/hammer/dummy control/dummy copy). Format: var|value=text|value=text;var|text (shown when non-zero);var (shown as var name when non-zero). Entries separated by ';', fields by '|'"
+[message.translations]
+simplified_chinese = "自定义 bind 状态 HUD 条目。为空时使用内置四项（卡键/锤子/分身控制/分身同步）。格式：变量名|状态值=文本|状态值=文本；变量名|文本（非零时显示）；变量名（仅填变量名时非零显示变量名本身）。条目用 ';' 分隔，字段用 '|' 分隔"
+traditional_chinese = "自訂 bind 狀態 HUD 條目。為空時使用內建四項（卡鍵/錘子/分控/同步）。格式：變數名|狀態值=文字|狀態值=文字；變數名|文字（非零時顯示）；變數名（僅填變數名時非零顯示變數名本身）。條目用 ';' 分隔，欄位用 '|' 分隔"
+japanese = "カスタム bind 状態 HUD エントリ。空の場合は組み込みの4項目（キー固定/ハンマー/分身操作/分身同期）。形式：変数名|状態値=テキスト|状態値=テキスト；変数名|テキスト（非ゼロ時に表示）；変数名（変数名のみの場合は非ゼロ時に変数名を表示）。エントリは ';' で、フィールドは '|' で区切る"
+korean = "사용자 지정 bind 상태 HUD 항목입니다. 비어 있으면 내장 4개 항목(키 고정/해머/분신 조작/분신 동기화)을 사용합니다. 형식: 변수명|상태값=텍스트|상태값=텍스트; 변수명|텍스트(0이 아닐 때 표시); 변수명(변수명만 입력 시 0이 아닐 때 변수명 표시). 항목은 ';', 필드는 '|'로 구분합니다"
+russian = "Пользовательские элементы HUD состояния bind. Пусто — встроенные 4 элемента (фиксация клавиш/молот/управление дамми/синхронизация дамми). Формат: переменная|значение=текст|значение=текст; переменная|текст (показывать при ненулевом значении); переменная (только имя переменной — показывать имя при ненулевом значении). Элементы разделяются ';', поля — '|'"
+german = "Benutzerdefinierte Bind-Status-HUD-Einträge. Leer: die 4 integrierten Einträge (Tastenfixierung/Hammer/Dummy-Steuerung/Dummy-Synchronisation). Format: Variable|Wert=Text|Wert=Text; Variable|Text (bei ungleich 0 anzeigen); Variable (nur Variablenname: bei ungleich 0 den Namen anzeigen). Einträge durch ';' trennen, Felder durch '|'"
+spanish = "Entradas de HUD de estado de bind personalizadas. Vacío: las 4 entradas integradas (fijación de teclas/martillo/control de dummy/sincronización de dummy). Formato: variable|valor=texto|valor=texto; variable|texto (se muestra si no es cero); variable (solo nombre: se muestra el nombre si no es cero). Entradas separadas por ';', campos por '|'"
+french = "Entrées HUD d'état de bind personnalisées. Vide : les 4 entrées intégrées (blocage des touches/marteau/contrôle du dummy/synchronisation du dummy). Format : variable|valeur=texte|valeur=texte ; variable|texte (affiché si non nul) ; variable (nom seul : affiché si non nul). Entrées séparées par ';', champs par '|'"
+brazilian_portuguese = "Entradas de HUD de estado de bind personalizadas. Vazio: as 4 entradas integradas (fixação de teclas/martelo/controle do dummy/sincronização do dummy). Formato: variável|valor=texto|valor=texto; variável|texto (exibido quando diferente de zero); variável (apenas nome: exibe o nome quando diferente de zero). Entradas separadas por ';', campos por '|'"
+portuguese = "Entradas de HUD de estado de bind personalizadas. Vazio: as 4 entradas integradas (fixação de teclas/martelo/controlo do dummy/sincronização do dummy). Formato: variável|valor=texto|valor=texto; variável|texto (exibido quando diferente de zero); variável (apenas nome: exibe o nome quando diferente de zero). Entradas separadas por ';', campos por '|'"
+turkish = "Özel bind durumu HUD girdileri. Boş: yerleşik 4 girdi (tuş kilidi/çekiç/dummy kontrolü/dummy senkronizasyonu). Biçim: değişken|değer=metin|değer=metin; değişken|metin (sıfır değilken göster); değişken (yalnızca ad: sıfır değilken adı göster). Girdiler ';' ile, alanlar '|' ile ayrılır"
+polish = "Niestandardowe wpisy HUD stanu bind. Puste: 4 wbudowane wpisy (blokada klawiszy/młot/sterowanie dummy/synchronizacja dummy). Format: zmienna|wartość=tekst|wartość=tekst; zmienna|tekst (pokazuj, gdy niezerowe); zmienna (tylko nazwa: pokazuj nazwę, gdy niezerowa). Wpisy oddzielaj ';', pola '|'"
+
+[[message]]
+key = "Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)"
+[message.translations]
+simplified_chinese = "将 qm_bind_status_items 重置为内置四项（卡键/锤子/分身控制/分身同步）"
+traditional_chinese = "將 qm_bind_status_items 重置為內建四項（卡鍵/錘子/分身控制/分身同步）"
+japanese = "qm_bind_status_items を組み込みの4項目（キー固定/ハンマー/分身操作/分身同期）にリセット"
+korean = "qm_bind_status_items를 내장 4개 항목(키 고정/해머/분신 조작/분신 동기화)으로 재설정"
+russian = "Сбросить qm_bind_status_items к встроенным 4 элементам (фиксация клавиш/молот/управление дамми/синхронизация дамми)"
+german = "qm_bind_status_items auf die 4 integrierten Einträge zurücksetzen (Tastenfixierung/Hammer/Dummy-Steuerung/Dummy-Synchronisation)"
+spanish = "Restablecer qm_bind_status_items a las 4 entradas integradas (fijación de teclas/martillo/control de dummy/sincronización de dummy)"
+french = "Réinitialiser qm_bind_status_items aux 4 entrées intégrées (blocage des touches/marteau/contrôle du dummy/synchronisation du dummy)"
+brazilian_portuguese = "Redefinir qm_bind_status_items para as 4 entradas integradas (fixação de teclas/martelo/controle do dummy/sincronização do dummy)"
+portuguese = "Repor qm_bind_status_items para as 4 entradas integradas (fixação de teclas/martelo/controlo do dummy/sincronização do dummy)"
+turkish = "qm_bind_status_items öğesini yerleşik 4 girdiye sıfırla (tuş kilidi/çekiç/dummy kontrolü/dummy senkronizasyonu)"
+polish = "Zresetuj qm_bind_status_items do 4 wbudowanych wpisów (blokada klawiszy/młot/sterowanie dummy/synchronizacja dummy)"
+
+[[message]]
+key = "Show key stuck status"
+[message.translations]
+simplified_chinese = "显示卡键状态"
+traditional_chinese = "顯示卡鍵狀態"
+japanese = "キー固着ステータスを表示"
+korean = "키 고정 상태 표시"
+russian = "Показывать статус залипших клавиш"
+german = "Tastensteck-Status anzeigen"
+spanish = "Mostrar estado de tecla atascada"
+french = "Afficher le statut de touche bloquée"
+brazilian_portuguese = "Mostrar status de tecla presa"
+portuguese = "Mostrar estado de tecla presa"
+turkish = "Tuş sıkışma durumunu göster"
+polish = "Pokaż stan zablokowanych klawiszy"
+
+[[message]]
+key = "Show hammer status"
+[message.translations]
+simplified_chinese = "显示锤状态"
+traditional_chinese = "顯示錘狀態"
+japanese = "ハンマーステータスを表示"
+korean = "망치 상태 표시"
+russian = "Показать статус молота"
+german = "Hammer-Status anzeigen"
+spanish = "Mostrar estado del martillo"
+french = "Afficher le statut du marteau"
+brazilian_portuguese = "Mostrar status do martelo"
+portuguese = "Mostrar estado do martelo"
+turkish = "Çekiç durumunu göster"
+polish = "Pokaż status młotka"
+
+[[message]]
+key = "Show dummy control status"
+[message.translations]
+simplified_chinese = "显示分身控制状态"
+traditional_chinese = "顯示分身控制狀態"
+japanese = "ダミーコントロール状態を表示"
+korean = "더미 제어 상태 표시"
+russian = "Показать статус управления дамми"
+german = "Dummy-Steuerungsstatus anzeigen"
+spanish = "Mostrar estado de control del Dummy"
+french = "Afficher le statut de contrôle du dummy"
+brazilian_portuguese = "Mostrar status de controle do dummy"
+portuguese = "Mostrar estado de controlo do Dummy"
+turkish = "Dummy kontrol durumunu göster"
+polish = "Pokaż status sterowania kukłą"
+
+[[message]]
+key = "Show dummy copy status"
+[message.translations]
+simplified_chinese = "显示分身同步状态"
+traditional_chinese = "顯示分身同步狀態"
+japanese = "ダミー同期状態を表示"
+korean = "더미 동기화 상태 표시"
+russian = "Показать статус синхронизации дамми"
+german = "Dummy-Synchronisationsstatus anzeigen"
+spanish = "Mostrar estado de sincronización del Dummy"
+french = "Afficher le statut de synchronisation du dummy"
+brazilian_portuguese = "Mostrar status de sincronização do dummy"
+portuguese = "Mostrar estado de sincronização do Dummy"
+turkish = "Dummy senkronizasyon durumunu göster"
+polish = "Pokaż status synchronizacji kukły"
+
+[[message]]
+key = "Custom bind status list"
+[message.translations]
+simplified_chinese = "自定义 bind 状态列表"
+traditional_chinese = "自訂 bind 狀態列表"
+japanese = "カスタム bind 状態リスト"
+korean = "사용자 지정 bind 상태 목록"
+russian = "Список пользовательских bind-статусов"
+german = "Benutzerdefinierte Bind-Status-Liste"
+spanish = "Lista de estado de bind personalizada"
+french = "Liste des états de bind personnalisés"
+brazilian_portuguese = "Lista de estado de bind personalizada"
+portuguese = "Lista de estado de bind personalizada"
+turkish = "Özel bind durumu listesi"
+polish = "Lista niestandardowych stanów bind"
+
+[[message]]
+key = "Empty: built-in 4 entries. Format: var|0=Off|1=On; var|Text"
+[message.translations]
+simplified_chinese = "为空时使用内置四项。格式：var|0=Off|1=On；var|Text"
+traditional_chinese = "為空時使用內建四項。格式：var|0=Off|1=On；var|Text"
+japanese = "空の場合は組み込みの4項目。形式：var|0=Off|1=On；var|Text"
+korean = "비어 있으면 내장 4개 항목. 형식: var|0=Off|1=On; var|Text"
+russian = "Пусто — встроенные 4 элемента. Формат: var|0=Off|1=On; var|Text"
+german = "Leer: die 4 integrierten Einträge. Format: var|0=Off|1=On; var|Text"
+spanish = "Vacío: las 4 entradas integradas. Formato: var|0=Off|1=On; var|Text"
+french = "Vide : les 4 entrées intégrées. Format : var|0=Off|1=On ; var|Text"
+brazilian_portuguese = "Vazio: as 4 entradas integradas. Formato: var|0=Off|1=On; var|Text"
+portuguese = "Vazio: as 4 entradas integradas. Formato: var|0=Off|1=On; var|Text"
+turkish = "Boş: yerleşik 4 girdi. Biçim: var|0=Off|1=On; var|Text"
+polish = "Puste: 4 wbudowane wpisy. Format: var|0=Off|1=On; var|Text"
+
+[[message]]
+key = "DDRace HUD Pro"
+[message.translations]
+simplified_chinese = 'DDRace HUD Pro'
+traditional_chinese = 'DDRace HUD Pro'
+japanese = 'DDRace HUD Pro（分身ステータス）'
+korean = 'DDRace HUD Pro（분신 상태）'
+russian = 'DDRace HUD Pro（статус дамми）'
+german = 'DDRace HUD Pro（Dummy-Status）'
+spanish = 'DDRace HUD Pro（estado del dummy）'
+french = 'DDRace HUD Pro（état du dummy）'
+brazilian_portuguese = 'DDRace HUD Pro（estado do dummy）'
+portuguese = 'DDRace HUD Pro（estado do dummy）'
+turkish = 'DDRace HUD Pro（dummy durumu）'
+polish = 'DDRace HUD Pro（status dummy）'
+
+[[message]]
+key = "Dummy key/hammer/control/copy status switches and custom bind status list"
+[message.translations]
+simplified_chinese = '卡键/锤子/分身控制/分身同步状态开关，以及自定义 bind 状态列表'
+traditional_chinese = '卡鍵/錘子/分身控制/分身同步狀態開關，以及自訂 bind 狀態列表'
+japanese = 'キー固定/ハンマー/分身操作/分身同期の状態スイッチとカスタム bind 状態リスト'
+korean = '키 고정/해머/분신 조작/분신 동기화 상태 스위치와 사용자 지정 bind 상태 목록'
+russian = 'Переключатели состояния фиксации клавиш/молота/управления дамми/синхронизации дамми и пользовательский список состояния bind'
+german = 'Status-Schalter für Tastenfixierung/Hammer/Dummy-Steuerung/Dummy-Synchronisation und benutzerdefinierte Bind-Status-Liste'
+spanish = 'Interruptores de estado de fijación de teclas/martillo/control de dummy/sincronización de dummy y lista de estado de bind personalizada'
+french = "Interrupteurs d'état de blocage des touches/marteau/contrôle du dummy/synchronisation du dummy et liste d'états de bind personnalisés"
+brazilian_portuguese = 'Interruptores de estado de fixação de teclas/martelo/controle do dummy/sincronização do dummy e lista de estado de bind personalizada'
+portuguese = 'Interruptores de estado de fixação de teclas/martelo/controlo do dummy/sincronização do dummy e lista de estado de bind personalizada'
+turkish = 'Tuş kilidi/çekiç/dummy kontrolü/dummy senkronizasyonu durum anahtarları ve özel bind durumu listesi'
+polish = 'Przełączniki stanu blokady klawiszy/młota/sterowania dummy/synchronizacji dummy oraz lista niestandardowych stanów bind'
+
+[[message]]
+key = "Sponsor title"
+[message.translations]
+simplified_chinese = "赞助头衔"
+traditional_chinese = "贊助頭銜"
+japanese = "支援者の称号"
+korean = "후원자 칭호"
+russian = "Титул спонсора"
+german = "Unterstützertitel"
+spanish = "Título de patrocinador"
+french = "Titre de soutien"
+brazilian_portuguese = "Título de apoiador"
+portuguese = "Título de apoiante"
+turkish = "Destekçi unvanı"
+polish = "Tytuł wspierającego"
+
+[[message]]
+key = "Redeem your code and customize your title"
+[message.translations]
+simplified_chinese = "领取赞助资格并设置头衔"
+traditional_chinese = "領取贊助資格並設定頭銜"
+japanese = "コードを引き換えて称号を設定"
+korean = "코드를 등록하고 칭호를 설정하세요"
+russian = "Активируйте код и настройте титул"
+german = "Code einlösen und Titel anpassen"
+spanish = "Canjea tu código y personaliza tu título"
+french = "Échangez votre code et personnalisez votre titre"
+brazilian_portuguese = "Resgate seu código e personalize seu título"
+portuguese = "Resgata o teu código e personaliza o teu título"
+turkish = "Kodunu kullan ve unvanını özelleştir"
+polish = "Wykorzystaj kod i dostosuj tytuł"
+
+[[message]]
+key = "Sponsor code"
+[message.translations]
+simplified_chinese = "认证码"
+traditional_chinese = "認證碼"
+japanese = "認証コード"
+korean = "인증 코드"
+russian = "Код спонсора"
+german = "Unterstützercode"
+spanish = "Código de patrocinador"
+french = "Code de soutien"
+brazilian_portuguese = "Código de apoiador"
+portuguese = "Código de apoiante"
+turkish = "Destekçi kodu"
+polish = "Kod wspierającego"
+
+[[message]]
+key = "Custom title"
+[message.translations]
+simplified_chinese = "自定义头衔"
+traditional_chinese = "自訂頭銜"
+japanese = "カスタム称号"
+korean = "사용자 지정 칭호"
+russian = "Свой титул"
+german = "Eigener Titel"
+spanish = "Título personalizado"
+french = "Titre personnalisé"
+brazilian_portuguese = "Título personalizado"
+portuguese = "Título personalizado"
+turkish = "Özel unvan"
+polish = "Własny tytuł"
+
+[[message]]
+key = "Exact bound nickname"
+[message.translations]
+simplified_chinese = "要绑定的完整昵称"
+traditional_chinese = "要綁定的完整暱稱"
+japanese = "紐付ける正確なニックネーム"
+korean = "연결할 정확한 닉네임"
+russian = "Точный ник для привязки"
+german = "Exakter gebundener Spielername"
+spanish = "Apodo exacto vinculado"
+french = "Pseudo exact associé"
+brazilian_portuguese = "Apelido exato vinculado"
+portuguese = "Alcunha exata associada"
+turkish = "Bağlanacak tam takma ad"
+polish = "Dokładny powiązany pseudonim"
+
+[[message]]
+key = "Only show with this nickname"
+[message.translations]
+simplified_chinese = "仅在使用此昵称时显示"
+traditional_chinese = "僅在使用此暱稱時顯示"
+japanese = "このニックネーム使用時のみ表示"
+korean = "이 닉네임을 사용할 때만 표시"
+russian = "Показывать только с этим ником"
+german = "Nur mit diesem Namen anzeigen"
+spanish = "Mostrar solo con este apodo"
+french = "Afficher uniquement avec ce pseudo"
+brazilian_portuguese = "Mostrar apenas com este apelido"
+portuguese = "Mostrar apenas com esta alcunha"
+turkish = "Yalnızca bu takma adla göster"
+polish = "Pokazuj tylko z tym pseudonimem"
+
+[[message]]
+key = "Up to 6 Chinese or 12 ASCII characters"
+[message.translations]
+simplified_chinese = "最多 6 个中文或 12 个英文字符"
+traditional_chinese = "最多 6 個中文或 12 個英文字符"
+japanese = "中国語は6文字、ASCIIは12文字まで"
+korean = "중국어 6자 또는 ASCII 12자까지"
+russian = "До 6 китайских или 12 ASCII-символов"
+german = "Bis zu 6 chinesische oder 12 ASCII-Zeichen"
+spanish = "Hasta 6 caracteres chinos o 12 ASCII"
+french = "6 caractères chinois ou 12 ASCII maximum"
+brazilian_portuguese = "Até 6 caracteres chineses ou 12 ASCII"
+portuguese = "Até 6 caracteres chineses ou 12 ASCII"
+turkish = "En fazla 6 Çince veya 12 ASCII karakter"
+polish = "Do 6 znaków chińskich lub 12 ASCII"
+
+[[message]]
+key = "Permanent access; up to 4 online IP addresses"
+[message.translations]
+simplified_chinese = "永久资格，最多 4 个 IP 同时在线"
+traditional_chinese = "永久資格，最多 4 個 IP 同時在線"
+japanese = "永久資格・同時接続は4つのIPまで"
+korean = "영구 자격, 최대 4개 IP 동시 접속"
+russian = "Навсегда; до 4 IP одновременно"
+german = "Dauerhaft; bis zu 4 IPs gleichzeitig"
+spanish = "Acceso permanente; hasta 4 IP conectadas"
+french = "Accès permanent ; 4 IP simultanées maximum"
+brazilian_portuguese = "Acesso permanente; até 4 IPs conectados"
+portuguese = "Acesso permanente; até 4 IPs ligados"
+turkish = "Kalıcı erişim; aynı anda en fazla 4 IP"
+polish = "Stały dostęp; do 4 IP jednocześnie"
+
+[[message]]
+key = "Enter your sponsor code"
+[message.translations]
+simplified_chinese = "请输入分发给你的认证码"
+traditional_chinese = "請輸入分發給你的認證碼"
+japanese = "配布された認証コードを入力"
+korean = "배포받은 인증 코드를 입력하세요"
+russian = "Введите выданный код спонсора"
+german = "Gib deinen Unterstützercode ein"
+spanish = "Introduce tu código de patrocinador"
+french = "Saisissez votre code de soutien"
+brazilian_portuguese = "Insira seu código de apoiador"
+portuguese = "Introduz o teu código de apoiante"
+turkish = "Sana verilen destekçi kodunu gir"
+polish = "Wpisz otrzymany kod wspierającego"
+
+[[message]]
+key = "Invalid sponsor code"
+[message.translations]
+simplified_chinese = "认证码无效"
+traditional_chinese = "認證碼無效"
+japanese = "無効な認証コード"
+korean = "유효하지 않은 인증 코드"
+russian = "Неверный код спонсора"
+german = "Ungültiger Unterstützercode"
+spanish = "Código de patrocinador no válido"
+french = "Code de soutien invalide"
+brazilian_portuguese = "Código de apoiador inválido"
+portuguese = "Código de apoiante inválido"
+turkish = "Geçersiz destekçi kodu"
+polish = "Nieprawidłowy kod wspierającego"
+
+[[message]]
+key = "Could not save title credential"
+[message.translations]
+simplified_chinese = "无法保存头衔凭证，请检查存储权限"
+traditional_chinese = "無法儲存頭銜憑證，請檢查儲存權限"
+japanese = "称号の認証情報を保存できません"
+korean = "칭호 인증 정보를 저장할 수 없습니다"
+russian = "Не удалось сохранить данные авторизации"
+german = "Titel-Zugangsdaten konnten nicht gespeichert werden"
+spanish = "No se pudieron guardar las credenciales"
+french = "Impossible de sauvegarder les identifiants du titre"
+brazilian_portuguese = "Não foi possível salvar as credenciais do título"
+portuguese = "Não foi possível guardar as credenciais do título"
+turkish = "Unvan kimlik bilgileri kaydedilemedi"
+polish = "Nie można zapisać danych uwierzytelniających"
+
+[[message]]
+key = "Contacting title server"
+[message.translations]
+simplified_chinese = "正在连接头衔服务器"
+traditional_chinese = "正在連接頭銜伺服器"
+japanese = "称号サーバーに接続中"
+korean = "칭호 서버에 연결 중"
+russian = "Подключение к серверу титулов"
+german = "Verbindung zum Titelserver"
+spanish = "Conectando al servidor de títulos"
+french = "Connexion au serveur de titres"
+brazilian_portuguese = "Conectando ao servidor de títulos"
+portuguese = "A ligar ao servidor de títulos"
+turkish = "Unvan sunucusuna bağlanılıyor"
+polish = "Łączenie z serwerem tytułów"
+
+[[message]]
+key = "Title too long or contains unsupported characters"
+[message.translations]
+simplified_chinese = "头衔过长或包含不支持的字符"
+traditional_chinese = "頭銜過長或包含不支援的字符"
+japanese = "称号が長すぎるか使用できない文字を含んでいます"
+korean = "칭호가 너무 길거나 지원하지 않는 문자가 있습니다"
+russian = "Титул слишком длинный или содержит недопустимые символы"
+german = "Titel zu lang oder mit ungültigen Zeichen"
+spanish = "Título demasiado largo o con caracteres no admitidos"
+french = "Titre trop long ou caractères non pris en charge"
+brazilian_portuguese = "Título muito longo ou com caracteres não aceitos"
+portuguese = "Título demasiado longo ou com caracteres não suportados"
+turkish = "Unvan çok uzun veya desteklenmeyen karakterler içeriyor"
+polish = "Tytuł jest za długi lub zawiera niedozwolone znaki"
+
+[[message]]
+key = "Permanent sponsor verified"
+[message.translations]
+simplified_chinese = "已认证：永久赞助资格"
+traditional_chinese = "已認證：永久贊助資格"
+japanese = "永久支援資格を認証済み"
+korean = "영구 후원 자격 인증 완료"
+russian = "Постоянный статус спонсора подтверждён"
+german = "Dauerhafter Unterstützerstatus bestätigt"
+spanish = "Patrocinio permanente verificado"
+french = "Soutien permanent vérifié"
+brazilian_portuguese = "Apoio permanente verificado"
+portuguese = "Apoio permanente verificado"
+turkish = "Kalıcı destekçi durumu doğrulandı"
+polish = "Stały status wspierającego potwierdzony"
+
+[[message]]
+key = "Title server unavailable; retry"
+[message.translations]
+simplified_chinese = "头衔服务暂不可用，请重试"
+traditional_chinese = "頭銜服務暫不可用，請重試"
+japanese = "称号サーバーに接続できません。再試行してください"
+korean = "칭호 서버에 연결할 수 없습니다. 다시 시도하세요"
+russian = "Сервер титулов недоступен; повторите попытку"
+german = "Titelserver nicht verfügbar; erneut versuchen"
+spanish = "Servidor de títulos no disponible; reintenta"
+french = "Serveur de titres indisponible ; réessayez"
+brazilian_portuguese = "Servidor de títulos indisponível; tente novamente"
+portuguese = "Servidor de títulos indisponível; tenta novamente"
+turkish = "Unvan sunucusu kullanılamıyor; tekrar dene"
+polish = "Serwer tytułów niedostępny; spróbuj ponownie"
+
+[[message]]
+key = "Sponsor code already claimed"
+[message.translations]
+simplified_chinese = "此认证码已被领取"
+traditional_chinese = "此認證碼已被領取"
+japanese = "このコードは使用済みです"
+korean = "이미 사용된 인증 코드입니다"
+russian = "Этот код уже активирован"
+german = "Code bereits eingelöst"
+spanish = "Este código ya se ha canjeado"
+french = "Ce code a déjà été utilisé"
+brazilian_portuguese = "Este código já foi resgatado"
+portuguese = "Este código já foi resgatado"
+turkish = "Bu kod zaten kullanılmış"
+polish = "Ten kod został już wykorzystany"
+
+[[message]]
+key = "Invalid bound name"
+[message.translations]
+simplified_chinese = "绑定昵称无效"
+traditional_chinese = "綁定暱稱無效"
+japanese = "紐付けるニックネームが無効です"
+korean = "연결할 닉네임이 유효하지 않습니다"
+russian = "Неверный ник для привязки"
+german = "Ungültiger gebundener Name"
+spanish = "Apodo vinculado no válido"
+french = "Pseudo associé invalide"
+brazilian_portuguese = "Apelido vinculado inválido"
+portuguese = "Alcunha associada inválida"
+turkish = "Bağlı takma ad geçersiz"
+polish = "Nieprawidłowy powiązany pseudonim"
+
+[[message]]
+key = "Four IP addresses are already online"
+[message.translations]
+simplified_chinese = "已有 4 个 IP 在线，请等待其他会话离线"
+traditional_chinese = "已有 4 個 IP 在線，請等待其他會話離線"
+japanese = "すでに4つのIPが接続中です"
+korean = "이미 4개 IP가 접속 중입니다"
+russian = "Уже подключены 4 IP-адреса"
+german = "Bereits 4 IP-Adressen online"
+spanish = "Ya hay 4 direcciones IP conectadas"
+french = "4 adresses IP sont déjà connectées"
+brazilian_portuguese = "Já há 4 endereços IP conectados"
+portuguese = "Já estão ligados 4 endereços IP"
+turkish = "Zaten 4 IP adresi çevrimiçi"
+polish = "Już 4 adresy IP są online"
+
+[[message]]
+key = "Redeem"
+[message.translations]
+simplified_chinese = "领取"
+traditional_chinese = "領取"
+japanese = "引き換え"
+korean = "등록"
+russian = "Активировать"
+german = "Einlösen"
+spanish = "Canjear"
+french = "Échanger"
+brazilian_portuguese = "Resgatar"
+portuguese = "Resgatar"
+turkish = "Kullan"
+polish = "Wykorzystaj"
+
+[[message]]
+key = "Instant zoom reverse"
+[message.translations]
+simplified_chinese = "反向缩放立即生效"
+traditional_chinese = "反向縮放立即生效"
+japanese = "ズームの逆方向操作を即時反映"
+korean = "줌 반전 즉시 적용"
+russian = "Мгновенный разворот зума"
+german = "Zoomrichtung sofort umkehren"
+spanish = "Inversión de zoom inmediata"
+french = "Inversion du zoom immédiate"
+brazilian_portuguese = "Inversão de zoom imediata"
+portuguese = "Inversão do zoom imediata"
+turkish = "Zoom yönünü anında çevir"
+polish = "Natychmiastowe odwrócenie zoomu"
+
+[[message]]
+key = "Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)"
+[message.translations]
+simplified_chinese = "反向按键时立即反向缩放（0=保留原有平滑缩放）"
+traditional_chinese = "反向按鍵時立即反向縮放（0=保留原有平滑縮放）"
+japanese = "逆方向キーでズームを即座に反転（0=元の滑らかなズームを維持）"
+korean = "반대 줌 키를 누르면 즉시 방향 전환 (0=기존 부드러운 줌 유지)"
+russian = "Мгновенно менять направление зума при нажатии противоположной клавиши (0=оставить прежний плавный зум)"
+german = "Zoomrichtung beim Drücken der Gegentaste sofort umkehren (0=ursprüngliches weiches Zoomen beibehalten)"
+spanish = "Invertir el zoom al instante al pulsar la tecla opuesta (0=mantener el zoom suave original)"
+french = "Inverser le zoom instantanément avec la touche opposée (0=garder le zoom fluide d'origine)"
+brazilian_portuguese = "Inverter o zoom na hora ao apertar a tecla oposta (0=manter o zoom suave original)"
+portuguese = "Inverter o zoom de imediato ao premir a tecla oposta (0=manter o zoom suave original)"
+turkish = "Karşı zoom tuşuna basınca yönü anında çevir (0=özgün yumuşak zoom korunur)"
+polish = "Natychmiastowa zmiana kierunku zoomu przeciwnym klawiszem (0=zachowaj płynny zoom)"
+
+[[message]]
+key = "New features"
+[message.translations]
+simplified_chinese = "新功能"
+traditional_chinese = "新功能"
+japanese = "新機能"
+korean = "새 기능"
+russian = "Новые возможности"
+german = "Neue Funktionen"
+spanish = "Novedades"
+french = "Nouveautés"
+brazilian_portuguese = "Novidades"
+portuguese = "Novidades"
+turkish = "Yeni özellikler"
+polish = "Nowe funkcje"
+
+[[message]]
+key = "Open settings"
+[message.translations]
+simplified_chinese = "打开设置"
+traditional_chinese = "開啟設定"
+japanese = "設定を開く"
+korean = "설정 열기"
+russian = "Открыть настройки"
+german = "Einstellungen öffnen"
+spanish = "Abrir ajustes"
+french = "Ouvrir les paramètres"
+brazilian_portuguese = "Abrir configurações"
+portuguese = "Abrir definições"
+turkish = "Ayarları aç"
+polish = "Otwórz ustawienia"
+
+[[message]]
+key = "Usage: %s"
+[message.translations]
+simplified_chinese = "用法：%s"
+traditional_chinese = "用法：%s"
+japanese = "使い方：%s"
+korean = "사용법: %s"
+russian = "Использование: %s"
+german = "Verwendung: %s"
+spanish = "Uso: %s"
+french = "Utilisation : %s"
+brazilian_portuguese = "Como usar: %s"
+portuguese = "Como usar: %s"
+turkish = "Kullanım: %s"
+polish = "Użycie: %s"
+
+[[message]]
+key = "Entry: %s"
+[message.translations]
+simplified_chinese = "入口：%s"
+traditional_chinese = "入口：%s"
+japanese = "場所：%s"
+korean = "위치: %s"
+russian = "Где найти: %s"
+german = "Fundort: %s"
+spanish = "Ubicación: %s"
+french = "Emplacement : %s"
+brazilian_portuguese = "Onde encontrar: %s"
+portuguese = "Onde encontrar: %s"
+turkish = "Konum: %s"
+polish = "Gdzie znaleźć: %s"
+
+[[message]]
+key = "Redeem your sponsor code to unlock a custom title, shown in chat and on your nameplate."
+[message.translations]
+simplified_chinese = "使用赞助兑换码解锁自定义称号，称号会显示在聊天与名牌上。"
+traditional_chinese = "使用贊助兌換碼解鎖自訂稱號，稱號會顯示在聊天與名牌上。"
+japanese = "スポンサーコードを引き換えるとカスタム称号を解除できます。称号はチャットとネームプレートに表示されます。"
+korean = "후원 코드를 등록하면 사용자 지정 칭호를 사용할 수 있습니다. 칭호는 채팅과 이름표에 표시됩니다."
+russian = "Активируйте спонсорский код, чтобы получить свой титул. Титул отображается в чате и на табличке имени."
+german = "Löse deinen Sponsor-Code ein, um einen eigenen Titel freizuschalten. Der Titel erscheint im Chat und am Namensschild."
+spanish = "Canjea tu código de patrocinador para desbloquear un título personalizado. El título se muestra en el chat y en la placa de nombre."
+french = "Échangez votre code de sponsor pour débloquer un titre personnalisé. Le titre s'affiche dans le chat et sur la plaque de nom."
+brazilian_portuguese = "Resgate seu código de patrocinador para liberar um título personalizado. O título aparece no chat e na placa de nome."
+portuguese = "Resgate o seu código de patrocinador para desbloquear um título personalizado. O título aparece no chat e na placa de nome."
+turkish = "Özel bir unvan açmak için sponsor kodunu kullan. Unvan sohbette ve isim etiketinde görünür."
+polish = "Wykorzystaj kod sponsora, aby odblokować własny tytuł. Tytuł jest widoczny na czacie i przy nicku."
+
+[[message]]
+key = "Enter the sponsor code, press Redeem, then write the title and press Save. Tick \"Only show with this nickname\" to bind it to one nickname."
+[message.translations]
+simplified_chinese = "填入赞助兑换码并点「兑换」，写下称号后点「保存」。勾选「仅在指定昵称下显示」可把称号绑定到某一个昵称。"
+traditional_chinese = "填入贊助兌換碼並點「兌換」，寫下稱號後點「儲存」。勾選「僅在指定暱稱下顯示」可把稱號綁定到某一個暱稱。"
+japanese = "スポンサーコードを入力して「引き換える」を押し、称号を書いて「保存」を押します。「このニックネームのみ表示」を有効にすると1つのニックネームに紐付けられます。"
+korean = "후원 코드를 입력하고 \"등록\"을 누른 뒤 칭호를 작성하고 \"저장\"을 누르세요. \"이 닉네임에서만 표시\"를 켜면 하나의 닉네임에만 연결됩니다."
+russian = "Введите спонсорский код и нажмите «Активировать», затем впишите титул и нажмите «Сохранить». Включите «Показывать только с этим ником», чтобы привязать титул к одному нику."
+german = "Gib den Sponsor-Code ein und drücke „Einlösen“, schreibe dann den Titel und drücke „Speichern“. Aktiviere „Nur mit diesem Nicknamen anzeigen“, um den Titel an einen Nicknamen zu binden."
+spanish = "Introduce el código de patrocinador y pulsa «Canjear», escribe el título y pulsa «Guardar». Activa «Mostrar solo con este apodo» para vincularlo a un apodo."
+french = "Saisissez le code de sponsor et cliquez sur « Échanger », écrivez le titre puis cliquez sur « Enregistrer ». Cochez « Afficher uniquement avec ce pseudo » pour le lier à un seul pseudo."
+brazilian_portuguese = "Insira o código de patrocinador e clique em \"Resgatar\", escreva o título e clique em \"Salvar\". Marque \"Mostrar apenas com este apelido\" para vinculá-lo a um apelido."
+portuguese = "Introduza o código de patrocinador e clique em «Resgatar», escreva o título e clique em «Guardar». Ative «Mostrar apenas com este nick» para o associar a um nick."
+turkish = "Sponsor kodunu gir ve \"Kullan\" düğmesine bas, ardından unvanı yaz ve \"Kaydet\"e bas. Tek bir takma ada bağlamak için \"Yalnızca bu takma adla göster\" seçeneğini işaretle."
+polish = "Wpisz kod sponsora i naciśnij „Zrealizuj”, następnie wpisz tytuł i naciśnij „Zapisz”. Zaznacz „Pokazuj tylko z tym nickiem”, aby przypisać tytuł do jednego nicku."
+
+[[message]]
+key = "Adds dummy key, hammer, control and copy status to the HUD, plus your own bind status list."
+[message.translations]
+simplified_chinese = "在 HUD 上显示分身的按键、锤子、控制与同步状态，并支持自定义 bind 状态列表。"
+traditional_chinese = "在 HUD 上顯示分身的按鍵、錘子、控制與同步狀態，並支援自訂 bind 狀態清單。"
+japanese = "分身のキー、ハンマー、コントロール、コピー状態をHUDに表示し、独自のbind状態リストも使えます。"
+korean = "더미의 키, 해머, 컨트롤, 복사 상태를 HUD에 표시하고 사용자 지정 bind 상태 목록도 지원합니다."
+russian = "Показывает на HUD состояние клавиш, молота, управления и копирования у дамми, а также свой список bind-статусов."
+german = "Zeigt Tasten-, Hammer-, Steuer- und Kopierstatus des Dummys im HUD, plus eine eigene Bind-Status-Liste."
+spanish = "Muestra en el HUD el estado de teclas, martillo, control y copia del dummy, además de tu propia lista de binds."
+french = "Affiche dans le HUD l'état des touches, du marteau, du contrôle et de la copie du dummy, plus votre liste de binds."
+brazilian_portuguese = "Mostra no HUD o estado de teclas, martelo, controle e cópia do dummy, além da sua própria lista de binds."
+portuguese = "Mostra no HUD o estado de teclas, martelo, controlo e cópia do dummy, além da sua própria lista de binds."
+turkish = "HUD'da kukla tuş, çekiç, kontrol ve kopyalama durumunu ve kendi bind durum listesini gösterir."
+polish = "Pokazuje na HUD stan klawiszy, młotka, sterowania i kopiowania kukiełki oraz własną listę statusów bindów."
+
+[[message]]
+key = "Switch on the status rows you need, then list the binds you want to watch."
+[message.translations]
+simplified_chinese = "打开需要的状态开关，再在自定义列表里填想监控的 bind。"
+traditional_chinese = "開啟需要的狀態開關，再在自訂清單裡填想監控的 bind。"
+japanese = "必要な状態スイッチをオンにし、監視したいbindをカスタムリストに入力します。"
+korean = "필요한 상태 스위치를 켜고, 감시할 bind를 사용자 지정 목록에 입력하세요."
+russian = "Включите нужные переключатели состояний и укажите bind-команды для отслеживания в своём списке."
+german = "Schalte die benötigten Status-Schalter ein und trage die zu überwachenden Binds in die eigene Liste ein."
+spanish = "Activa los interruptores de estado que necesites y añade a la lista los binds que quieras vigilar."
+french = "Activez les interrupteurs d'état nécessaires, puis listez les binds à surveiller."
+brazilian_portuguese = "Ative os interruptores de estado que precisar e liste os binds que deseja acompanhar."
+portuguese = "Ative os interruptores de estado necessários e liste os binds que quer acompanhar."
+turkish = "Gereken durum anahtarlarını aç, ardından izlemek istediğin bind'leri listeye ekle."
+polish = "Włącz potrzebne przełączniki stanu, a następnie wpisz do listy bindy, które chcesz śledzić."
+
+[[message]]
+key = "Shows lyrics from NetEase Cloud Music, Soda Music, Kugou and QQ Music on the dynamic island."
+[message.translations]
+simplified_chinese = "从网易云音乐、汽水音乐、酷狗、QQ 音乐获取歌词，并显示在灵动岛上。"
+traditional_chinese = "從網易雲音樂、汽水音樂、酷狗、QQ 音樂取得歌詞，並顯示在靈動島上。"
+japanese = "NetEase Cloud Music、Soda Music、Kugou、QQ Musicの歌詞を取得し、ダイナミックアイランドに表示します。"
+korean = "NetEase Cloud Music, Soda Music, Kugou, QQ Music의 가사를 가져와 다이내믹 아일랜드에 표시합니다."
+russian = "Получает текст песен из NetEase Cloud Music, Soda Music, Kugou и QQ Music и показывает его на динамическом острове."
+german = "Holt Songtexte aus NetEase Cloud Music, Soda Music, Kugou und QQ Music und zeigt sie auf der Dynamic Island."
+spanish = "Obtiene la letra de NetEase Cloud Music, Soda Music, Kugou y QQ Music y la muestra en la isla dinámica."
+french = "Récupère les paroles de NetEase Cloud Music, Soda Music, Kugou et QQ Music et les affiche sur l'île dynamique."
+brazilian_portuguese = "Obtém a letra do NetEase Cloud Music, Soda Music, Kugou e QQ Music e mostra na ilha dinâmica."
+portuguese = "Obtém a letra do NetEase Cloud Music, Soda Music, Kugou e QQ Music e mostra-a na ilha dinâmica."
+turkish = "NetEase Cloud Music, Soda Music, Kugou ve QQ Music'ten şarkı sözlerini alıp dinamik adada gösterir."
+polish = "Pobiera teksty z NetEase Cloud Music, Soda Music, Kugou i QQ Music i pokazuje je na dynamicznej wyspie."
+
+[[message]]
+key = "Pick the source that matches your music app and keep it playing; the lyrics follow automatically."
+[message.translations]
+simplified_chinese = "选择与你使用的音乐客户端匹配的来源并保持播放，歌词会自动跟随。"
+traditional_chinese = "選擇與你使用的音樂客戶端相符的來源並保持播放，歌詞會自動跟隨。"
+japanese = "使用中の音楽アプリに合うソースを選んで再生しておくだけで、歌詞が自動的に追従します。"
+korean = "사용하는 음악 앱에 맞는 소스를 선택하고 재생만 하면 가사가 자동으로 따라옵니다."
+russian = "Выберите источник, соответствующий вашему музыкальному приложению, и просто включите музыку — текст подтянется сам."
+german = "Wähle die zu deiner Musik-App passende Quelle und lass sie laufen; der Text folgt automatisch."
+spanish = "Elige la fuente que corresponda a tu app de música y deja que suene; la letra se sincroniza sola."
+french = "Choisissez la source correspondant à votre application de musique et laissez-la jouer ; les paroles suivent automatiquement."
+brazilian_portuguese = "Escolha a fonte que corresponde ao seu app de música e deixe tocando; a letra acompanha automaticamente."
+portuguese = "Escolha a fonte correspondente à sua aplicação de música e deixe-a a tocar; a letra acompanha automaticamente."
+turkish = "Müzik uygulamanla eşleşen kaynağı seç ve çalmaya devam et; sözler otomatik olarak takip eder."
+polish = "Wybierz źródło zgodne z twoją aplikacją muzyczną i pozostaw ją włączoną; tekst podąży automatycznie."
+
+[[message]]
+key = "Your weapon slides and rotates in when you switch, and flips while reloading."
+[message.translations]
+simplified_chinese = "切换武器时滑入旋转，装填时按装填时间翻转。"
+traditional_chinese = "切換武器時滑入旋轉，裝填時依裝填時間翻轉。"
+japanese = "武器切り替え時にスライドしながら回転し、リロード中は回転して裏返ります。"
+korean = "무기를 바꿀 때 미끄러지듯 회전하며 등장하고, 재장전 중에는 뒤집힙니다."
+russian = "При смене оружие въезжает с поворотом, а при перезарядке переворачивается."
+german = "Beim Waffenwechsel fährt die Waffe mit Drehung ein, beim Nachladen dreht sie sich um."
+spanish = "Al cambiar de arma, esta entra girando, y al recargar da una vuelta."
+french = "L'arme entre en glissant et en tournant lors du changement, et se retourne pendant le rechargement."
+brazilian_portuguese = "A arma entra deslizando e girando na troca, e vira durante o recarregamento."
+portuguese = "A arma entra a deslizar e a rodar na troca, e vira durante o recarregamento."
+turkish = "Silah değiştirirken kayarak dönerek girer, şarjör doldururken takla atar."
+polish = "Broń wsuwa się z obrotem przy zmianie, a przy przeładowaniu obraca się."
+
+[[message]]
+key = "Enable weapon switch animation or reload animation, then tune range, duration, rotation and easing."
+[message.translations]
+simplified_chinese = "打开武器切换动画或装填动画，再调整作用范围、时长、旋转角度与缓动。"
+traditional_chinese = "開啟武器切換動畫或裝填動畫，再調整作用範圍、時長、旋轉角度與緩動。"
+japanese = "武器切り替えアニメかリロードアニメを有効にし、範囲・時間・回転・イージングを調整します。"
+korean = "무기 교체 애니메이션 또는 재장전 애니메이션을 켜고 범위, 시간, 회전, 이징을 조정하세요."
+russian = "Включите анимацию смены или перезарядки оружия, затем настройте радиус, длительность, поворот и сглаживание."
+german = "Aktiviere die Waffenwechsel- oder Nachladeanimation und stelle dann Reichweite, Dauer, Drehung und Easing ein."
+spanish = "Activa la animación de cambio o de recarga y ajusta alcance, duración, rotación y suavizado."
+french = "Activez l'animation de changement ou de rechargement, puis réglez portée, durée, rotation et lissage."
+brazilian_portuguese = "Ative a animação de troca ou de recarga e ajuste alcance, duração, rotação e suavização."
+portuguese = "Ative a animação de troca ou de recarregamento e ajuste alcance, duração, rotação e suavização."
+turkish = "Silah değiştirme veya şarjör doldurma animasyonunu aç, ardından menzil, süre, dönüş ve yumuşatmayı ayarla."
+polish = "Włącz animację zmiany lub przeładowania broni, a potem dostosuj zasięg, czas, obrót i wygładzanie."
+
+[[message]]
+key = "Plays an animation whenever your skin changes, including skins stolen with the hammer."
+[message.translations]
+simplified_chinese = "皮肤变化时播放动画，包括锤子偷来的皮肤。"
+traditional_chinese = "皮膚變化時播放動畫，包括錘子偷來的皮膚。"
+japanese = "ハンマーで奪ったスキンも含め、スキンが変わるときにアニメーションを再生します。"
+korean = "해머로 빼앗은 스킨을 포함해 스킨이 바뀔 때 애니메이션을 재생합니다."
+russian = "Проигрывает анимацию при смене скина, в том числе скина, украденного молотом."
+german = "Spielt eine Animation ab, wenn sich dein Skin ändert, auch bei mit dem Hammer gestohlenen Skins."
+spanish = "Reproduce una animación cuando cambia tu skin, incluidas las robadas con el martillo."
+french = "Joue une animation à chaque changement de skin, y compris ceux volés au marteau."
+brazilian_portuguese = "Reproduz uma animação quando o skin muda, incluindo os roubados com o martelo."
+portuguese = "Reproduz uma animação sempre que o skin muda, incluindo os roubados com o martelo."
+turkish = "Çekiçle çalınanlar dahil, skinin değiştiğinde bir animasyon oynatır."
+polish = "Odtwarza animację przy zmianie skina, także tego skradzionego młotkiem."
+
+[[message]]
+key = "Enable skin transition animation, then choose the type, scope, duration and easing."
+[message.translations]
+simplified_chinese = "打开皮肤切换动画，再选择类型、作用范围、时长与缓动。"
+traditional_chinese = "開啟皮膚切換動畫，再選擇類型、作用範圍、時長與緩動。"
+japanese = "スキン切り替えアニメを有効にし、種類・範囲・時間・イージングを選びます。"
+korean = "스킨 전환 애니메이션을 켜고 종류, 범위, 시간, 이징을 선택하세요."
+russian = "Включите анимацию смены скина и выберите тип, область, длительность и сглаживание."
+german = "Aktiviere die Skin-Übergangsanimation und wähle Typ, Reichweite, Dauer und Easing."
+spanish = "Activa la animación de transición de skin y elige tipo, alcance, duración y suavizado."
+french = "Activez l'animation de transition de skin, puis choisissez type, portée, durée et lissage."
+brazilian_portuguese = "Ative a animação de transição de skin e escolha tipo, alcance, duração e suavização."
+portuguese = "Ative a animação de transição de skin e escolha tipo, alcance, duração e suavização."
+turkish = "Skin geçiş animasyonunu aç, ardından tür, menzil, süre ve yumuşatmayı seç."
+polish = "Włącz animację zmiany skina, a następnie wybierz typ, zasięg, czas i wygładzanie."
+
+[[message]]
+key = "Merges chat messages repeated within a short time into a single line."
+[message.translations]
+simplified_chinese = "短时间内重复的聊天消息会合并成一条。"
+traditional_chinese = "短時間內重複的聊天訊息會合併成一條。"
+japanese = "短時間に繰り返されたチャットメッセージを1行にまとめます。"
+korean = "짧은 시간 안에 반복된 채팅 메시지를 한 줄로 합칩니다."
+russian = "Объединяет повторяющиеся за короткое время сообщения чата в одну строку."
+german = "Fasst innerhalb kurzer Zeit wiederholte Chatnachrichten zu einer Zeile zusammen."
+spanish = "Une en una sola línea los mensajes de chat repetidos en poco tiempo."
+french = "Fusionne en une seule ligne les messages de chat répétés en peu de temps."
+brazilian_portuguese = "Junta em uma linha as mensagens de chat repetidas em pouco tempo."
+portuguese = "Junta numa só linha as mensagens de chat repetidas em pouco tempo."
+turkish = "Kısa sürede tekrarlanan sohbet mesajlarını tek satırda birleştirir."
+polish = "Scala powtórzone w krótkim czasie wiadomości czatu w jedną linię."
+
+[[message]]
+key = "Turn on \"Message merging\" in Dream Features."
+[message.translations]
+simplified_chinese = "在「梦的小功能」里打开「消息合并」。"
+traditional_chinese = "在「夢的小功能」裡開啟「訊息合併」。"
+japanese = "「ドリーム機能」で「Message merging」をオンにします。"
+korean = "\"드림 기능\"에서 \"Message merging\"을 켜세요."
+russian = "Включите «Message merging» в разделе «Dream Features»."
+german = "Aktiviere „Message merging“ in den „Dream Features“."
+spanish = "Activa «Message merging» en «Dream Features»."
+french = "Activez « Message merging » dans « Dream Features »."
+brazilian_portuguese = "Ative \"Message merging\" em \"Dream Features\"."
+portuguese = "Ative «Message merging» em «Dream Features»."
+turkish = "\"Dream Features\" bölümünde \"Message merging\" seçeneğini aç."
+polish = "Włącz „Message merging” w „Dream Features”."
+
+[[message]]
+key = "Still free after %d sponsors. Take a look?"
+[message.translations]
+simplified_chinese = "已经靠 %d 位赞助者撑到现在，要看看吗？"
+traditional_chinese = "已經靠 %d 位贊助者撐到現在，要看看嗎？"
+japanese = "%d 人のスポンサーに支えられています。見てみますか？"
+korean = "%d명의 후원자 덕분입니다. 보시겠어요?"
+russian = "Нас держат %d спонсоров. Посмотрите?"
+german = "Getragen von %d Unterstützern. Mal ansehen?"
+spanish = "Nos sostienen %d patrocinadores. ¿Lo ves?"
+french = "Grâce à %d sponsors. Aller voir ?"
+brazilian_portuguese = "Sustentado por %d apoiadores. Quer ver?"
+portuguese = "Sustentado por %d apoiadores. Quer ver?"
+turkish = "Bizi %d destekçi ayakta tutuyor. Bakmak ister misin?"
+polish = "Wspiera nas %d sponsorów. Zobaczysz?"
+
+[[message]]
+key = "Really? Not even a little?"
+[message.translations]
+simplified_chinese = "真的？一点都不考虑一下吗？"
+traditional_chinese = "真的？一點都不考慮一下嗎？"
+japanese = "本当に？少しも考えてくれないんですか？"
+korean = "정말요? 조금도 생각해 보실 생각이 없나요?"
+russian = "Серьёзно? Даже чуть-чуть?"
+german = "Wirklich? Nicht mal ein bisschen?"
+spanish = "¿En serio? ¿Ni un poquito?"
+french = "Vraiment ? Même pas un peu ?"
+brazilian_portuguese = "Sério? Nem um pouquinho?"
+portuguese = "A sério? Nem um pouquinho?"
+turkish = "Gerçekten mi? Hiç mi düşünmezsin?"
+polish = "Serio? Ani trochę?"
+
+[[message]]
+key = "Sponsor reminder"
+[message.translations]
+simplified_chinese = "赞助提醒"
+traditional_chinese = "贊助提醒"
+japanese = "スポンサー通知"
+korean = "후원 알림"
+russian = "Напоминание о спонсорстве"
+german = "Unterstützer-Hinweis"
+spanish = "Recordatorio de patrocinio"
+french = "Rappel de sponsoring"
+brazilian_portuguese = "Lembrete de apoio"
+portuguese = "Lembrete de apoio"
+turkish = "Destekçi hatırlatması"
+polish = "Przypomnienie o wsparciu"
+
+[[message]]
+key = "Sponsor reminder preview"
+[message.translations]
+simplified_chinese = "赞助提醒预览"
+traditional_chinese = "贊助提醒預覽"
+japanese = "スポンサー通知のプレビュー"
+korean = "후원 알림 미리보기"
+russian = "Предпросмотр напоминания"
+german = "Vorschau des Unterstützer-Hinweises"
+spanish = "Vista previa del recordatorio"
+french = "Aperçu du rappel de sponsoring"
+brazilian_portuguese = "Prévia do lembrete de apoio"
+portuguese = "Pré-visualização do lembrete"
+turkish = "Destekçi hatırlatması önizlemesi"
+polish = "Podgląd przypomnienia o wsparciu"
+
+[[message]]
+key = "Accumulated client launch count (used by the sponsor reminder)"
+[message.translations]
+simplified_chinese = "累计启动次数（用于赞助提醒）"
+traditional_chinese = "累計啟動次數（用於贊助提醒）"
+japanese = "クライアントの累計起動回数（スポンサー通知に使用）"
+korean = "누적 클라이언트 실행 횟수(후원 알림에 사용)"
+russian = "Суммарное число запусков клиента (для напоминания о спонсорстве)"
+german = "Kumulierte Client-Starts (für den Unterstützer-Hinweis)"
+spanish = "Número acumulado de inicios del cliente (para el recordatorio)"
+french = "Nombre cumulé de lancements du client (pour le rappel)"
+brazilian_portuguese = "Contagem acumulada de execuções (para o lembrete)"
+portuguese = "Contagem acumulada de arranques (para o lembrete)"
+turkish = "Toplam istemci başlatma sayısı (destekçi hatırlatması için)"
+polish = "Łączna liczba uruchomień klienta (dla przypomnienia)"
+
+[[message]]
+key = "Launch count threshold for the next sponsor reminder"
+[message.translations]
+simplified_chinese = "下次赞助提醒的启动次数阈值"
+traditional_chinese = "下次贊助提醒的啟動次數閾值"
+japanese = "次のスポンサー通知までの起動回数しきい値"
+korean = "다음 후원 알림까지의 실행 횟수 임계값"
+russian = "Порог числа запусков до следующего напоминания"
+german = "Startschwelle für den nächsten Unterstützer-Hinweis"
+spanish = "Umbral de inicios para el próximo recordatorio"
+french = "Seuil de lancements avant le prochain rappel"
+brazilian_portuguese = "Limite de execuções para o próximo lembrete"
+portuguese = "Limite de arranques para o próximo lembrete"
+turkish = "Sonraki hatırlatma için başlatma eşiği"
+polish = "Próg uruchomień do następnego przypomnienia"
+
+[[message]]
+key = "Show the occasional sponsor reminder in the main menu"
+[message.translations]
+simplified_chinese = "在主菜单偶尔显示赞助提醒"
+traditional_chinese = "在主選單偶爾顯示贊助提醒"
+japanese = "メインメニューでスポンサー通知を時々表示する"
+korean = "메인 메뉴에서 후원 알림을 가끔 표시"
+russian = "Иногда показывать напоминание о спонсорстве в главном меню"
+german = "Gelegentlichen Unterstützer-Hinweis im Hauptmenü zeigen"
+spanish = "Mostrar ocasionalmente el recordatorio en el menú principal"
+french = "Afficher occasionnellement le rappel dans le menu principal"
+brazilian_portuguese = "Mostrar ocasionalmente o lembrete no menu principal"
+portuguese = "Mostrar ocasionalmente o lembrete no menu principal"
+turkish = "Ana menüde ara sıra destekçi hatırlatması göster"
+polish = "Pokazuj czasem przypomnienie w menu głównym"
+
+[[message]]
+key = "Preview the sponsor reminder without changing the launch count"
+[message.translations]
+simplified_chinese = "预览赞助提醒，不影响启动计数"
+traditional_chinese = "預覽贊助提醒，不影響啟動計數"
+japanese = "起動回数を変えずにスポンサー通知をプレビュー"
+korean = "실행 횟수를 바꾸지 않고 후원 알림 미리보기"
+russian = "Предпросмотр напоминания без изменения счётчика запусков"
+german = "Unterstützer-Hinweis ohne Änderung der Startzahl ansehen"
+spanish = "Previsualizar el recordatorio sin cambiar el contador"
+french = "Prévisualiser le rappel sans modifier le compteur"
+brazilian_portuguese = "Pré-visualizar o lembrete sem alterar a contagem"
+portuguese = "Pré-visualizar o lembrete sem alterar a contagem"
+turkish = "Başlatma sayısını değiştirmeden hatırlatmayı önizle"
+polish = "Podejrzyj przypomnienie bez zmiany licznika uruchomień"
+
+[[message]]
+key = "1% low"
+[message.translations]
+simplified_chinese = "1% 最低帧"
+traditional_chinese = "1% 最低幀"
+japanese = "1%最低フレーム"
+korean = "1% 최저 프레임"
+russian = "1% низких кадров"
+german = "1%-Niedrigwerte"
+spanish = "1% más bajo"
+french = "1% les plus bas"
+brazilian_portuguese = "1% mais baixo"
+portuguese = "1% mais baixo"
+turkish = "%1 düşük"
+polish = "1% najniższych"
+
+[[message]]
+key = "Deactivate ghost"
+[message.translations]
+simplified_chinese = "停用影子"
+traditional_chinese = "停用影子"
+japanese = "ゴーストを無効化"
+korean = "고스트 비활성화"
+russian = "Деактивировать Ghost"
+german = "Geist deaktivieren"
+spanish = "Desactivar fantasma"
+french = "Désactiver le fantôme"
+brazilian_portuguese = "Desativar o fantasma"
+portuguese = "Desativar o fantasma"
+turkish = "Hayaleti devre dışı bırak"
+polish = "Dezaktywuj ducha"
+
+[[message]]
+key = "Download replay"
+[message.translations]
+simplified_chinese = "下载回放"
+traditional_chinese = "下載回放"
+japanese = "リプレイをダウンロード"
+korean = "リプレイ ダウンロード"
+russian = "Скачать реплей"
+german = "Wiederholung herunterladen"
+spanish = "Descargar repetición"
+french = "Télécharger la rediffusion"
+brazilian_portuguese = "Baixar a replay"
+portuguese = "Descarregar a repetição"
+turkish = "Tekrarı indir"
+polish = "Pobierz nagranie"
+
+[[message]]
+key = "Download the rank 1 demo for this map"
+[message.translations]
+simplified_chinese = "下载该地图的 Rank 1 演示"
+traditional_chinese = "下載該地圖的 Rank 1 示範"
+japanese = "このマップのランク1デモをダウンロード"
+korean = "이 맵의 랭크 1 데모 다운로드"
+russian = "Скачать демо ранга 1 для этой карты"
+german = "Rank-1-Demo für diese Karte herunterladen"
+spanish = "Descargar la demo de rango 1 de este mapa"
+french = "Télécharger la démo de rang 1 de cette carte"
+brazilian_portuguese = "Baixar a demo de rank 1 deste mapa"
+portuguese = "Descarregar a demo de rank 1 deste mapa"
+turkish = "Bu harita için Rank 1 demosunu indir"
+polish = "Pobierz demo rangi 1 dla tej mapy"
+
+[[message]]
+key = "Downloading rank 1 demo"
+[message.translations]
+simplified_chinese = "正在下载 Rank 1 演示"
+traditional_chinese = "正在下載 Rank 1 示範"
+japanese = "ランク1デモをダウンロード中"
+korean = "랭크 1 데모 다운로드 중"
+russian = "Загрузка демо ранга 1"
+german = "Rank-1-Demo wird heruntergeladen"
+spanish = "Descargando la demo de rango 1"
+french = "Téléchargement de la démo de rang 1"
+brazilian_portuguese = "Baixando a demo de rank 1"
+portuguese = "A descarregar a demo de rank 1"
+turkish = "Rank 1 demosu indiriliyor"
+polish = "Pobieranie dema rangi 1"
+
+[[message]]
+key = "Failed to download the rank 1 demo"
+[message.translations]
+simplified_chinese = "下载 Rank 1 演示失败"
+traditional_chinese = "下載 Rank 1 示範失敗"
+japanese = "ランク1デモのダウンロードに失敗"
+korean = "랭크 1 데모 다운로드 실패"
+russian = "Не удалось скачать демо ранга 1"
+german = "Herunterladen der Rank-1-Demo fehlgeschlagen"
+spanish = "Error al descargar la demo de rango 1"
+french = "Échec du téléchargement de la démo de rang 1"
+brazilian_portuguese = "Falha ao baixar a demo de rank 1"
+portuguese = "Falha ao descarregar a demo de rank 1"
+turkish = "Rank 1 demosu indirilemedi"
+polish = "Nie udało się pobrać dema rangi 1"
+
+[[message]]
+key = "Failed to fetch the replay list"
+[message.translations]
+simplified_chinese = "获取回放列表失败"
+traditional_chinese = "取得回放清單失敗"
+japanese = "リプレイ一覧の取得に失敗"
+korean = "리플레이 목록 가져오기 실패"
+russian = "Не удалось получить список реплеев"
+german = "Abrufen der Wiederholungsliste fehlgeschlagen"
+spanish = "Error al obtener la lista de repeticiones"
+french = "Échec de la récupération de la liste des rediffusions"
+brazilian_portuguese = "Falha ao obter a lista de replays"
+portuguese = "Falha ao obter a lista de repetições"
+turkish = "Tekrar listesi alınamadı"
+polish = "Nie udało się pobrać listy nagrań"
+
+[[message]]
+key = "Frame time p99"
+[message.translations]
+simplified_chinese = "帧时间 p99"
+traditional_chinese = "幀時間 p99"
+japanese = "フレーム時間 p99"
+korean = "프레임 시간 p99"
+russian = "Время кадра p99"
+german = "Framezeit p99"
+spanish = "Tiempo de frame p99"
+french = "Temps de frame p99"
+brazilian_portuguese = "Tempo de frame p99"
+portuguese = "Tempo de frame p99"
+turkish = "Kare süresi p99"
+polish = "Czas klatki p99"
+
+[[message]]
+key = "Ghost active"
+[message.translations]
+simplified_chinese = "影子已激活"
+traditional_chinese = "影子已啟用"
+japanese = "ゴーストが有効"
+korean = "고스트 활성화됨"
+russian = "Ghost активен"
+german = "Geist aktiv"
+spanish = "Fantasma activo"
+french = "Fantôme actif"
+brazilian_portuguese = "Fantasma ativo"
+portuguese = "Fantasma ativo"
+turkish = "Hayalet etkin"
+polish = "Duch aktywny"
+
+[[message]]
+key = "Ghost ready"
+[message.translations]
+simplified_chinese = "影子就绪"
+traditional_chinese = "影子就緒"
+japanese = "ゴースト準備完了"
+korean = "고스트 준비됨"
+russian = "Ghost готов"
+german = "Geist bereit"
+spanish = "Fantasma listo"
+french = "Fantôme prêt"
+brazilian_portuguese = "Fantasma pronto"
+portuguese = "Fantasma pronto"
+turkish = "Hayalet hazır"
+polish = "Duch gotowy"
+
+[[message]]
+key = "HTTP is not available"
+[message.translations]
+simplified_chinese = "HTTP 不可用"
+traditional_chinese = "HTTP 不可用"
+japanese = "HTTP を利用できません"
+korean = "HTTP를 사용할 수 없습니다"
+russian = "HTTP недоступен"
+german = "HTTP ist nicht verfügbar"
+spanish = "HTTP no está disponible"
+french = "HTTP n'est pas disponible"
+brazilian_portuguese = "HTTP não está disponível"
+portuguese = "HTTP não está disponível"
+turkish = "HTTP kullanılamıyor"
+polish = "HTTP jest niedostępne"
+
+[[message]]
+key = "Load as ghost"
+[message.translations]
+simplified_chinese = "作为影子加载"
+traditional_chinese = "作為影子載入"
+japanese = "ゴーストとして読み込む"
+korean = "고스트로 불러오기"
+russian = "Загрузить как Ghost"
+german = "Als Geist laden"
+spanish = "Cargar como fantasma"
+french = "Charger comme fantôme"
+brazilian_portuguese = "Carregar como fantasma"
+portuguese = "Carregar como fantasma"
+turkish = "Hayalet olarak yükle"
+polish = "Wczytaj jako duch"
+
+[[message]]
+key = "Long frames"
+[message.translations]
+simplified_chinese = "长帧"
+traditional_chinese = "長幀"
+japanese = "長いフレーム"
+korean = "긴 프레임"
+russian = "Длинные кадры"
+german = "Lange Frames"
+spanish = "Frames largos"
+french = "Frames longs"
+brazilian_portuguese = "Frames longos"
+portuguese = "Frames longos"
+turkish = "Uzun kareler"
+polish = "Długie klatki"
+
+[[message]]
+key = "No rank 1 replay was found for this map"
+[message.translations]
+simplified_chinese = "未找到该地图的 Rank 1 回放"
+traditional_chinese = "未找到該地圖的 Rank 1 回放"
+japanese = "このマップのランク1リプレイが見つかりません"
+korean = "이 맵의 랭크 1 리플레이를 찾을 수 없습니다"
+russian = "Реплей ранга 1 для этой карты не найден"
+german = "Kein Rank-1-Replay für diese Karte gefunden"
+spanish = "No se encontró repetición de rango 1 para este mapa"
+french = "Aucune rediffusion de rang 1 trouvée pour cette carte"
+brazilian_portuguese = "Nenhuma replay de rank 1 encontrada para este mapa"
+portuguese = "Nenhuma repetição de rank 1 encontrada para este mapa"
+turkish = "Bu harita için Rank 1 tekrarı bulunamadı"
+polish = "Nie znaleziono nagrania rangi 1 dla tej mapy"
+
+[[message]]
+key = "Play replay"
+[message.translations]
+simplified_chinese = "播放回放"
+traditional_chinese = "播放回放"
+japanese = "リプレイを再生"
+korean = "리플레이 재생"
+russian = "Воспроизвести реплей"
+german = "Wiederholung abspielen"
+spanish = "Reproducir repetición"
+french = "Lire la rediffusion"
+brazilian_portuguese = "Reproduzir a replay"
+portuguese = "Reproduzir a repetição"
+turkish = "Tekrarı oynat"
+polish = "Odtwórz nagranie"
+
+[[message]]
+key = "Rank 1"
+[message.translations]
+simplified_chinese = "Rank 1"
+traditional_chinese = "Rank 1"
+japanese = "ランク1"
+korean = "랭크 1"
+russian = "Ранг 1"
+german = "Rang 1"
+spanish = "Rango 1"
+french = "Rang 1"
+brazilian_portuguese = "Rank 1"
+portuguese = "Rank 1"
+turkish = "Rank 1"
+polish = "Ranga 1"
+
+[[message]]
+key = "Rank 1 demo"
+[message.translations]
+simplified_chinese = "Rank 1 演示"
+traditional_chinese = "Rank 1 示範"
+japanese = "ランク1デモ"
+korean = "랭크 1 데모"
+russian = "Демо ранга 1"
+german = "Rank-1-Demo"
+spanish = "Demo de rango 1"
+french = "Démo de rang 1"
+brazilian_portuguese = "Demo de rank 1"
+portuguese = "Demo de rank 1"
+turkish = "Rank 1 demosu"
+polish = "Demo rangi 1"
+
+[[message]]
+key = "Rank 1 demo downloaded to '%s'"
+[message.translations]
+simplified_chinese = "Rank 1 演示已下载到 '%s'"
+traditional_chinese = "Rank 1 示範已下載到 '%s'"
+japanese = "ランク1デモを '%s' にダウンロードしました"
+korean = "랭크 1 데모가 '%s'에 다운로드되었습니다"
+russian = "Демо ранга 1 загружено в '%s'"
+german = "Rank-1-Demo heruntergeladen nach '%s'"
+spanish = "Demo de rango 1 descargada en '%s'"
+french = "Démo de rang 1 téléchargée vers '%s'"
+brazilian_portuguese = "Demo de rank 1 baixada para '%s'"
+portuguese = "Demo de rank 1 descarregada para '%s'"
+turkish = "Rank 1 demosu '%s' konumuna indirildi"
+polish = "Demo rangi 1 pobrana do '%s'"
+
+[[message]]
+key = "Rank demo downloaded: %s. Play it from the Rank 1 list or the demo browser."
+[message.translations]
+simplified_chinese = "Rank 演示已下载：%s。可从 Rank 1 列表或演示浏览器播放。"
+traditional_chinese = "Rank 示範已下載：%s。可從 Rank 1 清單或示範瀏覽器播放。"
+japanese = "ランクデモをダウンロードしました：%s。ランク1一覧またはデモブラウザから再生できます。"
+korean = "랭크 데모 다운로드됨: %s. 랭크 1 목록 또는 데모 브라우저에서 재생하세요."
+russian = "Демо ранга загружено: %s. Запустите из списка Rank 1 или браузера демо."
+german = "Rank-Demo heruntergeladen: %s. Über die Rank-1-Liste oder den Demo-Browser abspielbar."
+spanish = "Demo de rango descargada: %s. Reprodúcela desde la lista de Rango 1 o el navegador de demos."
+french = "Démo de rang téléchargée : %s. Lancez-la depuis la liste des Rang 1 ou le navigateur de démos."
+brazilian_portuguese = "Demo de rank baixada: %s. Reproduza na lista Rank 1 ou no navegador de demos."
+portuguese = "Demo de rank descarregada: %s. Reproduza na lista Rank 1 ou no navegador de demos."
+turkish = "Rank demosu indirildi: %s. Rank 1 listesinden veya demo tarayıcısından oynatın."
+polish = "Demo rangi pobrana: %s. Odtwórz z listy Ranga 1 lub przeglądarki dem."
+
+[[message]]
+key = "Rank ghost: no official replay found for '%s'"
+[message.translations]
+simplified_chinese = "Rank 影子：未找到 '%s' 的官方回放"
+traditional_chinese = "Rank 影子：未找到 '%s' 的官方回放"
+japanese = "Rankゴースト：'%s' の公式リプレイが見つかりません"
+korean = "Rank 고스트: '%s'의 공식 리플레이를 찾을 수 없습니다"
+russian = "Ghost ранга: официальный реплей для '%s' не найден"
+german = "Rang-Geist: keine offizielle Wiederholung für '%s' gefunden"
+spanish = "Fantasma de rank: no se encontró repetición oficial para '%s'"
+french = "Fantôme de rang : aucune rediffusion officielle trouvée pour '%s'"
+brazilian_portuguese = "Fantasma de rank: nenhuma replay oficial encontrada para '%s'"
+portuguese = "Fantasma de rank: nenhuma repetição oficial encontrada para '%s'"
+turkish = "Rank hayaleti: '%s' için resmi tekrar bulunamadı"
+polish = "Duch rangi: nie znaleziono oficjalnego nagrania dla '%s'"
+
+[[message]]
+key = "Replay downloaded"
+[message.translations]
+simplified_chinese = "回放已下载"
+traditional_chinese = "回放已下載"
+japanese = "リプレイをダウンロードしました"
+korean = "리플레이 다운로드됨"
+russian = "Реплей загружен"
+german = "Wiederholung heruntergeladen"
+spanish = "Repetición descargada"
+french = "Rediffusion téléchargée"
+brazilian_portuguese = "Replay baixada"
+portuguese = "Repetição descarregada"
+turkish = "Tekrar indirildi"
+polish = "Nagranie pobrane"
+
+[[message]]
+key = "Replay list: failed to load, press Refresh to retry"
+[message.translations]
+simplified_chinese = "回放列表：加载失败，按刷新重试"
+traditional_chinese = "回放清單：載入失敗，按重新整理重試"
+japanese = "リプレイ一覧：読み込み失敗。更新で再試行"
+korean = "리플레이 목록: 불러오기 실패, 새로 고침으로 재시도"
+russian = "Список реплеев: ошибка загрузки, нажмите «Обновить»"
+german = "Wiederholungsliste: Laden fehlgeschlagen, zum Wiederholen aktualisieren"
+spanish = "Lista de repeticiones: error al cargar, pulsa Actualizar para reintentar"
+french = "Liste des rediffusions : échec du chargement, appuyez sur Actualiser pour réessayer"
+brazilian_portuguese = "Lista de replays: falha ao carregar, pressione Atualizar para tentar novamente"
+portuguese = "Lista de repetições: falha ao carregar, prima Atualizar para tentar novamente"
+turkish = "Tekrar listesi: yükleme başarısız, yeniden denemek için Yenile'ye basın"
+polish = "Lista nagrań: błąd wczytywania, naciśnij Odśwież, aby ponowić"
+
+[[message]]
+key = "Replay list: loading ..."
+[message.translations]
+simplified_chinese = "回放列表：加载中 …"
+traditional_chinese = "回放清單：載入中 …"
+japanese = "リプレイ一覧：読み込み中…"
+korean = "리플레이 목록: 불러오는 중…"
+russian = "Список реплеев: загрузка…"
+german = "Wiederholungsliste: wird geladen …"
+spanish = "Lista de repeticiones: cargando…"
+french = "Liste des rediffusions : chargement…"
+brazilian_portuguese = "Lista de replays: carregando…"
+portuguese = "Lista de repetições: a carregar…"
+turkish = "Tekrar listesi: yükleniyor…"
+polish = "Lista nagrań: wczytywanie…"
+
+[[message]]
+key = "Replay list: not loaded yet"
+[message.translations]
+simplified_chinese = "回放列表：尚未加载"
+traditional_chinese = "回放清單：尚未載入"
+japanese = "リプレイ一覧：未読み込み"
+korean = "리플레이 목록: 아직 불러오지 않음"
+russian = "Список реплеев: ещё не загружен"
+german = "Wiederholungsliste: noch nicht geladen"
+spanish = "Lista de repeticiones: aún no cargada"
+french = "Liste des rediffusions : pas encore chargée"
+brazilian_portuguese = "Lista de replays: ainda não carregada"
+portuguese = "Lista de repetições: ainda não carregada"
+turkish = "Tekrar listesi: henüz yüklenmedi"
+polish = "Lista nagrań: jeszcze nie wczytana"
+
+[[message]]
+key = "Replay list: up to date"
+[message.translations]
+simplified_chinese = "回放列表：已是最新"
+traditional_chinese = "回放清單：已是最新"
+japanese = "リプレイ一覧：最新です"
+korean = "리플레이 목록: 최신 상태"
+russian = "Список реплеев: актуален"
+german = "Wiederholungsliste: aktuell"
+spanish = "Lista de repeticiones: al día"
+french = "Liste des rediffusions : à jour"
+brazilian_portuguese = "Lista de replays: em dia"
+portuguese = "Lista de repetições: atualizada"
+turkish = "Tekrar listesi: güncel"
+polish = "Lista nagrań: aktualna"
+
+[[message]]
+key = "Replays directory"
+[message.translations]
+simplified_chinese = "回放目录"
+traditional_chinese = "回放目錄"
+japanese = "リプレイフォルダ"
+korean = "리플레이 디렉터리"
+russian = "Каталог реплеев"
+german = "Wiederholungsordner"
+spanish = "Directorio de repeticiones"
+french = "Dossier des rediffusions"
+brazilian_portuguese = "Diretório de replays"
+portuguese = "Diretório de repetições"
+turkish = "Tekrar klasörü"
+polish = "Katalog nagrań"
+
+[[message]]
+key = "Reports are not available on Axiom servers"
+[message.translations]
+simplified_chinese = "Axiom 服务器上不可用举报功能"
+traditional_chinese = "Axiom 伺服器上不可用檢舉功能"
+japanese = "Axiom サーバーでは報告を利用できません"
+korean = "Axiom 서버에서는 신고를 사용할 수 없습니다"
+russian = "На серверах Axiom жалобы недоступны"
+german = "Auf Axiom-Servern sind Meldungen nicht verfügbar"
+spanish = "Los reportes no están disponibles en servidores Axiom"
+french = "Les signalements ne sont pas disponibles sur les serveurs Axiom"
+brazilian_portuguese = "Relatórios não estão disponíveis em servidores Axiom"
+portuguese = "Os relatórios não estão disponíveis em servidores Axiom"
+turkish = "Axiom sunucularında şikayet kullanılamaz"
+polish = "Zgłoszenia nie są dostępne na serwerach Axiom"
+
+[[message]]
+key = "Task running ..."
+[message.translations]
+simplified_chinese = "任务执行中 …"
+traditional_chinese = "任務執行中 …"
+japanese = "タスク実行中…"
+korean = "작업 실행 중…"
+russian = "Задача выполняется…"
+german = "Aufgabe läuft …"
+spanish = "Tarea en ejecución…"
+french = "Tâche en cours…"
+brazilian_portuguese = "Tarefa em execução…"
+portuguese = "Tarefa em execução…"
+turkish = "Görev çalışıyor…"
+polish = "Zadanie w toku…"
+
+[[message]]
+key = "The downloaded file is not a valid demo"
+[message.translations]
+simplified_chinese = "下载的文件不是有效的演示"
+traditional_chinese = "下載的檔案不是有效的示範"
+japanese = "ダウンロードしたファイルは有効なデモではありません"
+korean = "다운로드한 파일은 유효한 데모가 아닙니다"
+russian = "Скачанный файл не является допустимым демо"
+german = "Die heruntergeladene Datei ist keine gültige Demo"
+spanish = "El archivo descargado no es una demo válida"
+french = "Le fichier téléchargé n'est pas une démo valide"
+brazilian_portuguese = "O arquivo baixado não é uma demo válida"
+portuguese = "O ficheiro descarregado não é uma demo válida"
+turkish = "İndirilen dosya geçerli bir demo değil"
+polish = "Pobrany plik nie jest prawidłowym demem"
+
+[[message]]
+key = "The rank 1 demo is already downloaded"
+[message.translations]
+simplified_chinese = "Rank 1 演示已下载过"
+traditional_chinese = "Rank 1 示範已下載過"
+japanese = "ランク1デモは既にダウンロード済みです"
+korean = "랭크 1 데모가 이미 다운로드되어 있습니다"
+russian = "Демо ранга 1 уже скачано"
+german = "Die Rank-1-Demo ist bereits heruntergeladen"
+spanish = "La demo de rango 1 ya está descargada"
+french = "La démo de rang 1 est déjà téléchargée"
+brazilian_portuguese = "A demo de rank 1 já foi baixada"
+portuguese = "A demo de rank 1 já foi descarregada"
+turkish = "Rank 1 demosu zaten indirildi"
+polish = "Demo rangi 1 jest już pobrana"
+
+[[message]]
+key = "The replay list is empty or malformed"
+[message.translations]
+simplified_chinese = "回放列表为空或格式错误"
+traditional_chinese = "回放清單為空或格式錯誤"
+japanese = "リプレイ一覧が空か形式が不正です"
+korean = "리플레이 목록이 비어 있거나 형식이 잘못되었습니다"
+russian = "Список реплеев пуст или повреждён"
+german = "Die Wiederholungsliste ist leer oder fehlerhaft"
+spanish = "La lista de repeticiones está vacía o mal formada"
+french = "La liste des rediffusions est vide ou mal formée"
+brazilian_portuguese = "A lista de replays está vazia ou malformada"
+portuguese = "A lista de repetições está vazia ou malformada"
+turkish = "Tekrar listesi boş veya hatalı"
+polish = "Lista nagrań jest pusta lub uszkodzona"
+
+[[message]]
+key = "Use MSDF text rendering for nameplates (requires TexturedMsdf)"
+[message.translations]
+simplified_chinese = "为铭牌启用 MSDF 文字渲染（需要 TexturedMsdf）"
+traditional_chinese = "為銘牌啟用 MSDF 文字渲染（需要 TexturedMsdf）"
+japanese = "ネームプレートにMSDFテキストレンダリングを使用する（TexturedMsdfが必要）"
+korean = "이름표에 MSDF 텍스트 렌더링 사용(TexturedMsdf 필요)"
+russian = "Использовать рендеринг текста MSDF для табличек (требуется TexturedMsdf)"
+german = "MSDF-Textrendering für Namensschilder verwenden (benötigt TexturedMsdf)"
+spanish = "Usar renderizado de texto MSDF para placas de nombre (requiere TexturedMsdf)"
+french = "Utiliser le rendu de texte MSDF pour les plaques de nom (requiert TexturedMsdf)"
+brazilian_portuguese = "Usar renderização de texto MSDF para plaquinhas (requer TexturedMsdf)"
+portuguese = "Utilizar renderização de texto MSDF para plaquinhas (requer TexturedMsdf)"
+turkish = "Ad plakaları için MSDF metin oluşturmayı kullan (TexturedMsdf gerekir)"
+polish = "Użyj renderowania tekstu MSDF dla tabliczek (wymaga TexturedMsdf)"

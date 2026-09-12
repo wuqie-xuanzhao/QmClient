@@ -5,13 +5,20 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
 
 enum class EQmAxiomMode
 {
+	NONE,
 	GORES,
 	AXRACE,
+};
+
+// 判断当前服务器属于 Axiom 的哪个积分模式所需的最小环境信息。
+struct SQmAxiomServerContext
+{
+	const char *m_pCommunityType;
+	const char *m_pServerName;
 };
 
 enum class EQmAxiomParseResult

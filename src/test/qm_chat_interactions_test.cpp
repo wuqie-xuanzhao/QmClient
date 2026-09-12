@@ -317,6 +317,85 @@ TEST(QmChatInteractions, ChatLineHitStopsAtContentWidth)
 	EXPECT_FALSE(CChat::IsChatLineHit(ContentRect, vec2(100.0f, 106.0f)));
 }
 
+TEST(QmChatInteractions, ChatLineMenuUsesContentBoundsAndKeepsTargetHighlighted)
+{
+	const std::string Header = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string OnRender = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const std::string OpenMenu = SourceFunctionBody(Source, "void CChat::OpenChatLineMenu(");
+
+	EXPECT_NE(Header.find("float m_ContentWidth"), std::string::npos);
+	EXPECT_NE(Header.find("int m_LineIndex = -1"), std::string::npos);
+	EXPECT_NE(OnRender.find("Line.m_ContentWidth"), std::string::npos);
+	EXPECT_NE(OnRender.find("const float RenderedContentWidth = Line.m_ContentWidth * RenderScale;"), std::string::npos);
+	EXPECT_NE(OnRender.find("const bool MouseInsideLine = IsChatLineHit(RenderedTextRect, MousePos);"), std::string::npos);
+	EXPECT_NE(OnRender.find("ChatLineMenuOpen && m_ChatLinePopupContext.m_LineIndex == LineIndex"), std::string::npos);
+	EXPECT_NE(OnRender.find("const ColorRGBA SelectionColor"), std::string::npos);
+	EXPECT_NE(OnRender.find("Graphics()->DrawRect(RenderedTextRect.x"), std::string::npos);
+	EXPECT_NE(OpenMenu.find("m_ChatLinePopupContext.m_LineIndex = GetLineIndex(&Line);"), std::string::npos);
+	EXPECT_NE(OpenMenu.find("UiMousePos.x, UiMousePos.y"), std::string::npos);
+	EXPECT_EQ(OpenMenu.find("ChatToUiScale"), std::string::npos);
+	EXPECT_NE(OnRender.find("OpenChatLineMenu(*pMenuLine, GetUiMousePos());"), std::string::npos);
+}
+
+TEST(QmChatInteractions, ChatLineMenuReopensOnOtherLinesAndClosesOnEmptySpaceOrOutsideLeftClick)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string OnRender = SourceFunctionBody(Source, "void CChat::OnRender()");
+	const std::string UiHeader = ReadTestSourceFile("src/game/client/ui.h");
+	const std::string UiSource = ReadTestSourceFile("src/game/client/ui.cpp");
+
+	// 菜单打开时右键不再被整体屏蔽：允许在其它消息行重新定位菜单
+	EXPECT_NE(OnRender.find("const bool ChatLineMenuRequested = m_Mode != MODE_NONE && !LanguageMenuOpen && !InsideInputBlock && !InsideTranslateButton && !InsideScrollbar && !m_ScrollbarDragging && !InsideChatLineMenu && Input()->KeyPress(KEY_MOUSE_2);"), std::string::npos);
+	EXPECT_EQ(OnRender.find("const bool ChatLineMenuRequested = ChatCopyActive && Input()->KeyPress(KEY_MOUSE_2);"), std::string::npos);
+	// 左键拖拽复制仍只在菜单关闭时生效，避免关闭菜单时误复制消息
+	EXPECT_NE(OnRender.find("const bool ChatCopyActive = m_Mode != MODE_NONE && !LanguageMenuOpen && !ChatLineMenuOpen && !InsideInputBlock && !InsideTranslateButton && !InsideScrollbar && !m_ScrollbarDragging;"), std::string::npos);
+	// 空白处右键关闭已打开的菜单
+	EXPECT_NE(OnRender.find("else if(ChatLineMenuOpen)"), std::string::npos);
+	// 左键按下非菜单区域立即关闭菜单
+	EXPECT_NE(OnRender.find("Ui()->GetPopupMenuRect(&m_ChatLinePopupContext)"), std::string::npos);
+	EXPECT_NE(OnRender.find("Input()->KeyPress(KEY_MOUSE_1)"), std::string::npos);
+	// CUi 提供弹窗矩形访问器
+	EXPECT_NE(UiHeader.find("const CUIRect *GetPopupMenuRect(const SPopupMenuId *pId) const;"), std::string::npos);
+	EXPECT_NE(UiSource.find("const CUIRect *CUi::GetPopupMenuRect("), std::string::npos);
+}
+
+TEST(QmChatCommandCompletion, KeepsDdnetTabCompletionWithoutQmExtensions)
+{
+	const std::string ChatHeader = ReadTestSourceFile("src/game/client/components/chat.h");
+	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
+	const std::string BindChatHeader = ReadTestSourceFile("src/game/client/components/tclient/bindchat.h");
+	const std::string BindChat = ReadTestSourceFile("src/game/client/components/tclient/bindchat.cpp");
+	const std::string CMake = ReadTestSourceFile("CMakeLists.txt");
+	const std::string OnInput = SourceFunctionBody(Chat, "bool CChat::OnInput(");
+	const std::string RegisterCommand = SourceFunctionBody(Chat, "void CChat::RegisterCommand(");
+	const size_t CompletionBufferGuard = OnInput.find("if(!m_CompletionUsed)");
+	const size_t PlayerCompletionGuard = OnInput.find("if(!m_CompletionUsed && m_aCompletionBuffer[0] != '/')");
+
+	EXPECT_EQ(ChatHeader.find("SSlashCommandSuggestion"), std::string::npos);
+	EXPECT_EQ(ChatHeader.find("BuildCommandUsagePreview"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("m_ServerCommandsNeedSorting"), std::string::npos);
+	EXPECT_EQ(Chat.find("RenderSlashCommandSuggestions"), std::string::npos);
+	EXPECT_EQ(Chat.find("BuildCommandUsagePreview"), std::string::npos);
+	EXPECT_EQ(Chat.find("Autocompletion hint"), std::string::npos);
+	EXPECT_EQ(OnInput.find("ApplySelectedSlashCommandSuggestion"), std::string::npos);
+	EXPECT_EQ(OnInput.find("Event.m_Key == KEY_TAB && m_Input.GetString()[0] == '/'"), std::string::npos);
+	ASSERT_NE(CompletionBufferGuard, std::string::npos);
+	ASSERT_NE(PlayerCompletionGuard, std::string::npos);
+	EXPECT_LT(CompletionBufferGuard, PlayerCompletionGuard);
+	EXPECT_NE(OnInput.find("const bool ShiftPressed = Input()->ShiftIsPressed();"), std::string::npos);
+	EXPECT_NE(OnInput.find("if(m_aCompletionBuffer[0] == '/' && !m_vServerCommands.empty())"), std::string::npos);
+	EXPECT_NE(OnInput.find("str_startswith_nocase(Command.m_aName, pCommandStart)"), std::string::npos);
+	EXPECT_NE(OnInput.find("if(m_Input.GetString()[0] == '/' && (str_find(pCompletionString, \" \") || str_find(pCompletionString, \"\\\"\")))"), std::string::npos);
+	EXPECT_NE(OnInput.find("m_aPlayerCompletionList"), std::string::npos);
+	EXPECT_NE(RegisterCommand.find("m_ServerCommandsNeedSorting = true;"), std::string::npos);
+	EXPECT_NE(OnInput.find("std::sort(m_vServerCommands.begin(), m_vServerCommands.end());"), std::string::npos);
+	EXPECT_NE(ChatHeader.find("std::vector<CCommand> m_vServerCommands"), std::string::npos);
+	EXPECT_EQ(BindChatHeader.find("ChatDoAutocomplete"), std::string::npos);
+	EXPECT_EQ(BindChat.find("CBindChat::ChatDoAutocomplete"), std::string::npos);
+	EXPECT_EQ(CMake.find("components/chat_completion"), std::string::npos);
+}
+
 TEST(QmChatInteractions, ScrollbarValueToBacklogLine)
 {
 	EXPECT_EQ(CChat::ScrollbarValueToBacklogLine(1.0f, 12), 0);

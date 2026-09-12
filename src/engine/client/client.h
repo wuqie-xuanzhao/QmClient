@@ -34,6 +34,10 @@
 #include <optional>
 #include <thread>
 
+// 性能日志文件的运行时开关包装（定义见 client.cpp）：CFutureLogger 只能 Set
+// 一次，游戏内开/关通过切换内部 logger（文件 logger ↔ noop）实现。
+class CQmPerfFileSwitchLogger;
+
 class CDemoEdit;
 class IDemoRecorder;
 class CMsgPacker;
@@ -128,6 +132,10 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	SHangInfo m_aHangInfo[2];
 	std::thread m_HangWatchdogThread;
 	char m_aHangDumpDir[IO_MAX_PATH_LENGTH] = "";
+
+	// 本进程内是否已经尝试过图形致命错误恢复：只尝试一次，避免
+	// 「图形故障 -> 重启 -> 又故障」形成无限重启循环。
+	bool m_QmGraphicsRecoveryAttempted = false;
 
 	IGraphics::CTextureHandle m_DebugFont;
 
@@ -319,7 +327,18 @@ private:
 	void StopHangWatchdog();
 	void UpdateHangHeartbeat();
 	void WriteHangReportAndDump(int64_t Now, int64_t LastHeartbeat);
+	// 运行期图形致命错误的恢复入口：写诊断报告，尝试一次干净重启（下次启动走安全图形设置），
+	// 避免落入断言模态框导致心跳停止、写出误导性 hang 报告。
+	// @return true 表示已触发恢复（调用方应立即停止当前帧的图形操作）
+	bool HandleQmGraphicsFatalError();
 	void FinishQmConfigMigration();
+
+	// 性能日志文件的运行时开关：CFutureLogger 只能 Set 一次，游戏内开/关
+	// 通过 CQmPerfFileSwitchLogger 包装切换内部 logger（文件 ↔ noop）实现。
+	std::shared_ptr<ILogger> m_pQmPerfFileSwitchLogger = nullptr; // 持有包装（基类引用，跨线程安全）
+	CQmPerfFileSwitchLogger *m_pQmPerfFileSwitch = nullptr; // 具体类型指针，仅 client.cpp 使用
+	bool m_QmPerfFileLoggerActive = false; // 当前是否已打开性能日志文件
+	int m_QmPerfLogReopenCounter = 0; // 本进程内第几次开启性能日志（文件名序号，避免覆盖旧日志）
 
 	std::shared_ptr<ILogger> m_pFileLogger = nullptr;
 	std::shared_ptr<ILogger> m_pStdoutLogger = nullptr;
@@ -354,6 +373,10 @@ public:
 	IHttp *Http() { return m_pHttp; }
 
 	CClient();
+
+	// 性能日志文件运行时开/关（供 client.cpp 启动与主循环调用）。
+	void SetQmPerfFileSwitch(std::shared_ptr<CQmPerfFileSwitchLogger> pSwitch);
+	void UpdateQmPerfFileLogger();
 
 	// ----- send functions -----
 	int SendMsg(int Conn, CMsgPacker *pMsg, int Flags) override;
