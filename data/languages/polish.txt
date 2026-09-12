@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Nie udało się pobrać punktów Axiom
 
-Axiom scores
-== Punkty Axiom
-
 Axis
 == Oś
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == Pełne snapshoty docierają z opóźnieniem lub nie docierają
 
-Completed maps
-== Ukończone mapy
-
 Compressor attack time (ms)
 == Czas ataku kompresora (ms)
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Skonfiguruj tożsamość i kraj gracza
 
+Configure qm_report_app_id and qm_report_secret first
+== Configure qm_report_app_id and qm_report_secret first
+
 Configure QmClient gameplay helpers
 == Skonfiguruj pomoce do gry QmClient
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == Połącz dummy, aby włączyć
+
+Connect to a server first
+== Najpierw połącz się z serwerem
 
 Connect to server first to establish voice network link
 == Najpierw połącz się z serwerem, aby ustanowić połączenie sieci głosowej
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Nie można połączyć dummy
 
+Could not create report scan request
+== Nie można utworzyć żądania skanowania zgłoszenia
+
 Could not find a Tutorial server. Check your internet connection.
 == Nie można znaleźć serwera samouczka. Sprawdź połączenie internetowe.
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Nie można znaleźć twojej drużyny
+
+Could not get current server address
+== Nie można uzyskać adresu bieżącego serwera
 
 Could not get server list from master server
 == Nie można pobrać listy serwerów z serwera głównego
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == Znacznik zakończenia migracji starej konfiguracji globalnego sortowania kart
 
-Global rank
-== Ranking światowy
-
 Global toggle key
 == Globalny klawisz przełączania
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == Typ mapy:
 
-Maps
-== Mapy
-
 Maps finished
 == Ukończone mapy
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == Głośność mikrofonu (procent)
 
-Mileage
-== Przebyty dystans
-
 Milliseconds
 == Milisekundy
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == Przenosi do kafelka o numerze x/y ii
+
+MSDF nameplate text
+== Tekst tabliczki MSDF
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Wielorozdzielcze rozmycie o mocniejszym efekcie i zrównoważonym obciążeniu GPU.
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == Nie otwarto, sprawdź urządzenie wyjściowe
 
-Not ranked
-== Poza rankingiem
-
 Not requested
 == Nie zażądano
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == Wyjście dzienników debugowania negocjacji KCP, wycofania i cyklu życia sesji
 
+Output nameplate MSDF path debug log
+== Wyjście dziennika debugowania ścieżek MSDF tabliczek
+
 Output switch
 == Przełącznik wyjścia
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == Miniony rok
-
-Paste sp_dc from Spotify web cookies
-== Wklej ciasteczko sp_dc z przeglądarki
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Ścieżka do certyfikatu CA używanego do weryfikacji certyfikatu serwera MySQL/MariaDB
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == Odpowiedz kukłą
 
+Report
+== Report
+
+Report request canceled
+== Report request canceled
+
+Report request failed due to network error
+== Report request failed due to network error
+
+Report request failed with HTTP status: %d
+== Report request failed with HTTP status: %d
+
+Report request is already in progress
+== Report request is already in progress
+
+Report scan request submitted
+== Report scan request submitted
+
+Report service App ID
+== Identyfikator aplikacji usługi zgłoszeń
+
+Report service signing key
+== Klucz podpisywania usługi zgłoszeń
+
+Report service URL
+== Adres URL usługi zgłoszeń
+
 Reports are not available on Axiom servers
 == Zgłoszenia nie są dostępne na serwerach Axiom
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Skanowanie bieżącego serwera
+
+Scanning current server...
+== Skanowanie bieżącego serwera...
 
 Score
 == Wynik
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == Zmiana trybu drużyny jest wyłączona na tym serwerze.
 
-Team rank
-== Ranking drużynowy
-
 Team save already in progress
 == Zapisywanie drużyny już trwa
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Użyj czułości myszy, gdy włączona jest dynamiczna kamera
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== Użyj renderowania tekstu MSDF dla tabliczek (wymaga TexturedMsdf)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== Użyj renderowania tekstu MSDF dla tabliczek (tylko wbudowane czcionki, czcionki niestandardowe wracają do FreeType)
 
 Use multi-char replacement based on word length
 == Użyj zamiany wieloznakowej na podstawie długości słowa
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Używa aktywnej akcji z bieżącą pozycją celowania.
+
+Uses the built-in font; a custom font falls back to FreeType.
+== Używa wbudowanej czcionki; czcionka niestandardowa wraca do FreeType.
 
 v = Velocity
 == v = Prędkość

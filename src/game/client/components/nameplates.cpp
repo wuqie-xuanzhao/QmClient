@@ -1,5 +1,6 @@
 #include "nameplates.h"
 
+#include <base/log.h>
 #include <base/str.h>
 
 #include <engine/graphics.h>
@@ -14,6 +15,7 @@
 #include <game/client/components/nameplate_text_effects.h>
 #include <game/client/components/qmclient/chat_emoji.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_gate.h>
 #include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_renderer.h>
 #include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/gameclient.h>
@@ -365,6 +367,60 @@ static constexpr float DEFAULT_PADDING = 5.0f;
 static constexpr int NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAME = 16;
 static int s_NameplateTextRebuildBudget = NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAME;
 
+// MSDF 路径调试统计：本帧走 MSDF / 回退 FreeType 的文本部件数（仅 qm_nameplate_msdf_debug 开启时累计）
+static int s_MsdfDebugMsdfParts = 0;
+static int s_MsdfDebugFallbackParts = 0;
+// 整名回退日志去重：同一缺失码点在整个会话内只报告一次
+static CQmNameplateMsdfFallbackReporter s_MsdfFallbackReporter;
+
+// 字体门控：图集按固定字体族预烤（base 页 DejaVu Sans，CJK 页 Source Han Sans SC），
+// 自定义字体与图集族不匹配时整条铭牌保持 FreeType 路径。
+static bool NameplateMsdfFontMatchesAtlas()
+{
+	return QmNameplateMsdfFontMatchesAtlas(g_Config.m_TcCustomFont);
+}
+
+// 字体门控状态日志：字体名或匹配结果变化时输出一行；配置关闭时调用方保证不进入此函数。
+static void LogNameplateMsdfFontGateIfChanged()
+{
+	static bool s_Logged = false;
+	static bool s_LastMatches = false;
+	static char s_aLastFont[256] = "";
+	const bool Matches = NameplateMsdfFontMatchesAtlas();
+	const bool FontChanged = str_comp(s_aLastFont, g_Config.m_TcCustomFont) != 0;
+	if(s_Logged && Matches == s_LastMatches && !FontChanged)
+		return;
+	s_Logged = true;
+	s_LastMatches = Matches;
+	str_copy(s_aLastFont, g_Config.m_TcCustomFont, sizeof(s_aLastFont));
+	if(Matches)
+		log_info("nameplate_msdf", "custom font '%s' matches atlas families, nameplates use MSDF path", g_Config.m_TcCustomFont);
+	else
+		log_info("nameplate_msdf", "custom font '%s' not in atlas families, nameplates use FreeType path", g_Config.m_TcCustomFont);
+}
+
+// 整名回退日志：按缺失码点去重（量级受字符集约束，几十条封顶），debug 模式下附带名字便于定位。
+static void LogNameplateMsdfFallbackOnce(uint32_t Codepoint, const char *pText)
+{
+	if(!s_MsdfFallbackReporter.ShouldReport(Codepoint))
+		return;
+	if(g_Config.m_QmNameplateMsdfDebug)
+		log_info("nameplate_msdf", "fallback to FreeType: U+%04X not in atlas (name '%s')", Codepoint, pText);
+	else
+		log_info("nameplate_msdf", "fallback to FreeType: U+%04X not in atlas", Codepoint);
+}
+
+// 每 10 秒输出一次本帧路径汇总（MSDF 部件数 / 回退部件数），仅在 debug 开关开启时调用。
+static void MaybeLogNameplateMsdfDebugSummary()
+{
+	static int64_t s_NextSummary = 0;
+	const int64_t Now = time_get();
+	if(s_NextSummary != 0 && Now < s_NextSummary)
+		return;
+	s_NextSummary = Now + time_freq() * 10;
+	log_info("nameplate_msdf", "debug summary: %d text parts via MSDF / %d via FreeType", s_MsdfDebugMsdfParts, s_MsdfDebugFallbackParts);
+}
+
 class CNamePlatePart
 {
 protected:
@@ -380,6 +436,8 @@ public:
 	virtual void Update(CGameClient &This, const CNamePlateData &Data) {}
 	virtual void Reset(CGameClient &This) {}
 	virtual void Render(CGameClient &This, vec2 Pos) const {}
+	// MSDF 路径调试采样：非文字部件返回 -1；文字部件返回当前路径（0=FreeType，1=MSDF）
+	virtual int SampleMsdfDebugPath() { return -1; }
 	vec2 Size() const { return m_Size; }
 	vec2 Padding() const { return m_Padding; }
 	bool NewLine() const { return m_NewLine; }
@@ -403,6 +461,12 @@ protected:
 	char m_aMsdfText[512] = "";
 	float m_MsdfFontSize = 0.0f;
 	bool m_MsdfTextValid = false;
+	// 门控状态：翻转时两条路径的缓存都必须失效（FreeType 态期间文本/字号可能已更新）
+	bool m_MsdfGateActive = false;
+	// 本轮 UpdateText 是否允许走 MSDF 缓存；整名回退时置 false 改走 FreeType 容器
+	bool m_MsdfBuildAllowed = false;
+	// 调试：上次采样的 MSDF 路径（-1 = 尚未采样；0 = FreeType；1 = MSDF）
+	int m_MsdfDebugLastState = -1;
 	virtual bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) = 0;
 	virtual void UpdateText(CGameClient &This, const CNamePlateData &Data) = 0;
 	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -411,14 +475,22 @@ protected:
 
 	static bool NameplateMsdfActive()
 	{
-		return g_Config.m_QmNameplateMsdf != 0 && QmNameplateMsdf().IsReady();
+		// 字体门控：图集字形与用户所选字体不一致时整条铭牌交给 FreeType（下一帧自动跟随设置变化）
+		return g_Config.m_QmNameplateMsdf != 0 && NameplateMsdfFontMatchesAtlas() && QmNameplateMsdf().IsReady();
 	}
 
 	// 整名回退：图集覆盖不到任何一个字符就整条交给原 FreeType 路径，
 	// 避免同一个名字混用两种清晰度（混排在缩放时会明显不一致）。
 	bool MsdfCoversText() const
 	{
-		return NameplateMsdfActive() && m_MsdfTextValid && QmNameplateMsdf().SupportsText(m_aMsdfText);
+		if(!NameplateMsdfActive() || !m_MsdfTextValid)
+			return false;
+		const uint32_t MissingCodepoint = QmNameplateMsdf().FindUnsupportedCodepoint(m_aMsdfText);
+		if(MissingCodepoint == 0)
+			return true;
+		// 回退原因按码点去重报告，天然统计出最常回退的字符
+		LogNameplateMsdfFallbackOnce(MissingCodepoint, m_aMsdfText);
+		return false;
 	}
 
 	void SetMsdfPlainText(const char *pText, float FontSize)
@@ -426,6 +498,49 @@ protected:
 		str_copy(m_aMsdfText, pText != nullptr ? pText : "");
 		m_MsdfFontSize = FontSize;
 		m_MsdfTextValid = m_aMsdfText[0] != '\0';
+	}
+
+	// 回退原因描述：仅用于 debug 路径事件日志。
+	const char *DescribeMsdfFallback() const
+	{
+		if(g_Config.m_QmNameplateMsdf == 0)
+			return "config disabled";
+		if(!NameplateMsdfFontMatchesAtlas())
+			return "custom font not in atlas families";
+		if(!QmNameplateMsdf().IsReady())
+			return "atlas not ready";
+		if(m_MsdfTextValid)
+		{
+			const uint32_t MissingCodepoint = QmNameplateMsdf().FindUnsupportedCodepoint(m_aMsdfText);
+			if(MissingCodepoint != 0)
+			{
+				static char s_aReason[48];
+				str_format(s_aReason, sizeof(s_aReason), "U+%04X not in atlas", MissingCodepoint);
+				return s_aReason;
+			}
+		}
+		return "text not cached";
+	}
+
+	int SampleMsdfDebugPath() override
+	{
+		const int State = MsdfCoversText() ? 1 : 0;
+		if(g_Config.m_QmNameplateMsdf == 0)
+		{
+			// 配置关闭是用户主动选择：只记录状态，不输出事件（避免整屏铭牌同时刷一行）
+			m_MsdfDebugLastState = State;
+			return State;
+		}
+		if(m_MsdfDebugLastState >= 0 && State != m_MsdfDebugLastState)
+		{
+			log_info("nameplate_msdf", "path '%s': %s -> %s (%s)",
+				m_aMsdfText[0] != '\0' ? m_aMsdfText : "?",
+				m_MsdfDebugLastState == 1 ? "MSDF" : "FreeType",
+				State == 1 ? "MSDF" : "FreeType",
+				State == 1 ? "atlas covers text" : DescribeMsdfFallback());
+		}
+		m_MsdfDebugLastState = State;
+		return State;
 	}
 
 	SQmNameplateMsdfTextStyle BuildMsdfStyle() const
@@ -464,9 +579,26 @@ protected:
 public:
 	void Update(CGameClient &This, const CNamePlateData &Data) override
 	{
-		// MSDF：分辨率无关，不按缩放档位重建
-		if(NameplateMsdfActive())
+		// 门控翻转（配置、字体或图集就绪变化）：两条路径的缓存都可能过期——
+		// FreeType 态期间文本/字号可能已更新，而 MSDF 本地缓存不会自动跟进。
+		// 丢弃缓存并让文字容器重建，本帧按新路径重新生成。
+		const bool MsdfGateActive = NameplateMsdfActive();
+		if(MsdfGateActive != m_MsdfGateActive)
 		{
+			m_MsdfGateActive = MsdfGateActive;
+			m_MsdfTextValid = false;
+			m_MsdfFontSize = 0.0f;
+			m_aMsdfText[0] = '\0';
+			This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
+		}
+
+		// 默认按 FreeType 构建；MSDF 分支仅在覆盖判定通过时才改回 MSDF
+		m_MsdfBuildAllowed = false;
+
+		// MSDF：分辨率无关，不按缩放档位重建
+		if(MsdfGateActive)
+		{
+			m_MsdfBuildAllowed = true;
 			bool NeedsMsdfUpdate = UpdateNeeded(This, Data);
 			if(NeedsMsdfUpdate || !m_MsdfTextValid)
 			{
@@ -480,11 +612,16 @@ public:
 				m_Size = vec2(0.0f, 0.0f);
 				return;
 			}
-			const vec2 Measured = QmNameplateMsdf().Measure(m_aMsdfText, m_MsdfFontSize);
-			m_RenderSize = Measured;
-			const float EffectPadding = MsdfEffectPadding();
-			m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
-			return;
+			// 整名回退：图集覆盖不到任何字符时落到 FreeType 构建（容器由下方重建块创建）
+			m_MsdfBuildAllowed = MsdfCoversText();
+			if(m_MsdfBuildAllowed)
+			{
+				const vec2 Measured = QmNameplateMsdf().Measure(m_aMsdfText, m_MsdfFontSize);
+				m_RenderSize = Measured;
+				const float EffectPadding = MsdfEffectPadding();
+				m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
+				return;
+			}
 		}
 
 		// 名牌文字在世界映射下渲染。相机缩放是离散档位（每档 1/ZOOM_STEP 倍），
@@ -727,7 +864,7 @@ protected:
 			str_format(m_aText, sizeof(m_aText), "%d", m_ClientId);
 		else
 			str_format(m_aText, sizeof(m_aText), "%d:", m_ClientId);
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -802,7 +939,7 @@ protected:
 		m_FontSize = Data.m_FontSize * ms_FontSizeScale;
 		m_Rainbow = Data.m_DeveloperRainbow;
 		str_copy(m_aText, Data.m_aQmTitle);
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -920,7 +1057,7 @@ protected:
 	{
 		m_FontSize = Data.m_FontSize;
 		str_copy(m_aText, Data.m_aName, sizeof(m_aText));
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -978,7 +1115,7 @@ protected:
 	{
 		m_FontSize = Data.m_FontSizeClan;
 		str_copy(m_aText, Data.m_aClan[0] != '\0' ? Data.m_aClan : " ", sizeof(m_aText));
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -1211,7 +1348,7 @@ protected:
 		m_FontSize = Data.m_FontSizeClan;
 		const char *pSkin = Data.m_InGame ? This.m_aClients[Data.m_ClientId].m_aSkinName : (Data.m_ClientId == 0 ? g_Config.m_ClPlayerSkin : g_Config.m_ClDummySkin);
 		str_copy(m_aText, pSkin, sizeof(m_aText));
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -1260,7 +1397,7 @@ protected:
 		m_Aligned = m_IsX && Data.m_CoordXAligned;
 		m_Coord = RoundCoordToCentitiles(m_IsX ? Data.m_Coords.x : Data.m_Coords.y) / 100.0f;
 		str_format(m_aText, sizeof(m_aText), "%c:%.2f", m_IsX ? 'X' : 'Y', m_Coord);
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -1302,7 +1439,7 @@ protected:
 		m_FontSize = Data.m_FontSizeClan;
 		const char *pReason = This.m_WarList.GetWarData(Data.m_ClientId).m_aReason;
 		str_copy(m_aText, pReason, sizeof(m_aText));
-		if(NameplateMsdfActive())
+		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
 			return;
@@ -1362,6 +1499,20 @@ private:
 	bool m_InGame = false;
 	PartsVector m_vpParts;
 	std::vector<SCoreRowParts> m_vCoreRows;
+	// MSDF 调试：统计本帧渲染路径并驱动路径变化事件（仅 debug 开关开启时由 Render 调用）
+	void SampleMsdfDebugPaths()
+	{
+		for(auto &Part : m_vpParts)
+		{
+			const int State = Part->SampleMsdfDebugPath();
+			if(State < 0)
+				continue;
+			if(State == 1)
+				++s_MsdfDebugMsdfParts;
+			else
+				++s_MsdfDebugFallbackParts;
+		}
+	}
 	void RenderLine(CGameClient &This,
 		vec2 Pos, vec2 Size,
 		const PartsVector::iterator &Start, const PartsVector::iterator &End)
@@ -1675,6 +1826,8 @@ public:
 	void Render(CGameClient &This, const vec2 &PositionBottomMiddle, const CNamePlate *pLayoutReference = nullptr)
 	{
 		dbg_assert(m_Inited, "Tried to render uninited nameplate");
+		if(g_Config.m_QmNameplateMsdfDebug)
+			SampleMsdfDebugPaths();
 		if(NameplateFreeMoveEnabled())
 		{
 			// Each row is positioned independently from PositionBottomMiddle:
@@ -2847,7 +3000,18 @@ void CNamePlates::OnRender()
 
 	// MSDF 名牌渲染：首次可用时懒加载图集（预烤资产，加载后无每帧生成开销）
 	if(g_Config.m_QmNameplateMsdf != 0)
+	{
 		QmNameplateMsdf().EnsureInitialized(Storage(), Graphics());
+		// 字体门控状态只在变化时输出，用于解释「为什么这条铭牌没走 MSDF」
+		LogNameplateMsdfFontGateIfChanged();
+	}
+
+	// 每帧重置 MSDF 调试统计（debug 开关关闭时零开销）
+	if(g_Config.m_QmNameplateMsdfDebug)
+	{
+		s_MsdfDebugMsdfParts = 0;
+		s_MsdfDebugFallbackParts = 0;
+	}
 
 	// 每帧重置名牌文字重建预算，把缩放档位变化带来的重建开销摊平到多帧
 	s_NameplateTextRebuildBudget = NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAME;
@@ -2919,6 +3083,10 @@ void CNamePlates::OnRender()
 
 	if(RenderFreezeWakeupPopups)
 		GameClient()->RenderFreezeWakeupPopups();
+
+	// MSDF 调试汇总：每 10 秒一行（当前帧口径）
+	if(g_Config.m_QmNameplateMsdfDebug)
+		MaybeLogNameplateMsdfDebugSummary();
 }
 
 void CNamePlates::OnWindowResize()
@@ -2934,6 +3102,13 @@ void CNamePlates::OnShutdown()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 		ResetChatBubbleAnimState(i, true);
 	QmNameplateMsdf().Shutdown();
+}
+
+void CNamePlates::OnGraphicsResourcesReset()
+{
+	// 设备重建后 MSDF 图集纹理全部失效：丢弃并等待在新设备上重建。
+	// 铭牌文字缓存会在门控翻转检测里自动作废（Ready=false → 各部件清缓存并重排）。
+	QmNameplateMsdf().OnGraphicsResourcesReset();
 }
 
 CNamePlates::CNamePlates() :

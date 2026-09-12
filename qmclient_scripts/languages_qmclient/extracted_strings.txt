@@ -405,7 +405,6 @@ Axiom auto login succeeded
 Axiom dummy password
 Axiom main account password
 Axiom score request failed
-Axiom scores
 Axis
 Backdrop blur algorithm: 0=Gaussian, 1=Kawase, 2=Dual Kawase
 Backend to use (e.g. OpenGL or Vulkan)
@@ -682,7 +681,6 @@ Community
 Compact
 Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
-Completed maps
 Compressor attack time (ms)
 Compressor makeup gain (percent)
 Compressor ratio (x10)
@@ -718,6 +716,7 @@ Configure keyword-based automatic replies
 Configure laser shape, glow, and animation
 Configure nameplate text, badges, and visibility
 Configure player identity and country
+Configure qm_report_app_id and qm_report_secret first
 Configure QmClient gameplay helpers
 Configure QmClient HUD elements
 Configure remaining DDNet client preferences
@@ -737,6 +736,7 @@ Confirm quit after game end (minutes, -1 off, 0 always)
 Connect address error
 Connect dummy
 Connect dummy to enable
+Connect to a server first
 Connect to server first to establish voice network link
 Connect to the specified host/ip
 Connected
@@ -783,9 +783,11 @@ Copy skin
 Copy skin option color
 Could not check for existing player with your name. Check your internet connection.
 Could not connect dummy
+Could not create report scan request
 Could not find a Tutorial server. Check your internet connection.
 Could not find online Tutorial server.\nStarting and connecting to local server…
 Could not find your Team
+Could not get current server address
 Could not get server list from master server
 Could not load default touch controls from file. See local console for details.
 Could not load sponsor QR code. Check the Base64 data
@@ -1529,7 +1531,6 @@ Glitch
 Global card
 Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
-Global rank
 Global toggle key
 Global UI size percentage
 Glow
@@ -2025,7 +2026,6 @@ Map size
 Map sound volume
 Map to use on server
 Map type:
-Maps
 Maps finished
 Margin when notification is docked
 Mark demo
@@ -2105,7 +2105,6 @@ Microphone
 Microphone permission denied by system
 Microphone volume
 Microphone volume (percent)
-Mileage
 Milliseconds
 Milliseconds to apply quick input early
 Min size
@@ -2154,6 +2153,7 @@ Move to category
 Movement
 Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
+MSDF nameplate text
 Multi-resolution blur with a stronger result and balanced GPU cost.
 Multi-View
 Multiple exact Axiom players found
@@ -2326,7 +2326,6 @@ Not enabled
 Not in the current browser list
 Not open, check input device or mic permission
 Not open, check output device
-Not ranked
 Not requested
 Note
 Note:
@@ -2433,6 +2432,7 @@ Output device not found
 Output device open failed
 Output device open failed, try reconnecting speakers/headphones or reselecting output device
 Output KCP negotiation, fallback, and session lifecycle debug logs
+Output nameplate MSDF path debug log
 Output switch
 Output voice debug log
 Overlay entities
@@ -2476,7 +2476,6 @@ Password for Axiom main account auto-login
 Password incorrect
 Password required to use reserved slots.
 Past year
-Paste sp_dc from Spotify web cookies
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 Path to client certificate for the MySQL/MariaDB SSL connection
 Path to client key for the MySQL/MariaDB SSL connection
@@ -2905,6 +2904,15 @@ Replays directory
 Reply
 Reply to messages from muted players
 Reply with dummy
+Report
+Report request canceled
+Report request failed due to network error
+Report request failed with HTTP status: %d
+Report request is already in progress
+Report scan request submitted
+Report service App ID
+Report service signing key
+Report service URL
 Reports are not available on Axiom servers
 Request to swap your tee with another team member
 Requesting to join the game
@@ -3032,6 +3040,7 @@ Scale down Tee
 Scale max mouse distance to 1000 for better aim
 Scale uncertainty duration by ping (100=1.0x)
 Scanning current server
+Scanning current server...
 Score
 Score earned
 Score limit
@@ -3720,7 +3729,6 @@ Team message text gradient color
 Team mode can't be changed while racing
 Team mode change disabled
 Team mode change is disabled on this server.
-Team rank
 Team save already in progress
 Team save disabled for teams in practice mode
 Team save in progress. You'll be able to load with '/load %s'
@@ -4064,7 +4072,7 @@ Use enemy list to drive player indicators
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 Use mouse sensitivity when dynamic camera is on
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 Use multi-char replacement based on word length
 Use native UI for IME (may break IME in fullscreen mode, requires restart)
 Use new smoothing algorithm
@@ -4088,6 +4096,7 @@ Use warlist colors instead of regular colors
 Use warlist groups for indicator
 Used by active shared text and numeric input fields
 Uses the active action with the current aiming position.
+Uses the built-in font; a custom font falls back to FreeType.
 v = Velocity
 V-Sync
 VAD allow list (comma-separated)

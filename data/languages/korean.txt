@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Axiom 점수 요청에 실패했습니다
 
-Axiom scores
-== Axiom 점수
-
 Axis
 == 축
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == 완전한 스냅샷이 늦게 도착하거나 도착하지 않음
 
-Completed maps
-== 완료한 맵
-
 Compressor attack time (ms)
 == 컴프레서 어택 타임 (ms)
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == 플레이어 정보 및 국기 구성
 
+Configure qm_report_app_id and qm_report_secret first
+== 먼저 qm_report_app_id와 qm_report_secret을 설정하세요
+
 Configure QmClient gameplay helpers
 == QmClient 게임 도우미 구성
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == 더미 연결 후 활성화
+
+Connect to a server first
+== 먼저 서버에 연결하세요
 
 Connect to server first to establish voice network link
 == 먼저 서버에 연결하여 음성 네트워크 링크를 설정해야 합니다
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == 더미에 연결할 수 없습니다
 
+Could not create report scan request
+== 신고 스캔 요청을 생성할 수 없습니다
+
 Could not find a Tutorial server. Check your internet connection.
 == 튜토리얼 서버를 찾을 수 없습니다. 인터넷 연결을 확인하세요.
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == 팀을 찾을 수 없습니다
+
+Could not get current server address
+== 현재 서버 주소를 가져올 수 없습니다
 
 Could not get server list from master server
 == 마스터 서버에서 서버 목록을 가져올 수 없습니다
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == 전역 카드 정렬 이전 설정 마이그레이션 완료 표시
 
-Global rank
-== 세계 순위
-
 Global toggle key
 == 전역 토글 키
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == 맵 유형:
 
-Maps
-== 맵
-
 Maps finished
 == 완료한 맵
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == 마이크 볼륨 (백분율)
 
-Mileage
-== 주행 거리
-
 Milliseconds
 == 밀리초
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == x/y 번호 ii 의 타일로 이동
+
+MSDF nameplate text
+== MSDF 이름표 텍스트
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == 더 강한 효과와 균형 잡힌 GPU 부하를 제공하는 다중 해상도 블러입니다.
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == 열려 있지 않음, 출력 장치 확인
 
-Not ranked
-== 순위 없음
-
 Not requested
 == 요청하지 않음
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP 협상, 폴백 및 세션 수명 주기 디버그 로그 출력
 
+Output nameplate MSDF path debug log
+== 이름표 MSDF 경로 디버그 로그 출력
+
 Output switch
 == 출력 전환
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == 지난 1년
-
-Paste sp_dc from Spotify web cookies
-== 브라우저의 sp_dc 쿠키 붙여넣기
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB 서버 인증서 확인에 사용할 CA 인증서 경로
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == 더미로 답장
 
+Report
+== 신고
+
+Report request canceled
+== 신고 요청이 취소되었습니다
+
+Report request failed due to network error
+== 네트워크 오류로 신고 요청이 실패했습니다
+
+Report request failed with HTTP status: %d
+== 신고 요청 실패, HTTP 상태: %d
+
+Report request is already in progress
+== 신고 요청이 이미 진행 중입니다
+
+Report scan request submitted
+== 신고 스캔 요청이 제출되었습니다
+
+Report service App ID
+== 신고 서비스 앱 ID
+
+Report service signing key
+== 신고 서비스 서명 키
+
+Report service URL
+== 신고 서비스 URL
+
 Reports are not available on Axiom servers
 == Axiom 서버에서는 신고를 사용할 수 없습니다
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == 현재 서버 스캔 중
+
+Scanning current server...
+== 현재 서버 스캔 중...
 
 Score
 == 점수
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == 이 서버에서는 팀 모드 변경이 비활성화되었습니다
 
-Team rank
-== 팀 순위
-
 Team save already in progress
 == 팀 저장이 이미 진행 중입니다
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== 이름표에 MSDF 텍스트 렌더링 사용(TexturedMsdf 필요)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== 이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만, 사용자 지정 글꼴은 FreeType으로 폴백)
 
 Use multi-char replacement based on word length
 == 단어 길이에 따른 다중 문자 대체 사용
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == 현재 조준 위치로 활성 작업을 사용합니다.
+
+Uses the built-in font; a custom font falls back to FreeType.
+== 내장 글꼴을 사용합니다. 사용자 지정 글꼴은 FreeType으로 폴백합니다.
 
 v = Velocity
 == v = 속도

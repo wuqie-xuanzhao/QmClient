@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Axiom puan isteği başarısız oldu
 
-Axiom scores
-== Axiom puanları
-
 Axis
 == Eksen
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == Tam anlık görüntüler geç geliyor veya hiç gelmiyor
 
-Completed maps
-== Tamamlanan haritalar
-
 Compressor attack time (ms)
 == Kompresör Saldırı Süresi (ms)
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Oyuncu kimliğini ve ülkesini yapılandır
 
+Configure qm_report_app_id and qm_report_secret first
+== Configure qm_report_app_id and qm_report_secret first
+
 Configure QmClient gameplay helpers
 == QmClient oyun yardımcılarını yapılandır
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == Etkinleştirmek için dublör bağla
+
+Connect to a server first
+== Önce bir sunucuya bağlan
 
 Connect to server first to establish voice network link
 == Ses ağ bağlantısını kurmak için önce sunucuya bağlanın
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Dublör bağlanamadı
 
+Could not create report scan request
+== Rapor tarama isteği oluşturulamadı
+
 Could not find a Tutorial server. Check your internet connection.
 == Bir Eğitim sunucusu bulunamadı. İnternet bağlantınızı kontrol edin.
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Takımın bulunamadı
+
+Could not get current server address
+== Geçerli sunucu adresi alınamadı
 
 Could not get server list from master server
 == Ana sunucudan sunucu listesi alınamadı
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == Genel kart sıralama eski yapılandırma geçişi tamamlandı işareti
 
-Global rank
-== Dünya sıralaması
-
 Global toggle key
 == Genel açma/kapama tuşu
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == Harita türü:
 
-Maps
-== Haritalar
-
 Maps finished
 == Tamamlanan haritalar
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == Mikrofon ses seviyesi (yüzde)
 
-Mileage
-== Kat edilen mesafe
-
 Milliseconds
 == Milisaniye
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == x/y-numarası ii olan karoya gider
+
+MSDF nameplate text
+== MSDF ad plakası metni
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Daha güçlü sonuç ve dengeli GPU maliyeti sunan çok çözünürlüklü bulanıklık.
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == Açık değil, çıkış cihazını kontrol edin
 
-Not ranked
-== Sıralamada değil
-
 Not requested
 == İstenmedi
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP anlaşması, geri dönüş ve oturum yaşam döngüsü hata ayıklama günlüklerini çıktıla
 
+Output nameplate MSDF path debug log
+== Ad plakası MSDF yolu hata ayıklama günlüğünü çıktıla
+
 Output switch
 == Çıkış anahtarı
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == Geçen yıl
-
-Paste sp_dc from Spotify web cookies
-== Tarayıcıdan sp_dc çerezini yapıştırın
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB sunucu sertifikasını doğrulamak için CA sertifikasının yolu
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == Dummy ile yanıtla
 
+Report
+== Report
+
+Report request canceled
+== Report request canceled
+
+Report request failed due to network error
+== Report request failed due to network error
+
+Report request failed with HTTP status: %d
+== Report request failed with HTTP status: %d
+
+Report request is already in progress
+== Report request is already in progress
+
+Report scan request submitted
+== Report scan request submitted
+
+Report service App ID
+== Şikayet hizmeti uygulama kimliği
+
+Report service signing key
+== Şikayet hizmeti imzalama anahtarı
+
+Report service URL
+== Şikayet hizmeti URL'si
+
 Reports are not available on Axiom servers
 == Axiom sunucularında şikayet kullanılamaz
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Geçerli sunucu taranıyor
+
+Scanning current server...
+== Geçerli sunucu taranıyor...
 
 Score
 == Skor
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == Bu sunucuda takım modu değişikliği devre dışı.
 
-Team rank
-== Takım sıralaması
-
 Team save already in progress
 == Takım kaydetme zaten devam ediyor
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== Ad plakaları için MSDF metin oluşturmayı kullan (TexturedMsdf gerekir)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== Ad plakaları için MSDF metin oluşturmayı kullan (yalnızca yerleşik yazı tipleri, özel yazı tipleri FreeType'a geri döner)
 
 Use multi-char replacement based on word length
 == Kelime uzunluğuna göre çok karakterli değiştirme kullan
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Mevcut nişan alma konumuyla etkin eylemi kullanır.
+
+Uses the built-in font; a custom font falls back to FreeType.
+== Yerleşik yazı tipini kullanır; özel bir yazı tipi FreeType'a geri döner.
 
 v = Velocity
 == v = Hız

@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Не удалось получить очки Axiom
 
-Axiom scores
-== Очки Axiom
-
 Axis
 == Ось
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == Полные снапшоты приходят с задержкой или не приходят
 
-Completed maps
-== Пройденные карты
-
 Compressor attack time (ms)
 == Время атаки компрессора (мс)
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Настроить профиль игрока и флаг
 
+Configure qm_report_app_id and qm_report_secret first
+== Сначала настройте qm_report_app_id и qm_report_secret
+
 Configure QmClient gameplay helpers
 == Настроить игровые помощники QmClient
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == Подключите дамми, чтобы включить
+
+Connect to a server first
+== Сначала подключитесь к серверу
 
 Connect to server first to establish voice network link
 == Сначала подключитесь к серверу, чтобы установить голосовую сетевую связь.
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Не удалось подключить дамми
 
+Could not create report scan request
+== Не удалось создать запрос сканирования жалобы
+
 Could not find a Tutorial server. Check your internet connection.
 == Не удалось найти учебный сервер. Проверьте ваше интернет-соединение.
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Не удалось найти вашу команду
+
+Could not get current server address
+== Не удалось получить адрес текущего сервера
 
 Could not get server list from master server
 == Не удалось получить список серверов от мастер-сервера
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == Флаг завершения миграции старой конфигурации глобальной сортировки карточек
 
-Global rank
-== Мировой рейтинг
-
 Global toggle key
 == Глобальная клавиша переключения
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == Тип карты:
 
-Maps
-== Карты
-
 Maps finished
 == Пройдено карт
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == Громкость микрофона (в процентах)
 
-Mileage
-== Пробег
-
 Milliseconds
 == Миллисекунды
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == Перемещает на тайл с номером x/y ii
+
+MSDF nameplate text
+== Текст табличек MSDF
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Многоуровневое размытие с более сильным эффектом и сбалансированной нагрузкой на GPU.
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == Не открыто, проверьте устройство вывода.
 
-Not ranked
-== Без рейтинга
-
 Not requested
 == Не запрошено
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == Выводить отладочные логи переговоров KCP, отката и жизненного цикла сессии
 
+Output nameplate MSDF path debug log
+== Выводить отладочный лог путей MSDF табличек
+
 Output switch
 == Переключение вывода
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == За последний год
-
-Paste sp_dc from Spotify web cookies
-== Вставьте sp_dc cookie из браузера
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Путь к сертификату CA для проверки сертификата сервера MySQL/MariaDB
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == Ответить дамми
 
+Report
+== Жалоба
+
+Report request canceled
+== Запрос жалобы отменён
+
+Report request failed due to network error
+== Запрос жалобы не выполнен из-за ошибки сети
+
+Report request failed with HTTP status: %d
+== Запрос жалобы завершился с HTTP-статусом: %d
+
+Report request is already in progress
+== Запрос жалобы уже выполняется
+
+Report scan request submitted
+== Запрос сканирования жалобы отправлен
+
+Report service App ID
+== App ID службы жалоб
+
+Report service signing key
+== Ключ подписи службы жалоб
+
+Report service URL
+== URL службы жалоб
+
 Reports are not available on Axiom servers
 == На серверах Axiom жалобы недоступны
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Сканирование текущего сервера
+
+Scanning current server...
+== Сканирование текущего сервера...
 
 Score
 == Очки
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == Изменение режима команды отключено на этом сервере.
 
-Team rank
-== Командный рейтинг
-
 Team save already in progress
 == Сохранение команды уже выполняется
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Использовать чувствительность мыши при включённой динамической камере
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== Использовать рендеринг текста MSDF для табличек (требуется TexturedMsdf)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== Использовать рендеринг текста MSDF для табличек (только встроенные шрифты, пользовательские шрифты переходят на FreeType)
 
 Use multi-char replacement based on word length
 == Использовать замену несколькими символами в зависимости от длины слова
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Использует активное действие с текущей позицией прицеливания.
+
+Uses the built-in font; a custom font falls back to FreeType.
+== Используется встроенный шрифт; пользовательский шрифт переходит на FreeType.
 
 v = Velocity
 == v = Скорость

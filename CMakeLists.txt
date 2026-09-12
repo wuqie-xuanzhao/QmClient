@@ -4381,6 +4381,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_modes_test.cpp
     qm_prediction_contract_test.cpp
     qm_nameplate_msdf_atlas_test.cpp
+    qm_nameplate_msdf_gate_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_weapon_trajectory_test.cpp
     qm_weapon_trajectory_contract_test.cpp

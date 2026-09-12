@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Axiom-Punkte konnten nicht abgerufen werden
 
-Axiom scores
-== Axiom-Punkte
-
 Axis
 == Achse
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == Vollständige Snapshots kommen verspätet oder gar nicht an
 
-Completed maps
-== Abgeschlossene Karten
-
 Compressor attack time (ms)
 == Kompressor-Angriffszeit (ms)
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Spieleridentität und Land konfigurieren
 
+Configure qm_report_app_id and qm_report_secret first
+== Configure qm_report_app_id and qm_report_secret first
+
 Configure QmClient gameplay helpers
 == QmClient-Spielhilfen konfigurieren
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == Dummy verbinden, um zu aktivieren
+
+Connect to a server first
+== Verbinde dich zuerst mit einem Server
 
 Connect to server first to establish voice network link
 == Zuerst mit Server verbinden, um das Sprach-Netzwerk-Link herzustellen
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Dummy konnte nicht verbunden werden
 
+Could not create report scan request
+== Meldungs-Scan-Anfrage konnte nicht erstellt werden
+
 Could not find a Tutorial server. Check your internet connection.
 == Es konnte kein Tutorial-Server gefunden werden. Überprüfe deine Internetverbindung.
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Dein Team wurde nicht gefunden
+
+Could not get current server address
+== Aktuelle Serveradresse konnte nicht gelesen werden
 
 Could not get server list from master server
 == Serverliste konnte nicht vom Master-Server abgerufen werden
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == Markierung für abgeschlossene Migration der alten globalen Kartenreihenfolge-Konfiguration
 
-Global rank
-== Weltrang
-
 Global toggle key
 == Globaler Umschaltknopf
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == Kartentyp:
 
-Maps
-== Karten
-
 Maps finished
 == Abgeschlossene Karten
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == Mikrofonlautstärke (Prozent)
 
-Mileage
-== Strecke
-
 Milliseconds
 == Millisekunden
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == Bewegt sich zur Kachel mit der x/y-Nummer ii
+
+MSDF nameplate text
+== MSDF-Namensschildtext
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Mehrstufige Unschärfe mit stärkerem Ergebnis und ausgewogener GPU-Last.
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == Nicht geöffnet, überprüfe Ausgabegerät
 
-Not ranked
-== Nicht gewertet
-
 Not requested
 == Nicht angefordert
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP-Aushandlungs-, Fallback- und Sitzungslebenszyklus-Debug-Logs ausgeben
 
+Output nameplate MSDF path debug log
+== Debug-Log für MSDF-Namensschildpfade ausgeben
+
 Output switch
 == Ausgabeumschaltung
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == Letztes Jahr
-
-Paste sp_dc from Spotify web cookies
-== sp_dc-Cookie aus dem Browser einfügen
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Pfad zum CA-Zertifikat zur Überprüfung des MySQL/MariaDB-Serverzertifikats
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == Mit Dummy antworten
 
+Report
+== Report
+
+Report request canceled
+== Report request canceled
+
+Report request failed due to network error
+== Report request failed due to network error
+
+Report request failed with HTTP status: %d
+== Report request failed with HTTP status: %d
+
+Report request is already in progress
+== Report request is already in progress
+
+Report scan request submitted
+== Report scan request submitted
+
+Report service App ID
+== App-ID des Meldedienstes
+
+Report service signing key
+== Signaturschlüssel des Meldedienstes
+
+Report service URL
+== URL des Meldedienstes
+
 Reports are not available on Axiom servers
 == Auf Axiom-Servern sind Meldungen nicht verfügbar
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Aktueller Server wird gescannt
+
+Scanning current server...
+== Aktueller Server wird gescannt...
 
 Score
 == Punktzahl
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == Team-Modus-Änderung ist auf diesem Server deaktiviert.
 
-Team rank
-== Teamrang
-
 Team save already in progress
 == Team-Speicherung läuft bereits
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Mausempfindlichkeit bei aktivierter dynamischer Kamera verwenden
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== MSDF-Textrendering für Namensschilder verwenden (benötigt TexturedMsdf)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== MSDF-Textrendering für Namensschilder verwenden (nur integrierte Schriftarten, benutzerdefinierte Schriftarten fallen auf FreeType zurück)
 
 Use multi-char replacement based on word length
 == Mehrzeichenersatz basierend auf Wortlänge verwenden
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Verwendet die aktive Aktion mit der aktuellen Zielposition.
+
+Uses the built-in font; a custom font falls back to FreeType.
+== Verwendet die integrierte Schriftart; eine benutzerdefinierte Schriftart fällt auf FreeType zurück.
 
 v = Velocity
 == v = Geschwindigkeit

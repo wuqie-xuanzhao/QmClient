@@ -1,5 +1,7 @@
 #include "qm_nameplate_msdf_renderer.h"
 
+#include "qm_nameplate_msdf_gate.h"
+
 #include <base/log.h>
 #include <base/math.h>
 #include <base/system.h>
@@ -28,50 +30,10 @@ namespace
 		return C == ' ' || C == '\t' || C == '\n' || C == '\r';
 	}
 
+	// 渲染器内部的短名：与门控/诊断工具共用同一份 UTF-8 解码实现。
 	uint32_t DecodeUtf8(const char *&p)
 	{
-		const unsigned char C0 = (unsigned char)*p;
-		if(C0 == 0)
-			return 0;
-		if(C0 < 0x80)
-		{
-			++p;
-			return C0;
-		}
-		int Len = 1;
-		uint32_t Cp = 0;
-		if((C0 & 0xE0) == 0xC0)
-		{
-			Len = 2;
-			Cp = C0 & 0x1Fu;
-		}
-		else if((C0 & 0xF0) == 0xE0)
-		{
-			Len = 3;
-			Cp = C0 & 0x0Fu;
-		}
-		else if((C0 & 0xF8) == 0xF0)
-		{
-			Len = 4;
-			Cp = C0 & 0x07u;
-		}
-		else
-		{
-			++p;
-			return 0xFFFD;
-		}
-		for(int i = 1; i < Len; ++i)
-		{
-			const unsigned char C = (unsigned char)p[i];
-			if((C & 0xC0) != 0x80)
-			{
-				++p;
-				return 0xFFFD;
-			}
-			Cp = (Cp << 6) | (C & 0x3Fu);
-		}
-		p += Len;
-		return Cp;
+		return QmNameplateMsdfDecodeUtf8(p);
 	}
 
 	ColorRGBA RainbowAt(float Time)
@@ -172,6 +134,22 @@ void CQmNameplateMsdfRenderer::Shutdown()
 	m_Error.clear();
 	m_pStorage = nullptr;
 	m_pGraphics = nullptr;
+}
+
+void CQmNameplateMsdfRenderer::OnGraphicsResourcesReset()
+{
+	// 设备重建后旧纹理句柄全部失效：丢弃页与字形表，让下一次 EnsureInitialized 在新设备上重建。
+	// m_FatalError（后端不支持等硬失败）保持不重试；m_pStorage/m_pGraphics 对象未变，保持不动。
+	const bool WasLoaded = m_Ready;
+	UnloadPages();
+	m_Glyphs.clear();
+	m_Ready = false;
+	m_InitAttempted = false;
+	m_NextInitAttempt = 0;
+	m_RefEmPixels = 0.0f;
+	m_Error.clear();
+	if(WasLoaded)
+		log_info("nameplate_msdf", "atlas released for graphics resources reset, will reload on next frame");
 }
 
 void CQmNameplateMsdfRenderer::EnsureInitialized(IStorage *pStorage, IGraphics *pGraphics)
@@ -401,19 +379,16 @@ bool CQmNameplateMsdfRenderer::SupportsText(const char *pText) const
 {
 	if(!m_Ready || pText == nullptr)
 		return false;
-	const char *p = pText;
-	while(*p != '\0')
-	{
-		const uint32_t Cp = DecodeUtf8(p);
-		if(Cp == 0)
-			break;
-		// 换行与制表符按空白处理，不需要字形
-		if(Cp == '\n' || Cp == '\r' || Cp == '\t')
-			continue;
-		if(m_Glyphs.find(Cp) == m_Glyphs.end())
-			return false;
-	}
-	return true;
+	return FindUnsupportedCodepoint(pText) == 0;
+}
+
+uint32_t CQmNameplateMsdfRenderer::FindUnsupportedCodepoint(const char *pText) const
+{
+	if(!m_Ready || pText == nullptr)
+		return 0;
+	return QmNameplateMsdfFirstMissingCodepoint(pText, [this](uint32_t Codepoint) {
+		return m_Glyphs.find(Codepoint) != m_Glyphs.end();
+	});
 }
 
 vec2 CQmNameplateMsdfRenderer::Measure(const char *pText, float FontSize) const

@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Axiom 分數請求失敗
 
-Axiom scores
-== Axiom 分數
-
 Axis
 == 軸
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == 完整快照到達延遲或未到達
 
-Completed maps
-== 已完成地圖
-
 Compressor attack time (ms)
 == 壓縮器攻擊時間（毫秒）
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == 設定玩家身分與國旗
 
+Configure qm_report_app_id and qm_report_secret first
+== 請先設定 qm_report_app_id 和 qm_report_secret
+
 Configure QmClient gameplay helpers
 == 設定 QmClient 遊戲輔助功能
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == 連接分身後可啟用
+
+Connect to a server first
+== 需要先連接到伺服器
 
 Connect to server first to establish voice network link
 == 需要先進入伺服器，語音網絡鏈路才會建立
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == 無法連接分身
 
+Could not create report scan request
+== 創建舉報掃描請求失敗
+
 Could not find a Tutorial server. Check your internet connection.
 == 找不到教學伺服器。請檢查你的網路連線。
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == 找不到你的隊伍
+
+Could not get current server address
+== 無法獲取當前伺服器地址
 
 Could not get server list from master server
 == 無法從主伺服器獲取伺服器列表
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == 全局卡片排序舊配置遷移完成標記
 
-Global rank
-== 全球排名
-
 Global toggle key
 == 全局開關鍵
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == 地圖類型：
 
-Maps
-== 地圖
-
 Maps finished
 == 已過地圖
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == 麥克風音量（百分比）
 
-Mileage
-== 里程
-
 Milliseconds
 == 毫秒
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == 移動到 x/y 編號 ii 的圖塊
+
+MSDF nameplate text
+== MSDF 名牌文字
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == 多解析度模糊，效果更強，並兼顧 GPU 開銷。
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == 未打開，請檢查輸出設備
 
-Not ranked
-== 未上榜
-
 Not requested
 == 尚未請求
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == 輸出 KCP 協商、fallback 和會話生命週期調試日誌
 
+Output nameplate MSDF path debug log
+== 輸出名牌 MSDF 路徑調試日誌
+
 Output switch
 == 輸出切換
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == 最近一年
-
-Paste sp_dc from Spotify web cookies
-== 貼上瀏覽器中的 sp_dc cookie
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == 用於驗證 MySQL/MariaDB 伺服器憑證的 CA 憑證路徑
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == 使用分身回覆
 
+Report
+== 檢舉
+
+Report request canceled
+== 檢舉請求已取消
+
+Report request failed due to network error
+== 檢舉請求因網路錯誤失敗
+
+Report request failed with HTTP status: %d
+== 檢舉請求失敗，HTTP 狀態碼：%d
+
+Report request is already in progress
+== 檢舉請求正在進行中
+
+Report scan request submitted
+== 檢舉掃描請求已提交
+
+Report service App ID
+== 檢舉服務 App ID
+
+Report service signing key
+== 檢舉服務簽名金鑰
+
+Report service URL
+== 檢舉服務 URL
+
 Reports are not available on Axiom servers
 == Axiom 伺服器上不可用檢舉功能
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == 正在掃描當前伺服器
+
+Scanning current server...
+== 正在掃描當前伺服器……
 
 Score
 == 分數
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == 本伺服器已禁用隊伍模式切換
 
-Team rank
-== 團隊排名
-
 Team save already in progress
 == 隊伍存檔尚未完成
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 開啟動態攝像頭時使用鼠標感應
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== 為銘牌啟用 MSDF 文字渲染（需要 TexturedMsdf）
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== 為名牌啟用 MSDF 文字渲染（僅內建字型，自訂字型會自動回退至 FreeType）
 
 Use multi-char replacement based on word length
 == 根據詞語長度使用多字符替換
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == 使用當前動作配合目前的瞄準位置。
+
+Uses the built-in font; a custom font falls back to FreeType.
+== 使用內建字型；自訂字型會自動回退至 FreeType。
 
 v = Velocity
 == v = 速度

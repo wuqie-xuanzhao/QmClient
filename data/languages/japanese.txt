@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Axiom スコアの取得に失敗しました
 
-Axiom scores
-== Axiom スコア
-
 Axis
 == 軸
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == 完全なスナップショットの到着が遅れているか、届いていません
 
-Completed maps
-== クリア済みマップ
-
 Compressor attack time (ms)
 == コンプレッサーのアタックタイム（ミリ秒）
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == プレイヤー情報と国旗を設定
 
+Configure qm_report_app_id and qm_report_secret first
+== 先にqm_report_app_idとqm_report_secretを設定してください
+
 Configure QmClient gameplay helpers
 == QmClient のゲーム補助機能を設定
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == ダミーに接続すると有効になります
+
+Connect to a server first
+== 最初にサーバーに接続してください
 
 Connect to server first to establish voice network link
 == まずサーバーに接続して音声ネットワークリンクを確立する
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == ダミーに接続できませんでした
 
+Could not create report scan request
+== レポートスキャンリクエストを作成できませんでした
+
 Could not find a Tutorial server. Check your internet connection.
 == チュートリアルサーバーが見つかりませんでした。インターネット接続を確認してください。
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == あなたのチームが見つかりませんでした
+
+Could not get current server address
+== 現在のサーバーアドレスを取得できませんでした
 
 Could not get server list from master server
 == マスターサーバーからサーバーリストを取得できませんでした
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == グローバルカードソート旧設定移行完了フラグ
 
-Global rank
-== 世界順位
-
 Global toggle key
 == グローバルトグルキー
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == マップタイプ：
 
-Maps
-== マップ
-
 Maps finished
 == クリアしたマップ
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == マイク音量（パーセント）
 
-Mileage
-== 走行距離
-
 Milliseconds
 == ミリ秒
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == x/y 番号 ii のタイルに移動
+
+MSDF nameplate text
+== MSDFネームプレートテキスト
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == 強いぼかしとバランスの取れたGPU負荷を両立する多重解像度方式です。
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == 開いていません。出力デバイスを確認してください
 
-Not ranked
-== ランク外
-
 Not requested
 == 未取得
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP ネゴシエーション、フォールバック、セッションライフサイクルのデバッグログを出力
 
+Output nameplate MSDF path debug log
+== ネームプレートのMSDFパスデバッグログを出力
+
 Output switch
 == 出力切り替え
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == 過去1年間
-
-Paste sp_dc from Spotify web cookies
-== ブラウザの sp_dc クッキーを貼り付け
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB サーバー証明書の検証に使用する CA 証明書のパス
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == ダミーで返信
 
+Report
+== 報告
+
+Report request canceled
+== 報告リクエストがキャンセルされました
+
+Report request failed due to network error
+== ネットワークエラーのため報告リクエストに失敗しました
+
+Report request failed with HTTP status: %d
+== 報告リクエストが失敗しました。HTTPステータス: %d
+
+Report request is already in progress
+== 報告リクエストはすでに進行中です
+
+Report scan request submitted
+== 報告スキャンリクエストを送信しました
+
+Report service App ID
+== 報告サービスのApp ID
+
+Report service signing key
+== 報告サービスの署名キー
+
+Report service URL
+== 報告サービスのURL
+
 Reports are not available on Axiom servers
 == Axiom サーバーでは報告を利用できません
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == 現在のサーバーをスキャン中
+
+Scanning current server...
+== 現在のサーバーをスキャン中...
 
 Score
 == スコア
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == このサーバーではチームモード変更は無効です。
 
-Team rank
-== チーム順位
-
 Team save already in progress
 == チーム保存は既に進行中です
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== ネームプレートにMSDFテキストレンダリングを使用する（TexturedMsdfが必要）
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== ネームプレートにMSDFテキストレンダリングを使用する（内蔵フォントのみ、カスタムフォントはFreeTypeにフォールバック）
 
 Use multi-char replacement based on word length
 == 単語の長さに基づいて複数文字置換を使用
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == 現在の照準位置でアクティブアクションを使用します。
+
+Uses the built-in font; a custom font falls back to FreeType.
+== 内蔵フォントを使用します。カスタムフォントはFreeTypeにフォールバックします。
 
 v = Velocity
 == v = 速度

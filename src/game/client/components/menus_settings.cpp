@@ -7203,7 +7203,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			const auto NamePlateStrongEnabled = [] { return g_Config.m_ClNamePlatesStrong != 0; };
 			const float NamePlateSectionHeaderHeight = MarginBetweenViews + HeadlineHeight + MarginSmall;
 			const float NamePlateColorPickerHeight = ColorPickerRowHeight;
-			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(10, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
+			// Nameplate text 区域：10 行效果控件 + MSDF 开关与内置字体说明各 1 行
+			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(12, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
 			static int s_NamePlatesStrong = 0;
 			const auto ResolveNamePlateContentHeight = [=](float ContentWidth) {
 				const auto RadioHeight = [&](const int OptionCount) {
@@ -7280,6 +7281,14 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
 				DoAppearanceHeading(LeftView, "appearance-nameplate-text-title", Localize("Nameplate text"), HeadlineFontSize, HeadlineHeight);
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
+
+				// MSDF 文字渲染使用内置图集字体；自定义字体与图集不符时整条铭牌自动回退 FreeType
+				DoNamePlateCheckBox(&g_Config.m_QmNameplateMsdf, "appearance-nameplate-text-msdf", Localize("MSDF nameplate text"), &g_Config.m_QmNameplateMsdf);
+				{
+					CUIRect MsdfNoteRow;
+					NextNamePlateRow(MsdfNoteRow);
+					Ui()->DoLabel(&MsdfNoteRow, Localize("Uses the built-in font; a custom font falls back to FreeType."), maximum(8.0f, AppearanceBodySize - 2.0f), TEXTALIGN_ML);
+				}
 
 				auto RenderNameplateTextEffectToggle = [&](int Effect, const void *pId, const char *pTextId, const char *pText) {
 					CUIRect CheckBox;

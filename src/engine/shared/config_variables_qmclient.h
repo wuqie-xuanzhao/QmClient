@@ -102,7 +102,8 @@ MACRO_CONFIG_COL(QmNameplateCoordXAlignHintColor, qm_nameplate_coord_x_align_hin
 MACRO_CONFIG_INT(QmNameplateCoordY, qm_nameplate_coord_y, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Nameplate position Y")
 MACRO_CONFIG_INT(QmNameplateCoordsOwn, qm_nameplate_coords_own, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show own nameplate coordinates")
 MACRO_CONFIG_INT(QmNameplateCoords, qm_nameplate_coords, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show others' nameplate coordinates")
-MACRO_CONFIG_INT(QmNameplateMsdf, qm_nameplate_msdf, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use MSDF text rendering for nameplates (requires TexturedMsdf)")
+MACRO_CONFIG_INT(QmNameplateMsdf, qm_nameplate_msdf, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)")
+MACRO_CONFIG_INT(QmNameplateMsdfDebug, qm_nameplate_msdf_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Output nameplate MSDF path debug log")
 
 // Enhanced Laser Effects (Glow + Pulse) / 增强激光效果（辉光+脉冲）
 MACRO_CONFIG_INT(QmLaserEnhanced, qm_laser_enhanced, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable enhanced laser effect (glow + pulse animation)")

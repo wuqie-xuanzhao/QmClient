@@ -1220,9 +1220,6 @@ Axiom main account password
 Axiom score request failed
 == Falha ao solicitar as pontuações do Axiom
 
-Axiom scores
-== Pontuações do Axiom
-
 Axis
 == Eixo
 
@@ -2051,9 +2048,6 @@ Compatible with single-player area hints from other servers
 Complete snapshots are arriving late or not arriving
 == Snapshots completos estão chegando atrasados ou não chegam
 
-Completed maps
-== Mapas concluídos
-
 Compressor attack time (ms)
 == Tempo de ataque do compressor (ms)
 
@@ -2159,6 +2153,9 @@ Configure nameplate text, badges, and visibility
 Configure player identity and country
 == Configurar identidade e país do jogador
 
+Configure qm_report_app_id and qm_report_secret first
+== Configure qm_report_app_id and qm_report_secret first
+
 Configure QmClient gameplay helpers
 == Configurar assistentes de jogo do QmClient
 
@@ -2215,6 +2212,9 @@ Connect dummy
 
 Connect dummy to enable
 == Conecte o dummy para habilitar
+
+Connect to a server first
+== Conecte-se a um servidor primeiro
 
 Connect to server first to establish voice network link
 == Conecte-se ao servidor primeiro para estabelecer o link de rede de voz
@@ -2354,6 +2354,9 @@ Could not check for existing player with your name. Check your internet connecti
 Could not connect dummy
 == Não foi possível conectar o dummy
 
+Could not create report scan request
+== Não foi possível criar a solicitação de varredura da denúncia
+
 Could not find a Tutorial server. Check your internet connection.
 == Não foi possível encontrar um servidor Tutorial. Verifique sua conexão com a internet.
 
@@ -2362,6 +2365,9 @@ Could not find online Tutorial server.\nStarting and connecting to local server�
 
 Could not find your Team
 == Não foi possível encontrar seu time
+
+Could not get current server address
+== Não foi possível obter o endereço do servidor atual
 
 Could not get server list from master server
 == Não foi possível obter a lista de servidores do servidor mestre
@@ -4592,9 +4598,6 @@ Global card ordering (format: stableId|tab|col|order; semicolon-separated)
 Global card ordering old config migration completed flag
 == Marcação de conclusão de migração da configuração antiga de ordenação global de cartões
 
-Global rank
-== Classificação global
-
 Global toggle key
 == Tecla de alternância global
 
@@ -6080,9 +6083,6 @@ Map to use on server
 Map type:
 == Tipo de mapa:
 
-Maps
-== Mapas
-
 Maps finished
 == Mapas concluídos
 
@@ -6320,9 +6320,6 @@ Microphone volume
 Microphone volume (percent)
 == Volume do microfone (porcentagem)
 
-Mileage
-== Distância percorrida
-
 Milliseconds
 == Milissegundos
 
@@ -6466,6 +6463,9 @@ Moves to the point with x/y-coordinates ii
 
 Moves to the tile with x/y-number ii
 == Move para o tile com número x/y ii
+
+MSDF nameplate text
+== Texto de plaquinha MSDF
 
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Desfoque em múltiplas resoluções, com efeito mais forte e custo de GPU equilibrado.
@@ -6983,9 +6983,6 @@ Not open, check input device or mic permission
 Not open, check output device
 == Não aberto, verifique o dispositivo de saída
 
-Not ranked
-== Sem classificação
-
 Not requested
 == Não solicitado
 
@@ -7304,6 +7301,9 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == Exibir logs de depuração de negociação KCP, fallback e ciclo de vida da sessão
 
+Output nameplate MSDF path debug log
+== Registrar log de depuração de caminhos MSDF das plaquinhas
+
 Output switch
 == Troca de saída
 
@@ -7432,9 +7432,6 @@ Password required to use reserved slots.
 
 Past year
 == Último ano
-
-Paste sp_dc from Spotify web cookies
-== Cole o cookie sp_dc do navegador
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Caminho para o certificado CA usado para verificar o certificado do servidor MySQL/MariaDB
@@ -8720,6 +8717,33 @@ Reply to messages from muted players
 Reply with dummy
 == Responder com Dummy
 
+Report
+== Report
+
+Report request canceled
+== Report request canceled
+
+Report request failed due to network error
+== Report request failed due to network error
+
+Report request failed with HTTP status: %d
+== Report request failed with HTTP status: %d
+
+Report request is already in progress
+== Report request is already in progress
+
+Report scan request submitted
+== Report scan request submitted
+
+Report service App ID
+== ID do aplicativo do serviço de relatórios
+
+Report service signing key
+== Chave de assinatura do serviço de relatórios
+
+Report service URL
+== URL do serviço de relatórios
+
 Reports are not available on Axiom servers
 == Relatórios não estão disponíveis em servidores Axiom
 
@@ -9100,6 +9124,9 @@ Scale uncertainty duration by ping (100=1.0x)
 
 Scanning current server
 == Escaneando o servidor atual
+
+Scanning current server...
+== Escaneando o servidor atual...
 
 Score
 == Pontuação
@@ -11165,9 +11192,6 @@ Team mode change disabled
 Team mode change is disabled on this server.
 == A alteração do modo do time está desabilitada neste servidor.
 
-Team rank
-== Classificação por equipes
-
 Team save already in progress
 == Salvamento do time já em andamento
 
@@ -12197,8 +12221,8 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Usar sensibilidade do mouse quando a câmera dinâmica estiver ativa
 
-Use MSDF text rendering for nameplates (requires TexturedMsdf)
-== Usar renderização de texto MSDF para plaquinhas (requer TexturedMsdf)
+Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
+== Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas, fontes personalizadas recorrem ao FreeType)
 
 Use multi-char replacement based on word length
 == Usar substituição de múltiplos caracteres com base no comprimento da palavra
@@ -12268,6 +12292,9 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Usa a ação ativa com a posição de mira atual.
+
+Uses the built-in font; a custom font falls back to FreeType.
+== Usa a fonte integrada; uma fonte personalizada recorre ao FreeType.
 
 v = Velocity
 == v = Velocidade

@@ -86,6 +86,9 @@ public:
 
 	bool Init(IStorage *pStorage, IGraphics *pGraphics);
 	void Shutdown();
+	// 设备重建（graphics resources reset）后调用：旧纹理句柄全部失效，丢弃页与字形表并允许重新初始化。
+	// 后端不支持等硬失败（m_FatalError）保持不重试。
+	void OnGraphicsResourcesReset();
 	// 供每帧调用：必要时初始化，失败则按退避重试（不阻塞渲染）
 	void EnsureInitialized(IStorage *pStorage, IGraphics *pGraphics);
 	bool IsReady() const { return m_Ready; }
@@ -93,6 +96,9 @@ public:
 
 	// 文本是否全部可由图集渲染（整名回退判定）
 	bool SupportsText(const char *pText) const;
+	// 返回第一个图集缺失的码点（0 表示全部可渲染）；供回退日志与统计使用。
+	// 图集未就绪时返回 0，调用方需先确认 IsReady()。
+	uint32_t FindUnsupportedCodepoint(const char *pText) const;
 	// 图集内的字形数量与页数，供日志/自检
 	size_t GlyphCount() const { return m_Glyphs.size(); }
 	size_t PageCount() const { return m_vPages.size(); }
