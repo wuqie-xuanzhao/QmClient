@@ -8,11 +8,24 @@
 #include <test/test.h>
 
 #include <cstdint>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
 namespace
 {
+	// PNG 是二进制文件,不能走 ReadTestSourceFile(它会剥除 ,破坏 PNG 签名)。
+	std::string ReadBinaryTestFile(const char *pRelativePath)
+	{
+		const std::string Path = std::string(DDNET_TEST_SOURCE_DIR) + "/" + pRelativePath;
+		std::ifstream File(Path, std::ios::binary);
+		EXPECT_TRUE(File.good()) << Path;
+		std::ostringstream Buffer;
+		Buffer << File.rdbuf();
+		return Buffer.str();
+	}
+
 	constexpr const char *kBaseManifest = "data/qmclient/nameplate_msdf/nameplate_base_msdf.json";
 	constexpr const char *kCjkManifest = "data/qmclient/nameplate_msdf/nameplate_cjk_msdf.json";
 	constexpr const char *kBaseImage = "data/qmclient/nameplate_msdf/nameplate_base_msdf.png";
@@ -91,7 +104,7 @@ namespace
 			Facts.m_Image = pImage->u.string.ptr;
 
 		// 图形上传的是 RGBA 页，PNG 尺寸必须与 manifest 声明一致
-		const std::string PngBytes = ReadTestSourceFile(pImagePath);
+		const std::string PngBytes = ReadBinaryTestFile(pImagePath);
 		uint32_t PngWidth = 0;
 		uint32_t PngHeight = 0;
 		EXPECT_TRUE(ReadPngSize(PngBytes, PngWidth, PngHeight)) << pImagePath;
@@ -172,3 +185,26 @@ TEST(QmNameplateMsdfAtlas, BasePageCoversAscii)
 	}
 	json_value_free(pRoot);
 }
+
+TEST(QmNameplateMsdfAtlas, ManifestsAreSelfConsistent)
+{
+	SAtlasFacts BaseFacts;
+	size_t BaseGlyphs = 0;
+	EXPECT_TRUE(CheckPage(kBaseManifest, kBaseImage, BaseFacts, BaseGlyphs));
+	EXPECT_EQ(BaseFacts.m_Kind, "msdf-glyphs");
+	EXPECT_GT(BaseFacts.m_PxRange, 0);
+	EXPECT_GT(BaseFacts.m_EmPixels, 0);
+	EXPECT_GE(BaseFacts.m_Padding, BaseFacts.m_PxRange + 1);
+	EXPECT_GT(BaseGlyphs, 900u);
+
+	SAtlasFacts CjkFacts;
+	size_t CjkGlyphs = 0;
+	EXPECT_TRUE(CheckPage(kCjkManifest, kCjkImage, CjkFacts, CjkGlyphs));
+	EXPECT_EQ(CjkFacts.m_Kind, "msdf-glyphs");
+	EXPECT_EQ(CjkFacts.m_PxRange, BaseFacts.m_PxRange);
+	EXPECT_EQ(CjkFacts.m_EmPixels, BaseFacts.m_EmPixels);
+	EXPECT_GE(CjkFacts.m_Padding, CjkFacts.m_PxRange + 1);
+	// 3500 个常用汉字是资源脚本的目标规模；明显偏小说明图集被截断
+	EXPECT_GE(CjkGlyphs, 3000u);
+}
+
