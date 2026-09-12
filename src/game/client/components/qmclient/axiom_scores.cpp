@@ -17,6 +17,9 @@ namespace
 	constexpr int64_t AXIOM_MATCH_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 	constexpr int64_t AXIOM_POINTS_CACHE_TTL_MS = 30 * 60 * 1000;
 	constexpr int64_t AXIOM_FAILURE_RETRY_MS = 30 * 1000;
+	// dyl 管线使用的旧常量名(值与上游改名后的 MATCH/POINTS 一致)。
+	constexpr int64_t AXIOM_SEARCH_CACHE_TTL_MS = AXIOM_MATCH_CACHE_TTL_MS;
+	constexpr int64_t AXIOM_SCORE_CACHE_TTL_MS = AXIOM_POINTS_CACHE_TTL_MS;
 	constexpr int64_t AXIOM_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 	constexpr size_t AXIOM_MAX_QUERY_NAME_BYTES = 256;
 	constexpr size_t AXIOM_MAX_DIFFICULTY_NAME_BYTES = 192;
@@ -826,9 +829,66 @@ void CQmAxiomScores::FinishActiveQueryIfIdle()
 
 void CQmAxiomScores::EnsureQueried(const char *pPlayerName)
 {
-	// 门面实现:走 dyl 管线的非阻塞查询入口。
-	// 注意不能调 Refresh() —— dyl 的 Refresh 末尾会回调 EnsureQueried,互调会死循环。
+	// 单活动槽管线:任一请求在飞时不响应新的预取,避免记分板预取循环
+	// 逐帧中止在飞请求(dyl 原始实现,Refresh 的强制刷新会先中止再进来)。
+	if(m_SearchRequest.m_pRequest || m_aModeRequests[0].m_pRequest || m_aModeRequests[1].m_pRequest || m_DdStatsRequest.m_pRequest)
+		return;
+	if(!pPlayerName || pPlayerName[0] == '\0' || static_cast<size_t>(str_length(pPlayerName)) > AXIOM_MAX_QUERY_NAME_BYTES || !str_utf8_check(pPlayerName))
+		return;
+
+	const int64_t Now = CurrentTick();
+	auto CacheIt = m_Cache.find(pPlayerName);
+	if(CacheIt == m_Cache.end())
+		CacheIt = m_Cache.emplace(pPlayerName, SCacheEntry{}).first;
+	SCacheEntry &Entry = CacheIt->second;
+	const bool SearchFresh = Entry.m_Result.m_SearchStatus == EQmAxiomScoreStatus::READY && IsWithinWindow(Entry.m_LastSearchSuccessTick, Now, AXIOM_SEARCH_CACHE_TTL_MS);
+	if(!SearchFresh)
+	{
+		// 持久化缓存刷新期间仍保持 READY，以便 UI 继续显示旧数据；请求本身
+		// 仍然是唯一的 in-flight 标记，不能因为 READY 状态而每帧取消重发。
+		if(m_SearchRequest.m_pRequest && m_SearchRequest.m_PlayerName == pPlayerName)
+			return;
+		if(IsWithinWindow(Entry.m_LastSearchFailureTick, Now, AXIOM_FAILURE_RETRY_MS))
+			return;
+
+		BeginActiveQuery(pPlayerName);
+		StartSearchRequest(pPlayerName, Entry);
+		StartDdStatsRequest(pPlayerName, Entry);
+		FinishActiveQueryIfIdle();
+		return;
+	}
+
+	std::array<bool, 2> aNeedsRequest{};
+	bool AnyRequestNeeded = false;
+	for(int Index = 0; Index < (int)Entry.m_Result.m_aModes.size(); ++Index)
+	{
+		const EQmAxiomScoreStatus Status = Entry.m_Result.m_aModes[Index].m_Status;
+		if(Status == EQmAxiomScoreStatus::READY && IsWithinWindow(Entry.m_aLastModeSuccessTick[Index], Now, AXIOM_SCORE_CACHE_TTL_MS))
+			continue;
+		if(m_aModeRequests[Index].m_pRequest && m_aModeRequests[Index].m_PlayerName == pPlayerName)
+			continue;
+		if(IsWithinWindow(Entry.m_aLastModeFailureTick[Index], Now, AXIOM_FAILURE_RETRY_MS))
+			continue;
+		aNeedsRequest[Index] = true;
+		AnyRequestNeeded = true;
+	}
+	const bool DdStatsFresh = !m_DdStatsEnabled || IsWithinWindow(Entry.m_LastDdStatsSuccessTick, Now, AXIOM_SCORE_CACHE_TTL_MS);
+	const bool DdStatsFetching = m_DdStatsRequest.m_pRequest && m_ActivePlayerName == pPlayerName;
+	const bool DdStatsRetryBlocked = IsWithinWindow(Entry.m_LastDdStatsFailureTick, Now, AXIOM_FAILURE_RETRY_MS);
+	const bool NeedDdStats = m_DdStatsEnabled && !DdStatsFresh && !DdStatsFetching && !DdStatsRetryBlocked;
+	AnyRequestNeeded |= NeedDdStats;
+	if(!AnyRequestNeeded)
+		return;
+
 	BeginActiveQuery(pPlayerName);
+	for(int Index = 0; Index < (int)aNeedsRequest.size(); ++Index)
+	{
+		if(aNeedsRequest[Index])
+			StartModeRequest(pPlayerName, Entry, ModeFromIndex(Index));
+	}
+	if(NeedDdStats)
+		StartDdStatsRequest(pPlayerName, Entry);
+	FinishActiveQueryIfIdle();
 }
 
 void CQmAxiomScores::Refresh(const char *pPlayerName)
