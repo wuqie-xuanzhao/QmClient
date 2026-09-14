@@ -1,6 +1,6 @@
-#include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
-
 #include <base/color.h>
+
+#include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
 
 #include <gtest/gtest.h>
 
@@ -69,6 +69,69 @@ TEST(QmHudNotifications, FormatsKnownSystemNotifications)
 
 	str_copy(aBuf, "sentinel", sizeof(aBuf));
 	EXPECT_FALSE(QmHudNotifications::TryFormatLocalizedNotificationMessage(nullptr, aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "");
+}
+
+TEST(QmHudNotifications, LocalizesServerChatWithoutChangingRawMessageFallbacks)
+{
+	char aBuf[256];
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("Team save already in progress", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Team save already in progress");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("队伍存档已在进行中", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Team save already in progress");
+
+	str_copy(aBuf, "sentinel", sizeof(aBuf));
+	EXPECT_FALSE(QmHudNotifications::TryFormatLocalizedServerChatMessage("regular server message", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "");
+
+	str_copy(aBuf, "sentinel", sizeof(aBuf));
+	EXPECT_FALSE(QmHudNotifications::TryFormatLocalizedServerChatMessage("'Alice' performed an unknown action", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "");
+}
+
+TEST(QmHudNotifications, LocalizesChineseServerChatToItsCanonicalKey)
+{
+	char aBuf[256];
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("你已经死亡，但会继续保持练习模式，直到你输入 kill。", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "You died, but will stay in practice until you use kill.");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("没有可返回的位置。", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "There is nowhere to go back to.");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("无效的 X 坐标。", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Invalid X coordinate.");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("服务器踢人/观战投票已不再由管理员主动监管。", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Server kick/spec votes are no longer actively moderated.");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("队伍功能已禁用", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Teams are disabled");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("目标玩家不在你的队伍里", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Player is on a different team");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("计时器不会显示。", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Timer isn't displayed.");
+
+	EXPECT_TRUE(QmHudNotifications::TryFormatLocalizedServerChatMessage("未找到该玩家", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "Player not found");
+
+	// canonical 归一表命中但当前没有可用译文时，必须保持原文，
+	// 不能把中文服务端消息显示成英文 canonical。
+	str_copy(aBuf, "sentinel", sizeof(aBuf));
+	EXPECT_FALSE(QmHudNotifications::TryFormatLocalizedServerChatMessage("投票通过", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "");
+
+	str_copy(aBuf, "sentinel", sizeof(aBuf));
+	EXPECT_FALSE(QmHudNotifications::TryFormatLocalizedServerChatMessage("------- 队伍前 5 名 -------", aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "");
+
+	// 未登记的中文服务端消息仍走原文回退，不得被当作翻译 key。
+	str_copy(aBuf, "sentinel", sizeof(aBuf));
+	EXPECT_FALSE(QmHudNotifications::TryFormatLocalizedServerChatMessage("这是一条未登记的服务端消息", aBuf, sizeof(aBuf)));
 	EXPECT_STREQ(aBuf, "");
 }
 
