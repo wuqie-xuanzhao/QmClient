@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == Activar cambio automático de Gores en el modo de juego Gores
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+
 Automatically re-join team 0 after finish (only if unlocked).
 == Volver a unirse automáticamente al equipo 0 después de terminar (solo si está desbloqueado)
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == Choose the menu font and cursor appearance
 
+Choose the menu font and font weight
+== Elegir la fuente del menú y su grosor
+
 Choose the menu map and background colors
 == Choose the menu map and background colors
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == Color
+
+Color map tune zones by their tune zone number
+== Colorear las zonas de tune del mapa según su número de tune zone
 
 Color of authenticated player names on scoreboard
 == Color de nombres de jugadores autenticados en la tabla de puntuaciones
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the ingame cursor scale
+== Configurar la escala del cursor en el juego
 
 Configure the input overlay display
 == Configure the input overlay display
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == Fuente personalizada
 
+Custom font weight (variable fonts)
+== Grosor de la fuente personalizada (fuentes variables)
+
 Custom Font:
 == Fuente Personalizada:
+
+Custom fonts use FreeType automatically.
+== Las fuentes personalizadas usan FreeType automáticamente.
 
 Custom prompt template
 == Plantilla de aviso personalizada
@@ -4346,11 +4364,17 @@ Follow
 Following
 == Siguiendo
 
+Font
+== Fuente
+
 Font cursor
 == Cursor de fuente
 
 Font size
 == Tamaño de fuente
+
+Font style:
+== Estilo de fuente:
 
 For more info: /cmdlist
 == Más información: /cmdlist
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == Modo de vista del fantasma desactivado. El fantasma vuelve a seguir tus carreras.
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== Modo de vista del fantasma: línea de tiempo independiente. Mantén pulsada la tecla de espectador para seguir a un miembro; la tabla de puntuación (Tab + Alt) controla la reproducción.
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== Modo de vista del fantasma: ESC alterna el panel de control. Pulsa ESC dos veces para abrir el menú del juego (salir de la repetición). Mantén pulsada la tecla de espectador para la lista de miembros.
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == Visibilidad del fantasma (alfa, 0=invisible, 100=visible)
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Miembros de rank 1
 
+Rank 1 replay
+== Repetición del rango 1
+
 Rank 1 replays
 == Demos de rank 1
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Fantasma de rank: la repetición tiene un rango de carrera inválido
-
-Rank ghost: the replay has no run start/end markers
-== Fantasma de rank: la repetición no tiene marcadores de inicio/fin
 
 Rank ghost: the replay list is empty or malformed
 == Fantasma de rank: la lista de repeticiones está vacía o mal formada
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == Mostrar segundos en el reloj
 
+Show semi-transparent ghost tees for other players who are spectating
+== Show semi-transparent ghost tees for other players who are spectating
+
 Show server chat messages
 == Mostrar mensajes de chat del servidor
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == Jugador especiado y amigos
+
+Spectator ghost opacity
+== Spectator ghost opacity
 
 Spectators
 == Espectadores
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Usar sensibilidad del ratón cuando la cámara dinámica está activada
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== Usar renderizado de texto MSDF para placas de nombre (solo fuentes integradas)
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == Usar renderizado de texto MSDF para placas de nombre (solo fuentes integradas, las fuentes personalizadas recurren a FreeType)
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == Solo skins originales
 
+Variable custom font weight
+== Grosor de la fuente personalizada variable
+
 Velocity
 == Velocidad
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == Efectos visuales
 
+Visual: Cursor
+== Visual: cursor
+
 Visual: Effects
 == Visual: Efectos
-
-Visual: Font & Cursor
-== Visual: Fuente y Cursor
 
 Visual: Nameplates
 == Visual: Placas de Nombre
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == Lo hecho, hecho está, no sirve decir más
-
-Wheel animate
-== Animación de la rueda
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == Cuando el Tee arcoíris de TClient está activado, esta función no tiene efecto.
@@ -13771,6 +13804,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == Usar acción
+
+[Rank 1 replay]
+Direction
+== Dirección
 
 [Show name plates]
 All

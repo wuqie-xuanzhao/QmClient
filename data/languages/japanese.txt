@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == Gores ゲームモードで自動的に Gores 自動切り替えを有効化
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+
 Automatically re-join team 0 after finish (only if unlocked).
 == 完走後に自動でチーム 0 に再参加（ロック解除時のみ）
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == Choose the menu font and cursor appearance
 
+Choose the menu font and font weight
+== メニューのフォントと太さを選択
+
 Choose the menu map and background colors
 == Choose the menu map and background colors
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == 色
+
+Color map tune zones by their tune zone number
+== tune zone の番号でマップの tune 領域を色分け
 
 Color of authenticated player names on scoreboard
 == スコアボード上の認証済みプレイヤー名の色
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the ingame cursor scale
+== ゲーム内カーソルスケールを設定
 
 Configure the input overlay display
 == Configure the input overlay display
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == カスタムフォント
 
+Custom font weight (variable fonts)
+== カスタムフォントの太さ（可変フォント）
+
 Custom Font:
 == カスタムフォント：
+
+Custom fonts use FreeType automatically.
+== カスタムフォントは自動的に FreeType を使用します。
 
 Custom prompt template
 == カスタムプロンプトテンプレート
@@ -4346,11 +4364,17 @@ Follow
 Following
 == フォロー中
 
+Font
+== フォント
+
 Font cursor
 == フォントカーソル
 
 Font size
 == フォントサイズ
+
+Font style:
+== フォントスタイル:
 
 For more info: /cmdlist
 == 詳細は /cmdlist を参照
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == ゴースト視聴モードを解除しました。ゴーストは再びあなたの走行に追従します。
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== ゴースト視聴モード：独立したタイムラインで再生。観戦キーを押している間にメンバーを追従、スコアボード（Tab + Alt）で再生を操作。
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== ゴースト視聴モード: ESC でコントロールパネルを切り替え。ESC を二回押すとゲームメニューを開きます（リプレイを離脱）。観戦キーを押している間はメンバー一覧を表示。
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == ゴーストの可視性（アルファ、0=不可視、100=可視）
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Rank 1 メンバー
 
+Rank 1 replay
+== ランク1リプレイ
+
 Rank 1 replays
 == Rank 1 リプレイ
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Rankゴースト：リプレイの走行範囲が無効です
-
-Rank ghost: the replay has no run start/end markers
-== Rankゴースト：リプレイに走行の開始/終了マーカーがありません
 
 Rank ghost: the replay list is empty or malformed
 == Rankゴースト：リプレイ一覧が空か壊れています
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == 時計に秒を表示
 
+Show semi-transparent ghost tees for other players who are spectating
+== Show semi-transparent ghost tees for other players who are spectating
+
 Show server chat messages
 == サーバーのチャットメッセージを表示
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == 観戦中のプレイヤーとフレンド
+
+Spectator ghost opacity
+== Spectator ghost opacity
 
 Spectators
 == 観戦者
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== ネームプレートに MSDF テキストレンダリングを使用（内蔵フォントのみ）
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == ネームプレートにMSDFテキストレンダリングを使用する（内蔵フォントのみ、カスタムフォントはFreeTypeにフォールバック）
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == バニラスキンのみ
 
+Variable custom font weight
+== 可変フォントのカスタム太さ
+
 Velocity
 == 速度
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == 視覚効果
 
+Visual: Cursor
+== ビジュアル: カーソル
+
 Visual: Effects
 == ビジュアル: エフェクト
-
-Visual: Font & Cursor
-== ビジュアル: フォントとカーソル
 
 Visual: Nameplates
 == ビジュアル：ネームプレート
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == 済んだことは仕方ない、言っても無駄だ
-
-Wheel animate
-== ホイールアニメーション
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == TClient のレインボー Tee が有効な場合、この機能は効果がありません。
@@ -13771,6 +13804,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == アクションを使用
+
+[Rank 1 replay]
+Direction
+== 方向
 
 [Show name plates]
 All

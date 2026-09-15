@@ -467,7 +467,7 @@ TEST(GraphicsRenderTargetGaussianBlur, FrontendRejectsNestedRenderTargets)
 TEST(GraphicsRenderTargetDualBlur, MediaIslandUsesHalfResolutionIntermediateTargets)
 {
 	const std::string Source = ReadFile("src/game/client/components/hud.cpp");
-	const std::string Body = ExtractFunctionBody(Source, "bool CHud::PrepareMediaIslandBlur");
+	const std::string Body = ExtractFunctionBody(Source, "IGraphics::CRenderTargetHandle CHud::MediaIslandBlurBackdrop()");
 	ASSERT_FALSE(Body.empty());
 	EXPECT_NE(Body.find("(BlurWidth + 1) / 2"), std::string::npos);
 	EXPECT_NE(Body.find("(BlurHeight + 1) / 2"), std::string::npos);

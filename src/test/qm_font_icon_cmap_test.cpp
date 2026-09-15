@@ -171,8 +171,8 @@ TEST(QmFontIcons, CodepointsExistInShippedPhosphorFonts)
 	}
 	ASSERT_FALSE(Codepoints.empty());
 
-	const std::string Regular = ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor-Regular.ttf");
-	const std::string Bold = ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor-Bold.ttf");
+	const std::string Regular = ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor/Phosphor-Regular.ttf");
+	const std::string Bold = ReadFontIconBinaryFile("data/qmclient/fonts/Phosphor/Phosphor-Bold.ttf");
 	ASSERT_GT(Regular.size(), 12u);
 	ASSERT_GT(Bold.size(), 12u);
 

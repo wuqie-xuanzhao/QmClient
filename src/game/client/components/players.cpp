@@ -157,6 +157,82 @@ static bool GetWarListTeeGlowColor(CGameClient *pGameClient, int ClientId, Color
 	return Color.a > 0.0f;
 }
 
+// 按队伍取 tee 外发光颜色：team 1..N 用 DDTeam 颜色，team 0（未组队）按配置模式取色
+static bool GetTeamTeeGlowColor(CGameClient *pGameClient, int ClientId, const CTeeRenderInfo &RenderInfo, ColorRGBA &Color)
+{
+	if(!g_Config.m_QmTeamTeeGlow || ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+	if(!pGameClient->m_aClients[ClientId].m_Active)
+		return false;
+
+	const int Team = pGameClient->m_Teams.Team(ClientId);
+	if(Team == VANILLA_TEAM_SUPER)
+		return false;
+	if(Team > 0)
+	{
+		Color = pGameClient->GetDDTeamColor(Team, 0.75f);
+		return true;
+	}
+
+	switch(g_Config.m_QmTeamTeeGlowTeam0Mode)
+	{
+	case 1:
+		// tee 自身颜色：0.7 渲染路径读 sixup 部件色，0.6 读皮肤整体自定义色，都未自定义则回退白光
+		{
+			const CTeeRenderInfo::CSixup &Sixup = RenderInfo.m_aSixup[g_Config.m_ClDummy];
+			if(CTeeRenderInfo::IsDrawableTexture(Sixup.PartTexture(protocol7::SKINPART_BODY)) && Sixup.m_aUseCustomColors[protocol7::SKINPART_BODY])
+				Color = Sixup.m_aColors[protocol7::SKINPART_BODY];
+			else if(RenderInfo.m_CustomColoredSkin)
+				Color = RenderInfo.m_ColorBody;
+			else
+				Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+		return true;
+	case 2:
+		Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmTeamTeeGlowColor, true));
+		return true;
+	case 3:
+	{
+		// 彩虹：随时间循环，玩家之间用黄金角错开相位便于旁观区分。
+		// 回放按 demo 时间轴取相位，暂停即冻结，保证同一回放发光颜色可复现。
+		float Seconds;
+		if(pGameClient->Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		{
+			const IDemoPlayer::CInfo *pDemoInfo = pGameClient->DemoPlayer()->BaseInfo();
+			Seconds = (pDemoInfo->m_CurrentTick - pDemoInfo->m_FirstTick) / (float)pGameClient->Client()->GameTickSpeed();
+		}
+		else
+		{
+			Seconds = time_get_nanoseconds().count() / 1000000000.0f;
+		}
+		const float Hue = std::fmod(Seconds / 10.0f + ClientId * normalized_golden_angle, 1.0f);
+		Color = color_cast<ColorRGBA>(ColorHSLA(Hue, 1.0f, 0.75f));
+		return true;
+	}
+	default:
+		return false;
+	}
+}
+
+// 只画 tee outline 层并多次放大叠加，形成外发光光晕
+static void RenderTeeGlow(CRenderTools *pRenderTools, const CAnimState *pAnim, const CTeeRenderInfo &RenderInfo, int Emote, vec2 Direction, vec2 Position, float Alpha, const SQmJellyDeform &JellyDeform, ColorRGBA GlowColor)
+{
+	CTeeRenderInfo GlowRenderInfo = RenderInfo;
+	GlowRenderInfo.m_TeeRenderFlags = (GlowRenderInfo.m_TeeRenderFlags & ~TEE_PREVIEW_LAYER_ALL) | TEE_PREVIEW_LAYER_OUTLINE | TEE_CUSTOM_OUTLINE_COLOR;
+	GlowRenderInfo.m_OutlineColor = GlowColor;
+
+	static constexpr float s_aGlowScales[] = {1.13f, 1.08f, 1.035f};
+	static constexpr float s_aGlowAlphas[] = {0.10f, 0.18f, 0.30f};
+	for(size_t i = 0; i < std::size(s_aGlowScales); ++i)
+	{
+		pRenderTools->RenderTee(pAnim, &GlowRenderInfo, Emote, Direction, Position,
+			Alpha * s_aGlowAlphas[i] * GlowColor.a,
+			JellyDeform.m_BodyScale * s_aGlowScales[i],
+			JellyDeform.m_FeetScale * s_aGlowScales[i],
+			JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
+	}
+}
+
 void CPlayers::RenderHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset, float Alpha)
 {
 	const vec2 HandPos = CalculateHandPosition(CenterPos, Dir, PostRotOffset);
@@ -650,7 +726,11 @@ void CPlayers::RenderHook(
 	bool OtherTeam = GameClient()->IsOtherTeam(ClientId);
 	float Alpha = (OtherTeam || ClientId < 0) ? g_Config.m_ClShowOthersAlpha / 100.0f : 1.0f;
 	if(ClientId == -2) // ghost
-		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
+	{
+		// QmClient: 查看模式（独立时间线）下回放是主内容，用不透明渲染；
+		// 跑图模式保持半透明参照物语义
+		Alpha = GameClient()->m_Ghost.ManualModeActive() ? 1.0f : g_Config.m_ClRaceGhostAlpha / 100.0f;
+	}
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 
@@ -762,7 +842,11 @@ void CPlayers::RenderPlayer(
 		Alpha = 1.0f;
 
 	if(ClientId == -2) // ghost
-		Alpha = g_Config.m_ClRaceGhostAlpha / 100.0f;
+	{
+		// QmClient: 查看模式（独立时间线）下回放是主内容，用不透明渲染；
+		// 跑图模式保持半透明参照物语义
+		Alpha = GameClient()->m_Ghost.ManualModeActive() ? 1.0f : g_Config.m_ClRaceGhostAlpha / 100.0f;
+	}
 	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
 		Alpha = std::min(Alpha, 0.5f);
 	const bool Afk = ClientId >= 0 && IsQmAfkForPresentation(
@@ -1268,23 +1352,14 @@ void CPlayers::RenderPlayer(
 		}
 	}
 
-	ColorRGBA WarListGlowColor;
+	ColorRGBA WarListGlowColor, TeamGlowColor;
 	if(GetWarListTeeGlowColor(GameClient(), ClientId, WarListGlowColor))
 	{
-		CTeeRenderInfo GlowRenderInfo = RenderInfo;
-		GlowRenderInfo.m_TeeRenderFlags = (GlowRenderInfo.m_TeeRenderFlags & ~TEE_PREVIEW_LAYER_ALL) | TEE_PREVIEW_LAYER_OUTLINE | TEE_CUSTOM_OUTLINE_COLOR;
-		GlowRenderInfo.m_OutlineColor = WarListGlowColor;
-
-		static constexpr float s_aGlowScales[] = {1.13f, 1.08f, 1.035f};
-		static constexpr float s_aGlowAlphas[] = {0.10f, 0.18f, 0.30f};
-		for(size_t i = 0; i < std::size(s_aGlowScales); ++i)
-		{
-			RenderTools()->RenderTee(&State, &GlowRenderInfo, Player.m_Emote, Direction, Position,
-				Alpha * s_aGlowAlphas[i] * WarListGlowColor.a,
-				JellyDeform.m_BodyScale * s_aGlowScales[i],
-				JellyDeform.m_FeetScale * s_aGlowScales[i],
-				JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
-		}
+		RenderTeeGlow(RenderTools(), &State, RenderInfo, Player.m_Emote, Direction, Position, Alpha, JellyDeform, WarListGlowColor);
+	}
+	else if(GetTeamTeeGlowColor(GameClient(), ClientId, RenderInfo, TeamGlowColor))
+	{
+		RenderTeeGlow(RenderTools(), &State, RenderInfo, Player.m_Emote, Direction, Position, Alpha, JellyDeform, TeamGlowColor);
 	}
 
 	RenderTools()->RenderTeeWithSkinChangeTransition(&State, pPreviousSkinInfo, &RenderInfo, Player.m_Emote, Direction, Position, SkinTransitionProgress, Alpha, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
@@ -1990,10 +2065,19 @@ void CPlayers::OnRender()
 		if(FollowingPlayer && ClientId == RenderLastId && IsPlayerInfoAvailable(ClientId))
 			continue;
 
+		// qm_show_spectator_ghosts 关闭时不渲染其他旁观者的半透明虚拟 Tee；
+		// 自己的保留作为位置反馈，录像幽灵（ClientId < 0）不受影响。
+		if(g_Config.m_QmShowSpectatorGhosts == 0 && ClientId >= 0 && !GameClient()->IsLocalClientId(ClientId))
+			continue;
+
 		float Alpha = 1.0f;
 		const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
 		const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
-		Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;
+		// 旁观者虚拟 Tee 统一虚化：用专用不透明度渲染（qm_spectator_ghost_alpha）；
+		// 异队的再与「显示其他人」透明度取较小值，尊重既有淡化设置。
+		Alpha = g_Config.m_QmSpectatorGhostAlpha / 100.0f;
+		if(OtherSpecChar)
+			Alpha = minimum(Alpha, g_Config.m_ClShowOthersAlpha / 100.f);
 		if(ClientId == -2) // ghost
 		{
 			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;

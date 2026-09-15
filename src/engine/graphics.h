@@ -366,6 +366,13 @@ public:
 		return SourceDimension;
 	}
 
+	// 捕获与模糊通道按单采样 RT 实现的后端（如 Vulkan），在 MSAA 开启时必须整体报告不支持并回退；
+	// MSAA 计数由线程层实时维护，因此该判断可跟随运行时设置变化。
+	static constexpr bool SingleSampleFeatureAllowedUnderMsaa(bool BackendSupported, bool ExternalPassRequiresSingleSample, uint32_t MultiSamplingCount)
+	{
+		return BackendSupported && (!ExternalPassRequiresSingleSample || MultiSamplingCount == 0);
+	}
+
 	static bool CalculateGaussianBlurKernel(const SGaussianBlurParams &Params, std::array<float, GAUSSIAN_BLUR_MAX_RADIUS + 1> &aWeights);
 
 	// Fixed vec4-only layout shared by the threaded command buffer, GLSL and
@@ -475,6 +482,11 @@ public:
 		float m_AtlasWidth = 0.0f;
 		float m_AtlasHeight = 0.0f;
 		float m_Rotation = 0.0f;
+		// 描边外扩量（屏幕像素）：>0 时覆盖阈值向外扩，画单层实心边框；0 为普通填充。
+		// 经 gMsdfParams.w 传给着色器；ring 模式忽略此字段（其 w 被 EndAngle 占用）。
+		float m_OutlineWidthPx = 0.0f;
+		// 运行时 MTSDF 字形可选择 Alpha 真 SDF，避免简单轮廓的 MSDF 通道退化。
+		bool m_UseTrueSdf = false;
 		// Procedural ring mode uses the existing MSDF command/shader with a
 		// signed-distance ring encoded as (-inner, outer, start, end).
 		bool m_ProceduralRing = false;

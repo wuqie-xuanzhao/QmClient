@@ -36,10 +36,36 @@ void main()
 		FragClr = vec4(Tint.rgb, Tint.a * RadialCoverage * AngularCoverage);
 		return;
 	}
-	float SignedDistance = Median(texture(gTextureSampler, TexCoord).rgb) - 0.5;
+	const vec4 Sample = texture(gTextureSampler, TexCoord);
+	float TrueSignedDistance = Sample.a - 0.5;
+	const bool UseTrueSdf = gMsdf.gMsdfParams.w < -0.0005;
+	float SignedDistance = UseTrueSdf ? TrueSignedDistance : Median(Sample.rgb) - 0.5;
 	vec2 UnitRange = vec2(gMsdf.gMsdfParams.x) / gMsdf.gMsdfParams.yz;
 	vec2 ScreenTexSize = vec2(1.0) / fwidth(TexCoord);
 	float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);
+	float RequestedOutline = UseTrueSdf ? max(-gMsdf.gMsdfParams.w - 0.001, 0.0) : gMsdf.gMsdfParams.w;
+	if(RequestedOutline > 0.0)
+	{
+		// 距离场在当前 quad 上最多只能表示约 0.5 * ScreenPxRange 的外扩。
+		// 超出这个范围会把 atlas 背景也推成不透明矩形；限制到留出一个抗锯齿像素的可表示范围。
+		const float MaxRepresentableOutline = max(0.0, 0.5 * ScreenPxRange - 0.5);
+		const float OutlineWidth = min(RequestedOutline, MaxRepresentableOutline);
+		const float FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
+		// 描边直接沿同一 signed distance 外扩，避免邻字形 UV 串采样造成孤立白点。
+		// MTSDF alpha is a true single-channel distance, so the outer edge does
+		// not inherit MSDF corner-channel interpolation artifacts.
+		if(UseTrueSdf)
+		{
+			const float OuterCoverage = clamp(TrueSignedDistance * ScreenPxRange + OutlineWidth + 0.5, 0.0, 1.0);
+			const float OutlineCoverage = max(OuterCoverage - FillCoverage, 0.0);
+			FragClr = vec4(Tint.rgb, Tint.a * OutlineCoverage);
+			return;
+		}
+		const float OuterCoverage = clamp(SignedDistance * ScreenPxRange + OutlineWidth + 0.5, 0.0, 1.0);
+		const float OutlineCoverage = max(OuterCoverage - FillCoverage, 0.0);
+		FragClr = vec4(Tint.rgb, Tint.a * OutlineCoverage);
+		return;
+	}
 	float Opacity = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
 	FragClr = vec4(Tint.rgb, Tint.a * Opacity);
 }

@@ -991,6 +991,8 @@ class CGraphics_Threaded : public IEngineGraphics
 #endif
 
 	CTextureHandle m_NullTexture;
+	// 全透明占位纹理：sprite 超出自定义图集范围时按「未提供 = 不可见」处理用。
+	CTextureHandle m_BlankTexture;
 
 	std::vector<int> m_vTextureIndices;
 	// Tracks slot generations so copied handles become stale once a slot is freed and reused.

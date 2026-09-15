@@ -185,10 +185,10 @@ void CPlayer::Tick()
 	if(m_Moderating && m_Afk)
 	{
 		m_Moderating = false;
-		GameServer()->SendChatTarget(m_ClientId, "Active moderator mode disabled because you are afk.");
+		GameServer()->SendChatTarget(m_ClientId, "由于你已挂机，主动管理员模式已关闭");
 
 		if(!GameServer()->PlayerModerating())
-			GameServer()->SendChat(-1, TEAM_ALL, "Server kick/spec votes are no longer actively moderated.");
+			GameServer()->SendChat(-1, TEAM_ALL, "服务器的踢人/旁观投票已不再由主动管理员模式接管");
 	}
 
 	// do latency stuff
@@ -217,7 +217,7 @@ void CPlayer::Tick()
 		SetInitialAfk(true);
 
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "'%s' would have timed out, but can use timeout protection now", Server()->ClientName(m_ClientId));
+		str_format(aBuf, sizeof(aBuf), "'%s' 原本会超时掉线，但现在可以使用超时保护", Server()->ClientName(m_ClientId));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 		Server()->ResetNetErrorString(m_ClientId);
 	}
@@ -877,7 +877,7 @@ void CPlayer::ProcessPause()
 	if(m_ForcePauseTime && m_ForcePauseTime < Server()->Tick())
 	{
 		m_ForcePauseTime = 0;
-		GameServer()->SendChatTarget(m_ClientId, "The force pause timer is now over, you can exit with /spec");
+		GameServer()->SendChatTarget(m_ClientId, "强制暂停计时已结束，你现在可以用 /spec 退出");
 	}
 
 	if(m_Paused == PAUSE_SPEC && !m_pCharacter->IsPaused() && CanSpec())
@@ -908,7 +908,7 @@ int CPlayer::Pause(int State, bool Force)
 			{
 				if(!Force && m_LastPause && m_LastPause + (int64_t)g_Config.m_SvSpecFrequency * Server()->TickSpeed() > Server()->Tick())
 				{
-					GameServer()->SendChatTarget(m_ClientId, "Can't /spec that quickly.");
+					GameServer()->SendChatTarget(m_ClientId, "你不能这么快再次 /spec。");
 					return m_Paused; // Do not update state. Do not collect $200
 				}
 				m_pCharacter->Pause(false);
@@ -919,7 +919,7 @@ int CPlayer::Pause(int State, bool Force)
 		case PAUSE_SPEC:
 			if(g_Config.m_SvPauseMessages)
 			{
-				str_format(aBuf, sizeof(aBuf), (State > PAUSE_NONE) ? "'%s' speced" : "'%s' resumed", Server()->ClientName(m_ClientId));
+				str_format(aBuf, sizeof(aBuf), (State > PAUSE_NONE) ? "'%s' 已旁观" : "'%s' 已恢复", Server()->ClientName(m_ClientId));
 				GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 			}
 			break;
@@ -954,7 +954,7 @@ int CPlayer::ForcePause(int Time)
 	if(g_Config.m_SvPauseMessages)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "'%s' was force-paused for %ds", Server()->ClientName(m_ClientId), Time);
+		str_format(aBuf, sizeof(aBuf), "'%s' 被强制暂停 %d 秒", Server()->ClientName(m_ClientId), Time);
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 	}
 
@@ -1030,7 +1030,7 @@ void CPlayer::ProcessScoreResult(CScorePlayerResult &Result)
 				Result.m_Data.m_MapVote.m_aServer, Result.m_Data.m_MapVote.m_aMap);
 
 			char aChatmsg[512];
-			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s' (%s)",
+			str_format(aChatmsg, sizeof(aChatmsg), "'%s' 发起了修改服务器选项 '%s' 的投票（%s）",
 				Server()->ClientName(m_ClientId), Result.m_Data.m_MapVote.m_aMap, "/map");
 
 			GameServer()->CallVote(m_ClientId, Result.m_Data.m_MapVote.m_aMap, aCmd, "/map", aChatmsg);
@@ -1054,12 +1054,12 @@ void CPlayer::ProcessScoreResult(CScorePlayerResult &Result)
 			{
 				char aBuf[512];
 				str_format(aBuf, sizeof(aBuf),
-					"Happy DDNet birthday to %s for finishing their first map %d year%s ago!",
-					Server()->ClientName(m_ClientId), Birthday, Birthday > 1 ? "s" : "");
+					"祝 %s 在 DDNet 生日快乐！%d 年前你完成了第一张地图！",
+					Server()->ClientName(m_ClientId), Birthday);
 				GameServer()->SendChat(-1, TEAM_ALL, aBuf, m_ClientId);
 				str_format(aBuf, sizeof(aBuf),
-					"Happy DDNet birthday, %s!\nYou have finished your first map exactly %d year%s ago!",
-					Server()->ClientName(m_ClientId), Birthday, Birthday > 1 ? "s" : "");
+					"祝 %s 在 DDNet 生日快乐！\n你正好在 %d 年前完成了第一张地图！",
+					Server()->ClientName(m_ClientId), Birthday);
 				GameServer()->SendBroadcast(aBuf, m_ClientId);
 				m_BirthdayAnnounced = true;
 
@@ -1072,7 +1072,7 @@ void CPlayer::ProcessScoreResult(CScorePlayerResult &Result)
 			GameServer()->Score()->PlayerData(m_ClientId)->SetBestTimeCp(Result.m_Data.m_Info.m_aTimeCp);
 			char aBuf[128], aTime[32];
 			str_time_float(Result.m_Data.m_Info.m_Time.value(), TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
-			str_format(aBuf, sizeof(aBuf), "Showing the checkpoint times for '%s' with a race time of %s", Result.m_Data.m_Info.m_aRequestedPlayer, aTime);
+			str_format(aBuf, sizeof(aBuf), "正在显示 '%s' 的检查点用时，当前成绩为 %s", Result.m_Data.m_Info.m_aRequestedPlayer, aTime);
 			GameServer()->SendChatTarget(m_ClientId, aBuf);
 			break;
 		}

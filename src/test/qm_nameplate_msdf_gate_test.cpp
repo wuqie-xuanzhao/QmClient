@@ -9,27 +9,28 @@
 
 TEST(QmNameplateMsdfGate, FontMatchesAtlasFamilies)
 {
-	// 图集固定字体族：base 页烤 DejaVu Sans，CJK 页烤 Source Han Sans SC
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("DejaVu Sans"));
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Source Han Sans SC"));
+	// 当前没有提交任何正式 profile；验证产物不能冒充随包发布字体。
+	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Noto Sans SC"));
+	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Glow Sans J Compressed Book"));
+	EXPECT_EQ(QmNameplateMsdfFontProfile("NotoSansCJKsc-Thin"), nullptr);
 }
 
 TEST(QmNameplateMsdfGate, FontMatchIgnoresCaseAndWeightSuffix)
 {
 	// 对齐字体下拉框的 str_find_nocase 子串匹配：大小写与权重/变体后缀不影响命中
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("dejavu sans"));
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("DEJAVU SANS BOLD"));
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Source Han Sans SC Heavy"));
+	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("noto sans cjk sc heavy"));
 }
 
 TEST(QmNameplateMsdfGate, OtherFontsDoNotMatchAtlas)
 {
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Arial"));
-	// 繁体族（TC）与宋体族（Serif）都不是图集预烤的族
-	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Source Han Sans TC"));
+	// 未随包字体仍必须完整回退 FreeType，不能拿相近字体图形冒充
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Source Han Serif SC"));
+	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Nunito Black"));
+	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("PingFang SC"));
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas(""));
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas(nullptr));
+	EXPECT_EQ(QmNameplateMsdfFontProfile("Source Han Serif SC"), nullptr);
 }
 
 TEST(QmNameplateMsdfGate, FirstMissingCodepointFindsFirstUnsupported)

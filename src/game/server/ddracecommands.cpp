@@ -98,11 +98,11 @@ void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData)
 		pSelf->m_apPlayers[Victim]->KillCharacter(WEAPON_GAME);
 		char aBuf[512];
 		if(pResult->NumArguments() == 2)
-			str_format(aBuf, sizeof(aBuf), "%s was killed by authorized player (%s)",
+			str_format(aBuf, sizeof(aBuf), "%s 被授权玩家处死（%s）",
 				pSelf->Server()->ClientName(Victim),
 				pResult->GetString(1));
 		else
-			str_format(aBuf, sizeof(aBuf), "%s was killed by authorized player",
+			str_format(aBuf, sizeof(aBuf), "%s 被授权玩家处死",
 				pSelf->Server()->ClientName(Victim));
 		pSelf->SendChat(-1, TEAM_ALL, aBuf);
 	}
@@ -548,15 +548,15 @@ void CGameContext::ConModerate(IConsole::IResult *pResult, void *pUserData)
 	pPlayer->m_Moderating = !pPlayer->m_Moderating;
 
 	if(!HadModerator && pPlayer->m_Moderating)
-		pSelf->SendChat(-1, TEAM_ALL, "Server kick/spec votes will now be actively moderated.", 0);
+		pSelf->SendChat(-1, TEAM_ALL, "服务器的踢人/旁观投票现在会被主动管理员模式接管", 0);
 
 	if(!pSelf->PlayerModerating())
-		pSelf->SendChat(-1, TEAM_ALL, "Server kick/spec votes are no longer actively moderated.", 0);
+		pSelf->SendChat(-1, TEAM_ALL, "服务器的踢人/旁观投票已不再由主动管理员模式接管", 0);
 
 	if(pPlayer->m_Moderating)
-		pSelf->SendChatTarget(pResult->m_ClientId, "Active moderator mode enabled for you.");
+		pSelf->SendChatTarget(pResult->m_ClientId, "已为你开启主动管理员模式");
 	else
-		pSelf->SendChatTarget(pResult->m_ClientId, "Active moderator mode disabled for you.");
+		pSelf->SendChatTarget(pResult->m_ClientId, "已为你关闭主动管理员模式");
 }
 
 void CGameContext::ConSetDDRTeam(IConsole::IResult *pResult, void *pUserData)

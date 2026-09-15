@@ -2366,6 +2366,10 @@ CRenderLayerEntityTune::CRenderLayerEntityTune(int GroupId, int LayerId, int Fla
 
 IGraphics::CTextureHandle CRenderLayerEntityTune::GetTexture() const
 {
+	// 关闭着色时改用普通实体贴图：编号颜色图集的每个切片都带色相，
+	// 用原始 TILE_TUNE 序号采样会得到固定杂色而不是灰色 tune tile。
+	if(!g_Config.m_QmShowTuneZoneColors)
+		return m_pMapImages->GetEntities(MAP_IMAGE_ENTITY_LAYER_TYPE_ALL_EXCEPT_SWITCH);
 	return m_pMapImages->GetTuneColors();
 }
 
@@ -2373,7 +2377,8 @@ void CRenderLayerEntityTune::GetTileData(unsigned char *pIndex, unsigned char *p
 {
 	const CTuneTile &Tile = m_pTuneTiles[y * m_pLayerTilemap->m_Width + x];
 	// Assign color indices in encounter order for higher adjacent color distance.
-	*pIndex = m_TuneColorMapper.TileTextureIndex(Tile.m_Type, Tile.m_Number, Graphics()->HasTextureArraysSupport());
+	// 开关关闭时保留原始 tune tile，不按编号着色。
+	*pIndex = g_Config.m_QmShowTuneZoneColors ? m_TuneColorMapper.TileTextureIndex(Tile.m_Type, Tile.m_Number, Graphics()->HasTextureArraysSupport()) : Tile.m_Type;
 	*pFlags = 0;
 }
 
@@ -2395,8 +2400,10 @@ void CRenderLayerEntityTune::InitTileData()
 
 void CRenderLayerEntityTune::RenderTileLayerNoTileBuffer(const ColorRGBA &Color, const CRenderLayerParams &Params)
 {
+	// 开关关闭时传空 mapper，RenderTunemap 会退回原始单色 tile。
+	CTuneColorMapper *pTuneColorMapper = g_Config.m_QmShowTuneZoneColors ? &m_TuneColorMapper : nullptr;
 	Graphics()->BlendNone();
-	RenderMap()->RenderTunemap(m_pTuneTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_OPAQUE, &m_TuneColorMapper);
+	RenderMap()->RenderTunemap(m_pTuneTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_OPAQUE, pTuneColorMapper);
 	Graphics()->BlendNormal();
-	RenderMap()->RenderTunemap(m_pTuneTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_TRANSPARENT, &m_TuneColorMapper);
+	RenderMap()->RenderTunemap(m_pTuneTiles, m_pLayerTilemap->m_Width, m_pLayerTilemap->m_Height, 32.0f, Color, (Params.m_RenderTileBorder ? TILERENDERFLAG_EXTEND : 0) | LAYERRENDERFLAG_TRANSPARENT, pTuneColorMapper);
 }

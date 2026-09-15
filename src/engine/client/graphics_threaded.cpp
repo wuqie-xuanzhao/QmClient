@@ -497,7 +497,7 @@ void CGraphics_Threaded::UnloadTexture(CTextureHandle *pIndex)
 	FreeTextureIndex(pIndex);
 }
 
-static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *pSprite, size_t &x, size_t &y, size_t &w, size_t &h);
+static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *pSprite, size_t &x, size_t &y, size_t &w, size_t &h, bool *pOutOfBounds = nullptr);
 
 IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo &FromImageInfo, const std::optional<CImageInfo> &FallbackImageInfo, const CDataSprite *pSprite)
 {
@@ -506,14 +506,29 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo
 	size_t y = 0;
 	size_t w = 0;
 	size_t h = 0;
-	if(FromImageInfo.m_pData == nullptr || !GetSpriteImageRect(FromImageInfo, pSprite, x, y, w, h))
+	bool OutOfBounds = false;
+	if(FromImageInfo.m_pData == nullptr || !GetSpriteImageRect(FromImageInfo, pSprite, x, y, w, h, &OutOfBounds))
 	{
+		if(OutOfBounds)
+		{
+			// 自定义图集比默认图集小（例如只做了部分区域的空白材质包）：
+			// 越界的 sprite 按「未提供」处理，不再让整包被拒而静默回退官方默认图。
+			if(FallbackImageInfo.has_value() && g_Config.m_QmBlankAssetFallback != 0)
+			{
+				log_warn("graphics/texture", "Sprite '%s' exceeds the %dx%d atlas, falling back to the default asset.", pSpriteName, FromImageInfo.m_Width, FromImageInfo.m_Height);
+				return LoadSpriteTexture(FallbackImageInfo.value(), std::nullopt, pSprite);
+			}
+			log_warn("graphics/texture", "Sprite '%s' exceeds the %dx%d atlas, keeping it invisible.", pSpriteName, FromImageInfo.m_Width, FromImageInfo.m_Height);
+			return m_BlankTexture;
+		}
 		log_error("graphics/texture", "Ignoring invalid sprite texture '%s'.", pSpriteName);
 		return m_NullTexture;
 	}
 
-	// 检查不可见纹理（可能是过时的游戏资源），回退到默认资源
-	if(FallbackImageInfo.has_value() && IsImageSubFullyTransparent(FromImageInfo, (int)x, (int)y, (int)w, (int)h))
+	// 检查不可见纹理（可能是过时的游戏资源，或用户故意留白的屏蔽材质）。
+	// qm_blank_asset_fallback 开启时回退默认资源（官方行为）；
+	// 关闭时保持不可见，让空白材质屏蔽雪花等粒子特效的意图生效。
+	if(FallbackImageInfo.has_value() && g_Config.m_QmBlankAssetFallback != 0 && IsImageSubFullyTransparent(FromImageInfo, (int)x, (int)y, (int)w, (int)h))
 	{
 		log_warn("graphics", "Asset '%s' appears to be invisible, falling back to default", pSpriteName);
 		return LoadSpriteTexture(FallbackImageInfo.value(), std::nullopt, pSprite);
@@ -654,7 +669,7 @@ static bool TextureDataSizeGrayscale(size_t Width, size_t Height, size_t &DataSi
 	return true;
 }
 
-static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *pSprite, size_t &x, size_t &y, size_t &w, size_t &h)
+static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *pSprite, size_t &x, size_t &y, size_t &w, size_t &h, bool *pOutOfBounds)
 {
 	if(pSprite == nullptr || pSprite->m_pSet == nullptr || pSprite->m_pSet->m_Gridx <= 0 || pSprite->m_pSet->m_Gridy <= 0 ||
 		pSprite->m_X < 0 || pSprite->m_Y < 0 || pSprite->m_W <= 0 || pSprite->m_H <= 0)
@@ -688,6 +703,10 @@ static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *p
 	if(w == 0 || h == 0 || x > ImageInfo.m_Width || y > ImageInfo.m_Height ||
 		w > ImageInfo.m_Width - x || h > ImageInfo.m_Height - y)
 	{
+		// 图集网格整除但 sprite 矩形超出图集：视为「图集比默认布局小」，
+		// 与真正的坏包（不可整除/无数据）区分开。
+		if(pOutOfBounds != nullptr)
+			*pOutOfBounds = true;
 		return false;
 	}
 	return true;
@@ -804,12 +823,12 @@ bool CGraphics_Threaded::IsRenderTargetSupported() const
 
 bool CGraphics_Threaded::IsRenderTargetGaussianBlurSupported() const
 {
-	return m_GLRenderTargetGaussianBlurSupported && (!m_GLRenderTargetExternalPassRequiresSingleSample || m_MultiSamplingCount == 0);
+	return IGraphics::SingleSampleFeatureAllowedUnderMsaa(m_GLRenderTargetGaussianBlurSupported, m_GLRenderTargetExternalPassRequiresSingleSample, m_MultiSamplingCount);
 }
 
 bool CGraphics_Threaded::IsBackbufferCaptureSupported() const
 {
-	return m_GLBackbufferCaptureSupported && (!m_GLRenderTargetExternalPassRequiresSingleSample || m_MultiSamplingCount == 0);
+	return IGraphics::SingleSampleFeatureAllowedUnderMsaa(m_GLBackbufferCaptureSupported, m_GLRenderTargetExternalPassRequiresSingleSample, m_MultiSamplingCount);
 }
 
 const char *CGraphics_Threaded::RenderTargetSupportReason() const
@@ -2938,7 +2957,10 @@ void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams
 	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
 	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
 	Cmd.m_State.m_Texture = Params.m_ProceduralRing ? m_NullTexture.Id() : Params.m_Texture.Id();
-	Cmd.m_MsdfParams = Params.m_ProceduralRing ? vec4(-Params.m_RingInnerRadius, Params.m_RingOuterRadius, Params.m_RingStartAngle, Params.m_RingEndAngle) : vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, 0.0f);
+	float MsdfW = maximum(std::abs(Params.m_OutlineWidthPx), 0.0f);
+	if(!Params.m_ProceduralRing && Params.m_UseTrueSdf)
+		MsdfW = -MsdfW - 0.001f;
+	Cmd.m_MsdfParams = Params.m_ProceduralRing ? vec4(-Params.m_RingInnerRadius, Params.m_RingOuterRadius, Params.m_RingStartAngle, Params.m_RingEndAngle) : vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, MsdfW);
 
 	const float CenterX = Params.m_Rect.x + Params.m_Rect.z * 0.5f;
 	const float CenterY = Params.m_Rect.y + Params.m_Rect.w * 0.5f;
@@ -4498,6 +4520,19 @@ void CGraphics_Threaded::CreateNullTexture()
 	m_NullTexture.Invalidate();
 	m_NullTexture = LoadTextureRaw(NullTextureInfo, TextureLoadFlags, "null-texture");
 	dbg_assert(m_NullTexture.IsNullTexture(), "Null texture invalid");
+
+	// 全透明占位纹理（16x16，与空纹理同尺寸以满足整除校验，避免触发警告弹窗）：
+	// sprite 超出自定义图集范围时按「不可见」处理用。
+	constexpr size_t BlankTextureDimension = 16;
+	unsigned char aBlankData[BlankTextureDimension * BlankTextureDimension * PixelSize] = {0};
+	CImageInfo BlankTextureInfo;
+	BlankTextureInfo.m_Width = BlankTextureDimension;
+	BlankTextureInfo.m_Height = BlankTextureDimension;
+	BlankTextureInfo.m_Format = CImageInfo::FORMAT_RGBA;
+	BlankTextureInfo.m_pData = aBlankData;
+	m_BlankTexture.Invalidate();
+	m_BlankTexture = LoadTextureRaw(BlankTextureInfo, TextureLoadFlags, "blank-texture");
+	dbg_assert(m_BlankTexture.IsValid(), "Blank texture invalid");
 }
 
 void CGraphics_Threaded::NotifyGraphicsResourcesReset()

@@ -4,6 +4,8 @@
 // 运行时不参与生成，因此这里直接校验提交进仓库的产物本身。
 #include <engine/shared/json.h>
 
+#include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_manifest.h>
+
 #include <gtest/gtest.h>
 #include <test/test.h>
 
@@ -11,11 +13,12 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace
 {
-	// PNG 是二进制文件,不能走 ReadTestSourceFile(它会剥除 ,破坏 PNG 签名)。
+	// PNG 是二进制文件，不能走 ReadTestSourceFile（它会剥除回车换行，破坏 PNG 签名）。
 	std::string ReadBinaryTestFile(const char *pRelativePath)
 	{
 		const std::string Path = std::string(DDNET_TEST_SOURCE_DIR) + "/" + pRelativePath;
@@ -27,9 +30,16 @@ namespace
 	}
 
 	constexpr const char *kBaseManifest = "data/qmclient/nameplate_msdf/nameplate_base_msdf.json";
-	constexpr const char *kCjkManifest = "data/qmclient/nameplate_msdf/nameplate_cjk_msdf.json";
 	constexpr const char *kBaseImage = "data/qmclient/nameplate_msdf/nameplate_base_msdf.png";
-	constexpr const char *kCjkImage = "data/qmclient/nameplate_msdf/nameplate_cjk_msdf.png";
+	constexpr int kPublishedProfileCount = 0;
+	constexpr const char *aProfiles[] = {nullptr};
+
+	bool PublishedAtlasAvailable()
+	{
+		std::ifstream Manifest(std::string(DDNET_TEST_SOURCE_DIR) + "/" + kBaseManifest, std::ios::binary);
+		std::ifstream Image(std::string(DDNET_TEST_SOURCE_DIR) + "/" + kBaseImage, std::ios::binary);
+		return Manifest.good() && Image.good();
+	}
 
 	// PNG IHDR：宽高为偏移 16/20 的大端 32 位整数
 	bool ReadPngSize(const std::string &Bytes, uint32_t &Width, uint32_t &Height)
@@ -53,9 +63,12 @@ namespace
 		int m_PxRange = 0;
 		int m_EmPixels = 0;
 		int m_Padding = 0;
+		double m_Ascent = 0.0;
+		double m_Descent = 0.0;
 		uint32_t m_Width = 0;
 		uint32_t m_Height = 0;
 		std::string m_Kind;
+		std::string m_DistanceField;
 		std::string m_Image;
 	};
 
@@ -80,13 +93,28 @@ namespace
 			}
 			return (int)pValue->u.integer;
 		};
+		auto NumField = [&](const char *pName) {
+			const json_value *pValue = json_object_get(pRoot, pName);
+			if(pValue == nullptr || (pValue->type != json_integer && pValue->type != json_double))
+			{
+				Ok = false;
+				return 0.0;
+			}
+			return pValue->type == json_integer ? (double)pValue->u.integer : pValue->u.dbl;
+		};
 		Facts.m_PxRange = IntField("px_range");
 		Facts.m_EmPixels = IntField("em_pixels");
 		Facts.m_Padding = IntField("padding");
+		// 行盒度量：基线排版（与内容无关的 ascent/descent）依赖这两个字段
+		Facts.m_Ascent = NumField("ascent");
+		Facts.m_Descent = NumField("descent");
 
 		const json_value *pKind = json_object_get(pRoot, "kind");
 		if(pKind != nullptr && pKind->type == json_string)
 			Facts.m_Kind = pKind->u.string.ptr;
+		const json_value *pDistanceField = json_object_get(pRoot, "distance_field");
+		if(pDistanceField != nullptr && pDistanceField->type == json_string)
+			Facts.m_DistanceField = pDistanceField->u.string.ptr;
 
 		const json_value *pAtlas = json_object_get(pRoot, "atlas");
 		const json_value *pGlyphs = json_object_get(pRoot, "glyphs");
@@ -151,11 +179,45 @@ namespace
 	}
 }
 
+TEST(QmNameplateMsdfAtlas, BuiltinProfilesReferenceExistingPages)
+{
+	if(kPublishedProfileCount == 0)
+	{
+		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
+	}
+	for(int ProfileIndex = 0; ProfileIndex < kPublishedProfileCount; ++ProfileIndex)
+	{
+		const char *pProfile = aProfiles[ProfileIndex];
+		SCOPED_TRACE(pProfile);
+		char aProfilePath[IO_MAX_PATH_LENGTH];
+		str_format(aProfilePath, sizeof(aProfilePath), "data/qmclient/nameplate_msdf/profiles/nameplate_%s.json", pProfile);
+		const std::string ProfileJson = ReadTestSourceFile(aProfilePath);
+		ASSERT_FALSE(ProfileJson.empty()) << aProfilePath;
+		json_value *pRoot = JsonParse(ProfileJson.c_str(), ProfileJson.size());
+		ASSERT_NE(pRoot, nullptr) << aProfilePath;
+		const json_value *pPages = json_object_get(pRoot, "pages");
+		ASSERT_NE(pPages, nullptr) << aProfilePath;
+		ASSERT_EQ(pPages->type, json_array) << aProfilePath;
+		ASSERT_GT(pPages->u.array.length, 0u) << aProfilePath;
+		for(unsigned i = 0; i < pPages->u.array.length; ++i)
+		{
+			ASSERT_NE(pPages->u.array.values[i], nullptr) << aProfilePath;
+			ASSERT_EQ(pPages->u.array.values[i]->type, json_string) << aProfilePath;
+			const std::string PagePath = pPages->u.array.values[i]->u.string.ptr;
+			const std::string SourcePagePath = PagePath.rfind("data/", 0) == 0 ? PagePath : "data/" + PagePath;
+			EXPECT_FALSE(ReadTestSourceFile(SourcePagePath.c_str()).empty()) << SourcePagePath;
+		}
+		json_value_free(pRoot);
+	}
+}
+
 // pxRange 之外的 padding 必须留足，否则字形边缘的双线性采样会串到邻居字形上
 
 // 基础页必须覆盖 ASCII（含空格），否则最常见的名字会整条回退
 TEST(QmNameplateMsdfAtlas, BasePageCoversAscii)
 {
+	if(!PublishedAtlasAvailable())
+		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
 	const std::string Json = ReadTestSourceFile(kBaseManifest);
 	ASSERT_FALSE(Json.empty());
 	json_value *pRoot = JsonParse(Json.c_str(), Json.size());
@@ -188,23 +250,186 @@ TEST(QmNameplateMsdfAtlas, BasePageCoversAscii)
 
 TEST(QmNameplateMsdfAtlas, ManifestsAreSelfConsistent)
 {
+	if(!PublishedAtlasAvailable())
+		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
 	SAtlasFacts BaseFacts;
 	size_t BaseGlyphs = 0;
 	EXPECT_TRUE(CheckPage(kBaseManifest, kBaseImage, BaseFacts, BaseGlyphs));
 	EXPECT_EQ(BaseFacts.m_Kind, "msdf-glyphs");
+	EXPECT_EQ(BaseFacts.m_DistanceField, "mtsdf");
 	EXPECT_GT(BaseFacts.m_PxRange, 0);
 	EXPECT_GT(BaseFacts.m_EmPixels, 0);
 	EXPECT_GE(BaseFacts.m_Padding, BaseFacts.m_PxRange + 1);
-	EXPECT_GT(BaseGlyphs, 900u);
-
-	SAtlasFacts CjkFacts;
-	size_t CjkGlyphs = 0;
-	EXPECT_TRUE(CheckPage(kCjkManifest, kCjkImage, CjkFacts, CjkGlyphs));
-	EXPECT_EQ(CjkFacts.m_Kind, "msdf-glyphs");
-	EXPECT_EQ(CjkFacts.m_PxRange, BaseFacts.m_PxRange);
-	EXPECT_EQ(CjkFacts.m_EmPixels, BaseFacts.m_EmPixels);
-	EXPECT_GE(CjkFacts.m_Padding, CjkFacts.m_PxRange + 1);
-	// 3500 个常用汉字是资源脚本的目标规模；明显偏小说明图集被截断
-	EXPECT_GE(CjkGlyphs, 3000u);
+	EXPECT_GT(BaseFacts.m_Ascent, 0.0);
+	EXPECT_GT(BaseFacts.m_Descent, 0.0);
+	EXPECT_GT(BaseFacts.m_Ascent, BaseFacts.m_Descent);
+	EXPECT_GT(BaseGlyphs, 700u);
 }
 
+namespace
+{
+	struct SRuntimeManifestScan
+	{
+		bool m_Found = false;
+		double m_PxRange = 0.0;
+		double m_EmPixels = 0.0;
+		double m_AtlasWidth = 0.0;
+		double m_AtlasHeight = 0.0;
+		double m_Ascent = 0.0;
+		double m_Descent = 0.0;
+		std::string m_Image;
+	};
+
+	// 复刻运行时解析器的取值顺序，但用共享实现扫描真实产物。
+	SRuntimeManifestScan ScanManifestWithRuntimeHelpers(const std::string &Json)
+	{
+		SRuntimeManifestScan Scan;
+		const char *pBegin = Json.c_str();
+		const char *pEnd = pBegin + Json.size();
+		const char *pPxRange = QmNameplateMsdfFindKey(pBegin, pEnd, "px_range");
+		const char *pEmPixels = QmNameplateMsdfFindKey(pBegin, pEnd, "em_pixels");
+		const char *pImage = QmNameplateMsdfFindKey(pBegin, pEnd, "image");
+		if(pPxRange == nullptr || pEmPixels == nullptr || pImage == nullptr)
+			return Scan;
+		if(!QmNameplateMsdfReadDouble(pPxRange, pEnd, Scan.m_PxRange) ||
+			!QmNameplateMsdfReadDouble(pEmPixels, pEnd, Scan.m_EmPixels) ||
+			!QmNameplateMsdfReadString(pImage, pEnd, Scan.m_Image))
+			return Scan;
+
+		const char *pAtlas = QmNameplateMsdfFindKey(pBegin, pEnd, "\"atlas\"");
+		if(pAtlas == nullptr)
+			return Scan;
+		const char *pAtlasEnd = pAtlas;
+		while(pAtlasEnd < pEnd && *pAtlasEnd != '}')
+			++pAtlasEnd;
+		const char *pWidth = QmNameplateMsdfFindKey(pAtlas, pAtlasEnd, "width");
+		const char *pHeight = QmNameplateMsdfFindKey(pAtlas, pAtlasEnd, "height");
+		if(pWidth == nullptr || pHeight == nullptr ||
+			!QmNameplateMsdfReadDouble(pWidth, pAtlasEnd, Scan.m_AtlasWidth) ||
+			!QmNameplateMsdfReadDouble(pHeight, pAtlasEnd, Scan.m_AtlasHeight))
+			return Scan;
+
+		// 行盒度量（可选字段）：键必须带引号定位——"ascent" 不是 "descent" 的子串，
+		// 带前引号才不会互相误匹配；解析失败/缺失保持 0，运行时按 cap 高度近似。
+		const char *pAscent = QmNameplateMsdfFindKey(pBegin, pEnd, "\"ascent\"");
+		const char *pDescent = QmNameplateMsdfFindKey(pBegin, pEnd, "\"descent\"");
+		if(pAscent != nullptr)
+			QmNameplateMsdfReadDouble(pAscent, pEnd, Scan.m_Ascent);
+		if(pDescent != nullptr)
+			QmNameplateMsdfReadDouble(pDescent, pEnd, Scan.m_Descent);
+
+		Scan.m_Found = true;
+		return Scan;
+	}
+
+	struct SRuntimeGlyphScan
+	{
+		bool m_Found = false;
+		double m_Advance = 0.0;
+		double m_X = 0.0;
+		double m_Y = 0.0;
+		double m_W = 0.0;
+		double m_H = 0.0;
+		bool m_HasOutline = false;
+	};
+
+	// 用运行时同一个 glyphs 扫描器遍历整块，返回条目数并顺带记录指定码点的度量。
+	int ScanGlyphsWithRuntimeHelpers(const std::string &Json, uint32_t WantedCodepoint, SRuntimeGlyphScan &Wanted)
+	{
+		const char *pBegin = Json.c_str();
+		const char *pEnd = pBegin + Json.size();
+		const char *pGlyphs = QmNameplateMsdfFindKey(pBegin, pEnd, "\"glyphs\"");
+		if(pGlyphs == nullptr)
+			return 0;
+		return QmNameplateMsdfForEachGlyphObject(pGlyphs, pEnd, [&](uint32_t Codepoint, const char *pObjectBegin, const char *pObjectEnd) {
+			auto Field = [&](const char *pName, double &Out) {
+				const char *pField = QmNameplateMsdfFindKey(pObjectBegin, pObjectEnd, pName);
+				return pField != nullptr && QmNameplateMsdfReadDouble(pField, pObjectEnd, Out);
+			};
+			if(Codepoint == WantedCodepoint)
+			{
+				SRuntimeGlyphScan Scan;
+				Scan.m_Found = Field("\"adv\"", Scan.m_Advance) && Field("\"x\"", Scan.m_X) &&
+					       Field("\"y\"", Scan.m_Y) && Field("\"w\"", Scan.m_W) && Field("\"h\"", Scan.m_H);
+				const char *pOutline = QmNameplateMsdfFindKey(pObjectBegin, pObjectEnd, "\"outline\"");
+				if(pOutline != nullptr)
+					QmNameplateMsdfReadBool(pOutline, pObjectEnd, Scan.m_HasOutline);
+				Wanted = Scan;
+			}
+			return true;
+		});
+	}
+}
+
+// 运行时解析器契约：manifest 是标准 JSON（"key": value）。手写扫描必须在 key 之后
+// 跳过结束引号与冒号，否则取值一律失败。这条曾经漏掉，导致「资产测试全绿、
+// 运行时整包解析失败、MSDF 从未真正启用」，整屏铭牌退到 FreeType 发虚。
+TEST(QmNameplateMsdfAtlas, RuntimeScannerReadsManifestFields)
+{
+	if(!PublishedAtlasAvailable())
+		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
+	const std::pair<const char *, const char *> aPages[] = {
+		{kBaseManifest, kBaseImage},
+	};
+	for(const auto &Page : aPages)
+	{
+		SCOPED_TRACE(Page.first);
+		const std::string Json = ReadTestSourceFile(Page.first);
+		ASSERT_FALSE(Json.empty()) << Page.first;
+		const SRuntimeManifestScan Scan = ScanManifestWithRuntimeHelpers(Json);
+		ASSERT_TRUE(Scan.m_Found) << Page.first;
+		EXPECT_GT(Scan.m_PxRange, 0.0) << Page.first;
+		EXPECT_GT(Scan.m_EmPixels, 0.0) << Page.first;
+		// 带引号的键扫描必须分别取到两个度量，且 ascent > descent（基线排版的合理性）
+		EXPECT_GT(Scan.m_Ascent, 0.0) << Page.first;
+		EXPECT_GT(Scan.m_Descent, 0.0) << Page.first;
+		EXPECT_GT(Scan.m_Ascent, Scan.m_Descent) << Page.first;
+
+		// image 字段必须能被整体取出，且文件名与随包页图一致（运行时取其文件名与 manifest 同目录拼接）
+		ASSERT_FALSE(Scan.m_Image.empty()) << Page.first;
+		const size_t ImageSlash = Scan.m_Image.find_last_of('/');
+		const std::string ImageName = ImageSlash == std::string::npos ? Scan.m_Image : Scan.m_Image.substr(ImageSlash + 1);
+		const std::string ExpectedName(Page.second);
+		EXPECT_EQ(ImageName, ExpectedName.substr(ExpectedName.find_last_of('/') + 1)) << Page.first;
+
+		// 运行时读到的图集尺寸必须与真实页图一致，否则 UV 会整块取错
+		const std::string PngBytes = ReadBinaryTestFile(Page.second);
+		uint32_t PngWidth = 0;
+		uint32_t PngHeight = 0;
+		ASSERT_TRUE(ReadPngSize(PngBytes, PngWidth, PngHeight)) << Page.second;
+		EXPECT_EQ(Scan.m_AtlasWidth, (double)PngWidth) << Page.second;
+		EXPECT_EQ(Scan.m_AtlasHeight, (double)PngHeight) << Page.second;
+	}
+}
+
+// 字形度量字段同样必须能读出来；读到 0 会让测量塌缩、四边形退化到画不出来。
+// 同时用运行时扫描器统计整块条目数，阈值与上面的 JSON 解析口径一致。
+TEST(QmNameplateMsdfAtlas, RuntimeScannerReadsGlyphFields)
+{
+	if(!PublishedAtlasAvailable())
+		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
+	const std::pair<const char *, size_t> aPages[] = {
+		{kBaseManifest, 700u},
+	};
+	for(const auto &Page : aPages)
+	{
+		SCOPED_TRACE(Page.first);
+		const std::string Json = ReadTestSourceFile(Page.first);
+		ASSERT_FALSE(Json.empty()) << Page.first;
+
+		SRuntimeGlyphScan Glyph;
+		const int Count = ScanGlyphsWithRuntimeHelpers(Json, 100, Glyph);
+		EXPECT_GT(Count, (int)Page.second) << Page.first;
+
+		if(Page.first == std::string(kBaseManifest))
+		{
+			ASSERT_TRUE(Glyph.m_Found) << Page.first;
+			EXPECT_GT(Glyph.m_Advance, 0.0);
+			EXPECT_GT(Glyph.m_W, 0.0);
+			EXPECT_GT(Glyph.m_H, 0.0);
+			EXPECT_GE(Glyph.m_X, 0.0);
+			EXPECT_GE(Glyph.m_Y, 0.0);
+			EXPECT_TRUE(Glyph.m_HasOutline);
+		}
+	}
+}

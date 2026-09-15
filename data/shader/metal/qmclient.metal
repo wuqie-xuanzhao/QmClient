@@ -99,10 +99,34 @@ fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in
 		const float AngularCoverage = Sweep >= 6.2830 ? 1.0 : smoothstep(0.0, AngularFeather, RelativeAngle) * smoothstep(0.0, AngularFeather, Sweep - RelativeAngle);
 		return float4(Input.m_Color.rgb, Input.m_Color.a * RadialCoverage * AngularCoverage);
 	}
-	const float SignedDistance = QmClientMedian(Texture.sample(Sampler, Input.m_TexCoord).rgb) - 0.5;
-	const float2 UnitRange = float2(MsdfParams.x) / MsdfParams.yz;
-	const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);
-	const float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);
+	const float4 Sample = Texture.sample(Sampler, Input.m_TexCoord);
+		const float TrueSignedDistance = Sample.a - 0.5;
+		const bool UseTrueSdf = MsdfParams.w < -0.0005;
+		const float SignedDistance = UseTrueSdf ? TrueSignedDistance : QmClientMedian(Sample.rgb) - 0.5;
+		const float2 UnitRange = float2(MsdfParams.x) / MsdfParams.yz;
+		const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);
+		const float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);
+		const float RequestedOutline = UseTrueSdf ? max(-MsdfParams.w - 0.001, 0.0) : MsdfParams.w;
+		if(RequestedOutline > 0.0)
+	{
+		// 距离场在当前 quad 上最多只能表示约 0.5 * ScreenPxRange 的外扩。
+		// 超出这个范围会把 atlas 背景也推成不透明矩形；限制到留出一个抗锯齿像素的可表示范围。
+		const float MaxRepresentableOutline = max(0.0, 0.5 * ScreenPxRange - 0.5);
+			const float OutlineWidth = min(RequestedOutline, MaxRepresentableOutline);
+		const float FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
+		// 描边直接沿同一 signed distance 外扩，避免邻字形 UV 串采样造成孤立白点。
+		// MTSDF alpha is a true single-channel distance, so the outer edge does
+		// not inherit MSDF corner-channel interpolation artifacts.
+		if(UseTrueSdf)
+		{
+			const float OuterCoverage = clamp(TrueSignedDistance * ScreenPxRange + OutlineWidth + 0.5, 0.0, 1.0);
+			const float OutlineCoverage = max(OuterCoverage - FillCoverage, 0.0);
+			return float4(Input.m_Color.rgb, Input.m_Color.a * OutlineCoverage);
+		}
+		const float OuterCoverage = clamp(SignedDistance * ScreenPxRange + OutlineWidth + 0.5, 0.0, 1.0);
+		const float OutlineCoverage = max(OuterCoverage - FillCoverage, 0.0);
+		return float4(Input.m_Color.rgb, Input.m_Color.a * OutlineCoverage);
+	}
 	const float Opacity = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
 	return float4(Input.m_Color.rgb, Input.m_Color.a * Opacity);
 }

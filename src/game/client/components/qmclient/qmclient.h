@@ -114,6 +114,15 @@ class CQmClient : public CComponent
 	mutable bool m_QmStatisticsFileExists = false;
 	mutable bool m_QmStatisticsFileInvalid = false;
 	mutable int64_t m_QmStatisticsNextSaveRetryTick = 0;
+	// 本地统计在会话内被修改后置脏；落盘按 m_QmStatisticsLocalSaveDueTick
+	// 节流，避免逐秒游玩时长触发逐秒写文件。崩溃时最多丢一个节流窗口。
+	bool m_QmStatisticsLocalStatsDirty = false;
+	int64_t m_QmStatisticsLocalSaveDueTick = 0;
+	// 完成事件有两条通道：0.6 是聊天广播，0.7 是 RaceFinish 事件；官方
+	// 服务端按协议二选一，个别魔改服可能都发，用 1 秒窗口去重兜底。
+	int64_t m_QmLastLocalFinishRecordTime = -1;
+	// 本次会话内是否成功拉取过 DDNet 档案；用于区分「查询中」与「查无此人」。
+	bool m_QmDdnetStatsSucceededOnce = false;
 	int m_QmClientPendingVoicePresencePlayers = 0;
 	bool m_QmClientDistributionSuccessLatched = false;
 	bool m_QmClientShutdownReported = false;
@@ -174,6 +183,7 @@ class CQmClient : public CComponent
 	void UpdateQmClientLocalModePlaytime();
 	void AccumulateQmClientLocalModePlaytime(int64_t Now);
 	void EndQmClientLocalModePlaytime();
+	void RecordQmClientLocalRaceFinish(int TimeMs);
 	void RefreshQmDdnetPlayerStats();
 	void RefreshQmClientPlaytime();
 
@@ -214,6 +224,10 @@ public:
 	const char *QmDdnetFavoritePartner() const { return m_aQmDdnetFavoritePartner; }
 	bool QmDdnetStatsIsFetching() const { return m_QmDdnetPlayerState.IsFetching(); }
 	bool QmDdnetStatsLastRequestFailed() const { return m_QmDdnetPlayerState.LastRequestFailed(); }
+	// 本次会话内是否完成过一次成功的 DDNet 档案查询（HTTP 200 且 JSON 可解析）。
+	bool QmDdnetStatsSucceededOnce() const { return m_QmDdnetStatsSucceededOnce; }
+	// 统计文件加载失败时为真；此时保存被拒绝，UI 应给出提示。
+	bool QmStatisticsFileInvalid() const { return m_QmStatisticsFileInvalid; }
 	int64_t QmDdnetStatsLastSuccessfulSyncTimestamp() const { return m_QmDdnetPlayerState.LastSuccessfulSyncTimestamp(); }
 	bool QmStatisticsIsFetching() const { return m_QmDdnetPlayerState.IsFetching() || m_QmClientPlaytimeManualRefreshActive; }
 	bool QmStatisticsLastRequestFailed() const { return m_QmDdnetPlayerState.LastRequestFailed() || m_QmClientPlaytimeManualRefreshFailed; }
@@ -222,6 +236,7 @@ public:
 	const std::vector<SQmClientDdnetPlayerStats> &QmClientDdnetPlayerStats() const { return m_vQmClientDdnetPlayerStats; }
 	bool SaveQmClientStatistics() const;
 	void RecordQmClientLocalMapFinish(const char *pGameMode, int Score);
+	void OnMessage(int MsgType, void *pRawMsg) override;
 	void UseCurrentQmDdnetPlayerName();
 	void RefreshQmClientStatistics();
 };

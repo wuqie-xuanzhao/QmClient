@@ -2900,10 +2900,14 @@ void CMenus::RenderLoadingDirect(const char *pCaption, const char *pContent, std
 		// Avoid rendering while loading the menu background as this would otherwise
 		// cause the regular menu background to be rendered for a few frames while
 		// the menu background is not loaded yet.
+		if(g_Config.m_QmGraphicsTrace >= 1)
+			dbg_msg("ui/loading", "frame skip: menu background still loading");
 		return;
 	}
 	if(!GameClient()->m_MenuBackground.Render())
 	{
+		if(g_Config.m_QmGraphicsTrace >= 1)
+			dbg_msg("ui/loading", "frame fallback: menu background unavailable, drawing procedural background");
 		RenderBackground();
 	}
 
@@ -2935,6 +2939,9 @@ void CMenus::RenderLoadingDirect(const char *pCaption, const char *pContent, std
 	}
 
 	Graphics()->SetColor(1.0, 1.0, 1.0, 1.0);
+
+	if(g_Config.m_QmGraphicsTrace >= 1)
+		dbg_msg("ui/loading", "loading frame presented: progress=%.2f", Progress.has_value() ? Progress.value() : -1.0f);
 
 	GameClient()->UpdateAndSwapClient();
 }
@@ -3129,6 +3136,34 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			Stats.m_GameMode = "DDraceNetwork";
 			Stats.m_CommunityId = "ddnet";
 			vModeStats.push_back(std::move(Stats));
+		}
+	}
+	// 本地 DDrace 条目按服务器社区分条，DDStats 游戏类型又会追加同名条目；
+	// 而 DDrace 行的展示数据只有官方 DDNet 聚合一份。先把所有 DDrace 变体
+	// 折叠成单条，避免图例、饼图和顶部总时长出现多条相同的「DDraceNetwork · DDNet」。
+	QmCollapseModeEntries(vModeStats, [](const SQmClientLocalModeStats &Stats) {
+		return IsStatsDDraceMode(Stats.m_GameMode);
+	});
+	// Gores 同理：本地按社区分条、DDStats 追加与 Axiom 占位可以并存，
+	// 超量截断时甚至可能选入两条 Gores。折叠成单条；任一来源带 Axiom
+	// 身份时保留该身份，保证官方 Axiom 数据仍能覆盖这一行。
+	bool HasAxiomGoresEntry = false;
+	for(const SQmClientLocalModeStats &Stats : vModeStats)
+	{
+		if(IsStatsGoresMode(Stats.m_GameMode) && Stats.m_IsAxiom)
+			HasAxiomGoresEntry = true;
+	}
+	if(QmCollapseModeEntries(vModeStats, [](const SQmClientLocalModeStats &Stats) {
+		   return IsStatsGoresMode(Stats.m_GameMode);
+	   }) && HasAxiomGoresEntry)
+	{
+		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [](const SQmClientLocalModeStats &Stats) {
+			return IsStatsGoresMode(Stats.m_GameMode);
+		});
+		if(It != vModeStats.end())
+		{
+			It->m_CommunityId = "axiom";
+			It->m_IsAxiom = true;
 		}
 	}
 	for(SQmClientLocalModeStats &Stats : vModeStats)
@@ -3409,6 +3444,15 @@ void CMenus::RenderStatistics(CUIRect MainView)
 			const int64_t PointsTotal = GameClient()->m_QmClient.QmDdnetPointsTotal();
 			if(Points >= 0 && PointsTotal >= 0)
 				str_format(pBuf, BufSize, "%" PRId64 "/%" PRId64, Points, PointsTotal);
+			// 行内区分「查询中 / 查询失败 / 已成功但查无此人」，
+			// 不能在名字不存在时永远显示加载中；查询在飞时优先显示加载中，
+			// 避免此前查过别的名字成功就误标成暂无数据。
+			else if(GameClient()->m_QmClient.QmDdnetStatsIsFetching())
+				str_copy(pBuf, Localize("Loading"), BufSize);
+			else if(GameClient()->m_QmClient.QmDdnetStatsLastRequestFailed())
+				str_copy(pBuf, Localize("Failed"), BufSize);
+			else if(GameClient()->m_QmClient.QmDdnetStatsSucceededOnce())
+				str_copy(pBuf, Localize("Unavailable"), BufSize);
 			else
 				str_copy(pBuf, Localize("Loading"), BufSize);
 			return;
@@ -3520,15 +3564,13 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	CUIRect Legend, Actions;
 	const float ActionsWidth = LegendAndActions.w >= 860.0f ? 560.0f : minimum(560.0f, maximum(420.0f, LegendAndActions.w * 0.42f));
 	LegendAndActions.VSplitRight(ActionsWidth, &Legend, &Actions);
-	CUIRect ActionRow;
-	Actions.HSplitTop(26.0f, &ActionRow, &Actions);
-	const float ButtonWidth = (ActionRow.w - 16.0f) / 3.0f;
 	CUIRect RefreshButton, UseCurrentNameButton, ModeTitleButton;
-	ActionRow.VSplitLeft(ButtonWidth, &RefreshButton, &ActionRow);
-	ActionRow.VSplitLeft(8.0f, nullptr, &ActionRow);
-	ActionRow.VSplitLeft(ButtonWidth, &UseCurrentNameButton, &ActionRow);
-	ActionRow.VSplitLeft(8.0f, nullptr, &ActionRow);
-	ModeTitleButton = ActionRow;
+	// 三个操作按钮上下排列，横排会挤压图例区域的阅读宽度。
+	Actions.HSplitTop(26.0f, &RefreshButton, &Actions);
+	Actions.HSplitTop(8.0f, nullptr, &Actions);
+	Actions.HSplitTop(26.0f, &UseCurrentNameButton, &Actions);
+	Actions.HSplitTop(8.0f, nullptr, &Actions);
+	Actions.HSplitTop(26.0f, &ModeTitleButton, &Actions);
 	static CButtonContainer s_StatisticsRefreshButton;
 	const char *pRefreshStatsLabel = StatisticsFetching ? Localize("Syncing remote stats") : (StatisticsFailed ? Localize("Retry remote stats") : Localize("Sync remote stats"));
 	if(DoButton_Menu(&s_StatisticsRefreshButton, pRefreshStatsLabel, 0, &RefreshButton, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f)))
@@ -3746,6 +3788,14 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		Localize("Data source"), Localize("Gores · Axiom"),
 		aDdnetSourceText,
 		aAxiomSourceText);
+	// 统计文件损坏时保存被永久拒绝，必须在页面上告知，
+	// 否则用户只会观察到「统计永远不变」而没有任何解释。
+	if(GameClient()->m_QmClient.QmStatisticsFileInvalid())
+	{
+		char aInfoTextWithWarning[sizeof(aInfoText)];
+		str_format(aInfoTextWithWarning, sizeof(aInfoTextWithWarning), "%s\n%s", aInfoText, Localize("Local statistics file is invalid, saving paused"));
+		str_copy(aInfoText, aInfoTextWithWarning, sizeof(aInfoText));
+	}
 
 	SLabelProperties InfoProps;
 	InfoProps.m_MaxWidth = static_cast<int>(NotesBody.w);
@@ -6296,7 +6346,7 @@ int CMenus::DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const 
 	return DoButton_MenuTab(pButtonContainer, pText, Checked, pRect, Corners, nullptr, nullptr, nullptr, nullptr, 10.0f, nullptr, &TextElement);
 }
 
-int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding)
+int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags, int Corners, float Rounding, bool Disabled)
 {
 	if(pTextId == nullptr)
 		return DoButton_Menu(pButtonContainer, pText, Checked, pRect, Flags, nullptr, Corners, Rounding);
@@ -6312,7 +6362,10 @@ int CMenus::DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *
 	}
 	CUIElement &TextElement = MenuTextElement(MENU_TEXT_SCOPE_INGAME, Page, -1, -1, pTextId, StyleKey);
 	Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
-	const int Result = DoButton_Menu(pButtonContainer, "", Checked, pRect, Flags, nullptr, Corners, Rounding);
+	// QmClient: 禁用态——背景压暗且不响应点击，位置/文案保持稳定（避免按钮忽隐忽现）。
+	// 禁用时去掉点击/悬停旗标但仍绘制按钮背景，否则按钮只剩文字没有底色
+	const ColorRGBA ButtonColor = Disabled ? ColorRGBA(0.45f, 0.45f, 0.5f, 0.35f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f);
+	const int Result = DoButton_Menu(pButtonContainer, "", Checked, pRect, Disabled ? 0 : Flags, nullptr, Corners, Rounding, 0.0f, ButtonColor);
 	CUIElement::SUIElementRect *pElementRect = TextElement.Rect(0);
 	const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
 	DoMenuLabelStreamed(MENU_TEXT_SCOPE_INGAME, TextElement, &Text, pText, Text.h * CUi::ms_FontmodHeight, TEXTALIGN_MC, Props);

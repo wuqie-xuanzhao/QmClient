@@ -2816,6 +2816,22 @@ turkish = "Saat cinsinden göster"
 polish = "Wyświetlaj w godzinach"
 
 [[message]]
+key = "Local statistics file is invalid, saving paused"
+[message.translations]
+simplified_chinese = "本地统计文件已损坏，保存已暂停"
+traditional_chinese = "本機統計檔案已損壞，儲存已暫停"
+japanese = "ローカル統計ファイルが破損しているため、保存を停止しています"
+korean = "로컬 통계 파일이 손상되어 저장이 일시 중지되었습니다"
+russian = "Файл локальной статистики повреждён, сохранение приостановлено"
+german = "Lokale Statistikdatei ist beschädigt, Speichern angehalten"
+spanish = "El archivo de estadísticas locales no es válido, guardado en pausa"
+french = "Le fichier de statistiques locales est invalide, sauvegarde en pause"
+brazilian_portuguese = "O arquivo de estatísticas locais é inválido, salvamento pausado"
+portuguese = "O ficheiro de estatísticas locais é inválido, gravação pausada"
+turkish = "Yerel istatistik dosyası geçersiz, kayıt duraklatıldı"
+polish = "Lokalny plik statystyk jest uszkodzony, zapis wstrzymany"
+
+[[message]]
 key = "Use current name"
 [message.translations]
 simplified_chinese = "使用当前名称"

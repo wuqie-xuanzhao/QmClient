@@ -203,17 +203,23 @@ namespace
 		const int LocalId = QmLocalReferenceClientId(pGameClient);
 		if(LocalId < 0 || LocalId >= MAX_CLIENTS)
 			return false;
-		if(pGameClient->m_aClients[LocalId].m_Team == TEAM_SPECTATORS)
+
+		// 与 IsOtherTeam 保持一致：跟随视角以被旁观者为参照，沿用其 solo 语义；
+		// 自由视角/纯旁观不参照任何玩家，所有玩家按原样显示。
+		const int SpecTargetId = pGameClient->m_Snap.m_SpecInfo.m_Active ? pGameClient->m_Snap.m_SpecInfo.m_SpectatorId : -1;
+		const bool Following = SpecTargetId >= 0 && SpecTargetId < MAX_CLIENTS;
+		const int ReferenceId = Following ? SpecTargetId : LocalId;
+		if(!Following && pGameClient->m_aClients[ReferenceId].m_Team == TEAM_SPECTATORS)
 			return false;
 
-		const bool Local = LocalId == ClientId;
-		if((pGameClient->m_aClients[LocalId].m_Solo || pGameClient->m_aClients[ClientId].m_Solo) && !Local)
+		const bool Local = ReferenceId == ClientId;
+		if((pGameClient->m_aClients[ReferenceId].m_Solo || pGameClient->m_aClients[ClientId].m_Solo) && !Local)
 			return true;
 
-		if(pGameClient->m_Teams.Team(ClientId) == TEAM_SUPER || pGameClient->m_Teams.Team(LocalId) == TEAM_SUPER)
+		if(pGameClient->m_Teams.Team(ClientId) == TEAM_SUPER || pGameClient->m_Teams.Team(ReferenceId) == TEAM_SUPER)
 			return false;
 
-		return pGameClient->m_Teams.Team(ClientId) != pGameClient->m_Teams.Team(LocalId);
+		return pGameClient->m_Teams.Team(ClientId) != pGameClient->m_Teams.Team(ReferenceId);
 	}
 
 	float QmKnownOwnerEventAlpha(CGameClient *pGameClient, int Owner)
@@ -1108,6 +1114,7 @@ void CGameClient::OnUpdate()
 	// Vulkan swapchain 重建在渲染线程执行，能力状态可能晚于窗口 resize 回调变化。
 	// 这里仅在 DPI、图标配置或 MSDF capability 变化时重载 atlas。
 	SyncQmUiIconWeight();
+	SyncQmCustomFontWeight();
 	m_QmIconManager.RefreshForCurrentDpi();
 
 	const bool TeeSettingsActive = m_Menus.IsSettingsPageActive() && g_Config.m_UiSettingsPage == CMenus::SETTINGS_TEE;
@@ -1188,6 +1195,16 @@ void CGameClient::SyncQmUiIconWeight()
 	m_AppliedQmUiIconWeight = Weight;
 	TextRender()->SetIconFontWeight(QmIconWeightUsesBoldFontFallback(Weight));
 	m_QmIconManager.RefreshForCurrentDpi();
+	OnWindowResize();
+}
+
+void CGameClient::SyncQmCustomFontWeight()
+{
+	const int Weight = std::clamp(g_Config.m_TcCustomFontWeight, 100, 900);
+	if(m_AppliedQmCustomFontWeight == Weight)
+		return;
+	m_AppliedQmCustomFontWeight = Weight;
+	TextRender()->SetCustomFontWeight(Weight);
 	OnWindowResize();
 }
 
@@ -3059,24 +3076,9 @@ void CGameClient::OnEnterGame()
 
 void CGameClient::OnGameOver()
 {
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && m_Snap.m_pLocalInfo != nullptr && m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
-	{
-		if((Client()->IsSixup() && m_Snap.m_pLocalInfo->m_Score != protocol7::FinishTime::NOT_FINISHED) || (!Client()->IsSixup() && m_Snap.m_pLocalInfo->m_Score != FinishTime::NOT_FINISHED_TIMESCORE))
-		{
-			const CServerInfo &ServerInfo = Client()->ServerInfo();
-			int Score = m_Snap.m_pLocalInfo->m_Score;
-			const bool IsSixupRace = Client()->IsSixup() && m_Snap.m_pGameInfoObj != nullptr && (m_Snap.m_pGameInfoObj->m_GameFlags & protocol7::GAMEFLAG_RACE) != 0;
-			if(m_GameInfo.m_TimeScore || IsSixupRace)
-			{
-				const int64_t FinishSeconds = Client()->IsSixup() ? maximum<int64_t>(1, Score / 1000) : maximum<int64_t>(1, -static_cast<int64_t>(Score));
-				Score = -static_cast<int>(std::min<int64_t>(FinishSeconds, std::numeric_limits<int>::max()));
-				const char *pGameType = ServerInfo.m_aGameType;
-				if(pGameType[0] == '\0')
-					pGameType = m_GameInfo.m_aGameType;
-				m_QmClient.RecordQmClientLocalMapFinish(pGameType, Score);
-			}
-		}
-	}
+	// 本地完成计数已迁移到 CQmClient::OnMessage：DDNet 系服务端不产生
+	// GAMEOVER，旧挂点在标准赛道服上永远不会触发；现在由 RaceFinish
+	// 事件（0.7）与「finished in」聊天广播（0.6）检测完成。
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK && g_Config.m_ClEditor == 0)
 		Client()->AutoScreenshot_Start();
 }
@@ -7374,9 +7376,15 @@ bool CGameClient::IsOtherTeam(int ClientId) const
 	}
 	else if(m_Snap.m_SpecInfo.m_Active && m_Snap.m_SpecInfo.m_SpectatorId != SPEC_FREEVIEW)
 	{
-		if(m_Teams.Team(ClientId) == m_Teams.TeamSuper() || m_Teams.Team(m_Snap.m_SpecInfo.m_SpectatorId) == m_Teams.TeamSuper())
+		const int SpectatorId = m_Snap.m_SpecInfo.m_SpectatorId;
+		// 跟随视角沿用被旁观者的 solo 语义：任一方处于 solo 即视为其他队伍
+		//（冻结条、碰撞显示等据此隐藏/减淡）；自由视角由外层分支返回 false，仍能看到所有玩家。
+		if(SpectatorId >= 0 && SpectatorId < MAX_CLIENTS && ClientId != SpectatorId &&
+			(m_aClients[SpectatorId].m_Solo || m_aClients[ClientId].m_Solo))
+			return true;
+		if(m_Teams.Team(ClientId) == m_Teams.TeamSuper() || m_Teams.Team(SpectatorId) == m_Teams.TeamSuper())
 			return false;
-		return m_Teams.Team(ClientId) != m_Teams.Team(m_Snap.m_SpecInfo.m_SpectatorId);
+		return m_Teams.Team(ClientId) != m_Teams.Team(SpectatorId);
 	}
 	else if((m_aClients[m_Snap.m_LocalClientId].m_Solo || m_aClients[ClientId].m_Solo) && !Local)
 	{
@@ -7748,6 +7756,8 @@ void CGameClient::LoadGameSkin(const char *pPath, bool AsDir)
 		m_GameSkinLoaded = true;
 	}
 	ImgInfo.Free();
+	if(FallbackImgInfo.has_value())
+		FallbackImgInfo.value().Free();
 }
 
 void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
@@ -7778,14 +7788,6 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
 
-	// 为不可见资源准备默认图回退
-	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
-	{
-		CImageInfo ImgDefaultInfo;
-		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_GAME].m_pFilename, IStorage::TYPE_ALL))
-			FallbackImgInfo = std::move(ImgDefaultInfo);
-	}
 	if(!PngLoaded && !IsDefault)
 	{
 		if(AsDir)
@@ -7795,8 +7797,15 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 	}
 	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_OOP].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_OOP].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
 	{
+		// 表情属装饰性资源：皮肤作者有意留空的格子保持空白，不回退默认图。
+		// 上游 DDNet 会把全透明区域替换成默认图，这里有意偏离，理由见 LoadHudSkin 中的说明。
 		for(int i = 0; i < 16; ++i)
-			m_EmoticonsSkin.m_aSpriteEmoticons[i] = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_OOP + i]);
+		{
+			const auto *pSprite = &g_pData->m_aSprites[SPRITE_OOP + i];
+			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite))
+				log_warn("graphics", "Emoticon asset '%s' is empty and stays blank", pSprite->m_pName);
+			m_EmoticonsSkin.m_aSpriteEmoticons[i] = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, pSprite);
+		}
 
 		m_EmoticonsSkinLoaded = true;
 	}
@@ -7823,12 +7832,13 @@ void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
 
-	// 为不可见资源准备默认图回退
+	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
+	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
 	std::optional<CImageInfo> FallbackImgInfo;
 	if(PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
-		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_GAME].m_pFilename, IStorage::TYPE_ALL))
+		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_PARTICLES].m_pFilename, IStorage::TYPE_ALL))
 			FallbackImgInfo = std::move(ImgDefaultInfo);
 	}
 	const bool ValidImage = PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SLICE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SLICE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo);
@@ -7892,6 +7902,8 @@ void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
 		}
 	}
 	ImgInfo.Free();
+	if(FallbackImgInfo.has_value())
+		FallbackImgInfo.value().Free();
 }
 
 void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
@@ -7950,14 +7962,6 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
 
-	// 为不可见资源准备默认图回退
-	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
-	{
-		CImageInfo ImgDefaultInfo;
-		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_GAME].m_pFilename, IStorage::TYPE_ALL))
-			FallbackImgInfo = std::move(ImgDefaultInfo);
-	}
 	if(!PngLoaded && !IsDefault)
 	{
 		if(AsDir)
@@ -7967,37 +7971,49 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 	}
 	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_HUD_AIRJUMP].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_HUD_AIRJUMP].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
 	{
-		m_HudSkin.m_SpriteHudAirjump = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP]);
-		m_HudSkin.m_SpriteHudAirjumpEmpty = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP_EMPTY]);
-		m_HudSkin.m_SpriteHudSolo = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_SOLO]);
-		m_HudSkin.m_SpriteHudCollisionDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_COLLISION_DISABLED]);
-		m_HudSkin.m_SpriteHudEndlessJump = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_JUMP]);
-		m_HudSkin.m_SpriteHudEndlessHook = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_HOOK]);
-		m_HudSkin.m_SpriteHudJetpack = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_JETPACK]);
-		m_HudSkin.m_SpriteHudFreezeBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL_LEFT]);
-		m_HudSkin.m_SpriteHudFreezeBarFull = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL]);
-		m_HudSkin.m_SpriteHudFreezeBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY]);
-		m_HudSkin.m_SpriteHudFreezeBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY_RIGHT]);
-		m_HudSkin.m_SpriteHudNinjaBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL_LEFT]);
-		m_HudSkin.m_SpriteHudNinjaBarFull = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL]);
-		m_HudSkin.m_SpriteHudNinjaBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY]);
-		m_HudSkin.m_SpriteHudNinjaBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY_RIGHT]);
-		m_HudSkin.m_SpriteHudHookHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_HOOK_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudHammerHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_HAMMER_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudShotgunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_SHOTGUN_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudGrenadeHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_GRENADE_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudLaserHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_LASER_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudGunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_GUN_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudDeepFrozen = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_DEEP_FROZEN]);
-		m_HudSkin.m_SpriteHudLiveFrozen = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_LIVE_FROZEN]);
-		m_HudSkin.m_SpriteHudTeleportGrenade = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GRENADE]);
-		m_HudSkin.m_SpriteHudTeleportGun = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GUN]);
-		m_HudSkin.m_SpriteHudTeleportLaser = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_LASER]);
-		m_HudSkin.m_SpriteHudPracticeMode = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_PRACTICE_MODE]);
-		m_HudSkin.m_SpriteHudLockMode = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_LOCK_MODE]);
-		m_HudSkin.m_SpriteHudTeam0Mode = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TEAM0_MODE]);
-		m_HudSkin.m_SpriteHudDummyHammer = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_HAMMER]);
-		m_HudSkin.m_SpriteHudDummyCopy = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_COPY]);
+		// HUD 图标是装饰性状态提示，且 set_hud 一直在新增 sprite（lock / team0 / practice /
+		// dummy 等都是后加的），旧皮肤这些格子空白属常态，不是资源损坏。皮肤是"完整替换"
+		// 语义：回退默认图会让作者有意留空（想隐藏某图标）的格子又冒出来，还会混入默认皮肤
+		// 的风格。因此这里有意偏离上游（上游会把全透明区域换成同图集默认图）——保持空白，
+		// 只在日志中提示，便于排查真正损坏的资源。
+		for(int SpriteId = SPRITE_HUD_AIRJUMP; SpriteId <= SPRITE_HUD_TEAM0_MODE; SpriteId++)
+		{
+			const auto *pSprite = &g_pData->m_aSprites[SpriteId];
+			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite))
+				log_warn("graphics", "HUD asset '%s' is empty and stays blank", pSprite->m_pName);
+		}
+
+		m_HudSkin.m_SpriteHudAirjump = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP]);
+		m_HudSkin.m_SpriteHudAirjumpEmpty = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP_EMPTY]);
+		m_HudSkin.m_SpriteHudSolo = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_SOLO]);
+		m_HudSkin.m_SpriteHudCollisionDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_COLLISION_DISABLED]);
+		m_HudSkin.m_SpriteHudEndlessJump = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_JUMP]);
+		m_HudSkin.m_SpriteHudEndlessHook = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_HOOK]);
+		m_HudSkin.m_SpriteHudJetpack = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_JETPACK]);
+		m_HudSkin.m_SpriteHudFreezeBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL_LEFT]);
+		m_HudSkin.m_SpriteHudFreezeBarFull = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL]);
+		m_HudSkin.m_SpriteHudFreezeBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY]);
+		m_HudSkin.m_SpriteHudFreezeBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY_RIGHT]);
+		m_HudSkin.m_SpriteHudNinjaBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL_LEFT]);
+		m_HudSkin.m_SpriteHudNinjaBarFull = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL]);
+		m_HudSkin.m_SpriteHudNinjaBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY]);
+		m_HudSkin.m_SpriteHudNinjaBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY_RIGHT]);
+		m_HudSkin.m_SpriteHudHookHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_HOOK_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudHammerHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_HAMMER_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudShotgunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_SHOTGUN_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudGrenadeHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_GRENADE_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudLaserHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_LASER_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudGunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_GUN_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudDeepFrozen = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_DEEP_FROZEN]);
+		m_HudSkin.m_SpriteHudLiveFrozen = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_LIVE_FROZEN]);
+		m_HudSkin.m_SpriteHudTeleportGrenade = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GRENADE]);
+		m_HudSkin.m_SpriteHudTeleportGun = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GUN]);
+		m_HudSkin.m_SpriteHudTeleportLaser = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_LASER]);
+		m_HudSkin.m_SpriteHudPracticeMode = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_PRACTICE_MODE]);
+		m_HudSkin.m_SpriteHudLockMode = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_LOCK_MODE]);
+		m_HudSkin.m_SpriteHudTeam0Mode = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TEAM0_MODE]);
+		m_HudSkin.m_SpriteHudDummyHammer = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_HAMMER]);
+		m_HudSkin.m_SpriteHudDummyCopy = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_COPY]);
 
 		m_HudSkinLoaded = true;
 	}
@@ -8031,18 +8047,29 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
 
-	// 为不可见资源准备默认图回退
+	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
+	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
 	std::optional<CImageInfo> FallbackImgInfo;
 	if(PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
-		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_GAME].m_pFilename, IStorage::TYPE_ALL))
+		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_EXTRAS].m_pFilename, IStorage::TYPE_ALL))
 			FallbackImgInfo = std::move(ImgDefaultInfo);
 	}
 	const bool ValidImage = PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_PART_SNOWFLAKE].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo);
+	// 回退图是手动管理的 CImageInfo（没有析构函数），而本函数有多条提前返回路径，
+	// 统一用这个幂等的 lambda 释放，避免漏掉某条路径造成整张解码图集泄漏。
+	auto &&FreeFallback = [&FallbackImgInfo]() {
+		if(FallbackImgInfo.has_value())
+		{
+			FallbackImgInfo.value().Free();
+			FallbackImgInfo.reset();
+		}
+	};
 	if(!ValidImage && !IsDefault)
 	{
 		ImgInfo.Free();
+		FreeFallback();
 		if(AsDir)
 			LoadExtrasSkin("default");
 		else
@@ -8083,6 +8110,7 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 			else
 			{
 				ImgInfo.Free();
+				FreeFallback();
 				if(AsDir)
 					LoadExtrasSkin("default");
 				else
@@ -8094,6 +8122,7 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 	else if(!IsDefault)
 	{
 		ImgInfo.Free();
+		FreeFallback();
 		if(AsDir)
 			LoadExtrasSkin("default");
 		else
@@ -8108,6 +8137,7 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 		m_ExtrasSkinLoaded = false;
 	}
 	ImgInfo.Free();
+	FreeFallback();
 }
 
 void CGameClient::RefreshSkin(const std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo)

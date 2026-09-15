@@ -18,8 +18,12 @@ if(NOT EXISTS "${MSDF_ROOT}/msdfgen.h")
 endif()
 
 file(GLOB MSDF_CORE_SOURCES "${MSDF_ROOT}/core/*.cpp")
-add_library(msdfgen-core STATIC ${MSDF_CORE_SOURCES})
+set(MSDF_FONT_SOURCES "${MSDF_ROOT}/ext/import-font.cpp")
+add_library(msdfgen-core STATIC ${MSDF_CORE_SOURCES} ${MSDF_FONT_SOURCES})
 target_include_directories(msdfgen-core PUBLIC "${MSDF_ROOT}")
+if(WIN32)
+  target_include_directories(msdfgen-core PRIVATE "${FREETYPE_ROOT}/include")
+endif()
 target_compile_definitions(msdfgen-core PUBLIC MSDFGEN_USE_CPP11 MSDFGEN_PUBLIC=)
 target_compile_features(msdfgen-core PUBLIC cxx_std_11)
 

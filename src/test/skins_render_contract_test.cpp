@@ -386,3 +386,58 @@ TEST(SkinsContract, ManagedTeeRefreshClearsTextureBranchesMissingFromDescriptor)
 	const std::string RefreshSkinBody = Source.substr(RefreshSkinPos, RefreshSkinsPos - RefreshSkinPos);
 	EXPECT_NE(RefreshSkinBody.find("TeeInfo.ResetMissingDescriptorBranches(SkinDescriptor.m_Flags);"), std::string::npos);
 }
+
+TEST(SkinsContract, TeamTeeGlowConfigAndTeePageUiAreRegistered)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string SettingsSource = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmTeamTeeGlow, qm_team_tee_glow, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmTeamTeeGlowTeam0Mode, qm_team_tee_glow_team0_mode, 1, 0, 3"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_COL(QmTeamTeeGlowColor, qm_team_tee_glow_color, 0xFFFFFFFF"), std::string::npos);
+	// 外发光是 Tee 外观设置：入口必须挂在 Tee 设置页（皮肤队列面板同栏），不得放回外观页。
+	EXPECT_NE(SettingsSource.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &g_Config.m_QmTeamTeeGlow"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("Localize(\"Team tee glow\")"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("std::clamp(g_Config.m_QmTeamTeeGlowTeam0Mode, 0, 3)"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("&g_Config.m_QmTeamTeeGlowColor"), std::string::npos);
+	EXPECT_EQ(SettingsSource.find("m_AppearanceSettingsTab == APPEARANCE_TAB_TEE"), std::string::npos);
+	EXPECT_EQ(ReadTestSourceFile("src/game/client/QmUi/QmCardRegistry.cpp").find("deck:appearance-tee-glow"), std::string::npos);
+	// Tee 页卡片体系：皮肤列表全宽独立，皮肤队列与外发光各占左右半宽卡片。
+	const std::string CardRegistrySource = ReadTestSourceFile("src/game/client/QmUi/QmCardRegistry.cpp");
+	EXPECT_NE(CardRegistrySource.find("\"deck:tee-skin-queue\", \"tee\", ECardColumn::Left, 1"), std::string::npos);
+	EXPECT_NE(CardRegistrySource.find("\"deck:tee-glow\", \"tee\", ECardColumn::Right, 1"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("AddCard(QueueSpec,"), std::string::npos);
+	EXPECT_NE(SettingsSource.find("AddCard(GlowSpec,"), std::string::npos);
+}
+
+TEST(SkinsContract, WarListGlowKeepsPriorityOverTeamTeeGlow)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/players.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "void CPlayers::RenderPlayer(");
+
+	// warlist 外发光优先，未命中 warlist 时才回落到队伍外发光；两者共用 RenderTeeGlow 三层绘制。
+	const size_t WarList = Body.find("GetWarListTeeGlowColor(GameClient(), ClientId, WarListGlowColor)");
+	ASSERT_NE(WarList, std::string::npos);
+	const size_t TeamGlow = Body.find("GetTeamTeeGlowColor(GameClient(), ClientId, RenderInfo, TeamGlowColor)");
+	ASSERT_NE(TeamGlow, std::string::npos);
+	EXPECT_LT(WarList, TeamGlow);
+	EXPECT_NE(Body.find("RenderTeeGlow(RenderTools(), &State, RenderInfo"), std::string::npos);
+}
+
+TEST(SkinsContract, TeamTeeGlowUsesTeamColorsForTeamedPlayers)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/players.cpp");
+	const std::string Body = ExtractSourceFunctionBody(Source, "static bool GetTeamTeeGlowColor(");
+
+	EXPECT_NE(Body.find("g_Config.m_QmTeamTeeGlow"), std::string::npos);
+	EXPECT_NE(Body.find("VANILLA_TEAM_SUPER"), std::string::npos);
+	EXPECT_NE(Body.find("GetDDTeamColor(Team, 0.75f)"), std::string::npos);
+	EXPECT_NE(Body.find("g_Config.m_QmTeamTeeGlowTeam0Mode"), std::string::npos);
+	EXPECT_NE(Body.find("normalized_golden_angle"), std::string::npos);
+	// team0 的 tee 自身颜色模式必须覆盖 0.7 sixup 部件色，避免 0.7 玩家恒为白光。
+	EXPECT_NE(Body.find("m_aSixup[g_Config.m_ClDummy]"), std::string::npos);
+	EXPECT_NE(Body.find("m_aUseCustomColors[protocol7::SKINPART_BODY]"), std::string::npos);
+	// 彩虹相位在回放中必须取 demo 时间轴（可复现），而非本地时钟。
+	EXPECT_NE(Body.find("IClient::STATE_DEMOPLAYBACK"), std::string::npos);
+	EXPECT_NE(Body.find("pDemoInfo->m_CurrentTick"), std::string::npos);
+}

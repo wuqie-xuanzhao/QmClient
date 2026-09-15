@@ -1,5 +1,3 @@
-# 请抬头享受阳光｜日子很好 我很我---------致咩子
-
 [[message]]
 key = "%s from %s"
 [message.translations]
@@ -10897,6 +10895,23 @@ turkish = "Diğerleri"
 polish = "Inni"
 
 [[message]]
+key = "Others"
+context = "Show players' key presses"
+[message.translations]
+simplified_chinese = "他人"
+traditional_chinese = "他人"
+japanese = "他人"
+korean = "다른 사람"
+russian = "Другие"
+german = "Andere"
+spanish = "Otros"
+french = "Autres"
+brazilian_portuguese = "Outros"
+portuguese = "Outros"
+turkish = "Başkaları"
+polish = "Inni"
+
+[[message]]
 key = "Others only"
 [message.translations]
 simplified_chinese = "仅他人"
@@ -13537,6 +13552,23 @@ turkish = "Ekran"
 polish = "Ekran"
 
 [[message]]
+key = "Screen"
+context = "Assets editor blend mode"
+[message.translations]
+simplified_chinese = "滤色"
+traditional_chinese = "濾色"
+japanese = "スクリーン"
+korean = "스크린"
+russian = "Экран"
+german = "Negativ multiplizieren"
+spanish = "Trama"
+french = "Superposition éclaircie"
+brazilian_portuguese = "Tela"
+portuguese = "Ecrã"
+turkish = "Ekran"
+polish = "Ekran"
+
+[[message]]
 key = "Screen refresh rate (Hz, only fullscreen)"
 [message.translations]
 simplified_chinese = "屏幕刷新率（单位：Hz；仅纯全屏模式）"
@@ -15311,6 +15343,74 @@ brazilian_portuguese = "Mostrar placas de nome"
 portuguese = "Mostrar placas de nome"
 turkish = "İsim plakalarını göster"
 polish = "Pokaż tabliczki z nazwami"
+
+[[message]]
+key = "All"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "全体"
+traditional_chinese = "全體"
+japanese = "すべて"
+korean = "모두"
+russian = "Все"
+german = "Alle"
+spanish = "Todos"
+french = "Tous"
+brazilian_portuguese = "Todos"
+portuguese = "Todos"
+turkish = "Tümü"
+polish = "Wszyscy"
+
+[[message]]
+key = "None"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "无"
+traditional_chinese = "無"
+japanese = "なし"
+korean = "없음"
+russian = "Нет"
+german = "Keine"
+spanish = "Ninguno"
+french = "Aucun"
+brazilian_portuguese = "Nenhum"
+portuguese = "Nenhum"
+turkish = "Yok"
+polish = "Brak"
+
+[[message]]
+key = "Others"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "他人"
+traditional_chinese = "他人"
+japanese = "他人"
+korean = "다른 사람"
+russian = "Другие"
+german = "Andere"
+spanish = "Otros"
+french = "Autres"
+brazilian_portuguese = "Outros"
+portuguese = "Outros"
+turkish = "Başkaları"
+polish = "Inni"
+
+[[message]]
+key = "Own"
+context = "Show name plates"
+[message.translations]
+simplified_chinese = "自身"
+traditional_chinese = "自身"
+japanese = "自身"
+korean = "자신"
+russian = "Свой"
+german = "Eigen"
+spanish = "Propio"
+french = "Propre"
+brazilian_portuguese = "Próprio"
+portuguese = "Próprio"
+turkish = "Kendi"
+polish = "Własny"
 
 [[message]]
 key = "Show names in chat in team colors"
@@ -19572,23 +19672,6 @@ turkish = "Kaplama"
 polish = "Nakładka"
 
 [[message]]
-key = "Screen"
-context = "Assets editor blend mode"
-[message.translations]
-simplified_chinese = "滤色"
-traditional_chinese = "濾色"
-japanese = "スクリーン"
-korean = "스크린"
-russian = "Экран"
-german = "Negativ multiplizieren"
-spanish = "Trama"
-french = "Superposition éclaircie"
-brazilian_portuguese = "Tela"
-portuguese = "Ecrã"
-turkish = "Ekran"
-polish = "Ekran"
-
-[[message]]
 key = "Hz"
 context = "Hertz"
 [message.translations]
@@ -19641,74 +19724,6 @@ polish = "Względny"
 
 [[message]]
 key = "All"
-context = "Show name plates"
-[message.translations]
-simplified_chinese = "全体"
-traditional_chinese = "全體"
-japanese = "すべて"
-korean = "모두"
-russian = "Все"
-german = "Alle"
-spanish = "Todos"
-french = "Tous"
-brazilian_portuguese = "Todos"
-portuguese = "Todos"
-turkish = "Tümü"
-polish = "Wszyscy"
-
-[[message]]
-key = "None"
-context = "Show name plates"
-[message.translations]
-simplified_chinese = "无"
-traditional_chinese = "無"
-japanese = "なし"
-korean = "없음"
-russian = "Нет"
-german = "Keine"
-spanish = "Ninguno"
-french = "Aucun"
-brazilian_portuguese = "Nenhum"
-portuguese = "Nenhum"
-turkish = "Yok"
-polish = "Brak"
-
-[[message]]
-key = "Others"
-context = "Show name plates"
-[message.translations]
-simplified_chinese = "他人"
-traditional_chinese = "他人"
-japanese = "他人"
-korean = "다른 사람"
-russian = "Другие"
-german = "Andere"
-spanish = "Otros"
-french = "Autres"
-brazilian_portuguese = "Outros"
-portuguese = "Outros"
-turkish = "Başkaları"
-polish = "Inni"
-
-[[message]]
-key = "Own"
-context = "Show name plates"
-[message.translations]
-simplified_chinese = "自身"
-traditional_chinese = "自身"
-japanese = "自身"
-korean = "자신"
-russian = "Свой"
-german = "Eigen"
-spanish = "Propio"
-french = "Propre"
-brazilian_portuguese = "Próprio"
-portuguese = "Próprio"
-turkish = "Kendi"
-polish = "Własny"
-
-[[message]]
-key = "All"
 context = "Show players' key presses"
 [message.translations]
 simplified_chinese = "全体"
@@ -19740,23 +19755,6 @@ brazilian_portuguese = "Nenhum"
 portuguese = "Nenhum"
 turkish = "Devre dışı"
 polish = "Wyłączone"
-
-[[message]]
-key = "Others"
-context = "Show players' key presses"
-[message.translations]
-simplified_chinese = "他人"
-traditional_chinese = "他人"
-japanese = "他人"
-korean = "다른 사람"
-russian = "Другие"
-german = "Andere"
-spanish = "Otros"
-french = "Autres"
-brazilian_portuguese = "Outros"
-portuguese = "Outros"
-turkish = "Başkaları"
-polish = "Inni"
 
 [[message]]
 key = "Own"
@@ -21310,3 +21308,387 @@ brazilian_portuguese = "Não foi possível criar a solicitação de varredura da
 portuguese = "Não foi possível criar o pedido de análise da denúncia"
 turkish = "Rapor tarama isteği oluşturulamadı"
 polish = "Nie można utworzyć żądania skanowania zgłoszenia"
+
+[[message]]
+key = "Configure qm_report_app_id and qm_report_secret first"
+[message.translations]
+simplified_chinese = "请先设置 qm_report_app_id 和 qm_report_secret"
+traditional_chinese = "請先設置 qm_report_app_id 和 qm_report_secret"
+japanese = "最初に qm_report_app_id と qm_report_secret を設定してください"
+korean = "먼저 qm_report_app_id와 qm_report_secret을 설정하세요"
+russian = "Сначала настройте qm_report_app_id и qm_report_secret"
+german = "Konfiguriere zuerst qm_report_app_id und qm_report_secret"
+spanish = "Configura primero qm_report_app_id y qm_report_secret"
+french = "Configure d'abord qm_report_app_id et qm_report_secret"
+brazilian_portuguese = "Configure qm_report_app_id e qm_report_secret primeiro"
+portuguese = "Configura primeiro qm_report_app_id e qm_report_secret"
+turkish = "Önce qm_report_app_id ve qm_report_secret ayarla"
+polish = "Najpierw skonfiguruj qm_report_app_id i qm_report_secret"
+
+[[message]]
+key = "Report"
+[message.translations]
+simplified_chinese = "举报"
+traditional_chinese = "舉報"
+japanese = "報告"
+korean = "신고"
+russian = "Пожаловаться"
+german = "Melden"
+spanish = "Reportar"
+french = "Signaler"
+brazilian_portuguese = "Denunciar"
+portuguese = "Denunciar"
+turkish = "Rapor et"
+polish = "Zgłoś"
+
+[[message]]
+key = "Report request canceled"
+[message.translations]
+simplified_chinese = "举报请求已取消"
+traditional_chinese = "舉報請求已取消"
+japanese = "報告リクエストがキャンセルされました"
+korean = "신고 요청이 취소되었습니다"
+russian = "Запрос жалобы отменен"
+german = "Meldungsanfrage abgebrochen"
+spanish = "Solicitud de reporte cancelada"
+french = "Demande de signalement annulée"
+brazilian_portuguese = "Solicitação de denúncia cancelada"
+portuguese = "Pedido de denúncia cancelado"
+turkish = "Rapor isteği iptal edildi"
+polish = "Zgłoszenie anulowane"
+
+[[message]]
+key = "Report request failed due to network error"
+[message.translations]
+simplified_chinese = "举报请求失败，网络请求异常"
+traditional_chinese = "舉報請求失敗，網絡請求異常"
+japanese = "ネットワークエラーのため報告リクエストが失敗しました"
+korean = "네트워크 오류로 인해 신고 요청이 실패했습니다"
+russian = "Запрос жалобы не удался из-за ошибки сети"
+german = "Meldungsanfrage wegen Netzwerkfehler fehlgeschlagen"
+spanish = "La solicitud de reporte falló por un error de red"
+french = "La demande de signalement a échoué à cause du réseau"
+brazilian_portuguese = "A solicitação de denúncia falhou por erro de rede"
+portuguese = "O pedido de denúncia falhou por erro de rede"
+turkish = "Rapor isteği ağ hatası nedeniyle başarısız oldu"
+polish = "Zgłoszenie nie powiodło się z powodu błędu sieci"
+
+[[message]]
+key = "Report request failed with HTTP status: %d"
+[message.translations]
+simplified_chinese = "举报请求失败，HTTP 状态码：%d"
+traditional_chinese = "舉報請求失敗，HTTP 狀態碼：%d"
+japanese = "報告リクエストが HTTP ステータス %d で失敗しました"
+korean = "HTTP 상태 %d로 인해 신고 요청이 실패했습니다"
+russian = "Запрос жалобы не удался, HTTP-статус: %d"
+german = "Meldungsanfrage fehlgeschlagen, HTTP-Status: %d"
+spanish = "La solicitud de reporte falló con estado HTTP: %d"
+french = "La demande de signalement a échoué avec le statut HTTP : %d"
+brazilian_portuguese = "A solicitação de denúncia falhou com status HTTP: %d"
+portuguese = "O pedido de denúncia falhou com estado HTTP: %d"
+turkish = "Rapor isteği HTTP durumuyla başarısız oldu: %d"
+polish = "Zgłoszenie nie powiodło się, status HTTP: %d"
+
+[[message]]
+key = "Report request is already in progress"
+[message.translations]
+simplified_chinese = "举报请求正在处理中"
+traditional_chinese = "舉報請求正在處理中"
+japanese = "報告リクエストは既に進行中です"
+korean = "신고 요청이 이미 진행 중입니다"
+russian = "Запрос жалобы уже выполняется"
+german = "Meldungsanfrage läuft bereits"
+spanish = "La solicitud de reporte ya está en curso"
+french = "La demande de signalement est déjà en cours"
+brazilian_portuguese = "A solicitação de denúncia já está em andamento"
+portuguese = "O pedido de denúncia já está em curso"
+turkish = "Rapor isteği zaten sürüyor"
+polish = "Zgłoszenie jest już przetwarzane"
+
+[[message]]
+key = "Report scan request submitted"
+[message.translations]
+simplified_chinese = "举报扫描请求已提交"
+traditional_chinese = "舉報掃描請求已提交"
+japanese = "報告スキャンリクエストが送信されました"
+korean = "신고 스캔 요청이 제출되었습니다"
+russian = "Запрос сканирования жалобы отправлен"
+german = "Meldungs-Scan-Anfrage gesendet"
+spanish = "Solicitud de escaneo de reporte enviada"
+french = "Demande de scan de signalement envoyée"
+brazilian_portuguese = "Solicitação de varredura da denúncia enviada"
+portuguese = "Pedido de análise da denúncia enviado"
+turkish = "Rapor tarama isteği gönderildi"
+polish = "Żądanie skanowania zgłoszenia wysłane"
+
+[[message]]
+key = "Reports are not available on Axiom servers"
+[message.translations]
+simplified_chinese = "Axiom 服务器内不可使用举报功能"
+traditional_chinese = "Axiom 伺服器內不可使用舉報功能"
+japanese = "Axiom サーバーではレポート機能は利用できません"
+korean = "Axiom 서버에서는 신고 기능을 사용할 수 없습니다"
+russian = "Жалобы недоступны на серверах Axiom"
+german = "Meldungen sind auf Axiom-Servern nicht verfügbar"
+spanish = "Los reportes no están disponibles en servidores Axiom"
+french = "Les signalements ne sont pas disponibles sur les serveurs Axiom"
+brazilian_portuguese = "Denúncias não estão disponíveis em servidores Axiom"
+portuguese = "As denúncias não estão disponíveis em servidores Axiom"
+turkish = "Axiom sunucularında rapor kullanılamaz"
+polish = "Zgłoszenia nie są dostępne na serwerach Axiom"
+
+[[message]]
+key = "Show dummy control status"
+[message.translations]
+simplified_chinese = "显示分身控制状态"
+traditional_chinese = "顯示分身控制狀態"
+japanese = "ダミーコントロール状態を表示"
+korean = "더미 제어 상태 표시"
+russian = "Показать статус управления дамми"
+german = "Dummy-Steuerungsstatus anzeigen"
+spanish = "Mostrar estado de control del Dummy"
+french = "Afficher le statut de contrôle du dummy"
+brazilian_portuguese = "Mostrar status de controle do dummy"
+portuguese = "Mostrar estado de controlo do Dummy"
+turkish = "Dummy kontrol durumunu göster"
+polish = "Pokaż status sterowania kukłą"
+
+[[message]]
+key = "Show dummy copy status"
+[message.translations]
+simplified_chinese = "显示分身同步状态"
+traditional_chinese = "顯示分身同步狀態"
+japanese = "ダミー同期状態を表示"
+korean = "더미 동기화 상태 표시"
+russian = "Показать статус синхронизации дамми"
+german = "Dummy-Synchronisationsstatus anzeigen"
+spanish = "Mostrar estado de sincronización del Dummy"
+french = "Afficher le statut de synchronisation du dummy"
+brazilian_portuguese = "Mostrar status de sincronização do dummy"
+portuguese = "Mostrar estado de sincronização do Dummy"
+turkish = "Dummy senkronizasyon durumunu göster"
+polish = "Pokaż status synchronizacji kukły"
+
+[[message]]
+key = "Show hammer status"
+[message.translations]
+simplified_chinese = "显示锤状态"
+traditional_chinese = "顯示錘狀態"
+japanese = "ハンマーステータスを表示"
+korean = "망치 상태 표시"
+russian = "Показать статус молота"
+german = "Hammer-Status anzeigen"
+spanish = "Mostrar estado del martillo"
+french = "Afficher le statut du marteau"
+brazilian_portuguese = "Mostrar status do martelo"
+portuguese = "Mostrar estado do martelo"
+turkish = "Çekiç durumunu göster"
+polish = "Pokaż status młotka"
+
+[[message]]
+key = "Show key stuck status"
+[message.translations]
+simplified_chinese = "显示卡键状态"
+traditional_chinese = "顯示卡鍵狀態"
+japanese = "キー固着ステータスを表示"
+korean = "키 고정 상태 표시"
+russian = "Показывать статус залипших клавиш"
+german = "Tastensteck-Status anzeigen"
+spanish = "Mostrar estado de tecla atascada"
+french = "Afficher le statut de touche bloquée"
+brazilian_portuguese = "Mostrar status de tecla presa"
+portuguese = "Mostrar estado de tecla presa"
+turkish = "Tuş sıkışma durumunu göster"
+polish = "Pokaż stan zablokowanych klawiszy"
+
+[[message]]
+key = "Tee color"
+[message.translations]
+simplified_chinese = "Tee 颜色"
+traditional_chinese = "Tee 顏色"
+japanese = "Tee の色"
+korean = "티 색상"
+russian = "Цвет ти"
+german = "Tee-Farbe"
+spanish = "Color del tee"
+french = "Couleur du tee"
+brazilian_portuguese = "Cor do tee"
+portuguese = "Cor do tee"
+turkish = "Tee rengi"
+polish = "Kolor teea"
+
+[[message]]
+key = "Custom color"
+[message.translations]
+simplified_chinese = "自定义颜色"
+traditional_chinese = "自定義顏色"
+japanese = "カスタムカラー"
+korean = "사용자 정의 색상"
+russian = "Пользовательский цвет"
+german = "Benutzerdefinierte Farbe"
+spanish = "Color personalizado"
+french = "Couleur personnalisée"
+brazilian_portuguese = "Cor personalizada"
+portuguese = "Cor personalizada"
+turkish = "Özel renk"
+polish = "Niestandardowy kolor"
+
+[[message]]
+key = "Team tee glow"
+[message.translations]
+simplified_chinese = "队伍 Tee 外发光"
+traditional_chinese = "隊伍 Tee 外發光"
+japanese = "チーム Tee の外側グロー"
+korean = "팀 티 외부 발광"
+russian = "Свечение контура ти по командам"
+german = "Team-Tee-Glühen"
+spanish = "Resplandor del tee por equipo"
+french = "Lueur du tee par équipe"
+brazilian_portuguese = "Brilho do tee por equipe"
+portuguese = "Brilho do tee por equipa"
+turkish = "Takım tee parlaması"
+polish = "Poświata tee według drużyn"
+
+[[message]]
+key = "Team 0 glow"
+[message.translations]
+simplified_chinese = "未组队发光"
+traditional_chinese = "未組隊發光"
+japanese = "チーム0のグロー"
+korean = "팀 0 발광"
+russian = "Свечение без команды"
+german = "Team-0-Glühen"
+spanish = "Resplandor del equipo 0"
+french = "Lueur de l'équipe 0"
+brazilian_portuguese = "Brilho da equipe 0"
+portuguese = "Brilho da equipa 0"
+turkish = "Takım 0 parlaması"
+polish = "Poświata drużyny 0"
+
+[[message]]
+key = "Team 0 glow color"
+[message.translations]
+simplified_chinese = "未组队发光颜色"
+traditional_chinese = "未組隊發光顏色"
+japanese = "チーム0のグロー色"
+korean = "팀 0 발광 색상"
+russian = "Цвет свечения без команды"
+german = "Team-0-Glühen-Farbe"
+spanish = "Color de resplandor del equipo 0"
+french = "Couleur de lueur de l'équipe 0"
+brazilian_portuguese = "Cor do brilho da equipe 0"
+portuguese = "Cor do brilho da equipa 0"
+turkish = "Takım 0 parlama rengi"
+polish = "Kolor poświaty drużyny 0"
+
+[[message]]
+key = "Random skin on map join"
+[message.translations]
+simplified_chinese = "进图随机换肤"
+traditional_chinese = "進圖隨機換膚"
+japanese = "マップ参加時にランダムなスキン"
+korean = "맵 입장 시 무작위 스킨"
+russian = "Случайный скин при входе на карту"
+german = "Zufälliger Skin beim Kartenbeitritt"
+spanish = "Skin aleatoria al entrar al mapa"
+french = "Skin aléatoire en rejoignant une carte"
+brazilian_portuguese = "Skin aleatória ao entrar no mapa"
+portuguese = "Skin aleatória ao entrar no mapa"
+turkish = "Haritaya girişte rastgele skin"
+polish = "Losowa skórka po wejściu na mapę"
+
+[[message]]
+key = "Apply a random skin from the queue"
+[message.translations]
+simplified_chinese = "从皮肤队列随机应用一个皮肤"
+traditional_chinese = "從皮膚佇列隨機套用一個皮膚"
+japanese = "キューからランダムにスキンを適用"
+korean = "큐에서 무작위 스킨 적용"
+russian = "Применить случайный скин из очереди"
+german = "Zufälligen Skin aus der Warteschlange anwenden"
+spanish = "Aplicar una piel aleatoria de la cola"
+french = "Appliquer un skin aléatoire de la file"
+brazilian_portuguese = "Aplicar uma skin aleatória da fila"
+portuguese = "Aplicar uma skin aleatória da fila"
+turkish = "Kuyruktan rastgele bir kaplama uygula"
+polish = "Zastosuj losową skórkę z kolejki"
+
+[[message]]
+key = "Start from a random queue position on every map join (also on dummy connect or re-enabling the queue). Set the switch interval to 0 to disable timed rotation and only switch on map join."
+[message.translations]
+simplified_chinese = "每次进图（分身连接、重新启用队列时同样生效）从队列随机位置开始轮换；将切换间隔设为 0 则不做时间轮换，仅进图随机换肤"
+traditional_chinese = "每次進圖（分身連接、重新啟用佇列時同樣生效）從皮膚佇列隨機位置開始輪換；將切換間隔設為 0 則不做時間輪換，僅進圖隨機換膚"
+japanese = "マップに参加するたび（ダミー接続・キュー再有効化時も）キューのランダムな位置からローテーションを開始します。切替間隔を 0 にすると時間ローテーションが無効になり、マップ参加時のみ切り替わります"
+korean = "맵에 들어갈 때마다(더미 연결, 큐 재활성화 시에도) 큐의 무작위 위치부터 순환을 시작합니다. 전환 간격을 0으로 하면 시간 순환이 비활성화되고 맵 입장 때만 전환됩니다"
+russian = "Каждый вход на карту (а также подключение Дами или повторное включение очереди) начинает ротацию со случайной позиции очереди. При интервале 0 ротация по времени отключается — скин меняется только при входе на карту"
+german = "Startet bei jedem Kartenbeitritt (auch bei Dummy-Verbindung oder Reaktivierung der Warteschlange) von einer zufälligen Position in der Warteschlange. Bei einem Wechselintervall von 0 ist die zeitgesteuerte Rotation deaktiviert und Skins wechseln nur beim Kartenbeitritt"
+spanish = "Comienza desde una posición aleatoria de la cola en cada entrada al mapa (también al conectar el dummy o reactivar la cola). Con intervalo 0 se desactiva la rotación temporizada y las skins solo cambian al entrar al mapa"
+french = "Démarre depuis une position aléatoire de la file à chaque entrée sur une carte (également à la connexion du dummy ou à la réactivation de la file). Avec un intervalle de 0, la rotation temporisée est désactivée et les skins ne changent qu'en entrant sur une carte"
+brazilian_portuguese = "Começa de uma posição aleatória da fila a cada entrada no mapa (também ao conectar o dummy ou reativar a fila). Com intervalo 0, a rotação temporizada é desativada e as skins só trocam ao entrar no mapa"
+portuguese = "Começa numa posição aleatória da fila sempre que entra no mapa (também ao ligar o dummy ou reativar a fila). Com intervalo 0, a rotação temporizada é desativada e as skins só mudam ao entrar no mapa"
+turkish = "Her haritaya girişte (dummy bağlantısı ve kuyruğun yeniden etkinleştirilmesinde de) kuyruğun rastgele bir konumundan başlar. Geçiş aralığı 0 olduğunda zamanlanmış döndürme devre dışı kalır ve skinler yalnızca haritaya girişte değişir"
+polish = "Każde wejście na mapę (a także połączenie dummy lub ponowne włączenie kolejki) rozpoczyna rotację od losowej pozycji kolejki. Przy interwale 0 rotacja czasowa jest wyłączona, a skórki zmieniają się tylko po wejściu na mapę"
+
+[[message]]
+key = "0 disables timed rotation; skins only switch on random start events"
+[message.translations]
+simplified_chinese = "0 表示不做时间轮换；仅在随机起点事件时切换皮肤"
+traditional_chinese = "0 表示不做時間輪換；僅在隨機起點事件時切換皮膚"
+japanese = "0 で時間によるローテーションを無効化。ランダム開始時のみスキンを切り替えます"
+korean = "0이면 시간 순환을 비활성화하고 무작위 시작 이벤트 때만 스킨을 전환합니다"
+russian = "0 отключает ротацию по времени; скины меняются только при случайном старте"
+german = "0 deaktiviert die zeitgesteuerte Rotation; Skins wechseln nur bei Zufallsstart"
+spanish = "0 desactiva la rotación temporizada; las skins solo cambian en eventos de inicio aleatorio"
+french = "0 désactive la rotation temporisée ; les skins ne changent que lors d'un départ aléatoire"
+brazilian_portuguese = "0 desativa a rotação temporizada; as skins só trocam em eventos de início aleatório"
+portuguese = "0 desativa a rotação temporizada; as skins só mudam em eventos de início aleatório"
+turkish = "0, zamanlanmış döndürmeyi devre dışı bırakır; skinler yalnızca rastgele başlangıç olaylarında değişir"
+polish = "0 wyłącza rotację czasową; skórki zmieniają się tylko przy losowym starcie"
+
+[[message]]
+key = "Enable rotation"
+[message.translations]
+simplified_chinese = "启用轮换"
+traditional_chinese = "啟用輪換"
+japanese = "ローテーションを有効にする"
+korean = "순환 활성화"
+russian = "Включить ротацию"
+german = "Rotation aktivieren"
+spanish = "Activar rotación"
+french = "Activer la rotation"
+brazilian_portuguese = "Ativar rotação"
+portuguese = "Ativar rotação"
+turkish = "Döndürmeyi etkinleştir"
+polish = "Włącz rotację"
+
+[[message]]
+key = "Compatibility mode"
+[message.translations]
+simplified_chinese = "兼容模式"
+traditional_chinese = "相容模式"
+japanese = "互換モード"
+korean = "호환 모드"
+russian = "Режим совместимости"
+german = "Kompatibilitätsmodus"
+spanish = "Modo de compatibilidad"
+french = "Mode de compatibilité"
+brazilian_portuguese = "Modo de compatibilidade"
+portuguese = "Modo de compatibilidade"
+turkish = "Uyumluluk modu"
+polish = "Tryb zgodności"
+
+[[message]]
+key = "Performance mode"
+[message.translations]
+simplified_chinese = "性能模式"
+traditional_chinese = "效能模式"
+japanese = "パフォーマンスモード"
+korean = "성능 모드"
+russian = "Режим производительности"
+german = "Leistungsmodus"
+spanish = "Modo de rendimiento"
+french = "Mode performances"
+brazilian_portuguese = "Modo de desempenho"
+portuguese = "Modo de desempenho"
+turkish = "Performans modu"
+polish = "Tryb wydajności"

@@ -402,6 +402,7 @@ private:
 	CUiRuntimeV2 m_UiRuntimeV2;
 	CQmIconManager m_QmIconManager;
 	int m_AppliedQmUiIconWeight = -1;
+	int m_AppliedQmCustomFontWeight = -1;
 	CQmImeManager m_QmImeManager;
 	CRaceHelper m_RaceHelper;
 	CQmHammerHitTracker m_HammerHitTracker;
@@ -505,6 +506,7 @@ public:
 	class CQmIconManager *QmIconManager() { return &m_QmIconManager; }
 	const class CQmIconManager *QmIconManager() const { return &m_QmIconManager; }
 	void SyncQmUiIconWeight();
+	void SyncQmCustomFontWeight();
 	class ISound *Sound() const { return m_pSound; }
 	class IInput *Input() const { return m_pInput; }
 	class IStorage *Storage() const { return m_pStorage; }

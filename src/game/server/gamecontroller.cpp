@@ -420,9 +420,9 @@ void IGameController::OnPlayerDisconnect(class CPlayer *pPlayer, const char *pRe
 	{
 		char aBuf[512];
 		if(pReason && *pReason)
-			str_format(aBuf, sizeof(aBuf), "'%s' has left the game (%s)", Server()->ClientName(ClientId), pReason);
+			str_format(aBuf, sizeof(aBuf), "'%s' 离开了游戏（%s）", Server()->ClientName(ClientId), pReason);
 		else
-			str_format(aBuf, sizeof(aBuf), "'%s' has left the game", Server()->ClientName(ClientId));
+			str_format(aBuf, sizeof(aBuf), "'%s' 离开了游戏", Server()->ClientName(ClientId));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf, -1);
 
 		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", ClientId, Server()->ClientName(ClientId));
@@ -702,7 +702,7 @@ bool IGameController::CanJoinTeam(int Team, int NotThisId, char *pErrorReason, i
 	if(pPlayer && pPlayer->IsPaused())
 	{
 		if(pErrorReason)
-			str_copy(pErrorReason, "Use /pause first then you can kill", ErrorReasonSize);
+			str_copy(pErrorReason, "请先使用 /pause，然后才能自杀", ErrorReasonSize);
 		return false;
 	}
 	if(Team == TEAM_SPECTATORS || (pPlayer && pPlayer->GetTeam() != TEAM_SPECTATORS))
@@ -722,7 +722,7 @@ bool IGameController::CanJoinTeam(int Team, int NotThisId, char *pErrorReason, i
 		return true;
 
 	if(pErrorReason)
-		str_format(pErrorReason, ErrorReasonSize, "Only %d active players are allowed", Server()->MaxClients() - g_Config.m_SvSpectatorSlots);
+		str_format(pErrorReason, ErrorReasonSize, "最多只允许 %d 名活跃玩家", Server()->MaxClients() - g_Config.m_SvSpectatorSlots);
 	return false;
 }
 
@@ -748,7 +748,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	char aBuf[128];
 	if(DoChatMsg)
 	{
-		str_format(aBuf, sizeof(aBuf), "'%s' joined the %s", Server()->ClientName(ClientId), GameServer()->m_pController->GetTeamName(Team));
+		str_format(aBuf, sizeof(aBuf), "'%s' 加入了 %s", Server()->ClientName(ClientId), GameServer()->m_pController->GetTeamName(Team));
 		GameServer()->SendChat(-1, TEAM_ALL, aBuf);
 	}
 

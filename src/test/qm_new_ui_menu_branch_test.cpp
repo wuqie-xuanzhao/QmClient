@@ -619,9 +619,9 @@ TEST(QmNewUiMenuBranches, SettingsInputFieldsReserveTrailingActionsAndKeepQueueU
 	EXPECT_NE(ThemeSource.find("ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string SkinRenderList = FunctionBody(SettingsSource, "const auto RenderList =");
-	EXPECT_NE(SkinRenderList.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
-	EXPECT_EQ(SkinRenderList.find("Ui()->DoLabel(&IntervalUnit"), std::string::npos);
+	const std::string SkinQueueSection = FunctionBody(SettingsSource, "const auto RenderSkinQueue =");
+	EXPECT_NE(SkinQueueSection.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
+	EXPECT_EQ(SkinQueueSection.find("Ui()->DoLabel(&IntervalUnit"), std::string::npos);
 }
 
 
@@ -1640,7 +1640,8 @@ TEST(QmNewUiMenuBranches, SpectatorSpecTeeDoesNotFallbackToMissingSkin)
 	EXPECT_NE(Source.find("SpectatorTeeRenderInfo.m_TeeRenderFlags = TEE_PREVIEW_LAYER_BODY_OUTLINE;"), std::string::npos);
 	EXPECT_NE(Render.find("const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);"), std::string::npos);
 	EXPECT_NE(Render.find("const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);"), std::string::npos);
-	EXPECT_NE(Render.find("Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;"), std::string::npos);
+	EXPECT_NE(Render.find("Alpha = g_Config.m_QmSpectatorGhostAlpha / 100.0f;"), std::string::npos);
+	EXPECT_NE(Render.find("Alpha = minimum(Alpha, g_Config.m_ClShowOthersAlpha / 100.f);"), std::string::npos);
 	EXPECT_NE(Render.find("continue;\n\t\tRenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo()"), std::string::npos);
 }
 
@@ -2518,7 +2519,7 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 
 	const std::string NamePlateBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
-	EXPECT_NE(NamePlateBranch.find("ResolveSettingsRowsHeight(10, LineSize, MarginSmall)"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("ResolveSettingsRowsHeight(12, LineSize, MarginSmall)"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const auto NextNamePlateRow"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const auto DoNamePlateCheckBox"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("AddMeasuredCard(5, ResolveNamePlateContentHeight"), std::string::npos);
@@ -3387,14 +3388,16 @@ TEST(QmNewUiMenuBranches, TeeStandardPageUsesUnifiedSettingsStack)
 	EXPECT_NE(Tee.find("ResolveSettingsTeeQueuePanelGeometry(TeeMetrics, (int)SkinQueue.size(), (int)vQueuePresets.size())"), std::string::npos);
 	EXPECT_NE(Tee.find("QueueListBody.HSplitTop(TeeMetrics.m_LineSpacing, nullptr, &QueueListBody);"), std::string::npos);
 	EXPECT_NE(Tee.find("QueueGeometry.m_QueueListViewportHeight"), std::string::npos);
-	EXPECT_NE(Tee.find("TeeMetrics.m_ButtonHeight), &QueueListHeaderLabel, &ClearQueueRect"), std::string::npos);
+	EXPECT_NE(Tee.find("TeeMetrics.m_ButtonHeight), &QueueListHeader, &ClearQueueRect"), std::string::npos);
+	EXPECT_NE(Tee.find("TeeMetrics.m_ButtonHeight), &QueueListHeaderLabel, &QueueRandomRect"), std::string::npos);
 	EXPECT_NE(Tee.find("s_QueueListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
 	EXPECT_NE(Tee.find("s_PresetListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
 	EXPECT_NE(Tee.find("const float QueueValueInputWidth = 58.0f * UiScale;"), std::string::npos);
 	EXPECT_NE(Tee.find("const float QueueIntervalLabelWidth = TextRender()->TextWidth(BodySize, pQueueIntervalLabel) + TeeMetrics.m_LineSpacing;"), std::string::npos);
 	EXPECT_NE(Tee.find("IntervalRow.VSplitLeft(minimum(IntervalRow.w, QueueIntervalLabelWidth), &IntervalLabel, &IntervalControls);"), std::string::npos);
 	EXPECT_NE(Tee.find("QuickSearch.VSplitRight(SkinControlGap, &QuickSearch, nullptr);"), std::string::npos);
-	EXPECT_NE(Tee.find("DrawRoundedSurface(Ui(), QueueSection, ui_token::color::SURFACE_OVERLAY"), std::string::npos);
+	// 皮肤队列已升级为独立卡片：不再有嵌套在列表卡内的 QueueSection 子卡面
+	EXPECT_EQ(Tee.find("DrawRoundedSurface(Ui(), QueueSection"), std::string::npos);
 	EXPECT_NE(Tee.find("const float MinimumSearchWidth = 140.0f * UiScale;"), std::string::npos);
 	EXPECT_EQ(Tee.find("SkinSearchPreferredWidth"), std::string::npos);
 	EXPECT_NE(Tee.find("AddCard(IdentitySpec, [IdentityContentHeight]"), std::string::npos);

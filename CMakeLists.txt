@@ -1834,9 +1834,9 @@ set(EXPECTED_DATA
   extras.png
   fonts/DejaVuSans.ttf
   fonts/GlowSansJ-Compressed-Book.otf
+  fonts/NotoSansSC-VF.ttf
   fonts/NotoEmoji-Regular.ttf
   fonts/NotoSansThai-Regular.ttf
-  fonts/SourceHanSans.ttc
   fonts/index.json
   game.png
   gui_buttons.png
@@ -1922,10 +1922,6 @@ set(EXPECTED_DATA
   qmclient/icons/qm_icons_thin_4x.png
   qmclient/icons/qm_icons_thin_msdf.json
   qmclient/icons/qm_icons_thin_msdf.png
-  qmclient/nameplate_msdf/nameplate_base_msdf.json
-  qmclient/nameplate_msdf/nameplate_base_msdf.png
-  qmclient/nameplate_msdf/nameplate_cjk_msdf.json
-  qmclient/nameplate_msdf/nameplate_cjk_msdf.png
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
   mapres/bg_cloud2.png
@@ -2032,17 +2028,6 @@ set(EXPECTED_DATA
   qmclient/chat_emojis/smell.png
   qmclient/chat_emojis/support.png
   qmclient/chat_emojis/surrender.png
-  qmclient/fonts/Cabin-Regular.ttf
-  qmclient/fonts/FreeSansBold.ttf
-  qmclient/fonts/GoogleSans-Regular.ttf
-  qmclient/fonts/Inter_24pt-Regular.ttf
-  qmclient/fonts/Inter_24pt-SemiBold.ttf
-  qmclient/fonts/Montserrat-Regular.ttf
-  qmclient/fonts/Nunito-Black.ttf
-  qmclient/fonts/Phosphor-Bold.ttf
-  qmclient/fonts/Phosphor-Regular.ttf
-  qmclient/fonts/Rubik-Regular.ttf
-  qmclient/fonts/minecraft_font.ttf
   qmclient/gui_logo.png
   qmclient/input_overlay_editor.html
   race_flag.png
@@ -2344,7 +2329,19 @@ set(EXPECTED_DATA
   wordlist.txt
 )
 
-set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;mp3;otf;png;rules;ttc;ttf;txt;vert;wv" data ${EXPECTED_DATA})
+file(GLOB_RECURSE QMCLIENT_BUNDLED_FONT_FILES
+  LIST_DIRECTORIES false
+  RELATIVE "${PROJECT_SOURCE_DIR}/data"
+  "${PROJECT_SOURCE_DIR}/data/qmclient/fonts/*"
+)
+list(APPEND EXPECTED_DATA ${QMCLIENT_BUNDLED_FONT_FILES})
+file(GLOB_RECURSE QMCLIENT_NAMEPLATE_MSDF_FILES
+  LIST_DIRECTORIES false
+  RELATIVE "${PROJECT_SOURCE_DIR}/data"
+  "${PROJECT_SOURCE_DIR}/data/qmclient/nameplate_msdf/*"
+)
+list(APPEND EXPECTED_DATA ${QMCLIENT_NAMEPLATE_MSDF_FILES})
+set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;mp3;otf;OTF;png;rules;ttc;TTC;ttf;TTF;txt;vert;wv" data ${EXPECTED_DATA})
 
 ########################################################################
 # COPY DATA AND SHARED LIBS
@@ -3640,12 +3637,14 @@ if(CLIENT)
 
   add_library(game-client-common INTERFACE)
   target_link_libraries(game-client-common INTERFACE ${LIBS_CLIENT})
+  target_compile_definitions(game-client-common INTERFACE MSDFGEN_USE_CPP11 MSDFGEN_PUBLIC= _USE_MATH_DEFINES)
 
   # Silence warnings from ChaiScript
   target_include_directories(game-client-common SYSTEM INTERFACE
     ${PROJECT_SOURCE_DIR}/src/engine/external/chaiscript)
 
   target_include_directories(game-client-common SYSTEM INTERFACE
+    ${PROJECT_SOURCE_DIR}/vendor/msdfgen
     ${FREETYPE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OGG_INCLUDE_DIRS}

@@ -1,19 +1,21 @@
 // QmClient 名牌 MSDF 字形图集生成工具（离线资源制作，不参与客户端构建）。
 //
-// 流程：FreeType 取字形轮廓 → msdfgen core 生成多通道距离场 → shelf 打包进单页图集
+// 流程：FreeType 取字形轮廓 → msdfgen core 生成 MTSDF（RGB 多通道 + Alpha 真 SDF）
+//      → shelf 打包进单页图集
 //      → 输出原始 RGBA（由 Python 侧编码 PNG）+ JSON manifest。
 //
 // 关键约定（均由探针实测确认，勿随意改动）：
 //  1. 轮廓在「形状空间」里就把 y 翻成向下（y' = bearingY - y），投影保持正缩放。
 //     若改用负 y 缩放或用 Y_DOWNWARD 位图，BitmapRef::reorient 会重排行序导致字形上下颠倒。
-//  2. 翻 y 会反转环绕方向，之后必须调用 Shape::orientContours()，否则整个距离场极性相反
-//     （字形本体变成透明、外部变成实心）。
+//  2. 翻 y 会反转环绕方向；根据 FreeType 的 REVERSE_FILL 标志恢复轮廓方向，
+//     不对重叠 CJK 轮廓调用 orientContours()，避免跨轮廓重排引入伪影。
 //  3. 输出满足 map = (signedDistance + pxRange/2) / pxRange，内侧为负。
-//     与 data/shader/textured_msdf.frag 的 median(rgb) - 0.5 > 0 填充判据一致。
+//     RGB 用 median(rgb) - 0.5 做填充，Alpha 真 SDF 用于描边与软效果。
 #include <ft2build.h>
-#include <msdfgen.h>
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
+#include <msdfgen.h>
+#include <msdfgen-ext.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -44,8 +46,8 @@ namespace
 		std::string m_FontPath;
 		std::string m_CharsetPath;
 		std::string m_OutputPrefix;
-		int m_EmPixels = 48;
-		double m_PxRange = 6.0;
+		int m_EmPixels = 64;
+		double m_PxRange = 8.0;
 		int m_Size = 4096;
 		int m_MaxGlyphs = 0;
 		unsigned m_FontIndex = 0;
@@ -56,6 +58,8 @@ namespace
 		msdfgen::Shape *m_pShape = nullptr;
 		msdfgen::Contour *m_pContour = nullptr;
 		msdfgen::Point2 m_Last;
+		msdfgen::Point2 m_Start;
+		bool m_HasContour = false;
 		double m_Scale = 1.0;
 		double m_FlipTop = 0.0;
 	};
@@ -70,7 +74,12 @@ namespace
 	int MoveTo(const FT_Vector *pTo, void *pUser)
 	{
 		auto *pCtx = static_cast<SOutlineContext *>(pUser);
-		pCtx->m_Last = FlipPoint(pTo, pCtx);
+		const msdfgen::Point2 Point = FlipPoint(pTo, pCtx);
+		if(pCtx->m_HasContour && pCtx->m_pContour != nullptr && pCtx->m_Last != pCtx->m_Start)
+			pCtx->m_pContour->addEdge(msdfgen::EdgeHolder(pCtx->m_Last, pCtx->m_Start));
+		pCtx->m_Last = Point;
+		pCtx->m_Start = Point;
+		pCtx->m_HasContour = true;
 		pCtx->m_pContour = &pCtx->m_pShape->addContour();
 		return 0;
 	}
@@ -102,7 +111,7 @@ namespace
 	void Usage()
 	{
 		printf("usage: qm-nameplate-msdf-atlas --font <path> [--font-index N] --charset <file> --output <prefix>\n"
-		       "       [--em-pixels 48] [--px-range 6] [--size 4096] [--max-glyphs N]\n"
+		       "       [--em-pixels 64] [--px-range 8] [--size 4096] [--max-glyphs N]\n"
 		       "charset file: one U+XXXX per line (blank lines and # comments ignored)\n");
 	}
 
@@ -304,6 +313,9 @@ int main(int argc, char **argv)
 
 	const int Size = Options.m_Size;
 	const int Padding = (int)std::ceil(Options.m_PxRange) + 1;
+	// 字体行盒度量（参考 em 像素）：基线排版的依据，写进 manifest 供运行时使用
+	const double Ascent = Face->size->metrics.ascender / 64.0;
+	const double Descent = -Face->size->metrics.descender / 64.0;
 	std::vector<uint8_t> vPage((size_t)Size * (size_t)Size * 4u, 0u);
 	std::vector<SShelf> vShelves;
 	std::vector<SGlyphEntry> vEntries;
@@ -329,7 +341,6 @@ int main(int argc, char **argv)
 			continue;
 		}
 		const FT_GlyphSlot Slot = Face->glyph;
-
 		SGlyphEntry Entry;
 		Entry.m_Codepoint = Codepoint;
 		Entry.m_AdvanceX = Slot->metrics.horiAdvance / 64.0;
@@ -345,16 +356,11 @@ int main(int argc, char **argv)
 		}
 
 		msdfgen::Shape Shape;
-		SOutlineContext Ctx;
-		Ctx.m_pShape = &Shape;
-		Ctx.m_Scale = 1.0 / 64.0;
-		Ctx.m_FlipTop = Entry.m_BearingY;
-		FT_Outline_Funcs Funcs{};
-		Funcs.move_to = MoveTo;
-		Funcs.line_to = LineTo;
-		Funcs.conic_to = ConicTo;
-		Funcs.cubic_to = CubicTo;
-		FT_Outline_Decompose(&Slot->outline, &Funcs, &Ctx);
+		if(msdfgen::readFreetypeOutline(Shape, &Slot->outline, 1.0 / 64.0) != 0)
+		{
+			++Skipped;
+			continue;
+		}
 
 		if(Shape.contours.empty())
 		{
@@ -362,9 +368,13 @@ int main(int argc, char **argv)
 			++Generated;
 			continue;
 		}
-		// 翻转 y 后必须重新定向轮廓，否则极性相反
+		// FreeType 的标准填充方向在 y 翻转后需要反转；带 REVERSE_FILL
+		// 标志的字体已经采用相反约定。按字体标志统一整组轮廓方向，
+		// 避免 orientContours() 对重叠 CJK 轮廓做错误的跨轮廓重排。
 		Shape.orientContours();
 		Shape.normalize();
+		// 对复杂 CJK/复合轮廓使用 simple 着色，避免 InkTrap 在重叠短边上
+		// 产生跨轮廓的错误颜色区域；MTSDF Alpha 仍提供稳定的真 SDF。
 		msdfgen::edgeColoringSimple(Shape, 3.0);
 
 		const msdfgen::Shape::Bounds Bounds = Shape.getBounds();
@@ -386,25 +396,26 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		msdfgen::Bitmap<float, 3> Msdf(W, H, msdfgen::Y_UPWARD);
+		msdfgen::Bitmap<float, 4> Mtsdf(W, H, msdfgen::Y_DOWNWARD);
 		// 形状已是 y 向下，正缩放 + 边距平移
 		msdfgen::Projection Projection(msdfgen::Vector2(1.0, 1.0), msdfgen::Vector2(Options.m_PxRange - Bounds.l, Options.m_PxRange - Bounds.b));
-		msdfgen::MSDFGeneratorConfig Config;
-		msdfgen::generateMSDF(Msdf, Shape, Projection, msdfgen::Range(Options.m_PxRange), Config);
+		// CJK 笔画经常由重叠轮廓组成，显式开启 overlap support；
+		// 同时保留 msdfgen 的 error correction，避免尖角/窄缝出现虫蚀伪影。
+		msdfgen::MSDFGeneratorConfig Config(true);
+		msdfgen::generateMTSDF(Mtsdf, Shape, Projection, msdfgen::Range(Options.m_PxRange), Config);
 
 		for(int y = 0; y < H; ++y)
 		{
 			for(int x = 0; x < W; ++x)
 			{
-				const float *p = Msdf(x, y);
+				const float *p = Mtsdf(x, y);
 				const size_t Dst = ((size_t)(PosY + y) * (size_t)Size + (size_t)(PosX + x)) * 4u;
-				for(int c = 0; c < 3; ++c)
+				for(int c = 0; c < 4; ++c)
 				{
-					const double Value = p[c];
+					const double Value = (double)p[c];
 					const double Clamped = Value < 0.0 ? 0.0 : (Value > 1.0 ? 1.0 : Value);
 					vPage[Dst + (size_t)c] = (uint8_t)(Clamped * 255.0 + 0.5);
 				}
-				vPage[Dst + 3] = 255u;
 			}
 		}
 
@@ -448,8 +459,11 @@ int main(int argc, char **argv)
 	fprintf(pManifest, "{\n");
 	fprintf(pManifest, "  \"version\": 1,\n");
 	fprintf(pManifest, "  \"kind\": \"msdf-glyphs\",\n");
+	fprintf(pManifest, "  \"alpha_sdf\": true,\n");
 	fprintf(pManifest, "  \"px_range\": %g,\n", Options.m_PxRange);
 	fprintf(pManifest, "  \"em_pixels\": %d,\n", Options.m_EmPixels);
+	fprintf(pManifest, "  \"ascent\": %g,\n", Ascent);
+	fprintf(pManifest, "  \"descent\": %g,\n", Descent);
 	fprintf(pManifest, "  \"padding\": %d,\n", Padding);
 	fprintf(pManifest, "  \"source_font\": \"%s\",\n", FontName.c_str());
 	fprintf(pManifest, "  \"atlas\": {\"width\": %d, \"height\": %d},\n", Size, Size);

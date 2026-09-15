@@ -52,13 +52,14 @@ TEST(SkinsContract, SkinQueueIntervalUsesMilliseconds)
 	ASSERT_NE(UpdateEnd, std::string::npos);
 	const std::string UpdateBody = Source.substr(UpdatePos, UpdateEnd - UpdatePos);
 
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 1, 120000"), std::string::npos);
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 1, 120000"), std::string::npos);
-	EXPECT_NE(Config.find("Skin queue switch interval (ms)"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 0, 120000"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 0, 120000"), std::string::npos);
+	EXPECT_NE(Config.find("Skin queue switch interval (ms, 0=no timed rotation, random start only)"), std::string::npos);
 	EXPECT_NE(Source.find("static constexpr int SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 1000;"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("std::chrono::milliseconds(QueueInterval)"), std::string::npos);
 	EXPECT_EQ(UpdateBody.find("QueueInterval * 1000"), std::string::npos);
-	EXPECT_NE(UpdateBody.find("const int QueueInterval = maximum(1, SkinQueueIntervalVar(Dummy));"), std::string::npos);
+	EXPECT_NE(UpdateBody.find("const int QueueInterval = SkinQueueIntervalVar(Dummy);"), std::string::npos);
+	EXPECT_EQ(UpdateBody.find("maximum(1, SkinQueueIntervalVar"), std::string::npos);
 	EXPECT_EQ(Source.find("SKIN_QUEUE_INTERVAL_UNITS_PER_SECOND = 10;"), std::string::npos);
 	EXPECT_EQ(Config.find("皮肤队列切换间隔（0.1 秒）"), std::string::npos);
 
@@ -72,9 +73,9 @@ TEST(SkinsContract, SkinQueueIntervalUsesMilliseconds)
 
 TEST(SkinsContract, SkinQueueRotationUsesExplicitEnableSwitchAndBoundedInterval)
 {
-	// Intent only: rotation has an explicit enable switch and a bounded (1..120000ms)
-	// interval, and Update gates on the enable flag. Widget/layout details are
-	// intentionally not asserted here.
+	// Intent only: rotation has an explicit enable switch and a bounded (0..120000ms)
+	// interval, where 0 means no timed rotation (random start events only). Update
+	// gates on the enable flag. Widget/layout details are intentionally not asserted.
 	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
 	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
@@ -90,7 +91,7 @@ TEST(SkinsContract, SkinQueueRotationUsesExplicitEnableSwitchAndBoundedInterval)
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024"), std::string::npos);
 	EXPECT_NE(Menus.find("Localize(\"Enable skin queue rotation\")"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
-	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);"), std::string::npos);
+	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 0, 120000, IntervalInputGroup, QueueIntervalOptions);"), std::string::npos);
 	EXPECT_EQ(Menus.find("QueueInterval = maximum(QueueIntervalInput.GetInteger(), 1);"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("!SkinQueueEnabledVar(Dummy)"), std::string::npos);
 	EXPECT_NE(UpdateBody.find("m_aSkinQueueLastUpdate[Dummy].reset();"), std::string::npos);
@@ -346,4 +347,60 @@ TEST(SkinsContract, TeeSettingsListEmitsRequestWindowPerfLogs)
 	EXPECT_NE(Source.find("m_SettingsHighPrioritySettled = VisibleSourceSettled;"), std::string::npos);
 	EXPECT_NE(Source.find("if(PerfDebugEnabled() &&"), std::string::npos);
 	EXPECT_NE(Source.find("if(m_SettingsRuntimeMetadata.m_LastPage != SETTINGS_TEE)"), std::string::npos);
+}
+
+TEST(SkinsContract, SkinQueueRandomJoinConfigAndCommandAreRegistered)
+{
+	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmSkinQueueRandomJoin, qm_skin_queue_random_join, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmDummySkinQueueRandomJoin, qm_dummy_skin_queue_random_join, 0, 0, 1"), std::string::npos);
+	EXPECT_NE(Source.find("Console()->Register(\"random_skin_queue\", \"\", CFGFLAG_CLIENT, ConRandomSkinQueue, this, \"Apply a random skin from the queue\")"), std::string::npos);
+	EXPECT_NE(Source.find("Console()->Register(\"random_dummy_skin_queue\", \"\", CFGFLAG_CLIENT, ConRandomDummySkinQueue, this, \"Apply a random skin from the dummy queue\")"), std::string::npos);
+}
+
+TEST(SkinsContract, SkinQueueRandomStartAppliesWhenRotationStartsPerDummy)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const std::string Body = FunctionBody(Source, "void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)");
+
+	// 随机起点在轮换（重新）启动的首帧生效：上线进图、分身单独连接、重新启用队列都覆盖，
+	// 因此随机化必须位于 UpdateSkinQueue 的在线首帧分支并按 dummy 取配置，而不是只在主连接进图钩子里。
+	EXPECT_NE(Body.find("g_Config.m_QmDummySkinQueueRandomJoin : g_Config.m_QmSkinQueueRandomJoin"), std::string::npos);
+	EXPECT_NE(Body.find("SkinQueueIndexVar(Dummy) = rand() % QueueActiveCount"), std::string::npos);
+	EXPECT_NE(Body.find("m_aSkinQueueElapsed[Dummy] = 0ns;"), std::string::npos);
+	const size_t FirstTick = Body.find("if(!m_aSkinQueueLastUpdate[Dummy].has_value())");
+	const size_t RandomJoin = Body.find("RandomJoin");
+	const size_t Apply = Body.find("ApplySkinQueueCurrent(Dummy);", FirstTick);
+	ASSERT_NE(FirstTick, std::string::npos);
+	ASSERT_NE(RandomJoin, std::string::npos);
+	ASSERT_NE(Apply, std::string::npos);
+	EXPECT_LT(FirstTick, RandomJoin);
+	EXPECT_LT(RandomJoin, Apply);
+	EXPECT_EQ(Source.find("void CSkins::OnMapLoad()"), std::string::npos);
+}
+
+TEST(SkinsContract, RandomSkinQueueIndexAppliesRandomBoundedEntry)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
+	const std::string Body = FunctionBody(Source, "bool CSkins::RandomSkinQueueIndex(int Dummy)");
+
+	// 空队列返回 false，非空时复用 ApplySkinQueueIndex 施加越界保护。
+	EXPECT_NE(Body.find("return false;"), std::string::npos);
+	EXPECT_NE(Body.find("ApplySkinQueueIndex(rand() % Queue.size(), Dummy)"), std::string::npos);
+}
+
+TEST(SkinsContract, TeeSkinQueuePanelExposesRandomControls)
+{
+	const std::string Source = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
+
+	const size_t DiceButton = Source.find("Ui()->DoButton_QmIcon(&s_TeeRandomSkinQueueButton, EQmIcon::DICE_FIVE");
+	ASSERT_NE(DiceButton, std::string::npos);
+	const size_t RandomApply = Source.find("GameClient()->m_Skins.RandomSkinQueueIndex(QueueDummy)");
+	ASSERT_NE(RandomApply, std::string::npos);
+	EXPECT_LT(DiceButton, RandomApply);
+	EXPECT_NE(Source.find("QueueDummy ? g_Config.m_QmDummySkinQueueRandomJoin : g_Config.m_QmSkinQueueRandomJoin"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Random skin on map join\")"), std::string::npos);
+	EXPECT_NE(Source.find("Localize(\"Apply a random skin from the queue\")"), std::string::npos);
 }

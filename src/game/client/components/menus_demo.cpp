@@ -1365,7 +1365,11 @@ int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType,
 	str_copy(Item.m_aFilename, pName);
 	if(IsDir)
 	{
-		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
+		// QmClient：上级目录显示可读文案，代替技术风格的 "../"
+		if(str_comp(pName, "..") == 0)
+			str_copy(Item.m_aName, Localize("Parent Folder"));
+		else
+			str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
 		Item.m_Date = 0;
 		Item.m_DateLoaded = true;
 		Item.m_DateValid = false;
@@ -1665,12 +1669,31 @@ void CMenus::DemolistPopulate()
 		m_DemoPopulateStartTime = time_get_nanoseconds();
 		Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 
+		// QmClient: 顶层追加 Rank 1 回放缓存入口（文件存放在 qmclient/rank1/demos，不在 demos/ 下建目录）
+		if(str_comp(m_aCurrentDemoFolder, pBaseFolder) == 0 && Storage()->FolderExists(CRankGhost::DEMO_CACHE_DIR, IStorage::TYPE_SAVE))
+		{
+			CDemoItem Item;
+			str_copy(Item.m_aFilename, CRankGhost::DEMO_CACHE_DIR);
+			str_copy(Item.m_aName, Localize("Rank 1 replays"));
+			Item.m_Date = 0;
+			Item.m_DateLoaded = true;
+			Item.m_DateValid = false;
+			Item.m_Size = 0;
+			Item.m_SizeLoaded = true;
+			Item.m_InfosLoaded = false;
+			Item.m_Valid = false;
+			Item.m_IsDir = true;
+			Item.m_IsLink = true;
+			Item.m_StorageType = IStorage::TYPE_SAVE;
+			m_vDemos.push_back(Item);
+		}
+
 		// Make sure there is a demo item to navigate back to the parent folder, if the folder contents could not be enumerated.
 		if(m_vDemos.empty())
 		{
 			CDemoItem Item;
 			str_copy(Item.m_aFilename, "..");
-			str_copy(Item.m_aName, "../");
+			str_copy(Item.m_aName, Localize("Parent Folder"));
 			Item.m_Date = 0;
 			Item.m_DateLoaded = true;
 			Item.m_DateValid = false;
@@ -2182,6 +2205,16 @@ void CMenus::StartRankDemoDownload(const char *pMapName)
 		return;
 	}
 
+	// QmClient：Rank 1 页缓存已有该图回放时不再重复下载，直接提示缓存位置
+	char aCachedRankDemo[IO_MAX_PATH_LENGTH];
+	if(GameClient()->m_RankGhost.FindCachedRankDemo(pMapName, 1, aCachedRankDemo, sizeof(aCachedRankDemo)))
+	{
+		char aMessage[IO_MAX_PATH_LENGTH + 128];
+		str_format(aMessage, sizeof(aMessage), Localize("Rank 1 demo already cached under 'Rank 1 replays': %s"), aCachedRankDemo);
+		FinishRankDemoDownload(true, aMessage);
+		return;
+	}
+
 	Storage()->CreateFolder("demos", IStorage::TYPE_SAVE);
 	m_RankDemoMap = pMapName;
 	str_copy(m_aRankDemoManifestPath, "demos/.qm_rank_watchable.jsonl");
@@ -2634,6 +2667,24 @@ void CMenus::RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivat
 		}
 	}
 
+	// QmClient：Rank 1 缓存目录里没有任何回放时给出引导，避免空列表只有上级目录项让人困惑
+	{
+		const size_t RankCacheDirLen = str_length(CRankGhost::DEMO_CACHE_DIR);
+		const bool InRankCacheFolder = str_startswith(m_aCurrentDemoFolder, CRankGhost::DEMO_CACHE_DIR) &&
+					       (m_aCurrentDemoFolder[RankCacheDirLen] == '\0' || m_aCurrentDemoFolder[RankCacheDirLen] == '/');
+		const bool AnyDemoFile = std::any_of(m_vpFilteredDemos.begin(), m_vpFilteredDemos.end(), [](const CDemoItem *pItem) { return !pItem->m_IsDir; });
+		if(InRankCacheFolder && !AnyDemoFile)
+		{
+			const CListboxItem HintItem = s_ListBox.DoCustomRow(UseNewUi ? RowHeight : ms_ListheaderHeight, false);
+			if(HintItem.m_Visible)
+			{
+				TextRender()->TextColor(0.55f, 0.55f, 0.55f, 1.0f);
+				Ui()->DoLabel(&HintItem.m_Rect, Localize("No Rank 1 replays cached yet. Search and download from the Rank 1 page."), 12.0f, TEXTALIGN_ML);
+				TextRender()->TextColor(TextRender()->DefaultTextColor());
+			}
+		}
+	}
+
 	const int OldSelected = m_DemolistSelectedIndex;
 	const bool WasItemSelected = s_ListBox.WasItemSelected();
 	const int NewSelected = s_ListBox.DoEnd();
@@ -3071,29 +3122,52 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 					const bool ParentFolder = str_comp(pSelectedItem->m_aFilename, "..") == 0;
 					if(ParentFolder) // parent folder
 					{
-						str_copy(m_aCurrentDemoSelectionName, fs_filename(m_aCurrentDemoFolder));
-						str_append(m_aCurrentDemoSelectionName, "/");
-						if(fs_parent_dir(m_aCurrentDemoFolder))
+						// QmClient: Rank 1 缓存目录（含其子目录）是挂在顶层的链接入口，
+						// .. 直接回到 demos 根目录，不逐级穿过 qmclient/ 等内部目录
+						const size_t RankCacheDirLen = str_length(CRankGhost::DEMO_CACHE_DIR);
+						const bool InRankCacheFolder = str_startswith(m_aCurrentDemoFolder, CRankGhost::DEMO_CACHE_DIR) &&
+									       (m_aCurrentDemoFolder[RankCacheDirLen] == '\0' || m_aCurrentDemoFolder[RankCacheDirLen] == '/');
+						if(InRankCacheFolder)
 						{
-							m_aCurrentDemoFolder[0] = '\0';
-							if(m_DemolistStorageType == IStorage::TYPE_ALL)
+							str_copy(m_aCurrentDemoFolder, pBaseFolder);
+							m_DemolistStorageType = IStorage::TYPE_ALL;
+							str_copy(m_aCurrentDemoSelectionName, Localize("Rank 1 replays"));
+						}
+						else
+						{
+							str_copy(m_aCurrentDemoSelectionName, fs_filename(m_aCurrentDemoFolder));
+							str_append(m_aCurrentDemoSelectionName, "/");
+							if(fs_parent_dir(m_aCurrentDemoFolder))
 							{
-								m_aCurrentDemoSelectionName[0] = '\0'; // will select first list item
-							}
-							else
-							{
-								Storage()->GetCompletePath(m_DemolistStorageType, pBaseFolder, m_aCurrentDemoSelectionName, sizeof(m_aCurrentDemoSelectionName));
-								str_append(m_aCurrentDemoSelectionName, "/");
+								m_aCurrentDemoFolder[0] = '\0';
+								if(m_DemolistStorageType == IStorage::TYPE_ALL)
+								{
+									m_aCurrentDemoSelectionName[0] = '\0'; // will select first list item
+								}
+								else
+								{
+									Storage()->GetCompletePath(m_DemolistStorageType, pBaseFolder, m_aCurrentDemoSelectionName, sizeof(m_aCurrentDemoSelectionName));
+									str_append(m_aCurrentDemoSelectionName, "/");
+								}
 							}
 						}
 					}
 					else // sub folder
 					{
-						if(m_aCurrentDemoFolder[0] != '\0')
-							str_append(m_aCurrentDemoFolder, "/");
-						else
+						// QmClient: 链接项携带完整存储路径（如 Rank 1 回放缓存目录），直接跳转
+						if(str_find(pSelectedItem->m_aFilename, "/") != nullptr)
+						{
+							str_copy(m_aCurrentDemoFolder, pSelectedItem->m_aFilename);
 							m_DemolistStorageType = pSelectedItem->m_StorageType;
-						str_append(m_aCurrentDemoFolder, pSelectedItem->m_aFilename);
+						}
+						else
+						{
+							if(m_aCurrentDemoFolder[0] != '\0')
+								str_append(m_aCurrentDemoFolder, "/");
+							else
+								m_DemolistStorageType = pSelectedItem->m_StorageType;
+							str_append(m_aCurrentDemoFolder, pSelectedItem->m_aFilename);
+						}
 					}
 					DemolistPopulate();
 					DemolistOnUpdate(!ParentFolder);
@@ -3349,29 +3423,52 @@ void CMenus::RenderDemoBrowserButtons(CUIRect ButtonsView, bool WasListboxItemAc
 				const bool ParentFolder = str_comp(pSelectedItem->m_aFilename, "..") == 0;
 				if(ParentFolder) // parent folder
 				{
-					str_copy(m_aCurrentDemoSelectionName, fs_filename(m_aCurrentDemoFolder));
-					str_append(m_aCurrentDemoSelectionName, "/");
-					if(fs_parent_dir(m_aCurrentDemoFolder))
+					// QmClient: Rank 1 缓存目录（含其子目录）是挂在顶层的链接入口，
+					// .. 直接回到 demos 根目录，不逐级穿过 qmclient/ 等内部目录
+					const size_t RankCacheDirLen = str_length(CRankGhost::DEMO_CACHE_DIR);
+					const bool InRankCacheFolder = str_startswith(m_aCurrentDemoFolder, CRankGhost::DEMO_CACHE_DIR) &&
+								       (m_aCurrentDemoFolder[RankCacheDirLen] == '\0' || m_aCurrentDemoFolder[RankCacheDirLen] == '/');
+					if(InRankCacheFolder)
 					{
-						m_aCurrentDemoFolder[0] = '\0';
-						if(m_DemolistStorageType == IStorage::TYPE_ALL)
+						str_copy(m_aCurrentDemoFolder, pBaseFolder);
+						m_DemolistStorageType = IStorage::TYPE_ALL;
+						str_copy(m_aCurrentDemoSelectionName, Localize("Rank 1 replays"));
+					}
+					else
+					{
+						str_copy(m_aCurrentDemoSelectionName, fs_filename(m_aCurrentDemoFolder));
+						str_append(m_aCurrentDemoSelectionName, "/");
+						if(fs_parent_dir(m_aCurrentDemoFolder))
 						{
-							m_aCurrentDemoSelectionName[0] = '\0'; // will select first list item
-						}
-						else
-						{
-							Storage()->GetCompletePath(m_DemolistStorageType, pBaseFolder, m_aCurrentDemoSelectionName, sizeof(m_aCurrentDemoSelectionName));
-							str_append(m_aCurrentDemoSelectionName, "/");
+							m_aCurrentDemoFolder[0] = '\0';
+							if(m_DemolistStorageType == IStorage::TYPE_ALL)
+							{
+								m_aCurrentDemoSelectionName[0] = '\0'; // will select first list item
+							}
+							else
+							{
+								Storage()->GetCompletePath(m_DemolistStorageType, pBaseFolder, m_aCurrentDemoSelectionName, sizeof(m_aCurrentDemoSelectionName));
+								str_append(m_aCurrentDemoSelectionName, "/");
+							}
 						}
 					}
 				}
 				else // sub folder
 				{
-					if(m_aCurrentDemoFolder[0] != '\0')
-						str_append(m_aCurrentDemoFolder, "/");
-					else
+					// QmClient: 链接项携带完整存储路径（如 Rank 1 回放缓存目录），直接跳转
+					if(str_find(pSelectedItem->m_aFilename, "/") != nullptr)
+					{
+						str_copy(m_aCurrentDemoFolder, pSelectedItem->m_aFilename);
 						m_DemolistStorageType = pSelectedItem->m_StorageType;
-					str_append(m_aCurrentDemoFolder, pSelectedItem->m_aFilename);
+					}
+					else
+					{
+						if(m_aCurrentDemoFolder[0] != '\0')
+							str_append(m_aCurrentDemoFolder, "/");
+						else
+							m_DemolistStorageType = pSelectedItem->m_StorageType;
+						str_append(m_aCurrentDemoFolder, pSelectedItem->m_aFilename);
+					}
 				}
 				DemolistPopulate();
 				DemolistOnUpdate(!ParentFolder);

@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == Gores oyun modunda Gores otomatik geçişini otomatik olarak etkinleştir
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+
 Automatically re-join team 0 after finish (only if unlocked).
 == Bitişten sonra otomatik olarak 0 takımına yeniden katıl (yalnızca kilitli değilse)
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == Choose the menu font and cursor appearance
 
+Choose the menu font and font weight
+== Menü yazı tipini ve kalınlığını seçin
+
 Choose the menu map and background colors
 == Choose the menu map and background colors
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == Renk
+
+Color map tune zones by their tune zone number
+== Haritadaki tune bölgelerini tune zone numarasına göre renklendir
 
 Color of authenticated player names on scoreboard
 == Skor tablosunda doğrulanmış oyuncu adlarının rengi
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the ingame cursor scale
+== Oyun içi imleç ölçeğini ayarlayın
 
 Configure the input overlay display
 == Configure the input overlay display
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == Özel yazı tipi
 
+Custom font weight (variable fonts)
+== Özel yazı tipi kalınlığı (değişken yazı tipleri)
+
 Custom Font:
 == Özel Yazı Tipi:
+
+Custom fonts use FreeType automatically.
+== Özel yazı tipleri otomatik olarak FreeType kullanır.
 
 Custom prompt template
 == Özel istem şablonu
@@ -4346,11 +4364,17 @@ Follow
 Following
 == Takip Ediliyor
 
+Font
+== Yazı tipi
+
 Font cursor
 == Yazı tipi imleci
 
 Font size
 == Yazı tipi boyutu
+
+Font style:
+== Yazı tipi stili:
 
 For more info: /cmdlist
 == Daha fazla bilgi: /cmdlist
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == Hayalet görüntüleme modu kapatıldı. Hayalet yine koşularınızı takip eder.
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== Hayalet görüntüleme modu: bağımsız zaman çizelgesi. Bir üyeyi takip etmek için izleme tuşunu basılı tutun; oynatma kontrolü skor tablosunda (Tab + Alt).
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== Hayalet görüntüleme modu: ESC kontrol panelini değiştirir. Oyun menüsünü açmak için ESC'ye iki kez basın (tekrardan çıkılır). Üye listesi için izleme tuşunu basılı tutun.
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == Hayalet görünürlüğü (alfa, 0=görünmez, 100=görünür)
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Rank 1 üyeleri
 
+Rank 1 replay
+== Rank 1 tekrarı
+
 Rank 1 replays
 == Rank 1 demoları
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Rank hayaleti: tekrarın koşu aralığı geçersiz
-
-Rank ghost: the replay has no run start/end markers
-== Rank hayaleti: tekrarda başlangıç/bitiş işaretleri yok
 
 Rank ghost: the replay list is empty or malformed
 == Rank hayaleti: tekrar listesi boş veya bozuk
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == Saatte saniyeleri göster
 
+Show semi-transparent ghost tees for other players who are spectating
+== Show semi-transparent ghost tees for other players who are spectating
+
 Show server chat messages
 == Sunucu sohbet mesajlarını göster
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == İzlenen oyuncu ve arkadaşlar
+
+Spectator ghost opacity
+== Spectator ghost opacity
 
 Spectators
 == İzleyiciler
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== Ad plakaları için MSDF metin oluşturmayı kullan (yalnızca yerleşik yazı tipleri)
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == Ad plakaları için MSDF metin oluşturmayı kullan (yalnızca yerleşik yazı tipleri, özel yazı tipleri FreeType'a geri döner)
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == Sadece orijinal skinler
 
+Variable custom font weight
+== Değişken özel yazı tipi kalınlığı
+
 Velocity
 == Hız
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == Görsel efektler
 
+Visual: Cursor
+== Görsel: İmleç
+
 Visual: Effects
 == Görsel: Efektler
-
-Visual: Font & Cursor
-== Görsel: Yazı Tipi ve İmleç
 
 Visual: Nameplates
 == Görsel: İsim Levhaları
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == Olan oldu, daha fazla söylemenin faydası yok
-
-Wheel animate
-== Tekerlek animasyonu
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == TClient gökkuşağı Tee açıkken bu özellik etkili olmaz.
@@ -13771,6 +13804,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == Eylemi Kullan
+
+[Rank 1 replay]
+Direction
+== Yön
 
 [Show name plates]
 All

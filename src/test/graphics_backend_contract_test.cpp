@@ -1,12 +1,14 @@
 #include <engine/client/backend/graphics_backend_contract.h>
 #include <engine/client/backend/vulkan/backend_vulkan.h>
 #include <engine/client/backend_sdl.h>
+#include <engine/graphics.h>
 
 #if (defined(CONF_PLATFORM_MACOS) || defined(CONF_PLATFORM_IOS)) && defined(CONF_BACKEND_METAL) && defined(CONF_BACKEND_METAL_READY)
 #include <engine/client/backend/metal/backend_metal.h>
 #endif
 
 #include <gtest/gtest.h>
+#include <test/qmclient_source_contract_test.h>
 
 TEST(GraphicsBackendContract, NamesAreStable)
 {
@@ -307,4 +309,25 @@ TEST(GraphicsBackendContract, BackendCapabilitiesResetClearsPreviousBackendState
 	EXPECT_EQ(Capabilities.m_DetectedContextMajor, 0);
 	EXPECT_EQ(Capabilities.m_DetectedContextMinor, 0);
 	EXPECT_EQ(Capabilities.m_DetectedContextPatch, 0);
+}
+
+TEST(GraphicsBackendContract, SingleSampleFeaturesFallBackUnderMsaa)
+{
+	// 双因子闸门：后端支持且（无单采样约束或 MSAA 关闭）时，捕获/模糊能力才对外可用。
+	EXPECT_TRUE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(true, false, 0));
+	EXPECT_TRUE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(true, false, 4));
+	EXPECT_TRUE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(true, true, 0));
+	EXPECT_FALSE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(true, true, 2));
+	EXPECT_FALSE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(true, true, 4));
+	EXPECT_FALSE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(false, false, 0));
+	EXPECT_FALSE(IGraphics::SingleSampleFeatureAllowedUnderMsaa(false, true, 0));
+}
+
+TEST(GraphicsBackendContract, VulkanDeclaresSingleSampleExternalPassConstraint)
+{
+	// Vulkan 的捕获/模糊通道按单采样 RT 实现，MSAA 下由后端命令层静默跳过；该上报
+	// 无法在无 Vulkan+MSAA 设备的测试环境中运行时观察，故以源码合同锁定 Cmd_Init 的
+	// 能力声明，防止线程层闸门 SingleSampleFeatureAllowedUnderMsaa 失去输入回到静默失效。
+	const std::string Source = ReadTestSourceFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
+	EXPECT_NE(Source.find("m_RenderTargetExternalPassRequiresSingleSample = true"), std::string::npos);
 }

@@ -637,22 +637,22 @@ bool CSaveTeam::HandleSaveError(ESaveResult Result, int ClientId, CGameContext *
 	case ESaveResult::SUCCESS:
 		return false;
 	case ESaveResult::TEAM_FLOCK:
-		pGameContext->SendChatTarget(ClientId, "You have to be in a team (from 1-127)");
+		pGameContext->SendChatTarget(ClientId, "必须处于 1–127 号队伍中");
 		break;
 	case ESaveResult::TEAM_NOT_FOUND:
-		pGameContext->SendChatTarget(ClientId, "Could not find your Team");
+		pGameContext->SendChatTarget(ClientId, "找不到你的队伍");
 		break;
 	case ESaveResult::CHAR_NOT_FOUND:
-		pGameContext->SendChatTarget(ClientId, "To save all players in your team have to be alive and not in '/spec'");
+		pGameContext->SendChatTarget(ClientId, "要保存队伍，队内所有玩家都必须存活且不能处于 '/spec'");
 		break;
 	case ESaveResult::NOT_STARTED:
-		pGameContext->SendChatTarget(ClientId, "Your team has not started yet");
+		pGameContext->SendChatTarget(ClientId, "你的队伍还没有开始");
 		break;
 	case ESaveResult::TEAM_0_MODE:
-		pGameContext->SendChatTarget(ClientId, "Team can't be saved while in team 0 mode");
+		pGameContext->SendChatTarget(ClientId, "处于 0 队模式时不能保存队伍存档");
 		break;
 	case ESaveResult::DRAGGER_ACTIVE:
-		pGameContext->SendChatTarget(ClientId, "Team can't be saved while a dragger is active");
+		pGameContext->SendChatTarget(ClientId, "有拖拽器生效时不能保存队伍存档");
 		break;
 	}
 	return true;
@@ -906,7 +906,7 @@ bool CSaveTeam::MatchPlayers(const char (*paNames)[MAX_NAME_LENGTH], const int *
 {
 	if(NumPlayer > m_MembersCount)
 	{
-		str_format(pMessage, MessageLen, "Too many players in this team, should be %d", m_MembersCount);
+		str_format(pMessage, MessageLen, "队伍人数过多，应为 %d 人", m_MembersCount);
 		return false;
 	}
 	// check for wrong players
@@ -922,7 +922,7 @@ bool CSaveTeam::MatchPlayers(const char (*paNames)[MAX_NAME_LENGTH], const int *
 		}
 		if(!Found)
 		{
-			str_format(pMessage, MessageLen, "'%s' doesn't belong to this team", paNames[i]);
+			str_format(pMessage, MessageLen, "'%s' 不属于这个队伍", paNames[i]);
 			return false;
 		}
 	}
@@ -941,7 +941,7 @@ bool CSaveTeam::MatchPlayers(const char (*paNames)[MAX_NAME_LENGTH], const int *
 		}
 		if(!Found)
 		{
-			str_format(pMessage, MessageLen, "'%s' has to be in this team", m_pSavedTees[i].GetName());
+			str_format(pMessage, MessageLen, "'%s' 必须在这个队伍中", m_pSavedTees[i].GetName());
 			return false;
 		}
 	}

@@ -2,19 +2,19 @@
     "font files": [
         "DejaVuSans.ttf",
         "GlowSansJ-Compressed-Book.otf",
-        "SourceHanSans.ttc",
+        "NotoSansSC-VF.ttf",
         "NotoEmoji-Regular.ttf",
         "NotoSansThai-Regular.ttf"
     ],
     "default": "DejaVu Sans",
     "language variants": {
         "japanese": "Glow Sans J Compressed Book",
-        "korean": "Source Han Sans K",
-        "simplified_chinese": "Source Han Sans SC",
-        "traditional_chinese": "Source Han Sans TC"
+        "korean": "Noto Sans SC",
+        "simplified_chinese": "Noto Sans SC",
+        "traditional_chinese": "Noto Sans SC"
     },
     "fallbacks": [
-        "Source Han Sans",
+        "Noto Sans SC",
         "Noto Sans Thai",
         "Noto Emoji"
     ],

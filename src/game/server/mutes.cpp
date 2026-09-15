@@ -207,11 +207,11 @@ void CGameContext::MuteWithMessage(const NETADDR *pAddr, int Seconds, const char
 	char aChatMessage[256];
 	if(pReason[0] != '\0')
 	{
-		str_format(aChatMessage, sizeof(aChatMessage), "'%s' has been muted for %d seconds (%s)", pDisplayName, Seconds, pReason);
+		str_format(aChatMessage, sizeof(aChatMessage), "'%s' 已被禁言 %d 秒（%s）", pDisplayName, Seconds, pReason);
 	}
 	else
 	{
-		str_format(aChatMessage, sizeof(aChatMessage), "'%s' has been muted for %d seconds", pDisplayName, Seconds);
+		str_format(aChatMessage, sizeof(aChatMessage), "'%s' 已被禁言 %d 秒", pDisplayName, Seconds);
 	}
 	SendChat(-1, TEAM_ALL, aChatMessage);
 }
@@ -226,11 +226,11 @@ void CGameContext::VoteMuteWithMessage(const NETADDR *pAddr, int Seconds, const 
 	char aChatMessage[256];
 	if(pReason[0] != '\0')
 	{
-		str_format(aChatMessage, sizeof(aChatMessage), "'%s' has been banned from voting for %d seconds (%s)", pDisplayName, Seconds, pReason);
+		str_format(aChatMessage, sizeof(aChatMessage), "'%s' 已被禁止投票 %d 秒（%s）", pDisplayName, Seconds, pReason);
 	}
 	else
 	{
-		str_format(aChatMessage, sizeof(aChatMessage), "'%s' has been banned from voting for %d seconds", pDisplayName, Seconds);
+		str_format(aChatMessage, sizeof(aChatMessage), "'%s' 已被禁止投票 %d 秒", pDisplayName, Seconds);
 	}
 	SendChat(-1, TEAM_ALL, aChatMessage);
 }

@@ -126,9 +126,10 @@ TEST(SettingsWarmupTClientContract, TClientVisualSettingsUseStableTextIdsForPreb
 {
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
 
-	EXPECT_NE(TClient.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-visual-font-cursor-title\""), std::string::npos);
+	EXPECT_NE(TClient.find("DoSettingsLabelStreamed(TitleElement, &Label, Localize(\"Font\")"), std::string::npos);
+	EXPECT_NE(TClient.find("\"tclient-cursor-title\""), std::string::npos);
 	EXPECT_NE(TClient.find("DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-hammer-mode\""), std::string::npos);
 	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-cursor-scale\""), std::string::npos);
-	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-wheel-animate-ms\""), std::string::npos);
-	EXPECT_NE(TClient.find("DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, \"tclient-wheel-animate-off\""), std::string::npos);
+	EXPECT_EQ(TClient.find("tclient-wheel-animate-ms"), std::string::npos);
+	EXPECT_EQ(TClient.find("tclient-wheel-animate-off"), std::string::npos);
 }

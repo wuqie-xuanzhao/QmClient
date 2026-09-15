@@ -241,6 +241,7 @@ MACRO_CONFIG_INT(TcAutoVoteWhenFarTime, tc_auto_vote_when_far_time, 5, 0, 20, CF
 
 // Font
 MACRO_CONFIG_STR(TcCustomFont, tc_custom_font, 255, "DejaVu Sans", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Custom font")
+MACRO_CONFIG_INT(TcCustomFontWeight, tc_custom_font_weight, 400, 100, 900, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Variable custom font weight")
 
 // Bg Draw
 MACRO_CONFIG_INT(TcBgDrawWidth, tc_bg_draw_width, 5, 1, 50, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Background stroke width")

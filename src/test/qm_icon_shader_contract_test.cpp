@@ -13,6 +13,18 @@ TEST(QmIconShaderContract, UsesDerivativeAntialiasingOnBothBackends)
 		EXPECT_NE(Source.find("Median"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("fwidth(TexCoord)"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("ScreenPxRange"), std::string::npos) << pPath;
+		// w 分量同时编码描边宽度和运行时字形的 Alpha 真 SDF 选择。
+		EXPECT_NE(Source.find("RequestedOutline > 0.0"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("UseTrueSdf"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5"), std::string::npos) << pPath;
+		// MTSDF：RGB median 负责填充，Alpha 真 SDF 负责描边外缘。
+		EXPECT_NE(Source.find("vec4 Sample = texture(gTextureSampler, TexCoord)"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("TrueSignedDistance = Sample.a - 0.5"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("OuterCoverage = clamp(TrueSignedDistance * ScreenPxRange + OutlineWidth + 0.5"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("OutlineCoverage = max(OuterCoverage - FillCoverage"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("+ 0.5, 0.0, 1.0);"), std::string::npos) << pPath;
+		EXPECT_EQ(Source.find("aDirs[8]"), std::string::npos) << pPath;
+		EXPECT_EQ(Source.find("TexCoord + aDirs"), std::string::npos) << pPath;
 	}
 }
 
@@ -29,10 +41,16 @@ TEST(QmIconShaderContract, MetalMsdfMatchesOpenGlAndVulkanSemantics)
 	EXPECT_NE(Metal.find("return max(min(Value.r, Value.g), min(max(Value.r, Value.g), Value.b));"), std::string::npos);
 
 	// 屏幕像素范围推导必须保留 fwidth 导数，否则小字号图标会退化成硬边或糊边。
-	EXPECT_NE(Metal.find("const float SignedDistance = QmClientMedian(Texture.sample(Sampler, Input.m_TexCoord).rgb) - 0.5;"), std::string::npos);
+	EXPECT_NE(Metal.find("const float4 Sample = Texture.sample(Sampler, Input.m_TexCoord);"), std::string::npos);
+		EXPECT_NE(Metal.find("const float SignedDistance = UseTrueSdf ? TrueSignedDistance : QmClientMedian(Sample.rgb) - 0.5;"), std::string::npos);
+	EXPECT_NE(Metal.find("const float TrueSignedDistance = Sample.a - 0.5;"), std::string::npos);
 	EXPECT_NE(Metal.find("const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);"), std::string::npos);
 	EXPECT_NE(Metal.find("const float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);"), std::string::npos);
-	EXPECT_NE(Metal.find("const float Opacity = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);"), std::string::npos);
+		EXPECT_NE(Metal.find("if(RequestedOutline > 0.0)"), std::string::npos);
+	EXPECT_NE(Metal.find("const float FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);"), std::string::npos);
+	EXPECT_NE(Metal.find("const float OuterCoverage = clamp(TrueSignedDistance * ScreenPxRange + OutlineWidth + 0.5, 0.0, 1.0);"), std::string::npos);
+	EXPECT_NE(Metal.find("const float OutlineCoverage = max(OuterCoverage - FillCoverage, 0.0);"), std::string::npos);
+	EXPECT_EQ(Metal.find("aDirs[8]"), std::string::npos);
 
 	// 入口必须绑定专用 MSDF 管线，并在片段阶段接收 MSDF 参数缓冲。
 	EXPECT_NE(Metal.find("fragment float4 qmclient_textured_msdf_fragment("), std::string::npos);

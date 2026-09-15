@@ -834,7 +834,7 @@ void CGameTeams::OnFinish(CPlayer *pPlayer, int TimeTicks, const char *pTimestam
 	SetLastTimeCp(pPlayer, -1);
 	// Note that the "finished in" message is parsed by the client
 	str_format(aBuf, sizeof(aBuf),
-		"%s finished in: %d minute(s) %5.2f second(s)",
+		"%s 完成了地图，用时：%d 分钟 %5.2f 秒",
 		Server()->ClientName(ClientId), (int)Time / 60,
 		Time - ((int)Time / 60 * 60));
 	if(g_Config.m_SvHideScore)

@@ -25,6 +25,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/rank_ghost.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
@@ -66,6 +67,7 @@ namespace
 		return str_comp_nocase(g_Config.m_GfxBackend, "OpenGL") == 0;
 	}
 
+	// island 背景模糊按 1/4 分辨率准备渲染目标（与 UI 半透明面板的模糊分辨率一致）
 	int MediaIslandBlurTargetDimension(int ScreenDimension)
 	{
 		return ScreenDimension > 0 ? (ScreenDimension + 3) / 4 : 0;
@@ -452,6 +454,29 @@ namespace
 	SHudGameTimerInfo BuildHudGameTimerInfo(const CGameClient &GameClient, const IClient &Client, ITextRender *pTextRender, float HudWidth)
 	{
 		SHudGameTimerInfo Result;
+		// Rank 1 查看模式有自己的 demo 播放头，不能从当前在线快照的 round start tick
+		// 计算本地游戏时间；直接使用该回放的实际成绩与播放进度。
+		CRankGhost::SViewState ViewState;
+		if(GameClient.m_RankGhost.GetViewState(ViewState))
+		{
+			const int64_t TimeCentiseconds = (int64_t)std::llround(ViewState.m_CurSeconds * 100.0f);
+			str_time(TimeCentiseconds, TIME_DAYS, Result.m_aText, sizeof(Result.m_aText));
+
+			static float s_TextWidthM = pTextRender->TextWidth(Result.m_FontSize, "00:00", -1, -1.0f);
+			static float s_TextWidthH = pTextRender->TextWidth(Result.m_FontSize, "00:00:00", -1, -1.0f);
+			static float s_TextWidth0D = pTextRender->TextWidth(Result.m_FontSize, "0d 00:00:00", -1, -1.0f);
+			static float s_TextWidth00D = pTextRender->TextWidth(Result.m_FontSize, "00d 00:00:00", -1, -1.0f);
+			static float s_TextWidth000D = pTextRender->TextWidth(Result.m_FontSize, "000d 00:00:00", -1, -1.0f);
+			Result.m_W = TimeCentiseconds >= 3600 * 24 * 100 ? s_TextWidth000D :
+									   (TimeCentiseconds >= 3600 * 24 * 10 ? s_TextWidth00D :
+														 (TimeCentiseconds >= 3600 * 24 ? s_TextWidth0D :
+																		  (TimeCentiseconds >= 3600 ? s_TextWidthH : s_TextWidthM)));
+			Result.m_X = HudWidth * 0.5f - Result.m_W * 0.5f;
+			Result.m_Left = Result.m_X;
+			Result.m_Visible = true;
+			return Result;
+		}
+
 		const CNetObj_GameInfo *pGameInfoObj = GameClient.m_Snap.m_pGameInfoObj;
 		if(pGameInfoObj == nullptr || (pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_SUDDENDEATH) != 0)
 			return Result;
@@ -977,7 +1002,6 @@ CHud::CHud()
 	m_LocalTimeV2AnimState.Reset();
 	m_MediaIslandAnimState.Reset();
 	m_MediaIslandFrameCache.Reset();
-	m_MediaIslandBlurReady = false;
 	m_MediaIslandBlurLastAttemptFrame = 0;
 	m_MediaIslandBlurAttemptInitialized = false;
 	m_WeaponPresentationState.Reset();
@@ -1069,7 +1093,6 @@ void CHud::ResetHudContainers()
 	m_LocalTimeV2AnimState.Reset();
 	m_MediaIslandAnimState.Reset();
 	m_MediaIslandFrameCache.Reset();
-	m_MediaIslandBlurReady = false;
 	m_MediaIslandBlurLastAttemptFrame = 0;
 	m_MediaIslandBlurAttemptInitialized = false;
 	m_WeaponPresentationState.Reset();
@@ -1159,28 +1182,26 @@ void CHud::DestroyDummyMiniViewRenderTarget()
 	m_DummyMiniViewRenderTargetHeight = 0;
 }
 
-bool CHud::PrepareMediaIslandBlur()
+IGraphics::CRenderTargetHandle CHud::MediaIslandBlurBackdrop()
 {
 	if(!QmHudMediaIslandShouldPrepareBackdropBlur(g_Config.m_QmHudIslandBgOpacity, g_Config.m_QmGaussianBlur != 0) || !Graphics()->HasMediaIslandSdf())
-		return false;
+		return IGraphics::CRenderTargetHandle();
 	if(!Graphics()->IsBackbufferCaptureSupported() || !Graphics()->IsRenderTargetGaussianBlurSupported())
 	{
 		if(m_MediaIslandBlurSource.IsValid() || m_MediaIslandBlurDownsample.IsValid() || m_MediaIslandBlurDownsampleTemporary.IsValid() || m_MediaIslandBlurDownsampleTarget.IsValid() || m_MediaIslandBlurTarget.IsValid())
 			DestroyMediaIslandBlurTargets();
-		return false;
+		return IGraphics::CRenderTargetHandle();
 	}
 
 	const int BlurWidth = MediaIslandBlurTargetDimension(Graphics()->ScreenWidth());
 	const int BlurHeight = MediaIslandBlurTargetDimension(Graphics()->ScreenHeight());
 	const int BlurMode = std::clamp(g_Config.m_QmBlurMode, 0, 2);
-	const bool DualKawase = BlurMode == static_cast<int>(IGraphics::EBlurMode::DUAL);
-	const int TemporaryCount = DualKawase ? IGraphics::DUAL_KAWASE_PYRAMID_LEVELS : 1;
 	if(BlurWidth <= 0 || BlurHeight <= 0)
 	{
 		m_MediaIslandBlurReady = false;
 		m_MediaIslandBlurLastAttemptFrame = 0;
 		m_MediaIslandBlurAttemptInitialized = false;
-		return false;
+		return IGraphics::CRenderTargetHandle();
 	}
 
 	const bool SizeChanged = BlurWidth != m_MediaIslandBlurWidth || BlurHeight != m_MediaIslandBlurHeight;
@@ -1197,7 +1218,7 @@ bool CHud::PrepareMediaIslandBlur()
 		if(!m_MediaIslandBlurSource.IsValid() || !m_MediaIslandBlurDownsample.IsValid() || !m_MediaIslandBlurDownsampleTemporary.IsValid() || !m_MediaIslandBlurDownsampleTarget.IsValid() || !m_MediaIslandBlurTarget.IsValid())
 		{
 			DestroyMediaIslandBlurTargets();
-			return false;
+			return IGraphics::CRenderTargetHandle();
 		}
 		m_MediaIslandBlurWidth = BlurWidth;
 		m_MediaIslandBlurHeight = BlurHeight;
@@ -1205,15 +1226,27 @@ bool CHud::PrepareMediaIslandBlur()
 	}
 
 	const uint64_t CurrentFrame = Client()->PerfFrame();
-	if(!QmHudMediaIslandShouldRefreshBackdropBlur(CurrentFrame, m_MediaIslandBlurLastAttemptFrame, m_MediaIslandBlurAttemptInitialized))
-		return m_MediaIslandBlurReady;
-	m_MediaIslandBlurLastAttemptFrame = CurrentFrame;
-	m_MediaIslandBlurAttemptInitialized = true;
+	const bool Refresh = QmHudMediaIslandShouldRefreshBackdropBlur(CurrentFrame, m_MediaIslandBlurLastAttemptFrame, m_MediaIslandBlurAttemptInitialized);
+	if(Refresh)
+	{
+		m_MediaIslandBlurLastAttemptFrame = CurrentFrame;
+		m_MediaIslandBlurAttemptInitialized = true;
+		Ui()->PrepareGaussianBlur();
+	}
+
+	// QmClient：island 背景与 UI 半透明面板参数一致（同为 1/4 分辨率），UI 已准备同一次捕获/模糊
+	// 结果时直接复用，避免重复模糊；UI 句柄销毁重建期间自然回退到下面的独立渲染目标管线。
+	if(Ui()->GaussianBlurTargetReady())
+		return Ui()->GaussianBlurTarget();
+
+	// 独立管线：非刷新帧沿用上一帧结果，避免每帧重复捕获与模糊
+	if(!Refresh)
+		return m_MediaIslandBlurReady ? m_MediaIslandBlurTarget : IGraphics::CRenderTargetHandle();
 
 	if(!Graphics()->CaptureBackbufferToRenderTarget(m_MediaIslandBlurSource))
 	{
 		m_MediaIslandBlurReady = false;
-		return false;
+		return IGraphics::CRenderTargetHandle();
 	}
 
 	IGraphics::SGaussianBlurParams BlurParams;
@@ -1226,7 +1259,7 @@ bool CHud::PrepareMediaIslandBlur()
 		m_MediaIslandBlurDownsampleTarget,
 		m_MediaIslandBlurTarget,
 		BlurParams);
-	return m_MediaIslandBlurReady;
+	return m_MediaIslandBlurReady ? m_MediaIslandBlurTarget : IGraphics::CRenderTargetHandle();
 }
 
 void CHud::OnRelease()
@@ -4907,10 +4940,9 @@ void CHud::RenderMediaIsland()
 	CurrentSdfState.m_OuterShadowSize = ScreenPixelSize * MEDIA_ISLAND_OUTER_SHADOW_PIXELS;
 	CurrentSdfState.m_OuterShadowOpacity = MEDIA_ISLAND_OUTER_SHADOW_OPACITY * EntrancePose.m_BackgroundColor.a;
 	CurrentSdfState.m_Rect = QmHudMediaIslandSdfOuterRect(CurrentSdfState);
-	IGraphics::CRenderTargetHandle Backdrop;
-	if(PrepareMediaIslandBlur())
+	const IGraphics::CRenderTargetHandle Backdrop = MediaIslandBlurBackdrop();
+	if(Backdrop.IsValid())
 	{
-		Backdrop = m_MediaIslandBlurTarget;
 		const CUIRect BackdropScreenRect = {
 			TransformedScreenX0,
 			TransformedScreenY0,
@@ -6117,8 +6149,10 @@ namespace
 			return Layout;
 		}
 
-		Layout.m_W = MaxWidth + Layout.m_PaddingX * 2.0f;
-		Layout.m_H = Layout.m_LineHeight * LineCount + Layout.m_PaddingY * 2.0f;
+		// 面板尺寸与行数同源：内置四项与自定义列表共用同一套“背景包住每一行”的推导
+		const SQmBindStatusPanelSize PanelSize = QmComputeBindStatusPanelSize(LineCount, MaxWidth, Layout.m_LineHeight, Layout.m_PaddingX, Layout.m_PaddingY);
+		Layout.m_W = PanelSize.m_W;
+		Layout.m_H = PanelSize.m_H;
 		const float MaxX = maximum(HudWidth - Layout.m_W, 0.0f);
 		Layout.m_X = std::clamp(HudWidth - Layout.m_W - KEY_STATUS_RIGHT_MARGIN, 0.0f, MaxX);
 		return Layout;
@@ -6133,22 +6167,19 @@ namespace
 		Layout.m_PaddingY = 3.0f;
 		Layout.m_Y = 38.0f;
 
-		const int LineCount = (int)vLines.size();
-		if(LineCount == 0)
-		{
-			Layout.m_W = 0.0f;
-			Layout.m_H = 0.0f;
-			return Layout;
-		}
-
 		float MaxWidth = 0.0f;
 		for(const std::string &Line : vLines)
 		{
 			MaxWidth = maximum(MaxWidth, pTextRender->TextWidth(Layout.m_FontSize, Line.c_str(), -1, -1.0f));
 		}
 
-		Layout.m_W = MaxWidth + Layout.m_PaddingX * 2.0f;
-		Layout.m_H = Layout.m_LineHeight * LineCount + Layout.m_PaddingY * 2.0f;
+		// 行数来自实际要绘制的自定义条目数：条目增减时面板高度同步变化，不会残留固定高度
+		const SQmBindStatusPanelSize PanelSize = QmComputeBindStatusPanelSize((int)vLines.size(), MaxWidth, Layout.m_LineHeight, Layout.m_PaddingX, Layout.m_PaddingY);
+		Layout.m_W = PanelSize.m_W;
+		Layout.m_H = PanelSize.m_H;
+		if(Layout.m_H <= 0.0f)
+			return Layout; // 无可见行：不绘制面板
+
 		const float MaxX = maximum(HudWidth - Layout.m_W, 0.0f);
 		Layout.m_X = std::clamp(HudWidth - Layout.m_W - KEY_STATUS_RIGHT_MARGIN, 0.0f, MaxX);
 		return Layout;
@@ -6334,14 +6365,32 @@ void CHud::RenderMovementInformation()
 	const float KeyStatusGap = 2.0f;
 
 	const SKeyStatusLines KeyStatusLines = GetKeyStatusLines(GameClient());
-	SKeyStatusLayout KeyStatusLayout = GetKeyStatusLayout(TextRender(), KeyStatusLines, m_Width);
-	// 自定义 bind 状态列表非空时完全替换内置四项
+
+	// 内置四项里当前可见的行，按绘制顺序
+	std::vector<SQmBindStatusBuiltinLine> vBuiltinKeyStatusLines;
+	if(KeyStatusLines.m_ShowKey)
+		vBuiltinKeyStatusLines.push_back({true, KeyStatusLines.m_pKeyStatusText, KeyStatusLines.m_KeyTone});
+	if(KeyStatusLines.m_ShowHammer)
+		vBuiltinKeyStatusLines.push_back({true, KeyStatusLines.m_aHammerLine, KeyStatusLines.m_HammerTone});
+	if(KeyStatusLines.m_ShowControl)
+		vBuiltinKeyStatusLines.push_back({true, KeyStatusLines.m_aControlLine, KeyStatusLines.m_ControlTone});
+	if(KeyStatusLines.m_ShowSync)
+		vBuiltinKeyStatusLines.push_back({true, KeyStatusLines.m_aSyncLine, KeyStatusLines.m_SyncTone});
+
+	// 自定义 bind 状态列表非空时完全替换内置四项。实际绘制的行与面板尺寸同源：
+	// 两者都由同一个行数推导，条目增减时背景同步变化，不会残留固定高度或漏包某一行
+	const bool CustomKeyStatusActive = GameClient()->m_QmBindStatusHud.IsCustomListActive();
 	std::vector<std::string> vCustomKeyStatusLines;
-	if(GameClient()->m_QmBindStatusHud.IsCustomListActive())
-	{
+	if(CustomKeyStatusActive)
 		vCustomKeyStatusLines = GameClient()->m_QmBindStatusHud.GetVisibleLines();
-		KeyStatusLayout = GetKeyStatusLayout(TextRender(), vCustomKeyStatusLines, m_Width);
-	}
+
+	const std::vector<SQmBindStatusRenderLine> vKeyStatusRenderLines = QmBuildBindStatusRenderLines(CustomKeyStatusActive, vCustomKeyStatusLines, vBuiltinKeyStatusLines);
+	std::vector<std::string> vKeyStatusTexts;
+	vKeyStatusTexts.reserve(vKeyStatusRenderLines.size());
+	for(const SQmBindStatusRenderLine &Line : vKeyStatusRenderLines)
+		vKeyStatusTexts.push_back(Line.m_Text);
+
+	const SKeyStatusLayout KeyStatusLayout = GetKeyStatusLayout(TextRender(), vKeyStatusTexts, m_Width);
 	const bool ShowKeyStatus = KeyStatusLayout.m_H > 0.0f;
 
 	float MovementBoxHeight = ShowMovementInfo ? GetMovementInformationBoxHeight() : 0.0f;
@@ -6637,43 +6686,18 @@ void CHud::RenderMovementInformation()
 		ColorRGBA KeyRainbowColor = color_cast<ColorRGBA>(KeyRainbowHsla);
 
 		const ColorRGBA DefaultKeyStatusColor = TextRender()->DefaultTextColor();
-		// 彩虹色 HUD 开启时四项共用同一彩虹色；关闭时逐行按状态语义着色
+		// 彩虹色 HUD 开启时所有行共用同一彩虹色；关闭时内置行按状态语义着色，
+		// 自定义行没有状态语义（色调 NONE）沿用默认文字色
 		const auto KeyStatusLineColor = [&](EQmBindStatusTone Tone) {
 			return g_Config.m_ClHudRainbowColors ? KeyRainbowColor : KeyStatusToneColor(Tone, DefaultKeyStatusColor);
 		};
 
-		if(GameClient()->m_QmBindStatusHud.IsCustomListActive())
+		// 只画 QmBuildBindStatusRenderLines 给出的行：自定义列表生效时内置四项不在此列
+		for(const SQmBindStatusRenderLine &Line : vKeyStatusRenderLines)
 		{
-			// 自定义列表条目没有状态语义，关闭彩虹色时沿用默认文字色
-			TextRender()->TextColor(g_Config.m_ClHudRainbowColors ? KeyRainbowColor : DefaultKeyStatusColor);
-			for(const std::string &Line : vCustomKeyStatusLines)
-			{
-				TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, Line.c_str(), -1.0f);
-				KeyTextY += KeyStatusLayout.m_LineHeight;
-			}
-		}
-		else if(KeyStatusLines.m_ShowKey)
-		{
-			TextRender()->TextColor(KeyStatusLineColor(KeyStatusLines.m_KeyTone));
-			TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_pKeyStatusText, -1.0f);
+			TextRender()->TextColor(KeyStatusLineColor(Line.m_Tone));
+			TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, Line.m_Text.c_str(), -1.0f);
 			KeyTextY += KeyStatusLayout.m_LineHeight;
-		}
-		if(KeyStatusLines.m_ShowHammer)
-		{
-			TextRender()->TextColor(KeyStatusLineColor(KeyStatusLines.m_HammerTone));
-			TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_aHammerLine, -1.0f);
-			KeyTextY += KeyStatusLayout.m_LineHeight;
-		}
-		if(KeyStatusLines.m_ShowControl)
-		{
-			TextRender()->TextColor(KeyStatusLineColor(KeyStatusLines.m_ControlTone));
-			TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_aControlLine, -1.0f);
-			KeyTextY += KeyStatusLayout.m_LineHeight;
-		}
-		if(KeyStatusLines.m_ShowSync)
-		{
-			TextRender()->TextColor(KeyStatusLineColor(KeyStatusLines.m_SyncTone));
-			TextRender()->Text(KeyTextX, KeyTextY, KeyStatusLayout.m_FontSize, KeyStatusLines.m_aSyncLine, -1.0f);
 		}
 		TextRender()->TextColor(DefaultKeyStatusColor);
 	}
@@ -7276,9 +7300,9 @@ void CHud::OnRender()
 			}
 			RenderJumpHint();
 		}
-		else if(GameClient()->m_Snap.m_SpecInfo.m_Active)
+		else if(GameClient()->m_Snap.m_SpecInfo.m_Active || GameClient()->m_RankGhost.IsViewModeActive())
 		{
-			int SpectatorId = GameClient()->m_Snap.m_SpecInfo.m_SpectatorId;
+			const int SpectatorId = GameClient()->m_Snap.m_SpecInfo.m_Active ? GameClient()->m_Snap.m_SpecInfo.m_SpectatorId : SPEC_FREEVIEW;
 			if(SpectatorId != SPEC_FREEVIEW && g_Config.m_ClShowhudHealthAmmo)
 			{
 				float HudMainHeight = 0.0f;
@@ -7326,7 +7350,7 @@ void CHud::OnRender()
 			RenderLocalTime((m_Width / 7) * 3);
 			RenderLegacyMediaInfo();
 		}
-		if(LocalCharacterHudVisible)
+		if(LocalCharacterHudVisible || GameClient()->m_RankGhost.IsViewModeActive())
 			RenderDDRaceEffects();
 		if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			RenderConnectionWarning();
@@ -7391,6 +7415,97 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 
 void CHud::RenderDDRaceEffects()
 {
+	// Rank 1 查看模式没有在线服务器的 SV_DDRACETIME/SV_RACEFINISH 实时消息；
+	// 用回放时间线里的成绩消息驱动同一套原生 Finish / 检查点差值表现，
+	// 停留 4 秒 + 淡出 2 秒也随独立播放头推进。
+	CRankGhost::SViewState ViewState;
+	if(GameClient()->m_RankGhost.GetViewState(ViewState))
+	{
+		const float FinishAge = maximum(0.0f, ViewState.m_CurSeconds - ViewState.m_FinishSeconds);
+		const bool FinishVisible = ViewState.m_Finished && FinishAge < 6.0f;
+		const bool CpDiffVisible = !FinishVisible && ViewState.m_HasCpDiff &&
+					   ViewState.m_CpDiffAgeSeconds < 6.0f && g_Config.m_ClShowhudTimeCpDiff != 0;
+		if(!FinishVisible && !CpDiffVisible)
+			return;
+
+		char aBuf[64];
+		char aTime[32];
+		float Alpha = 0.0f;
+		// 检查点差值是单行小字（10），终点成绩是 12，带差值时再占一行
+		float EffectHeight = 10.0f;
+		if(FinishVisible)
+		{
+			str_time((int64_t)std::llround(ViewState.m_FinishSeconds * 100.0f), TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+			str_format(aBuf, sizeof(aBuf), "Finish time: %s", aTime);
+			// 与原生一致：差值行存在时整体高度按两行算，避开媒体岛
+			EffectHeight = ViewState.m_HasFinishDiff ? 24.0f : 12.0f;
+		}
+		else
+		{
+			// 与原生检查点差值同一格式：负值绿色、正值红色、零白色
+			if(ViewState.m_CpDiffSeconds < 0.0f)
+			{
+				str_time_float(-ViewState.m_CpDiffSeconds, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+				str_format(aBuf, sizeof(aBuf), "-%s", aTime);
+			}
+			else
+			{
+				str_time_float(ViewState.m_CpDiffSeconds, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+				str_format(aBuf, sizeof(aBuf), "+%s", aTime);
+			}
+		}
+		Alpha = FinishVisible ? (FinishAge <= 4.0f ? 1.0f : (6.0f - FinishAge) / 2.0f) :
+					(ViewState.m_CpDiffAgeSeconds <= 4.0f ? 1.0f : (6.0f - ViewState.m_CpDiffAgeSeconds) / 2.0f);
+
+		if(FinishVisible)
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+		else if(ViewState.m_CpDiffSeconds > 0.0f)
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Alpha); // red
+		else if(ViewState.m_CpDiffSeconds < 0.0f)
+			TextRender()->TextColor(0.5f, 1.0f, 0.5f, Alpha); // green
+		else
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Alpha);
+
+		const float MainFontSize = FinishVisible ? 12.0f : 10.0f;
+		const float EffectWidth = TextRender()->TextWidth(MainFontSize, aBuf);
+		const float EffectX = 150 * Graphics()->ScreenAspect() - EffectWidth / 2;
+		const float EffectY = QmHudTopEffectY(20.0f, EffectHeight, EffectX, EffectX + EffectWidth, m_MediaIslandLastVisibleRect, m_MediaIslandLastVisibleRectValid);
+		CTextCursor Cursor;
+		Cursor.SetPosition(vec2(EffectX, EffectY));
+		Cursor.m_FontSize = MainFontSize;
+		TextRender()->RecreateTextContainer(m_DDRaceEffectsTextContainerIndex, &Cursor, aBuf);
+
+		if(FinishVisible && ViewState.m_HasFinishDiff && m_DDRaceEffectsTextContainerIndex.Valid())
+		{
+			const float Diff = ViewState.m_FinishDiffSeconds;
+			if(Diff < 0.0f)
+			{
+				str_time_float(-Diff, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+				str_format(aBuf, sizeof(aBuf), "-%s", aTime);
+				TextRender()->TextColor(0.5f, 1.0f, 0.5f, Alpha); // green
+			}
+			else
+			{
+				str_time_float(Diff, TIME_HOURS_CENTISECS, aTime, sizeof(aTime));
+				str_format(aBuf, sizeof(aBuf), "+%s", aTime);
+				TextRender()->TextColor(1.0f, 0.5f, 0.5f, Alpha); // red
+			}
+			CTextCursor DiffCursor;
+			DiffCursor.SetPosition(vec2(150 * Graphics()->ScreenAspect() - TextRender()->TextWidth(10, aBuf) / 2, EffectY + 14.0f));
+			DiffCursor.m_FontSize = 10.0f;
+			TextRender()->AppendTextContainer(m_DDRaceEffectsTextContainerIndex, &DiffCursor, aBuf);
+		}
+
+		if(m_DDRaceEffectsTextContainerIndex.Valid())
+		{
+			auto OutlineColor = TextRender()->DefaultTextOutlineColor();
+			OutlineColor.a *= Alpha;
+			TextRender()->RenderTextContainer(m_DDRaceEffectsTextContainerIndex, TextRender()->DefaultTextColor(), OutlineColor);
+		}
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+		return;
+	}
+
 	if(m_DDRaceTime)
 	{
 		char aBuf[64];

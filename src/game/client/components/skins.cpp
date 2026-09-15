@@ -1264,6 +1264,8 @@ void CSkins::OnConsoleInit()
 	Console()->Register("add_dummy_skin_queue_preset_item", "i[preset_index] s[skin_name]", CFGFLAG_CLIENT, ConAddDummySkinQueuePresetItem, this, "Add a skin to a dummy queue preset");
 	Console()->Register("add_skin_queue_preset_item_ex", "i[preset_index] s[skin_name] i[use_custom_color] i[color_body] i[color_feet]", CFGFLAG_CLIENT, ConAddSkinQueuePresetItemEx, this, "Add a colored skin to a queue preset");
 	Console()->Register("add_dummy_skin_queue_preset_item_ex", "i[preset_index] s[skin_name] i[use_custom_color] i[color_body] i[color_feet]", CFGFLAG_CLIENT, ConAddDummySkinQueuePresetItemEx, this, "Add a colored skin to a dummy queue preset");
+	Console()->Register("random_skin_queue", "", CFGFLAG_CLIENT, ConRandomSkinQueue, this, "Apply a random skin from the queue");
+	Console()->Register("random_dummy_skin_queue", "", CFGFLAG_CLIENT, ConRandomDummySkinQueue, this, "Apply a random skin from the dummy queue");
 
 	Console()->Chain("player_skin", ConchainRefreshSkinList, this);
 	Console()->Chain("dummy_skin", ConchainRefreshSkinList, this);
@@ -1522,7 +1524,7 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 {
 	SyncSkinQueueFromMapPlayers(Dummy);
 	auto &Queue = m_aSkinQueue[Dummy];
-	const int QueueInterval = maximum(1, SkinQueueIntervalVar(Dummy));
+	const int QueueInterval = SkinQueueIntervalVar(Dummy);
 	const int QueueActiveCount = (int)Queue.size();
 	if(!SkinQueueEnabledVar(Dummy) || Queue.empty() || QueueActiveCount <= 0)
 	{
@@ -1541,6 +1543,13 @@ void CSkins::UpdateSkinQueue(std::chrono::nanoseconds Now, int Dummy)
 	if(!m_aSkinQueueLastUpdate[Dummy].has_value())
 	{
 		m_aSkinQueueLastUpdate[Dummy] = Now;
+		// 轮换（重新）启动时按配置从随机位置开始：进图上线、分身单独连接、重新启用队列都会走到这里。
+		const int RandomJoin = Dummy ? g_Config.m_QmDummySkinQueueRandomJoin : g_Config.m_QmSkinQueueRandomJoin;
+		if(RandomJoin)
+		{
+			SkinQueueIndexVar(Dummy) = rand() % QueueActiveCount;
+			m_aSkinQueueElapsed[Dummy] = 0ns;
+		}
 		ApplySkinQueueCurrent(Dummy);
 		return;
 	}
@@ -3179,6 +3188,16 @@ bool CSkins::ApplySkinQueueIndex(size_t QueueIndex, int Dummy)
 	return true;
 }
 
+bool CSkins::RandomSkinQueueIndex(int Dummy)
+{
+	auto &Queue = m_aSkinQueue[Dummy];
+	if(Queue.empty())
+	{
+		return false;
+	}
+	return ApplySkinQueueIndex(rand() % Queue.size(), Dummy);
+}
+
 void CSkins::TrimSkinQueueToLimit(int Dummy)
 {
 	auto &Queue = m_aSkinQueue[Dummy];
@@ -3661,6 +3680,18 @@ void CSkins::ConAddDummySkinQueueEx(IConsole::IResult *pResult, void *pUserData)
 {
 	auto *pSelf = static_cast<CSkins *>(pUserData);
 	pSelf->AddSkinQueue(pResult->GetString(0), pResult->GetInteger(1) != 0, pResult->GetInteger(2), pResult->GetInteger(3), 1);
+}
+
+void CSkins::ConRandomSkinQueue(IConsole::IResult *pResult, void *pUserData)
+{
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->RandomSkinQueueIndex(0);
+}
+
+void CSkins::ConRandomDummySkinQueue(IConsole::IResult *pResult, void *pUserData)
+{
+	auto *pSelf = static_cast<CSkins *>(pUserData);
+	pSelf->RandomSkinQueueIndex(1);
 }
 
 void CSkins::ConAddSkinQueuePreset(IConsole::IResult *pResult, void *pUserData)

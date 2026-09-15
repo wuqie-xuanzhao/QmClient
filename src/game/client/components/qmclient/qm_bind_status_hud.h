@@ -54,6 +54,36 @@ EQmBindStatusTone QmResolveBuiltinBindStatusTone(EQmBindStatusLine Line, int Val
 // 把条目列表序列化回配置字符串（恢复默认/导出用）
 std::string QmSerializeBindStatusList(const std::vector<SQmBindStatusEntry> &vEntries);
 
+// 状态面板尺寸（HUD 背景框）
+struct SQmBindStatusPanelSize
+{
+	float m_W;
+	float m_H;
+};
+
+// 由可见行数与最宽行推导面板尺寸：宽度 = 最宽行 + 左右内边距，高度 = 行高 * 行数 + 上下内边距。
+// 行数 <= 0 返回零尺寸（不绘制面板）。行数变化时高度必须同步增长，保证背景包住每一行（纯函数，可单测）
+SQmBindStatusPanelSize QmComputeBindStatusPanelSize(int LineCount, float MaxLineWidth, float LineHeight, float PaddingX, float PaddingY);
+
+// 面板实际绘制的一行：文本 + 状态色调（自定义条目没有状态语义，色调为 NONE）
+struct SQmBindStatusRenderLine
+{
+	std::string m_Text;
+	EQmBindStatusTone m_Tone = EQmBindStatusTone::NONE;
+};
+
+// 内置四项里的一行：只有 m_Show 为真时才参与绘制
+struct SQmBindStatusBuiltinLine
+{
+	bool m_Show = false;
+	const char *m_pText = "";
+	EQmBindStatusTone m_Tone = EQmBindStatusTone::NONE;
+};
+
+// 决定面板实际绘制的行：自定义列表生效时完全替换内置四项，两者互斥，不会把内置行追加到自定义行之后。
+// 面板尺寸由返回的行数推导（QmComputeBindStatusPanelSize），保证背景始终包住每一行（纯函数，可单测）
+std::vector<SQmBindStatusRenderLine> QmBuildBindStatusRenderLines(bool CustomActive, const std::vector<std::string> &vCustomLines, const std::vector<SQmBindStatusBuiltinLine> &vBuiltinLines);
+
 // 自定义 bind 状态 HUD 模块：解析 qm_bind_status_items 并提供当前应显示的文本行
 class CQmBindStatusHud : public CComponent
 {

@@ -782,12 +782,14 @@ void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect
 		*pValue = OriginalValue;
 }
 
-bool CMenus::RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly)
+bool CMenus::RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly, const char *pTooltip)
 {
 	const int OriginalValue = *pValue;
 	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pTextId, pText, *pValue, pRect) != 0;
 	if(Changed)
 		*pValue ^= 1;
+	if(pTooltip != nullptr && !PrewarmOnly && !Ui()->RenderOnly())
+		GameClient()->m_Tooltips.DoToolTip(pId, pRect, pTooltip);
 	if(PrewarmOnly || Ui()->RenderOnly())
 		*pValue = OriginalValue;
 	return Changed;
@@ -1984,12 +1986,25 @@ void CMenus::RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHei
 	}
 }
 
-void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly)
+void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	CUIRect Row;
 	auto RenderCheckbox = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pText, int *pValue) {
 		Content.HSplitTop(LineHeight, &Row, &Content);
 		RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	auto RenderCheckboxTipped = [this, &Content, &Row, LineHeight, LineSpacing, PrewarmOnly](const void *pId, const char *pText, const char *pTooltip, int *pValue) {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		RenderQmFunctionCheckbox(pId, pText, Localize(pText), pValue, &Row, PrewarmOnly, pTooltip);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	};
+	auto RenderValue = [this, &Content, &Row, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue, const char *pSuffix = "") {
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		CUIRect LabelColumn, ControlColumn;
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, pSuffix, PrewarmOnly);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	};
 	RenderCheckbox(&g_Config.m_QmFootParticles, "Local particle effects", &g_Config.m_QmFootParticles);
@@ -2001,6 +2016,11 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", &g_Config.m_QmScoreboardPoints);
 	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
 	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
+	RenderCheckboxTipped(&g_Config.m_QmShowTuneZoneColors, "Show tune zone colors", Localize("Color map tune zones by their tune zone number"), &g_Config.m_QmShowTuneZoneColors);
+	RenderCheckboxTipped(&g_Config.m_QmBlankAssetFallback, "Blank asset auto fallback", Localize("Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)"), &g_Config.m_QmBlankAssetFallback);
+	RenderCheckboxTipped(&g_Config.m_QmShowSpectatorGhosts, "Show spectator ghost tees", Localize("Show semi-transparent ghost tees for other players who are spectating"), &g_Config.m_QmShowSpectatorGhosts);
+	static int s_QmSpectatorGhostAlphaInputId;
+	RenderValue("qmclient-spectator-ghost-alpha", "Spectator ghost opacity", &s_QmSpectatorGhostAlphaInputId, &g_Config.m_QmSpectatorGhostAlpha, 0, 100, "%");
 	RenderCheckbox(&g_Config.m_QmMessageMerge, "Message merging", &g_Config.m_QmMessageMerge);
 	RenderCheckbox(&g_Config.m_QmNewUi, "New UI", &g_Config.m_QmNewUi);
 	RenderCheckbox(&g_Config.m_QmShortServerNames, "Short server names", &g_Config.m_QmShortServerNames);
@@ -4933,7 +4953,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		AddCard(EQmModuleId::GoresActor, "qm:gores_actor", "Gores Actor", "Auto chat when dying in water", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionGoresActorContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::Gores, "qm:gores", "Gores Mode", "Gores auto weapon switch", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionGoresContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::KeyBinds, "qm:key_binds", "Key Bindings", "Common key bindings", [this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmFunctionKeyBindsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth); });
-		AddCard(EQmModuleId::MiniFeatures, "qm:mini_features", "Dream Features", "Only what you can't imagine, nothing Dream can't do", [this, LineHeight, LineSpacing, ReadOnly](CUIRect &Content) { RenderQmFunctionMiniFeaturesContent(Content, LineHeight, LineSpacing, ReadOnly); });
+		AddCard(EQmModuleId::MiniFeatures, "qm:mini_features", "Dream Features", "Only what you can't imagine, nothing Dream can't do", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionMiniFeaturesContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::JumpHint, "qm:jump_hint", "Position jump hint", "Jump hint text", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionJumpHintContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::WeaponTrajectory, "qm:weapon_trajectory", "Weapon Trajectory", "Show grenade and laser trajectory preview", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionWeaponTrajectoryContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::FriendNotify, "qm:friend_notify", "Friend Notifications", "Friend online and join notifications", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionFriendNotifyContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });

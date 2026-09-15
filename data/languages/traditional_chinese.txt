@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == 在 Gores 遊戲模式中自動啟用 Gores 自動切換
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== 自訂資源的貼圖全透明時自動回退到預設資源；關閉後空白貼圖保持不可見（可用於遮蔽特效）
+
 Automatically re-join team 0 after finish (only if unlocked).
 == 完賽後自動回到 0 隊（僅未鎖定時）
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == Choose the menu font and cursor appearance
 
+Choose the menu font and font weight
+== 選擇菜單字型和字重
+
 Choose the menu map and background colors
 == Choose the menu map and background colors
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == 顏色
+
+Color map tune zones by their tune zone number
+== 按 Tune Zone 編號給地圖上的對應區塊著色
 
 Color of authenticated player names on scoreboard
 == 計分板中已認證玩家的名稱顏色
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the ingame cursor scale
+== 設定遊戲內光標縮放
 
 Configure the input overlay display
 == Configure the input overlay display
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == 自定義字體
 
+Custom font weight (variable fonts)
+== 自訂字型字重（可變字型）
+
 Custom Font:
 == 自定義字體：
+
+Custom fonts use FreeType automatically.
+== 自訂字型會自動使用 FreeType。
 
 Custom prompt template
 == 自定義提示詞模板
@@ -4346,11 +4364,17 @@ Follow
 Following
 == 當前
 
+Font
+== 字型
+
 Font cursor
 == 字型游標
 
 Font size
 == 字體大小
+
+Font style:
+== 字型樣式：
 
 For more info: /cmdlist
 == 更多指令請查看: /cmdlist
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == 已退出檢視模式。影子恢復跟隨你的跑圖。
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== 檢視模式：影子以獨立時間軸播放。按住旁觀鍵跟隨成員；計分板（Tab + Alt）控制播放。
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== 檢視模式：按 ESC 切換控制面板。連按兩次 ESC 開啟遊戲菜單（離開回放）。按住旁觀鍵顯示成員列表。
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == 鬼魂的可見性（alpha 值，0 不可見，100 完全可見）
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Rank 1 成員
 
+Rank 1 replay
+== Rank 1 回放
+
 Rank 1 replays
 == Rank 1 回放
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Rank 影子：回放的跑圖區間無效
-
-Rank ghost: the replay has no run start/end markers
-== Rank 影子：回放缺少跑圖起訖標記
 
 Rank ghost: the replay list is empty or malformed
 == Rank 影子：回放列表為空或格式有誤
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == 在時間處顯示秒數
 
+Show semi-transparent ghost tees for other players who are spectating
+== 為正在旁觀的其他玩家渲染半透明虛擬 Tee（官方行為）
+
 Show server chat messages
 == 顯示來自伺服器的聊天消息
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == 被觀戰的玩家與好友
+
+Spectator ghost opacity
+== 旁觀者虛化程度
 
 Spectators
 == 旁觀者
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 開啟動態攝像頭時使用鼠標感應
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== 使用 MSDF 渲染名牌文字（僅內建字型）
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == 為名牌啟用 MSDF 文字渲染（僅內建字型，自訂字型會自動回退至 FreeType）
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == 只顯示原生皮膚
 
+Variable custom font weight
+== 可變字型的自訂字重
+
 Velocity
 == 速度
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == 視覺效果
 
+Visual: Cursor
+== 視覺：光標
+
 Visual: Effects
 == 視覺：特效
-
-Visual: Font & Cursor
-== 視覺：字體與光標
 
 Visual: Nameplates
 == 視覺：名牌
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == 事已至此，多說無益
-
-Wheel animate
-== 滾輪動畫
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == 已啟用 TClient 彩虹 Tee 時，本功能不會生效。
@@ -13771,6 +13804,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == 使用行為
+
+[Rank 1 replay]
+Direction
+== 方向
 
 [Show name plates]
 All

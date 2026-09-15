@@ -594,6 +594,7 @@ public:
 	void MoveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
 	void MoveActiveSkinQueueItem(size_t FromIndex, size_t ToIndex, int Dummy);
 	bool ApplySkinQueueIndex(size_t QueueIndex, int Dummy);
+	bool RandomSkinQueueIndex(int Dummy);
 	void TrimSkinQueueToLimit(int Dummy);
 	void TrimActiveSkinQueueToLimit(int Dummy);
 	bool AddSkinQueuePresetFromCurrent(int Dummy);
@@ -861,6 +862,8 @@ private:
 	static void ConAddDummySkinQueue(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddSkinQueueEx(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddDummySkinQueueEx(IConsole::IResult *pResult, void *pUserData);
+	static void ConRandomSkinQueue(IConsole::IResult *pResult, void *pUserData);
+	static void ConRandomDummySkinQueue(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddSkinQueuePreset(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddDummySkinQueuePreset(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddSkinQueuePresetItem(IConsole::IResult *pResult, void *pUserData);

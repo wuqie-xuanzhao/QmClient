@@ -2841,6 +2841,11 @@ protected:
 		if(vkBeginCommandBuffer(CommandBuffer, &BeginInfo) != VK_SUCCESS)
 			return false;
 		BeginSwapRenderPass(m_VKRenderPassLoad);
+		// 命令缓冲已被重置，其中记录过的 index buffer、descriptor 与动态状态绑定
+		// 全部不存在了；必须同步清空 CPU 侧缓存，否则后续绘制会因缓存命中而
+		// 跳过重新绑定，产生无效绘制（Vulkan 校验层报未绑定资源，部分驱动
+		// 表现为 device lost）。BeginSwapRenderPass 只清了管线缓存。
+		ResetDrawCommandState(0);
 		return true;
 	}
 
@@ -2995,6 +3000,16 @@ protected:
 		PresentInfo.pImageIndices = &m_CurImageIndex;
 
 		m_LastPresentedSwapChainImageIndex = m_CurImageIndex;
+
+		// 黑帧探测：呈现时没有任何绘制调用的帧在屏幕上只会显示清屏色，
+		// 玩家看到的就是“闪黑”。用 trace 开关暴露这类帧的命令构成，
+		// 用于定位加载界面背景闪烁的来源。
+		if(g_Config.m_QmGraphicsTrace >= 1 && m_FrameProfileStats.m_EstimatedRenderCallCount == 0)
+		{
+			dbg_msg("vulkan", "black frame candidate: presented image=%u/%u render_commands=%" PRIu64 " command_count=%" PRIu64 " swap_pass_active=%d render_target_active=%d rendering_paused=%d",
+				m_CurImageIndex, m_SwapChainImageCount, m_FrameProfileStats.m_RenderCommands, m_FrameProfileStats.m_CommandCount,
+				m_SwapRenderPassActive ? 1 : 0, m_RenderTargetActive ? 1 : 0, m_RenderingPaused ? 1 : 0);
+		}
 
 		auto PresentStart = m_FrameProfilingActive ? time_get_nanoseconds() : std::chrono::nanoseconds::zero();
 		VkResult QueuePresentRes = m_pfnQueuePresentKHR(m_VKPresentQueue, &PresentInfo);
@@ -4187,21 +4202,31 @@ protected:
 		}
 
 		size_t DynamicStateIndex = GetDynamicModeIndexFromExecBuffer(ExecBuffer);
-		if(DynamicStateIndex == VULKAN_BACKEND_CLIP_MODE_DYNAMIC_SCISSOR_AND_VIEWPORT)
+		if(RenderThreadIndex < m_vDrawCommandStates.size())
 		{
-			if(RenderThreadIndex < m_vDrawCommandStates.size())
+			auto &DrawState = m_vDrawCommandStates[RenderThreadIndex];
+			if(DynamicStateIndex != VULKAN_BACKEND_CLIP_MODE_DYNAMIC_SCISSOR_AND_VIEWPORT)
 			{
-				auto &DrawState = m_vDrawCommandStates[RenderThreadIndex];
-				if(DrawState.m_HasDynamicViewportScissor && DynamicStatesEqual(DrawState.m_Viewport, ExecBuffer.m_Viewport, DrawState.m_Scissor, ExecBuffer.m_Scissor))
-				{
-					Stats.m_DynamicStateSetSkips++;
-					return;
-				}
+				// 绑定不声明动态 viewport/scissor 的管线后，先前用 vkCmdSetViewport/
+				// vkCmdSetScissor 设置的值按规范变为未定义；缓存必须失效，
+				// 否则再次绑定动态管线时会错误地跳过设置（扫描报告第 5 项）。
+				DrawState.m_HasDynamicViewportScissor = false;
+			}
+			else if(DrawState.m_HasDynamicViewportScissor && DynamicStatesEqual(DrawState.m_Viewport, ExecBuffer.m_Viewport, DrawState.m_Scissor, ExecBuffer.m_Scissor))
+			{
+				Stats.m_DynamicStateSetSkips++;
+				return;
+			}
+			else
+			{
 				DrawState.m_HasDynamicViewportScissor = true;
 				DrawState.m_Viewport = ExecBuffer.m_Viewport;
 				DrawState.m_Scissor = ExecBuffer.m_Scissor;
 			}
+		}
 
+		if(DynamicStateIndex == VULKAN_BACKEND_CLIP_MODE_DYNAMIC_SCISSOR_AND_VIEWPORT)
+		{
 			vkCmdSetViewport(CommandBuffer, 0, 1, &ExecBuffer.m_Viewport);
 			vkCmdSetScissor(CommandBuffer, 0, 1, &ExecBuffer.m_Scissor);
 			Stats.m_DynamicStateSets++;
@@ -8074,7 +8099,8 @@ public:
 		SFrameProfileStats Stats = CurrentFrameProfileStats();
 		const bool PeriodicSummary = m_CurFrame - m_LastFrameProfileLogFrame >= 120;
 		const bool SlowFrame = g_Config.m_QmGraphicsTrace >= 2 && Stats.m_CPUFrameTime >= std::chrono::milliseconds(8);
-		if(!PeriodicSummary && !SlowFrame)
+		const bool TraceAllFrames = g_Config.m_QmGraphicsTrace >= 3;
+		if(!TraceAllFrames && !PeriodicSummary && !SlowFrame)
 			return;
 
 		if(PeriodicSummary)
@@ -9044,7 +9070,15 @@ public:
 	{
 		if(m_RenderingPaused || !SupportsBackbufferCapture() || HasMultiSampling() || m_RenderTargetActive || !m_SwapRenderPassActive || pCommand->m_TargetId < 0 ||
 			(size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || m_CurImageIndex >= m_vSwapChainImages.size())
+		{
+			// 静默跳过会让模糊目标保留上一帧的旧内容，是画面闪烁的候选来源之一；
+			// 用 trace 开关暴露具体是哪个条件命中
+			if(g_Config.m_QmGraphicsTrace >= 1)
+				dbg_msg("vulkan", "backbuffer capture skipped: paused=%d capture_supported=%d msaa=%d target_active=%d swap_pass_active=%d",
+					m_RenderingPaused ? 1 : 0, SupportsBackbufferCapture() ? 1 : 0, HasMultiSampling() ? 1 : 0,
+					m_RenderTargetActive ? 1 : 0, m_SwapRenderPassActive ? 1 : 0);
 			return true;
+		}
 		SRenderTarget &Target = m_vRenderTargets[pCommand->m_TargetId];
 		if(Target.m_Image == VK_NULL_HANDLE || Target.m_Width == 0 || Target.m_Height == 0 ||
 			(Target.m_Layout != VK_IMAGE_LAYOUT_UNDEFINED && Target.m_Layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL))

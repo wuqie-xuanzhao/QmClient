@@ -1,7 +1,8 @@
 // QmClient: 铭牌 MSDF 门控与回退诊断工具。
 //
-// 门控：图集按固定字体族离线预烤（base 页 DejaVu Sans，CJK 页 Source Han Sans SC），
-// 自定义字体与图集族不匹配时整条铭牌保持 FreeType 路径，避免与用户所选字体不一致。
+// 门控：只有存在正式预生成 profile 的客户端内置字体才允许走 MSDF；
+// 语言缺口由渲染器加载随包的 fallback profile 补齐。
+// 用户字体和缺少 profile 的字体统一走 FreeType。
 //
 // 回退诊断：SupportsText 判定失败时定位首个缺失码点，并按码点去重报告，
 // 日志量级受字符集约束（几十条封顶），不会因每帧刷屏。
@@ -63,19 +64,36 @@ inline uint32_t QmNameplateMsdfDecodeUtf8(const char *&p)
 	return Cp;
 }
 
-// 图集固定字体族：base 页烤 DejaVu Sans，CJK 页烤 Source Han Sans SC。
-// 配置字体串包含任一族名（忽略大小写，对齐字体下拉框的 str_find_nocase 匹配）才算命中。
+// 返回当前已验收字体对应的图集 profile。未知字体必须返回 nullptr。
+// profile 名称同时作为 data/qmclient/nameplate_msdf/profiles/ 下的 manifest 文件名。
+inline const char *QmNameplateMsdfFontProfile(const char *pConfiguredFont)
+{
+	if(pConfiguredFont == nullptr || pConfiguredFont[0] == '\0')
+		return nullptr;
+	if(str_comp_nocase(pConfiguredFont, "DejaVu Sans") == 0 ||
+		str_comp_nocase(pConfiguredFont, "Noto Sans SC") == 0 || str_comp_nocase(pConfiguredFont, "NotoSansSC") == 0 ||
+		str_comp_nocase(pConfiguredFont, "Glow Sans J Compressed Book") == 0 || str_comp_nocase(pConfiguredFont, "Glow Sans J") == 0 ||
+		str_comp_nocase(pConfiguredFont, "GlowSansJ-Compressed-Book") == 0)
+		return "noto_glow_cjk";
+	struct SFontProfile { const char *m_pFamily; const char *m_pProfile; };
+	static constexpr SFontProfile s_aProfiles[] = {
+		{"Cabin", "cabin"}, {"FreeSans", "freesans"}, {"FreeSans Bold", "freesans"}, {"Google Sans", "google_sans"},
+		{"Inter", "inter_regular"}, {"Inter SemiBold", "inter_semibold"},
+		{"Maple Mono Normal", "maple_mono_regular"}, {"Maple Mono Normal CN", "maple_mono_regular"},
+		{"Maple Mono Normal Bold", "maple_mono_bold"}, {"Minecraft", "minecraft"}, {"Montserrat", "montserrat"},
+		{"Nunito Black", "nunito"}, {"Poppins", "poppins_regular"}, {"Poppins Medium", "poppins_medium"},
+		{"Poppins Bold", "poppins_bold"}, {"Rubik", "rubik"},
+		{"Times New Roman", "times_new_roman"}, {"LXGW WenKai", "lxgw_wenkai_regular"},
+	};
+	for(const SFontProfile &Profile : s_aProfiles)
+		if(str_comp_nocase(pConfiguredFont, Profile.m_pFamily) == 0)
+			return Profile.m_pProfile;
+	return nullptr;
+}
+
 inline bool QmNameplateMsdfFontMatchesAtlas(const char *pConfiguredFont)
 {
-	static const char *const s_apAtlasFamilies[] = {"DejaVu Sans", "Source Han Sans SC"};
-	if(pConfiguredFont == nullptr || pConfiguredFont[0] == '\0')
-		return false;
-	for(const char *pFamily : s_apAtlasFamilies)
-	{
-		if(str_find_nocase(pConfiguredFont, pFamily) != nullptr)
-			return true;
-	}
-	return false;
+	return QmNameplateMsdfFontProfile(pConfiguredFont) != nullptr;
 }
 
 // 遍历文本（换行/制表符按空白跳过），返回第一个 HasGlyph 判定为缺失的码点；

@@ -92,6 +92,10 @@ private:
 	float MinZoomLevel();
 	float MaxZoomLevel();
 
+	// QmClient：影子查看模式的"多人同框"由自动取景接管缩放，
+	// zoom+/- 改为调整用户倍率（与 DDNet multiview 的 personal zoom 同语义）
+	bool GhostMultiViewZoomActive() const;
+
 	vec2 m_LastTargetPos;
 	float m_DyncamSmoothingSpeedBias;
 	bool m_CanUseCameraInfo;

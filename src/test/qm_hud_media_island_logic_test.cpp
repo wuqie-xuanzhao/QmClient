@@ -1214,6 +1214,38 @@ TEST(QmHudMediaIslandSatellite, ParsesActiveMuteRemainingMessageSeparately)
 	EXPECT_EQ(QmHudParseSpamProtectionMute("This server has an initial chat delay, you will be able to talk in 17 seconds.", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
 }
 
+// 服务端玩家可见文案已中文化，解析器必须同时认得中文原文，否则禁言倒计时在中文服务端上失效。
+TEST(QmHudMediaIslandSatellite, ParsesChineseServerMuteMessages)
+{
+	int Seconds = 0;
+	EXPECT_EQ(QmHudParseSpamProtectionMute("你在接下来的 17 秒内不能发言。", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::REMAINING);
+	EXPECT_EQ(Seconds, 17);
+
+	EXPECT_EQ(QmHudParseSpamProtectionMute("'Main' 已被禁言 60 秒（Spam protection）", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::SPAM_BROADCAST);
+	EXPECT_EQ(Seconds, 60);
+	EXPECT_EQ(QmHudParseSpamProtectionMute("'O'Brien' 已被禁言 45 秒（Spam protection）", "O'Brien", "Dummy", Seconds), EHudMediaIslandMuteMessage::SPAM_BROADCAST);
+	EXPECT_EQ(Seconds, 45);
+
+	// 分身名字同样要能命中。
+	EXPECT_EQ(QmHudParseSpamProtectionMute("'Dummy' 已被禁言 30 秒（Spam protection）", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::SPAM_BROADCAST);
+	EXPECT_EQ(Seconds, 30);
+}
+
+// 中文侧必须与英文侧保持同一套排除规则：非本人、非 Spam protection、无原因后缀都不算。
+TEST(QmHudMediaIslandSatellite, IgnoresChineseServerMuteMessagesForOtherCauses)
+{
+	int Seconds = 0;
+	EXPECT_EQ(QmHudParseSpamProtectionMute("'Other' 已被禁言 60 秒（Spam protection）", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
+	EXPECT_EQ(QmHudParseSpamProtectionMute("'Main' 已被禁言 60 秒（manual）", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
+	// 无原因后缀的广播（服务端不带 pReason 时的分支）不视为刷屏禁言。
+	EXPECT_EQ(QmHudParseSpamProtectionMute("'Main' 已被禁言 60 秒", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
+	// 初始聊天延迟提示不算禁言，与英文侧一致。
+	EXPECT_EQ(QmHudParseSpamProtectionMute("本服务器有初始聊天延迟，你将在 17 秒后可以发言。", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
+	// 前缀命中但秒数缺失，必须返回 NONE 而不是落进刷屏禁言分支。
+	EXPECT_EQ(QmHudParseSpamProtectionMute("你在接下来的 秒内不能发言。", "Main", "Dummy", Seconds), EHudMediaIslandMuteMessage::NONE);
+	EXPECT_EQ(Seconds, 0);
+}
+
 
 
 

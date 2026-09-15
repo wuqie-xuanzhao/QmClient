@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == Автоматически включать авто-переключение Gores в игровом режиме Gores
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+
 Automatically re-join team 0 after finish (only if unlocked).
 == Автоматически возвращаться в команду 0 после финиша (только если не заблокировано)
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == Choose the menu font and cursor appearance
 
+Choose the menu font and font weight
+== Выбор шрифта меню и его толщины
+
 Choose the menu map and background colors
 == Choose the menu map and background colors
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == Цвет
+
+Color map tune zones by their tune zone number
+== Раскрашивать tune-зоны карты по номеру tune zone
 
 Color of authenticated player names on scoreboard
 == Цвет имён авторизованных игроков на табло
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the ingame cursor scale
+== Настройка масштаба курсора в игре
 
 Configure the input overlay display
 == Configure the input overlay display
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == Свой шрифт
 
+Custom font weight (variable fonts)
+== Толщина своего шрифта (вариативные шрифты)
+
 Custom Font:
 == Пользовательский шрифт:
+
+Custom fonts use FreeType automatically.
+== Пользовательские шрифты автоматически используют FreeType.
 
 Custom prompt template
 == Пользовательский шаблон промпта
@@ -4346,11 +4364,17 @@ Follow
 Following
 == Следую
 
+Font
+== Шрифт
+
 Font cursor
 == Курсор шрифта
 
 Font size
 == Размер шрифта
+
+Font style:
+== Стиль шрифта:
 
 For more info: /cmdlist
 == Подробнее: /cmdlist
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == Режим просмотра Ghost выключен. Ghost снова следует за вашими заездами.
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== Режим просмотра Ghost: независимая шкала времени. Удерживайте клавишу наблюдения, чтобы следить за участником; управление воспроизведением — на таблице очков (Tab + Alt).
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== Режим просмотра Ghost: ESC переключает панель управления. Двойное нажатие ESC открывает меню игры (выход из повтора). Удерживайте клавишу наблюдения для списка участников.
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == Видимость призрака (альфа, 0=невидимо, 100=видимо)
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Участники ранга 1
 
+Rank 1 replay
+== Повтор ранга 1
+
 Rank 1 replays
 == Реплеи ранга 1
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Ghost ранга: у реплея недопустимый диапазон прохождения
-
-Rank ghost: the replay has no run start/end markers
-== Ghost ранга: в реплее нет маркеров начала/конца прохождения
 
 Rank ghost: the replay list is empty or malformed
 == Ghost ранга: список реплеев пуст или повреждён
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == Показывать секунды на часах
 
+Show semi-transparent ghost tees for other players who are spectating
+== Show semi-transparent ghost tees for other players who are spectating
+
 Show server chat messages
 == Показывать серверные сообщения чата
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == Наблюдаемый игрок и друзья
+
+Spectator ghost opacity
+== Spectator ghost opacity
 
 Spectators
 == Наблюдатели
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Использовать чувствительность мыши при включённой динамической камере
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== Использовать рендеринг текста MSDF для табличек (только встроенные шрифты)
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == Использовать рендеринг текста MSDF для табличек (только встроенные шрифты, пользовательские шрифты переходят на FreeType)
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == Только ванильные скины
 
+Variable custom font weight
+== Толщина вариативного пользовательского шрифта
+
 Velocity
 == Скорость
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == Визуальные эффекты
 
+Visual: Cursor
+== Визуал: Курсор
+
 Visual: Effects
 == Визуал: Эффекты
-
-Visual: Font & Cursor
-== Визуал: Шрифт и курсор
 
 Visual: Nameplates
 == Визуал: Таблички с именами
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == Что сделано, то сделано, бесполезно говорить больше
-
-Wheel animate
-== Анимация колёсика
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == Если включен радужный Tee TClient, эта функция не действует.
@@ -13771,6 +13804,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == Использовать действие
+
+[Rank 1 replay]
+Direction
+== Направление
 
 [Show name plates]
 All

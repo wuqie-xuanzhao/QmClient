@@ -1,6 +1,7 @@
 #include "qm_nameplate_msdf_renderer.h"
 
 #include "qm_nameplate_msdf_gate.h"
+#include "qm_nameplate_msdf_manifest.h"
 
 #include <base/log.h>
 #include <base/math.h>
@@ -14,22 +15,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 namespace
 {
-	constexpr const char *kManifestBase = "qmclient/nameplate_msdf/nameplate_base_msdf.json";
-	constexpr const char *kManifestCjk = "qmclient/nameplate_msdf/nameplate_cjk_msdf.json";
-
-	// 描边/光晕用 8 向偏移近似，方向斜向按 1/sqrt(2) 归一
-	constexpr float s_aOffsetDirs[8][2] = {
-		{1.0f, 0.0f}, {-1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, -1.0f},
-		{0.70710678f, 0.70710678f}, {-0.70710678f, 0.70710678f}, {0.70710678f, -0.70710678f}, {-0.70710678f, -0.70710678f}};
-
-	bool IsSpace(unsigned char C)
-	{
-		return C == ' ' || C == '\t' || C == '\n' || C == '\r';
-	}
-
+	constexpr const char *kProfileManifestPrefix = "qmclient/nameplate_msdf/profiles/nameplate_";
+	constexpr const char *kProfileManifestSuffix = ".json";
 	// 渲染器内部的短名：与门控/诊断工具共用同一份 UTF-8 解码实现。
 	uint32_t DecodeUtf8(const char *&p)
 	{
@@ -42,62 +33,48 @@ namespace
 		return color_cast<ColorRGBA>(ColorHSLA(Hue, 0.7f, 0.65f, 1.0f));
 	}
 
-	// 有界子串查找：manifest 很大，不能用依赖 NUL 终止的 str_find
+	// 渲染器内部的短名：manifest 取值统一走 qm_nameplate_msdf_manifest.h 的共享实现，
+	// 保证生产解析器与图集契约测试用的是同一套分隔符处理（曾因两者不一致导致整包解析失败）。
 	const char *FindSpan(const char *pBegin, const char *pEnd, const char *pNeedle)
 	{
-		const size_t NeedleLen = str_length(pNeedle);
-		if(NeedleLen == 0 || pBegin == nullptr || pEnd == nullptr || (size_t)(pEnd - pBegin) < NeedleLen)
-			return nullptr;
-		const char *pLast = pEnd - NeedleLen;
-		for(const char *p = pBegin; p <= pLast; ++p)
-		{
-			if(p[0] == pNeedle[0] && mem_comp(p, pNeedle, NeedleLen) == 0)
-				return p;
-		}
-		return nullptr;
+		return QmNameplateMsdfFindSpan(pBegin, pEnd, pNeedle);
 	}
 
-	// 在 [pBegin,pEnd) 中定位 key（形如 "key"），返回其后冒号的位置
 	const char *FindKey(const char *pBegin, const char *pEnd, const char *pKey)
 	{
-		const char *p = FindSpan(pBegin, pEnd, pKey);
-		if(p == nullptr)
-			return nullptr;
-		return p + str_length(pKey);
+		return QmNameplateMsdfFindKey(pBegin, pEnd, pKey);
 	}
 
 	bool ReadDouble(const char *p, const char *pEnd, double &Out)
 	{
-		char aBuffer[64];
-		size_t i = 0;
-		while(p < pEnd && IsSpace((unsigned char)*p))
-			++p;
-		while(p < pEnd && i + 1 < sizeof(aBuffer) && (*p == '-' || *p == '+' || *p == '.' || (*p >= '0' && *p <= '9') || *p == 'e' || *p == 'E'))
-		{
-			aBuffer[i++] = *p++;
-		}
-		aBuffer[i] = '\0';
-		if(i == 0)
-			return false;
-		Out = strtod(aBuffer, nullptr);
-		return true;
+		return QmNameplateMsdfReadDouble(p, pEnd, Out);
+	}
+
+	bool ReadString(const char *p, const char *pEnd, std::string &Out)
+	{
+		return QmNameplateMsdfReadString(p, pEnd, Out);
 	}
 
 	bool ReadBool(const char *p, const char *pEnd, bool &Out)
 	{
-		while(p < pEnd && IsSpace((unsigned char)*p))
+		return QmNameplateMsdfReadBool(p, pEnd, Out);
+	}
+
+	bool ReadJsonStringAt(const char *&p, const char *pEnd, std::string &Out)
+	{
+		while(p < pEnd && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r' || *p == ','))
 			++p;
-		if(p + 4 <= pEnd && strncmp(p, "true", 4) == 0)
-		{
-			Out = true;
-			return true;
-		}
-		if(p + 5 <= pEnd && strncmp(p, "false", 5) == 0)
-		{
-			Out = false;
-			return true;
-		}
-		return false;
+		if(p >= pEnd || *p != '"')
+			return false;
+		++p;
+		const char *pBegin = p;
+		while(p < pEnd && *p != '"')
+			++p;
+		if(p >= pEnd)
+			return false;
+		Out.assign(pBegin, p);
+		++p;
+		return true;
 	}
 }
 
@@ -128,9 +105,12 @@ void CQmNameplateMsdfRenderer::Shutdown()
 	UnloadPages();
 	m_Glyphs.clear();
 	m_Ready = false;
+	m_OptionalPagePending = false;
 	// 刻意保留 m_InitAttempted：否则每帧的 EnsureInitialized 会在图集缺失/后端不支持时反复读盘重试
 	m_NextInitAttempt = 0;
 	m_RefEmPixels = 0.0f;
+	m_RefAscent = 0.0f;
+	m_RefDescent = 0.0f;
 	m_Error.clear();
 	m_pStorage = nullptr;
 	m_pGraphics = nullptr;
@@ -144,9 +124,12 @@ void CQmNameplateMsdfRenderer::OnGraphicsResourcesReset()
 	UnloadPages();
 	m_Glyphs.clear();
 	m_Ready = false;
+	m_OptionalPagePending = false;
 	m_InitAttempted = false;
 	m_NextInitAttempt = 0;
 	m_RefEmPixels = 0.0f;
+	m_RefAscent = 0.0f;
+	m_RefDescent = 0.0f;
 	m_Error.clear();
 	if(WasLoaded)
 		log_info("nameplate_msdf", "atlas released for graphics resources reset, will reload on next frame");
@@ -154,17 +137,33 @@ void CQmNameplateMsdfRenderer::OnGraphicsResourcesReset()
 
 void CQmNameplateMsdfRenderer::EnsureInitialized(IStorage *pStorage, IGraphics *pGraphics)
 {
-	if(m_Ready || m_FatalError)
-		return;
-	// 失败退避：图集缺失或损坏时不要每帧重试读盘
-	if(m_InitAttempted && time_get() < m_NextInitAttempt)
-		return;
-	m_InitAttempted = false;
-	if(!Init(pStorage, pGraphics))
-		m_NextInitAttempt = time_get() + time_freq() * 10;
+	EnsureInitialized(pStorage, pGraphics, m_Profile.empty() ? nullptr : m_Profile.c_str());
 }
 
-bool CQmNameplateMsdfRenderer::Init(IStorage *pStorage, IGraphics *pGraphics)
+void CQmNameplateMsdfRenderer::EnsureInitialized(IStorage *pStorage, IGraphics *pGraphics, const char *pProfile)
+{
+	if(pProfile == nullptr || pProfile[0] == '\0')
+		return;
+	if(m_Profile != pProfile)
+	{
+		Shutdown();
+		m_Profile = pProfile;
+	}
+	if(m_FatalError)
+		return;
+	if(!m_Ready)
+	{
+		// 失败退避：图集缺失或损坏时不要每帧重试读盘
+		if(m_InitAttempted && time_get() < m_NextInitAttempt)
+			return;
+		m_InitAttempted = false;
+		if(!Init(pStorage, pGraphics, pProfile))
+			m_NextInitAttempt = time_get() + time_freq() * 10;
+		return;
+	}
+}
+
+bool CQmNameplateMsdfRenderer::Init(IStorage *pStorage, IGraphics *pGraphics, const char *pProfile)
 {
 	if(m_InitAttempted)
 		return m_Ready;
@@ -185,27 +184,100 @@ bool CQmNameplateMsdfRenderer::Init(IStorage *pStorage, IGraphics *pGraphics)
 		return false;
 	}
 
-	if(!LoadPage(kManifestBase))
+	if(!LoadProfile(pProfile))
 	{
-		log_error("nameplate_msdf", "failed to load base atlas: %s", m_Error.c_str());
+		log_error("nameplate_msdf", "failed to load profile '%s': %s", pProfile, m_Error.c_str());
 		Shutdown();
 		return false;
 	}
-	// CJK 页是可选的：缺失时仍可用基础脚本渲染
-	if(!LoadPage(kManifestCjk))
-		log_info("nameplate_msdf", "CJK page not loaded (%s); CJK names fall back to FreeType", m_Error.c_str());
+	// 主字体只负责自身字形；语言缺口由客户端随包的通用 profile 补齐。
+	// 先加载主 profile，ParseManifest 使用 emplace 保证主字体字形优先，
+	// 因而英文仍保持用户选择的字体，中文/日文/韩文则来自内置 CJK 字体。
+	const char *pFallbackProfiles[] = {"dejavu", "noto_glow_cjk"};
+	for(const char *pFallback : pFallbackProfiles)
+	{
+		if(str_comp(pFallback, pProfile) == 0)
+			continue;
+		const std::string PreviousError = m_Error;
+		if(!LoadProfile(pFallback))
+		{
+			// 补充 profile 缺失不应让主 profile 失效；保留主 profile 的错误状态。
+			m_Error = PreviousError;
+		}
+	}
 
 	m_Ready = !m_vPages.empty() && !m_Glyphs.empty();
 	if(m_Ready)
 	{
-		log_info("nameplate_msdf", "Nameplate MSDF ready: %zu page(s), %zu glyphs, refEm=%.0f pxRange=%.1f",
-			m_vPages.size(), m_Glyphs.size(), m_RefEmPixels, m_vPages.empty() ? 0.0f : m_vPages[0].m_PxRange);
+		// 旧图集无行盒度量时的近似：ascent 取大写 H 的 cap 高度（基线一致性仍成立），
+		// descent 取 0.25em（与常见拉丁字体的 hhea 比例接近）。重建图集后即为真实度量。
+		if(m_RefAscent <= 0.0f)
+		{
+			const auto HCap = m_Glyphs.find(0x48);
+			m_RefAscent = HCap != m_Glyphs.end() && HCap->second.m_BearingY > 0.0f ? HCap->second.m_BearingY : m_RefEmPixels * 0.75f;
+		}
+		if(m_RefDescent <= 0.0f)
+			m_RefDescent = m_RefEmPixels * 0.25f;
+		log_info("nameplate_msdf", "Nameplate MSDF ready: %zu page(s), %zu glyphs, refEm=%.0f pxRange=%.1f ascent=%.2f descent=%.2f",
+			m_vPages.size(), m_Glyphs.size(), m_RefEmPixels, m_vPages.empty() ? 0.0f : m_vPages[0].m_PxRange, m_RefAscent, m_RefDescent);
 	}
 	else
 	{
 		Shutdown();
 	}
 	return m_Ready;
+}
+
+bool CQmNameplateMsdfRenderer::LoadProfile(const char *pProfile)
+{
+	char aManifestPath[IO_MAX_PATH_LENGTH];
+	str_format(aManifestPath, sizeof(aManifestPath), "%s%s%s", kProfileManifestPrefix, pProfile, kProfileManifestSuffix);
+	void *pData = nullptr;
+	unsigned Size = 0;
+	if(!m_pStorage->ReadFile(aManifestPath, IStorage::TYPE_ALL, &pData, &Size))
+	{
+		m_Error = "profile manifest missing: ";
+		m_Error += aManifestPath;
+		return false;
+	}
+	std::string Text((const char *)pData, Size);
+	free(pData);
+	const char *pEnd = Text.c_str() + Text.size();
+	const char *pPages = FindKey(Text.c_str(), pEnd, "\"pages\"");
+	if(pPages == nullptr)
+	{
+		m_Error = "profile manifest has no pages: ";
+		m_Error += aManifestPath;
+		return false;
+	}
+	const char *p = pPages;
+	while(p < pEnd && *p != '[')
+		++p;
+	if(p >= pEnd)
+		return false;
+	++p;
+	int Loaded = 0;
+	while(p < pEnd)
+	{
+		while(p < pEnd && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r' || *p == ','))
+			++p;
+		if(p >= pEnd || *p == ']')
+			break;
+		std::string PagePath;
+		if(!ReadJsonStringAt(p, pEnd, PagePath))
+			break;
+		if(LoadPage(PagePath.c_str()))
+			++Loaded;
+		else
+			log_info("nameplate_msdf", "profile '%s' page unavailable (%s), continuing with remaining pages", pProfile, m_Error.c_str());
+	}
+	if(Loaded == 0)
+	{
+		m_Error = "profile has no loadable pages: ";
+		m_Error += pProfile;
+		return false;
+	}
+	return true;
 }
 
 bool CQmNameplateMsdfRenderer::LoadPage(const char *pManifestPath)
@@ -229,9 +301,11 @@ bool CQmNameplateMsdfRenderer::ParseManifest(const char *pText, const std::strin
 
 	const char *pPxRange = FindKey(pText, pEnd, "px_range");
 	const char *pEmPixels = FindKey(pText, pEnd, "em_pixels");
+	const char *pAlphaSdf = FindKey(pText, pEnd, "alpha_sdf");
 	const char *pImage = FindKey(pText, pEnd, "image");
 	double PxRange = 0.0;
 	double EmPixels = 0.0;
+	bool AlphaSdf = false;
 	if(pPxRange == nullptr || pEmPixels == nullptr || pImage == nullptr ||
 		!ReadDouble(pPxRange, pEnd, PxRange) || !ReadDouble(pEmPixels, pEnd, EmPixels) || PxRange <= 0.0 || EmPixels <= 0.0)
 	{
@@ -239,17 +313,19 @@ bool CQmNameplateMsdfRenderer::ParseManifest(const char *pText, const std::strin
 		m_Error += ManifestPath;
 		return false;
 	}
+	if(pAlphaSdf != nullptr)
+		ReadBool(pAlphaSdf, pEnd, AlphaSdf);
 
 	// image 字段为相对 data/ 的路径，取其文件名与本 manifest 同目录拼接
-	std::string ImageName(pImage, pEnd);
+	std::string ImageField;
+	if(!ReadString(pImage, pEnd, ImageField))
 	{
-		const size_t End = ImageName.find('"');
-		if(End != std::string::npos)
-			ImageName.resize(End);
-		const size_t Slash = ImageName.find_last_of('/');
-		if(Slash != std::string::npos)
-			ImageName = ImageName.substr(Slash + 1);
+		m_Error = "manifest image field malformed: ";
+		m_Error += ManifestPath;
+		return false;
 	}
+	const size_t Slash = ImageField.find_last_of('/');
+	const std::string ImageName = Slash == std::string::npos ? ImageField : ImageField.substr(Slash + 1);
 	const size_t DirEnd = ManifestPath.find_last_of('/');
 	const std::string ImagePath = (DirEnd == std::string::npos ? std::string() : ManifestPath.substr(0, DirEnd + 1)) + ImageName;
 
@@ -266,6 +342,7 @@ bool CQmNameplateMsdfRenderer::ParseManifest(const char *pText, const std::strin
 	{
 		m_Error = "manifest has no atlas block: ";
 		m_Error += ManifestPath;
+		m_pGraphics->UnloadTexture(&Texture);
 		return false;
 	}
 	// atlas 块内的 width/height 紧跟其后，避免误取 glyphs 里的同名字段
@@ -287,6 +364,9 @@ bool CQmNameplateMsdfRenderer::ParseManifest(const char *pText, const std::strin
 	}
 
 	const int PageIndex = (int)m_vPages.size();
+	const float PreviousRefEmPixels = m_RefEmPixels;
+	const float PreviousRefAscent = m_RefAscent;
+	const float PreviousRefDescent = m_RefDescent;
 	SPage Page;
 	Page.m_Texture = Texture;
 	Page.m_Info.m_ImageName = ImagePath;
@@ -294,80 +374,93 @@ bool CQmNameplateMsdfRenderer::ParseManifest(const char *pText, const std::strin
 	Page.m_Info.m_Height = (int)AtlasHeight;
 	Page.m_PxRange = (float)PxRange;
 	m_vPages.push_back(Page);
+	auto RollbackPage = [&]() {
+		SPage &Back = m_vPages.back();
+		if(Back.m_Texture.IsValid())
+			m_pGraphics->UnloadTexture(&Back.m_Texture);
+		m_vPages.pop_back();
+		m_RefEmPixels = PreviousRefEmPixels;
+		m_RefAscent = PreviousRefAscent;
+		m_RefDescent = PreviousRefDescent;
+	};
 	if(m_RefEmPixels <= 0.0f)
 		m_RefEmPixels = (float)EmPixels;
+	const float PageMetricScale = EmPixels > 0.0 ? m_RefEmPixels / (float)EmPixels : 1.0f;
+	// Profile 中允许混用不同烘焙分辨率。把本页距离范围和字形度量
+	// 归一到首个页面的参考 em，避免高分辨率中文页被整体缩小或描边变薄。
+	m_vPages.back().m_PxRange = (float)PxRange * PageMetricScale;
+	// 行盒度量（可选字段，旧图集没有）：字体真实的 ascent/descent（参考 em 像素），
+	// 来自 FreeType hhea 度量。基线排版必须与字符串内容无关，见 Measure()/Draw()。
+	// 键带引号定位："ascent" 不是 "descent" 的子串（带前引号），不会互相误匹配。
+	if(m_RefAscent <= 0.0f)
+	{
+		double Ascent = 0.0;
+		double Descent = 0.0;
+		const char *pAscent = FindKey(pText, pEnd, "\"ascent\"");
+		const char *pDescent = FindKey(pText, pEnd, "\"descent\"");
+		if(pAscent != nullptr)
+			ReadDouble(pAscent, pEnd, Ascent);
+		if(pDescent != nullptr)
+			ReadDouble(pDescent, pEnd, Descent);
+		if(Ascent > 0.0)
+			m_RefAscent = (float)Ascent;
+		if(Descent > 0.0)
+			m_RefDescent = (float)Descent;
+	}
 
-	// glyphs 块：逐个解析 "<codepoint>": { ... }
+	// glyphs 块：逐个解析 "<codepoint>": { ... }（扫描逻辑与图集契约测试共用同一份实现）
 	const char *pGlyphs = FindKey(pText, pEnd, "\"glyphs\"");
 	if(pGlyphs == nullptr)
 	{
 		m_Error = "manifest has no glyphs block: ";
 		m_Error += ManifestPath;
+		RollbackPage();
 		return false;
 	}
-	const char *p = pGlyphs;
-	size_t Parsed = 0;
-	while(p < pEnd)
-	{
-		while(p < pEnd && (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t' || *p == ',' || *p == '{' || *p == '}'))
-			++p;
-		if(p >= pEnd || *p != '"')
-			break;
-		++p;
-		char *pCodeEnd = nullptr;
-		const long Codepoint = strtol(p, &pCodeEnd, 10);
-		if(pCodeEnd == nullptr || pCodeEnd == p || Codepoint <= 0 || Codepoint > 0x10FFFF)
-			break;
-		p = pCodeEnd;
-		const char *pObjectBegin = FindSpan(p, pEnd, "{");
-		if(pObjectBegin == nullptr)
-			break;
-		const char *pObjectEnd = FindSpan(pObjectBegin, pEnd, "}");
-		if(pObjectEnd == nullptr)
-			break;
+	const int Parsed = QmNameplateMsdfForEachGlyphObject(pGlyphs, pEnd,
+		[&](uint32_t Codepoint, const char *pObjectBegin, const char *pObjectEnd) {
+			SGlyph Glyph;
+			Glyph.m_Page = PageIndex;
+			double Value = 0.0;
+			const char *pField = FindKey(pObjectBegin, pObjectEnd, "\"x\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_X = (int)Value;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"y\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_Y = (int)Value;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"w\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_W = (int)Value;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"h\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_H = (int)Value;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"adv\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_Advance = (float)Value;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"bx\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_BearingX = (float)Value;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"by\"");
+			if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
+				Glyph.m_BearingY = (float)Value;
+			bool Outline = false;
+			pField = FindKey(pObjectBegin, pObjectEnd, "\"outline\"");
+			if(pField != nullptr && ReadBool(pField, pObjectEnd, Outline))
+				Glyph.m_HasOutline = Outline;
+			// 只有新生成且明确声明 alpha_sdf 的图集才能走 Alpha 真 SDF。
+			// 旧图集的 Alpha 可能只是常量通道，必须继续使用 RGB median。
+			Glyph.m_UseTrueSdf = AlphaSdf;
+			Glyph.m_Valid = true;
 
-		SGlyph Glyph;
-		Glyph.m_Page = PageIndex;
-		double Value = 0.0;
-		const char *pField = FindKey(pObjectBegin, pObjectEnd, "\"x\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_X = (int)Value;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"y\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_Y = (int)Value;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"w\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_W = (int)Value;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"h\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_H = (int)Value;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"adv\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_Advance = (float)Value;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"bx\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_BearingX = (float)Value;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"by\"");
-		if(pField != nullptr && ReadDouble(pField, pObjectEnd, Value))
-			Glyph.m_BearingY = (float)Value;
-		bool Outline = false;
-		pField = FindKey(pObjectBegin, pObjectEnd, "\"outline\"");
-		if(pField != nullptr && ReadBool(pField, pObjectEnd, Outline))
-			Glyph.m_HasOutline = Outline;
-		Glyph.m_Valid = true;
-
-		// 同名码位跨页时以先加载的页为准（基础页优先），避免 CJK 页覆盖拉丁字形
-		m_Glyphs.emplace((uint32_t)Codepoint, Glyph);
-		++Parsed;
-		p = pObjectEnd + 1;
-	}
+			// 同名码位跨页时以先加载的页为准（基础页优先），避免 CJK 页覆盖拉丁字形
+			Glyph.m_MetricScale = PageMetricScale;
+			m_Glyphs.emplace(Codepoint, Glyph);
+			return true;
+		});
 	if(Parsed == 0)
 	{
 		// 回滚本页，保持 m_vPages 与 m_Glyphs 一致
-		SPage &Back = m_vPages.back();
-		if(Back.m_Texture.IsValid())
-			m_pGraphics->UnloadTexture(&Back.m_Texture);
-		m_vPages.pop_back();
+		RollbackPage();
 		m_Error = "manifest glyphs block empty: ";
 		m_Error += ManifestPath;
 		return false;
@@ -398,8 +491,6 @@ vec2 CQmNameplateMsdfRenderer::Measure(const char *pText, float FontSize) const
 	const float Scale = FontSize / m_RefEmPixels;
 	const char *p = pText;
 	float Width = 0.0f;
-	float MaxY = 0.0f;
-	float MinY = 0.0f;
 	while(*p != '\0')
 	{
 		const uint32_t Cp = DecodeUtf8(p);
@@ -407,36 +498,55 @@ vec2 CQmNameplateMsdfRenderer::Measure(const char *pText, float FontSize) const
 			break;
 		auto It = m_Glyphs.find(Cp);
 		if(It == m_Glyphs.end())
-			continue;
-		const SGlyph &Glyph = It->second;
-		Width += Glyph.m_Advance * Scale;
-		if(Glyph.m_HasOutline)
 		{
-			// 字形顶相对基线的偏移（by - pxRange）为负值，底为 by - pxRange + h
-			const float Top = (Glyph.m_BearingY - m_vPages[Glyph.m_Page].m_PxRange) * Scale;
-			const float Bottom = Top + Glyph.m_H * Scale;
-			MinY = std::min(MinY, Top);
-			MaxY = std::max(MaxY, Bottom);
+			// 字体链全部没有该码点时不切换整条铭牌到 FreeType，
+			// 使用 ASCII '?' 保持 MSDF 路径、宽度和布局稳定。
+			It = m_Glyphs.find('?');
+			if(It == m_Glyphs.end())
+				continue;
 		}
+		Width += It->second.m_Advance * Scale;
 	}
-	return vec2(Width, MaxY - MinY);
+	// 高度固定为行盒（ascent+descent），与字符串内容无关。
+	// 若按墨迹包围盒居中，纯小写、含大写/带变音符的字符串基线各不相同，
+	// 混排时小写与大写会被「居中对齐」而非「基线对齐」，明显违背排版。
+	return vec2(Width, (m_RefAscent + m_RefDescent) * Scale);
 }
 
-void CQmNameplateMsdfRenderer::EmitGlyphQuad(const SGlyph &Glyph, float X, float Y, float W, float H, const ColorRGBA &Color)
+float CQmNameplateMsdfRenderer::CanvasToScreenScale() const
+{
+	if(m_pGraphics == nullptr)
+		return 1.0f;
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	m_pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float CanvasHeight = ScreenY1 - ScreenY0;
+	const int ScreenHeightPx = m_pGraphics->ScreenHeight();
+	if(CanvasHeight <= 0.0f || ScreenHeightPx <= 0)
+		return 1.0f;
+	return (float)ScreenHeightPx / CanvasHeight;
+}
+
+void CQmNameplateMsdfRenderer::EmitGlyphQuad(const SGlyph &Glyph, float X, float Y, float W, float H, const ColorRGBA &Color, float OutlineWidthPx)
 {
 	const SPage &Page = m_vPages[Glyph.m_Page];
 	IGraphics::STexturedMsdfParams Params;
 	Params.m_Texture = Page.m_Texture;
 	Params.m_Rect = vec4(X, Y, W, H);
+	// 只收紧到首尾 texel 的中心，保留完整 pxRange；整像素 inset 会让
+	// 距离场缩放比例与字形四边形不一致，并在边缘制造波纹/白点。
+	const float HalfTexelX = 0.5f / (float)Page.m_Info.m_Width;
+	const float HalfTexelY = 0.5f / (float)Page.m_Info.m_Height;
 	Params.m_UvRect = vec4(
-		(float)Glyph.m_X / (float)Page.m_Info.m_Width,
-		(float)Glyph.m_Y / (float)Page.m_Info.m_Height,
-		(float)(Glyph.m_X + Glyph.m_W) / (float)Page.m_Info.m_Width,
-		(float)(Glyph.m_Y + Glyph.m_H) / (float)Page.m_Info.m_Height);
+			((float)Glyph.m_X / (float)Page.m_Info.m_Width) + HalfTexelX,
+			((float)Glyph.m_Y / (float)Page.m_Info.m_Height) + HalfTexelY,
+			((float)(Glyph.m_X + Glyph.m_W) / (float)Page.m_Info.m_Width) - HalfTexelX,
+			((float)(Glyph.m_Y + Glyph.m_H) / (float)Page.m_Info.m_Height) - HalfTexelY);
 	Params.m_Color = Color;
 	Params.m_PxRange = Page.m_PxRange;
 	Params.m_AtlasWidth = (float)Page.m_Info.m_Width;
 	Params.m_AtlasHeight = (float)Page.m_Info.m_Height;
+	Params.m_OutlineWidthPx = std::max(OutlineWidthPx, 0.0f);
+	Params.m_UseTrueSdf = Glyph.m_UseTrueSdf;
 	m_pGraphics->RenderTexturedMsdf(Params);
 }
 
@@ -472,7 +582,9 @@ vec2 CQmNameplateMsdfRenderer::Draw(const char *pText, float X, float Y, float F
 			}
 			auto It = m_Glyphs.find(Cp);
 			if(It == m_Glyphs.end())
-				return vec2(0.0f, 0.0f);
+				It = m_Glyphs.find('?');
+			if(It == m_Glyphs.end())
+				continue;
 			if(It->second.m_HasOutline)
 				vPlaced.push_back({&It->second, PenX});
 			PenX += It->second.m_Advance * (FontSize / m_RefEmPixels);
@@ -480,33 +592,25 @@ vec2 CQmNameplateMsdfRenderer::Draw(const char *pText, float X, float Y, float F
 	}
 
 	const float Scale = FontSize / m_RefEmPixels;
-	// 基线必须由真实度量推出，不能写死 em 比例：字形顶相对基线为 (bearingY - pxRange)，
-	// 取本串最大值即可让整串墨迹顶端正好落在 Y，与 Measure() 的包围盒口径一致（否则垂直居中会偏）。
-	float MaxTop = 0.0f;
-	for(const SPlaced &Placed : vPlaced)
-		MaxTop = std::max(MaxTop, (Placed.m_pGlyph->m_BearingY - m_vPages[Placed.m_pGlyph->m_Page].m_PxRange) * Scale);
-	const float Baseline = Y - MaxTop;
+	// 基线固定为 Y + ascent（字体行盒度量），与字符串内容无关：
+	// 大写、小写、变音符、中英混排都落在同一条基线上，符合排版。
+	// 不能按本串最大 bearingY 推基线——那会让基线随内容漂移（纯小写串整体下沉）。
+	const float Baseline = Y + m_RefAscent * Scale;
 
-	// 描边：8 向偏移 + 按宽度分档加重
-	if(Style.m_OutlineColor.a > 0.0f && Style.m_OutlineWidth > 0.5f)
+	// 描边：单 pass，8 向等距采样的覆盖并集（着色器内实现，半径 = OutlineWidthPx 屏幕像素，
+	// 上限 4 texel 防止越采相邻字形/整块饱和）。得到一层均匀、实心、单色的边框，
+	// 与位图字体的「自带粗体」观感一致；不再用多份偏移拷贝叠加——半透明拷贝重叠会叠色，边缘也参差。
+	if(Style.m_OutlineColor.a > 0.0f && Style.m_OutlineWidth > 0.0f)
 	{
-		const int Passes = std::clamp((int)std::lround(Style.m_OutlineWidth), 1, 4);
-		for(int Pass = 1; Pass <= Passes; ++Pass)
+		const float OutlineWidthPx = CanvasToScreenScale() * Style.m_OutlineWidth;
+		for(const SPlaced &Placed : vPlaced)
 		{
-			const float Radius = (float)Pass;
-			const float PassAlpha = Style.m_OutlineColor.a / (float)Passes;
-			const ColorRGBA Outline = Style.m_OutlineColor.WithAlpha(PassAlpha);
-			for(const auto &Dir : s_aOffsetDirs)
-			{
-				for(const SPlaced &Placed : vPlaced)
-				{
-					const SGlyph &Glyph = *Placed.m_pGlyph;
-					EmitGlyphQuad(Glyph,
-						Placed.m_PenX + (Glyph.m_BearingX - m_vPages[Glyph.m_Page].m_PxRange) * Scale + Dir[0] * Radius,
-						Baseline + (Glyph.m_BearingY - m_vPages[Glyph.m_Page].m_PxRange) * Scale + Dir[1] * Radius,
-						Glyph.m_W * Scale, Glyph.m_H * Scale, Outline);
-				}
-			}
+			const SGlyph &Glyph = *Placed.m_pGlyph;
+			const SPage &Page = m_vPages[Glyph.m_Page];
+			EmitGlyphQuad(Glyph,
+				Placed.m_PenX + (Glyph.m_BearingX - Page.m_PxRange) * Scale,
+				Baseline - (Glyph.m_BearingY + Page.m_PxRange) * Scale,
+				Glyph.m_W * Scale * Glyph.m_MetricScale, Glyph.m_H * Scale * Glyph.m_MetricScale, Style.m_OutlineColor, OutlineWidthPx);
 		}
 	}
 
@@ -523,8 +627,8 @@ vec2 CQmNameplateMsdfRenderer::Draw(const char *pText, float X, float Y, float F
 		}
 		EmitGlyphQuad(Glyph,
 			Placed.m_PenX + (Glyph.m_BearingX - Page.m_PxRange) * Scale,
-			Baseline + (Glyph.m_BearingY - Page.m_PxRange) * Scale,
-			Glyph.m_W * Scale, Glyph.m_H * Scale, Color);
+			Baseline - (Glyph.m_BearingY + Page.m_PxRange) * Scale,
+			Glyph.m_W * Scale * Glyph.m_MetricScale, Glyph.m_H * Scale * Glyph.m_MetricScale, Color);
 	}
 
 	return Measure(pText, FontSize);

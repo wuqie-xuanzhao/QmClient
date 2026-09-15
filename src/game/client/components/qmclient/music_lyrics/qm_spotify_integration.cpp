@@ -544,7 +544,8 @@ void CSpotifyIntegration::PollTokenPipeline()
 	{
 		std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pTokenRequest;
 		m_pImpl->m_pTokenRequest.reset();
-		const int Status = pRequest->StatusCode();
+		// 网络失败时终态非 DONE，读取 StatusCode 会触发断言；以 -1 走通用失败路径
+		const int Status = pRequest->State() == EHttpState::DONE ? pRequest->StatusCode() : -1;
 		if(pRequest->State() == EHttpState::DONE && Status == 200)
 		{
 			unsigned char *pData = nullptr;
@@ -620,7 +621,8 @@ void CSpotifyIntegration::PollSongPipeline()
 		return;
 	std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pSearchRequest;
 	m_pImpl->m_pSearchRequest.reset();
-	const int Status = pRequest->StatusCode();
+	// 网络失败时终态非 DONE，读取 StatusCode 会触发断言；以 -1 走通用失败路径
+	const int Status = pRequest->State() == EHttpState::DONE ? pRequest->StatusCode() : -1;
 	if(pRequest->State() == EHttpState::DONE && Status == 200)
 	{
 		unsigned char *pData = nullptr;
@@ -684,7 +686,8 @@ void CSpotifyIntegration::PollSongPipelineLyrics()
 		return;
 	std::shared_ptr<IHttpRequest> pRequest = m_pImpl->m_pLyricsRequest;
 	m_pImpl->m_pLyricsRequest.reset();
-	const int Status = pRequest->StatusCode();
+	// 网络失败时终态非 DONE，读取 StatusCode 会触发断言；以 -1 走通用失败路径
+	const int Status = pRequest->State() == EHttpState::DONE ? pRequest->StatusCode() : -1;
 	if(pRequest->State() == EHttpState::DONE && Status == 200)
 	{
 		unsigned char *pData = nullptr;

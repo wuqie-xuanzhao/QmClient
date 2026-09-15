@@ -190,12 +190,10 @@ TEST(SkinsContract, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("const bool QueueDirty = GameClient()->m_Skins.SkinQueueDirty(QueueDummy);"), std::string::npos);
 	EXPECT_NE(Menus.find("const auto &SkinQueue = GameClient()->m_Skins.SkinQueue(QueueDummy);"), std::string::npos);
 	EXPECT_EQ(Menus.find("QueueDirty ? \"● \""), std::string::npos);
-	EXPECT_NE(Menus.find("QueueTitleLabelProps.m_DisallowNewline = true;"), std::string::npos);
-	EXPECT_NE(Menus.find("QueueTitleLabelProps.m_MinimumFontSize = 6.0f;"), std::string::npos);
+	EXPECT_NE(Menus.find("Localize(\"Enable rotation\")"), std::string::npos);
 	EXPECT_EQ(Menus.find("CurrentQueueRect"), std::string::npos);
 	EXPECT_EQ(Menus.find("QueueHeader.VSplitLeft(QueueHeader.w * 0.48f"), std::string::npos);
-	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", aQueueLabel, QueueEnabled, &QueueHeader"), std::string::npos);
-	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", aQueueLabel"), std::string::npos);
+	EXPECT_NE(Menus.find("DoSettingsButton_CheckBox(SETTINGS_TEE, -1, &QueueEnabled, QueueDummy ? \"tee-dummy-skin-queue-enabled\" : \"tee-player-skin-queue-enabled\", Localize(\"Enable rotation\")"), std::string::npos);
 	EXPECT_EQ(Menus.find("Localize(\"Enable skin queue\"), QueueEnabled"), std::string::npos);
 	EXPECT_EQ(Menus.find("CUIRect QueueEnabledRect"), std::string::npos);
 	EXPECT_NE(Menus.find("ResolveSettingsTeeQueuePanelGeometry(TeeMetrics, (int)SkinQueue.size(), (int)vQueuePresets.size())"), std::string::npos);
@@ -207,7 +205,8 @@ TEST(SkinsContract, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("s_QueueListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
 	EXPECT_NE(Menus.find("s_PresetListBox.SetItemColors(ui_token::color::LIST_ITEM_SELECTED"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueList.HSplitTop(TeeMetrics.m_LineHeight, &QueueListHeader"), std::string::npos);
-	EXPECT_NE(Menus.find("TeeMetrics.m_ButtonHeight), &QueueListHeaderLabel, &ClearQueueRect"), std::string::npos);
+	EXPECT_NE(Menus.find("TeeMetrics.m_ButtonHeight), &QueueListHeader, &ClearQueueRect"), std::string::npos);
+	EXPECT_NE(Menus.find("TeeMetrics.m_ButtonHeight), &QueueListHeaderLabel, &QueueRandomRect"), std::string::npos);
 	EXPECT_NE(Menus.find("CurrentQueueLabelProps.m_MaxWidth = QueueListHeaderLabel.w;"), std::string::npos);
 	EXPECT_NE(Menus.find("Ui()->DoLabel(&QueueListHeaderLabel, aCurrentQueueLabel"), std::string::npos);
 	EXPECT_EQ(Menus.find("DoSettingsMenuLabel(SETTINGS_TEE, -1, -1, \"tee_queue_list_label\", &QueueListHeaderLabel, Localize(\"Skin queue\")"), std::string::npos);
@@ -229,7 +228,7 @@ TEST(SkinsContract, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_NE(Menus.find("TeeSkinQueueIntervalCtx.m_ScopeHash = MakeUiScopeHash(\"settings_tee_skin_queue_interval_text_input\");"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueIntervalOptions.m_CommitPolicy = ui_widget::EInputCommitPolicy::ON_RELEASE_OR_SUBMIT;"), std::string::npos);
 	EXPECT_NE(Menus.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
-	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 1, 120000, IntervalInputGroup, QueueIntervalOptions);"), std::string::npos);
+	EXPECT_NE(Menus.find("ui_widget::NumericField(TeeSkinQueueIntervalCtx, &s_aQueueIntervalStates[QueueDummy], &QueueInterval, &QueueInterval, 0, 120000, IntervalInputGroup, QueueIntervalOptions);"), std::string::npos);
 	EXPECT_EQ(Menus.find("Ui()->DoEditBox(&QueueIntervalInput, &IntervalInput"), std::string::npos);
 	EXPECT_NE(Source.find("m_vSkinQueuePresets.push_back({\"Server preset\", {}, CSkinQueuePreset::EKind::SERVER});"), std::string::npos);
 	// Removed UI: Apply/Save-current buttons, the select/cancel-select calls, and the

@@ -2729,7 +2729,8 @@ void CGameConsole::OnRender()
 			// stop rendering when lines reach the top
 			const bool Outside = y - OffsetY <= RowHeight;
 			const bool CanRenderOneLine = y - LocalOffsetY > RowHeight;
-			if(Outside && !CanRenderOneLine)
+			const bool SelectionActive = !pConsole->m_ChatExportMode && m_ConsoleState == CONSOLE_OPEN && (pConsole->m_MouseIsPress || pConsole->m_HasSelection || pConsole->m_CurSelStart != pConsole->m_CurSelEnd);
+			if(Outside && !CanRenderOneLine && !SelectionActive)
 				break;
 
 			const int LinesNotRendered = pEntry->m_LineCount - minimum((int)std::floor((y - LocalOffsetY) / RowHeight), pEntry->m_LineCount);

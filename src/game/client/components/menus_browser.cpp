@@ -722,7 +722,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	// display important messages in the middle of the screen so no
 	// users misses it
 	{
-		if(!ServerBrowser()->NumServers() && ServerBrowser()->IsGettingServerlist())
+		// 局域网标签不查询主服务器，后台 HTTP 刷新（如好友在线扫描）时不应显示主服务器加载提示
+		const bool IsLanTab = ServerBrowser()->GetCurrentType() == IServerBrowser::TYPE_LAN;
+		if(!ServerBrowser()->NumServers() && !IsLanTab && ServerBrowser()->IsGettingServerlist())
 		{
 			char aLoadingLabel[256];
 			const int LoadingDotsCount = static_cast<int>(Client()->GlobalTime() * 3.0f) % 7;
@@ -731,7 +733,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		}
 		else if(!ServerBrowser()->NumServers())
 		{
-			if(ServerBrowser()->GetCurrentType() == IServerBrowser::TYPE_LAN)
+			if(IsLanTab)
 			{
 				CUIRect Label, Button;
 				View.HMargin((View.h - (16.0f + 18.0f + 8.0f)) / 2.0f, &Label);

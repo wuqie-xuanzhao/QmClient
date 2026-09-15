@@ -1320,6 +1320,9 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
 			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
+			char aLocalizedServerMessage[1024];
+			const bool ServerMessageLocalized = QmHudNotifications::TryFormatLocalizedServerChatMessage(pMsg->m_pMessage, aLocalizedServerMessage, sizeof(aLocalizedServerMessage));
+			const char *pDisplayMessage = ServerMessageLocalized ? aLocalizedServerMessage : pMsg->m_pMessage;
 			if(QmMacosGraphicsDiagnosticsEnabled())
 			{
 				char aPayload[256];
@@ -1334,7 +1337,7 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 				PrintSuppressedServerMessage();
 				return;
 			}
-			AddLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage, false, ServerMessageAnalysis.m_Class);
+			AddLine(pMsg->m_ClientId, pMsg->m_Team, pDisplayMessage, false, ServerMessageAnalysis.m_Class);
 		}
 		else
 		{

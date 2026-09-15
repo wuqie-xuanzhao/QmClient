@@ -392,7 +392,11 @@ bool CUi::PrepareGaussianBlur()
 void CUi::RenderGaussianBlur(const CUIRect &Rect, float Alpha, int Corners, float Rounding)
 {
 	if(m_GaussianBlurSuppressionDepth > 0 || Rect.w <= 0.0f || Rect.h <= 0.0f || Alpha <= 0.0f || !PrepareGaussianBlur())
+	{
+		if(g_Config.m_QmGraphicsTrace >= 1 && m_GaussianBlurSuppressionDepth <= 0 && Rect.w > 0.0f && Rect.h > 0.0f && Alpha > 0.0f)
+			dbg_msg("ui/blur", "blur unavailable this frame (prepare failed)");
 		return;
+	}
 
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);

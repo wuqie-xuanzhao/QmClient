@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == Gores 게임 모드에서 Gores 자동 전환 자동 활성화
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+
 Automatically re-join team 0 after finish (only if unlocked).
 == 완주 후 자동으로 0팀 재가입 (잠금 해제된 경우에만)
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == Choose the menu font and cursor appearance
 
+Choose the menu font and font weight
+== 메뉴 글꼴과 굵기 선택
+
 Choose the menu map and background colors
 == Choose the menu map and background colors
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == 색상
+
+Color map tune zones by their tune zone number
+== tune zone 번호로 맵의 tune 영역에 색상 적용
 
 Color of authenticated player names on scoreboard
 == 점수판에 인증된 플레이어 이름 색상
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == Configure the companion appearance and movement
+
+Configure the ingame cursor scale
+== 게임 내 커서 크기 설정
 
 Configure the input overlay display
 == Configure the input overlay display
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == 사용자 정의 글꼴
 
+Custom font weight (variable fonts)
+== 사용자 지정 글꼴 굵기(가변 글꼴)
+
 Custom Font:
 == 사용자 정의 글꼴:
+
+Custom fonts use FreeType automatically.
+== 사용자 지정 글꼴은 자동으로 FreeType을 사용합니다.
 
 Custom prompt template
 == 사용자 정의 프롬프트 템플릿
@@ -4346,11 +4364,17 @@ Follow
 Following
 == 현재
 
+Font
+== 글꼴
+
 Font cursor
 == 폰트 커서
 
 Font size
 == 글꼴 크기
+
+Font style:
+== 글꼴 스타일:
 
 For more info: /cmdlist
 == 더 많은 정보: /cmdlist
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == 고스트 보기 모드가 해제되었습니다. 고스트가 다시 주행을 따라갑니다.
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== 고스트 보기 모드: 독립 타임라인으로 재생합니다. 관전 키를 누른 상태로 멤버를 따라가고, 스코어보드(Tab + Alt)로 재생을 조작하세요.
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== 고스트 보기 모드: ESC로 제어 패널을 전환합니다. ESC를 두 번 누르면 게임 메뉴가 열립니다(리플레이 종료). 관전 키를 누르면 멤버 목록이 표시됩니다.
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == 유령 가시성 (알파, 0=투명, 100=보임)
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Rank 1 멤버
 
+Rank 1 replay
+== 랭크 1 리플레이
+
 Rank 1 replays
 == Rank 1 리플레이
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Rank 고스트: 리플레이의 주행 구간이 유효하지 않습니다
-
-Rank ghost: the replay has no run start/end markers
-== Rank 고스트: 리플레이에 주행 시작/종료 마커가 없습니다
 
 Rank ghost: the replay list is empty or malformed
 == Rank 고스트: 리플레이 목록이 비어 있거나 손상되었습니다
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == 시계에 초 표시
 
+Show semi-transparent ghost tees for other players who are spectating
+== Show semi-transparent ghost tees for other players who are spectating
+
 Show server chat messages
 == 서버 채팅 메시지 표시
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == 관전 중인 플레이어와 친구
+
+Spectator ghost opacity
+== Spectator ghost opacity
 
 Spectators
 == 관전자
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== 이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만)
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == 이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만, 사용자 지정 글꼴은 FreeType으로 폴백)
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == 바닐라 스킨만 표시
 
+Variable custom font weight
+== 가변 글꼴의 사용자 지정 굵기
+
 Velocity
 == 속도
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == 시각 효과
 
+Visual: Cursor
+== 시각: 커서
+
 Visual: Effects
 == 시각: 효과
-
-Visual: Font & Cursor
-== 시각: 글꼴 및 커서
 
 Visual: Nameplates
 == 시각: 이름표
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == 이미 지난 일, 더 말해도 소용없다
-
-Wheel animate
-== 휠 애니메이션
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == TClient 무지개 Tee가 켜져 있으면 이 기능은 적용되지 않습니다.
@@ -13771,6 +13804,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == 사용 작업
+
+[Rank 1 replay]
+Direction
+== 방향
 
 [Show name plates]
 All

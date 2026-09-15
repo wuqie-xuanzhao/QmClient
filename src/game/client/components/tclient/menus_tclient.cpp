@@ -16,6 +16,7 @@
 #include <engine/shared/localization.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
+#include <engine/warning.h>
 
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/QmUi/QmCardRegistry.h>
@@ -327,8 +328,10 @@ namespace
 	uint64_t HashTClientSettingsCardLayout(const char *pStableCardId)
 	{
 		uint64_t Hash = 1469598103934665603ull;
-		if(str_comp(pStableCardId, "tclient:visual-font-cursor") == 0)
-			return HashValueFnv1a64(Hash, g_Config.m_TcAnimateWheelTime > 0);
+		if(str_comp(pStableCardId, "tclient:font") == 0)
+			return HashValueFnv1a64(Hash, g_Config.m_TcCustomFontWeight);
+		if(str_comp(pStableCardId, "tclient:cursor") == 0)
+			return Hash;
 		if(str_comp(pStableCardId, "tclient:visual-nameplates") == 0)
 			return HashValueFnv1a64(Hash, g_Config.m_TcWhiteFeet);
 		if(str_comp(pStableCardId, "tclient:visual-effects") == 0)
@@ -612,6 +615,27 @@ static void ApplyTClientContentMetrics(const float ContentWidth)
 int CMenus::DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
 {
 	return DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_TCLIENT, m_TClientSettingsTab, pId, pTextId, pText, pValue, pRect, VMargin, 0.0f, FontSize);
+}
+
+static void NotifyNameplateMsdfEnabled(IClient *pClient, int PreviousValue)
+{
+	if(PreviousValue != 0 || g_Config.m_QmNameplateMsdf == 0)
+		return;
+	log_info("nameplate_msdf", "manual MSDF mode enabled for nameplates; atlas/runtime glyph loading starts on the next render frame");
+	if(pClient != nullptr)
+	{
+		pClient->AddWarning(SWarning(Localize("MSDF nameplate text"), Localize("Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.")));
+	}
+}
+
+static void DisableNameplateMsdfForFontChange(IClient *pClient)
+{
+	if(g_Config.m_QmNameplateMsdf == 0)
+		return;
+	g_Config.m_QmNameplateMsdf = 0;
+	log_info("nameplate_msdf", "custom font changed; manual MSDF mode disabled until explicitly enabled again");
+	if(pClient != nullptr)
+		pClient->AddWarning(SWarning(Localize("MSDF nameplate text"), Localize("The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.")));
 }
 
 static constexpr const char *SETTINGS_RUNTIME_CACHE_METADATA_FILE = "qmclient/settings_section_cache_metadata.cfg";
@@ -1311,8 +1335,8 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 	CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpLabel, &CurrentColumn);
 	if(Render)
 	{
-		CUIElement &TitleElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-visual-font-cursor-title");
-		DoSettingsLabelStreamed(TitleElement, &Label, Localize("Visual: Font & Cursor"), HeadlineFontSize, TEXTALIGN_ML, TClientFixedLabelProperties(HeadlineFontSize, Label.w));
+		CUIElement &TitleElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-visual-font-title");
+		DoSettingsLabelStreamed(TitleElement, &Label, Localize("Font"), HeadlineFontSize, TEXTALIGN_ML, TClientFixedLabelProperties(HeadlineFontSize, Label.w));
 	}
 	CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 	CTClientSettingsRowAllocator Rows(CurrentColumn);
@@ -1341,7 +1365,9 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 		int FontSelectedOld = -1;
 		for(size_t i = 0; i < CustomFaces.size(); ++i)
 		{
-			if(str_find_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()))
+			const bool ExactFamily = str_comp_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()) == 0;
+			const bool FamilyWithStyle = str_startswith_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()) && g_Config.m_TcCustomFont[str_length(CustomFaces[i].c_str())] == ' ';
+			if(ExactFamily || FamilyWithStyle)
 				FontSelectedOld = (int)i;
 		}
 		CUIRect FontDirectory;
@@ -1350,15 +1376,14 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 		const int FontSelectedNew = DoSettingsDropDown(&Button, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 		if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 		{
+			DisableNameplateMsdfForFontChange(Client());
 			str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
 			s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 			s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 			TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 			InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
-			TextRender()->OnPreWindowResize();
 			GameClient()->OnWindowResize();
 			GameClient()->Editor()->OnWindowResize();
-			TextRender()->OnWindowResize();
 			GameClient()->m_MapImages.SetTextureScale(101);
 			GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 		}
@@ -1375,25 +1400,54 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 	Button = Rows.Next();
 	if(Render)
 	{
-		Button.VSplitLeft(120.0f, &Label, &Button);
-		DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, nullptr, &Label, Localize("Hammer Mode:"), FontSize, TEXTALIGN_ML);
-		static std::vector<const char *> s_DropDownNames;
-		s_DropDownNames = {Localize("Normal", "Hammer Mode"), Localize("Rotate with cursor", "Hammer Mode"), Localize("Rotate with cursor like gun", "Hammer Mode")};
-		static CUi::SDropDownState s_DropDownState;
-		static CScrollRegion s_DropDownScrollRegion;
-		s_DropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_DropDownScrollRegion;
-		g_Config.m_TcHammerRotatesWithCursor = DoSettingsDropDown(&Button, g_Config.m_TcHammerRotatesWithCursor, s_DropDownNames.data(), s_DropDownNames.size(), s_DropDownState);
+		const auto &Styles = *TextRender()->GetCustomFontStyles(g_Config.m_TcCustomFont);
+		if(Styles.size() > 1)
+		{
+			Button.VSplitLeft(100.0f, &Label, &Button);
+			CUIElement &StyleLabel = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-custom-font-style-label");
+			DoSettingsLabelStreamed(StyleLabel, &Label, Localize("Font style:"), FontSize, TEXTALIGN_ML, TClientFixedLabelProperties(FontSize, Label.w));
+			static std::vector<std::string> s_StyleNamesOwned;
+			static std::vector<const char *> s_StyleNames;
+			static CUi::SDropDownState s_StyleDropDownState;
+			static CScrollRegion s_StyleDropDownScrollRegion;
+			s_StyleDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_StyleDropDownScrollRegion;
+			s_StyleDropDownState.m_SelectionPopupContext.m_SpecialFontRenderMode = true;
+			if(s_StyleNamesOwned != Styles)
+			{
+				s_StyleNamesOwned = Styles;
+				s_StyleNames.clear();
+				for(const auto &Style : s_StyleNamesOwned)
+					s_StyleNames.push_back(Style.c_str());
+			}
+			int SelectedStyle = -1;
+			for(size_t i = 0; i < Styles.size(); ++i)
+				if(str_comp_nocase(g_Config.m_TcCustomFont, Styles[i].c_str()) == 0)
+					SelectedStyle = (int)i;
+			const int NewStyle = DoSettingsDropDown(&Button, SelectedStyle, s_StyleNames.data(), s_StyleNames.size(), s_StyleDropDownState);
+			if(NewStyle >= 0 && NewStyle != SelectedStyle && (size_t)NewStyle < Styles.size())
+			{
+				DisableNameplateMsdfForFontChange(Client());
+				str_copy(g_Config.m_TcCustomFont, Styles[NewStyle].c_str());
+				TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
+				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
+				GameClient()->OnWindowResize();
+			}
+		}
 	}
 	Button = Rows.Next();
 	if(Render)
-		DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-cursor-scale", &g_Config.m_TcCursorScale, &g_Config.m_TcCursorScale, &Button, Localize("Ingame cursor scale"), 0, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
-	Button = Rows.Next();
-	if(Render)
 	{
-		if(g_Config.m_TcAnimateWheelTime > 0)
-			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms");
-		else
-			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms (off)");
+		const int PreviousValue = g_Config.m_QmNameplateMsdf;
+				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use MSDF text rendering for nameplates (built-in fonts only)"), &g_Config.m_QmNameplateMsdf, &Button, LineSize);
+				static int s_NameplateMsdfTooltipId;
+				GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &Button, Localize("Custom fonts use FreeType automatically."));
+		NotifyNameplateMsdfEnabled(Client(), PreviousValue);
+	}
+	if(TextRender()->CustomFontHasVariableWeight(g_Config.m_TcCustomFont))
+	{
+		Button = Rows.Next();
+		if(Render)
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-custom-font-weight", &g_Config.m_TcCustomFontWeight, &g_Config.m_TcCustomFontWeight, &Button, Localize("Custom font weight (variable fonts)"), 100, 900, &CUi::ms_LinearScrollbarScale, 0, "");
 	}
 	BoxRect.h = CurrentColumn.y - BoxRect.y;
 	return CurrentColumn.y - SavedY;
@@ -1562,9 +1616,31 @@ float CMenus::LayoutTClientHudCacheSection(CUIRect &CurrentColumn, bool Render)
 SSettingsSection CMenus::BuildTClientThemeCacheSection()
 {
 	SSettingsSection S;
-	S.m_pName = "Visual: Font & Cursor";
-	ConfigureSettingsCardSection(S, Localizable("Visual: Font & Cursor"), "tclient:visual-font-cursor", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);
-	S.m_DependencyConfigInts = {&g_Config.m_TcCursorScale, &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcHammerRotatesWithCursor};
+	S.m_pName = "Font";
+	ConfigureSettingsCardSection(S, Localizable("Font"), "tclient:font", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);
+	S.m_DependencyConfigInts = {&g_Config.m_TcCustomFontWeight, &g_Config.m_QmNameplateMsdf};
+	return S;
+}
+
+SSettingsSection CMenus::BuildTClientCursorCacheSection()
+{
+	SSettingsSection S;
+	S.m_pName = "Visual: Cursor";
+	ConfigureSettingsCardSection(S, Localizable("Visual: Cursor"), "tclient:cursor", [this](CUIRect &Col, bool Render) -> float {
+		CUIRect Label, Button, Tmp;
+		const float SavedY = Col.y;
+		Col.HSplitTop(Margin, nullptr, &Col);
+		Col.HSplitTop(HeadlineHeight, Render ? &Label : &Tmp, &Col);
+		if(Render)
+			DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-cursor-title", &Label, Localize("Visual: Cursor"), HeadlineFontSize, TEXTALIGN_ML);
+		Col.HSplitTop(MarginSmall, nullptr, &Col);
+		CTClientSettingsRowAllocator Rows(Col);
+		Button = Rows.Next();
+		if(Render)
+			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-cursor-scale", &g_Config.m_TcCursorScale, &g_Config.m_TcCursorScale, &Button, Localize("Ingame cursor scale"), 0, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
+		return Col.y - SavedY;
+	}, Margin);
+	S.m_DependencyConfigInts = {&g_Config.m_TcCursorScale};
 	return S;
 }
 
@@ -1610,6 +1686,7 @@ std::vector<SSettingsSection> CMenus::BuildTClientLeftCacheSections()
 {
 	std::vector<SSettingsSection> vSections;
 	vSections.push_back(BuildTClientThemeCacheSection());
+	vSections.push_back(BuildTClientCursorCacheSection());
 	vSections.push_back(BuildTClientAutoReplyCacheSection());
 	vSections.push_back(BuildTClientPetCacheSection());
 	return vSections;
@@ -1741,7 +1818,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 		};
 		Section.m_RenderFullFn = Section.m_RenderCompactFn;
 	};
-	static std::array<CTClientSettingsCardFrameBinding, 19> s_aDeckCardBindings;
+	static std::array<CTClientSettingsCardFrameBinding, 20> s_aDeckCardBindings;
 	size_t DeckCardBindingIndex = 0;
 	auto AppendDeckCards = [&](std::vector<SSettingsSection> &vSections) {
 		if(ReadOnly)
@@ -1820,7 +1897,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			BoxRect = CurrentColumn;
 			CurrentColumn.HSplitTop(HeadlineHeight, Render ? &Label : &TmpLabel, &CurrentColumn);
 			if(Render)
-				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-visual-font-cursor-title", &Label, Localize("Visual: Font & Cursor"), HeadlineFontSize, TEXTALIGN_ML);
+				DoSettingsMenuLabel(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-visual-font-title", &Label, Localize("Font"), HeadlineFontSize, TEXTALIGN_ML);
 			CurrentColumn.HSplitTop(MarginSmall, nullptr, &CurrentColumn);
 
 			const bool RenderFontDropdown = Render && ShouldRenderSection(CurrentColumn, 0.0f, LineSize);
@@ -1857,7 +1934,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					int FontSelectedOld = -1;
 					for(size_t i = 0; i < CustomFaces.size(); ++i)
 					{
-						if(str_find_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()))
+						if(str_comp_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()) == 0)
 							FontSelectedOld = i;
 					}
 					CUIRect FontDirectory;
@@ -1867,15 +1944,14 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					const int FontSelectedNew = DoSettingsDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 					if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 					{
+						DisableNameplateMsdfForFontChange(Client());
 						str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
 						VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 						RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 						TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 						InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
-						TextRender()->OnPreWindowResize();
 						GameClient()->OnWindowResize();
 						GameClient()->Editor()->OnWindowResize();
-						TextRender()->OnWindowResize();
 						GameClient()->m_MapImages.SetTextureScale(101);
 						GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 					}
@@ -1891,6 +1967,32 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					}
 					LogSettingsStage("tclient_settings_left_visual_font_dropdown", FontDropDownTimer);
 				}
+			}
+			else
+			{
+				SkipSection(CurrentColumn, 0.0f, LineSize);
+			}
+
+			if(TextRender()->CustomFontHasVariableWeight(g_Config.m_TcCustomFont) && ShouldRenderVisualBlock(LineSize))
+			{
+				CUIRect MsdfRow;
+				CurrentColumn.HSplitTop(LineSize, &MsdfRow, &CurrentColumn);
+				const int PreviousValue = g_Config.m_QmNameplateMsdf;
+				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use MSDF text rendering for nameplates (built-in fonts only)"), &g_Config.m_QmNameplateMsdf, &MsdfRow, LineSize);
+				static int s_NameplateMsdfTooltipId;
+				GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &MsdfRow, Localize("Custom fonts use FreeType automatically."));
+				NotifyNameplateMsdfEnabled(Client(), PreviousValue);
+			}
+			else
+			{
+				SkipSection(CurrentColumn, 0.0f, LineSize);
+			}
+
+			if(ShouldRenderVisualBlock(LineSize))
+			{
+				CUIRect WeightRow;
+				CurrentColumn.HSplitTop(LineSize, &WeightRow, &CurrentColumn);
+				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-custom-font-weight", &g_Config.m_TcCustomFontWeight, &g_Config.m_TcCustomFontWeight, &WeightRow, Localize("Custom font weight (variable fonts)"), 100, 900, &CUi::ms_LinearScrollbarScale, 0, "");
 			}
 			else
 			{
@@ -1923,11 +2025,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			{
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-cursor-scale", &g_Config.m_TcCursorScale, &g_Config.m_TcCursorScale, &Button, Localize("Ingame cursor scale"), 0, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
-				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-				if(g_Config.m_TcAnimateWheelTime > 0)
-					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms");
-				else
-					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-off", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms (off)");
 			}
 			else
 			{
@@ -1969,7 +2066,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				int FontSelectedOld = -1;
 				for(size_t i = 0; i < CustomFaces.size(); ++i)
 				{
-					if(str_find_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()))
+					if(str_comp_nocase(g_Config.m_TcCustomFont, CustomFaces[i].c_str()) == 0)
 						FontSelectedOld = i;
 				}
 				CUIRect FontDirectory;
@@ -1978,15 +2075,14 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				const int FontSelectedNew = DoSettingsDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 				if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 				{
+					DisableNameplateMsdfForFontChange(Client());
 					str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
 					VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 					RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 					TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 					InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
-					TextRender()->OnPreWindowResize();
 					GameClient()->OnWindowResize();
 					GameClient()->Editor()->OnWindowResize();
-					TextRender()->OnWindowResize();
 					GameClient()->m_MapImages.SetTextureScale(101);
 					GameClient()->m_MapImages.SetTextureScale(g_Config.m_ClTextEntitiesSize);
 				}
@@ -1999,6 +2095,21 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					Storage()->GetCompletePath(IStorage::TYPE_SAVE, "qmclient/fonts", aBuf, sizeof(aBuf));
 					Client()->ViewFile(aBuf);
 				}
+			}
+			else
+			{
+				SkipSection(CurrentColumn, 0.0f, LineSize);
+			}
+
+			if(ShouldRenderSection(CurrentColumn, 0.0f, LineSize))
+			{
+				CUIRect MsdfRow;
+				CurrentColumn.HSplitTop(LineSize, &MsdfRow, &CurrentColumn);
+				const int PreviousValue = g_Config.m_QmNameplateMsdf;
+					DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use MSDF text rendering for nameplates (built-in fonts only)"), &g_Config.m_QmNameplateMsdf, &MsdfRow, LineSize);
+					static int s_NameplateMsdfTooltipId;
+					GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &MsdfRow, Localize("Custom fonts use FreeType automatically."));
+				NotifyNameplateMsdfEnabled(Client(), PreviousValue);
 			}
 			else
 			{
@@ -2030,11 +2141,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			{
 				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
 				DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-cursor-scale", &g_Config.m_TcCursorScale, &g_Config.m_TcCursorScale, &Button, Localize("Ingame cursor scale"), 0, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
-				CurrentColumn.HSplitTop(LineSize, &Button, &CurrentColumn);
-				if(g_Config.m_TcAnimateWheelTime > 0)
-					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms");
-				else
-					DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-wheel-animate-ms", &g_Config.m_TcAnimateWheelTime, &g_Config.m_TcAnimateWheelTime, &Button, Localize("Wheel animate"), 0, 1000, &CUi::ms_LinearScrollbarScale, 0, "ms (off)");
 			}
 			else
 			{
@@ -2698,8 +2804,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			std::vector<SSettingsSection> vLeftSections;
 			SSettingsSection S;
 
-			// -- Visual: Font & Cursor --
+			// -- Font / Visual: Cursor --
 			vLeftSections.push_back(BuildTClientThemeCacheSection());
+			vLeftSections.push_back(BuildTClientCursorCacheSection());
 
 			// -- Visual: Nameplates --
 			S = SSettingsSection{};
@@ -3552,8 +3659,9 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 	}
 	if(!ReadOnly)
 	{
-		static constexpr std::array<std::pair<const char *, const char *>, 19> s_aDeckCardSpecs = {{
-			{"tclient:visual-font-cursor", "Visual: Font & Cursor"},
+		static constexpr std::array<std::pair<const char *, const char *>, 20> s_aDeckCardSpecs = {{
+			{"tclient:font", "Font"},
+			{"tclient:cursor", "Visual: Cursor"},
 			{"tclient:visual-nameplates", "Visual: Nameplates"},
 			{"tclient:visual-effects", "Visual: Effects"},
 			{"tclient:input", "Input"},

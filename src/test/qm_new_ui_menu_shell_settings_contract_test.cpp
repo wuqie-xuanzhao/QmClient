@@ -122,9 +122,9 @@ TEST(QmNewUiMenuShellSettingsContract, SettingsInputFieldsReserveTrailingActions
 	EXPECT_NE(ThemeSource.find("ColorHSLA(g_Config.m_QmUiColor), g_Config.m_QmUiOpacity / 100.0f"), std::string::npos);
 
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");
-	const std::string SkinRenderList = FunctionBody(SettingsSource, "const auto RenderList =");
-	EXPECT_NE(SkinRenderList.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
-	EXPECT_EQ(SkinRenderList.find("Ui()->DoLabel(&IntervalUnit"), std::string::npos);
+	const std::string SkinRenderQueue = FunctionBody(SettingsSource, "const auto RenderSkinQueue =");
+	EXPECT_NE(SkinRenderQueue.find("QueueIntervalOptions.m_pSuffix = \"ms\";"), std::string::npos);
+	EXPECT_EQ(SkinRenderQueue.find("Ui()->DoLabel(&IntervalUnit"), std::string::npos);
 }
 
 TEST(QmNewUiMenuShellSettingsContract, AppearanceNamePlateContainsNameplateTextControlsWithoutInternalScrollRegion)

@@ -33,6 +33,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/gameclient.h>
+#include <game/client/race.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
 #include <game/layers.h>
@@ -63,6 +64,9 @@
 [[maybe_unused]] static constexpr int64_t MAP_CATEGORY_CACHE_SAVE_DELAY_SEC = 5;
 static constexpr int QMCLIENT_SYNC_INTERVAL_SECONDS = 30;
 static constexpr int QMCLIENT_VOICE_SYNC_INTERVAL_SECONDS = 10;
+// 本地统计文件的条目上限：异常服务器可能用任意 gametype 制造新条目，
+// 限制文件与内存的增长；达到上限后只更新已有条目，不再新建。
+static constexpr int QMCLIENT_MAX_LOCAL_MODE_STATS = 256;
 static constexpr const char *QMCLIENT_DEFAULT_VOICE_SERVER = "42.194.185.210:9987";
 // Recognition, online-user distribution and voice presence are served by the
 // voice service itself (default :9987) and use the /qm/* namespace.
@@ -881,14 +885,17 @@ void CQmClient::LoadQmClientLocalModeStats()
 						Stats.m_PlaytimeSeconds = ParsedPlaytime;
 				}
 			}
-			auto Existing = std::find_if(m_vQmClientLocalModeStats.begin(), m_vQmClientLocalModeStats.end(), [&Stats](const SQmClientLocalModeStats &Entry) {
-				return str_comp_nocase(Entry.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0 && Entry.m_CommunityId == Stats.m_CommunityId && Entry.m_IsAxiom == Stats.m_IsAxiom;
-			});
-			if(Existing == m_vQmClientLocalModeStats.end())
-			{
-				m_vQmClientLocalModeStats.push_back(std::move(Stats));
+		auto Existing = std::find_if(m_vQmClientLocalModeStats.begin(), m_vQmClientLocalModeStats.end(), [&Stats](const SQmClientLocalModeStats &Entry) {
+			return str_comp_nocase(Entry.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0 && Entry.m_CommunityId == Stats.m_CommunityId && Entry.m_IsAxiom == Stats.m_IsAxiom;
+		});
+		if(Existing == m_vQmClientLocalModeStats.end())
+		{
+			// 文件被手工改成超量条目时截断，保证内存与后续保存有界。
+			if((int)m_vQmClientLocalModeStats.size() >= QMCLIENT_MAX_LOCAL_MODE_STATS)
 				continue;
-			}
+			m_vQmClientLocalModeStats.push_back(std::move(Stats));
+			continue;
+		}
 			Existing->m_Maps = (int)std::min<int64_t>(std::numeric_limits<int>::max(), SaturatingAddInt64(Existing->m_Maps, Stats.m_Maps));
 			Existing->m_Score = SaturatingAddInt64(Existing->m_Score, Stats.m_Score);
 			Existing->m_PlaytimeSeconds = SaturatingAddInt64(Existing->m_PlaytimeSeconds, Stats.m_PlaytimeSeconds);
@@ -1189,9 +1196,12 @@ void CQmClient::RecordQmClientLocalMapFinish(const char *pGameMode, int Score)
 			if(Stats.m_Maps < std::numeric_limits<int>::max())
 				++Stats.m_Maps;
 			Stats.m_Score = SaturatingAddInt64(Stats.m_Score, Score);
+			m_QmStatisticsLocalStatsDirty = true;
 			return;
 		}
 	}
+	if((int)m_vQmClientLocalModeStats.size() >= QMCLIENT_MAX_LOCAL_MODE_STATS)
+		return;
 	SQmClientLocalModeStats Stats;
 	Stats.m_GameMode = pGameMode;
 	Stats.m_CommunityId = CommunityId;
@@ -1199,6 +1209,50 @@ void CQmClient::RecordQmClientLocalMapFinish(const char *pGameMode, int Score)
 	Stats.m_Maps = 1;
 	Stats.m_Score = Score;
 	m_vQmClientLocalModeStats.push_back(std::move(Stats));
+	m_QmStatisticsLocalStatsDirty = true;
+}
+
+void CQmClient::OnMessage(int MsgType, void *pRawMsg)
+{
+	// 本地完成计数：DDNet 系服务端不会产生 GAMEOVER，完成通过两条互斥
+	// 通道播报——0.6 是「finished in」聊天广播（含中文格式），0.7 是
+	// RaceFinish 事件。demo 回放与离线状态不计数。
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return;
+
+	if(MsgType == NETMSGTYPE_SV_RACEFINISH)
+	{
+		const CNetMsg_Sv_RaceFinish *pMsg = (CNetMsg_Sv_RaceFinish *)pRawMsg;
+		if(pMsg->m_ClientId >= 0 && pMsg->m_ClientId == GameClient()->m_Snap.m_LocalClientId && pMsg->m_Time > 0)
+			RecordQmClientLocalRaceFinish(pMsg->m_Time);
+	}
+	else if(MsgType == NETMSGTYPE_SV_CHAT)
+	{
+		const CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		const int LocalClientId = GameClient()->m_Snap.m_LocalClientId;
+		// m_pMessage 解包失败时可能为 null，必须先判空再交给解析器。
+		if(pMsg->m_ClientId != -1 || LocalClientId < 0 || pMsg->m_pMessage == nullptr)
+			return;
+		char aName[MAX_NAME_LENGTH];
+		const int Time = CRaceHelper::TimeFromFinishMessage(pMsg->m_pMessage, aName, sizeof(aName));
+		if(Time > 0 && str_comp(aName, GameClient()->m_aClients[LocalClientId].m_aName) == 0)
+			RecordQmClientLocalRaceFinish(Time);
+	}
+}
+
+void CQmClient::RecordQmClientLocalRaceFinish(int TimeMs)
+{
+	// 双通道兜底去重：同一完成事件在 1 秒内只记一次。
+	const int64_t Now = time_get();
+	if(m_QmLastLocalFinishRecordTime >= 0 && Now - m_QmLastLocalFinishRecordTime < time_freq())
+		return;
+	const char *pGameType = Client()->ServerInfo().m_aGameType;
+	if(!pGameType || pGameType[0] == '\0')
+		return;
+	m_QmLastLocalFinishRecordTime = Now;
+	// 两条通道的时间都是毫秒；score 字段按正的完成秒数累计，
+	// 不再沿用旧 GAMEOVER 路径的负值语义。
+	RecordQmClientLocalMapFinish(pGameType, maximum<int>(1, TimeMs / 1000));
 }
 
 void CQmClient::AccumulateQmClientLocalModePlaytime(int64_t Now)
@@ -1227,15 +1281,19 @@ void CQmClient::AccumulateQmClientLocalModePlaytime(int64_t Now)
 		if(str_comp_nocase(Stats.m_GameMode.c_str(), m_QmClientActiveLocalMode.c_str()) == 0 && Stats.m_CommunityId == m_QmClientActiveLocalCommunityId && Stats.m_IsAxiom == m_QmClientActiveLocalIsAxiom)
 		{
 			Stats.m_PlaytimeSeconds = SaturatingAddInt64(Stats.m_PlaytimeSeconds, Seconds);
+			m_QmStatisticsLocalStatsDirty = true;
 			return;
 		}
 	}
+	if((int)m_vQmClientLocalModeStats.size() >= QMCLIENT_MAX_LOCAL_MODE_STATS)
+		return;
 	SQmClientLocalModeStats Stats;
 	Stats.m_GameMode = m_QmClientActiveLocalMode;
 	Stats.m_CommunityId = m_QmClientActiveLocalCommunityId;
 	Stats.m_IsAxiom = m_QmClientActiveLocalIsAxiom;
 	Stats.m_PlaytimeSeconds = Seconds;
 	m_vQmClientLocalModeStats.push_back(std::move(Stats));
+	m_QmStatisticsLocalStatsDirty = true;
 }
 
 void CQmClient::UpdateQmClientLocalModePlaytime()
@@ -1316,13 +1374,19 @@ void CQmClient::OnUpdate()
 	UpdateQmClientLifecycleAndServerTime();
 	UpdateQmDdnetPlayerStats();
 	// 远程请求在 Axiom 组件中异步完成；下一帧统一落盘，避免每帧写文件。
+	// 本地统计脏标记按 30 秒节流落盘：游玩时长逐秒累计，不能逐秒写文件，
+	// 但也不能只在关机时保存——崩溃会把整段会话的本地统计全部丢失。
 	const int64_t StatisticsNow = time_get();
-	if(GameClient() != nullptr && !m_QmStatisticsFileInvalid && GameClient()->m_QmAxiomScores.PersistentCacheDirty() &&
+	if(GameClient() != nullptr && !m_QmStatisticsFileInvalid &&
+		(GameClient()->m_QmAxiomScores.PersistentCacheDirty() ||
+			(m_QmStatisticsLocalStatsDirty && StatisticsNow >= m_QmStatisticsLocalSaveDueTick)) &&
 		(m_QmStatisticsNextSaveRetryTick == 0 || StatisticsNow >= m_QmStatisticsNextSaveRetryTick))
 	{
 		if(SaveQmClientStatistics())
 		{
 			GameClient()->m_QmAxiomScores.ClearPersistentCacheDirty();
+			m_QmStatisticsLocalStatsDirty = false;
+			m_QmStatisticsLocalSaveDueTick = StatisticsNow + 30 * time_freq();
 			m_QmStatisticsNextSaveRetryTick = 0;
 		}
 		else
@@ -1623,7 +1687,8 @@ void CQmClient::FinishQmClientPlaytimeQuery()
 		return;
 
 	const EHttpState State = m_pQmClientPlaytimeQueryTask->State();
-	const int StatusCode = m_pQmClientPlaytimeQueryTask->StatusCode();
+	// 非_DONE_终态（网络失败/中止）读取 StatusCode 会触发断言，失败时以 -1 占位
+	const int StatusCode = State == EHttpState::DONE ? m_pQmClientPlaytimeQueryTask->StatusCode() : -1;
 	const bool ManualRefresh = m_QmClientPlaytimeManualRefreshActive;
 	const bool Ok = FinishQmClientPlaytimeTask(m_pQmClientPlaytimeQueryTask, false);
 	m_QmClientPlaytimeLastSync = time_get();
@@ -1844,6 +1909,7 @@ void CQmClient::FinishQmDdnetPlayerStats()
 
 		if(Result.m_Parsed)
 		{
+			m_QmDdnetStatsSucceededOnce = true;
 			StoreQmDdnetPlayerStats(ParsePlayerName.c_str(), Result.m_FavoritePartner, Result.m_TotalFinishes, Result.m_Points, Result.m_PointsTotal, Result.m_PlaytimeHours, Result.m_PlaytimeHoursPastYear);
 			SelectQmDdnetPlayerStats(g_Config.m_PlayerName);
 			if(SaveQmClientStatistics() && GameClient() != nullptr)
@@ -1859,10 +1925,14 @@ void CQmClient::FinishQmDdnetPlayerStats()
 	if(!m_pQmDdnetPlayerTask)
 		return;
 
-	if(m_pQmDdnetPlayerTask->State() != EHttpState::DONE || m_pQmDdnetPlayerTask->StatusCode() != 200)
+	// libcurl 失败同样会让请求进入终态（Done() 为真但状态非 DONE），
+	// 此时调用 StatusCode() 会触发 http.cpp 的断言并弹出崩溃报告
+	const EHttpState State = m_pQmDdnetPlayerTask->State();
+	const int StatusCode = State == EHttpState::DONE ? m_pQmDdnetPlayerTask->StatusCode() : -1;
+	if(State != EHttpState::DONE || StatusCode != 200)
 	{
 		log_warn("qmclient", "DDNet statistics request failed for '%s': state=%d status=%d",
-			m_QmDdnetPlayerState.RequestPlayerName().c_str(), (int)m_pQmDdnetPlayerTask->State(), m_pQmDdnetPlayerTask->StatusCode());
+			m_QmDdnetPlayerState.RequestPlayerName().c_str(), (int)State, StatusCode);
 		m_QmDdnetPlayerState.CompleteHttp(false, time_get(), (int64_t)QMCLIENT_DDNET_PLAYER_RETRY_DELAY_SECONDS * time_freq());
 		m_pQmDdnetPlayerTask = nullptr;
 		return;
@@ -2812,9 +2882,14 @@ void CQmClient::UpdateTitleAuthentication()
 	}
 	if(m_pTitleReport && m_pTitleReport->Done())
 	{
-		if(m_pTitleReport->StatusCode() == 409)
+		// 失败/中止的请求不读取 StatusCode，避免 http.cpp 断言
+		const EHttpState ReportState = m_pTitleReport->State();
+		const int ReportStatusCode = ReportState == EHttpState::DONE ? m_pTitleReport->StatusCode() : -1;
+		if(ReportState != EHttpState::DONE)
+			m_pTitleStatus = Localizable("Title server unavailable; retry");
+		else if(ReportStatusCode == 409)
 			m_pTitleStatus = Localizable("Four IP addresses are already online");
-		else if(m_pTitleReport->StatusCode() == 200 && !TitleBusy())
+		else if(ReportStatusCode == 200 && !TitleBusy())
 			m_pTitleStatus = Localizable("Permanent sponsor verified");
 		m_pTitleReport.reset();
 	}

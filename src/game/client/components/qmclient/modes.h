@@ -3,6 +3,7 @@
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_MODES_H
 
 #include <cstdint>
+#include <limits>
 
 struct SQmStatisticsModeDisplay
 {
@@ -153,6 +154,48 @@ bool ConsumeQmBudgetedWork(int &Cursor, int Total, int Budget);
 bool QmStatisticsShouldShowAxiomGores(bool HasLocalAxiomGores, bool IsCurrentAxiomCommunity, bool HasAxiomResult);
 SQmStatisticsModeDisplay ResolveQmStatisticsModeDisplay(int LocalMaps, int64_t LocalPlaytimeSeconds, bool IsAxiomGores, bool HasAxiomStats, int64_t AxiomMaps, int64_t AxiomPlaytimeSeconds, bool IsDdnet, int DdnetFinishes, int64_t DdnetPlaytimeHours = -1);
 int64_t QmStatisticsChartWeight(int Maps, int64_t PlaytimeSeconds, bool UseMaps);
+
+template<typename T>
+T QmSaturatingAddStats(T Left, T Right)
+{
+	if(Right > 0 && Left > std::numeric_limits<T>::max() - Right)
+		return std::numeric_limits<T>::max();
+	if(Right < 0 && Left < std::numeric_limits<T>::min() - Right)
+		return std::numeric_limits<T>::min();
+	return Left + Right;
+}
+
+// 把列表中所有被 IsMode 命中的条目折叠进第一条：m_Maps / m_Score /
+// m_PlaytimeSeconds 饱和累加，其余字段保留第一条的值。返回是否发生折叠。
+// 统计页同一模式会因服务器社区不同、DDStats 追加同名条目等原因出现多条
+// 记录，展示前必须折叠成一条，否则图例和饼图会渲染出完全相同的重复项。
+template<typename TList, typename TPred>
+bool QmCollapseModeEntries(TList &vStats, TPred IsMode)
+{
+	bool Collapsed = false;
+	auto First = vStats.end();
+	auto It = vStats.begin();
+	while(It != vStats.end())
+	{
+		if(!IsMode(*It))
+		{
+			++It;
+			continue;
+		}
+		if(First == vStats.end())
+		{
+			First = It;
+			++It;
+			continue;
+		}
+		First->m_Maps = QmSaturatingAddStats(First->m_Maps, It->m_Maps);
+		First->m_Score = QmSaturatingAddStats(First->m_Score, It->m_Score);
+		First->m_PlaytimeSeconds = QmSaturatingAddStats(First->m_PlaytimeSeconds, It->m_PlaytimeSeconds);
+		It = vStats.erase(It);
+		Collapsed = true;
+	}
+	return Collapsed;
+}
 
 bool ShouldHideFocusHud(bool FocusActive, bool HideHud);
 bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool FocusActive, bool HideHud);

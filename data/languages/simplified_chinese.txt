@@ -1208,6 +1208,9 @@ Automatically create statboard csv
 Automatically enable Gores auto-switch in Gores game mode
 == 在 Gores 游戏模式中自动启用 Gores 自动切换
 
+Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== 自定义资源的贴图全透明时自动回退到默认资源；关闭后空白贴图保持不可见（可用于屏蔽特效）
+
 Automatically re-join team 0 after finish (only if unlocked).
 == 完赛后自动回到 0 队（仅未锁定时）
 
@@ -1841,6 +1844,9 @@ Choose the language used by the client
 Choose the menu font and cursor appearance
 == 选择菜单字体和光标外观
 
+Choose the menu font and font weight
+== 选择菜单字体和字重
+
 Choose the menu map and background colors
 == 选择菜单地图和背景颜色
 
@@ -2035,6 +2041,9 @@ Collision Line Opacity
 
 Color
 == 颜色
+
+Color map tune zones by their tune zone number
+== 按 Tune Zone 编号给地图上的对应区块着色
 
 Color of authenticated player names on scoreboard
 == 计分板中已认证玩家的名称颜色
@@ -2248,6 +2257,9 @@ Configure Tee appearance and skins
 
 Configure the companion appearance and movement
 == 配置伙伴的外观和移动
+
+Configure the ingame cursor scale
+== 配置游戏内光标缩放
 
 Configure the input overlay display
 == 配置输入叠加层显示
@@ -2576,8 +2588,14 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 == 自定义字体
 
+Custom font weight (variable fonts)
+== 自定义字体字重（可变字体）
+
 Custom Font:
 == 自定义字体：
+
+Custom fonts use FreeType automatically.
+== 自定义字体会自动使用 FreeType。
 
 Custom prompt template
 == 自定义提示词模板
@@ -4346,11 +4364,17 @@ Follow
 Following
 == 当前
 
+Font
+== 字体
+
 Font cursor
 == 字体光标
 
 Font size
 == 字体大小
+
+Font style:
+== 字体样式：
 
 For more info: /cmdlist
 == 更多命令请查看：/cmdlist
@@ -4643,8 +4667,8 @@ Ghost tools
 Ghost view mode off. The ghost follows your runs again.
 == 已退出查看模式。影子恢复跟随你的跑图。
 
-Ghost view mode: independent timeline. Hold the spectate key to follow a member; the scoreboard (Tab + Alt) controls playback.
-== 查看模式：影子按独立时间线播放。按住旁观键跟随成员；计分板（Tab + Alt）控制播放。
+Ghost view mode: ESC toggles the control panel. Double-tap ESC to open the game menu (leave the replay). Hold the spectate key for the member list.
+== 查看模式：按 ESC 切换控制面板。连按两次 ESC 打开游戏菜单（退出回放）。按住旁观键显示成员列表。
 
 Ghost visibility (alpha, 0=invisible, 100=visible)
 == 幽灵不透明度（0 不可见，100 完全可见）
@@ -8399,6 +8423,9 @@ Rank 1 demo downloaded to '%s'
 Rank 1 members
 == Rank 1 成员
 
+Rank 1 replay
+== Rank 1 回放
+
 Rank 1 replays
 == Rank 1 回放
 
@@ -8482,9 +8509,6 @@ Rank ghost: the downloaded replay is not a valid demo
 
 Rank ghost: the replay has an invalid run range
 == Rank 影子：回放的跑图区间无效
-
-Rank ghost: the replay has no run start/end markers
-== Rank 影子：回放缺少跑图起止标记
 
 Rank ghost: the replay list is empty or malformed
 == Rank 影子：回放列表为空或格式有误
@@ -10406,6 +10430,9 @@ Show scoreboard after death
 Show seconds on clock
 == 在时间处显示秒数
 
+Show semi-transparent ghost tees for other players who are spectating
+== 为正在旁观的其他玩家渲染半透明虚拟 Tee（官方行为）
+
 Show server chat messages
 == 显示来自服务器的聊天消息
 
@@ -10948,6 +10975,9 @@ Spectated player
 
 Spectated player and friends
 == 被观战的玩家与好友
+
+Spectator ghost opacity
+== 旁观者虚化程度
 
 Spectators
 == 旁观者
@@ -12518,6 +12548,9 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 启用动态摄像机时使用鼠标灵敏度
 
+Use MSDF text rendering for nameplates (built-in fonts only)
+== 使用 MSDF 渲染铭牌文字（仅内置字体）
+
 Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 == 为铭牌启用 MSDF 文字渲染（仅内置字体，自定义字体会自动回退到 FreeType）
 
@@ -12611,6 +12644,9 @@ VAD threshold (percent)
 Vanilla skins only
 == 只显示原生皮肤
 
+Variable custom font weight
+== 可变字体的自定义字重
+
 Velocity
 == 速度
 
@@ -12689,11 +12725,11 @@ Visual
 Visual effects
 == 视觉效果
 
+Visual: Cursor
+== 视觉：光标
+
 Visual: Effects
 == 视觉：特效
-
-Visual: Font & Cursor
-== 视觉：字体与光标
 
 Visual: Nameplates
 == 视觉：名牌
@@ -12973,9 +13009,6 @@ What level DDRace binding is set to (automatic, you don't need to use it).
 
 What's done is done, no use saying more
 == 事已至此，多说无益
-
-Wheel animate
-== 滚轮动画
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == 已启用 TClient 彩虹 Tee 时，本功能不会生效。
@@ -17691,6 +17724,10 @@ Swap Action
 [Predefined touch button behaviors]
 Use Action
 == 使用行为
+
+[Rank 1 replay]
+Direction
+== 方向
 
 [Show name plates]
 All

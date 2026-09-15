@@ -263,19 +263,53 @@ std::string QmSerializeBindStatusList(const std::vector<SQmBindStatusEntry> &vEn
 	return Out;
 }
 
+SQmBindStatusPanelSize QmComputeBindStatusPanelSize(int LineCount, float MaxLineWidth, float LineHeight, float PaddingX, float PaddingY)
+{
+	SQmBindStatusPanelSize Size{};
+	if(LineCount <= 0)
+		return Size; // 没有可见行时不绘制面板
+	Size.m_W = MaxLineWidth + PaddingX * 2.0f;
+	Size.m_H = LineHeight * (float)LineCount + PaddingY * 2.0f;
+	return Size;
+}
+
+std::vector<SQmBindStatusRenderLine> QmBuildBindStatusRenderLines(bool CustomActive, const std::vector<std::string> &vCustomLines, const std::vector<SQmBindStatusBuiltinLine> &vBuiltinLines)
+{
+	std::vector<SQmBindStatusRenderLine> vResult;
+	if(CustomActive)
+	{
+		// 自定义列表完全替换内置四项：这里只输出自定义行，内置行一条都不追加，
+		// 否则内置行会画在自定义行下方、跑出按自定义行数算出的面板背景
+		vResult.reserve(vCustomLines.size());
+		for(const std::string &Line : vCustomLines)
+			vResult.push_back({Line, EQmBindStatusTone::NONE});
+		return vResult;
+	}
+
+	vResult.reserve(vBuiltinLines.size());
+	for(const SQmBindStatusBuiltinLine &Line : vBuiltinLines)
+	{
+		if(!Line.m_Show)
+			continue;
+		vResult.push_back({Line.m_pText != nullptr ? Line.m_pText : "", Line.m_Tone});
+	}
+	return vResult;
+}
+
 void CQmBindStatusHud::OnConsoleInit()
 {
-	Console()->Register("qm_bind_status_reset", "", CFGFLAG_CLIENT, ConResetDefaults, this, "Reset qm_bind_status_items to the built-in four entries (key stuck/hammer/dummy control/dummy copy)");
+	Console()->Register("qm_bind_status_reset", "", CFGFLAG_CLIENT, ConResetDefaults, this, "Clear qm_bind_status_items and use the built-in four entries (key stuck/hammer/dummy control/dummy copy)");
 }
 
 void CQmBindStatusHud::ConResetDefaults(IConsole::IResult *, void *pUserData)
 {
 	CQmBindStatusHud *pSelf = static_cast<CQmBindStatusHud *>(pUserData);
-	const std::string Serialized = QmSerializeBindStatusList(QmDefaultBindStatusEntries());
-	str_copy(pSelf->Config()->m_QmBindStatusItems, Serialized.c_str(), sizeof(pSelf->Config()->m_QmBindStatusItems));
+	// 默认态即空列表：清空后回落到内置四项（经 Localize 显示当前语言），
+	// 不再把内置项的英文模板序列化进配置，否则自定义列表会以英文固化显示
+	pSelf->Config()->m_QmBindStatusItems[0] = '\0';
 	pSelf->m_LastConfig.clear();
 	pSelf->m_ConfigValid = false;
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "qm_bind_status", "qm_bind_status_items reset to the built-in four entries");
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "qm_bind_status", "qm_bind_status_items cleared, built-in four entries restored");
 }
 
 bool CQmBindStatusHud::IsCustomListActive() const

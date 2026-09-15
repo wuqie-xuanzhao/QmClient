@@ -309,6 +309,8 @@ TEST(QmCardRegistry, CoversCurrentSettingsDeckIds)
 		"deck:tee-identity",
 		"deck:tee-skin-options",
 		"deck:tee-skin-list",
+		"deck:tee-skin-queue",
+		"deck:tee-glow",
 		"deck:graphics-display",
 		"deck:player-identity",
 		"deck:player-country",
@@ -383,15 +385,16 @@ TEST(QmCardRegistry, PlayerStandardPageCardsPersistInVisualOrder)
 }
 
 // 意图：Tee 页按预览、选项、列表拆卡后，宽屏默认保持预览与选项左右排列、搜索列表全宽。
-TEST(QmCardRegistry, TeeStandardPageUsesThreeFunctionalCards)
+TEST(QmCardRegistry, TeeStandardPageUsesFiveFunctionalCards)
 {
 	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+	// 皮肤列表全宽独立；预览/选项一行，皮肤队列/外发光各占左右半宽一行。
 	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 0),
 		(std::vector<std::string>{"deck:tee-skin-list"}));
 	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 1),
-		(std::vector<std::string>{"deck:tee-identity"}));
+		(std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-queue"}));
 	EXPECT_EQ(Model.StableIdOrder("deck:", "tee", 2),
-		(std::vector<std::string>{"deck:tee-skin-options"}));
+		(std::vector<std::string>{"deck:tee-skin-options", "deck:tee-glow"}));
 }
 
 // 意图：Tee 拆卡后搜索词必须落到实际承载功能的卡片，而不是都跳到预览卡。
@@ -716,6 +719,8 @@ TEST(QmCardRegistry, TeeMigrationOnlyReflowsLegacyDefaultLayout)
 		{"deck:tee-identity", "tee", 0, 0},
 		{"deck:tee-skin-options", "tee", 1, 0},
 		{"deck:tee-skin-list", "tee", 2, 0},
+		{"deck:tee-skin-queue", "tee", 1, 1},
+		{"deck:tee-glow", "tee", 2, 1},
 	};
 	const char *pLegacySerialized =
 		"deck:tee-identity|tee|full|0;"
@@ -725,18 +730,22 @@ TEST(QmCardRegistry, TeeMigrationOnlyReflowsLegacyDefaultLayout)
 		{"deck:tee-identity", "tee", 1, 0},
 		{"deck:tee-skin-options", "tee", 2, 0},
 		{"deck:tee-skin-list", "tee", 0, 0},
+		{"deck:tee-skin-queue", "tee", 1, 1},
+		{"deck:tee-glow", "tee", 2, 1},
 	};
 	const std::vector<const char *> vAllowedIds = {
 		"deck:tee-identity",
 		"deck:tee-skin-options",
 		"deck:tee-skin-list",
+		"deck:tee-skin-queue",
+		"deck:tee-glow",
 	};
 	qm_card_order::CModel LegacyModel;
 	LegacyModel.LoadMerged(pLegacySerialized, qm_card_registry::BuildDefaultEntries());
 	EXPECT_TRUE(qm_card_order::MigrateExactLayout(LegacyModel, "tee", vLegacyDefaults, vTargetLayout, vAllowedIds));
 	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 0), (std::vector<std::string>{"deck:tee-skin-list"}));
-	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity"}));
-	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 2), (std::vector<std::string>{"deck:tee-skin-options"}));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-queue"}));
+	EXPECT_EQ(LegacyModel.StableIdOrder("deck:", "tee", 2), (std::vector<std::string>{"deck:tee-skin-options", "deck:tee-glow"}));
 
 	const char *pCustomizedSerialized =
 		"deck:tee-identity|tee|left|0;"
@@ -745,7 +754,7 @@ TEST(QmCardRegistry, TeeMigrationOnlyReflowsLegacyDefaultLayout)
 	qm_card_order::CModel CustomizedModel;
 	CustomizedModel.LoadMerged(pCustomizedSerialized, qm_card_registry::BuildDefaultEntries());
 	EXPECT_FALSE(qm_card_order::MigrateExactLayout(CustomizedModel, "tee", vLegacyDefaults, vTargetLayout, vAllowedIds));
-	EXPECT_EQ(CustomizedModel.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-options"}));
+	EXPECT_EQ(CustomizedModel.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-options", "deck:tee-skin-queue"}));
 }
 
 TEST(QmCardRegistry, GlobalCardOrderMaximumValueFitsConsoleCommand)
@@ -828,8 +837,8 @@ TEST(QmCardRegistry, GlobalCardOrderSurvivesFreshConfigManagerReload)
 		qm_card_order::CModel Reloaded;
 		ASSERT_TRUE(Reloaded.LoadMerged(g_Config.m_QmGlobalCardOrder, qm_card_registry::BuildDefaultEntries()));
 		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 0), (std::vector<std::string>{"deck:tee-skin-list"}));
-		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity"}));
-		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 2), (std::vector<std::string>{"deck:tee-skin-options"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 1), (std::vector<std::string>{"deck:tee-identity", "deck:tee-skin-queue"}));
+		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tee", 2), (std::vector<std::string>{"deck:tee-skin-options", "deck:tee-glow"}));
 		EXPECT_TRUE(Reloaded.StableIdOrder("deck:", "tclient-status-bar", 1).empty());
 		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-status-bar", 2), (std::vector<std::string>{"deck:tclient-status-bar-settings", "deck:tclient-status-bar-preview"}));
 		EXPECT_EQ(Reloaded.StableIdOrder("deck:", "tclient-profiles", 1), (std::vector<std::string>{"deck:tclient-profiles-options"}));

@@ -387,6 +387,13 @@ static void ShowPendingQmCrashReport(IStorage *pStorage)
 	if(Search.m_aPath[0] == '\0')
 		return;
 
+	// 默认不打扰：报告仍保留在 dumps/QmClient_Crash 供反馈问题时取用，打开开关才在启动时弹窗
+	if(g_Config.m_QmCrashReportOnStartup == 0)
+	{
+		log_info("crash_reporter", "pending crash report kept on disk: %s (set qm_crash_report_on_startup 1 to show it at startup)", Search.m_aPath);
+		return;
+	}
+
 	char aAbsolutePath[IO_MAX_PATH_LENGTH];
 	pStorage->GetCompletePath(IStorage::TYPE_SAVE, Search.m_aPath, aAbsolutePath, sizeof(aAbsolutePath));
 	// 启动阶段只负责拉起独立报告进程，不能在这里进入报告窗口的消息循环，
@@ -417,34 +424,54 @@ static bool ReadQmLifecycleMarkerStartedAt(IStorage *pStorage, int64_t &StartedA
 	return StartedAt > 0;
 }
 
-static void FormatQmGraphicsCrashReportFingerprint(const SQmLatestCrashReport &Report, char *pBuf, size_t BufSize)
+// 图形崩溃恢复状态：记录触发恢复的崩溃报告指纹和被安全设置覆盖前的用户偏好，
+// 用于在下一次启动时把用户偏好还回去，避免恢复逻辑永久改写用户配置。
+struct SQmGraphicsRecoveryState
 {
-	str_format(pBuf, BufSize, "%lld\n%s", (long long)Report.m_TimeModified, Report.m_aPath);
-}
+	int64_t m_ReportTimeModified = 0;
+	char m_aReportPath[IO_MAX_PATH_LENGTH] = "";
+	int m_Mode = 0;
+	char m_aBackend[256] = "";
+	bool m_Applied = false;
+};
 
-static bool WasQmGraphicsCrashReportRecovered(IStorage *pStorage, const SQmLatestCrashReport &Report)
+static bool ReadQmGraphicsRecoveryState(IStorage *pStorage, SQmGraphicsRecoveryState &State)
 {
+	State = {};
 	char *pState = pStorage->ReadFileStr(gs_pQmGraphicsRecoveryStateFile, IStorage::TYPE_SAVE);
 	if(pState == nullptr)
 		return false;
 
-	char aFingerprint[IO_MAX_PATH_LENGTH + 64];
-	FormatQmGraphicsCrashReportFingerprint(Report, aFingerprint, sizeof(aFingerprint));
-	const bool Recovered = str_comp(pState, aFingerprint) == 0;
+	char aLine[IO_MAX_PATH_LENGTH + 64];
+	const char *pStr = pState;
+	while((pStr = str_next_token(pStr, "\n", aLine, sizeof(aLine))))
+	{
+		if(const char *pValue = str_startswith(aLine, "report_time="))
+			State.m_ReportTimeModified = str_toint64_base(pValue);
+		else if(const char *pValue = str_startswith(aLine, "report_path="))
+			str_copy(State.m_aReportPath, pValue);
+		else if(const char *pValue = str_startswith(aLine, "mode="))
+			State.m_Mode = str_toint_base(pValue, 10);
+		else if(const char *pValue = str_startswith(aLine, "backend="))
+			str_copy(State.m_aBackend, pValue);
+		else if(const char *pValue = str_startswith(aLine, "applied="))
+			State.m_Applied = str_toint_base(pValue, 10) != 0;
+	}
 	free(pState);
-	return Recovered;
+	return State.m_ReportTimeModified > 0 && State.m_aReportPath[0] != '\0';
 }
 
-static bool MarkQmGraphicsCrashReportRecovered(IStorage *pStorage, const SQmLatestCrashReport &Report)
+static bool WriteQmGraphicsRecoveryState(IStorage *pStorage, const SQmGraphicsRecoveryState &State)
 {
 	pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE);
 	IOHANDLE File = pStorage->OpenFile(gs_pQmGraphicsRecoveryStateFile, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 		return false;
 
-	char aFingerprint[IO_MAX_PATH_LENGTH + 64];
-	FormatQmGraphicsCrashReportFingerprint(Report, aFingerprint, sizeof(aFingerprint));
-	const bool Success = io_write(File, aFingerprint, str_length(aFingerprint)) == str_length(aFingerprint);
+	char aBuf[IO_MAX_PATH_LENGTH + 128];
+	str_format(aBuf, sizeof(aBuf), "report_time=%lld\nreport_path=%s\nmode=%d\nbackend=%s\napplied=%d\n",
+		(long long)State.m_ReportTimeModified, State.m_aReportPath, State.m_Mode, State.m_aBackend, State.m_Applied ? 1 : 0);
+	const bool Success = io_write(File, aBuf, str_length(aBuf)) == str_length(aBuf);
 	io_close(File);
 	return Success;
 }
@@ -558,39 +585,81 @@ static bool ApplyQmSafeGraphicsRecovery(bool GraphicsDriverFault)
 
 static void RecoverQmGraphicsSettingsAfterDriverCrash(IStorage *pStorage)
 {
-	if(pStorage == nullptr || !pStorage->FileExists(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE))
+	if(pStorage == nullptr)
 		return;
 
-	int64_t SessionStartedAt = 0;
-	if(!ReadQmLifecycleMarkerStartedAt(pStorage, SessionStartedAt))
-		return;
+	SQmGraphicsRecoveryState State;
+	const bool HasState = ReadQmGraphicsRecoveryState(pStorage, State);
 
-	SQmLatestCrashReport Latest;
-	Latest.m_MinTimeModified = (time_t)SessionStartedAt;
-	pStorage->ListDirectoryInfo(IStorage::TYPE_SAVE, gs_pQmCrashDumpDir, FindLatestQmCrashReportCallback, &Latest);
-	if(Latest.m_aPath[0] == '\0' || WasQmGraphicsCrashReportRecovered(pStorage, Latest))
-		return;
-
-	char *pCrashReport = pStorage->ReadFileStr(Latest.m_aPath, IStorage::TYPE_SAVE);
-	if(pCrashReport == nullptr)
-		return;
-
-	const bool HasGraphicsDriverFault = QmCrashTextHasGraphicsDriverFault(pCrashReport);
-	free(pCrashReport);
-	if(!HasGraphicsDriverFault)
-		return;
-
-	const bool Changed = ApplyQmSafeGraphicsRecovery(HasGraphicsDriverFault);
-	if(Changed)
+	// 崩溃基线：lifecycle marker 只在上一次会话异常结束时保留，其 started_at
+	// 是异常会话的启动时间，用于圈定本次需要处理的崩溃报告。
+	char aLatestReport[IO_MAX_PATH_LENGTH] = "";
+	time_t LatestReportTime = 0;
+	if(pStorage->FileExists(gs_pQmLifecycleMarkerFile, IStorage::TYPE_SAVE))
 	{
-		log_warn("client", "previous crash report '%s' points to the graphics driver; resetting safe graphics settings without FSAA while preserving a desktop-sized display mode", Latest.m_aPath);
+		int64_t SessionStartedAt = 0;
+		if(ReadQmLifecycleMarkerStartedAt(pStorage, SessionStartedAt))
+		{
+			SQmLatestCrashReport Latest;
+			Latest.m_MinTimeModified = (time_t)SessionStartedAt;
+			pStorage->ListDirectoryInfo(IStorage::TYPE_SAVE, gs_pQmCrashDumpDir, FindLatestQmCrashReportCallback, &Latest);
+			str_copy(aLatestReport, Latest.m_aPath);
+			LatestReportTime = Latest.m_TimeModified;
+		}
 	}
-	else
+
+	const bool IsRecoveredReport = HasState && State.m_Applied &&
+				       State.m_ReportTimeModified == (int64_t)LatestReportTime &&
+				       str_comp(State.m_aReportPath, aLatestReport) == 0;
+
+	// 新的图形驱动崩溃：把用户当前图形偏好记入恢复状态，本次启动使用安全设置；
+	// 下一次启动（无新图形崩溃时）自动还回用户偏好，不再永久改写用户配置。
+	if(aLatestReport[0] != '\0' && !IsRecoveredReport)
 	{
-		log_info("client", "previous crash report '%s' points to the graphics driver; safe graphics settings are already active", Latest.m_aPath);
+		char *pCrashReport = pStorage->ReadFileStr(aLatestReport, IStorage::TYPE_SAVE);
+		if(pCrashReport != nullptr)
+		{
+			const bool HasGraphicsDriverFault = QmCrashTextHasGraphicsDriverFault(pCrashReport);
+			free(pCrashReport);
+			if(HasGraphicsDriverFault)
+			{
+				SQmGraphicsRecoveryState NewState;
+				NewState.m_ReportTimeModified = (int64_t)LatestReportTime;
+				str_copy(NewState.m_aReportPath, aLatestReport);
+				NewState.m_Mode = g_Config.m_QmGraphicsMode;
+				str_copy(NewState.m_aBackend, g_Config.m_GfxBackend);
+				NewState.m_Applied = true;
+				ApplyQmSafeGraphicsRecovery(HasGraphicsDriverFault);
+				if(WriteQmGraphicsRecoveryState(pStorage, NewState))
+				{
+					log_warn("client", "previous crash report '%s' points to the graphics driver; this launch uses safe graphics settings, the user preference (mode=%d backend='%s') will be restored on next start", aLatestReport, NewState.m_Mode, NewState.m_aBackend);
+				}
+				else
+				{
+					log_warn("client", "failed to write graphics recovery state; safe graphics settings stay active for this launch");
+				}
+				return;
+			}
+		}
 	}
-	if(!MarkQmGraphicsCrashReportRecovered(pStorage, Latest))
-		log_warn("client", "failed to remember recovered graphics crash report '%s'", Latest.m_aPath);
+
+	// 上一次启动执行过安全恢复且本次没有发现新的图形崩溃：把用户偏好还回去。
+	// 用户若已在安全会话中自行修改了图形设置（与安全值不一致），尊重用户改动。
+	if(HasState && State.m_Applied)
+	{
+		const auto SafeConfig = graphics_backend::SafeBackendConfig();
+		const bool UntouchedByUser = g_Config.m_QmGraphicsMode == graphics_backend::GRAPHICS_MODE_COMPATIBILITY &&
+					     str_comp_nocase(g_Config.m_GfxBackend, SafeConfig.m_pBackend) == 0;
+		const bool PreferenceDiffers = State.m_Mode != g_Config.m_QmGraphicsMode ||
+					       str_comp_nocase(State.m_aBackend, g_Config.m_GfxBackend) != 0;
+		if(UntouchedByUser && PreferenceDiffers)
+		{
+			g_Config.m_QmGraphicsMode = State.m_Mode;
+			str_copy(g_Config.m_GfxBackend, State.m_aBackend);
+			log_info("client", "restoring user graphics preference after safe recovery launch: mode=%d backend='%s'", State.m_Mode, State.m_aBackend);
+		}
+		pStorage->RemoveFile(gs_pQmGraphicsRecoveryStateFile, IStorage::TYPE_SAVE);
+	}
 }
 
 static const char *ClientStateToString(int State)
@@ -4785,6 +4854,10 @@ void CClient::Run()
 				}
 				else
 					m_pGraphics->Swap();
+				// 只在连接/加载阶段记录，避免菜单和游戏内每帧刷屏
+				if(g_Config.m_QmGraphicsTrace >= 1 &&
+					(State() == IClient::STATE_CONNECTING || State() == IClient::STATE_LOADING))
+					dbg_msg("gfx/swap", "swap source=mainloop state=%d", State());
 			}
 			else if(!IsRenderActive)
 			{
@@ -5987,6 +6060,8 @@ void CClient::UpdateAndSwap()
 	Input()->Update();
 	Graphics()->Swap();
 	Graphics()->Clear(0, 0, 0);
+	if(g_Config.m_QmGraphicsTrace >= 1)
+		dbg_msg("gfx/swap", "swap source=loading state=%d", State());
 	m_GlobalTime = (time_get() - m_GlobalStartTime) / (float)time_freq();
 }
 

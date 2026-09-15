@@ -120,7 +120,7 @@ namespace qm_card_registry
 			{"qm:gores_actor", "function", ECardColumn::Left, 3, "Gores actor", "gores 演员 actor 掉水 diaoshui 自动发言 zidong fayan 表情 biaoqing 表情id emoticon 发送概率 gaolv function", "Auto chat when dying in water"},
 			{"qm:gores", "function", ECardColumn::Left, 4, "Gores", "gores kog king of gores 锤枪切换 chuichang qiehuan 自动切枪 zidong qieqiang 自动切锤 zidong qiechui gun hammer prevweapon fire 开火后切锤 kaihuo qiechui 拿到其他武器停用 快速输入 kuaisu shuru fast input 快速输入其他玩家 function", "Gores auto weapon switch"},
 			{"qm:key_binds", "function", ECardColumn::Left, 5, "Key binds", "按键绑定 anjian bangding bind 快捷键 kuaijiejian 常用绑定 changyong bangding 武器辅助线 fuzhuxian 异常断开 yichang duankai timeout disconnect function", "Common key bindings"},
-			{"qm:mini_features", "function", ECardColumn::Left, 6, "Mini features", "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 自动管理 zidong guanli 进程优先级 jincheng youxianji 协作制图 xiezuo zhitu 多人制图 duoren zhitu function", "Configure Dream-only convenience features"},
+			{"qm:mini_features", "function", ECardColumn::Left, 6, "Mini features", "梦的小功能 meng xiaogongneng 粒子拖尾 lizi tuowei 远程粒子 yuancheng lizi 计分板查分 chafen 聊天框淡出 liaotian danchu 表情选择 biaoqing xuanze 动画优化 donghua youhua 复读 fudu 锤人换皮 chuiren huanpi 随机表情 suiji biaoqing 连击 lianji combo 说话不弹表情 shuo hua biaoqing 本地彩虹名字 caihong mingzi 计分板Qm标识 qm biaoshi scoreboard badge 更新 gengxin 版本 banben 过旧 guojiu 提示 tishi outdated version warning 新版UI xinban ui settings page shezhi yemian 新版IME xinban ime 输入法 shurufa 候选栏 houxuanlan 自动管理 zidong guanli 进程优先级 jincheng youxianji 协作制图 xiezuo zhitu 多人制图 duoren zhitu tune zone 区域着色 quyu zhaose 地图着色 ditu zhaose function", "Configure Dream-only convenience features"},
 			{"qm:jump_hint", "function", ECardColumn::Left, 7, "Jump hint", "位置跳跃提示 tiaoyue tishi jump hint position edge jump color yanse 颜色 horizontal position shuiping weizhi vertical position chuizhi weizhi font size ziti function", "Customize the position jump hint"},
 			{"qm:weapon_trajectory", "function", ECardColumn::Left, 8, "Weapon trajectory", "武器辅助线 wuqi fuzhuxian weapon trajectory 弹道辅助线 dandao fuzhuxian 手枪辅助线 shouqiang fuzhuxian pistol guide line 预测忍者路径 yuce renzhe lujing predict ninja path 线宽 xian kuan 透明度 toumingdu 始终显示 shizhong xianshi 按键显示 anjian xianshi function", "Show grenade and laser trajectory preview"},
 			{"qm:coords", "hud", ECardColumn::Left, 9, "Coordinates", "显示坐标 xianshi zuobiao coords position 自己坐标 ziji 他人坐标 taren 显示x xianshi x 显示y xianshi y 对齐提示 duiqi tishi 严格对齐 yange duiqi hud", "Show coordinates above players"},
@@ -166,6 +166,9 @@ namespace qm_card_registry
 			{"tclient:tee-trails", "tclient", ECardColumn::Left, 8, "Tee trails", "tee trails tclient", "Adjust trails rendered behind Tees"},
 			{"tclient:background-draw", "tclient", ECardColumn::Right, 8, "Background draw", "background draw tclient", "Control custom background drawing"},
 			{"tclient:finish-name", "tclient", ECardColumn::Left, 9, "Finish name", "finish name tclient", "Format player names after a finish"},
+			// 拆分后的字体与光标卡片；保留旧 stable id 作为迁移兼容项。
+			{"tclient:font", "tclient", ECardColumn::Left, 0, "Font", "font tclient visual", "Choose the menu font and font weight"},
+			{"tclient:cursor", "tclient", ECardColumn::Left, 1, "Visual: Cursor", "cursor tclient visual", "Configure the ingame cursor scale"},
 
 			// === 设置 deck · deck:<page>-<card>（原无持久化；tab=归属页/子页，column/order 按运行时卡片顺序显式化）===
 			{"deck:qmclient-contributors-community", "qmclient-contributors", ECardColumn::Left, 0, "QmClient Community", "community links qmclient", "Find QmClient communities and project links"},
@@ -182,7 +185,9 @@ namespace qm_card_registry
 			{"deck:player-country", "player", ECardColumn::Right, 0, Localizable("Choose country flag"), "player dummy country flag", "Select the country flag for each player"},
 			{"deck:tee-identity", "tee", ECardColumn::Left, 0, "Player preview", "tee player dummy identity preview", "Preview player and dummy appearance"},
 			{"deck:tee-skin-options", "tee", ECardColumn::Right, 0, "Skin options", "tee skin colors eyes options prefix", "Configure skin colors, eyes, and filters"},
-			{"deck:tee-skin-list", "tee", ECardColumn::Full, 0, "Skin search", "tee skins search filter list", "Search skins and manage the skin queue"},
+			{"deck:tee-skin-list", "tee", ECardColumn::Full, 0, "Skin search", "tee skins search filter list", "Search, filter, and manage skins"},
+			{"deck:tee-skin-queue", "tee", ECardColumn::Left, 1, "Skin queue", "tee skin queue rotation random preset interval", "Manage the skin rotation queue"},
+			{"deck:tee-glow", "tee", ECardColumn::Right, 1, "Team tee glow", "tee team glow color rainbow spectate", "Color tee outlines by team for spectating"},
 			{"deck:tee7-editor", "tee7", ECardColumn::Full, 0, "Skin", "tee sixup skin editor", "Edit individual Tee 7 skin parts"},
 			{"deck:graphics-display", "graphics", ECardColumn::Left, 0, Localizable("Graphics display"), "graphics display monitor window", "Window and monitor"},
 			{"deck:graphics-visual", "graphics", ECardColumn::Left, 1, Localizable("Visual"), "graphics visual rendering card appearance settings card border corner segments rainbow title", "Rendering options"},

@@ -14,7 +14,10 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
+#include <limits>
 #include <string>
+#include <vector>
 
 static void ExpectColorNear(const ColorRGBA &Color, const ColorRGBA &Expected)
 {
@@ -118,6 +121,61 @@ TEST(QmStatisticsModeDisplay, DoesNotApplyDdnetHoursToNonDdnetMode)
 	const SQmStatisticsModeDisplay Display = ResolveQmStatisticsModeDisplay(9, 123, false, false, 0, 0, false, -1, 2848);
 	EXPECT_EQ(Display.m_Maps, 9);
 	EXPECT_EQ(Display.m_PlaytimeSeconds, 123);
+}
+
+namespace
+{
+struct SQmTestModeStats
+{
+	std::string m_GameMode;
+	std::string m_CommunityId;
+	bool m_IsAxiom = false;
+	int m_Maps = 0;
+	int64_t m_Score = 0;
+	int64_t m_PlaytimeSeconds = 0;
+};
+} // namespace
+
+TEST(QmStatisticsModeCollapse, FoldsDuplicateDDraceVariantsIntoSingleEntry)
+{
+	// 回归：本地按服务器社区分条的 DDrace 记录加上 DDStats 追加的同名条目，
+	// 会让统计页渲染出多条完全相同的「DDraceNetwork · DDNet」图例与饼图切片。
+	std::vector<SQmTestModeStats> vStats;
+	vStats.push_back({"DDraceNetwork", "ddnet", false, 2000, 15000, 100 * 3600});
+	vStats.push_back({"DDraceNetwork", "ddstats", false, 100, 1000, 20 * 3600});
+	vStats.push_back({"DDNet", "", false, 56, 719, 5 * 3600});
+	vStats.push_back({"Gores", "axiom", true, 12, 600, 3 * 3600});
+
+	const auto IsDDrace = [](const SQmTestModeStats &Stats) {
+		return Stats.m_GameMode == "DDraceNetwork" || Stats.m_GameMode == "DDNet";
+	};
+
+	EXPECT_TRUE(QmCollapseModeEntries(vStats, IsDDrace));
+	ASSERT_EQ(vStats.size(), 2u);
+	EXPECT_EQ(vStats[0].m_GameMode, "DDraceNetwork");
+	EXPECT_EQ(vStats[0].m_CommunityId, "ddnet");
+	EXPECT_EQ(vStats[0].m_Maps, 2000 + 100 + 56);
+	EXPECT_EQ(vStats[0].m_Score, 15000 + 1000 + 719);
+	EXPECT_EQ(vStats[0].m_PlaytimeSeconds, (100 + 20 + 5) * 3600);
+	// 未命中的条目保持原样。
+	EXPECT_EQ(vStats[1].m_GameMode, "Gores");
+	EXPECT_EQ(vStats[1].m_CommunityId, "axiom");
+	EXPECT_EQ(vStats[1].m_Maps, 12);
+	EXPECT_EQ(vStats[1].m_PlaytimeSeconds, 3 * 3600);
+
+	// 只剩一条 DDrace 时再次折叠不应有变化。
+	EXPECT_FALSE(QmCollapseModeEntries(vStats, IsDDrace));
+	EXPECT_EQ(vStats.size(), 2u);
+}
+
+TEST(QmStatisticsModeCollapse, SaturatesFoldedValuesAtTypeLimits)
+{
+	std::vector<SQmTestModeStats> vStats;
+	vStats.push_back({"DDraceNetwork", "ddnet", false, std::numeric_limits<int>::max(), 0, 0});
+	vStats.push_back({"DDraceNetwork", "ddstats", false, 5, 0, 0});
+	EXPECT_TRUE(QmCollapseModeEntries(vStats, [](const SQmTestModeStats &Stats) { return Stats.m_GameMode == "DDraceNetwork"; }));
+	ASSERT_EQ(vStats.size(), 1u);
+	EXPECT_EQ(vStats[0].m_Maps, std::numeric_limits<int>::max());
 }
 
 TEST(QmStatisticsChart, FallsBackToPlaytimeWhenNoModeHasFinishedMaps)

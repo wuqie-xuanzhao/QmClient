@@ -195,6 +195,9 @@ MACRO_CONFIG_INT(QmSkinChangeTransitionIntensity, qm_skin_change_transition_inte
 MACRO_CONFIG_INT(QmCycleTeeHue, qm_cycle_tee_hue, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cycle custom Tee hue for main")
 MACRO_CONFIG_INT(QmCycleTeeHueDummy, qm_cycle_tee_hue_dummy, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cycle custom Tee hue for dummy simultaneously")
 MACRO_CONFIG_INT(QmCycleTeeHueSpeed, qm_cycle_tee_hue_speed, 72, 0, 360, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Cycle custom Tee hue speed (deg/s)")
+MACRO_CONFIG_INT(QmTeamTeeGlow, qm_team_tee_glow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Draw a glow around tees colored by their race team")
+MACRO_CONFIG_INT(QmTeamTeeGlowTeam0Mode, qm_team_tee_glow_team0_mode, 1, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Team 0 (unteamed) tee glow mode: 0=Off, 1=Tee color, 2=Custom color, 3=Rainbow")
+MACRO_CONFIG_COL(QmTeamTeeGlowColor, qm_team_tee_glow_color, 0xFFFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_COLALPHA, "Team 0 tee glow custom color")
 MACRO_CONFIG_INT(QmRandomEmoteOnHit, qm_random_emote_on_hit, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Random emote when hit by hammer/grenade")
 MACRO_CONFIG_INT(QmEmoticonShadow, qm_emoticon_shadow, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Draw shadow behind emote")
 MACRO_CONFIG_INT(QmWeaponTrajectory, qm_weapon_trajectory, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Weapon trajectory helper mode (0=Off, 1=On key, 2=Always)")
@@ -433,6 +436,7 @@ MACRO_CONFIG_INT(QmDynamicFovAmount, qm_dynamic_fov_amount, 50, 0, 200, CFGFLAG_
 MACRO_CONFIG_INT(QmDynamicFovSmoothness, qm_dynamic_fov_smoothness, 80, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dynamic FOV smoothness (0=instant, 100=smoothest)")
 MACRO_CONFIG_INT(QmCinematicCamera, qm_cinematic_camera, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable smooth cinematic camera while free spectating")
 MACRO_CONFIG_INT(QmZoomInstantReverse, qm_zoom_instant_reverse, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)")
+MACRO_CONFIG_INT(QmCrashReportOnStartup, qm_crash_report_on_startup, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show pending crash reports in a window at startup (0 = keep them on disk and log a line instead)")
 MACRO_CONFIG_INT(QmAspectPreset, qm_aspect_preset, 0, 0, 6, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Aspect ratio preset (0=off, 1=5:4, 2=4:3, 3=3:2, 4=16:9, 5=21:9, 6=custom)")
 MACRO_CONFIG_INT(QmAspectRatio, qm_aspect_ratio, 178, 100, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Custom aspect ratio, stored as x100 (e.g. 178=16:9, 233=21:9)")
 
@@ -468,18 +472,24 @@ MACRO_CONFIG_INT(Qm3DParticlesPulseStrength, qm_3d_particles_pulse_strength, 15,
 MACRO_CONFIG_INT(Qm3DParticlesPulseSpeed, qm_3d_particles_pulse_speed, 100, 10, 300, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Background 3D particle pulse speed")
 MACRO_CONFIG_INT(Qm3DParticlesTwinkle, qm_3d_particles_twinkle, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable background 3D particle flicker")
 MACRO_CONFIG_INT(Qm3DParticlesTwinkleStrength, qm_3d_particles_twinkle_strength, 35, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Background 3D particle flicker intensity")
+MACRO_CONFIG_INT(QmShowTuneZoneColors, qm_show_tune_zone_colors, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Color map tune zones by their tune zone number")
+MACRO_CONFIG_INT(QmBlankAssetFallback, qm_blank_asset_fallback, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)")
+MACRO_CONFIG_INT(QmShowSpectatorGhosts, qm_show_spectator_ghosts, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show semi-transparent ghost tees for other players who are spectating")
+MACRO_CONFIG_INT(QmSpectatorGhostAlpha, qm_spectator_ghost_alpha, 50, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)")
 
 // Skin queue - 皮肤队列
 MACRO_CONFIG_INT(QmSkinQueueEnabled, qm_skin_queue_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable skin queue rotation")
-MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 1, 120000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Skin queue switch interval (ms)")
+MACRO_CONFIG_INT(QmSkinQueueInterval, qm_skin_queue_interval, 600, 0, 120000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Skin queue switch interval (ms, 0=no timed rotation, random start only)")
 MACRO_CONFIG_INT(QmSkinQueueLength, qm_skin_queue_length, 20, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Skin queue max length")
 MACRO_CONFIG_INT(QmSkinQueueIndex, qm_skin_queue_index, 0, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Skin queue current position")
 MACRO_CONFIG_INT(QmSkinQueueRotateMap, qm_skin_queue_rotate_map, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto-fetch all players' skins for rotation queue")
+MACRO_CONFIG_INT(QmSkinQueueRandomJoin, qm_skin_queue_random_join, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Start skin queue from a random position when entering a map")
 MACRO_CONFIG_INT(QmDummySkinQueueEnabled, qm_dummy_skin_queue_enabled, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable dummy skin queue rotation")
-MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 1, 120000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dummy skin queue switch interval (ms)")
+MACRO_CONFIG_INT(QmDummySkinQueueInterval, qm_dummy_skin_queue_interval, 600, 0, 120000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dummy skin queue switch interval (ms, 0=no timed rotation, random start only)")
 MACRO_CONFIG_INT(QmDummySkinQueueLength, qm_dummy_skin_queue_length, 20, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dummy skin queue max length")
 MACRO_CONFIG_INT(QmDummySkinQueueIndex, qm_dummy_skin_queue_index, 0, 0, 1024, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dummy skin queue current position")
 MACRO_CONFIG_INT(QmDummySkinQueueRotateMap, qm_dummy_skin_queue_rotate_map, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto-fetch all players' skins for dummy rotation queue")
+MACRO_CONFIG_INT(QmDummySkinQueueRandomJoin, qm_dummy_skin_queue_random_join, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Start dummy skin queue from a random position when entering a map")
 
 // Foot Particles - 粒子效果
 MACRO_CONFIG_INT(QmFootParticles, qm_foot_particles, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Local particles: show particles behind own Tee (e.g. freeze snow)")
@@ -512,6 +522,7 @@ MACRO_CONFIG_INT(QmDummyMiniViewZoom, qm_dummy_miniview_zoom, 100, 10, 300, CFGF
 
 // System Media Controls - 系统媒体控件
 MACRO_CONFIG_INT(QmSmtcEnable, qm_smtc_enable, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable system media transport control integration")
+MACRO_CONFIG_INT(QmRankGhostShowDirection, qm_rank_ghost_show_direction, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show direction key indicators above rank ghost members in view mode")
 MACRO_CONFIG_INT(QmSmtcShowHud, qm_smtc_show_hud, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show system media info on HUD")
 MACRO_CONFIG_INT(QmNeteaseHookEnable, qm_netease_hook_enable, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Netease Music hook integration")
 MACRO_CONFIG_INT(QmNeteaseHookTimeoutMs, qm_netease_hook_timeout_ms, 1500, 250, 10000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Netease hook heartbeat timeout (milliseconds)")

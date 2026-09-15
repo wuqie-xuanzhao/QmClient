@@ -1,4 +1,5 @@
 # 请抬头享受阳光｜日子很好 我很我---------致咩子
+
 [[message]]
 key = " min"
 [message.translations]
@@ -9540,3 +9541,83 @@ brazilian_portuguese = "A atualização está pronta e será instalada ao sair."
 portuguese = "A atualização está pronta e será instalada ao sair."
 turkish = "Güncelleme hazır ve çıkışta kurulacak."
 polish = "Aktualizacja jest gotowa i zostanie zainstalowana przy wyjściu."
+
+[[message]]
+key = "Custom font weight (variable fonts)"
+[message.translations]
+simplified_chinese = "自定义字体字重（可变字体）"
+traditional_chinese = "自訂字型字重（可變字型）"
+japanese = "カスタムフォントの太さ（可変フォント）"
+korean = "사용자 지정 글꼴 굵기(가변 글꼴)"
+russian = "Толщина своего шрифта (вариативные шрифты)"
+german = "Schriftstärke der eigenen Schrift (variable Schriften)"
+spanish = "Grosor de la fuente personalizada (fuentes variables)"
+french = "Graisse de la police personnalisée (polices variables)"
+brazilian_portuguese = "Espessura da fonte personalizada (fontes variáveis)"
+portuguese = "Espessura da fonte personalizada (fontes variáveis)"
+turkish = "Özel yazı tipi kalınlığı (değişken yazı tipleri)"
+polish = "Grubość niestandardowej czcionki (czcionki zmienne)"
+
+[[message]]
+key = "Custom fonts use FreeType automatically."
+[message.translations]
+simplified_chinese = "自定义字体会自动使用 FreeType。"
+traditional_chinese = "自訂字型會自動使用 FreeType。"
+japanese = "カスタムフォントは自動的に FreeType を使用します。"
+korean = "사용자 지정 글꼴은 자동으로 FreeType을 사용합니다."
+russian = "Пользовательские шрифты автоматически используют FreeType."
+german = "Eigene Schriften verwenden automatisch FreeType."
+spanish = "Las fuentes personalizadas usan FreeType automáticamente."
+french = "Les polices personnalisées utilisent FreeType automatiquement."
+brazilian_portuguese = "As fontes personalizadas usam FreeType automaticamente."
+portuguese = "As fontes personalizadas usam FreeType automaticamente."
+turkish = "Özel yazı tipleri otomatik olarak FreeType kullanır."
+polish = "Niestandardowe czcionki automatycznie używają FreeType."
+
+[[message]]
+key = "Font style:"
+[message.translations]
+simplified_chinese = "字体样式："
+traditional_chinese = "字型樣式："
+japanese = "フォントスタイル:"
+korean = "글꼴 스타일:"
+russian = "Стиль шрифта:"
+german = "Schriftstil:"
+spanish = "Estilo de fuente:"
+french = "Style de police :"
+brazilian_portuguese = "Estilo da fonte:"
+portuguese = "Estilo da fonte:"
+turkish = "Yazı tipi stili:"
+polish = "Styl czcionki:"
+
+[[message]]
+key = "Use MSDF text rendering for nameplates (built-in fonts only)"
+[message.translations]
+simplified_chinese = "使用 MSDF 渲染铭牌文字（仅内置字体）"
+traditional_chinese = "使用 MSDF 渲染名牌文字（僅內建字型）"
+japanese = "ネームプレートに MSDF テキストレンダリングを使用（内蔵フォントのみ）"
+korean = "이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만)"
+russian = "Использовать рендеринг текста MSDF для табличек (только встроенные шрифты)"
+german = "MSDF-Textrendering für Namensschilder verwenden (nur integrierte Schriftarten)"
+spanish = "Usar renderizado de texto MSDF para placas de nombre (solo fuentes integradas)"
+french = "Utiliser le rendu de texte MSDF pour les plaques de nom (polices intégrées uniquement)"
+brazilian_portuguese = "Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas)"
+portuguese = "Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas)"
+turkish = "Ad plakaları için MSDF metin oluşturmayı kullan (yalnızca yerleşik yazı tipleri)"
+polish = "Użyj renderowania tekstu MSDF dla tabliczek (tylko wbudowane czcionki)"
+
+[[message]]
+key = "Variable custom font weight"
+[message.translations]
+simplified_chinese = "可变字体的自定义字重"
+traditional_chinese = "可變字型的自訂字重"
+japanese = "可変フォントのカスタム太さ"
+korean = "가변 글꼴의 사용자 지정 굵기"
+russian = "Толщина вариативного пользовательского шрифта"
+german = "Schriftstärke der variablen eigenen Schrift"
+spanish = "Grosor de la fuente personalizada variable"
+french = "Graisse de la police personnalisée variable"
+brazilian_portuguese = "Espessura da fonte personalizada variável"
+portuguese = "Espessura da fonte personalizada variável"
+turkish = "Değişken özel yazı tipi kalınlığı"
+polish = "Grubość zmiennej niestandardowej czcionki"

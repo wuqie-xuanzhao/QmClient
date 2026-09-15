@@ -1,11 +1,11 @@
-// QmClient: 名牌专用 MSDF 文本渲染器（预烤字形图集）。
+// QmClient: 名牌专用 MTSDF 文本渲染器（预烤字形图集）。
 //
 // 与全局文本渲染完全独立：不动 ITextRender / FreeType 位图字，HUD、菜单、聊天仍走原路径。
-// 字形在离线阶段用 msdfgen 烤进图集（qmclient_scripts/qm_nameplate_msdf_build.py），
+// 字形在离线阶段用 msdfgen 烤进 MTSDF 图集（RGB=MSDF，A=真 SDF；见 qmclient_scripts/qm_nameplate_msdf_build.py），
 // 运行时只做「查表 + 一次性画四边形」，因此缩放与 HiDPI 下都不再有位图重采样发虚的问题。
 //
-// 覆盖策略：整名回退。名字里只要有一个字符不在图集内，SupportsText() 返回 false，
-// 调用方应把整条名字交回原 FreeType 路径，避免同一名字混用两种清晰度。
+// 覆盖策略：主字体优先，内置语言 fallback profile 补齐缺字；只有所有已加载 profile
+// 都缺少字符时才由调用方把整条名字交回 FreeType，避免同一名字混用两种清晰度。
 #ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_NAMEPLATE_MSDF_QM_NAMEPLATE_MSDF_RENDERER_H
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_NAMEPLATE_MSDF_QM_NAMEPLATE_MSDF_RENDERER_H
 
@@ -15,6 +15,7 @@
 #include <engine/graphics.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,7 +25,7 @@ class IStorage;
 struct SQmNameplateMsdfTextStyle
 {
 	ColorRGBA m_TextColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
-	// 描边宽度（屏幕像素）
+	// 描边宽度（画布单位；渲染时按当前映射换算成屏幕像素，单层实心边框）
 	float m_OutlineWidth = 1.0f;
 	ColorRGBA m_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
 	bool m_RainbowEnabled = false;
@@ -49,8 +50,10 @@ class CQmNameplateMsdfRenderer
 		float m_Advance = 0.0f;
 		float m_BearingX = 0.0f;
 		float m_BearingY = 0.0f;
+		float m_MetricScale = 1.0f;
 		int m_Page = -1;
 		bool m_HasOutline = false;
+		bool m_UseTrueSdf = false;
 		// 字形的水平推进（空白字形也有效），用于测量
 		bool m_Valid = false;
 	};
@@ -66,32 +69,46 @@ class CQmNameplateMsdfRenderer
 	IGraphics *m_pGraphics = nullptr;
 	bool m_InitAttempted = false;
 	bool m_Ready = false;
+	// 可选页（CJK）曾加载失败：base 页可用也必须按退避补加载，
+	// 否则一次瞬时读盘/上传失败会让全部 CJK 名字永久停在 FreeType。
+	bool m_OptionalPagePending = false;
 	// 图集缺失/损坏时的下次重试时间，避免每帧重复读盘
 	int64_t m_NextInitAttempt = 0;
 	// 后端不支持等硬性失败：不再重试（重试也不会成功）
 	bool m_FatalError = false;
 	std::string m_Error;
+	std::string m_Profile;
 
 	std::vector<SPage> m_vPages;
 	std::unordered_map<uint32_t, SGlyph> m_Glyphs;
 	float m_RefEmPixels = 0.0f;
+	// 参考字体的排版基线盒（参考 em 像素）。基线与字符串内容无关：
+	// 所有文本共享同一 ascent，混合大小写/中英时才符合排版。
+	// 旧图集无这些字段时按 cap 高度近似，重建图集后为真实 hhea 度量。
+	float m_RefAscent = 0.0f;
+	float m_RefDescent = 0.0f;
 
 	bool LoadPage(const char *pManifestPath);
+	bool LoadProfile(const char *pProfile);
 	bool ParseManifest(const char *pText, const std::string &ManifestPath);
 	void UnloadPages();
-	void EmitGlyphQuad(const SGlyph &Glyph, float X, float Y, float W, float H, const ColorRGBA &Color);
+	// 当前映射下 1 画布单位对应的屏幕像素数（描边宽度换算用）
+	float CanvasToScreenScale() const;
+	void EmitGlyphQuad(const SGlyph &Glyph, float X, float Y, float W, float H, const ColorRGBA &Color, float OutlineWidthPx = 0.0f);
 
 public:
 	~CQmNameplateMsdfRenderer();
 
-	bool Init(IStorage *pStorage, IGraphics *pGraphics);
+	bool Init(IStorage *pStorage, IGraphics *pGraphics, const char *pProfile);
 	void Shutdown();
 	// 设备重建（graphics resources reset）后调用：旧纹理句柄全部失效，丢弃页与字形表并允许重新初始化。
 	// 后端不支持等硬失败（m_FatalError）保持不重试。
 	void OnGraphicsResourcesReset();
 	// 供每帧调用：必要时初始化，失败则按退避重试（不阻塞渲染）
 	void EnsureInitialized(IStorage *pStorage, IGraphics *pGraphics);
+	void EnsureInitialized(IStorage *pStorage, IGraphics *pGraphics, const char *pProfile);
 	bool IsReady() const { return m_Ready; }
+	const char *Profile() const { return m_Profile.c_str(); }
 	const char *Error() const { return m_Error.c_str(); }
 
 	// 文本是否全部可由图集渲染（整名回退判定）
@@ -103,7 +120,7 @@ public:
 	size_t GlyphCount() const { return m_Glyphs.size(); }
 	size_t PageCount() const { return m_vPages.size(); }
 
-	// 按 FontSize 测量文本（宽, 高）；无法整体渲染时返回 (-1,-1)
+	// 按 FontSize 测量文本（宽, 高）；图集未就绪或字号非法时返回 (0,0)
 	vec2 Measure(const char *pText, float FontSize) const;
 	// 在 (X,Y) 左上角绘制，返回实际绘制尺寸
 	vec2 Draw(const char *pText, float X, float Y, float FontSize, const SQmNameplateMsdfTextStyle &Style);

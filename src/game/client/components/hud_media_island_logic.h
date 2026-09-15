@@ -1157,10 +1157,23 @@ namespace HudMediaIslandDetail
 		if(str_length(pText) <= NameLength + 1 || str_comp_num(pText + 1, pExpected, NameLength) != 0 || pText[NameLength + 1] != '\'')
 			return false;
 
+		// 服务端文案已中文化（'%s' 已被禁言 %d 秒（Spam protection）），两种语言都要认；
+		// 禁言原因本身仍是英文常量 "Spam protection"，所以只有前后缀需要分语言。
 		constexpr const char *pMutedPrefix = " has been muted for ";
-		const char *pSeconds = str_startswith(pText + NameLength + 2, pMutedPrefix);
+		constexpr const char *pMutedPrefixZh = " 已被禁言 ";
+		constexpr const char *pMutedSuffix = " seconds (Spam protection)";
+		constexpr const char *pMutedSuffixZh = " 秒（Spam protection）";
+
+		const char *pRest = pText + NameLength + 2;
+		const char *pSeconds = str_startswith(pRest, pMutedPrefix);
+		const char *pSuffix = pMutedSuffix;
+		if(pSeconds == nullptr)
+		{
+			pSeconds = str_startswith(pRest, pMutedPrefixZh);
+			pSuffix = pMutedSuffixZh;
+		}
 		const char *pEnd = nullptr;
-		return pSeconds != nullptr && ParsePositiveSeconds(pSeconds, Seconds, &pEnd) && str_comp(pEnd, " seconds (Spam protection)") == 0;
+		return pSeconds != nullptr && ParsePositiveSeconds(pSeconds, Seconds, &pEnd) && str_comp(pEnd, pSuffix) == 0;
 	}
 }
 
@@ -1170,11 +1183,24 @@ inline EHudMediaIslandMuteMessage QmHudParseSpamProtectionMute(const char *pText
 	if(pText == nullptr)
 		return EHudMediaIslandMuteMessage::NONE;
 
+	// 服务端禁言提示已中文化（你在接下来的 %d 秒内不能发言。），中英并列匹配；
+	// 初始聊天延迟提示（本服务器有初始聊天延迟…）在两种语言下都不算禁言，与英文侧行为一致。
 	constexpr const char *pRemainingPrefix = "You are not permitted to talk for the next ";
-	if(const char *pSeconds = str_startswith(pText, pRemainingPrefix))
+	constexpr const char *pRemainingPrefixZh = "你在接下来的 ";
+	constexpr const char *pRemainingSuffix = " seconds.";
+	constexpr const char *pRemainingSuffixZh = " 秒内不能发言。";
+
+	const char *pSeconds = str_startswith(pText, pRemainingPrefix);
+	const char *pRemainingSuffixUsed = pRemainingSuffix;
+	if(pSeconds == nullptr)
+	{
+		pSeconds = str_startswith(pText, pRemainingPrefixZh);
+		pRemainingSuffixUsed = pRemainingSuffixZh;
+	}
+	if(pSeconds != nullptr)
 	{
 		const char *pEnd = nullptr;
-		if(HudMediaIslandDetail::ParsePositiveSeconds(pSeconds, Seconds, &pEnd) && str_comp(pEnd, " seconds.") == 0)
+		if(HudMediaIslandDetail::ParsePositiveSeconds(pSeconds, Seconds, &pEnd) && str_comp(pEnd, pRemainingSuffixUsed) == 0)
 			return EHudMediaIslandMuteMessage::REMAINING;
 		Seconds = 0;
 		return EHudMediaIslandMuteMessage::NONE;

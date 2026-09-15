@@ -418,7 +418,10 @@ class ITextRender : public IInterface
 	MACRO_INTERFACE("textrender")
 public:
 	virtual std::vector<std::string> *GetCustomFaces() = 0; // TClient
+	virtual std::vector<std::string> *GetCustomFontStyles(const char *pFamily) = 0; // TClient
 	virtual void SetCustomFace(const char *pFace) = 0; // TClient
+	virtual void SetCustomFontWeight(int Weight) = 0; // TClient
+	virtual bool CustomFontHasVariableWeight(const char *pFace) const = 0; // TClient
 
 	virtual bool LoadFonts() = 0;
 	virtual void SetFontPreset(EFontPreset FontPreset) = 0;

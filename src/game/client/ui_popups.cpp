@@ -94,23 +94,22 @@ void CUi::RenderPopupMenus()
 		if(AllowPopupPointerInput)
 			++m_PopupInputDepth;
 
-		if(Active)
-		{
-			// Prevent UI elements below the popup menu from being activated.
-			SetHotItem(pId);
-		}
-
-		if(CheckActiveItem(pId))
+		// 点击弹窗外释放左键时关闭弹窗。这里必须先记下关闭意图并走完本帧渲染流程，
+		// 不能提前 continue：m_PopupInputDepth 一旦漏掉配对递减就会永久泄漏，
+		// 之后所有弹窗的底层输入屏蔽失效，弹窗下面的页面会重新响应鼠标并抢占拖拽捕获。
+		bool CloseBeforeRender = false;
+		// 阻断型弹窗：在弹窗外按下左键立即关闭，不依赖 HotItem→ActiveItem 的
+		// 两帧捕获链，保证“点外部关闭”始终可用。
+		if(Active && PopupMenu.m_Props.m_BlockUnderlyingPointerInput && MouseButtonClicked(0) && !Inside)
+			CloseBeforeRender = true;
+		else if(CheckActiveItem(pId))
 		{
 			if(!MouseButton(0))
 			{
 				if(!Inside)
-				{
-					ClosePopupMenu(pId);
-					--i;
-					continue;
-				}
-				SetActiveItem(nullptr);
+					CloseBeforeRender = true;
+				else
+					SetActiveItem(nullptr);
 			}
 		}
 		else if(HotItem() == pId)
@@ -119,28 +118,39 @@ void CUi::RenderPopupMenus()
 				SetActiveItem(pId);
 		}
 
-		if(Inside && PopupMenu.m_Props.m_BlockUnderlyingScroll)
+		EPopupMenuFunctionResult Result = POPUP_KEEP_OPEN;
+		if(!CloseBeforeRender)
 		{
-			// Prevent scroll regions directly behind popup menus from using the mouse scroll events.
-			SetHotScrollRegion(nullptr);
+			if(Inside && PopupMenu.m_Props.m_BlockUnderlyingScroll)
+			{
+				// Prevent scroll regions directly behind popup menus from using the mouse scroll events.
+				SetHotScrollRegion(nullptr);
+			}
+			if(ClipToViewport)
+				ClipEnable(&PopupMenu.m_Props.m_Viewport);
+
+			CUIRect PopupRect = PopupMenu.m_Rect;
+			DrawRoundedSurface(this, PopupRect, PopupMenu.m_Props.m_BackgroundColor, PopupMenu.m_Props.m_BorderColor, 3.0f, SPopupMenu::POPUP_BORDER, PopupMenu.m_Props.m_Corners);
+			PopupRect.Margin(SPopupMenu::POPUP_BORDER, &PopupRect);
+			PopupRect.Margin(SPopupMenu::POPUP_MARGIN, &PopupRect);
+
+			// The popup render function can open/close popups, which may resize the vector and thus
+			// invalidate the variable PopupMenu. We therefore store pId in a separate variable.
+			Result = PopupMenu.m_pfnFunc(PopupMenu.m_pContext, PopupRect, Active);
+			if(ClipToViewport)
+				ClipDisable();
 		}
-		if(ClipToViewport)
-			ClipEnable(&PopupMenu.m_Props.m_Viewport);
-
-		CUIRect PopupRect = PopupMenu.m_Rect;
-		DrawRoundedSurface(this, PopupRect, PopupMenu.m_Props.m_BackgroundColor, PopupMenu.m_Props.m_BorderColor, 3.0f, SPopupMenu::POPUP_BORDER, PopupMenu.m_Props.m_Corners);
-		PopupRect.Margin(SPopupMenu::POPUP_BORDER, &PopupRect);
-		PopupRect.Margin(SPopupMenu::POPUP_MARGIN, &PopupRect);
-
-		// The popup render function can open/close popups, which may resize the vector and thus
-		// invalidate the variable PopupMenu. We therefore store pId in a separate variable.
-		EPopupMenuFunctionResult Result = PopupMenu.m_pfnFunc(PopupMenu.m_pContext, PopupRect, Active);
-		if(ClipToViewport)
-			ClipDisable();
 		if(AllowPopupPointerInput)
 			--m_PopupInputDepth;
-		if(Result != POPUP_KEEP_OPEN || (Active && ConsumeHotkey(HOTKEY_ESCAPE)))
+		if(CloseBeforeRender)
+		{
+			ClosePopupMenu(pId);
+			--i;
+		}
+		else if(Result != POPUP_KEEP_OPEN || (Active && ConsumeHotkey(HOTKEY_ESCAPE)))
+		{
 			ClosePopupMenu(pId, Result == POPUP_CLOSE_CURRENT_AND_DESCENDANTS);
+		}
 	}
 	m_RenderingPopupMenus = false;
 }

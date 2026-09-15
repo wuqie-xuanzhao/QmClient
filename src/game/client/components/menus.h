@@ -1629,6 +1629,8 @@ protected:
 	char m_aRankDemoDestinationPath[IO_MAX_PATH_LENGTH] = "";
 	// Rank 1 页面：待播放的官方回放缓存路径（断线确认后播放）
 	char m_aPendingRankDemoPlayPath[IO_MAX_PATH_LENGTH] = "";
+	// Rank 1 页面：地图搜索（跨全清单查找指定名次的官方回放）
+	CLineInputBuffered<64> m_RankSearchInput;
 
 	SDemoSelectionEntry DemoSelectionEntryFromItem(const CDemoItem &Item) const;
 	bool IsDemoItemSelected(const CDemoItem &Item) const;
@@ -2482,7 +2484,7 @@ public:
 	SMenuTextPlanItem AddStableTextButton(int Page, int Tab, int Subtab, const char *pTextId, const char *pText, const CUIRect &Rect, const char *pSourceTag = nullptr) const;
 	void DoMenuLabelStreamed(EMenuTextScope Scope, CUIElement &Element, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {}, int StrLen = -1, const CTextCursor *pReadCursor = nullptr, bool Render = true);
 	int DoIngameMenuTab(CButtonContainer *pButtonContainer, int Page, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = ui_token::radius::BASE);
+	int DoIngameMenuButton(int Page, const char *pTextId, CButtonContainer *pButtonContainer, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = ui_token::radius::BASE, bool Disabled = false);
 	int DoIngameMenuCheckBox(int Page, const char *pTextId, const void *pId, const char *pText, int Checked, const CUIRect *pRect);
 	void DoIngameMenuLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
 	void DoIngameMenuTitleLabel(int Page, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &LabelProps = {});
@@ -2820,6 +2822,7 @@ private:
 	void RenderSettingsTClient(CUIRect MainView, bool PrewarmOnly = false);
 	void RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly = false);
 	SSettingsSection BuildTClientThemeCacheSection();
+	SSettingsSection BuildTClientCursorCacheSection();
 	SSettingsSection BuildTClientAutoReplyCacheSection();
 	SSettingsSection BuildTClientPetCacheSection();
 	SSettingsSection BuildTClientHudCacheSection();
@@ -2857,7 +2860,7 @@ private:
 	void RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly);
 	void RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect &ControlColumn, int *pValue, int MinValue, int MaxValue, const char *pSuffix, bool PrewarmOnly, unsigned Flags = 0u);
-	bool RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly);
+	bool RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly, const char *pTooltip = nullptr);
 	bool RenderQmVisualCheckbox(CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, const char *pTextId, const char *pText, int *pValue);
 	void RenderQmVisualLabel(const char *pTextId, CUIRect *pRect, const char *pText, float FontSize, int TextAlign = TEXTALIGN_ML, const SLabelProperties &LabelProps = {});
 	void RenderQmVisualStreamerContent(CUIRect &Content, float LineHeight, float LineSpacing);
@@ -2879,7 +2882,7 @@ private:
 	void RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
-	void RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly);
+	void RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionBlockWordsContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionKeywordReplyContent(CUIRect &Content, float UiScale, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionTranslateContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);

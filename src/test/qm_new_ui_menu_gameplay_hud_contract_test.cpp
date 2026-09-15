@@ -67,7 +67,8 @@ TEST(QmNewUiMenuGameplayHudContract, SpectatorSpecTeeDoesNotFallbackToMissingSki
 	EXPECT_NE(Source.find("SpectatorTeeRenderInfo.m_TeeRenderFlags = TEE_PREVIEW_LAYER_BODY_OUTLINE;"), std::string::npos);
 	EXPECT_NE(Render.find("const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);"), std::string::npos);
 	EXPECT_NE(Render.find("const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);"), std::string::npos);
-	EXPECT_NE(Render.find("Alpha = OtherSpecChar ? g_Config.m_ClShowOthersAlpha / 100.f : 1.f;"), std::string::npos);
+	EXPECT_NE(Render.find("Alpha = g_Config.m_QmSpectatorGhostAlpha / 100.0f;"), std::string::npos);
+	EXPECT_NE(Render.find("Alpha = minimum(Alpha, g_Config.m_ClShowOthersAlpha / 100.f);"), std::string::npos);
 	EXPECT_NE(Render.find("continue;\n\t\tRenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo()"), std::string::npos);
 }
 

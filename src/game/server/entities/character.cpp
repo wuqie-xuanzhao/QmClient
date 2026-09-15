@@ -793,7 +793,7 @@ void CCharacter::PreTick()
 		// Prevent the player from getting a negative time
 		// The main reason why this can happen is because of time penalty tiles
 		// However, other reasons are hereby also excluded
-		GameServer()->SendChatTarget(m_pPlayer->GetCid(), "You died of old age");
+		GameServer()->SendChatTarget(m_pPlayer->GetCid(), "你老死了");
 		Die(m_pPlayer->GetCid(), WEAPON_WORLD);
 	}
 
@@ -1690,7 +1690,7 @@ void CCharacter::HandleTiles(int Index)
 	// hit others
 	if(((m_TileIndex == TILE_HIT_DISABLE) || (m_TileFIndex == TILE_HIT_DISABLE)) && (!m_Core.m_HammerHitDisabled || !m_Core.m_ShotgunHitDisabled || !m_Core.m_GrenadeHitDisabled || !m_Core.m_LaserHitDisabled))
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't hit others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能攻击其他玩家");
 		m_Core.m_HammerHitDisabled = true;
 		m_Core.m_ShotgunHitDisabled = true;
 		m_Core.m_GrenadeHitDisabled = true;
@@ -1698,7 +1698,7 @@ void CCharacter::HandleTiles(int Index)
 	}
 	else if(((m_TileIndex == TILE_HIT_ENABLE) || (m_TileFIndex == TILE_HIT_ENABLE)) && (m_Core.m_HammerHitDisabled || m_Core.m_ShotgunHitDisabled || m_Core.m_GrenadeHitDisabled || m_Core.m_LaserHitDisabled))
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can hit others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以攻击其他玩家");
 		m_Core.m_ShotgunHitDisabled = false;
 		m_Core.m_GrenadeHitDisabled = false;
 		m_Core.m_HammerHitDisabled = false;
@@ -1708,36 +1708,36 @@ void CCharacter::HandleTiles(int Index)
 	// collide with others
 	if(((m_TileIndex == TILE_NPC_DISABLE) || (m_TileFIndex == TILE_NPC_DISABLE)) && !m_Core.m_CollisionDisabled)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't collide with others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能与其他玩家碰撞");
 		m_Core.m_CollisionDisabled = true;
 	}
 	else if(((m_TileIndex == TILE_NPC_ENABLE) || (m_TileFIndex == TILE_NPC_ENABLE)) && m_Core.m_CollisionDisabled)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can collide with others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以与其他玩家碰撞");
 		m_Core.m_CollisionDisabled = false;
 	}
 
 	// hook others
 	if(((m_TileIndex == TILE_NPH_DISABLE) || (m_TileFIndex == TILE_NPH_DISABLE)) && !m_Core.m_HookHitDisabled)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't hook others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能钩中其他玩家");
 		m_Core.m_HookHitDisabled = true;
 	}
 	else if(((m_TileIndex == TILE_NPH_ENABLE) || (m_TileFIndex == TILE_NPH_ENABLE)) && m_Core.m_HookHitDisabled)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can hook others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以钩中其他玩家");
 		m_Core.m_HookHitDisabled = false;
 	}
 
 	// unlimited air jumps
 	if(((m_TileIndex == TILE_UNLIMITED_JUMPS_ENABLE) || (m_TileFIndex == TILE_UNLIMITED_JUMPS_ENABLE)) && !m_Core.m_EndlessJump)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You have unlimited air jumps");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你拥有无限空中跳");
 		m_Core.m_EndlessJump = true;
 	}
 	else if(((m_TileIndex == TILE_UNLIMITED_JUMPS_DISABLE) || (m_TileFIndex == TILE_UNLIMITED_JUMPS_DISABLE)) && m_Core.m_EndlessJump)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You don't have unlimited air jumps");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你不再拥有无限空中跳");
 		m_Core.m_EndlessJump = false;
 	}
 
@@ -1755,12 +1755,12 @@ void CCharacter::HandleTiles(int Index)
 	// jetpack gun
 	if(((m_TileIndex == TILE_JETPACK_ENABLE) || (m_TileFIndex == TILE_JETPACK_ENABLE)) && !m_Core.m_Jetpack)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You have a jetpack gun");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在拥有喷气枪");
 		m_Core.m_Jetpack = true;
 	}
 	else if(((m_TileIndex == TILE_JETPACK_DISABLE) || (m_TileFIndex == TILE_JETPACK_DISABLE)) && m_Core.m_Jetpack)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You lost your jetpack gun");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你失去了喷气枪");
 		m_Core.m_Jetpack = false;
 	}
 
@@ -1781,39 +1781,39 @@ void CCharacter::HandleTiles(int Index)
 	{
 		m_Core.m_HasTelegunGun = true;
 
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "Teleport gun enabled");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "传送枪已开启");
 	}
 	else if(((m_TileIndex == TILE_TELE_GUN_DISABLE) || (m_TileFIndex == TILE_TELE_GUN_DISABLE)) && m_Core.m_HasTelegunGun)
 	{
 		m_Core.m_HasTelegunGun = false;
 
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "Teleport gun disabled");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "传送枪已关闭");
 	}
 
 	if(((m_TileIndex == TILE_TELE_GRENADE_ENABLE) || (m_TileFIndex == TILE_TELE_GRENADE_ENABLE)) && !m_Core.m_HasTelegunGrenade)
 	{
 		m_Core.m_HasTelegunGrenade = true;
 
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "Teleport grenade enabled");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "传送榴弹枪已开启");
 	}
 	else if(((m_TileIndex == TILE_TELE_GRENADE_DISABLE) || (m_TileFIndex == TILE_TELE_GRENADE_DISABLE)) && m_Core.m_HasTelegunGrenade)
 	{
 		m_Core.m_HasTelegunGrenade = false;
 
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "Teleport grenade disabled");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "传送榴弹枪已关闭");
 	}
 
 	if(((m_TileIndex == TILE_TELE_LASER_ENABLE) || (m_TileFIndex == TILE_TELE_LASER_ENABLE)) && !m_Core.m_HasTelegunLaser)
 	{
 		m_Core.m_HasTelegunLaser = true;
 
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "Teleport laser enabled");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "传送激光已开启");
 	}
 	else if(((m_TileIndex == TILE_TELE_LASER_DISABLE) || (m_TileFIndex == TILE_TELE_LASER_DISABLE)) && m_Core.m_HasTelegunLaser)
 	{
 		m_Core.m_HasTelegunLaser = false;
 
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "Teleport laser disabled");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "传送激光已关闭");
 	}
 
 	// stopper
@@ -1889,42 +1889,42 @@ void CCharacter::HandleTiles(int Index)
 	}
 	else if(SwitchType == TILE_HIT_ENABLE && m_Core.m_HammerHitDisabled && SwitchDelay == WEAPON_HAMMER)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can hammer hit others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以用锤子攻击其他玩家");
 		m_Core.m_HammerHitDisabled = false;
 	}
 	else if(SwitchType == TILE_HIT_DISABLE && !(m_Core.m_HammerHitDisabled) && SwitchDelay == WEAPON_HAMMER)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't hammer hit others");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能用锤子攻击其他玩家");
 		m_Core.m_HammerHitDisabled = true;
 	}
 	else if(SwitchType == TILE_HIT_ENABLE && m_Core.m_ShotgunHitDisabled && SwitchDelay == WEAPON_SHOTGUN)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can shoot others with shotgun");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以用散弹枪攻击其他玩家");
 		m_Core.m_ShotgunHitDisabled = false;
 	}
 	else if(SwitchType == TILE_HIT_DISABLE && !(m_Core.m_ShotgunHitDisabled) && SwitchDelay == WEAPON_SHOTGUN)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't shoot others with shotgun");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能用散弹枪攻击其他玩家");
 		m_Core.m_ShotgunHitDisabled = true;
 	}
 	else if(SwitchType == TILE_HIT_ENABLE && m_Core.m_GrenadeHitDisabled && SwitchDelay == WEAPON_GRENADE)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can shoot others with grenade");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以用榴弹枪攻击其他玩家");
 		m_Core.m_GrenadeHitDisabled = false;
 	}
 	else if(SwitchType == TILE_HIT_DISABLE && !(m_Core.m_GrenadeHitDisabled) && SwitchDelay == WEAPON_GRENADE)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't shoot others with grenade");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能用榴弹枪攻击其他玩家");
 		m_Core.m_GrenadeHitDisabled = true;
 	}
 	else if(SwitchType == TILE_HIT_ENABLE && m_Core.m_LaserHitDisabled && SwitchDelay == WEAPON_LASER)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can shoot others with laser");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在可以用激光攻击其他玩家");
 		m_Core.m_LaserHitDisabled = false;
 	}
 	else if(SwitchType == TILE_HIT_DISABLE && !(m_Core.m_LaserHitDisabled) && SwitchDelay == WEAPON_LASER)
 	{
-		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "You can't shoot others with laser");
+		GameServer()->SendChatTarget(GetPlayer()->GetCid(), "你现在不能用激光攻击其他玩家");
 		m_Core.m_LaserHitDisabled = true;
 	}
 	else if(SwitchType == TILE_JUMP)
@@ -1939,11 +1939,11 @@ void CCharacter::HandleTiles(int Index)
 		{
 			char aBuf[256];
 			if(NewJumps == -1)
-				str_copy(aBuf, "You only have your ground jump now");
+				str_copy(aBuf, "你现在只有地面跳了");
 			else if(NewJumps == 1)
-				str_format(aBuf, sizeof(aBuf), "You can jump %d time", NewJumps);
+				str_format(aBuf, sizeof(aBuf), "你现在可以跳 %d 次", NewJumps);
 			else
-				str_format(aBuf, sizeof(aBuf), "You can jump %d times", NewJumps);
+				str_format(aBuf, sizeof(aBuf), "你现在可以跳 %d 次", NewJumps);
 			GameServer()->SendChatTarget(GetPlayer()->GetCid(), aBuf);
 			m_Core.m_Jumps = NewJumps;
 		}
@@ -2448,7 +2448,7 @@ void CCharacter::SetEndlessHook(bool Enable)
 	{
 		return;
 	}
-	GameServer()->SendChatTarget(GetPlayer()->GetCid(), Enable ? "Endless hook has been activated" : "Endless hook has been deactivated");
+	GameServer()->SendChatTarget(GetPlayer()->GetCid(), Enable ? "无限钩已开启" : "无限钩已关闭");
 
 	m_Core.m_EndlessHook = Enable;
 }
@@ -2540,7 +2540,7 @@ bool CCharacter::Rescue()
 		if(m_LastRescue + (int64_t)g_Config.m_SvRescueDelay * Server()->TickSpeed() > Server()->Tick() && !Teams()->IsPractice(Team()))
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "You have to wait %d seconds until you can rescue yourself", (int)((m_LastRescue + (int64_t)g_Config.m_SvRescueDelay * Server()->TickSpeed() - Server()->Tick()) / Server()->TickSpeed()));
+			str_format(aBuf, sizeof(aBuf), "你还需要等待 %d 秒才能自救", (int)((m_LastRescue + (int64_t)g_Config.m_SvRescueDelay * Server()->TickSpeed() - Server()->Tick()) / Server()->TickSpeed()));
 			GameServer()->SendChatTarget(GetPlayer()->GetCid(), aBuf);
 			return false;
 		}

@@ -515,7 +515,7 @@ class CHud : public CComponent
 	bool HasVisibleMediaIsland() const;
 	float GetTopIslandAvoidanceRight() const;
 	void DestroyMediaIslandBlurTargets();
-	bool PrepareMediaIslandBlur();
+	IGraphics::CRenderTargetHandle MediaIslandBlurBackdrop();
 	void RenderMediaIsland();
 
 	int m_LastSpectatorCountTick;
