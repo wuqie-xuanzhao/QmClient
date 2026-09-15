@@ -4,6 +4,7 @@
 
 #include <engine/demo.h>
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 #include <engine/textrender.h>
 
@@ -22,6 +23,7 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/statboard.h>
 #include <game/client/gameclient.h>
+#include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 
@@ -535,6 +537,36 @@ void CScoreboard::RenderTitleBar(CUIRect TitleBar, int Team, const char *pTitle)
 	RenderTitleScore(ScoreLabel, Team, TitleFontSize);
 }
 
+void CScoreboard::RenderServerPlayerCount(CUIRect Rect, const char *pText)
+{
+	const float ContentAlpha = m_AnimContentAlpha;
+	if(ContentAlpha <= 0.001f || pText[0] == '\0')
+		return;
+
+	constexpr float FontSize = 10.0f;
+	constexpr float PaddingX = 5.0f;
+
+	Rect.VMargin(6.0f, &Rect);
+	Rect.HMargin(4.0f, &Rect);
+	if(Rect.w <= 1.0f || Rect.h <= 1.0f)
+		return;
+
+	Rect.Draw(ScoreboardUiColorSurface(ContentAlpha, 0.18f), IGraphics::CORNER_ALL, 5.0f);
+
+	const ColorRGBA TextColor = TextRender()->DefaultTextColor().WithMultipliedAlpha(ContentAlpha);
+	CUIRect Content = Rect;
+	Content.HMargin(PaddingX, &Content);
+
+	const float IconSize = FontSize + 2.0f;
+	CUIRect IconRect;
+	Content.VSplitLeft(IconSize, &IconRect, &Content);
+	Content.VSplitLeft(3.0f, nullptr, &Content);
+	IconRect.VMargin((IconRect.h - IconSize) * 0.5f, &IconRect);
+
+	Ui()->DrawQmIcon(IconRect, EQmIcon::USERS, FontIcons::FONT_ICON_USERS, TextColor);
+	Ui()->DoLabel(&Content, pText, FontSize, TEXTALIGN_ML);
+}
+
 void CScoreboard::RenderGoals(CUIRect Goals)
 {
 	const float ContentAlpha = m_AnimContentAlpha;
@@ -573,10 +605,12 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	TextRender()->TextOutlineColor(BaseOutlineColor);
 
 	const bool ShowMediaControls = g_Config.m_QmSmtcEnable != 0;
+	const bool ShowGhostControls = GameClient()->m_RankGhost.IsViewModeActive();
 	const bool IsTeamPlay = GameClient()->IsTeamPlay();
 	CUIRect SpectatorPanel = Spectators;
 	CUIRect MediaPanel;
-	if(ShowMediaControls)
+	CUIRect GhostPanel;
+	if(ShowMediaControls || ShowGhostControls)
 	{
 		CUiV2LayoutEngine LayoutEngine;
 		SUiStyle PanelStyle;
@@ -586,12 +620,19 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 		PanelStyle.m_JustifyContent = EUiAlign::START;
 		static thread_local std::vector<SUiLayoutChild> s_vPanels;
 		std::vector<SUiLayoutChild> &vPanels = s_vPanels;
-		vPanels.assign(2, SUiLayoutChild{});
-		vPanels[0].m_Style.m_Width = SUiLength::Flex(1.0f);
-		vPanels[1].m_Style.m_Width = SUiLength::Flex(1.0f);
+		const int NumPanels = 1 + (ShowMediaControls ? 1 : 0) + (ShowGhostControls ? 1 : 0);
+		vPanels.assign(NumPanels, SUiLayoutChild{});
+		// 旁观者列表保持更宽；媒体/影子回放面板平分剩余空间
+		vPanels[0].m_Style.m_Width = SUiLength::Flex(NumPanels > 2 ? 1.6f : 1.0f);
+		for(int i = 1; i < NumPanels; i++)
+			vPanels[i].m_Style.m_Width = SUiLength::Flex(1.0f);
 		LayoutEngine.ComputeChildren(PanelStyle, CUiV2LegacyAdapter::FromCUIRect(Spectators), vPanels);
 		SpectatorPanel = CUiV2LegacyAdapter::ToCUIRect(vPanels[0].m_Box);
-		MediaPanel = CUiV2LegacyAdapter::ToCUIRect(vPanels[1].m_Box);
+		int PanelIndex = 1;
+		if(ShowMediaControls)
+			MediaPanel = CUiV2LegacyAdapter::ToCUIRect(vPanels[PanelIndex++].m_Box);
+		if(ShowGhostControls)
+			GhostPanel = CUiV2LegacyAdapter::ToCUIRect(vPanels[PanelIndex++].m_Box);
 	}
 
 	const float CornerRadius = 7.5f;
@@ -605,6 +646,14 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 		MediaPanel.Draw(ScoreboardUiColorSurface(ContentAlpha), IGraphics::CORNER_ALL, CornerRadius);
 		MediaControls = MediaPanel;
 		MediaControls.Margin(5.0f, &MediaControls);
+	}
+
+	CUIRect GhostControls;
+	if(ShowGhostControls)
+	{
+		GhostPanel.Draw(ScoreboardUiColorSurface(ContentAlpha), IGraphics::CORNER_ALL, CornerRadius);
+		GhostControls = GhostPanel;
+		GhostControls.Margin(5.0f, &GhostControls);
 	}
 
 	CTextCursor Cursor;
@@ -698,6 +747,11 @@ void CScoreboard::RenderSpectators(CUIRect Spectators)
 	if(ShowMediaControls)
 	{
 		RenderMediaControls(MediaControls);
+	}
+
+	if(ShowGhostControls)
+	{
+		RenderGhostPlaybackControls(GhostControls);
 	}
 }
 
@@ -799,6 +853,84 @@ void CScoreboard::RenderMediaControls(CUIRect Controls)
 		GameClient()->m_SystemMediaControls.Next();
 	}
 	RestoreTextColors();
+}
+
+// QmClient: 影子查看模式的播放控制条（独立时间线，Alt 呼出光标后可交互）
+void CScoreboard::RenderGhostPlaybackControls(CUIRect Controls)
+{
+	const float ContentAlpha = m_AnimContentAlpha;
+	CRankGhost::SViewState State;
+	if(!GameClient()->m_RankGhost.GetViewState(State))
+		return;
+
+	const ColorRGBA BaseTextColor = TextRender()->DefaultTextColor().WithMultipliedAlpha(ContentAlpha);
+	const ColorRGBA BaseOutlineColor = TextRender()->DefaultTextOutlineColor().WithMultipliedAlpha(ContentAlpha);
+	TextRender()->TextColor(BaseTextColor);
+	TextRender()->TextOutlineColor(BaseOutlineColor);
+
+	CUIRect Body = Controls;
+	CUIRect TitleRect;
+	Body.HSplitTop(12.0f, &TitleRect, &Body);
+	Ui()->DoLabel(&TitleRect, Localize("Ghost replay"), 10.0f, TEXTALIGN_ML);
+	Body.HSplitTop(2.0f, nullptr, &Body);
+
+	// 进度条：点击/拖动定位
+	CUIRect BarRect;
+	Body.HSplitTop(14.0f, &BarRect, &Body);
+	Body.HSplitTop(3.0f, nullptr, &Body);
+	{
+		CUIRect Track = BarRect;
+		Track.HMargin(4.0f, &Track);
+		Track.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f * ContentAlpha), IGraphics::CORNER_ALL, 3.0f);
+		CUIRect Fill = Track;
+		Fill.w = maximum(Fill.w * std::clamp(State.m_Progress, 0.0f, 1.0f), 2.0f);
+		Fill.Draw(ColorRGBA(0.30f, 0.62f, 1.0f, 0.90f * ContentAlpha), IGraphics::CORNER_ALL, 3.0f);
+	}
+	static CButtonContainer s_ProgressButton;
+	if(m_RenderInteractions && Ui()->DoButtonLogic(&s_ProgressButton, 0, &BarRect, BUTTONFLAG_LEFT))
+	{
+		const float Fraction = (Ui()->MouseX() - BarRect.x) / maximum(1.0f, BarRect.w);
+		GameClient()->m_RankGhost.ViewSeek(std::clamp(Fraction, 0.0f, 1.0f));
+	}
+
+	// 底部：播放/暂停 + 时间显示
+	CUIRect RowRect;
+	Body.HSplitTop(20.0f, &RowRect, &Body);
+	CUIRect PlayButton;
+	RowRect.VSplitLeft(24.0f, &PlayButton, &RowRect);
+	RowRect.VSplitLeft(4.0f, nullptr, &RowRect);
+
+	static CButtonContainer s_GhostPlayButton;
+	const char *pPlayIcon = State.m_Playing ? FontIcons::FONT_ICON_PAUSE : FontIcons::FONT_ICON_PLAY;
+	const float PlayButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_GhostPlayButton) * ContentAlpha;
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_GhostPlayButton, pPlayIcon, &PlayButton, m_RenderInteractions, ColorRGBA(1.0f, 1.0f, 1.0f, PlayButtonAlpha), ContentAlpha))
+	{
+		GameClient()->m_RankGhost.ViewPlayPause();
+	}
+	TextRender()->TextColor(BaseTextColor);
+	TextRender()->TextOutlineColor(BaseOutlineColor);
+
+	// 右侧退出按钮：结束查看模式，影子恢复跟跑
+	CUIRect CloseButton;
+	RowRect.VSplitRight(24.0f, &RowRect, &CloseButton);
+	RowRect.VSplitRight(4.0f, &RowRect, nullptr);
+	static CButtonContainer s_GhostCloseButton;
+	const float CloseButtonAlpha = 0.5f * Ui()->ButtonColorMul(&s_GhostCloseButton) * ContentAlpha;
+	if(DoScoreboardMediaIconButton(Ui(), TextRender(), &s_GhostCloseButton, FontIcons::FONT_ICON_XMARK, &CloseButton, m_RenderInteractions, ColorRGBA(1.0f, 0.4f, 0.4f, CloseButtonAlpha), ContentAlpha))
+	{
+		GameClient()->m_RankGhost.ViewStop();
+	}
+	TextRender()->TextColor(BaseTextColor);
+	TextRender()->TextOutlineColor(BaseOutlineColor);
+
+	char aTimeBuf[64];
+	const int Cur = (int)State.m_CurSeconds;
+	const int Tot = (int)(State.m_TotalSeconds + 0.5f);
+	if(Tot >= 3600)
+		str_format(aTimeBuf, sizeof(aTimeBuf), "%d:%02d:%02d / %d:%02d:%02d", Cur / 3600, (Cur % 3600) / 60, Cur % 60, Tot / 3600, (Tot % 3600) / 60, Tot % 60);
+	else
+		str_format(aTimeBuf, sizeof(aTimeBuf), "%d:%02d / %d:%02d", Cur / 60, Cur % 60, Tot / 60, Tot % 60);
+	Ui()->DoLabel(&RowRect, aTimeBuf, 10.0f, TEXTALIGN_ML);
 }
 
 void CScoreboard::RenderSoundMuteBar(CUIRect ScoreboardRect)
@@ -1881,6 +2013,19 @@ void CScoreboard::OnRender()
 			g_Config.m_QmScoreboardSortMode ^= 1;
 	};
 
+	// 服务器人数：沿用官方 ESC 服务器信息的「当前 / 上限」，仅真实联机且服务端上报上限时显示。
+	const CServerInfo &ServerInfo = Client()->ServerInfo();
+	const bool ShowServerPlayers = Client()->State() == IClient::STATE_ONLINE && ServerInfo.m_MaxClients > 0;
+	char aServerPlayersBuf[64] = "";
+	if(ShowServerPlayers)
+		str_format(aServerPlayersBuf, sizeof(aServerPlayersBuf), "%s: %d/%d", Localize("Players"), GameClient()->m_Snap.m_NumPlayers, ServerInfo.m_MaxClients);
+	const float ServerPlayersFontSize = 10.0f;
+	const float ServerPlayersWidth = ShowServerPlayers ? TextRender()->TextWidth(ServerPlayersFontSize, aServerPlayersBuf) + 34.0f : 0.0f;
+	auto &&DoServerPlayers = [&](CUIRect Rect) {
+		if(ShowServerPlayers)
+			RenderServerPlayerCount(Rect, aServerPlayersBuf);
+	};
+
 	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
 	const ColorRGBA PrevTextOutlineColor = TextRender()->GetTextOutlineColor();
 	const ColorRGBA BaseTextColor = TextRender()->DefaultTextColor().WithMultipliedAlpha(m_AnimContentAlpha);
@@ -1973,6 +2118,7 @@ void CScoreboard::OnRender()
 		RedScoreboardContent.HSplitTop(TitleHeight, &RedTitleContent, &RedScoreboardContent);
 		BlueScoreboardContent.HSplitTop(TitleHeight, &BlueTitleContent, &BlueScoreboardContent);
 		CUIRect SortButton;
+		CUIRect ServerPlayers;
 		const CUIRect BlueTitleBackground = BlueTitle;
 		{
 			CUiV2LayoutEngine LayoutEngine;
@@ -1982,12 +2128,17 @@ void CScoreboard::OnRender()
 			TitleSplitStyle.m_JustifyContent = EUiAlign::START;
 			static thread_local std::vector<SUiLayoutChild> s_vTitleChildren;
 			std::vector<SUiLayoutChild> &vTitleChildren = s_vTitleChildren;
-			vTitleChildren.assign(2, SUiLayoutChild{});
+			vTitleChildren.assign(ShowServerPlayers ? 3 : 2, SUiLayoutChild{});
+			const int SortButtonIndex = ShowServerPlayers ? 2 : 1;
 			vTitleChildren[0].m_Style.m_Width = SUiLength::Flex(1.0f);
-			vTitleChildren[1].m_Style.m_Width = SUiLength::Px(SortButtonWidth);
+			if(ShowServerPlayers)
+				vTitleChildren[1].m_Style.m_Width = SUiLength::Px(ServerPlayersWidth);
+			vTitleChildren[SortButtonIndex].m_Style.m_Width = SUiLength::Px(SortButtonWidth);
 			LayoutEngine.ComputeChildren(TitleSplitStyle, CUiV2LegacyAdapter::FromCUIRect(BlueTitleContent), vTitleChildren);
 			BlueTitleContent = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[0].m_Box);
-			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
+			if(ShowServerPlayers)
+				ServerPlayers = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
+			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[SortButtonIndex].m_Box);
 		}
 
 		RedTitle.Draw(ScoreboardWithUiAlpha(ui_token::color::DANGER, BackgroundAlphaFinal), IGraphics::CORNER_T, ui_token::radius::CARD);
@@ -1997,6 +2148,7 @@ void CScoreboard::OnRender()
 
 		RenderTitleBar(RedTitleContent, TEAM_RED, pRedTeamName == nullptr ? Localize("Red team") : pRedTeamName);
 		RenderTitleBar(BlueTitleContent, TEAM_BLUE, pBlueTeamName == nullptr ? Localize("Blue team") : pBlueTeamName);
+		DoServerPlayers(ServerPlayers);
 		DoSortButton(SortButton);
 		RenderScoreboard(RedScoreboardContent, TEAM_RED, 0, NumPlayers, RedPlayerRows, RenderState);
 		RenderScoreboard(BlueScoreboardContent, TEAM_BLUE, 0, NumPlayers, BluePlayerRows, RenderState);
@@ -2019,6 +2171,7 @@ void CScoreboard::OnRender()
 		CUIRect ScoreboardContentBody = ScoreboardContent;
 		ScoreboardContentBody.HSplitTop(TitleHeight, &Title, &ScoreboardContentBody);
 		CUIRect SortButton;
+		CUIRect ServerPlayers;
 		{
 			CUiV2LayoutEngine LayoutEngine;
 			SUiStyle TitleSplitStyle;
@@ -2027,14 +2180,20 @@ void CScoreboard::OnRender()
 			TitleSplitStyle.m_JustifyContent = EUiAlign::START;
 			static thread_local std::vector<SUiLayoutChild> s_vTitleChildren;
 			std::vector<SUiLayoutChild> &vTitleChildren = s_vTitleChildren;
-			vTitleChildren.assign(2, SUiLayoutChild{});
+			vTitleChildren.assign(ShowServerPlayers ? 3 : 2, SUiLayoutChild{});
+			const int SortButtonIndex = ShowServerPlayers ? 2 : 1;
 			vTitleChildren[0].m_Style.m_Width = SUiLength::Flex(1.0f);
-			vTitleChildren[1].m_Style.m_Width = SUiLength::Px(SortButtonWidth);
+			if(ShowServerPlayers)
+				vTitleChildren[1].m_Style.m_Width = SUiLength::Px(ServerPlayersWidth);
+			vTitleChildren[SortButtonIndex].m_Style.m_Width = SUiLength::Px(SortButtonWidth);
 			LayoutEngine.ComputeChildren(TitleSplitStyle, CUiV2LegacyAdapter::FromCUIRect(Title), vTitleChildren);
 			Title = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[0].m_Box);
-			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
+			if(ShowServerPlayers)
+				ServerPlayers = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
+			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[SortButtonIndex].m_Box);
 		}
 		RenderTitleBar(Title, TEAM_GAME, pTitle);
+		DoServerPlayers(ServerPlayers);
 		DoSortButton(SortButton);
 
 		if(NumPlayers <= 16)
