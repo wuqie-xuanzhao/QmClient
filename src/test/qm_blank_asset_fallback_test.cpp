@@ -20,6 +20,17 @@ namespace
 		return Image;
 	}
 
+	CImageInfo MakeRImage(size_t Width, size_t Height)
+	{
+		CImageInfo Image;
+		Image.m_Width = Width;
+		Image.m_Height = Height;
+		Image.m_Format = CImageInfo::FORMAT_R;
+		Image.m_pData = static_cast<uint8_t *>(malloc(Width * Height));
+		mem_zero(Image.m_pData, Width * Height);
+		return Image;
+	}
+
 	void SetPixel(CImageInfo &Image, size_t X, size_t Y, uint8_t R, uint8_t G, uint8_t B, uint8_t A)
 	{
 		const size_t Offset = (Y * Image.m_Width + X) * 4;
@@ -149,27 +160,61 @@ TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectFillsBlankSpriteOnly)
 	SetPixel(Default, 2, 2, 20, 20, 20, 255);
 	SetPixel(Custom, 0, 0, 10, 10, 10, 255);
 
-	EXPECT_TRUE(CopyFallbackOverBlankRect(Custom, Default, 2, 2, 2, 2));
+	EXPECT_TRUE(CopyFallbackOverBlankRect(Custom, Default, 2, 2, 2, 2, 2, 2, 2, 2));
 	EXPECT_TRUE(PixelEquals(Custom, 2, 2, 20, 20, 20, 255));
 	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 10, 10, 10, 255));
 
 	// 已经画过的格不再被覆盖。
 	SetPixel(Default, 0, 0, 99, 99, 99, 255);
-	EXPECT_FALSE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 2, 2));
+	EXPECT_FALSE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 2, 2, 0, 0, 2, 2));
 	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 10, 10, 10, 255));
 
 	Custom.Free();
 	Default.Free();
 }
 
-TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectRequiresIdenticalImageShape)
+TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectScalesFallbackBetweenCanvasSizes)
+{
+	// 自定义画布与默认画布分辨率不同时，整图回退仍按比例取最近邻样本，而不是直接放弃。
+	CImageInfo Custom = MakeRgbaImage(4, 4);
+	CImageInfo Default = MakeRgbaImage(8, 8);
+	SetPixel(Default, 0, 0, 20, 20, 20, 255);
+	SetPixel(Default, 6, 6, 30, 30, 30, 255);
+
+	ASSERT_TRUE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 4, 4, 0, 0, 8, 8));
+	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 20, 20, 20, 255));
+	// 目标 (3,3) 采样默认 (6,6)：(3 * 8) / 4 = 6。
+	EXPECT_TRUE(PixelEquals(Custom, 3, 3, 30, 30, 30, 255));
+
+	Custom.Free();
+	Default.Free();
+}
+
+TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectMapsEachCellAcrossCanvasSizes)
+{
+	// strong_weak 这类 3x1 图集：两张画布分辨率不同，回退仍按格位一一对应。
+	CImageInfo Custom = MakeRgbaImage(6, 3);
+	CImageInfo Default = MakeRgbaImage(12, 6);
+	SetPixel(Default, 4, 0, 40, 40, 40, 255); // 默认图第 1 格（x 4..7）
+	SetPixel(Custom, 0, 0, 10, 10, 10, 255);  // 自定义图只有第 0 格有内容
+
+	// 自定义第 1 格 (2,0)-(4,3) 对应默认第 1 格 (4,0)-(8,6)。
+	ASSERT_TRUE(CopyFallbackOverBlankRect(Custom, Default, 2, 0, 2, 3, 4, 0, 4, 6));
+	EXPECT_TRUE(PixelEquals(Custom, 2, 0, 40, 40, 40, 255));
+	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 10, 10, 10, 255));
+	EXPECT_TRUE(PixelEquals(Custom, 4, 0, 0, 0, 0, 0));
+
+	Custom.Free();
+	Default.Free();
+}
+
+TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectRequiresMatchingFormat)
 {
 	CImageInfo Custom = MakeRgbaImage(4, 4);
-	CImageInfo Default = MakeRgbaImage(8, 4);
-	SetPixel(Default, 0, 0, 20, 20, 20, 255);
+	CImageInfo Default = MakeRImage(4, 4);
 
-	// 尺寸不同时不能按格补齐：格坐标换算基准不同，会取到错误区域。
-	EXPECT_FALSE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 4, 4));
+	// 通道布局不同（RGBA 对 R）时不能按像素直接拷贝。
+	EXPECT_FALSE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 4, 4, 0, 0, 4, 4));
 	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 0, 0, 0, 0));
 
 	Custom.Free();

@@ -409,7 +409,9 @@ namespace
 
 	// 自定义单图资源（gui_cursor / arrow / strong_weak）以整张纹理 + sprite 子区域绘制，
 	// 没法像 sprite 纹理那样逐个回退。这里按 qm_blank_asset_fallback 的语义，先把自定义图里
-	// 全透明的 sprite 区域用内置默认图同位置的像素补齐，再整张上传，效果与 LoadSpriteTexture 一致。
+	// 全透明的 sprite 区域用内置默认图补齐，再整张上传，效果与 LoadSpriteTexture 一致。
+	// 两张图的像素尺寸允许不同：sprite 位置按各自画布的格比例换算（格数量相同），
+	// 因此换成别的分辨率的材质仍然能取到对应格，而不是要求像素尺寸一致。
 	void FillBlankNamedAssetSprites(CGameClient *pGameClient, int ImageId, CImageInfo &ImgInfo)
 	{
 		if(g_Config.m_QmBlankAssetFallback == 0)
@@ -421,8 +423,9 @@ namespace
 		CImageInfo DefaultImgInfo;
 		if(!pGameClient->Graphics()->LoadPng(DefaultImgInfo, pDefaultPath, IStorage::TYPE_ALL))
 			return;
-		// 回退图必须是同一图集的默认文件：sprite 格坐标按各自网格换算，尺寸或格式不同会取到错误区域。
-		if(DefaultImgInfo.m_Width != ImgInfo.m_Width || DefaultImgInfo.m_Height != ImgInfo.m_Height || DefaultImgInfo.m_Format != ImgInfo.m_Format)
+		// 回退图必须是同一图集的默认文件：格坐标按各自网格换算，换别的图集（列数不同）会取到错误区域。
+		// 格式必须一致（含 alpha），否则连空白判定都不成立。
+		if(DefaultImgInfo.m_Format != ImgInfo.m_Format)
 		{
 			DefaultImgInfo.Free();
 			return;
@@ -436,16 +439,20 @@ namespace
 				continue;
 			AnySprite = true;
 
+			const int GridX = Sprite.m_pSet->m_Gridx;
+			const int GridY = Sprite.m_pSet->m_Gridy;
 			size_t x = 0, y = 0, w = 0, h = 0;
-			if(!ResolveSpritePixelRect(ImgInfo.m_Width, ImgInfo.m_Height, Sprite.m_pSet->m_Gridx, Sprite.m_pSet->m_Gridy,
-				   Sprite.m_X, Sprite.m_Y, Sprite.m_W, Sprite.m_H, x, y, w, h))
+			size_t FallbackX = 0, FallbackY = 0, FallbackW = 0, FallbackH = 0;
+			if(!ResolveSpritePixelRect(ImgInfo.m_Width, ImgInfo.m_Height, GridX, GridY, Sprite.m_X, Sprite.m_Y, Sprite.m_W, Sprite.m_H, x, y, w, h))
 				continue;
-			if(CopyFallbackOverBlankRect(ImgInfo, DefaultImgInfo, x, y, w, h))
+			if(!ResolveSpritePixelRect(DefaultImgInfo.m_Width, DefaultImgInfo.m_Height, GridX, GridY, Sprite.m_X, Sprite.m_Y, Sprite.m_W, Sprite.m_H, FallbackX, FallbackY, FallbackW, FallbackH))
+				continue;
+			if(CopyFallbackOverBlankRect(ImgInfo, DefaultImgInfo, x, y, w, h, FallbackX, FallbackY, FallbackW, FallbackH))
 				log_warn("graphics", "Asset sprite '%s' is empty, falling back to the default sprite", Sprite.m_pName);
 		}
-		if(!AnySprite && CopyFallbackOverBlankRect(ImgInfo, DefaultImgInfo, 0, 0, ImgInfo.m_Width, ImgInfo.m_Height))
+		if(!AnySprite && CopyFallbackOverBlankRect(ImgInfo, DefaultImgInfo, 0, 0, ImgInfo.m_Width, ImgInfo.m_Height, 0, 0, DefaultImgInfo.m_Width, DefaultImgInfo.m_Height))
 		{
-			// 没有任何 sprite 引用该图（例如光标），整张空白时按整图回退。
+			// 没有任何 sprite 引用该图（例如光标），整张空白时按整图回退；分辨率不同则按比例缩放。
 			log_warn("graphics", "Asset '%s' is empty, falling back to the default asset", pDefaultPath);
 		}
 		DefaultImgInfo.Free();

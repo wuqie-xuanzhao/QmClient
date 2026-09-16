@@ -508,15 +508,38 @@ bool IsImageRectFullyTransparent(const CImageInfo &Image, size_t X, size_t Y, si
 	return true;
 }
 
-bool CopyFallbackOverBlankRect(CImageInfo &Image, const CImageInfo &FallbackImage, size_t X, size_t Y, size_t Width, size_t Height)
+bool CopyFallbackOverBlankRect(CImageInfo &Image, const CImageInfo &FallbackImage,
+	size_t X, size_t Y, size_t Width, size_t Height,
+	size_t FallbackX, size_t FallbackY, size_t FallbackWidth, size_t FallbackHeight)
 {
-	if(Image.m_Width != FallbackImage.m_Width || Image.m_Height != FallbackImage.m_Height || Image.m_Format != FallbackImage.m_Format)
-		return false;
-	if(FallbackImage.m_pData == nullptr)
+	if(Image.m_Format != FallbackImage.m_Format || Image.m_pData == nullptr || FallbackImage.m_pData == nullptr)
 		return false;
 	if(!IsImageRectFullyTransparent(Image, X, Y, Width, Height))
 		return false;
+	if(FallbackWidth == 0 || FallbackHeight == 0 ||
+		FallbackX > FallbackImage.m_Width || FallbackY > FallbackImage.m_Height ||
+		FallbackWidth > FallbackImage.m_Width - FallbackX || FallbackHeight > FallbackImage.m_Height - FallbackY)
+	{
+		return false;
+	}
 
-	Image.CopyRectFrom(FallbackImage, X, Y, Width, Height, X, Y);
+	const size_t PixelSize = Image.PixelSize();
+	if(PixelSize == 0 || PixelSize != FallbackImage.PixelSize())
+		return false;
+
+	uint8_t *pDstData = static_cast<uint8_t *>(Image.m_pData);
+	const uint8_t *pSrcData = static_cast<const uint8_t *>(FallbackImage.m_pData);
+	for(size_t Row = 0; Row < Height; ++Row)
+	{
+		// 分辨率不同的画布上，同一格位按比例取最近邻样本。
+		const size_t SampleY = FallbackY + static_cast<size_t>((static_cast<int64_t>(Row) * static_cast<int64_t>(FallbackHeight)) / static_cast<int64_t>(Height));
+		for(size_t Column = 0; Column < Width; ++Column)
+		{
+			const size_t SampleX = FallbackX + static_cast<size_t>((static_cast<int64_t>(Column) * static_cast<int64_t>(FallbackWidth)) / static_cast<int64_t>(Width));
+			const size_t DstOffset = ((Y + Row) * Image.m_Width + (X + Column)) * PixelSize;
+			const size_t SrcOffset = (SampleY * FallbackImage.m_Width + SampleX) * PixelSize;
+			mem_copy(&pDstData[DstOffset], &pSrcData[SrcOffset], PixelSize);
+		}
+	}
 	return true;
 }

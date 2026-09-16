@@ -42,8 +42,13 @@ bool ResolveSpritePixelRect(size_t ImageWidth, size_t ImageHeight, int GridX, in
 // 有效，其它格式、空数据或越界矩形都返回 false。
 bool IsImageRectFullyTransparent(const CImageInfo &Image, size_t X, size_t Y, size_t Width, size_t Height);
 
-// 空白 sprite 回退：当 Image 的指定矩形完全透明时，用 FallbackImage 同位置的像素覆盖它。
-// 两张图必须同尺寸同格式（同一图集的内置默认图），否则不做任何修改。返回是否发生了覆盖。
-bool CopyFallbackOverBlankRect(CImageInfo &Image, const CImageInfo &FallbackImage, size_t X, size_t Y, size_t Width, size_t Height);
+// 空白 sprite 回退：当 Image 的 (X, Y, Width, Height) 完全透明时，用 FallbackImage 的
+// (FallbackX, FallbackY, FallbackWidth, FallbackHeight) 覆盖它。
+// 两个区域的像素尺寸一致时按行拷贝，不一致时按最近邻缩放——同一 sprite 在不同分辨率的画布上
+// 占同一个格位，所以映射依据是「格比例」而不是绝对像素尺寸。
+// 两张图必须同格式（含 alpha）且数据有效，否则不做任何修改。返回是否发生了覆盖。
+bool CopyFallbackOverBlankRect(CImageInfo &Image, const CImageInfo &FallbackImage,
+	size_t X, size_t Y, size_t Width, size_t Height,
+	size_t FallbackX, size_t FallbackY, size_t FallbackWidth, size_t FallbackHeight);
 
 #endif // ENGINE_GFX_IMAGE_MANIPULATION_H
