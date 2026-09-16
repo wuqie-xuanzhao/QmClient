@@ -918,6 +918,8 @@ public:
 			return "分身图";
 		if(str_comp_nocase(pType, "Solo") == 0)
 			return "单人图";
+		if(str_comp_nocase(pType, "活动") == 0)
+			return "活动图";
 		return pType;
 	}
 	struct SFriendAutoFollowState
@@ -1036,7 +1038,8 @@ public:
 				return "Dummy";
 			if(str_find_nocase(pText, "Solo") || str_find(pText, "单人"))
 				return "Solo";
-			if(str_find(pText, "活动"))
+			// 官方简中 Event 译作「活动」，英文与中文写法都要认。
+			if(str_find_nocase(pText, "Event") || str_find(pText, "活动"))
 				return "活动";
 			if(str_find(pText, "极限"))
 				return "极限";

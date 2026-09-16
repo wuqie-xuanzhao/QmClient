@@ -225,7 +225,12 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 活动 - CHN9 AXRace");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动 - CHN9 广州");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动图 - CHN9 广州");
+
+	// 官方简中 Event 译作「活动」，英文写法也要认出来。
+	str_copy(Info.m_aName, "DDNet CHN2 上海 - Event 活动");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动图 - CHN2 上海");
 
 	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 极限 - CHN9 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
