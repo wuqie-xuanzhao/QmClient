@@ -557,38 +557,10 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo
 
 bool CGraphics_Threaded::IsImageSubFullyTransparent(const CImageInfo &FromImageInfo, int x, int y, int w, int h)
 {
-	if(FromImageInfo.m_Format == CImageInfo::FORMAT_R || FromImageInfo.m_Format == CImageInfo::FORMAT_RA || FromImageInfo.m_Format == CImageInfo::FORMAT_RGBA)
-	{
-		if(FromImageInfo.m_pData == nullptr || x < 0 || y < 0 || w <= 0 || h <= 0)
-			return false;
-		if(static_cast<size_t>(x) > FromImageInfo.m_Width || static_cast<size_t>(y) > FromImageInfo.m_Height ||
-			static_cast<size_t>(w) > FromImageInfo.m_Width - static_cast<size_t>(x) ||
-			static_cast<size_t>(h) > FromImageInfo.m_Height - static_cast<size_t>(y))
-		{
-			return false;
-		}
-		size_t ImageDataSize = 0;
-		if(!FromImageInfo.DataSize(ImageDataSize))
-			return false;
-		const uint8_t *pImgData = FromImageInfo.m_pData;
-		const size_t PixelSize = FromImageInfo.PixelSize();
-		for(int iy = 0; iy < h; ++iy)
-		{
-			for(int ix = 0; ix < w; ++ix)
-			{
-				const size_t PixelX = static_cast<size_t>(x) + static_cast<size_t>(ix);
-				const size_t PixelY = static_cast<size_t>(y) + static_cast<size_t>(iy);
-				const size_t RealOffset = (PixelY * FromImageInfo.m_Width + PixelX) * PixelSize;
-				if(RealOffset >= ImageDataSize || PixelSize - 1 >= ImageDataSize - RealOffset)
-					return false;
-				if(pImgData[RealOffset + (PixelSize - 1)] > 0)
-					return false;
-			}
-		}
-
-		return true;
-	}
-	return false;
+	if(x < 0 || y < 0 || w <= 0 || h <= 0)
+		return false;
+	// 判定逻辑复用 engine/gfx 的纯函数，保证与客户端侧的空白 sprite 回退使用同一套语义。
+	return IsImageRectFullyTransparent(FromImageInfo, static_cast<size_t>(x), static_cast<size_t>(y), static_cast<size_t>(w), static_cast<size_t>(h));
 }
 
 bool CGraphics_Threaded::IsSpriteTextureFullyTransparent(const CImageInfo &FromImageInfo, const CDataSprite *pSprite)
@@ -671,45 +643,13 @@ static bool TextureDataSizeGrayscale(size_t Width, size_t Height, size_t &DataSi
 
 static bool GetSpriteImageRect(const CImageInfo &ImageInfo, const CDataSprite *pSprite, size_t &x, size_t &y, size_t &w, size_t &h, bool *pOutOfBounds)
 {
-	if(pSprite == nullptr || pSprite->m_pSet == nullptr || pSprite->m_pSet->m_Gridx <= 0 || pSprite->m_pSet->m_Gridy <= 0 ||
-		pSprite->m_X < 0 || pSprite->m_Y < 0 || pSprite->m_W <= 0 || pSprite->m_H <= 0)
-	{
+	if(pSprite == nullptr || pSprite->m_pSet == nullptr)
 		return false;
-	}
-
-	const size_t Gridx = pSprite->m_pSet->m_Gridx;
-	const size_t Gridy = pSprite->m_pSet->m_Gridy;
-	if(ImageInfo.m_Width == 0 || ImageInfo.m_Height == 0 || ImageInfo.m_Width % Gridx != 0 || ImageInfo.m_Height % Gridy != 0)
-		return false;
-
-	const size_t GridWidth = ImageInfo.m_Width / Gridx;
-	const size_t GridHeight = ImageInfo.m_Height / Gridy;
-	const size_t SpriteX = pSprite->m_X;
-	const size_t SpriteY = pSprite->m_Y;
-	const size_t SpriteW = pSprite->m_W;
-	const size_t SpriteH = pSprite->m_H;
-	if(SpriteX > std::numeric_limits<size_t>::max() / GridWidth ||
-		SpriteY > std::numeric_limits<size_t>::max() / GridHeight ||
-		SpriteW > std::numeric_limits<size_t>::max() / GridWidth ||
-		SpriteH > std::numeric_limits<size_t>::max() / GridHeight)
-	{
-		return false;
-	}
-
-	x = SpriteX * GridWidth;
-	y = SpriteY * GridHeight;
-	w = SpriteW * GridWidth;
-	h = SpriteH * GridHeight;
-	if(w == 0 || h == 0 || x > ImageInfo.m_Width || y > ImageInfo.m_Height ||
-		w > ImageInfo.m_Width - x || h > ImageInfo.m_Height - y)
-	{
-		// 图集网格整除但 sprite 矩形超出图集：视为「图集比默认布局小」，
-		// 与真正的坏包（不可整除/无数据）区分开。
-		if(pOutOfBounds != nullptr)
-			*pOutOfBounds = true;
-		return false;
-	}
-	return true;
+	// 换算规则集中放在 engine/gfx 的纯函数里，客户端侧的单图资源空白回退复用同一实现。
+	return ResolveSpritePixelRect(ImageInfo.m_Width, ImageInfo.m_Height,
+		pSprite->m_pSet->m_Gridx, pSprite->m_pSet->m_Gridy,
+		pSprite->m_X, pSprite->m_Y, pSprite->m_W, pSprite->m_H,
+		x, y, w, h, pOutOfBounds);
 }
 
 IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(const CImageInfo &Image, int Flags, const char *pTexName)

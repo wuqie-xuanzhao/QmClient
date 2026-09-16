@@ -4232,6 +4232,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_font_icon_resource_contract_test.cpp
     QmLayoutTest.cpp
     qm_afk_presentation_contract_test.cpp
+    qm_blank_asset_fallback_test.cpp
     input_overlay_format_test.cpp
     QmUiTokensTest.cpp
     qm_ui_presentation_contract_test.cpp

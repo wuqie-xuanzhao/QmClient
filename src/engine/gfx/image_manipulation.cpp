@@ -434,3 +434,89 @@ int HighestBit(int OfVar)
 
 	return RetV;
 }
+
+bool ResolveSpritePixelRect(size_t ImageWidth, size_t ImageHeight, int GridX, int GridY,
+	int SpriteX, int SpriteY, int SpriteW, int SpriteH,
+	size_t &OutX, size_t &OutY, size_t &OutW, size_t &OutH, bool *pOutOfBounds)
+{
+	if(pOutOfBounds != nullptr)
+		*pOutOfBounds = false;
+	if(GridX <= 0 || GridY <= 0 || SpriteX < 0 || SpriteY < 0 || SpriteW <= 0 || SpriteH <= 0)
+		return false;
+
+	const size_t GridCountX = (size_t)GridX;
+	const size_t GridCountY = (size_t)GridY;
+	if(ImageWidth == 0 || ImageHeight == 0 || ImageWidth % GridCountX != 0 || ImageHeight % GridCountY != 0)
+		return false;
+
+	const size_t CellWidth = ImageWidth / GridCountX;
+	const size_t CellHeight = ImageHeight / GridCountY;
+	const size_t SpriteXU = (size_t)SpriteX;
+	const size_t SpriteYU = (size_t)SpriteY;
+	const size_t SpriteWU = (size_t)SpriteW;
+	const size_t SpriteHU = (size_t)SpriteH;
+	const size_t MaxSize = std::numeric_limits<size_t>::max();
+	if(SpriteXU > MaxSize / CellWidth || SpriteYU > MaxSize / CellHeight ||
+		SpriteWU > MaxSize / CellWidth || SpriteHU > MaxSize / CellHeight)
+	{
+		return false;
+	}
+
+	OutX = SpriteXU * CellWidth;
+	OutY = SpriteYU * CellHeight;
+	OutW = SpriteWU * CellWidth;
+	OutH = SpriteHU * CellHeight;
+	if(OutW == 0 || OutH == 0 || OutX > ImageWidth || OutY > ImageHeight ||
+		OutW > ImageWidth - OutX || OutH > ImageHeight - OutY)
+	{
+		// 图集网格整除但 sprite 矩形超出图集：视为「图集比默认布局小」，
+		// 与真正的坏包（不可整除/无数据）区分开。
+		if(pOutOfBounds != nullptr)
+			*pOutOfBounds = true;
+		return false;
+	}
+	return true;
+}
+
+bool IsImageRectFullyTransparent(const CImageInfo &Image, size_t X, size_t Y, size_t Width, size_t Height)
+{
+	if(Image.m_Format != CImageInfo::FORMAT_R && Image.m_Format != CImageInfo::FORMAT_RA && Image.m_Format != CImageInfo::FORMAT_RGBA)
+		return false;
+	if(Image.m_pData == nullptr || Width == 0 || Height == 0)
+		return false;
+	if(X > Image.m_Width || Y > Image.m_Height || Width > Image.m_Width - X || Height > Image.m_Height - Y)
+		return false;
+
+	size_t ImageDataSize = 0;
+	if(!Image.DataSize(ImageDataSize))
+		return false;
+
+	// 与引擎原有判定保持一致：PixelSize - 1 处为 alpha（FORMAT_R 时即唯一通道），
+	// 该字节为 0 视为像素完全透明。
+	const size_t PixelSize = Image.PixelSize();
+	for(size_t iy = 0; iy < Height; ++iy)
+	{
+		for(size_t ix = 0; ix < Width; ++ix)
+		{
+			const size_t Offset = ((Y + iy) * Image.m_Width + (X + ix)) * PixelSize;
+			if(Offset >= ImageDataSize || PixelSize - 1 >= ImageDataSize - Offset)
+				return false;
+			if(Image.m_pData[Offset + (PixelSize - 1)] > 0)
+				return false;
+		}
+	}
+	return true;
+}
+
+bool CopyFallbackOverBlankRect(CImageInfo &Image, const CImageInfo &FallbackImage, size_t X, size_t Y, size_t Width, size_t Height)
+{
+	if(Image.m_Width != FallbackImage.m_Width || Image.m_Height != FallbackImage.m_Height || Image.m_Format != FallbackImage.m_Format)
+		return false;
+	if(FallbackImage.m_pData == nullptr)
+		return false;
+	if(!IsImageRectFullyTransparent(Image, X, Y, Width, Height))
+		return false;
+
+	Image.CopyRectFrom(FallbackImage, X, Y, Width, Height, X, Y);
+	return true;
+}

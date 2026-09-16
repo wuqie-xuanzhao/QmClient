@@ -1,0 +1,177 @@
+#include "test.h"
+
+#include <base/system.h>
+
+#include <engine/gfx/image_manipulation.h>
+#include <engine/image.h>
+
+#include <gtest/gtest.h>
+
+namespace
+{
+	CImageInfo MakeRgbaImage(size_t Width, size_t Height)
+	{
+		CImageInfo Image;
+		Image.m_Width = Width;
+		Image.m_Height = Height;
+		Image.m_Format = CImageInfo::FORMAT_RGBA;
+		Image.m_pData = static_cast<uint8_t *>(malloc(Width * Height * 4));
+		mem_zero(Image.m_pData, Width * Height * 4);
+		return Image;
+	}
+
+	void SetPixel(CImageInfo &Image, size_t X, size_t Y, uint8_t R, uint8_t G, uint8_t B, uint8_t A)
+	{
+		const size_t Offset = (Y * Image.m_Width + X) * 4;
+		Image.m_pData[Offset + 0] = R;
+		Image.m_pData[Offset + 1] = G;
+		Image.m_pData[Offset + 2] = B;
+		Image.m_pData[Offset + 3] = A;
+	}
+
+	bool PixelEquals(const CImageInfo &Image, size_t X, size_t Y, uint8_t R, uint8_t G, uint8_t B, uint8_t A)
+	{
+		const size_t Offset = (Y * Image.m_Width + X) * 4;
+		return Image.m_pData[Offset + 0] == R && Image.m_pData[Offset + 1] == G &&
+		       Image.m_pData[Offset + 2] == B && Image.m_pData[Offset + 3] == A;
+	}
+
+	// hud spriteset 的网格：16x16（datasrc/content.py 的 SpriteSet("hud", image_hud, 16, 16)）。
+	constexpr int QM_TEST_HUD_GRID = 16;
+	constexpr size_t QM_TEST_HUD_SIZE = 512;
+} // namespace
+
+TEST(QmBlankAssetFallback, ResolveSpritePixelRectConvertsGridCellsToPixels)
+{
+	size_t x = 0, y = 0, w = 0, h = 0;
+	const bool Resolved = ResolveSpritePixelRect(QM_TEST_HUD_SIZE, QM_TEST_HUD_SIZE, QM_TEST_HUD_GRID, QM_TEST_HUD_GRID, 4, 6, 2, 2, x, y, w, h);
+
+	ASSERT_TRUE(Resolved);
+	EXPECT_EQ(x, 128u);
+	EXPECT_EQ(y, 192u);
+	EXPECT_EQ(w, 64u);
+	EXPECT_EQ(h, 64u);
+}
+
+TEST(QmBlankAssetFallback, ResolveSpritePixelRectRejectsAtlasNotDivisibleByGrid)
+{
+	size_t x = 0, y = 0, w = 0, h = 0;
+
+	// 宽度 500 无法被 16 整除，格宽只能取整，换算出错区域。
+	EXPECT_FALSE(ResolveSpritePixelRect(500, QM_TEST_HUD_SIZE, QM_TEST_HUD_GRID, QM_TEST_HUD_GRID, 10, 6, 2, 2, x, y, w, h));
+}
+
+TEST(QmBlankAssetFallback, ResolveSpritePixelRectRejectsInvalidGridAndSprite)
+{
+	size_t x = 0, y = 0, w = 0, h = 0;
+
+	EXPECT_FALSE(ResolveSpritePixelRect(QM_TEST_HUD_SIZE, QM_TEST_HUD_SIZE, 0, QM_TEST_HUD_GRID, 0, 0, 1, 1, x, y, w, h));
+	EXPECT_FALSE(ResolveSpritePixelRect(QM_TEST_HUD_SIZE, QM_TEST_HUD_SIZE, QM_TEST_HUD_GRID, QM_TEST_HUD_GRID, 0, 0, 0, 1, x, y, w, h));
+	EXPECT_FALSE(ResolveSpritePixelRect(0, QM_TEST_HUD_SIZE, QM_TEST_HUD_GRID, QM_TEST_HUD_GRID, 0, 0, 1, 1, x, y, w, h));
+}
+
+TEST(QmBlankAssetFallback, ResolveSpritePixelRectFlagsSpriteBeyondAtlas)
+{
+	size_t x = 0, y = 0, w = 0, h = 0;
+	bool OutOfBounds = false;
+
+	// (15,6) 起 2 格宽会超出 16 格图集：按「图集比默认布局小」处理，而不是坏包。
+	EXPECT_FALSE(ResolveSpritePixelRect(QM_TEST_HUD_SIZE, QM_TEST_HUD_SIZE, QM_TEST_HUD_GRID, QM_TEST_HUD_GRID, 15, 6, 2, 2, x, y, w, h, &OutOfBounds));
+	EXPECT_TRUE(OutOfBounds);
+
+	// 参数非法不应被误判成越界。
+	OutOfBounds = false;
+	EXPECT_FALSE(ResolveSpritePixelRect(QM_TEST_HUD_SIZE, QM_TEST_HUD_SIZE, 0, QM_TEST_HUD_GRID, 0, 0, 1, 1, x, y, w, h, &OutOfBounds));
+	EXPECT_FALSE(OutOfBounds);
+}
+
+TEST(QmBlankAssetFallback, ResolveSpritePixelRectKeepsHudStatusIconsOnDistinctCells)
+{
+	// practice / lock / team0 都在 hud 图集第 6 行，回退必须取各自的格，不能共用区域。
+	const struct
+	{
+		int m_SpriteX;
+		int m_SpriteY;
+		size_t m_ExpectedX;
+	} aCases[] = {
+		{4, 6, 128},
+		{10, 6, 320},
+		{12, 6, 384},
+	};
+
+	for(const auto &Case : aCases)
+	{
+		size_t x = 0, y = 0, w = 0, h = 0;
+		ASSERT_TRUE(ResolveSpritePixelRect(QM_TEST_HUD_SIZE, QM_TEST_HUD_SIZE, QM_TEST_HUD_GRID, QM_TEST_HUD_GRID, Case.m_SpriteX, Case.m_SpriteY, 2, 2, x, y, w, h));
+		EXPECT_EQ(x, Case.m_ExpectedX);
+		EXPECT_EQ(y, 192u);
+		EXPECT_EQ(w, 64u);
+		EXPECT_EQ(h, 64u);
+	}
+}
+
+TEST(QmBlankAssetFallback, IsImageRectFullyTransparentTreatsZeroAlphaAsBlank)
+{
+	CImageInfo Image = MakeRgbaImage(4, 4);
+	// RGB 有内容但 alpha 为 0：仍然算空白，皮肤作者隐藏图标就是这么留空的。
+	SetPixel(Image, 1, 1, 255, 0, 0, 0);
+
+	EXPECT_TRUE(IsImageRectFullyTransparent(Image, 0, 0, 4, 4));
+	EXPECT_TRUE(IsImageRectFullyTransparent(Image, 1, 1, 1, 1));
+	Image.Free();
+}
+
+TEST(QmBlankAssetFallback, IsImageRectFullyTransparentRejectsAnyVisiblePixel)
+{
+	CImageInfo Image = MakeRgbaImage(4, 4);
+	SetPixel(Image, 2, 3, 0, 0, 0, 1);
+
+	EXPECT_FALSE(IsImageRectFullyTransparent(Image, 0, 0, 4, 4));
+	EXPECT_TRUE(IsImageRectFullyTransparent(Image, 0, 0, 2, 3));
+	Image.Free();
+}
+
+TEST(QmBlankAssetFallback, IsImageRectFullyTransparentRejectsRectOutsideImage)
+{
+	CImageInfo Image = MakeRgbaImage(4, 4);
+
+	EXPECT_FALSE(IsImageRectFullyTransparent(Image, 3, 0, 2, 1));
+	EXPECT_FALSE(IsImageRectFullyTransparent(Image, 0, 0, 0, 4));
+	Image.Free();
+}
+
+TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectFillsBlankSpriteOnly)
+{
+	CImageInfo Custom = MakeRgbaImage(4, 4);
+	CImageInfo Default = MakeRgbaImage(4, 4);
+	// 默认图的两个 2x2 格里都有内容；自定义图只画了左上格，右下格是空白。
+	SetPixel(Default, 0, 0, 10, 10, 10, 255);
+	SetPixel(Default, 2, 2, 20, 20, 20, 255);
+	SetPixel(Custom, 0, 0, 10, 10, 10, 255);
+
+	EXPECT_TRUE(CopyFallbackOverBlankRect(Custom, Default, 2, 2, 2, 2));
+	EXPECT_TRUE(PixelEquals(Custom, 2, 2, 20, 20, 20, 255));
+	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 10, 10, 10, 255));
+
+	// 已经画过的格不再被覆盖。
+	SetPixel(Default, 0, 0, 99, 99, 99, 255);
+	EXPECT_FALSE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 2, 2));
+	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 10, 10, 10, 255));
+
+	Custom.Free();
+	Default.Free();
+}
+
+TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectRequiresIdenticalImageShape)
+{
+	CImageInfo Custom = MakeRgbaImage(4, 4);
+	CImageInfo Default = MakeRgbaImage(8, 4);
+	SetPixel(Default, 0, 0, 20, 20, 20, 255);
+
+	// 尺寸不同时不能按格补齐：格坐标换算基准不同，会取到错误区域。
+	EXPECT_FALSE(CopyFallbackOverBlankRect(Custom, Default, 0, 0, 4, 4));
+	EXPECT_TRUE(PixelEquals(Custom, 0, 0, 0, 0, 0, 0));
+
+	Custom.Free();
+	Default.Free();
+}

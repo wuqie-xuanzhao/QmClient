@@ -68,6 +68,7 @@
 #include <engine/engine.h>
 #include <engine/favorites.h>
 #include <engine/friends.h>
+#include <engine/gfx/image_manipulation.h>
 #include <engine/graphics.h>
 #include <engine/map.h>
 #include <engine/serverbrowser.h>
@@ -406,6 +407,50 @@ namespace
 			pKeyStates[Key >> 3] &= ~Mask;
 	}
 
+	// 自定义单图资源（gui_cursor / arrow / strong_weak）以整张纹理 + sprite 子区域绘制，
+	// 没法像 sprite 纹理那样逐个回退。这里按 qm_blank_asset_fallback 的语义，先把自定义图里
+	// 全透明的 sprite 区域用内置默认图同位置的像素补齐，再整张上传，效果与 LoadSpriteTexture 一致。
+	void FillBlankNamedAssetSprites(CGameClient *pGameClient, int ImageId, CImageInfo &ImgInfo)
+	{
+		if(g_Config.m_QmBlankAssetFallback == 0)
+			return;
+		const char *pDefaultPath = g_pData->m_aImages[ImageId].m_pFilename;
+		if(pDefaultPath[0] == '\0')
+			return;
+
+		CImageInfo DefaultImgInfo;
+		if(!pGameClient->Graphics()->LoadPng(DefaultImgInfo, pDefaultPath, IStorage::TYPE_ALL))
+			return;
+		// 回退图必须是同一图集的默认文件：sprite 格坐标按各自网格换算，尺寸或格式不同会取到错误区域。
+		if(DefaultImgInfo.m_Width != ImgInfo.m_Width || DefaultImgInfo.m_Height != ImgInfo.m_Height || DefaultImgInfo.m_Format != ImgInfo.m_Format)
+		{
+			DefaultImgInfo.Free();
+			return;
+		}
+
+		bool AnySprite = false;
+		for(int SpriteId = 0; SpriteId < NUM_SPRITES; ++SpriteId)
+		{
+			const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
+			if(Sprite.m_pSet == nullptr || Sprite.m_pSet->m_pImage != &g_pData->m_aImages[ImageId])
+				continue;
+			AnySprite = true;
+
+			size_t x = 0, y = 0, w = 0, h = 0;
+			if(!ResolveSpritePixelRect(ImgInfo.m_Width, ImgInfo.m_Height, Sprite.m_pSet->m_Gridx, Sprite.m_pSet->m_Gridy,
+				   Sprite.m_X, Sprite.m_Y, Sprite.m_W, Sprite.m_H, x, y, w, h))
+				continue;
+			if(CopyFallbackOverBlankRect(ImgInfo, DefaultImgInfo, x, y, w, h))
+				log_warn("graphics", "Asset sprite '%s' is empty, falling back to the default sprite", Sprite.m_pName);
+		}
+		if(!AnySprite && CopyFallbackOverBlankRect(ImgInfo, DefaultImgInfo, 0, 0, ImgInfo.m_Width, ImgInfo.m_Height))
+		{
+			// 没有任何 sprite 引用该图（例如光标），整张空白时按整图回退。
+			log_warn("graphics", "Asset '%s' is empty, falling back to the default asset", pDefaultPath);
+		}
+		DefaultImgInfo.Free();
+	}
+
 	void LoadNamedSingleFileImage(CGameClient *pGameClient, int ImageId, const char *pCategoryId, const char *pActiveName)
 	{
 		if(ImageId < 0 || ImageId >= g_pData->m_NumImages || pCategoryId == nullptr || pActiveName == nullptr)
@@ -418,7 +463,18 @@ namespace
 			if(Candidate.empty())
 				continue;
 
-			NewTexture = pGameClient->Graphics()->LoadTexture(Candidate.c_str(), IStorage::TYPE_ALL);
+			// 只有开关打开且文件可按 PNG 解码时才需要像素级判定；其余情况（开关关闭、
+			// WebP 等非 PNG 文件）都走原来的整文件加载路径，行为与以前完全一致。
+			CImageInfo ImgInfo;
+			if(g_Config.m_QmBlankAssetFallback != 0 && pGameClient->Graphics()->LoadPng(ImgInfo, Candidate.c_str(), IStorage::TYPE_ALL))
+			{
+				FillBlankNamedAssetSprites(pGameClient, ImageId, ImgInfo);
+				NewTexture = pGameClient->Graphics()->LoadTextureRawMove(ImgInfo, 0, Candidate.c_str());
+			}
+			else
+			{
+				NewTexture = pGameClient->Graphics()->LoadTexture(Candidate.c_str(), IStorage::TYPE_ALL);
+			}
 			if(NewTexture.IsValid() && !NewTexture.IsNullTexture())
 				break;
 			NewTexture = IGraphics::CTextureHandle();
@@ -7788,28 +7844,52 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
 
+	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
+	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
+	std::optional<CImageInfo> FallbackImgInfo;
+	if(PngLoaded && !IsDefault)
+	{
+		CImageInfo ImgDefaultInfo;
+		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_EMOTICONS].m_pFilename, IStorage::TYPE_ALL))
+			FallbackImgInfo = std::move(ImgDefaultInfo);
+	}
+	// 回退图是手动管理的 CImageInfo（没有析构函数），而本函数有多条提前返回路径，
+	// 统一用这个幂等的 lambda 释放，避免漏掉某条路径造成整张解码图集泄漏。
+	auto &&FreeFallback = [&FallbackImgInfo]() {
+		if(FallbackImgInfo.has_value())
+		{
+			FallbackImgInfo.value().Free();
+			FallbackImgInfo.reset();
+		}
+	};
+
 	if(!PngLoaded && !IsDefault)
 	{
+		ImgInfo.Free();
+		FreeFallback();
 		if(AsDir)
 			LoadEmoticonsSkin("default");
 		else
 			LoadEmoticonsSkin(pPath, true);
+		return;
 	}
 	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_OOP].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_OOP].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
 	{
-		// 表情属装饰性资源：皮肤作者有意留空的格子保持空白，不回退默认图。
-		// 上游 DDNet 会把全透明区域替换成默认图，这里有意偏离，理由见 LoadHudSkin 中的说明。
+		// 表情属装饰性资源：默认（qm_blank_asset_fallback 关闭）时皮肤作者有意留空的格子保持空白；
+		// 打开开关才按官方行为用同图集默认图的同位置贴图补齐。回退成功的那条日志由引擎打印。
 		for(int i = 0; i < 16; ++i)
 		{
 			const auto *pSprite = &g_pData->m_aSprites[SPRITE_OOP + i];
-			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite))
+			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite) &&
+				(g_Config.m_QmBlankAssetFallback == 0 || !FallbackImgInfo.has_value()))
 				log_warn("graphics", "Emoticon asset '%s' is empty and stays blank", pSprite->m_pName);
-			m_EmoticonsSkin.m_aSpriteEmoticons[i] = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, pSprite);
+			m_EmoticonsSkin.m_aSpriteEmoticons[i] = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, pSprite);
 		}
 
 		m_EmoticonsSkinLoaded = true;
 	}
 	ImgInfo.Free();
+	FreeFallback();
 }
 
 void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
@@ -7962,12 +8042,34 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
 
+	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
+	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
+	std::optional<CImageInfo> FallbackImgInfo;
+	if(PngLoaded && !IsDefault)
+	{
+		CImageInfo ImgDefaultInfo;
+		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_HUD].m_pFilename, IStorage::TYPE_ALL))
+			FallbackImgInfo = std::move(ImgDefaultInfo);
+	}
+	// 回退图是手动管理的 CImageInfo（没有析构函数），而本函数有多条提前返回路径，
+	// 统一用这个幂等的 lambda 释放，避免漏掉某条路径造成整张解码图集泄漏。
+	auto &&FreeFallback = [&FallbackImgInfo]() {
+		if(FallbackImgInfo.has_value())
+		{
+			FallbackImgInfo.value().Free();
+			FallbackImgInfo.reset();
+		}
+	};
+
 	if(!PngLoaded && !IsDefault)
 	{
+		ImgInfo.Free();
+		FreeFallback();
 		if(AsDir)
 			LoadHudSkin("default");
 		else
 			LoadHudSkin(pPath, true);
+		return;
 	}
 	else if(PngLoaded && Graphics()->CheckImageDivisibility(aPath, ImgInfo, g_pData->m_aSprites[SPRITE_HUD_AIRJUMP].m_pSet->m_Gridx, g_pData->m_aSprites[SPRITE_HUD_AIRJUMP].m_pSet->m_Gridy, true) && Graphics()->IsImageFormatRgba(aPath, ImgInfo))
 	{
@@ -7976,48 +8078,52 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 		// 语义：回退默认图会让作者有意留空（想隐藏某图标）的格子又冒出来，还会混入默认皮肤
 		// 的风格。因此这里有意偏离上游（上游会把全透明区域换成同图集默认图）——保持空白，
 		// 只在日志中提示，便于排查真正损坏的资源。
+		// 是否回退由 qm_blank_asset_fallback 决定：默认关闭时保持上面的「留空即隐藏某图标」语义，
+		// 打开时按官方行为用同图集默认图同位置的贴图补齐空白格（回退成功的日志由引擎打印）。
 		for(int SpriteId = SPRITE_HUD_AIRJUMP; SpriteId <= SPRITE_HUD_TEAM0_MODE; SpriteId++)
 		{
 			const auto *pSprite = &g_pData->m_aSprites[SpriteId];
-			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite))
+			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite) &&
+				(g_Config.m_QmBlankAssetFallback == 0 || !FallbackImgInfo.has_value()))
 				log_warn("graphics", "HUD asset '%s' is empty and stays blank", pSprite->m_pName);
 		}
 
-		m_HudSkin.m_SpriteHudAirjump = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP]);
-		m_HudSkin.m_SpriteHudAirjumpEmpty = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP_EMPTY]);
-		m_HudSkin.m_SpriteHudSolo = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_SOLO]);
-		m_HudSkin.m_SpriteHudCollisionDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_COLLISION_DISABLED]);
-		m_HudSkin.m_SpriteHudEndlessJump = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_JUMP]);
-		m_HudSkin.m_SpriteHudEndlessHook = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_HOOK]);
-		m_HudSkin.m_SpriteHudJetpack = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_JETPACK]);
-		m_HudSkin.m_SpriteHudFreezeBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL_LEFT]);
-		m_HudSkin.m_SpriteHudFreezeBarFull = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL]);
-		m_HudSkin.m_SpriteHudFreezeBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY]);
-		m_HudSkin.m_SpriteHudFreezeBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY_RIGHT]);
-		m_HudSkin.m_SpriteHudNinjaBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL_LEFT]);
-		m_HudSkin.m_SpriteHudNinjaBarFull = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL]);
-		m_HudSkin.m_SpriteHudNinjaBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY]);
-		m_HudSkin.m_SpriteHudNinjaBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY_RIGHT]);
-		m_HudSkin.m_SpriteHudHookHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_HOOK_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudHammerHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_HAMMER_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudShotgunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_SHOTGUN_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudGrenadeHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_GRENADE_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudLaserHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_LASER_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudGunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_GUN_HIT_DISABLED]);
-		m_HudSkin.m_SpriteHudDeepFrozen = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_DEEP_FROZEN]);
-		m_HudSkin.m_SpriteHudLiveFrozen = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_LIVE_FROZEN]);
-		m_HudSkin.m_SpriteHudTeleportGrenade = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GRENADE]);
-		m_HudSkin.m_SpriteHudTeleportGun = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GUN]);
-		m_HudSkin.m_SpriteHudTeleportLaser = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_LASER]);
-		m_HudSkin.m_SpriteHudPracticeMode = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_PRACTICE_MODE]);
-		m_HudSkin.m_SpriteHudLockMode = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_LOCK_MODE]);
-		m_HudSkin.m_SpriteHudTeam0Mode = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_TEAM0_MODE]);
-		m_HudSkin.m_SpriteHudDummyHammer = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_HAMMER]);
-		m_HudSkin.m_SpriteHudDummyCopy = Graphics()->LoadSpriteTexture(ImgInfo, std::nullopt, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_COPY]);
+		m_HudSkin.m_SpriteHudAirjump = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP]);
+		m_HudSkin.m_SpriteHudAirjumpEmpty = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_AIRJUMP_EMPTY]);
+		m_HudSkin.m_SpriteHudSolo = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_SOLO]);
+		m_HudSkin.m_SpriteHudCollisionDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_COLLISION_DISABLED]);
+		m_HudSkin.m_SpriteHudEndlessJump = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_JUMP]);
+		m_HudSkin.m_SpriteHudEndlessHook = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_ENDLESS_HOOK]);
+		m_HudSkin.m_SpriteHudJetpack = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_JETPACK]);
+		m_HudSkin.m_SpriteHudFreezeBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL_LEFT]);
+		m_HudSkin.m_SpriteHudFreezeBarFull = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_FULL]);
+		m_HudSkin.m_SpriteHudFreezeBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY]);
+		m_HudSkin.m_SpriteHudFreezeBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_FREEZE_BAR_EMPTY_RIGHT]);
+		m_HudSkin.m_SpriteHudNinjaBarFullLeft = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL_LEFT]);
+		m_HudSkin.m_SpriteHudNinjaBarFull = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_FULL]);
+		m_HudSkin.m_SpriteHudNinjaBarEmpty = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY]);
+		m_HudSkin.m_SpriteHudNinjaBarEmptyRight = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_NINJA_BAR_EMPTY_RIGHT]);
+		m_HudSkin.m_SpriteHudHookHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_HOOK_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudHammerHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_HAMMER_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudShotgunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_SHOTGUN_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudGrenadeHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_GRENADE_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudLaserHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_LASER_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudGunHitDisabled = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_GUN_HIT_DISABLED]);
+		m_HudSkin.m_SpriteHudDeepFrozen = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_DEEP_FROZEN]);
+		m_HudSkin.m_SpriteHudLiveFrozen = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_LIVE_FROZEN]);
+		m_HudSkin.m_SpriteHudTeleportGrenade = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GRENADE]);
+		m_HudSkin.m_SpriteHudTeleportGun = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_GUN]);
+		m_HudSkin.m_SpriteHudTeleportLaser = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TELEPORT_LASER]);
+		m_HudSkin.m_SpriteHudPracticeMode = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_PRACTICE_MODE]);
+		m_HudSkin.m_SpriteHudLockMode = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_LOCK_MODE]);
+		m_HudSkin.m_SpriteHudTeam0Mode = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_TEAM0_MODE]);
+		m_HudSkin.m_SpriteHudDummyHammer = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_HAMMER]);
+		m_HudSkin.m_SpriteHudDummyCopy = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, &g_pData->m_aSprites[SPRITE_HUD_DUMMY_COPY]);
 
 		m_HudSkinLoaded = true;
 	}
 	ImgInfo.Free();
+	FreeFallback();
 }
 
 void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
