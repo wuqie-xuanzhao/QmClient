@@ -882,26 +882,29 @@ public:
 	{
 		if(pType == nullptr || pType[0] == '\0')
 			return nullptr;
-		if(str_comp_nocase(pType, "DDmaX Easy") == 0)
-			return "DDmaX.Easy 古典";
-		if(str_comp_nocase(pType, "DDmaX.Easy") == 0)
-			return "DDmaX.Easy 古典";
-		if(str_comp_nocase(pType, "DDmaX Next") == 0)
-			return "DDmaX.Next 古典";
-		if(str_comp_nocase(pType, "DDmaX.Next") == 0)
-			return "DDmaX.Next 古典";
-		if(str_comp_nocase(pType, "DDmaX Pro") == 0)
-			return "DDmaX.Pro 古典";
-		if(str_comp_nocase(pType, "DDmaX.Pro") == 0)
-			return "DDmaX.Pro 古典";
-		if(str_comp_nocase(pType, "DDmaX Nut") == 0)
-			return "DDmaX.Nut 古典";
-		if(str_comp_nocase(pType, "DDmaX.Nut") == 0)
-			return "DDmaX.Nut 古典";
+		// 官方简中里 Classic(含 DDmaX 系列)是「古典」、Oldschool 是「传统」，两者不能混用。
+		if(str_comp_nocase(pType, "DDmaX Easy") == 0 || str_comp_nocase(pType, "DDmaX.Easy") == 0)
+			return "古典 Easy";
+		if(str_comp_nocase(pType, "DDmaX Next") == 0 || str_comp_nocase(pType, "DDmaX.Next") == 0)
+			return "古典 Next";
+		if(str_comp_nocase(pType, "DDmaX Pro") == 0 || str_comp_nocase(pType, "DDmaX.Pro") == 0)
+			return "古典 Pro";
+		if(str_comp_nocase(pType, "DDmaX Nut") == 0 || str_comp_nocase(pType, "DDmaX.Nut") == 0)
+			return "古典 Nut";
 		if(str_comp_nocase(pType, "DDmaX") == 0)
-			return "DDmaX 古典";
+			return "古典";
+		if(str_comp_nocase(pType, "Classic Easy") == 0)
+			return "古典 Easy";
+		if(str_comp_nocase(pType, "Classic Next") == 0)
+			return "古典 Next";
+		if(str_comp_nocase(pType, "Classic Pro") == 0)
+			return "古典 Pro";
+		if(str_comp_nocase(pType, "Classic Nut") == 0)
+			return "古典 Nut";
+		if(str_comp_nocase(pType, "Classic") == 0)
+			return "古典";
 		if(str_comp_nocase(pType, "Oldschool") == 0)
-			return "古典图";
+			return "传统图";
 		if(str_comp_nocase(pType, "Novice") == 0)
 			return "简单图";
 		if(str_comp_nocase(pType, "Moderate") == 0)
@@ -1006,7 +1009,19 @@ public:
 					return "DDmaX Nut";
 				return "DDmaX";
 			}
-			if(str_find_nocase(pText, "Oldschool") || str_find(pText, "古典") || str_find(pText, "传统"))
+			if(str_find_nocase(pText, "Classic") || str_find(pText, "古典"))
+			{
+				if(str_find_nocase(pText, "Easy"))
+					return "Classic Easy";
+				if(str_find_nocase(pText, "Next"))
+					return "Classic Next";
+				if(str_find_nocase(pText, "Pro"))
+					return "Classic Pro";
+				if(str_find_nocase(pText, "Nut"))
+					return "Classic Nut";
+				return "Classic";
+			}
+			if(str_find_nocase(pText, "Oldschool") || str_find(pText, "传统"))
 				return "Oldschool";
 			if(str_find_nocase(pText, "Novice") || str_find(pText, "普通") || str_find(pText, "简单"))
 				return "Novice";

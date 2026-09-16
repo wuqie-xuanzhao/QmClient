@@ -240,19 +240,28 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "DDNet CHN2 上海 - DDmaX.Easy 古典");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Easy 古典 - CHN2 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Easy - CHN2 上海");
 
 	str_copy(Info.m_aName, "DDNet CHN7 西安 - DDmaX.Next");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Next 古典 - CHN7 西安");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Next - CHN7 西安");
 
 	str_copy(Info.m_aName, "DDNet CHN3 宁波 - DDmaX.Pro 古典");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "DDmaX.Pro 古典 - CHN3 宁波");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Pro - CHN3 宁波");
+
+	str_copy(Info.m_aName, "DDNet CHN4 成都 - DDmaX.Nut 古典");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Nut - CHN4 成都");
+
+	// 官方简中把 Classic 译作「古典」，只带中文写作的古典服同样不应落到「传统图」。
+	str_copy(Info.m_aName, "DDNet CHN2 上海 - 古典 next");
+	str_copy(Info.m_aGameType, "DDraceNetwork");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Next - CHN2 上海");
 
 	str_copy(Info.m_aName, "DDNet CHN6 上海 - Oldschool 传统");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 - CHN6 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "传统图 - CHN6 上海");
 
 	str_copy(Info.m_aName, "DDNet CHN6 上海 - Solo 单人");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
