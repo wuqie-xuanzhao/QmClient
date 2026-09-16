@@ -7,9 +7,11 @@
 #include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/shared/config.h>
+#include <engine/sqlite.h>
 #include <engine/storage.h>
 
 #include <gtest/gtest.h>
+#include <sqlite3.h>
 
 #include <memory>
 
@@ -108,4 +110,42 @@ TEST(ServerBrowser, PingCache)
 	EXPECT_EQ(pPingCache->NumEntries(), 2);
 	EXPECT_EQ(pPingCache->GetPing(&Localhost4, 1), 1337);
 	EXPECT_EQ(pPingCache->GetPing(&Localhost6, 1), 345);
+}
+
+TEST(ServerBrowser, PingCacheIgnoresExpiredEntries)
+{
+	// 过期缓存值不能当实测延迟用：延迟列应回落到地区估算，而不是显示很久以前的测量值。
+	CTestInfo Info;
+	Info.m_DeleteTestStorageFilesOnSuccess = true;
+
+	auto pConsole = CreateConsole(CFGFLAG_CLIENT);
+	std::unique_ptr<IStorage> pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr) << "Error creating test storage";
+
+	NETADDR OldAddr, FreshAddr;
+	ASSERT_FALSE(net_addr_from_str(&OldAddr, "127.0.0.1:8303"));
+	ASSERT_FALSE(net_addr_from_str(&FreshAddr, "127.0.0.2:8303"));
+
+	// 直接写入缓存数据库：一条 30 天前的记录和一条刚写入的记录。
+	{
+		CSqlite pDisk = SqliteOpen(pConsole.get(), pStorage.get(), "ddnet-cache.sqlite3");
+		ASSERT_TRUE(pDisk) << "Error opening ping cache database";
+		ASSERT_EQ(sqlite3_exec(pDisk.get(), "CREATE TABLE IF NOT EXISTS server_pings (ip_address TEXT PRIMARY KEY NOT NULL, ping INTEGER NOT NULL, utc_timestamp TEXT NOT NULL)", nullptr, nullptr, nullptr), SQLITE_OK);
+		ASSERT_EQ(sqlite3_exec(pDisk.get(), "INSERT OR REPLACE INTO server_pings (ip_address, ping, utc_timestamp) VALUES ('127.0.0.1', 171, datetime('now', '-30 days')), ('127.0.0.2', 123, datetime('now'))", nullptr, nullptr, nullptr), SQLITE_OK);
+	}
+
+	const int OldMaxAgeHours = g_Config.m_QmPingCacheMaxAgeHours;
+	g_Config.m_QmPingCacheMaxAgeHours = 72;
+
+	auto pPingCache = std::unique_ptr<IServerBrowserPingCache>(CreateServerBrowserPingCache(pConsole.get(), pStorage.get()));
+	pPingCache->Load();
+	EXPECT_EQ(pPingCache->NumEntries(), 2);
+	EXPECT_EQ(pPingCache->GetPing(&OldAddr, 1), -1);
+	EXPECT_EQ(pPingCache->GetPing(&FreshAddr, 1), 123);
+
+	// 0 表示永不过期：旧记录重新可见。
+	g_Config.m_QmPingCacheMaxAgeHours = 0;
+	EXPECT_EQ(pPingCache->GetPing(&OldAddr, 1), 171);
+
+	g_Config.m_QmPingCacheMaxAgeHours = OldMaxAgeHours;
 }

@@ -5,6 +5,7 @@
 #include <base/log.h>
 #include <base/perf_timer.h>
 
+#include <engine/client/serverbrowser.h>
 #include <engine/engine.h>
 #include <engine/favorites.h>
 #include <engine/friends.h>
@@ -4375,5 +4376,11 @@ void CMenus::UpdateCommunityCache(bool Force)
 	else
 	{
 		ServerBrowser()->CommunityCache().Update(Force);
+		// 社区数据刷新后，把国家筛选名单与新出现的可选国家对齐，避免"只看某几个国家"的结果漂移。
+		auto *pServerBrowser = dynamic_cast<CServerBrowser *>(ServerBrowser());
+		if(pServerBrowser != nullptr && pServerBrowser->CountriesFilter().AutoExcludeNewCountries())
+		{
+			Client()->ServerBrowserUpdate();
+		}
 	}
 }

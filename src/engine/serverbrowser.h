@@ -112,6 +112,9 @@ public:
 	int m_Location;
 	bool m_LatencyIsEstimated;
 	int m_Latency; // in ms
+	// 延迟测量上限：达到该值表示这次测量触到 1 秒超时，不视为可用延迟。
+	// 浏览器只在存在可用实测值时才显示数字，否则显示地区名（见 FormatServerbrowserPing）。
+	static constexpr int LATENCY_UNKNOWN = 999;
 	ERankState m_HasRank;
 	char m_aGameType[16];
 	ColorRGBA m_GametypeColor;

@@ -4409,6 +4409,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     swap_countdown_message_test.cpp
     secure_random_test.cpp
     server_test.cpp
+    serverbrowser_country_filter_test.cpp
     serverbrowser_test.cpp
     serverinfo_test.cpp
     settings_card_deck_logic_test.cpp
