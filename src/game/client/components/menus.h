@@ -883,26 +883,27 @@ public:
 		if(pType == nullptr || pType[0] == '\0')
 			return nullptr;
 		// 官方简中里 Classic(含 DDmaX 系列)是「古典」、Oldschool 是「传统」，两者不能混用。
+		// 难度/类型显示名统一带「图」后缀，避免浏览器列表里有的带、有的不带。
 		if(str_comp_nocase(pType, "DDmaX Easy") == 0 || str_comp_nocase(pType, "DDmaX.Easy") == 0)
-			return "古典 Easy";
+			return "古典图 Easy";
 		if(str_comp_nocase(pType, "DDmaX Next") == 0 || str_comp_nocase(pType, "DDmaX.Next") == 0)
-			return "古典 Next";
+			return "古典图 Next";
 		if(str_comp_nocase(pType, "DDmaX Pro") == 0 || str_comp_nocase(pType, "DDmaX.Pro") == 0)
-			return "古典 Pro";
+			return "古典图 Pro";
 		if(str_comp_nocase(pType, "DDmaX Nut") == 0 || str_comp_nocase(pType, "DDmaX.Nut") == 0)
-			return "古典 Nut";
+			return "古典图 Nut";
 		if(str_comp_nocase(pType, "DDmaX") == 0)
-			return "古典";
+			return "古典图";
 		if(str_comp_nocase(pType, "Classic Easy") == 0)
-			return "古典 Easy";
+			return "古典图 Easy";
 		if(str_comp_nocase(pType, "Classic Next") == 0)
-			return "古典 Next";
+			return "古典图 Next";
 		if(str_comp_nocase(pType, "Classic Pro") == 0)
-			return "古典 Pro";
+			return "古典图 Pro";
 		if(str_comp_nocase(pType, "Classic Nut") == 0)
-			return "古典 Nut";
+			return "古典图 Nut";
 		if(str_comp_nocase(pType, "Classic") == 0)
-			return "古典";
+			return "古典图";
 		if(str_comp_nocase(pType, "Oldschool") == 0)
 			return "传统图";
 		if(str_comp_nocase(pType, "Novice") == 0)
@@ -910,13 +911,13 @@ public:
 		if(str_comp_nocase(pType, "Moderate") == 0)
 			return "中阶图";
 		if(str_comp_nocase(pType, "Brutal") == 0)
-			return "高阶";
+			return "高阶图";
 		if(str_comp_nocase(pType, "Insane") == 0)
-			return "疯狂";
+			return "疯狂图";
 		if(str_comp_nocase(pType, "Dummy") == 0)
-			return "分身";
+			return "分身图";
 		if(str_comp_nocase(pType, "Solo") == 0)
-			return "单人";
+			return "单人图";
 		return pType;
 	}
 	struct SFriendAutoFollowState
@@ -1110,11 +1111,49 @@ public:
 
 		if(str_find_nocase(pName, "Axiom"))
 		{
+			// 尾部只保留区段标记(如 CHN7)：钩累死/AXRace 是 Axiom 的玩法模式，不进短名。
+			// 地区优先取「⌬ 上海 ✦」里的城市，没有 ✦ 的写法取 Axiom 后直接跟的城市。
+			const auto IsCjkStart = [](const char *p) {
+				const unsigned char Lead = (unsigned char)*p;
+				return Lead >= 0xE4 && Lead <= 0xE9;
+			};
+			const auto ExtractAxiomLocation = [&](char *pOut, int OutSize) -> bool {
+				pOut[0] = '\0';
+				if(const char *pStar = str_find(pName, "✦"))
+				{
+					const char *pEnd = pStar;
+					while(pEnd > pName && pEnd[-1] == ' ')
+						--pEnd;
+					const char *pStart = pEnd;
+					while(pStart > pName && pStart[-1] != ' ')
+						--pStart;
+					if(!IsCjkStart(pStart))
+						return false;
+					str_copy(pOut, pStart, minimum((int)(pEnd - pStart) + 1, OutSize));
+					return pOut[0] != '\0';
+				}
+				const char *pAfterBrand = str_find_nocase(pName, "Axiom");
+				const char *pCandidate = pAfterBrand != nullptr ? str_skip_whitespaces_const(pAfterBrand + 5) : nullptr;
+				if(pCandidate == nullptr || !IsCjkStart(pCandidate))
+					return false;
+				const char *pEnd = str_find(pCandidate, " ");
+				str_copy(pOut, pCandidate, pEnd != nullptr ? minimum((int)(pEnd - pCandidate) + 1, OutSize) : OutSize);
+				return pOut[0] != '\0';
+			};
+
 			const char *pDash = str_find(pName, " - ");
-			const char *pMapName = pDash != nullptr ? str_skip_whitespaces_const(pDash + 3) : nullptr;
-			if(pMapName != nullptr && pMapName[0] != '\0')
+			const char *pTail = pDash != nullptr ? str_skip_whitespaces_const(pDash + 3) : nullptr;
+			if(pTail != nullptr && pTail[0] != '\0')
 			{
-				str_format(pBuffer, BufferSize, "%s - %s", ServerbrowserShortTypeDisplayName(pDifficulty), pMapName);
+				char aTail[64];
+				const char *pTailEnd = str_find(pTail, " ");
+				str_copy(aTail, pTail, pTailEnd != nullptr ? minimum((int)(pTailEnd - pTail) + 1, (int)sizeof(aTail)) : (int)sizeof(aTail));
+
+				char aLocation[32];
+				if(ExtractAxiomLocation(aLocation, (int)sizeof(aLocation)))
+					str_format(pBuffer, BufferSize, "%s - %s %s", ServerbrowserShortTypeDisplayName(pDifficulty), aTail, aLocation);
+				else
+					str_format(pBuffer, BufferSize, "%s - %s", ServerbrowserShortTypeDisplayName(pDifficulty), aTail);
 				return pBuffer;
 			}
 		}

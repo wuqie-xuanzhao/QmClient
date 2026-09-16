@@ -192,7 +192,7 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "Axiom 北京 普通 - CHN1O 钩累死");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN1O 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN1O 北京");
 
 	str_copy(Info.m_aName, "DDNet CHN7 西安 - Moderate 中阶");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
@@ -200,39 +200,44 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "DDNet CHN2 上海 - Brutal 高阶");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN2 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶图 - CHN2 上海");
 
+	// Axiom 尾部用地区而不是玩法模式(钩累死/AXRace)；名字里没有地区时只留区段标记。
 	str_copy(Info.m_aName, "Axiom Novice - CHN12 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN12 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "简单图 - CHN12");
 
 	str_copy(Info.m_aName, "Axiom Insane - CHN7 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "疯狂 - CHN7 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "疯狂图 - CHN7");
+
+	str_copy(Info.m_aName, "Axiom ⌬ 上海 ✦ 单人 - CHN1 钩累死");
+	str_copy(Info.m_aGameType, "Gores");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "单人图 - CHN1 上海");
 
 	str_copy(Info.m_aName, "Axiom Axiom ◇ 广州 ✦ 困难 - CHN9 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN9 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶图 - CHN9 广州");
 
 	str_copy(Info.m_aName, "Axiom Axiom ◇ 北京 ✦ 困难 - CHN10 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN10 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶图 - CHN10 北京");
 
 	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 活动 - CHN9 AXRace");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动 - CHN9 AXRace");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "活动 - CHN9 广州");
 
 	str_copy(Info.m_aName, "Axiom ◇ 广州 ✦ 极限 - CHN9 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "极限 - CHN9 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "极限 - CHN9 广州");
 
 	str_copy(Info.m_aName, "Axiom ◇ 上海 ✦ 训练 - CHN2 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "训练 - CHN2 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "训练 - CHN2 上海");
 
 	str_copy(Info.m_aName, "Axiom ◇ 成都 ✦ 娱乐 - CHN12 钩累死");
 	str_copy(Info.m_aGameType, "Gores");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "娱乐 - CHN12 钩累死");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "娱乐 - CHN12 成都");
 
 	str_copy(Info.m_aName, "DDNet Moderate - CHN7 西安");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
@@ -240,24 +245,24 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "DDNet CHN2 上海 - DDmaX.Easy 古典");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Easy - CHN2 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 Easy - CHN2 上海");
 
 	str_copy(Info.m_aName, "DDNet CHN7 西安 - DDmaX.Next");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Next - CHN7 西安");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 Next - CHN7 西安");
 
 	str_copy(Info.m_aName, "DDNet CHN3 宁波 - DDmaX.Pro 古典");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Pro - CHN3 宁波");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 Pro - CHN3 宁波");
 
 	str_copy(Info.m_aName, "DDNet CHN4 成都 - DDmaX.Nut 古典");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Nut - CHN4 成都");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 Nut - CHN4 成都");
 
 	// 官方简中把 Classic 译作「古典」，只带中文写作的古典服同样不应落到「传统图」。
 	str_copy(Info.m_aName, "DDNet CHN2 上海 - 古典 next");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典 Next - CHN2 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "古典图 Next - CHN2 上海");
 
 	str_copy(Info.m_aName, "DDNet CHN6 上海 - Oldschool 传统");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
@@ -265,11 +270,11 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "DDNet CHN6 上海 - Solo 单人");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "单人 - CHN6 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "单人图 - CHN6 上海");
 
 	str_copy(Info.m_aName, "DDNet CHN5 上海 - Dummy 分身");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "分身 - CHN5 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "分身图 - CHN5 上海");
 
 	str_copy(Info.m_aName, "DDNet Taiwan - Moderate");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
@@ -277,11 +282,11 @@ TEST(QmNewUiMenuGameplaySocialContract, ShortServerNamesCoverKnownFamilies)
 
 	str_copy(Info.m_aName, "DDNet Taiwan - Brutal");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - Taiwan");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶图 - Taiwan");
 
 	str_copy(Info.m_aName, "Brutal - CHN5 上海");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
-	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶 - CHN5 上海");
+	EXPECT_STREQ(CMenus::GetServerbrowserDisplayName(&Info, aBuf, sizeof(aBuf)), "高阶图 - CHN5 上海");
 
 	str_copy(Info.m_aName, "Plain Server Name");
 	str_copy(Info.m_aGameType, "DDraceNetwork");
