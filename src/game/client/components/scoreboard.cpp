@@ -1397,6 +1397,9 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 	Spacing *= RowsVerticalScale;
 	RoundRadius *= RowsVerticalScale;
 	FontSize *= RowsVerticalScale;
+	// 练习/锁队图标随行字号等比缩小：固定 12px 在人多压缩行高时会比队伍标签文字还大。
+	// 基准场景（FontSize=12）下正好等于 SCOREBOARD_TEAM_MODE_ICON_SIZE，行为不变。
+	const float TeamModeIconSize = minimum(SCOREBOARD_TEAM_MODE_ICON_SIZE, FontSize);
 
 	const SScoreboardRowRenderDetail RowDetail = ResolveScoreboardRowRenderDetail();
 	const bool ShowClientBrand = RowDetail.m_ShowClientBrand && g_Config.m_QmClientShowBadge;
@@ -1474,7 +1477,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 			LineHeight,
 			Spacing,
 			TeamFontSize,
-			HasTeamModeIcons ? SCOREBOARD_TEAM_MODE_ICON_SIZE : 0.0f,
+			HasTeamModeIcons ? TeamModeIconSize : 0.0f,
 			EndsDDTeam);
 		CUIRect RowAndSpacing, Row;
 		Scoreboard.HSplitTop(LineHeight + TeamLabelLayout.m_RowSpacing, &RowAndSpacing, &Scoreboard);
@@ -1509,7 +1512,7 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 					RenderTeamModeIcons(
 						TeamLabelLayout.m_X + TextRender()->TextWidth(TeamFontSize, aBuf) + 1.5f,
 						TeamLabelLayout.m_IconY,
-						SCOREBOARD_TEAM_MODE_ICON_SIZE,
+						TeamModeIconSize,
 						Plan.m_aTeamModes[DDTeam],
 						ItemAlpha);
 				}
