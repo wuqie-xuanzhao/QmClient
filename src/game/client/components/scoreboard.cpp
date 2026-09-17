@@ -2000,11 +2000,15 @@ void CScoreboard::OnRender()
 		if(m_MouseUnlocked && IsActive())
 		{
 			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-				m_ScrollOffset -= 4.0f;
+				m_ScrollTarget -= 4;
 			if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-				m_ScrollOffset += 4.0f;
+				m_ScrollTarget += 4;
 		}
-		m_ScrollOffset = std::clamp(m_ScrollOffset, 0.0f, (float)ScrollMaxStart);
+		m_ScrollTarget = std::clamp(m_ScrollTarget, 0, ScrollMaxStart);
+		// 平滑滚动：当前偏移逐帧向目标行缓动（帧时长与 UI 动画同源）。
+		m_ScrollOffset += (m_ScrollTarget - m_ScrollOffset) * minimum(1.0f, Client()->RenderFrameTime() * 18.0f);
+		if(std::abs(m_ScrollTarget - m_ScrollOffset) < 0.01f)
+			m_ScrollOffset = (float)m_ScrollTarget;
 	}
 	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;
 
@@ -2245,10 +2249,15 @@ void CScoreboard::OnRender()
 		{
 			static CButtonContainer s_ScoreboardScrollButton;
 			const ColorRGBA ScrollButtonColor = g_Config.m_QmScoreboardScroll ? ScoreboardWithUiAlpha(ColorRGBA(0.25f, 0.55f, 0.8f, 0.6f), m_AnimContentAlpha) : ScoreboardUiColorSurface(m_AnimContentAlpha, 0.18f);
-			if(Ui()->DoButton_PopupMenu(&s_ScoreboardScrollButton, pScrollLabel, &ScrollButton, SortButtonFontSize, TEXTALIGN_MC, 0.0f, false, m_RenderInteractions, ScrollButtonColor))
+			// 与排序按钮同款内边距，保证两颗按钮尺寸一致。
+			CUIRect ScrollButtonInner = ScrollButton;
+			ScrollButtonInner.VMargin(4.0f, &ScrollButtonInner);
+			ScrollButtonInner.HMargin(6.0f, &ScrollButtonInner);
+			if(Ui()->DoButton_PopupMenu(&s_ScoreboardScrollButton, pScrollLabel, &ScrollButtonInner, SortButtonFontSize, TEXTALIGN_MC, 0.0f, false, m_RenderInteractions, ScrollButtonColor))
 			{
 				g_Config.m_QmScoreboardScroll ^= 1;
 				m_ScrollOffset = 0.0f;
+				m_ScrollTarget = 0;
 			}
 		}
 		DoSortButton(SortButton);
@@ -2259,16 +2268,18 @@ void CScoreboard::OnRender()
 			RenderScoreboard(ScoreboardContentBody, TEAM_GAME, ScrollStart, ScrollStart + ScrollVisibleRows, RedPlayerRows, RenderState);
 			if(ScrollMaxStart > 0)
 			{
-				// 右缘细滚动条：提示还有未显示的玩家与当前窗口位置。
+				// 复用全局竖向滚动条组件：可拖拽，样式与其它界面一致。
+				static int s_ScoreboardScrollBarId = 0;
 				CUIRect ScrollBarTrack = ScoreboardContentBody;
-				ScrollBarTrack.VSplitRight(4.0f, nullptr, &ScrollBarTrack);
-				const float TrackHeight = ScrollBarTrack.h;
-				const float WindowRatio = minimum(1.0f, (float)ScrollVisibleRows / (float)RedPlayerRows.m_Count);
-				const float KnobHeight = maximum(24.0f, TrackHeight * WindowRatio);
-				const float KnobTravel = maximum(1.0f, TrackHeight - KnobHeight);
-				const float KnobY = ScrollBarTrack.y + KnobTravel * ((float)ScrollStart / (float)ScrollMaxStart);
-				CUIRect Knob = {ScrollBarTrack.x, KnobY, ScrollBarTrack.w, KnobHeight};
-				Knob.Draw(ScoreboardUiColorSurface(m_AnimContentAlpha, 0.6f), IGraphics::CORNER_ALL, 1.5f);
+				ScrollBarTrack.VSplitRight(12.0f, nullptr, &ScrollBarTrack);
+				ScrollBarTrack.VSplitRight(3.0f, nullptr, &ScrollBarTrack);
+				const float ScrollCurrent = (float)m_ScrollTarget / (float)ScrollMaxStart;
+				const float ScrollNew = Ui()->DoScrollbarV(&s_ScoreboardScrollBarId, &ScrollBarTrack, ScrollCurrent);
+				if(ScrollNew != ScrollCurrent)
+				{
+					m_ScrollTarget = std::clamp((int)std::round(ScrollNew * (float)ScrollMaxStart), 0, ScrollMaxStart);
+					m_ScrollOffset = (float)m_ScrollTarget;
+				}
 			}
 		}
 		else if(NumPlayers <= 16)

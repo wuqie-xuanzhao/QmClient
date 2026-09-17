@@ -129,8 +129,9 @@ class CScoreboard : public CComponent
 	IGraphics::CTextureHandle m_DeadTeeTexture;
 	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> m_aCachedTeamModes{};
 
-	// 滚动模式下的行偏移（单位：行，可有小数以获得平滑滚动）。
+	// 滚动模式下的行偏移（单位：行，可有小数以获得平滑滚动）与其目标行。
 	float m_ScrollOffset = 0.0f;
+	int m_ScrollTarget = 0;
 
 	std::optional<vec2> m_LastMousePos;
 	bool m_MouseUnlocked = false;
