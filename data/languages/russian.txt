@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == Первая страница в консоли
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== На переполненных серверах строки таблицы имеют фиксированную высоту, остальных игроков просматривайте колесом мыши
+
 Flip:
 == Отразить:
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == Курсор таблицы лидеров
+
+Scoreboard filter: only show players whose name or clan contains this text
+== Фильтр таблицы: показывать только игроков, чьё имя или клан содержит этот текст
 
 Scoreboard point check
 == Проверка очков на табло

@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == Konsolda ilk sayfa
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== Kalabalık sunucularda skor tablosu satırları sabit yükseklikte olur; kalanları görmek için fare tekerleğiyle kaydırın
+
 Flip:
 == Çevir:
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == Skor tablosu imleci
+
+Scoreboard filter: only show players whose name or clan contains this text
+== Skor tablosu filtresi: adı veya klanı bu metni içeren oyuncuları göster
 
 Scoreboard point check
 == Skor tablosu puan kontrolü

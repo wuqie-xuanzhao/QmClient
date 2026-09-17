@@ -1208,7 +1208,17 @@ void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan)
 	std::array<int, MAX_CLIENTS> aNextSourceDDTeam{};
 	const bool IsTeamPlay = GameClient()->IsTeamPlay();
 	auto &&IsInScoreboardTeam = [&](const CNetObj_PlayerInfo *pInfo) {
-		return pInfo != nullptr && QmScoreboardEffectivePlayerTeam(pInfo->m_Team, GameClient()->m_aClients[pInfo->m_ClientId].m_Spec, IsTeamPlay) == Team;
+		if(pInfo == nullptr)
+			return false;
+		// 名字/战队子串过滤（不区分大小写）：qm_scoreboard_filter 留空显示全部。
+		const char *pFilter = g_Config.m_QmScoreboardFilter;
+		if(pFilter[0] != '\0')
+		{
+			const auto &ClientData = GameClient()->m_aClients[pInfo->m_ClientId];
+			if(!str_find_nocase(ClientData.m_aName, pFilter) && !str_find_nocase(ClientData.m_aClan, pFilter))
+				return false;
+		}
+		return QmScoreboardEffectivePlayerTeam(pInfo->m_Team, GameClient()->m_aClients[pInfo->m_ClientId].m_Spec, IsTeamPlay) == Team;
 	};
 
 	int PreviousDDTeam = -1;
@@ -1979,16 +1989,28 @@ void CScoreboard::OnRender()
 	if(Teams)
 		BuildPlayerRowPlan(TEAM_BLUE, BluePlayerRows);
 	const int NumPlayers = Teams ? maximum(RedPlayerRows.m_Count, BluePlayerRows.m_Count) : RedPlayerRows.m_Count;
+	// 滚动模式：非队伍玩法且人数超过一屏时，固定行高只显示一列，滚轮查看其余玩家。
+	const bool ScrollMode = !Teams && g_Config.m_QmScoreboardScroll && NumPlayers > 16;
+	const int ScrollVisibleRows = 16;
+	const int ScrollMaxStart = ScrollMode ? maximum(0, RedPlayerRows.m_Count - ScrollVisibleRows) : 0;
+	if(ScrollMode)
+	{
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+			m_ScrollOffset -= 4.0f;
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+			m_ScrollOffset += 4.0f;
+		m_ScrollOffset = std::clamp(m_ScrollOffset, 0.0f, (float)ScrollMaxStart);
+	}
 	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;
 
 	// Scoreboard width: clamp to screen width for narrow aspect ratios
 	const float ScreenMargin = 10.0f;
 	const float MaxScoreboardWidth = maximum(200.0f, Screen.w - ScreenMargin);
-	const int ScoreboardColumns = Teams ? 2 : (NumPlayers <= 16 ? 1 : (NumPlayers <= 64 ? 2 : 3));
+	const int ScoreboardColumns = ScrollMode ? 1 : (Teams ? 2 : (NumPlayers <= 16 ? 1 : (NumPlayers <= 64 ? 2 : 3)));
 	const float ClientBrandExtraWidth = g_Config.m_QmClientShowBadge ? maximum(TextRender()->TextWidth(12.0f, "Qm"), TextRender()->TextWidth(12.0f, "Arg")) + CLIENT_BRAND_LABEL_GAP : 0.0f;
 	const float BaseScoreboardSmallWidth = (g_Config.m_QmScoreboardPoints ? (450.0f + 10.0f) : 450.0f) + ClientBrandExtraWidth;
 	const float ScoreboardSmallWidth = minimum(BaseScoreboardSmallWidth, MaxScoreboardWidth);
-	const float BaseScoreboardWidth = !Teams && NumPlayers <= 16 ? ScoreboardSmallWidth : 850.0f + ClientBrandExtraWidth * ScoreboardColumns;
+	const float BaseScoreboardWidth = ScrollMode || (!Teams && NumPlayers <= 16) ? ScoreboardSmallWidth : 850.0f + ClientBrandExtraWidth * ScoreboardColumns;
 	const float ScoreboardWidth = minimum(BaseScoreboardWidth, MaxScoreboardWidth);
 	const float TitleHeight = 30.0f;
 
@@ -2200,7 +2222,25 @@ void CScoreboard::OnRender()
 		DoServerPlayers(ServerPlayers);
 		DoSortButton(SortButton);
 
-		if(NumPlayers <= 16)
+		if(ScrollMode)
+		{
+			const int ScrollStart = std::clamp((int)std::round(m_ScrollOffset), 0, ScrollMaxStart);
+			RenderScoreboard(ScoreboardContentBody, TEAM_GAME, ScrollStart, ScrollStart + ScrollVisibleRows, RedPlayerRows, RenderState);
+			if(ScrollMaxStart > 0)
+			{
+				// 右缘细滚动条：提示还有未显示的玩家与当前窗口位置。
+				CUIRect ScrollBarTrack = ScoreboardContentBody;
+				ScrollBarTrack.VSplitRight(4.0f, nullptr, &ScrollBarTrack);
+				const float TrackHeight = ScrollBarTrack.h;
+				const float WindowRatio = minimum(1.0f, (float)ScrollVisibleRows / (float)RedPlayerRows.m_Count);
+				const float KnobHeight = maximum(24.0f, TrackHeight * WindowRatio);
+				const float KnobTravel = maximum(1.0f, TrackHeight - KnobHeight);
+				const float KnobY = ScrollBarTrack.y + KnobTravel * ((float)ScrollStart / (float)ScrollMaxStart);
+				CUIRect Knob = {ScrollBarTrack.x, KnobY, ScrollBarTrack.w, KnobHeight};
+				Knob.Draw(ScoreboardUiColorSurface(m_AnimContentAlpha, 0.6f), IGraphics::CORNER_ALL, 1.5f);
+			}
+		}
+		else if(NumPlayers <= 16)
 		{
 			RenderScoreboard(ScoreboardContentBody, TEAM_GAME, 0, NumPlayers, RedPlayerRows, RenderState);
 		}

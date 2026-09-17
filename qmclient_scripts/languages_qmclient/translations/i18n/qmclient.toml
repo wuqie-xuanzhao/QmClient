@@ -29054,3 +29054,35 @@ brazilian_portuguese = "Descartar pings de servidor em cache mais antigos que es
 portuguese = "Descartar pings de servidor em cache mais antigos do que estas horas (0 = nunca expirar)"
 turkish = "Bu saatten eski önbelleğe alınmış sunucu pinglerini yok say (0 = hiç sona ermez)"
 polish = "Odrzuć zbuforowane pingi serwerów starsze niż podana liczba godzin (0 = nigdy nie wygasają)"
+
+[[message]]
+key = "Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers"
+[message.translations]
+simplified_chinese = "人多的服务器使用固定行高的计分板，滚轮滚动查看其余玩家"
+traditional_chinese = "人多的伺服器使用固定行高的計分板，滾動滾輪查看其餘玩家"
+japanese = "人数の多いサーバーでは行の高さを固定にし、ホイールでスクロールして表示します"
+korean = "많은 인원의 서버에서는 행 높이를 고정하고 마우스 휠로 스크롤하여 표시합니다"
+russian = "На переполненных серверах строки таблицы имеют фиксированную высоту, остальных игроков просматривайте колесом мыши"
+german = "Bei vollen Servern haben die Scoreboard-Zeilen eine feste Höhe; scrollen Sie mit dem Mausrad"
+spanish = "En servidores llenos, las filas del marcador tienen altura fija; usa la rueda del ratón para desplazarte"
+french = "Sur les serveurs remplis, les lignes du tableau ont une hauteur fixe ; faites défiler avec la molette"
+brazilian_portuguese = "Em servidores cheios, as linhas do placar têm altura fixa; role com o mouse para ver os demais"
+portuguese = "Em servidores cheios, as linhas do placar têm altura fixa; desloque com a roda do rato"
+turkish = "Kalabalık sunucularda skor tablosu satırları sabit yükseklikte olur; kalanları görmek için fare tekerleğiyle kaydırın"
+polish = "Na pełnych serwerach wiersze tabeli wyników mają stałą wysokość; przewijaj kółkiem myszy, aby zobaczyć pozostałych"
+
+[[message]]
+key = "Scoreboard filter: only show players whose name or clan contains this text"
+[message.translations]
+simplified_chinese = "计分板筛选：仅显示名字或战队包含此文本的玩家"
+traditional_chinese = "計分板篩選：僅顯示名字或戰隊包含此文字的玩家"
+japanese = "スコアボードフィルター：名前またはクランにこの文字列を含むプレイヤーのみ表示します"
+korean = "스코어보드 필터: 이름 또는 클랜에 이 텍스트가 포함된 플레이어만 표시합니다"
+russian = "Фильтр таблицы: показывать только игроков, чьё имя или клан содержит этот текст"
+german = "Scoreboard-Filter: nur Spieler anzeigen, deren Name oder Clan diesen Text enthält"
+spanish = "Filtro del marcador: mostrar solo jugadores cuyo nombre o clan contenga este texto"
+french = "Filtre du tableau : n'afficher que les joueurs dont le nom ou le clan contient ce texte"
+brazilian_portuguese = "Filtro do placar: mostrar apenas jogadores cujo nome ou clã contenha este texto"
+portuguese = "Filtro do placar: mostrar apenas jogadores cujo nome ou clã contenha este texto"
+turkish = "Skor tablosu filtresi: adı veya klanı bu metni içeren oyuncuları göster"
+polish = "Filtr tabeli wyników: pokazuj tylko graczy, których nazwa lub klan zawiera ten tekst"

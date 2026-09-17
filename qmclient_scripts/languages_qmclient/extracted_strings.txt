@@ -1454,6 +1454,7 @@ Finished
 Finished maps
 Fire
 First page in console
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 Flip:
 Focus mode
 Folder
@@ -3136,6 +3137,7 @@ Score earned
 Score limit
 Scoreboard
 Scoreboard cursor
+Scoreboard filter: only show players whose name or clan contains this text
 Scoreboard point check
 Scoreboard score lookup
 Scoreboard sort mode (0=Score, 1=Points)

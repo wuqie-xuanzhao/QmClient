@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == コンソールの最初のページ
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== 人数の多いサーバーでは行の高さを固定にし、ホイールでスクロールして表示します
+
 Flip:
 == 反転：
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == スコアボードカーソル
+
+Scoreboard filter: only show players whose name or clan contains this text
+== スコアボードフィルター：名前またはクランにこの文字列を含むプレイヤーのみ表示します
 
 Scoreboard point check
 == スコアボードポイントチェック

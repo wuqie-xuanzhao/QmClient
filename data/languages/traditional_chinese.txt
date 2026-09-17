@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == 控制台第一頁
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== 人多的伺服器使用固定行高的計分板，滾動滾輪查看其餘玩家
+
 Flip:
 == 翻轉：
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == 計分板光標
+
+Scoreboard filter: only show players whose name or clan contains this text
+== 計分板篩選：僅顯示名字或戰隊包含此文字的玩家
 
 Scoreboard point check
 == 計分板積分檢查

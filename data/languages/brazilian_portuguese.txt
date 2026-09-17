@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == Primeira página no console
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== Em servidores cheios, as linhas do placar têm altura fixa; role com o mouse para ver os demais
+
 Flip:
 == Inverter:
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == Cursor do placar
+
+Scoreboard filter: only show players whose name or clan contains this text
+== Filtro do placar: mostrar apenas jogadores cujo nome ou clã contenha este texto
 
 Scoreboard point check
 == Verificação de pontos no placar

@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == Première page dans la console
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== Sur les serveurs remplis, les lignes du tableau ont une hauteur fixe ; faites défiler avec la molette
+
 Flip:
 == Retourner :
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == Curseur du tableau des scores
+
+Scoreboard filter: only show players whose name or clan contains this text
+== Filtre du tableau : n'afficher que les joueurs dont le nom ou le clan contient ce texte
 
 Scoreboard point check
 == Vérification des points du tableau des scores

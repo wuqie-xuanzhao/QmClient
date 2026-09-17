@@ -4367,6 +4367,9 @@ Fire
 First page in console
 == 콘솔 첫 페이지
 
+Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
+== 많은 인원의 서버에서는 행 높이를 고정하고 마우스 휠로 스크롤하여 표시합니다
+
 Flip:
 == 뒤집기:
 
@@ -9412,6 +9415,9 @@ Scoreboard
 
 Scoreboard cursor
 == 점수판 커서
+
+Scoreboard filter: only show players whose name or clan contains this text
+== 스코어보드 필터: 이름 또는 클랜에 이 텍스트가 포함된 플레이어만 표시합니다
 
 Scoreboard point check
 == 점수판 포인트 확인
