@@ -86,7 +86,9 @@ int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameMo
 	State.m_LastValue = CurrentValue;
 	if(GameModeLeft)
 	{
-		const bool Restore = State.m_WasActive && State.m_AutoChangedValue && CurrentValue == 1;
+		// 自动启用是位置相关的一次性语义：只要本次进入是自动启用所致，离开 Gores 服务器
+		// 一律恢复进入前的值——期间用户手动开/关不阻止自动关（手动关时恢复值本就是关）。
+		const bool Restore = State.m_WasActive;
 		if(Restore)
 		{
 			Changed = true;
@@ -97,14 +99,30 @@ int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameMo
 	return CurrentValue;
 }
 
-int ApplyQmGoresDummyHammerOnEnter(bool GoresEntered, bool DisableOnEnter, int CurrentValue, bool &Changed)
+int ApplyQmGoresDummyHammerConfig(SQmFocusConfigOverrideState &State, bool ModeActivated, bool ModeDeactivated, bool DisableRequested, int CurrentValue, bool &Changed)
 {
-	// 只处理"进入 Gores 模式"那一帧：一次性关闭，不保留接管状态，也不在之后压回 0。
+	// 进入 Gores 模式且选项允许时一次性关闭分身锤；期间用户手动改值即释放接管；
+	// 退出 Gores 模式时若接管仍在则恢复进入前的值。不持续强制，避免用户重新打开的分身锤被反复压回 0。
 	Changed = false;
-	if(!GoresEntered || !DisableOnEnter || CurrentValue == 0)
-		return CurrentValue;
-	Changed = true;
-	return 0;
+	if(ModeActivated && DisableRequested && CurrentValue != 0)
+	{
+		State.m_WasActive = true;
+		State.m_SavedValue = CurrentValue;
+		State.m_AutoChangedValue = true;
+		State.m_LastValue = 0;
+		Changed = true;
+		return 0;
+	}
+	if(State.m_WasActive && State.m_AutoChangedValue && CurrentValue != State.m_LastValue)
+		State.m_AutoChangedValue = false;
+	State.m_LastValue = CurrentValue;
+	if(ModeDeactivated && State.m_WasActive && State.m_AutoChangedValue && CurrentValue == 0)
+	{
+		State.m_AutoChangedValue = false;
+		Changed = true;
+		return State.m_SavedValue;
+	}
+	return CurrentValue;
 }
 
 bool ShouldKeepQmGoresHammerInFreeze(bool GoresCycleActive, bool InFreeze, bool HammerRequested)

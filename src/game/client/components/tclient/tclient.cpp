@@ -4537,16 +4537,20 @@ void CTClient::ApplyGoresFastInputLink()
 	const bool GoresGameModeLeft = m_GoresGameModeStateKnown && m_PrevGoresGameMode && !GoresGameMode;
 	// 与禅模式同理：临时接管生效期间必须登记写盘覆盖，否则在 Gores 状态下退出会把这几个
 	// 接管值写进配置，下次启动就分不清是自动接管还是用户自己开的。
-	const auto ApplyGoresSaveOverride = [this](const char *pScriptName, const SQmFocusConfigOverrideState &State, bool OwnedBefore) {
+	// pOwnerId 为空 = 只保护落盘、不锁定设置页开关：用于"进入时启用一次"的一次性接管，
+	// 用户随后仍可手动开关（用户改值时纯函数会自行释放接管）；持续强制的项才传来源并灰化。
+	const auto ApplyGoresSaveOverride = [this](const char *pScriptName, const SQmFocusConfigOverrideState &State, bool OwnedBefore, const char *pOwnerId) {
 		if(State.m_AutoChangedValue != OwnedBefore)
-			ConfigManager()->SetSaveValueOverride(pScriptName, State.m_AutoChangedValue, State.m_SavedValue, "qm_gores_mode");
+			ConfigManager()->SetSaveValueOverride(pScriptName, State.m_AutoChangedValue, State.m_SavedValue, pOwnerId);
 	};
 	const bool GoresAutoEnableOwnedBefore = m_GoresAutoEnableOverride.m_AutoChangedValue;
 	bool GoresAutoEnableChanged = false;
 	const int GoresEnabled = ApplyQmGoresAutoEnableConfig(m_GoresAutoEnableOverride, GoresGameModeEntered, GoresGameModeLeft, g_Config.m_QmGoresAutoEnable != 0, g_Config.m_QmGores, GoresAutoEnableChanged);
 	if(GoresAutoEnableChanged)
 		g_Config.m_QmGores = GoresEnabled;
-	ApplyGoresSaveOverride("qm_gores", m_GoresAutoEnableOverride, GoresAutoEnableOwnedBefore);
+	// 总开关是一次性启用：进入 Gores 服务器时打开一次即撒手，之后用户可随手关，
+	// 只保留"退出不把自动值写进配置"的落盘保护。
+	ApplyGoresSaveOverride("qm_gores", m_GoresAutoEnableOverride, GoresAutoEnableOwnedBefore, nullptr);
 	m_GoresGameModeStateKnown = true;
 	m_PrevGoresGameMode = GoresGameMode;
 	if(!m_GoresModeStateKnown)
@@ -4563,15 +4567,20 @@ void CTClient::ApplyGoresFastInputLink()
 		g_Config.m_TcFastInput = TcFastInput;
 	if(TcFastInputOthersChanged)
 		g_Config.m_TcFastInputOthers = TcFastInputOthers;
-	ApplyGoresSaveOverride("tc_fast_input", m_GoresFastInputOverride, TcFastInputOwnedBefore);
-	ApplyGoresSaveOverride("tc_fast_input_others", m_GoresFastInputOthersOverride, TcFastInputOthersOwnedBefore);
+	// 快速输入联动随 Gores 模式持续强制，保持灰化与来源提示。
+	ApplyGoresSaveOverride("tc_fast_input", m_GoresFastInputOverride, TcFastInputOwnedBefore, "qm_gores_mode");
+	ApplyGoresSaveOverride("tc_fast_input_others", m_GoresFastInputOthersOverride, TcFastInputOthersOwnedBefore, "qm_gores_mode");
 	// 分身锤只在"进入 Gores 模式"那一帧关一次，之后不再持续接管 cl_dummy_hammer：
 	// 持续覆盖会让用户重新打开的分身锤被反复压回 0，看起来像开关被锁住。
-	const bool GoresEntered = StateWasKnown && GoresActive && !m_PrevGoresModeActive;
+	// 激活/去激活边界：qm_gores 0→1 视为进入（含自动启用在连服首帧打开的情况），1→0 视为退出。
+	const bool GoresModeActivated = GoresActive && !m_PrevGoresModeActive;
+	const bool GoresModeDeactivated = StateWasKnown && m_PrevGoresModeActive && !GoresActive;
+	const bool DummyHammerOwnedBefore = m_GoresDummyHammerOverride.m_AutoChangedValue;
 	bool DummyHammerChanged = false;
-	const int DummyHammer = ApplyQmGoresDummyHammerOnEnter(GoresEntered, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
+	const int DummyHammer = ApplyQmGoresDummyHammerConfig(m_GoresDummyHammerOverride, GoresModeActivated, GoresModeDeactivated, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
 	if(DummyHammerChanged)
 		g_Config.m_ClDummyHammer = DummyHammer;
+	ApplyGoresSaveOverride("cl_dummy_hammer", m_GoresDummyHammerOverride, DummyHammerOwnedBefore, nullptr);
 	if(!StateWasKnown)
 		m_PrevGoresModeActive = GoresActive;
 	if(StateWasKnown && GoresActive != m_PrevGoresModeActive)
@@ -4604,10 +4613,12 @@ void CTClient::ResetGoresConfigOverrides()
 	RestoreOverride(m_GoresAutoEnableOverride, g_Config.m_QmGores, 1);
 	RestoreOverride(m_GoresFastInputOverride, g_Config.m_TcFastInput, 1);
 	RestoreOverride(m_GoresFastInputOthersOverride, g_Config.m_TcFastInputOthers, 1);
+	RestoreOverride(m_GoresDummyHammerOverride, g_Config.m_ClDummyHammer, 0);
 	// 恢复之后必须解除写盘覆盖，否则这些配置项会一直按接管前的旧值保存。
 	ConfigManager()->SetSaveValueOverride("qm_gores", false);
 	ConfigManager()->SetSaveValueOverride("tc_fast_input", false);
 	ConfigManager()->SetSaveValueOverride("tc_fast_input_others", false);
+	ConfigManager()->SetSaveValueOverride("cl_dummy_hammer", false);
 	m_GoresGameModeStateKnown = false;
 	m_PrevGoresGameMode = false;
 }

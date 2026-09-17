@@ -94,19 +94,25 @@ TEST(QmGoresMode, AutoEnableRespectsManualDisable)
 	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, true, false, true, 0, Changed), 1);
 	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, false, true, 0, Changed), 0);
 	EXPECT_FALSE(Changed);
+	// 用户中途手动关闭后离开 Gores 服务器：仍恢复进入前的值（本来就是关，结果不变）。
 	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, true, true, 0, Changed), 0);
-	EXPECT_FALSE(Changed);
+	EXPECT_TRUE(Changed);
 }
 
-TEST(QmGoresMode, AutoEnableKeepsManualReenable)
+TEST(QmGoresMode, AutoEnableTurnsOffWhenLeavingGameModeEvenAfterManualToggles)
 {
+	// 自动启用是位置相关的一次性语义：进 Gores 服自动开，离开一律恢复进入前的值，
+	// 期间的手动开关（关了又开）不阻止自动关。
 	SQmFocusConfigOverrideState State;
 	bool Changed = false;
 	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, true, false, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
 	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, false, true, 0, Changed), 0);
-	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, false, true, 1, Changed), 1);
-	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, true, true, 1, Changed), 1);
 	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, false, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmGoresAutoEnableConfig(State, false, true, true, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
 }
 
 TEST(QmGoresMode, AutoEnableAndFastInputLinkComposeWithoutLockingTheUserToggle)
@@ -138,20 +144,38 @@ TEST(QmGoresMode, AutoEnableAndFastInputLinkComposeWithoutLockingTheUserToggle)
 
 TEST(QmGoresMode, DummyHammerIsClearedOnceOnGoresEntry)
 {
-	// 进入 Gores 模式的那一帧按选项关闭分身锤，之后不再接管：用户重新打开就保持打开。
+	// 进入 Gores 模式的那一帧按选项一次性关闭分身锤；期间帧不接管，用户改值即释放接管。
+	SQmFocusConfigOverrideState State;
 	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(true, true, 1, Changed), 0);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, true, false, true, 1, Changed), 0);
 	EXPECT_TRUE(Changed);
 
-	// 后续帧不是进入事件，即使仍在 Gores 模式也不能把用户重新打开的分身锤压回 0。
-	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(false, true, 1, Changed), 1);
+	// 用户重新打开：保持打开，接管随之释放，退出 Gores 模式时不再恢复。
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, false, false, true, 1, Changed), 1);
+	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, false, true, true, 1, Changed), 1);
 	EXPECT_FALSE(Changed);
 
 	// 已经关闭时不重复写入；未开启该选项时不干预。
-	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(true, true, 0, Changed), 0);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, true, false, true, 0, Changed), 0);
 	EXPECT_FALSE(Changed);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(true, false, 1, Changed), 1);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, true, false, false, 1, Changed), 1);
 	EXPECT_FALSE(Changed);
+}
+
+TEST(QmGoresMode, DummyHammerRestoresWhenLeavingGoresMode)
+{
+	// 接管未被用户动过：退出 Gores 模式恢复进入前的值，并可再次进入/退出。
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, true, false, true, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, false, true, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, true, false, true, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(State, false, true, true, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
 }
 
 TEST(QmGoresMode, HammerSwitchAnimationCanBeSkipped)

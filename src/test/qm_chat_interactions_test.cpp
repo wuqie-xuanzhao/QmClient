@@ -118,7 +118,22 @@ TEST(QmAxiomAutoLogin, ClassifiesOnlyExplicitLoginSuccessReplies)
 	EXPECT_EQ(QmClassifyAxiomLoginReply("Welcome, please login with /login."), EQmAxiomLoginReply::IGNORE);
 	EXPECT_EQ(QmClassifyAxiomLoginReply("Authentication is required before login."), EQmAxiomLoginReply::IGNORE);
 	EXPECT_EQ(QmClassifyAxiomLoginReply("You must be logged in to use this command."), EQmAxiomLoginReply::IGNORE);
-	EXPECT_EQ(QmClassifyAxiomLoginReply("Login successful, but an error occurred."), EQmAxiomLoginReply::RETRYABLE_FAILURE);
+	// 成功判定优先于失败词：避免“登录成功，但…”被当成可重试失败而反复重新登录。
+	EXPECT_EQ(QmClassifyAxiomLoginReply("Login successful, but an error occurred."), EQmAxiomLoginReply::SUCCESS);
+	// 账号已在别处在线无法靠重试解决，按硬失败停止，不再反复触发验证。
+	EXPECT_EQ(QmClassifyAxiomLoginReply("已有玩家在线"), EQmAxiomLoginReply::HARD_FAILURE);
+}
+
+TEST(QmAxiomAutoLogin, SlowRetryStopsAfterTotalAttemptCap)
+{
+	// 慢速重试不再无限进行：总尝试次数到达上限后按硬失败停止。
+	SQmAxiomAutoLoginState State;
+	State.m_Attempts = QMCLIENT_AXIOM_AUTO_LOGIN_TOTAL_MAX_ATTEMPTS;
+	State.m_WaitingReply = true;
+	QmScheduleAxiomAutoLoginRetry(State, 1000, 1000);
+	EXPECT_TRUE(State.m_HardFailed);
+	EXPECT_FALSE(State.m_WaitingReply);
+	EXPECT_FALSE(QmUpdateAxiomAutoLoginState(State, 999999, 1000));
 }
 
 TEST(QmChatPresentation, InactiveOldLineKeepsFullOpacity)

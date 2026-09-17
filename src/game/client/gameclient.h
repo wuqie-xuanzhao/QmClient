@@ -1092,6 +1092,7 @@ public:
 	void Echo(const char *pString) override;
 	void Echo(const char *pString, bool ForceVisible);
 	bool IsOtherTeam(int ClientId) const;
+	bool IsSoloHidden(int ClientId) const;
 	int SwitchStateTeam() const;
 	bool IsLocalCharSuper() const;
 	bool CanDisplayWarning() const override;

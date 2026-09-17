@@ -126,7 +126,7 @@ int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameMo
 int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActive, bool AutoToggle, int CurrentValue, bool &Changed);
 // Gores 模式开启的那一帧把分身锤关掉一次（由 qm_gores_disable_dummy_hammer 控制），
 // 之后不再干预用户自己的开关；持续接管会让开关看起来被锁住，也无法手动重新打开。
-int ApplyQmGoresDummyHammerOnEnter(bool GoresEntered, bool DisableOnEnter, int CurrentValue, bool &Changed);
+int ApplyQmGoresDummyHammerConfig(SQmFocusConfigOverrideState &State, bool ModeActivated, bool ModeDeactivated, bool DisableRequested, int CurrentValue, bool &Changed);
 bool ShouldKeepQmGoresHammerInFreeze(bool GoresCycleActive, bool InFreeze, bool HammerRequested);
 bool ShouldTriggerQmGoresHammerWakeup(bool GoresCycleActive, bool HammerRequested, bool ExternalHammerWakeup);
 int QmGoresHammerWakeupFireState(int CurrentFire);
