@@ -29086,3 +29086,35 @@ brazilian_portuguese = "Filtro do placar: mostrar apenas jogadores cujo nome ou 
 portuguese = "Filtro do placar: mostrar apenas jogadores cujo nome ou clã contenha este texto"
 turkish = "Skor tablosu filtresi: adı veya klanı bu metni içeren oyuncuları göster"
 polish = "Filtr tabeli wyników: pokazuj tylko graczy, których nazwa lub klan zawiera ten tekst"
+
+[[message]]
+key = "Leave empty to show everyone"
+[message.translations]
+simplified_chinese = "留空则显示所有玩家"
+traditional_chinese = "留空則顯示所有玩家"
+japanese = "空欄の場合は全プレイヤーを表示"
+korean = "비우면 모든 플레이어 표시"
+russian = "Оставьте пустым, чтобы показать всех игроков"
+german = "Leer lassen, um alle Spieler anzuzeigen"
+spanish = "Déjalo vacío para mostrar a todos los jugadores"
+french = "Laissez vide pour afficher tous les joueurs"
+brazilian_portuguese = "Deixe vazio para mostrar todos os jogadores"
+portuguese = "Deixe vazio para mostrar todos os jogadores"
+turkish = "Herkesi göstermek için boş bırakın"
+polish = "Pozostaw puste, aby pokazać wszystkich graczy"
+
+[[message]]
+key = "Use the scoreboard cursor mode to scroll the list"
+[message.translations]
+simplified_chinese = "使用计分板光标模式滚动查看列表"
+traditional_chinese = "使用計分板游標模式滾動查看清單"
+japanese = "リストをスクロールするにはスコアボードカーソルモードを使用してください"
+korean = "목록을 스크롤하려면 스코어보드 커서 모드를 사용하세요"
+russian = "Для прокрутки списка используйте режим курсора таблицы"
+german = "Verwenden Sie den Scoreboard-Cursormodus, um die Liste zu scrollen"
+spanish = "Usa el modo cursor del marcador para desplazar la lista"
+french = "Utilisez le mode curseur du tableau pour faire défiler la liste"
+brazilian_portuguese = "Use o modo cursor do placar para rolar a lista"
+portuguese = "Use o modo cursor do placar para deslocar a lista"
+turkish = "Listeyi kaydırmak için skor tablosu imleç modunu kullanın"
+polish = "Użyj trybu kursora tabeli wyników, aby przewijać listę"

@@ -5840,6 +5840,9 @@ Leave empty to disable
 Leave empty to join public room
 == 空欄にして公開ルームに入室
 
+Leave empty to show everyone
+== 空欄の場合は全プレイヤーを表示
+
 Leave empty to use default prompt
 == 空欄にしてデフォルトプロンプトを使用
 
@@ -12646,6 +12649,9 @@ Use Tee icons instead of circles
 
 Use the mouse wheel on a hovered module to scale it by 5%
 == ホバーした HUD モジュール上でマウスホイールを使用すると 5% 単位で拡大縮小します
+
+Use the scoreboard cursor mode to scroll the list
+== リストをスクロールするにはスコアボードカーソルモードを使用してください
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == `add_favorite` の後にこれを使用してお気に入りをグループ化します。`begin_favorite_group` で開始します

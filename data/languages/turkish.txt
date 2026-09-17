@@ -5840,6 +5840,9 @@ Leave empty to disable
 Leave empty to join public room
 == Genel odaya katılmak için boş bırakın
 
+Leave empty to show everyone
+== Herkesi göstermek için boş bırakın
+
 Leave empty to use default prompt
 == Varsayılan istemi kullanmak için boş bırakın
 
@@ -12646,6 +12649,9 @@ Use Tee icons instead of circles
 
 Use the mouse wheel on a hovered module to scale it by 5%
 == Üzerine gelinen bir modülü fare tekerleği ile %5 oranında ölçeklendir
+
+Use the scoreboard cursor mode to scroll the list
+== Listeyi kaydırmak için skor tablosu imleç modunu kullanın
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == Favorileri gruplamak için `add_favorite`'den sonra kullanın. `begin_favorite_group` ile başlayın

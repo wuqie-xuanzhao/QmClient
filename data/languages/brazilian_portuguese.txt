@@ -5840,6 +5840,9 @@ Leave empty to disable
 Leave empty to join public room
 == Deixe em branco para entrar em sala pública
 
+Leave empty to show everyone
+== Deixe vazio para mostrar todos os jogadores
+
 Leave empty to use default prompt
 == Deixe em branco para usar o prompt padrão
 
@@ -12646,6 +12649,9 @@ Use Tee icons instead of circles
 
 Use the mouse wheel on a hovered module to scale it by 5%
 == Use a roda do mouse em um módulo pairando para redimensioná-lo em 5%
+
+Use the scoreboard cursor mode to scroll the list
+== Use o modo cursor do placar para rolar a lista
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == Use isso após `add_favorite` para agrupar favoritos. Comece com `begin_favorite_group`

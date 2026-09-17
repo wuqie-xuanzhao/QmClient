@@ -5840,6 +5840,9 @@ Leave empty to disable
 Leave empty to join public room
 == Оставьте пустым для входа в публичную комнату
 
+Leave empty to show everyone
+== Оставьте пустым, чтобы показать всех игроков
+
 Leave empty to use default prompt
 == Оставьте пустым для использования промпта по умолчанию
 
@@ -12646,6 +12649,9 @@ Use Tee icons instead of circles
 
 Use the mouse wheel on a hovered module to scale it by 5%
 == Используйте колесо мыши на наведённом модуле для масштабирования на 5%
+
+Use the scoreboard cursor mode to scroll the list
+== Для прокрутки списка используйте режим курсора таблицы
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == Используйте это после `add_favorite` для группировки избранного. Начните с `begin_favorite_group`

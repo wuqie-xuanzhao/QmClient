@@ -5840,6 +5840,9 @@ Leave empty to disable
 Leave empty to join public room
 == 공개 방에 입장하려면 비워 두세요
 
+Leave empty to show everyone
+== 비우면 모든 플레이어 표시
+
 Leave empty to use default prompt
 == 기본 프롬프트를 사용하려면 비워 두세요
 
@@ -12646,6 +12649,9 @@ Use Tee icons instead of circles
 
 Use the mouse wheel on a hovered module to scale it by 5%
 == 마우스를 모듈 위에 올리고 휠을 굴리면 5% 씩 크기 조정
+
+Use the scoreboard cursor mode to scroll the list
+== 목록을 스크롤하려면 스코어보드 커서 모드를 사용하세요
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == 즐겨찾기를 그룹화하려면 `add_favorite` 뒤에 사용하세요. `begin_favorite_group` 으로 시작

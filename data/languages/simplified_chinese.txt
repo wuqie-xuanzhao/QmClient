@@ -5840,6 +5840,9 @@ Leave empty to disable
 Leave empty to join public room
 == 留空以进入公共房间
 
+Leave empty to show everyone
+== 留空则显示所有玩家
+
 Leave empty to use default prompt
 == 留空使用默认提示词
 
@@ -12646,6 +12649,9 @@ Use Tee icons instead of circles
 
 Use the mouse wheel on a hovered module to scale it by 5%
 == 将鼠标悬停在 HUD 模块上并滚动滚轮可按 5% 缩放
+
+Use the scoreboard cursor mode to scroll the list
+== 使用计分板光标模式滚动查看列表
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == 在 `add_favorite` 之后使用它来对收藏夹进行分组。从 `begin_favorite_group` 开始

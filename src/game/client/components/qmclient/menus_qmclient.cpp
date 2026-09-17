@@ -2059,6 +2059,20 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmBetterScoreboard, "Better scoreboard", &g_Config.m_QmBetterScoreboard);
 	RenderCheckbox(&g_Config.m_QmScoreboardPoints, "Scoreboard point check", &g_Config.m_QmScoreboardPoints);
 	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
+	RenderCheckboxTipped(&g_Config.m_QmScoreboardScroll, "Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers", Localize("Use the scoreboard cursor mode to scroll the list"), &g_Config.m_QmScoreboardScroll);
+	{
+		// 计分板过滤器：CLineInput 直接绑定配置缓冲，输入即时生效（控制台修改也会同步）。
+		IUiContext TextInputCtx = SettingsUiContext("qmclient-mini-scoreboard-filter-input", BodySize / ui_token::font::BODY);
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		CUIRect LabelColumn;
+		CUIRect ControlColumn;
+		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
+		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-scoreboard-filter", &LabelColumn, Localize("Scoreboard filter: only show players whose name or clan contains this text"), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
+		static CLineInput s_ScoreboardFilterInput(g_Config.m_QmScoreboardFilter, sizeof(g_Config.m_QmScoreboardFilter));
+		s_ScoreboardFilterInput.SetEmptyText(Localize("Leave empty to show everyone"));
+		ui_widget::InputField(TextInputCtx, &s_ScoreboardFilterInput, ControlColumn, Localize("Leave empty to show everyone"), BodySize);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
 	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
 	RenderCheckboxTipped(&g_Config.m_QmShowTuneZoneColors, "Show tune zone colors", Localize("Color map tune zones by their tune zone number"), &g_Config.m_QmShowTuneZoneColors);
 	// 回退语义在加载期读取：开关变化由 CGameClient::OnRender 的兜底轮询统一触发热重载，

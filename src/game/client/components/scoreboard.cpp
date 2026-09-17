@@ -1995,10 +1995,15 @@ void CScoreboard::OnRender()
 	const int ScrollMaxStart = ScrollMode ? maximum(0, RedPlayerRows.m_Count - ScrollVisibleRows) : 0;
 	if(ScrollMode)
 	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-			m_ScrollOffset -= 4.0f;
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			m_ScrollOffset += 4.0f;
+		// 只在计分板光标模式（toggle_scoreboard_cursor）下响应滚轮，
+		// 避免与武器切换等滚轮绑定冲突。
+		if(m_MouseUnlocked && IsActive())
+		{
+			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+				m_ScrollOffset -= 4.0f;
+			if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+				m_ScrollOffset += 4.0f;
+		}
 		m_ScrollOffset = std::clamp(m_ScrollOffset, 0.0f, (float)ScrollMaxStart);
 	}
 	const bool TimeScore = GameClient()->m_GameInfo.m_TimeScore;

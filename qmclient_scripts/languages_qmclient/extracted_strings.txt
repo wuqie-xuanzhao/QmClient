@@ -1945,6 +1945,7 @@ Leaks your IP address to all servers by pinging each of them, also acquiring the
 Learn
 Leave empty to disable
 Leave empty to join public room
+Leave empty to show everyone
 Leave empty to use default prompt
 Left jump
 Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets.
@@ -4214,6 +4215,7 @@ Use sounds
 Use team colors for name plates
 Use Tee icons instead of circles
 Use the mouse wheel on a hovered module to scale it by 5%
+Use the scoreboard cursor mode to scroll the list
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 Use vector font rendering for nameplates
