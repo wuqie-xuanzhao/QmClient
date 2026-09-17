@@ -32,6 +32,8 @@ namespace
 		case 1: return "bold";
 		case 2: return "thin";
 		case 3: return "fill";
+		case 4: return "light";
+		case 5: return "duotone";
 		}
 		return "bold";
 	}
@@ -117,6 +119,8 @@ void CQmIconAtlas::ResetForDeviceRecreate()
 	m_Height = 0;
 	m_Padding = 0;
 	m_PxRange = 0.0f;
+	m_UseTrueSdf = false;
+	m_SecondaryMask = false;
 	m_Type = EType::ALPHA;
 }
 
@@ -268,6 +272,12 @@ bool CQmIconManager::Reload()
 	m_NextReloadAttemptTime = 0;
 	m_HasFailedReloadTarget = false;
 	m_NextMsdfProbeTime = MsdfProbeFailed ? time_get() + time_freq() * QM_ICON_RELOAD_RETRY_DELAY_SECONDS : 0;
+	if(LoadedMsdf)
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "MTSDF icon atlas ready: weight=%s icons=%d", IconAtlasWeightName(Weight), m_Atlas.m_LoadedIconCount);
+		LogIconAtlas(m_pConsole, aBuf);
+	}
 	return true;
 }
 
@@ -294,6 +304,9 @@ bool CQmIconManager::RetryMsdfAtlas()
 	m_PreferredScale = 0;
 	m_AtlasWeight = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight);
 	m_NextMsdfProbeTime = 0;
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "MTSDF icon atlas ready: weight=%s icons=%d", IconAtlasWeightName(m_AtlasWeight), m_Atlas.m_LoadedIconCount);
+	LogIconAtlas(m_pConsole, aBuf);
 	return true;
 }
 
@@ -341,7 +354,7 @@ bool CQmIconManager::LoadManifest(CQmIconAtlas &Atlas, const char *pManifestPath
 		if(Msdf)
 		{
 			const char *pKind = JsonStringField(pRoot, "kind");
-			if(str_comp(pKind, "msdf") != 0 || !JsonIntField(pRoot, "px_range", PxRange) || PxRange <= 0)
+			if(str_comp(pKind, "mtsdf") != 0 || json_object_get(pRoot, "alpha_sdf") == &json_value_none || !JsonIntField(pRoot, "px_range", PxRange) || PxRange <= 0)
 				break;
 		}
 
@@ -426,6 +439,8 @@ bool CQmIconManager::LoadManifest(CQmIconAtlas &Atlas, const char *pManifestPath
 		Atlas.m_Height = AtlasHeight;
 		Atlas.m_Padding = AtlasPadding;
 		Atlas.m_PxRange = static_cast<float>(PxRange);
+		Atlas.m_UseTrueSdf = Msdf && pRoot->type == json_object && json_object_get(pRoot, "alpha_sdf") != &json_value_none;
+		Atlas.m_SecondaryMask = Msdf && pRoot->type == json_object && json_object_get(pRoot, "secondary_mask") != &json_value_none;
 		Atlas.m_Type = Msdf ? CQmIconAtlas::EType::MSDF : CQmIconAtlas::EType::ALPHA;
 		if(m_DiagnosticsEnabled)
 			m_Diagnostics.m_TextureLoads++;
@@ -537,6 +552,8 @@ bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRG
 		Params.m_PxRange = m_Atlas.m_PxRange;
 		Params.m_AtlasWidth = static_cast<float>(m_Atlas.m_Width);
 		Params.m_AtlasHeight = static_cast<float>(m_Atlas.m_Height);
+		Params.m_UseTrueSdf = m_Atlas.m_UseTrueSdf && !m_Atlas.HasSecondaryMask();
+		Params.m_UseSecondarySdf = m_Atlas.HasSecondaryMask();
 		m_pGraphics->RenderTexturedMsdf(Params);
 		return true;
 	}
@@ -583,6 +600,8 @@ bool CQmIconManager::RenderIconRotated(EQmIcon Icon, const CUIRect &Rect, const 
 		Params.m_PxRange = m_Atlas.m_PxRange;
 		Params.m_AtlasWidth = static_cast<float>(m_Atlas.m_Width);
 		Params.m_AtlasHeight = static_cast<float>(m_Atlas.m_Height);
+		Params.m_UseTrueSdf = m_Atlas.m_UseTrueSdf && !m_Atlas.HasSecondaryMask();
+		Params.m_UseSecondarySdf = m_Atlas.HasSecondaryMask();
 		Params.m_Rotation = Rotation;
 		m_pGraphics->RenderTexturedMsdf(Params);
 		return true;

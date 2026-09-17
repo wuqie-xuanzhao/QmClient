@@ -280,7 +280,8 @@ void SIntConfigVariable::Register()
 
 bool SIntConfigVariable::IsDefault() const
 {
-	return *m_pVariable == m_Default;
+	// 写盘覆盖生效时必须按用户真实值判断，否则会把临时状态当成用户设置写进配置文件。
+	return (m_HasSaveValueOverride ? m_SaveValueOverride : *m_pVariable) == m_Default;
 }
 
 size_t SIntConfigVariable::MaxSerializedSize() const
@@ -295,7 +296,7 @@ void SIntConfigVariable::Serialize(char *pOut, size_t Size, int Value) const
 
 void SIntConfigVariable::Serialize(char *pOut, size_t Size) const
 {
-	Serialize(pOut, Size, *m_pVariable);
+	Serialize(pOut, Size, m_HasSaveValueOverride ? m_SaveValueOverride : *m_pVariable);
 }
 
 void SIntConfigVariable::SetValue(int Value)
@@ -592,6 +593,59 @@ void CConfigManager::SetReadOnly(const char *pScriptName, bool ReadOnly)
 		}
 	}
 	dbg_assert_failed("Invalid command for SetReadOnly: '%s'", pScriptName);
+}
+
+void CConfigManager::SetSaveValueOverride(const char *pScriptName, bool Active, int Value, const char *pOwnerId)
+{
+	for(SConfigVariable *pVariable : m_vpAllVariables)
+	{
+		if(str_comp(pScriptName, pVariable->m_pScriptName) == 0)
+		{
+			// 每个配置项只允许一个临时接管来源：两个接管者会互相清除对方的写盘保护，
+			// 静默地把接管值写进配置文件。
+			const bool Conflicting = Active && pVariable->m_HasSaveValueOverride && pVariable->m_SaveValueOverride != Value;
+			if(Conflicting)
+				log_error("config", "Conflicting save value override for '%s'", pScriptName);
+			dbg_assert(!Conflicting, "config variable '%s' already has a different save value override", pScriptName);
+			pVariable->SetSaveValueOverride(Active, Value, pOwnerId);
+			return;
+		}
+	}
+	// Debug 构建断言，release 构建留下日志：名字写错会让写盘保护静默失效。
+	log_error("config", "Invalid config variable for SetSaveValueOverride: '%s'", pScriptName);
+	dbg_assert_failed("Invalid config variable for SetSaveValueOverride: '%s'", pScriptName);
+}
+
+const char *CConfigManager::SaveValueOverrideOwner(const int *pValue) const
+{
+	if(pValue == nullptr)
+		return nullptr;
+	for(const SConfigVariable *pVariable : m_vpAllVariables)
+	{
+		if(pVariable->m_Type != SConfigVariable::VAR_INT)
+			continue;
+		const SIntConfigVariable *pIntVariable = static_cast<const SIntConfigVariable *>(pVariable);
+		if(pIntVariable->m_pVariable != pValue)
+			continue;
+		return pVariable->m_HasSaveValueOverride ? pVariable->m_pSaveValueOverrideOwner : nullptr;
+	}
+	return nullptr;
+}
+
+int CConfigManager::RealValue(const int *pValue) const
+{
+	if(pValue == nullptr)
+		return 0;
+	for(const SConfigVariable *pVariable : m_vpAllVariables)
+	{
+		if(pVariable->m_Type != SConfigVariable::VAR_INT)
+			continue;
+		const SIntConfigVariable *pIntVariable = static_cast<const SIntConfigVariable *>(pVariable);
+		if(pIntVariable->m_pVariable != pValue)
+			continue;
+		return pVariable->m_HasSaveValueOverride ? pVariable->m_SaveValueOverride : *pIntVariable->m_pVariable;
+	}
+	return *pValue;
 }
 
 void CConfigManager::SetGameSettingsReadOnly(bool ReadOnly)

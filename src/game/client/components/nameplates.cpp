@@ -28,6 +28,23 @@
 #include <limits>
 #include <memory>
 #include <vector>
+
+// 录制画面跟随用户真实设置：禅模式等临时接管只改写运行时值，录制时读回接管前的真实值
+//（未接管时两者相同）。名字板一族没有专门的 video 配置，用真实值代替被接管的运行时值，
+// 保证"开禅模式录视频"不会把名字板、坐标一起录没。
+#if defined(CONF_VIDEORECORDER)
+static int NameplateRenderValue(IConfigManager *pConfigManager, const int *pValue)
+{
+	return IVideo::Current() && pConfigManager != nullptr ? pConfigManager->RealValue(pValue) : *pValue;
+}
+#else
+static int NameplateRenderValue(IConfigManager *pConfigManager, const int *pValue)
+{
+	(void)pConfigManager;
+	return *pValue;
+}
+#endif
+
 //枚举
 enum class EHookStrongWeakState
 {
@@ -56,7 +73,7 @@ static constexpr std::array<ENameplateCoreRow, kNameplateCoreRowCount> s_aDefaul
 
 static bool FocusModeHidesChat()
 {
-	return g_Config.m_QmFocusMode != 0 && g_Config.m_QmFocusModeHideChat != 0;
+	return GetQmFocusModeDecisions().m_HidePlayerMessages;
 }
 
 struct SChatBubbleAnimState
@@ -423,20 +440,8 @@ static int s_MsdfDebugFallbackParts = 0;
 // 整名回退日志去重：同一缺失码点在整个会话内只报告一次
 static CQmNameplateMsdfFallbackReporter s_MsdfFallbackReporter;
 
-// 只要当前 MSDF 会话确认有一个字形/烘焙失败，整套铭牌统一回退 FreeType，避免混排。
-static bool s_NameplateMsdfForceFreeType = false;
-
-static void ForceNameplateMsdfFreeType(const char *pReason)
-{
-	if(!s_NameplateMsdfForceFreeType)
-	{
-		s_NameplateMsdfForceFreeType = true;
-		log_info("nameplate_msdf", "MSDF failed (%s); all nameplates use FreeType until MSDF is re-enabled", pReason != nullptr ? pReason : "unknown reason");
-	}
-}
-
-// 字体门控：只有已验收、随客户端发布的预生成 profile 才允许 MSDF；
-// 当前没有正式 profile，所有字体统一走 FreeType。
+// 字体门控：只有已验收、随客户端发布的预生成 profile 才允许名牌 MTSDF；
+// 其他字体始终保持 FreeType，避免同一字体在不同机器上出现不同结果。
 static bool NameplateMsdfFontMatchesAtlas()
 {
 	return QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont) != nullptr;
@@ -556,7 +561,7 @@ protected:
 	static bool NameplateMsdfActive()
 	{
 		// 字体门控：图集字形与用户所选字体不一致时整条铭牌交给 FreeType。
-		if(g_Config.m_QmNameplateMsdf == 0 || s_NameplateMsdfForceFreeType)
+		if(g_Config.m_QmNameplateMsdf == 0)
 			return false;
 		const char *pProfile = NameplateMsdfFontProfile();
 		// 只有随客户端发布、且有离线 profile 的字体允许走 MSDF。
@@ -565,10 +570,10 @@ protected:
 		return pProfile != nullptr && QmNameplateMsdf().IsReady() && str_comp(QmNameplateMsdf().Profile(), pProfile) == 0;
 	}
 
-	static bool NameplateMsdfEffectsSupported(const CNamePlateData &Data)
+	static bool NameplateMsdfEffectsSupported()
 	{
-		// MSDF 当前只实现边框和彩虹；渐变、辉光回退 FreeType，保持与原效果一致。
-		return !Data.m_UseTextEffects || (g_Config.m_QmNameplateTextEffects & (QM_TEXT_EFFECT_GRADIENT | QM_TEXT_EFFECT_GLOW)) == 0;
+		// MTSDF 在渲染器中统一实现边框、渐变、彩虹和辉光，避免同一铭牌切换到两种字体路径。
+		return true;
 	}
 
 	// 整名回退：图集覆盖不到任何一个字符就整条交给原 FreeType 路径，
@@ -580,10 +585,12 @@ protected:
 		const uint32_t MissingCodepoint = QmNameplateMsdf().FindUnsupportedCodepoint(m_aMsdfText);
 		if(MissingCodepoint == 0)
 			return true;
-		// 内置 profile 缺字时使用稳定的 '?' 占位，但整条铭牌仍保持 MSDF；
-		// 不把一个未知码点变成 FreeType/MSDF 混排。
+		// 图集（含 noto_glow_cjk 兜底页：汉字/假名/谚文/泰文/符号）覆盖不到就整条交回
+		// FreeType。MTSDF 侧已把随包字体能覆盖的脚本尽量补齐，剩下的只有 FreeType
+		// 才有字形的罕见码点；旧实现按区段白名单判断，装饰符号会被留在 MSDF 路径
+		// 画成 '?'，既丢信息又让用户误以为「渲染坏了」。
 		LogNameplateMsdfFallbackOnce(MissingCodepoint, m_aMsdfText);
-		return true;
+		return false;
 	}
 
 	void SetMsdfPlainText(const char *pText, float FontSize)
@@ -598,8 +605,6 @@ protected:
 	{
 		if(g_Config.m_QmNameplateMsdf == 0)
 			return "config disabled";
-		if(s_NameplateMsdfForceFreeType)
-			return "MSDF failure forced global FreeType fallback";
 		if(m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & (QM_TEXT_EFFECT_GRADIENT | QM_TEXT_EFFECT_GLOW)) != 0)
 			return "gradient or glow effect uses FreeType path";
 		if(NameplateMsdfFontProfile() == nullptr)
@@ -680,7 +685,19 @@ protected:
 				Style.m_OutlineWidth = 0.5f * (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4);
 				Style.m_OutlineColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextBorderColor, true));
 			}
+			if((Effects & QM_TEXT_EFFECT_GRADIENT) != 0)
+			{
+				Style.m_GradientEnabled = true;
+				Style.m_GradientColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGradientColor, true));
+			}
+			if((Effects & QM_TEXT_EFFECT_GLOW) != 0)
+			{
+				Style.m_GlowEnabled = true;
+				Style.m_GlowColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGlowColor, true));
+				Style.m_GlowWidth = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12);
+			}
 			Style.m_RainbowEnabled = (Effects & QM_TEXT_EFFECT_RAINBOW) != 0;
+			Style.m_RainbowTime = (float)(time_get() / (double)time_freq());
 		}
 		return Style;
 	}
@@ -688,9 +705,14 @@ protected:
 	// MSDF 路径的尺寸外扩只考虑描边：描边用 8 向偏移实现，不需要像位图光晕那样留大边距。
 	float MsdfEffectPadding() const
 	{
-		if(!m_UseTextEffects || (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_BORDER) == 0)
+		if(!m_UseTextEffects)
 			return 0.0f;
-		return (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4);
+		float Padding = 0.0f;
+		if((g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_BORDER) != 0)
+			Padding = maximum(Padding, (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4));
+		if((g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GLOW) != 0)
+			Padding = maximum(Padding, (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12));
+		return Padding;
 	}
 
 	CNamePlatePartText(CGameClient &This) :
@@ -720,7 +742,7 @@ public:
 		m_MsdfBuildAllowed = false;
 
 		// MSDF：分辨率无关，不按缩放档位重建
-		if(!m_NameplateForceFreeType && MsdfGateActive && NameplateMsdfEffectsSupported(Data))
+		if(!m_NameplateForceFreeType && MsdfGateActive && NameplateMsdfEffectsSupported())
 		{
 			m_MsdfBuildAllowed = true;
 			bool NeedsMsdfUpdate = UpdateNeeded(This, Data);
@@ -2247,7 +2269,8 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	const bool HideIdentity = GameClient()->ShouldHideStreamerIdentity(ClientId);
 
-	Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;
+	Data.m_ShowName = pPlayerInfo->m_Local ? NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) :
+						 NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates);
 	GameClient()->FormatStreamerName(ClientId, Data.m_aName, sizeof(Data.m_aName));
 	str_copy(Data.m_aQmTitle, Data.m_ShowName ? GameClient()->m_QmClient.PlayerTitle(ClientId) : "");
 	Data.m_DeveloperRainbow = Data.m_aQmTitle[0] != '\0' && GameClient()->IsQmDeveloperRainbow(ClientId);
@@ -2430,7 +2453,8 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	Data.m_Local = pPlayerInfo->m_Local;
 
 	CNamePlate *pLayoutReference = nullptr;
-	if(Alpha > 0.0f && NameplateFreeMoveEnabled() && (!g_Config.m_ClNamePlates || !g_Config.m_ClNamePlatesOwn))
+	const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) == 0 || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) == 0;
+	if(Alpha > 0.0f && NameplateFreeMoveEnabled() && NameplatePartiallyHidden)
 	{
 		CNamePlateData FrameData = Data;
 		FrameData.m_ShowName = true;
@@ -3172,14 +3196,12 @@ void CNamePlates::OnRender()
 	if(s_LastMsdfEnabled >= 0 && s_LastMsdfEnabled != MsdfEnabled)
 	{
 		ResetNamePlates();
-		if(MsdfEnabled != 0)
-			s_NameplateMsdfForceFreeType = false;
-		else
+		if(MsdfEnabled == 0)
 			QmNameplateMsdf().Shutdown();
 	}
 	s_LastMsdfEnabled = MsdfEnabled;
 
-	if(MsdfEnabled != 0 && !s_NameplateMsdfForceFreeType)
+	if(MsdfEnabled != 0)
 	{
 		const char *pProfile = NameplateMsdfFontProfile();
 		if(pProfile != nullptr)
@@ -3199,15 +3221,15 @@ void CNamePlates::OnRender()
 	// 每帧重置名牌文字重建预算，把缩放档位变化带来的重建开销摊平到多帧
 	s_NameplateTextRebuildBudget = NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAME;
 
-	int ShowDirection = g_Config.m_ClShowDirection;
+	int ShowDirection = NameplateRenderValue(ConfigManager(), &g_Config.m_ClShowDirection);
 #if defined(CONF_VIDEORECORDER)
 	if(IVideo::Current())
 		ShowDirection = g_Config.m_ClVideoShowDirection;
 #endif
 	const bool ShowCoordXAlignHint = g_Config.m_QmNameplateCoordXAlignHint || g_Config.m_QmNameplateCoordXAlignHintStrict;
-	const bool ShowCoords = (g_Config.m_QmNameplateCoords || g_Config.m_QmNameplateCoordsOwn) &&
-				(g_Config.m_QmNameplateCoordX || g_Config.m_QmNameplateCoordY);
-	const bool RenderNames = g_Config.m_ClNamePlates || g_Config.m_ClNamePlatesOwn;
+	const bool ShowCoords = (NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoords) || NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoordsOwn)) &&
+				(NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoordX) || NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoordY));
+	const bool RenderNames = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn);
 	const bool RenderClan = g_Config.m_ClNamePlatesClan || (g_Config.m_TcWarList && g_Config.m_TcWarListShowClan);
 	const bool RenderClientIds = g_Config.m_Debug || g_Config.m_ClNamePlatesIds;
 	const bool RenderStrongWeak = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
@@ -3285,7 +3307,6 @@ void CNamePlates::OnShutdown()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 		ResetChatBubbleAnimState(i, true);
 	QmNameplateMsdf().Shutdown();
-	s_NameplateMsdfForceFreeType = false;
 }
 
 void CNamePlates::OnGraphicsResourcesReset()

@@ -1,3 +1,6 @@
+#ifndef TEST_QM_ANIM_TEST_HELPERS_H
+#define TEST_QM_ANIM_TEST_HELPERS_H
+
 #pragma once
 
 #include <engine/shared/config.h>
@@ -27,3 +30,5 @@ inline SUiAnimRequest MakeQmAnimRequest(uint64_t NodeKey, EUiAnimProperty Proper
 	Request.m_TrackId = TrackId;
 	return Request;
 }
+
+#endif

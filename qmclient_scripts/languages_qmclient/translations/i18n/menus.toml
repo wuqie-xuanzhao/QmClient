@@ -20230,22 +20230,6 @@ turkish = "Özel arayüz simgesi rengi"
 polish = "Niestandardowy kolor ikon interfejsu"
 
 [[message]]
-key = "UI icon weight"
-[message.translations]
-simplified_chinese = "界面图标粗细"
-traditional_chinese = "介面圖示粗細"
-japanese = "UI アイコンの太さ"
-korean = "UI 아이콘 굵기"
-russian = "Толщина значков интерфейса"
-german = "Strichstärke der UI-Symbole"
-spanish = "Grosor de los iconos de la interfaz"
-french = "Épaisseur des icônes de l'interface"
-brazilian_portuguese = "Espessura dos ícones da interface"
-portuguese = "Espessura dos ícones da interface"
-turkish = "Arayüz simgesi kalınlığı"
-polish = "Grubość ikon interfejsu"
-
-[[message]]
 key = "Thin"
 [message.translations]
 simplified_chinese = "细体"
@@ -21692,3 +21676,83 @@ brazilian_portuguese = "Modo de desempenho"
 portuguese = "Modo de desempenho"
 turkish = "Performans modu"
 polish = "Tryb wydajności"
+
+[[message]]
+key = "Duotone"
+[message.translations]
+simplified_chinese = "双色调"
+traditional_chinese = "雙色調"
+japanese = "デュオトーン"
+korean = "듀오톤"
+russian = "Дуотон"
+german = "Duoton"
+spanish = "Dúotono"
+french = "Bichromie"
+brazilian_portuguese = "Tom duplo"
+portuguese = "Tom duplo"
+turkish = "Çift ton"
+polish = "Dwuton"
+
+[[message]]
+key = "Light"
+[message.translations]
+simplified_chinese = "轻体"
+traditional_chinese = "輕體"
+japanese = "ライト"
+korean = "라이트"
+russian = "Лёгкий"
+german = "Leicht"
+spanish = "Ligera"
+french = "Léger"
+brazilian_portuguese = "Leve"
+portuguese = "Leve"
+turkish = "Hafif"
+polish = "Lekki"
+
+[[message]]
+key = "UI icon style"
+[message.translations]
+simplified_chinese = "界面图标样式"
+traditional_chinese = "介面圖示樣式"
+japanese = "UI アイコンのスタイル"
+korean = "UI 아이콘 스타일"
+russian = "Стиль значков интерфейса"
+german = "Stil der UI-Symbole"
+spanish = "Estilo de los iconos de la interfaz"
+french = "Style des icônes de l'interface"
+brazilian_portuguese = "Estilo dos ícones da interface"
+portuguese = "Estilo dos ícones da interface"
+turkish = "Arayüz simgesi stili"
+polish = "Styl ikon interfejsu"
+
+[[message]]
+key = "Blank material"
+[message.translations]
+simplified_chinese = "空白材质"
+traditional_chinese = "空白材質"
+japanese = "空白素材"
+korean = "빈 소재"
+russian = "Пустой материал"
+german = "Leeres Material"
+spanish = "Material en blanco"
+french = "Matériau vide"
+brazilian_portuguese = "Material em branco"
+portuguese = "Material em branco"
+turkish = "Boş materyal"
+polish = "Pusty materiał"
+
+[[message]]
+key = "Blank: hides this asset"
+[message.translations]
+simplified_chinese = "空白：隐藏此资源"
+traditional_chinese = "空白：隱藏此資源"
+japanese = "空白：このアセットを非表示にします"
+korean = "빈 값: 이 에셋을 숨깁니다"
+russian = "Пусто: скрывает этот ресурс"
+german = "Leer: blendet dieses Asset aus"
+spanish = "En blanco: oculta este recurso"
+french = "Vide : masque cet élément"
+brazilian_portuguese = "Em branco: oculta este asset"
+portuguese = "Em branco: oculta este recurso"
+turkish = "Boş: bu varlığı gizler"
+polish = "Puste: ukrywa ten zasób"

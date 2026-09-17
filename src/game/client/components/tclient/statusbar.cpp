@@ -504,6 +504,12 @@ void CStatusBar::OnRender()
 	if(!g_Config.m_TcStatusBar || !GameClient()->m_Snap.m_pGameInfoObj)
 		return;
 
+#if defined(CONF_VIDEORECORDER)
+	// 渲染（录制）demo 视频时跟随 cl_video_showhud，避免状态栏被一起录进视频
+	if(IVideo::Current() && !g_Config.m_ClVideoShowhud)
+		return;
+#endif
+
 	if(str_comp(m_aAppliedStatusBarScheme, g_Config.m_TcStatusBarScheme) != 0)
 		ApplyStatusBarScheme(g_Config.m_TcStatusBarScheme);
 

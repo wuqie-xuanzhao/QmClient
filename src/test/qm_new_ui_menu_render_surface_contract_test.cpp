@@ -104,12 +104,12 @@ TEST(QmNewUiMenuRenderSurfaceContract, GraphicsIconCardSupportsDynamicCustomColo
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
 	EXPECT_NE(Graphics.find("s_aGraphicsIconColorButtons[4]"), std::string::npos);
-	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[4]"), std::string::npos);
+	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[6]"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Custom\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Rainbow\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Thin\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Fill\")"), std::string::npos);
-	EXPECT_NE(Graphics.find("static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};"), std::string::npos);
+	EXPECT_NE(Graphics.find("static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};"), std::string::npos);
 	EXPECT_NE(Graphics.find("DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId"), std::string::npos);
 	EXPECT_NE(Graphics.find("vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);"), std::string::npos);
 	EXPECT_NE(Graphics.find("vCards.back().m_PreLayoutInput = [this, GraphicsMetrics]"), std::string::npos);
@@ -119,7 +119,7 @@ TEST(QmNewUiMenuRenderSurfaceContract, GraphicsIconCardSupportsDynamicCustomColo
 	const std::string Config = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	EXPECT_NE(Config.find("MACRO_CONFIG_COL(QmUiIconCustomColor, qm_ui_icon_custom_color"), std::string::npos);
 	EXPECT_NE(Config.find("Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow"), std::string::npos);
-	EXPECT_NE(Config.find("Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill"), std::string::npos);
+	EXPECT_NE(Config.find("Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone"), std::string::npos);
 }
 
 TEST(QmNewUiMenuRenderSurfaceContract, RoundedUiSurfacesUseClampedGeometryAndSharedPaths)

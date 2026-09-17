@@ -29,10 +29,13 @@ namespace
 		return Buffer.str();
 	}
 
-	constexpr const char *kBaseManifest = "data/qmclient/nameplate_msdf/nameplate_base_msdf.json";
-	constexpr const char *kBaseImage = "data/qmclient/nameplate_msdf/nameplate_base_msdf.png";
-	constexpr int kPublishedProfileCount = 0;
-	constexpr const char *aProfiles[] = {nullptr};
+	// 随包发布的基线页：DejaVu 是回退链里的通用拉丁页，覆盖全部可见 ASCII。
+	constexpr const char *kBaseManifest = "data/qmclient/nameplate_msdf/nameplate_dejavu_00.json";
+	constexpr const char *kBaseImage = "data/qmclient/nameplate_msdf/nameplate_dejavu_00.png";
+	// 随包内置 profile：dejavu（通用拉丁）与 noto_glow_cjk（汉字/假名/谚文/泰文/符号兜底）。
+	// 两者是渲染器回退链上的固定组合，页引用必须全部存在。
+	constexpr int kPublishedProfileCount = 2;
+	constexpr const char *aProfiles[] = {"dejavu", "noto_glow_cjk"};
 
 	bool PublishedAtlasAvailable()
 	{
@@ -60,8 +63,10 @@ namespace
 
 	struct SAtlasFacts
 	{
-		int m_PxRange = 0;
-		int m_EmPixels = 0;
+		// 生成器对整数值会写 `8` 而不是 `8.0`（自建工具与 msdf-atlas-gen 两条链都如此），
+		// 所以这两个度量必须按数字读，不能假定 json_integer。
+		double m_PxRange = 0.0;
+		double m_EmPixels = 0.0;
 		int m_Padding = 0;
 		double m_Ascent = 0.0;
 		double m_Descent = 0.0;
@@ -102,8 +107,8 @@ namespace
 			}
 			return pValue->type == json_integer ? (double)pValue->u.integer : pValue->u.dbl;
 		};
-		Facts.m_PxRange = IntField("px_range");
-		Facts.m_EmPixels = IntField("em_pixels");
+		Facts.m_PxRange = NumField("px_range");
+		Facts.m_EmPixels = NumField("em_pixels");
 		Facts.m_Padding = IntField("padding");
 		// 行盒度量：基线排版（与内容无关的 ascent/descent）依赖这两个字段
 		Facts.m_Ascent = NumField("ascent");
@@ -230,20 +235,30 @@ TEST(QmNameplateMsdfAtlas, BasePageCoversAscii)
 		char aKey[16];
 		str_format(aKey, sizeof(aKey), "%u", Codepoint);
 		const json_value *pEntry = json_object_get(pGlyphs, aKey);
+		// 空格没有可见轮廓，生成器不为它出 quad；运行时在 Measure/DrawText 里按 0.25em
+		// 单独推进笔位（见 qm_nameplate_msdf_renderer.cpp），因此这里不要求它存在。
+		// 若某天它确实被写进了图集，则必须有正的推进宽度，否则排版会塌缩。
+		if(Codepoint == 0x20)
+		{
+			if(pEntry != nullptr && pEntry->type == json_object)
+			{
+				const json_value *pAdvance = json_object_get(pEntry, "adv");
+				ASSERT_NE(pAdvance, nullptr) << aKey;
+				EXPECT_EQ(pAdvance->type, json_double) << aKey;
+				EXPECT_GT(pAdvance->u.dbl, 0.0) << aKey;
+			}
+			continue;
+		}
 		EXPECT_NE(pEntry, nullptr) << "missing U+" << std::hex << Codepoint;
 		if(pEntry == nullptr || pEntry->type != json_object)
 			continue;
-		// 空格没有轮廓，但必须有推进宽度，否则排版会塌缩
 		const json_value *pAdvance = json_object_get(pEntry, "adv");
 		ASSERT_NE(pAdvance, nullptr) << aKey;
 		EXPECT_EQ(pAdvance->type, json_double) << aKey;
 		EXPECT_GT(pAdvance->u.dbl, 0.0) << aKey;
-		if(Codepoint != 0x20)
-		{
-			const json_value *pOutline = json_object_get(pEntry, "outline");
-			ASSERT_NE(pOutline, nullptr) << aKey;
-			EXPECT_EQ(pOutline->u.boolean, 1) << aKey;
-		}
+		const json_value *pOutline = json_object_get(pEntry, "outline");
+		ASSERT_NE(pOutline, nullptr) << aKey;
+		EXPECT_EQ(pOutline->u.boolean, 1) << aKey;
 	}
 	json_value_free(pRoot);
 }
@@ -257,9 +272,9 @@ TEST(QmNameplateMsdfAtlas, ManifestsAreSelfConsistent)
 	EXPECT_TRUE(CheckPage(kBaseManifest, kBaseImage, BaseFacts, BaseGlyphs));
 	EXPECT_EQ(BaseFacts.m_Kind, "msdf-glyphs");
 	EXPECT_EQ(BaseFacts.m_DistanceField, "mtsdf");
-	EXPECT_GT(BaseFacts.m_PxRange, 0);
-	EXPECT_GT(BaseFacts.m_EmPixels, 0);
-	EXPECT_GE(BaseFacts.m_Padding, BaseFacts.m_PxRange + 1);
+	EXPECT_GT(BaseFacts.m_PxRange, 0.0);
+	EXPECT_GT(BaseFacts.m_EmPixels, 0.0);
+	EXPECT_GE((double)BaseFacts.m_Padding, BaseFacts.m_PxRange + 1.0);
 	EXPECT_GT(BaseFacts.m_Ascent, 0.0);
 	EXPECT_GT(BaseFacts.m_Descent, 0.0);
 	EXPECT_GT(BaseFacts.m_Ascent, BaseFacts.m_Descent);
@@ -370,6 +385,10 @@ TEST(QmNameplateMsdfAtlas, RuntimeScannerReadsManifestFields)
 		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
 	const std::pair<const char *, const char *> aPages[] = {
 		{kBaseManifest, kBaseImage},
+		// 兜底页一并验：2048² 的日文页与 4096² 的汉字页都要能被同一套运行时扫描器读出，
+		// 且 manifest 里的图集尺寸必须与真实 PNG 一致（不一致会让 UV 整块取错）。
+		{"data/qmclient/nameplate_msdf/nameplate_noto_glow_jp.json", "data/qmclient/nameplate_msdf/nameplate_noto_glow_jp.png"},
+		{"data/qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.json", "data/qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.png"},
 	};
 	for(const auto &Page : aPages)
 	{
@@ -410,6 +429,8 @@ TEST(QmNameplateMsdfAtlas, RuntimeScannerReadsGlyphFields)
 		GTEST_SKIP() << "No published built-in MSDF profile is present yet";
 	const std::pair<const char *, size_t> aPages[] = {
 		{kBaseManifest, 700u},
+		// 汉字兜底页整块 1800 字形，扫描器必须一条不漏地走完
+		{"data/qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.json", 1700u},
 	};
 	for(const auto &Page : aPages)
 	{

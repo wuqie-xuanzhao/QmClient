@@ -1250,8 +1250,9 @@ static void StartEntitiesDecode(CMenus::SCustomEntities *pEntitiesItem, IStorage
 	std::vector<std::string> vPossiblePaths;
 	char aPath[IO_MAX_PATH_LENGTH];
 
-	if(str_comp(pEntitiesItem->m_aName, "default") == 0)
+	if(str_comp(pEntitiesItem->m_aName, "default") == 0 || IsBlankAssetName(pEntitiesItem->m_aName))
 	{
+		// blank 也按内置实体图解码：只为拿到尺寸与格式，收尾上传前会把像素清空成空白缩略图。
 		for(int i = 0; i < MAP_IMAGE_MOD_TYPE_COUNT; ++i)
 		{
 			str_format(aPath, sizeof(aPath), "editor/entities_clear/%s.png", gs_apModEntitiesNames[i]);
@@ -1327,7 +1328,8 @@ static void StartAssetDecode(TName *pAssetItem, const char *pAssetName, IStorage
 	std::vector<std::string> vPossiblePaths;
 	char aPath[IO_MAX_PATH_LENGTH];
 
-	if(str_comp(pAssetItem->m_aName, "default") == 0)
+	// 空白材质没有对应文件，预览按内置默认图解码（与 LoadAsset 一致）。
+	if(IsProtectedAssetName(pAssetItem->m_aName))
 	{
 		if(str_comp(pAssetName, "gui_cursor") == 0 || str_comp(pAssetName, "arrow") == 0 || str_comp(pAssetName, "strong_weak") == 0)
 		{
@@ -1516,7 +1518,8 @@ template<typename TName>
 static void LoadAsset(TName *pAssetItem, const char *pAssetName, IGraphics *pGraphics)
 {
 	char aPath[IO_MAX_PATH_LENGTH];
-	if(str_comp(pAssetItem->m_aName, "default") == 0)
+	// 空白材质没有对应文件，预览沿用内置默认图；卡片名称本身就说明这是空白材质。
+	if(IsProtectedAssetName(pAssetItem->m_aName))
 	{
 		str_format(aPath, sizeof(aPath), "%s.png", pAssetName);
 		pAssetItem->m_RenderTexture = pGraphics->LoadTexture(aPath, IStorage::TYPE_ALL);
@@ -2646,8 +2649,6 @@ namespace
 	template<typename TName>
 	void EnsureDefaultAssetVisible(const SAssetResourceCategory &Category, std::vector<TName> &vAssetList)
 	{
-		(void)Category;
-
 		const auto HasDefault = std::any_of(vAssetList.begin(), vAssetList.end(), [](const TName &AssetItem) {
 			return IsProtectedDefaultAsset(AssetItem.m_aName);
 		});
@@ -2656,6 +2657,20 @@ namespace
 			TName DefaultItem;
 			str_copy(DefaultItem.m_aName, "default");
 			vAssetList.push_back(DefaultItem);
+		}
+
+		// 客户端自带空白材质：图片素材都提供该虚拟条目，用户不必自己造透明图。
+		if(AssetResourceSupportsBlank(Category))
+		{
+			const auto HasBlank = std::any_of(vAssetList.begin(), vAssetList.end(), [](const TName &AssetItem) {
+				return IsBlankAssetName(AssetItem.m_aName);
+			});
+			if(!HasBlank)
+			{
+				TName BlankItem;
+				str_copy(BlankItem.m_aName, QM_BLANK_ASSET_NAME);
+				vAssetList.push_back(BlankItem);
+			}
 		}
 
 		std::sort(vAssetList.begin(), vAssetList.end(), [](const TName &LeftItem, const TName &RightItem) {
@@ -2670,6 +2685,9 @@ namespace
 		const char *pDisplayName = pItem->m_aDisplayName[0] != '\0' ? pItem->m_aDisplayName : pItem->m_aName;
 		if(str_comp(pDisplayName, "entity_bg (Workshop)") == 0)
 			return Localize("entity_bg (Workshop)");
+		// 客户端自带的空白材质用本地化名称显示，不把内部名 "blank" 直接摆给用户。
+		if(IsBlankAssetName(pDisplayName))
+			return Localize("Blank material");
 		return pDisplayName;
 	}
 
@@ -2755,6 +2773,7 @@ namespace
 		SNamedSingleFileNameScanUser ScanUser{&vAssetNames};
 		pStorage->ListDirectory(IStorage::TYPE_ALL, Category.m_pInstallFolder, CollectNamedSingleFileAssetNamesCallback, &ScanUser);
 		::EnsureDefaultAssetVisible(vAssetNames);
+		::EnsureBlankAssetVisible(vAssetNames);
 	}
 
 	std::string LocalNameFromNamedSingleFileInstallPath(const SAssetResourceCategory &Category, std::string_view InstallPath)
@@ -3373,7 +3392,7 @@ namespace
 
 	bool DeleteLocalAssetByTab(IStorage *pStorage, int CurTab, const char *pAssetName)
 	{
-		if(IsProtectedDefaultAsset(pAssetName))
+		if(IsProtectedAssetName(pAssetName))
 			return false;
 
 		const char *pSubFolder = nullptr;
@@ -3416,7 +3435,7 @@ namespace
 
 	bool CanDeleteLocalAssetByTab(IStorage *pStorage, int CurTab, const char *pAssetName)
 	{
-		if(IsProtectedDefaultAsset(pAssetName))
+		if(IsProtectedAssetName(pAssetName))
 			return false;
 
 		switch(CurTab)
@@ -5797,6 +5816,10 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 			const SSettingsAssetPreviewHandle UploadHandle = Handle;
 			const SResourcePreviewKey PreviewKey = BuildAssetsResourcePreviewKey(pItem->m_aName, s_CurCustomTab, false, Graphics()->ScreenHiDPIScale(), TextureWidth);
 			gs_SettingsAssetsResourcePreviewCache.GetOrCreate(PreviewKey).m_UploadPending = true;
+			// 空白材质的缩略图应当是「什么都没有」，而不是将被屏蔽掉的默认贴图；
+			// 解码仍走内置默认图（只为拿到尺寸与格式），上传前把像素清空即可。
+			if(IsBlankAssetName(pItem->m_aName) && pItem->m_PreviewImage.m_pData != nullptr)
+				ClearImageToTransparent(pItem->m_PreviewImage);
 			Graphics()->UnloadTexture(&pItem->m_RenderTexture);
 			pItem->m_PreviewResidentBytes = 0;
 			gs_SettingsAssetsResourcePreviewUploadScheduler.EnqueueUploadToTarget(
@@ -5902,9 +5925,11 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 				if(pItem == nullptr)
 					continue;
 				const char *pLocalStatusLabel = ResolveLocalAssetStatusLabel(pItem, ShowLocalOnlyBadge);
+				// 空白材质没有作者行，把副标题位置用来提示它是「隐藏该类素材」的效果。
+				const char *pAuthorLabel = pItem->m_aAuthor[0] != '\0' ? pItem->m_aAuthor : (IsBlankAssetName(pItem->m_aName) ? Localize("Blank: hides this asset") : "--");
 				const SSettingsAssetsCardCacheKey CardCacheKey = BuildAssetsCardCacheKey(pItem->m_aName, s_CurCustomTab, Graphics()->ScreenHiDPIScale(), LocalCardWidth, pLocalStatusLabel, true, false, ShowLocalOnlyBadge);
 				if(FindAssetsCardMetadata(CardCacheKey) == nullptr)
-					RequestAssetsCardMetadataHydration(CardCacheKey, AssetCardDisplayName(pItem), pItem->m_aAuthor[0] != '\0' ? pItem->m_aAuthor : "--", pLocalStatusLabel, true, false, ShowLocalOnlyBadge, LocalCardHydrationScheduler, LocalPreviewPipelineScheduler, LocalResourcePreviewTelemetry, true);
+					RequestAssetsCardMetadataHydration(CardCacheKey, AssetCardDisplayName(pItem), pAuthorLabel, pLocalStatusLabel, true, false, ShowLocalOnlyBadge, LocalCardHydrationScheduler, LocalPreviewPipelineScheduler, LocalResourcePreviewTelemetry, true);
 				if(AssetsContentWarmupBlocked)
 					continue;
 				if(s_CurCustomTab != ASSETS_TAB_ENTITY_BG || pItem->m_RenderTexture.IsValid())
@@ -7163,7 +7188,7 @@ void CMenus::RenderSettingsCustom(CUIRect MainView)
 					CPerfTimer CardLayoutTextTimer;
 					const CUIRect CardRect = ItemRect;
 					const bool IsEntityBgDirectory = s_CurCustomTab == ASSETS_TAB_ENTITY_BG && static_cast<const SCustomEntityBg *>(pItem)->m_IsDirectory;
-					const bool HasDeleteButton = !IsEntityBgDirectory && !IsProtectedDefaultAsset(pItem->m_aName);
+					const bool HasDeleteButton = !IsEntityBgDirectory && !IsProtectedAssetName(pItem->m_aName);
 					const bool ShowLocalOnlyBadge = pCategory->m_LocalOnlyBadge && !pCategory->m_WorkshopEnabled;
 					const bool ShowAuthorRow = AssetsCardShellShowsAuthorRow(s_CurCustomTab, true, IsEntityBgDirectory);
 					const char *pLocalStatusLabel = ResolveLocalAssetStatusLabel(pItem, ShowLocalOnlyBadge);

@@ -14,7 +14,7 @@ from qm_build_icon_atlas import _parse_path_polylines
 
 SAMPLE_COUNT = 64
 VIEWBOX_CENTER = 128.0
-WEIGHTS = ("thin", "regular", "bold", "fill")
+WEIGHTS = ("thin", "light", "regular", "bold", "fill", "duotone")
 
 # Phosphor 眼睛图标由复合路径组成。每个表面用外轮廓和可选内轮廓表示；
 # 缺失的一侧输出为退化轮廓，让拓扑能够从几何中出现或消失，而不是做位图淡化。
@@ -27,6 +27,10 @@ SURFACE_LAYOUT = {
         "eye": [("ring", 0, 1), ("ring", 2, 3)],
         "eye-off": [("ring", 0, 1), ("fill", 2, None), ("fill", 3, None), ("fill", 4, None)],
     },
+    "light": {
+        "eye": [("fill", 0, None)],
+        "eye-off": [("fill", 0, None), ("fill", 1, None), ("fill", 2, None), ("fill", 3, None), ("fill", 4, None)],
+    },
     "bold": {
         "eye": [("ring", 0, 1), ("ring", 2, 3)],
         "eye-off": [("ring", 0, 1), ("fill", 2, None)],
@@ -34,6 +38,10 @@ SURFACE_LAYOUT = {
     "fill": {
         "eye": [("ring", 0, 1)],
         "eye-off": [("fill", 0, None), ("ring", 1, 2)],
+    },
+    "duotone": {
+        "eye": [("fill", 0, None), ("fill", 1, None)],
+        "eye-off": [("fill", 0, None), ("fill", 1, None), ("fill", 2, None), ("fill", 3, None), ("fill", 4, None)],
     },
 }
 

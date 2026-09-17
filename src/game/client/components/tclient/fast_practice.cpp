@@ -1237,7 +1237,7 @@ void CFastPractice::TrackPracticeTileFeedback(int ClientId, CCharacter *pChar, c
 	if(FeedbackDecision.m_PlayDeathFeedback && !GameClient()->m_SuppressEvents)
 		GameClient()->m_Effects.PlayerDeath(AfterPos, ClientId, 1.0f);
 	if(FeedbackDecision.m_PlayDeathFeedback && g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
-		if(ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame))
+		if(GetQmFocusModeDecisions().m_PlayDeathOrSpawnSound)
 			GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_DIE, 1.0f, AfterPos);
 }
 
@@ -1641,7 +1641,7 @@ bool CFastPractice::OverridePredict()
 			if(g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
 			{
 				if(Events & COREEVENT_GROUND_JUMP)
-					if(ShouldPlayFocusJumpSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteJumpSounds != 0, g_Config.m_SndGame))
+					if(GetQmFocusModeDecisions().m_AirJump.m_PlaySound)
 						GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
 				if(Events & COREEVENT_HOOK_ATTACH_PLAYER)
 					GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, Pos);
@@ -1666,7 +1666,7 @@ bool CFastPractice::OverridePredict()
 			if(g_Config.m_SndGame && !GameClient()->m_SuppressEvents)
 			{
 				if(Events & COREEVENT_GROUND_JUMP)
-					if(ShouldPlayFocusJumpSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteJumpSounds != 0, g_Config.m_SndGame))
+					if(GetQmFocusModeDecisions().m_AirJump.m_PlaySound)
 						GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
 				if(Events & COREEVENT_HOOK_ATTACH_PLAYER)
 					GameClient()->m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, Pos);

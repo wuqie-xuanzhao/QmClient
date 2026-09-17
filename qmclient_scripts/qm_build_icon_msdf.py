@@ -52,6 +52,11 @@ def collect_svg_files(source_dirs: list[Path]) -> list[Path]:
 
 
 def requires_raster_sdf(source: Path) -> bool:
+    # Duotone SVGs may contain compound path commands that msdfgen cannot
+    # robustly classify; flatten them through the raster SDF fallback so the
+    # complete style remains loadable instead of aborting atlas generation.
+    if "phosphor_duotone" in source.parts:
+        return True
     root = ET.parse(source).getroot()
     path_count = 0
     for element in root.iter():
@@ -112,6 +117,35 @@ def distance_transform(mask: list[bool], width: int, height: int, feature: bool)
     return result
 
 
+def _raster_to_sdf(raster: Path, *, required: bool) -> "Image.Image":
+    """把一层的光栅覆盖转成 0.5 + signed/PX_RANGE 编码的距离场（单通道 L）。
+
+    required=True 时空覆盖视为生成失败；否则返回全 0（等价于「远离字形」），
+    因为部分 Phosphor duotone 图标本身就没有 secondary 层。
+    """
+    from PIL import Image
+
+    alpha = Image.open(raster).convert("RGBA").getchannel("A")
+    mask = [value >= 128 for value in alpha.get_flattened_data()]
+    if not any(mask):
+        if required:
+            raise SystemExit(f"Unable to create SDF from {raster}")
+        return Image.new("L", (FIELD_SIZE, FIELD_SIZE), 0)
+    if all(mask):
+        return Image.new("L", (FIELD_SIZE, FIELD_SIZE), 255)
+
+    distance_to_inside = distance_transform(mask, FIELD_SIZE, FIELD_SIZE, True)
+    distance_to_outside = distance_transform(mask, FIELD_SIZE, FIELD_SIZE, False)
+    field = Image.new("L", (FIELD_SIZE, FIELD_SIZE))
+    pixels = field.load()
+    for y in range(FIELD_SIZE):
+        for x in range(FIELD_SIZE):
+            index = y * FIELD_SIZE + x
+            signed_distance = math.sqrt(distance_to_outside[index]) - math.sqrt(distance_to_inside[index])
+            pixels[x, y] = round(255.0 * max(0.0, min(1.0, 0.5 + signed_distance / PX_RANGE)))
+    return field
+
+
 def render_raster_sdf(source: Path, output: Path) -> None:
     from PIL import Image
 
@@ -122,23 +156,55 @@ def render_raster_sdf(source: Path, output: Path) -> None:
 
     raster_path = output.with_name(f"{output.stem}-source.png")
     _render_svg_fallback(source, raster_path, FIELD_SIZE)
-    alpha = Image.open(raster_path).convert("RGBA").getchannel("A")
-    mask = [value >= 128 for value in alpha.get_flattened_data()]
-    if not any(mask) or all(mask):
-        raise SystemExit(f"Unable to create SDF from {source}")
-
-    distance_to_inside = distance_transform(mask, FIELD_SIZE, FIELD_SIZE, True)
-    distance_to_outside = distance_transform(mask, FIELD_SIZE, FIELD_SIZE, False)
-    field = Image.new("RGBA", (FIELD_SIZE, FIELD_SIZE), (0, 0, 0, 255))
-    pixels = field.load()
-    for y in range(FIELD_SIZE):
-        for x in range(FIELD_SIZE):
-            index = y * FIELD_SIZE + x
-            signed_distance = math.sqrt(distance_to_outside[index]) - math.sqrt(distance_to_inside[index])
-            value = round(255.0 * max(0.0, min(1.0, 0.5 + signed_distance / PX_RANGE)))
-            pixels[x, y] = (value, value, value, 255)
-    field.save(output)
+    field = _raster_to_sdf(raster_path, required=True)
+    # 单层图集沿用 MTSDF 约定：RGB 与 Alpha 都是同一条真 SDF。
+    Image.merge("RGBA", (field, field, field, field)).save(output)
     raster_path.unlink()
+
+
+def _write_layer_svg(source: Path, output: Path, *, keep_secondary: bool) -> None:
+    """把 duotone SVG 拆成单层：secondary 是 opacity < 0.5 的填充层，其余为 primary。
+
+    primary 必须单独渲染。若直接用两层并集当 primary，secondary 区域会同时落在
+    primary 覆盖里，着色器算出的 Opacity 恒为 1，secondary 颜色永远显示不出来。
+    """
+    root = ET.parse(source).getroot()
+    for element in list(root):
+        opacity = float(element.attrib.get("opacity", "1"))
+        if (opacity < 0.5) != keep_secondary:
+            root.remove(element)
+    ET.ElementTree(root).write(output, encoding="unicode")
+
+
+def render_duotone_field(source: Path, output: Path) -> None:
+    """Build primary-layer distance field in RGB plus secondary-layer distance field in Alpha.
+
+    Phosphor duotone 用 opacity="0.2" 标注 secondary 填充层。两层各自是独立距离场，
+    共享同一 PX_RANGE，因此着色器可以用同一个 ScreenPxRange 解码两者，
+    在任意缩放尺寸下都保持锐利边缘（而不是把光栅覆盖当遮罩用）。
+    """
+    from PIL import Image
+
+    try:
+        from qmclient_scripts.qm_build_icon_atlas import _render_svg_fallback
+    except ModuleNotFoundError:
+        from qm_build_icon_atlas import _render_svg_fallback
+
+    primary_svg = output.with_suffix(".primary.svg")
+    secondary_svg = output.with_suffix(".secondary.svg")
+    primary_raster = output.with_name(f"{output.stem}-primary.png")
+    secondary_raster = output.with_name(f"{output.stem}-secondary.png")
+    _write_layer_svg(source, primary_svg, keep_secondary=False)
+    _write_layer_svg(source, secondary_svg, keep_secondary=True)
+    _render_svg_fallback(primary_svg, primary_raster, FIELD_SIZE)
+    _render_svg_fallback(secondary_svg, secondary_raster, FIELD_SIZE)
+
+    primary_field = _raster_to_sdf(primary_raster, required=True)
+    secondary_field = _raster_to_sdf(secondary_raster, required=False)
+    Image.merge("RGBA", (primary_field, primary_field, primary_field, secondary_field)).save(output)
+
+    for path in (primary_svg, secondary_svg, primary_raster, secondary_raster):
+        path.unlink()
 
 
 def main() -> int:
@@ -166,13 +232,15 @@ def main() -> int:
         temp_dir = Path(temp)
         for index, svg in enumerate(svg_files):
             field_path = temp_dir / f"{svg.stem}.png"
-            if requires_raster_sdf(svg):
+            if "phosphor_duotone" in svg.parts:
+                render_duotone_field(svg, field_path)
+            elif requires_raster_sdf(svg):
                 render_raster_sdf(svg, field_path)
             else:
                 subprocess.run(
                     [
                         msdfgen,
-                        "msdf",
+                        "mtsdf",
                         "-svg",
                         str(svg),
                         "-dimensions",
@@ -189,7 +257,8 @@ def main() -> int:
                     ],
                     check=True,
                 )
-            field = Image.open(field_path).convert("RGB")
+            # 保留 MTSDF 的 Alpha 真 SDF；丢弃 Alpha 会把资源退化成普通 MSDF。
+            field = Image.open(field_path).convert("RGBA")
             if field.size != (FIELD_SIZE, FIELD_SIZE):
                 raise SystemExit(f"msdfgen returned unexpected size for {svg}")
 
@@ -197,7 +266,7 @@ def main() -> int:
             row = index // columns
             x = column * CELL_SIZE + PADDING
             y = row * CELL_SIZE + PADDING
-            atlas.paste(field.convert("RGBA"), (x, y))
+            atlas.paste(field, (x, y))
             icons[icon_id(svg)] = {"x": x, "y": y, "w": FIELD_SIZE, "h": FIELD_SIZE}
 
     args.output.mkdir(parents=True, exist_ok=True)
@@ -206,9 +275,11 @@ def main() -> int:
     atlas.save(args.output / image_name)
     manifest = {
         "version": 2,
-        "kind": "msdf",
+        "kind": "mtsdf",
+        "distance_field": "mtsdf",
+        "alpha_sdf": True,
         "px_range": PX_RANGE,
-        "source": "QmClient SVG sources generated with msdfgen",
+        "source": "QmClient SVG sources generated with msdfgen MTSDF",
         "atlas": {
             "image": f"qmclient/icons/{image_name}",
             "width": atlas_width,
@@ -217,6 +288,8 @@ def main() -> int:
         },
         "icons": icons,
     }
+    if "duotone" in args.atlas_name:
+        manifest["secondary_mask"] = "alpha"
     (args.output / manifest_name).write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0
 

@@ -104,7 +104,7 @@
 	X("This team can't have the mode changed", "This team can't have the mode changed") \
 	X("这个队伍不能切换模式", "This team can't have the mode changed") \
 	X("Team mode can't be changed while racing", "Team mode can't be changed while racing") \
-	X("比赛进行中不能切换队伍模式", "Team mode can't be changed while racing") \
+	X("比赛进行中不能切换队伍模式", "Team mode can't be changed while racing")
 
 #define QM_HUD_NOTIFICATION_STATIC_SWAP_RESCUE_RULES(X) \
 	X("Unknown argument. Check '/rescuemode list'", "Unknown argument. Check '/rescuemode list'") \
@@ -138,7 +138,7 @@
 	X("Join a team to use swap feature, which means you can swap positions with each other.", "Join a team to use swap feature, which means you can swap positions with each other.") \
 	X("先加入队伍后才能使用交换功能，也就是和队友互换位置", "Join a team to use swap feature, which means you can swap positions with each other.") \
 	X("You do not have a pending swap request.", "You do not have a pending swap request.") \
-	X("你当前没有待处理的交换请求", "You do not have a pending swap request.") \
+	X("你当前没有待处理的交换请求", "You do not have a pending swap request.")
 
 #define QM_HUD_NOTIFICATION_STATIC_VOTE_MODERATION_RULES(X) \
 	X("You are running a vote, please try again after the vote is done!", "You are running a vote, please try again after the vote is done!") \

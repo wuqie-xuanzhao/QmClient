@@ -31,6 +31,7 @@
 #include <game/client/components/countryflags.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_gate.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/section_loader.h>
 #include <game/client/components/skins.h>
@@ -622,9 +623,10 @@ static void NotifyNameplateMsdfEnabled(IClient *pClient, int PreviousValue)
 	if(PreviousValue != 0 || g_Config.m_QmNameplateMsdf == 0)
 		return;
 	log_info("nameplate_msdf", "manual MSDF mode enabled for nameplates; atlas/runtime glyph loading starts on the next render frame");
-	if(pClient != nullptr)
+	// 只有不在随包 profile 列表中的字体才提示；支持的字体开启时不弹红色警告。
+	if(pClient != nullptr && QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont) == nullptr)
 	{
-		pClient->AddWarning(SWarning(Localize("MSDF nameplate text"), Localize("Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.")));
+		pClient->AddWarning(SWarning(Localize("Vector nameplate text"), Localize("This font has no bundled vector profile. Nameplates will use FreeType.")));
 	}
 }
 
@@ -634,8 +636,7 @@ static void DisableNameplateMsdfForFontChange(IClient *pClient)
 		return;
 	g_Config.m_QmNameplateMsdf = 0;
 	log_info("nameplate_msdf", "custom font changed; manual MSDF mode disabled until explicitly enabled again");
-	if(pClient != nullptr)
-		pClient->AddWarning(SWarning(Localize("MSDF nameplate text"), Localize("The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.")));
+	(void)pClient;
 }
 
 static constexpr const char *SETTINGS_RUNTIME_CACHE_METADATA_FILE = "qmclient/settings_section_cache_metadata.cfg";
@@ -1438,10 +1439,20 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 	if(Render)
 	{
 		const int PreviousValue = g_Config.m_QmNameplateMsdf;
-				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use MSDF text rendering for nameplates (built-in fonts only)"), &g_Config.m_QmNameplateMsdf, &Button, LineSize);
-				static int s_NameplateMsdfTooltipId;
-				GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &Button, Localize("Custom fonts use FreeType automatically."));
+		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use vector font rendering for nameplates"), &g_Config.m_QmNameplateMsdf, &Button, LineSize);
+		static int s_NameplateMsdfTooltipId;
+		GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &Button, Localize("Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType."));
 		NotifyNameplateMsdfEnabled(Client(), PreviousValue);
+	}
+	Button = Rows.Next();
+	if(Render)
+	{
+		Button.VSplitLeft(100.0f, &Label, &Button);
+		CUIElement &SupportElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-nameplate-vector-support");
+		const bool SupportsVector = QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont) != nullptr;
+		DoSettingsLabelStreamed(SupportElement, &Label, Localize("Bundled vector profile:"), FontSize, TEXTALIGN_ML, TClientFixedLabelProperties(FontSize, Label.w));
+		CUIElement &ValueElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-nameplate-vector-support-value");
+		DoSettingsLabelStreamed(ValueElement, &Button, Localize(SupportsVector ? "Available for this bundled font" : "Not available; FreeType is used"), FontSize, TEXTALIGN_ML, TClientFixedLabelProperties(FontSize, Button.w));
 	}
 	if(TextRender()->CustomFontHasVariableWeight(g_Config.m_TcCustomFont))
 	{
@@ -1638,8 +1649,7 @@ SSettingsSection CMenus::BuildTClientCursorCacheSection()
 		Button = Rows.Next();
 		if(Render)
 			DoSettingsScrollbarOption(SETTINGS_TCLIENT, m_TClientSettingsTab, m_TClientSettingsTab, "tclient-cursor-scale", &g_Config.m_TcCursorScale, &g_Config.m_TcCursorScale, &Button, Localize("Ingame cursor scale"), 0, 500, &CUi::ms_LinearScrollbarScale, 0, "%");
-		return Col.y - SavedY;
-	}, Margin);
+		return Col.y - SavedY; }, Margin);
 	S.m_DependencyConfigInts = {&g_Config.m_TcCursorScale};
 	return S;
 }
@@ -1973,21 +1983,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				SkipSection(CurrentColumn, 0.0f, LineSize);
 			}
 
-			if(TextRender()->CustomFontHasVariableWeight(g_Config.m_TcCustomFont) && ShouldRenderVisualBlock(LineSize))
-			{
-				CUIRect MsdfRow;
-				CurrentColumn.HSplitTop(LineSize, &MsdfRow, &CurrentColumn);
-				const int PreviousValue = g_Config.m_QmNameplateMsdf;
-				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use MSDF text rendering for nameplates (built-in fonts only)"), &g_Config.m_QmNameplateMsdf, &MsdfRow, LineSize);
-				static int s_NameplateMsdfTooltipId;
-				GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &MsdfRow, Localize("Custom fonts use FreeType automatically."));
-				NotifyNameplateMsdfEnabled(Client(), PreviousValue);
-			}
-			else
-			{
-				SkipSection(CurrentColumn, 0.0f, LineSize);
-			}
-
 			if(ShouldRenderVisualBlock(LineSize))
 			{
 				CUIRect WeightRow;
@@ -2095,21 +2090,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					Storage()->GetCompletePath(IStorage::TYPE_SAVE, "qmclient/fonts", aBuf, sizeof(aBuf));
 					Client()->ViewFile(aBuf);
 				}
-			}
-			else
-			{
-				SkipSection(CurrentColumn, 0.0f, LineSize);
-			}
-
-			if(ShouldRenderSection(CurrentColumn, 0.0f, LineSize))
-			{
-				CUIRect MsdfRow;
-				CurrentColumn.HSplitTop(LineSize, &MsdfRow, &CurrentColumn);
-				const int PreviousValue = g_Config.m_QmNameplateMsdf;
-					DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use MSDF text rendering for nameplates (built-in fonts only)"), &g_Config.m_QmNameplateMsdf, &MsdfRow, LineSize);
-					static int s_NameplateMsdfTooltipId;
-					GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &MsdfRow, Localize("Custom fonts use FreeType automatically."));
-				NotifyNameplateMsdfEnabled(Client(), PreviousValue);
 			}
 			else
 			{
@@ -5169,10 +5149,23 @@ void CMenus::RenderSettingsTClientStatusBar(CUIRect MainView, bool PrewarmOnly)
 		CUIRect CheckBoxRect, Button, Label;
 		CTClientSettingsRowAllocator Rows(View);
 		CheckBoxRect = Rows.Next();
-		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, &g_Config.m_TcStatusBar, "tclient-statusbar-show", Localize("Show status bar"), g_Config.m_TcStatusBar, &CheckBoxRect))
+		// 禅模式接管状态栏时：灰化、拒绝点击并提示接管来源（与 ReadOnly 同样只显示标签）。
+		const char *pStatusBarOverrideTooltip = TemporaryOverrideTooltip(&g_Config.m_TcStatusBar);
+		SLabelProperties StatusBarLabelProps;
+		if(pStatusBarOverrideTooltip != nullptr)
+		{
+			StatusBarLabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+			if(!m_MenuTextPlanCollecting)
+			{
+				// 接管时该行只画标签、没有控件占 hover，先补一次只读按钮逻辑让提示能激活。
+				Ui()->DoButtonLogic(&g_Config.m_TcStatusBar, 0, &CheckBoxRect, BUTTONFLAG_LEFT);
+				GameClient()->m_Tooltips.DoToolTip(&g_Config.m_TcStatusBar, &CheckBoxRect, pStatusBarOverrideTooltip);
+			}
+		}
+		if(!ReadOnly && pStatusBarOverrideTooltip == nullptr && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, &g_Config.m_TcStatusBar, "tclient-statusbar-show", Localize("Show status bar"), g_Config.m_TcStatusBar, &CheckBoxRect))
 			g_Config.m_TcStatusBar ^= 1;
-		else if(ReadOnly)
-			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-show", &CheckBoxRect, Localize("Show status bar"), FontSize, TEXTALIGN_ML);
+		else if(ReadOnly || pStatusBarOverrideTooltip != nullptr)
+			DoSettingsLabel(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, "tclient-statusbar-show", &CheckBoxRect, Localize("Show status bar"), FontSize, TEXTALIGN_ML, StatusBarLabelProps);
 		CheckBoxRect = Rows.Next();
 		if(!ReadOnly && DoSettingsButton_CheckBox(SETTINGS_TCLIENT, TCLIENT_TAB_STATUSBAR, TCLIENT_TAB_STATUSBAR, &g_Config.m_TcStatusBarLabels, "tclient-statusbar-show-labels", Localize("Show labels on status bar items"), g_Config.m_TcStatusBarLabels, &CheckBoxRect))
 			g_Config.m_TcStatusBarLabels ^= 1;

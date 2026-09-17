@@ -267,7 +267,7 @@ inline float QmIconFallbackFontSize(const CUIRect &Rect)
 
 inline int NormalizeQmIconWeight(const int Weight)
 {
-	return Weight >= 0 && Weight <= 3 ? Weight : 1;
+	return Weight >= 0 && Weight <= 5 ? Weight : 1;
 }
 
 inline bool QmIconWeightUsesBoldFontFallback(const int Weight)
@@ -341,6 +341,8 @@ public:
 		std::swap(m_Height, Other.m_Height);
 		std::swap(m_Padding, Other.m_Padding);
 		std::swap(m_PxRange, Other.m_PxRange);
+		std::swap(m_UseTrueSdf, Other.m_UseTrueSdf);
+		std::swap(m_SecondaryMask, Other.m_SecondaryMask);
 		std::swap(m_Type, Other.m_Type);
 	}
 	bool IsReady() const { return m_Texture.IsValid() && m_LoadedIconCount == static_cast<int>(EQmIcon::COUNT); }
@@ -350,6 +352,7 @@ public:
 	int Height() const { return m_Height; }
 	int Padding() const { return m_Padding; }
 	bool IsMsdf() const { return m_Type == EType::MSDF; }
+	bool HasSecondaryMask() const { return m_SecondaryMask; }
 	EQmIconAtlasType Type() const { return IsMsdf() ? EQmIconAtlasType::MSDF : EQmIconAtlasType::ALPHA; }
 
 private:
@@ -363,6 +366,8 @@ private:
 	int m_Height = 0;
 	int m_Padding = 0;
 	float m_PxRange = 0.0f;
+	bool m_UseTrueSdf = false;
+	bool m_SecondaryMask = false;
 	EType m_Type = EType::ALPHA;
 };
 

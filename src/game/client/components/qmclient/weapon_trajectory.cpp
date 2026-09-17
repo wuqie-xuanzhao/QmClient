@@ -24,7 +24,7 @@
 
 bool CQmWeaponTrajectory::IsVisible() const
 {
-	if(ShouldHideFocusGuideLines(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideGuideLines != 0))
+	if(GetQmFocusModeDecisions().m_HideGuideLines)
 		return false;
 
 	const int TrajectoryMode = std::clamp(g_Config.m_QmWeaponTrajectory, 0, 2);

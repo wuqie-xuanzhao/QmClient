@@ -38,6 +38,7 @@ public:
 	int NumItems() const override;
 
 	[[nodiscard]] bool Load(const char *pMapName, int StorageType) override;
+	void Adopt(CMap &&Other);
 	void Unload() override;
 	bool IsLoaded() const override;
 	IOHANDLE File() const override;

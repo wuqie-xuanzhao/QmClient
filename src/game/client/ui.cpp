@@ -391,9 +391,12 @@ bool CUi::PrepareGaussianBlur()
 
 void CUi::RenderGaussianBlur(const CUIRect &Rect, float Alpha, int Corners, float Rounding)
 {
+	// 调用方（模糊作用域与 HUD 背景）只看作用域，不看 qm_gaussian_blur，因此功能关闭时
+	// 每个半透明矩形仍会走到这里。关闭是用户的正常选择、不是失败，不能打 trace——
+	// 否则 qm_graphics_trace 一开，加载界面/主菜单每帧都会刷满 "prepare failed"。
 	if(m_GaussianBlurSuppressionDepth > 0 || Rect.w <= 0.0f || Rect.h <= 0.0f || Alpha <= 0.0f || !PrepareGaussianBlur())
 	{
-		if(g_Config.m_QmGraphicsTrace >= 1 && m_GaussianBlurSuppressionDepth <= 0 && Rect.w > 0.0f && Rect.h > 0.0f && Alpha > 0.0f)
+		if(g_Config.m_QmGaussianBlur != 0 && g_Config.m_QmGraphicsTrace >= 1 && m_GaussianBlurSuppressionDepth <= 0 && Rect.w > 0.0f && Rect.h > 0.0f && Alpha > 0.0f)
 			dbg_msg("ui/blur", "blur unavailable this frame (prepare failed)");
 		return;
 	}

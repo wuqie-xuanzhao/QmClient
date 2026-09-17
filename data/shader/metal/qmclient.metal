@@ -101,7 +101,11 @@ fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in
 	}
 	const float4 Sample = Texture.sample(Sampler, Input.m_TexCoord);
 		const float TrueSignedDistance = Sample.a - 0.5;
-		const bool UseTrueSdf = MsdfParams.w < -0.0005;
+		// w 编码契约见 src/engine/graphics.h 的 qm_msdf_param 命名空间，三个后端必须一致：
+		//   w > 0 → 普通 MSDF（w = 描边宽度）；-0.001 < w < 0 → Duotone；w <= -0.001 → Alpha 真 SDF。
+		// 注意 Duotone 区间必须严格避开真 SDF 的描边编码，否则带描边的真 SDF 字形会被误判。
+		const bool UseTrueSdf = MsdfParams.w <= -0.001;
+		const bool UseSecondarySdf = MsdfParams.w < 0.0 && !UseTrueSdf;
 		const float SignedDistance = UseTrueSdf ? TrueSignedDistance : QmClientMedian(Sample.rgb) - 0.5;
 		const float2 UnitRange = float2(MsdfParams.x) / MsdfParams.yz;
 		const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);
@@ -128,6 +132,17 @@ fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in
 		return float4(Input.m_Color.rgb, Input.m_Color.a * OutlineCoverage);
 	}
 	const float Opacity = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
+	if(UseSecondarySdf)
+	{
+		// Duotone atlas：RGB 与 Alpha 是同一 px_range 下的两张距离场（primary / secondary），
+		// 因此复用 ScreenPxRange 解码 secondary 覆盖，缩放到任意尺寸都保持锐利边缘。
+		const float SecondaryCoverage = clamp((Sample.a - 0.5) * ScreenPxRange + 0.5, 0.0, 1.0);
+		// secondary 配色目前由主 tint 向白偏移推导；真正的双色需要独立的 secondary 颜色输入。
+		const float3 SecondaryColor = mix(Input.m_Color.rgb, float3(1.0), 0.55);
+		const float Alpha = max(Opacity, SecondaryCoverage);
+		const float3 Color = mix(SecondaryColor, Input.m_Color.rgb, Opacity);
+		return float4(Color, Input.m_Color.a * Alpha);
+	}
 	return float4(Input.m_Color.rgb, Input.m_Color.a * Opacity);
 }
 

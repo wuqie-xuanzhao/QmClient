@@ -508,6 +508,14 @@ bool IsImageRectFullyTransparent(const CImageInfo &Image, size_t X, size_t Y, si
 	return true;
 }
 
+void ClearImageToTransparent(CImageInfo &Image)
+{
+	size_t DataSize = 0;
+	if(Image.m_pData == nullptr || !Image.DataSize(DataSize))
+		return;
+	mem_zero(Image.m_pData, DataSize);
+}
+
 bool CopyFallbackOverBlankRect(CImageInfo &Image, const CImageInfo &FallbackImage,
 	size_t X, size_t Y, size_t Width, size_t Height,
 	size_t FallbackX, size_t FallbackY, size_t FallbackWidth, size_t FallbackHeight)

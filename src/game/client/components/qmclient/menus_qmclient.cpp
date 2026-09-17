@@ -782,10 +782,41 @@ void CMenus::RenderQmSettingsSliderWithValueInput(const void *pId, const CUIRect
 		*pValue = OriginalValue;
 }
 
+// 被禅模式/Gores 等临时接管的配置项：设置页灰化显示并提示接管来源；未被接管返回 nullptr。
+static const char *QmTemporaryOverrideTooltip(const char *pOwnerId)
+{
+	if(pOwnerId == nullptr)
+		return nullptr;
+	if(str_comp(pOwnerId, "qm_zen_mode") == 0)
+		return Localize("Controlled by Zen mode");
+	if(str_comp(pOwnerId, "qm_gores_mode") == 0)
+		return Localize("Controlled by Gores mode");
+	return Localize("Temporarily controlled by a mode toggle");
+}
+
+const char *CMenus::TemporaryOverrideTooltip(const int *pValue) const
+{
+	return QmTemporaryOverrideTooltip(ConfigManager() != nullptr ? ConfigManager()->SaveValueOverrideOwner(pValue) : nullptr);
+}
+
 bool CMenus::RenderQmFunctionCheckbox(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, bool PrewarmOnly, const char *pTooltip)
 {
 	const int OriginalValue = *pValue;
-	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pTextId, pText, *pValue, pRect) != 0;
+	const char *pOverrideTooltip = TemporaryOverrideTooltip(pValue);
+	SLabelProperties LabelProps;
+	if(pOverrideTooltip != nullptr)
+	{
+		LabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+		// 灰化行用 ProcessInput=false 绘制，不会自己占 hover；补一次只读的按钮逻辑
+		// 让 HotItem 指向本行，CTooltips 才会激活提示（返回值丢弃，不写值）。
+		if(!PrewarmOnly && !Ui()->RenderOnly())
+		{
+			Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_LEFT);
+			GameClient()->m_Tooltips.DoToolTip(pId, pRect, pOverrideTooltip);
+		}
+	}
+	// 被临时接管的项灰化并停止响应点击：接管期间用户改它会被接管逻辑覆盖。
+	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, pId, pTextId, pText, *pValue, pRect, LabelProps, pOverrideTooltip == nullptr) != 0;
 	if(Changed)
 		*pValue ^= 1;
 	if(pTooltip != nullptr && !PrewarmOnly && !Ui()->RenderOnly())
@@ -799,7 +830,19 @@ bool CMenus::RenderQmVisualCheckbox(CUIRect &Content, float LineHeight, float Li
 {
 	CUIRect Row;
 	Content.HSplitTop(LineHeight, &Row, &Content);
-	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, pId, pTextId, pText, *pValue, &Row) != 0;
+	const char *pOverrideTooltip = TemporaryOverrideTooltip(pValue);
+	SLabelProperties LabelProps;
+	if(pOverrideTooltip != nullptr)
+	{
+		LabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+		// 灰化行不占 hover，补一次只读的按钮逻辑让提示能激活（返回值丢弃，不写值）。
+		if(!Ui()->RenderOnly())
+		{
+			Ui()->DoButtonLogic(pId, 0, &Row, BUTTONFLAG_LEFT);
+			GameClient()->m_Tooltips.DoToolTip(pId, &Row, pOverrideTooltip);
+		}
+	}
+	const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_VISUAL, QMCLIENT_SETTINGS_TAB_VISUAL, pId, pTextId, pText, *pValue, &Row, LabelProps, pOverrideTooltip == nullptr) != 0;
 	if(Changed)
 		*pValue ^= 1;
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
@@ -1847,6 +1890,7 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 		RenderCheckbox(&g_Config.m_QmGoresDisableIfWeapons, "qmclient-gores-disable-if-weapons", "Disable after picking up other weapons", &g_Config.m_QmGoresDisableIfWeapons);
 		RenderCheckbox(&g_Config.m_QmGoresDisableDummyHammer, "qmclient-gores-disable-dummy-hammer", "Temporarily disable dummy hammering", &g_Config.m_QmGoresDisableDummyHammer);
 		RenderCheckbox(&g_Config.m_QmGoresHideGuides, "qmclient-gores-hide-guides", "Hide guide lines", &g_Config.m_QmGoresHideGuides);
+		RenderCheckbox(&g_Config.m_QmGoresSuppressSwitchAnim, "qmclient-gores-suppress-switch-anim", "Skip switch animation when hammering", &g_Config.m_QmGoresSuppressSwitchAnim);
 	}
 
 	Content.HSplitTop(LineHeight, &Row, &Content);
@@ -2017,7 +2061,13 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
 	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
 	RenderCheckboxTipped(&g_Config.m_QmShowTuneZoneColors, "Show tune zone colors", Localize("Color map tune zones by their tune zone number"), &g_Config.m_QmShowTuneZoneColors);
-	RenderCheckboxTipped(&g_Config.m_QmBlankAssetFallback, "Blank asset auto fallback", Localize("Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)"), &g_Config.m_QmBlankAssetFallback);
+	{
+		const int BlankAssetFallbackBefore = g_Config.m_QmBlankAssetFallback;
+		RenderCheckboxTipped(&g_Config.m_QmBlankAssetFallback, "Blank asset auto fallback", Localize("Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)"), &g_Config.m_QmBlankAssetFallback);
+		// 回退语义在加载期生效：开关一变立刻重载自定义素材，否则要重新选一次素材或重启才看得到变化。
+		if(!PrewarmOnly && g_Config.m_QmBlankAssetFallback != BlankAssetFallbackBefore)
+			GameClient()->ReloadCustomAssetImagery();
+	}
 	RenderCheckboxTipped(&g_Config.m_QmShowSpectatorGhosts, "Show spectator ghost tees", Localize("Show semi-transparent ghost tees for other players who are spectating"), &g_Config.m_QmShowSpectatorGhosts);
 	static int s_QmSpectatorGhostAlphaInputId;
 	RenderValue("qmclient-spectator-ghost-alpha", "Spectator ghost opacity", &s_QmSpectatorGhostAlphaInputId, &g_Config.m_QmSpectatorGhostAlpha, 0, 100, "%");
@@ -3621,9 +3671,15 @@ void CMenus::RenderQmHudCoordsContent(CUIRect &Content, const SSettingsContentMe
 	const float LineSpacing = Metrics.m_LineSpacing;
 	CUIRect Row, LabelCol, ControlCol;
 	auto DoQmSettingsCheckboxAuto = [this](const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float) {
-		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect) != 0;
+		const char *pOverrideTooltip = TemporaryOverrideTooltip(pValue);
+		SLabelProperties LabelProps;
+		if(pOverrideTooltip != nullptr)
+			LabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect, LabelProps, pOverrideTooltip == nullptr) != 0;
 		if(Changed)
 			*pValue ^= 1;
+		if(pOverrideTooltip != nullptr && !Ui()->RenderOnly())
+			GameClient()->m_Tooltips.DoToolTip(pId, pRect, pOverrideTooltip);
 		return Changed;
 	};
 	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {
@@ -4860,7 +4916,8 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		case EQmModuleId::GoresActor:
 			return !g_Config.m_TcFreezeChatEnabled ? Row() : Row() * (g_Config.m_TcFreezeChatEmoticon ? 5.0f : 4.0f);
 		case EQmModuleId::Gores:
-			return Row() * (3.0f + (g_Config.m_QmAxiomAutoLogin ? 2.0f : 0.0f) + ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? 6.0f : 0.0f)) + LineHeight;
+			// 3 行固定项 + Axiom 登录的 2 行密码框 + 开关组 7 行（与 RenderQmFunctionGoresContent 逐项对应）+ 键位行。
+			return Row() * (3.0f + (g_Config.m_QmAxiomAutoLogin ? 2.0f : 0.0f) + ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? 7.0f : 0.0f)) + LineHeight;
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
 		case EQmModuleId::MiniFeatures: return Rows(20.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;

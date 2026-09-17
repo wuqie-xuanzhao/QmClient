@@ -13,14 +13,29 @@ void CMapRenderer::Clear()
 	for(auto &pLayer : m_vpRenderLayers)
 		pLayer->Unload();
 	m_vpRenderLayers.clear();
+	m_pLoadGroup.reset();
+	m_pLoadEnvelopeManager.reset();
+	m_pLoadLayers = nullptr;
+	m_pLoadImages = nullptr;
+	m_LoadCallback.reset();
+	m_LoadFinished = true;
 }
 
-void CMapRenderer::Load(ERenderType Type, CLayers *pLayers, IMapImages *pMapImages, const IEnvelopeEval *pEnvelopeEval, std::optional<FCallbackMapRendererInit> CallbackMapRendererInitOptional)
+void CMapRenderer::BeginLoad(ERenderType Type, CLayers *pLayers, IMapImages *pMapImages, const IEnvelopeEval *pEnvelopeEval, std::optional<FCallbackMapRendererInit> CallbackMapRendererInitOptional)
 {
 	Clear();
+	m_LoadType = Type;
+	m_pLoadLayers = pLayers;
+	m_pLoadImages = pMapImages;
+	m_pLoadEnvelopeManager = std::make_shared<CEnvelopeManager>(pEnvelopeEval, pLayers->Map());
+	m_LoadCallback = std::move(CallbackMapRendererInitOptional);
+	m_LoadGroupId = 0;
+	m_LoadLayerId = 0;
+	m_LoadCompletedWork = 0;
+	m_LoadPassedGameLayer = false;
+	m_LoadFinished = false;
 
-	std::shared_ptr<CEnvelopeManager> pEnvelopeManager = std::make_shared<CEnvelopeManager>(pEnvelopeEval, pLayers->Map());
-	int TotalWork = 0;
+	m_LoadTotalWork = 0;
 	bool CountPassedGameLayer = false;
 	for(int GroupId = 0; GroupId < pLayers->NumGroups(); ++GroupId)
 	{
@@ -33,135 +48,127 @@ void CMapRenderer::Load(ERenderType Type, CLayers *pLayers, IMapImages *pMapImag
 				break;
 			if(Type == ERenderType::RENDERTYPE_FOREGROUND && !CountPassedGameLayer)
 				continue;
-			++TotalWork;
+			++m_LoadTotalWork;
 		}
 		if((Type == ERenderType::RENDERTYPE_BACKGROUND || Type == ERenderType::RENDERTYPE_BACKGROUND_FORCE) && CountPassedGameLayer)
 			break;
 	}
-	int CompletedWork = 0;
-	bool PassedGameLayer = false;
+	if(m_LoadTotalWork == 0 && m_LoadCallback.has_value())
+		(*m_LoadCallback)(1, 1);
+}
 
-	for(int GroupId = 0; GroupId < pLayers->NumGroups(); GroupId++)
+void CMapRenderer::LoadStep(int MaxLayers)
+{
+	if(m_LoadFinished || m_pLoadLayers == nullptr)
+		return;
+
+	MaxLayers = maximum(MaxLayers, 1);
+	int ProcessedLayers = 0;
+	while(ProcessedLayers < MaxLayers && m_LoadGroupId < m_pLoadLayers->NumGroups())
 	{
-		CMapItemGroup *pGroup = pLayers->GetGroup(GroupId);
-		std::unique_ptr<CRenderLayer> pRenderLayerGroup = std::make_unique<CRenderLayerGroup>(GroupId, pGroup);
-		pRenderLayerGroup->OnInit(Graphics(), TextRender(), RenderMap(), pEnvelopeManager, pLayers->Map(), pMapImages);
-		if(!pRenderLayerGroup->IsValid())
+		CMapItemGroup *pGroup = m_pLoadLayers->GetGroup(m_LoadGroupId);
+		if(pGroup == nullptr)
 		{
-			log_error("map_renderer", "error group was null, group number = %d, total groups = %d", GroupId, pLayers->NumGroups());
-			log_error("map_renderer", "this is here to prevent a crash but the source of this is unknown, please report this for it to get fixed");
-			log_error("map_renderer", "we need mapname and crc and the map that caused this if possible, and anymore info you think is relevant");
+			++m_LoadGroupId;
+			m_LoadLayerId = 0;
 			continue;
 		}
 
-		for(int LayerId = 0; LayerId < pGroup->m_NumLayers; LayerId++)
+		if(!m_pLoadGroup)
 		{
-			CMapItemLayer *pLayer = pLayers->GetLayer(pGroup->m_StartLayer + LayerId);
-			int LayerType = GetLayerType(pLayer);
-			PassedGameLayer |= LayerType == LAYER_GAME;
-
-			if(Type == ERenderType::RENDERTYPE_BACKGROUND_FORCE || Type == ERenderType::RENDERTYPE_BACKGROUND)
+			m_pLoadGroup = std::make_unique<CRenderLayerGroup>(m_LoadGroupId, pGroup);
+			m_pLoadGroup->OnInit(Graphics(), TextRender(), RenderMap(), m_pLoadEnvelopeManager, m_pLoadLayers->Map(), m_pLoadImages);
+			if(!m_pLoadGroup->IsValid())
 			{
-				if(PassedGameLayer)
-					return;
+				log_error("map_renderer", "error group was null, group number = %d, total groups = %d", m_LoadGroupId, m_pLoadLayers->NumGroups());
+				m_pLoadGroup.reset();
+				++m_LoadGroupId;
+				m_LoadLayerId = 0;
+				continue;
 			}
-			else if(Type == ERenderType::RENDERTYPE_FOREGROUND)
-			{
-				if(!PassedGameLayer)
-					continue;
-			}
-
-			if(pRenderLayerGroup)
-				m_vpRenderLayers.push_back(std::move(pRenderLayerGroup));
-
-			std::unique_ptr<CRenderLayer> pRenderLayer;
-
-			if(pLayer->m_Type == LAYERTYPE_TILES)
-			{
-				CMapItemLayerTilemap *pTileLayer = (CMapItemLayerTilemap *)pLayer;
-
-				switch(LayerType)
-				{
-				case LAYER_DEFAULT_TILESET:
-					pRenderLayer = std::make_unique<CRenderLayerTile>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				case LAYER_GAME:
-					pRenderLayer = std::make_unique<CRenderLayerEntityGame>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				case LAYER_FRONT:
-					pRenderLayer = std::make_unique<CRenderLayerEntityFront>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				case LAYER_TELE:
-					pRenderLayer = std::make_unique<CRenderLayerEntityTele>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				case LAYER_SPEEDUP:
-					pRenderLayer = std::make_unique<CRenderLayerEntitySpeedup>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				case LAYER_SWITCH:
-					pRenderLayer = std::make_unique<CRenderLayerEntitySwitch>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				case LAYER_TUNE:
-					pRenderLayer = std::make_unique<CRenderLayerEntityTune>(
-						GroupId,
-						LayerId,
-						pLayer->m_Flags,
-						pTileLayer);
-					break;
-				default:
-					dbg_assert_failed("Unknown LayerType %d", LayerType);
-				}
-			}
-			else if(pLayer->m_Type == LAYERTYPE_QUADS)
-			{
-				CMapItemLayerQuads *pQLayer = (CMapItemLayerQuads *)pLayer;
-
-				pRenderLayer = std::make_unique<CRenderLayerQuads>(
-					GroupId,
-					LayerId,
-					pLayer->m_Flags,
-					pQLayer);
-			}
-
-			// just ignore invalid layers from rendering
-			if(pRenderLayer)
-			{
-				pRenderLayer->OnInit(Graphics(), TextRender(), RenderMap(), pEnvelopeManager, pLayers->Map(), pMapImages);
-				if(pRenderLayer->IsValid())
-				{
-					pRenderLayer->Init();
-					m_vpRenderLayers.push_back(std::move(pRenderLayer));
-				}
-			}
-			if(CallbackMapRendererInitOptional.has_value())
-				(*CallbackMapRendererInitOptional)(++CompletedWork, TotalWork);
 		}
+
+		if(m_LoadLayerId >= pGroup->m_NumLayers)
+		{
+			m_pLoadGroup.reset();
+			++m_LoadGroupId;
+			m_LoadLayerId = 0;
+			continue;
+		}
+
+		CMapItemLayer *pLayer = m_pLoadLayers->GetLayer(pGroup->m_StartLayer + m_LoadLayerId);
+		const int LayerType = GetLayerType(pLayer);
+		m_LoadPassedGameLayer |= LayerType == LAYER_GAME;
+		if((m_LoadType == ERenderType::RENDERTYPE_BACKGROUND_FORCE || m_LoadType == ERenderType::RENDERTYPE_BACKGROUND) && m_LoadPassedGameLayer)
+		{
+			m_pLoadGroup.reset();
+			m_LoadFinished = true;
+			return;
+		}
+		if(m_LoadType == ERenderType::RENDERTYPE_FOREGROUND && !m_LoadPassedGameLayer)
+		{
+			++m_LoadLayerId;
+			++m_LoadCompletedWork;
+			if(m_LoadCallback.has_value())
+				(*m_LoadCallback)(m_LoadCompletedWork, m_LoadTotalWork);
+			++ProcessedLayers;
+			continue;
+		}
+
+		if(m_pLoadGroup)
+		{
+			m_vpRenderLayers.push_back(std::move(m_pLoadGroup));
+		}
+
+		std::unique_ptr<CRenderLayer> pRenderLayer;
+		if(pLayer->m_Type == LAYERTYPE_TILES)
+		{
+			CMapItemLayerTilemap *pTileLayer = (CMapItemLayerTilemap *)pLayer;
+			switch(LayerType)
+			{
+			case LAYER_DEFAULT_TILESET: pRenderLayer = std::make_unique<CRenderLayerTile>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			case LAYER_GAME: pRenderLayer = std::make_unique<CRenderLayerEntityGame>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			case LAYER_FRONT: pRenderLayer = std::make_unique<CRenderLayerEntityFront>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			case LAYER_TELE: pRenderLayer = std::make_unique<CRenderLayerEntityTele>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			case LAYER_SPEEDUP: pRenderLayer = std::make_unique<CRenderLayerEntitySpeedup>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			case LAYER_SWITCH: pRenderLayer = std::make_unique<CRenderLayerEntitySwitch>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			case LAYER_TUNE: pRenderLayer = std::make_unique<CRenderLayerEntityTune>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, pTileLayer); break;
+			default: dbg_assert_failed("Unknown LayerType %d", LayerType);
+			}
+		}
+		else if(pLayer->m_Type == LAYERTYPE_QUADS)
+		{
+			pRenderLayer = std::make_unique<CRenderLayerQuads>(m_LoadGroupId, m_LoadLayerId, pLayer->m_Flags, (CMapItemLayerQuads *)pLayer);
+		}
+		if(pRenderLayer)
+		{
+			pRenderLayer->OnInit(Graphics(), TextRender(), RenderMap(), m_pLoadEnvelopeManager, m_pLoadLayers->Map(), m_pLoadImages);
+			if(pRenderLayer->IsValid())
+			{
+				pRenderLayer->Init();
+				m_vpRenderLayers.push_back(std::move(pRenderLayer));
+			}
+		}
+
+		++m_LoadLayerId;
+		++m_LoadCompletedWork;
+		if(m_LoadCallback.has_value())
+			(*m_LoadCallback)(m_LoadCompletedWork, m_LoadTotalWork);
+		++ProcessedLayers;
 	}
-	if(CallbackMapRendererInitOptional.has_value() && TotalWork == 0)
-		(*CallbackMapRendererInitOptional)(1, 1);
+
+	if(m_LoadGroupId >= m_pLoadLayers->NumGroups())
+	{
+		m_pLoadGroup.reset();
+		m_LoadFinished = true;
+	}
+}
+
+void CMapRenderer::Load(ERenderType Type, CLayers *pLayers, IMapImages *pMapImages, const IEnvelopeEval *pEnvelopeEval, std::optional<FCallbackMapRendererInit> CallbackMapRendererInitOptional)
+{
+	BeginLoad(Type, pLayers, pMapImages, pEnvelopeEval, std::move(CallbackMapRendererInitOptional));
+	while(!IsLoadFinished())
+		LoadStep(64);
 }
 
 void CMapRenderer::Render(const CRenderLayerParams &Params)

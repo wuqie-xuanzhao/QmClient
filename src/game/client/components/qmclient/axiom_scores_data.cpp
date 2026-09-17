@@ -366,4 +366,3 @@ SQmAxiomPopupSize QmAxiomPopupSize(float ScreenWidth, float ScreenHeight)
 	const float MaxHeight = maximum(0.0f, ScreenHeight - AXIOM_POPUP_SCREEN_MARGIN * 2.0f);
 	return {minimum(AXIOM_POPUP_WIDTH, MaxWidth), minimum(AXIOM_POPUP_HEIGHT, MaxHeight)};
 }
-

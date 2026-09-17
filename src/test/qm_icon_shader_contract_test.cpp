@@ -13,9 +13,10 @@ TEST(QmIconShaderContract, UsesDerivativeAntialiasingOnBothBackends)
 		EXPECT_NE(Source.find("Median"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("fwidth(TexCoord)"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("ScreenPxRange"), std::string::npos) << pPath;
-		// w 分量同时编码描边宽度和运行时字形的 Alpha 真 SDF 选择。
+		// w 分量同时编码描边宽度和运行时字形的采样模式（普通 MSDF / Alpha 真 SDF / Duotone）。
 		EXPECT_NE(Source.find("RequestedOutline > 0.0"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("UseTrueSdf"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("UseSecondarySdf"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5"), std::string::npos) << pPath;
 		// MTSDF：RGB median 负责填充，Alpha 真 SDF 负责描边外缘。
 		EXPECT_NE(Source.find("vec4 Sample = texture(gTextureSampler, TexCoord)"), std::string::npos) << pPath;
@@ -25,6 +26,36 @@ TEST(QmIconShaderContract, UsesDerivativeAntialiasingOnBothBackends)
 		EXPECT_NE(Source.find("+ 0.5, 0.0, 1.0);"), std::string::npos) << pPath;
 		EXPECT_EQ(Source.find("aDirs[8]"), std::string::npos) << pPath;
 		EXPECT_EQ(Source.find("TexCoord + aDirs"), std::string::npos) << pPath;
+	}
+}
+
+// w 编码契约：三个后端必须用同一阈值把 Duotone 区间与真 SDF 的描边编码分开。
+// 真 SDF 的 w = -(描边像素 + 0.001) <= -0.001，因此 Duotone 只能占用 (-0.001, 0)；
+// 否则任何带描边的真 SDF 字形（名牌描边/辉光 pass）都会被误判成 Duotone。
+// 编码常量定义在 src/engine/graphics.h 的 qm_msdf_param 命名空间。
+TEST(QmIconShaderContract, AllBackendsShareNonOverlappingMsdfModeThresholds)
+{
+	struct SBackend
+	{
+		const char *m_pPath;
+		const char *m_pTrueSdfExpr;
+	};
+	const SBackend aBackends[] = {
+		{"data/shader/textured_msdf.frag", "const bool UseTrueSdf = gMsdfParams.w <= -0.001;"},
+		{"data/shader/vulkan/textured_msdf.frag", "const bool UseTrueSdf = gMsdf.gMsdfParams.w <= -0.001;"},
+		{"data/shader/metal/qmclient.metal", "const bool UseTrueSdf = MsdfParams.w <= -0.001;"},
+	};
+	for(const SBackend &Backend : aBackends)
+	{
+		const std::string Source = ReadRepoFile(Backend.m_pPath);
+		ASSERT_FALSE(Source.empty()) << Backend.m_pPath;
+		EXPECT_NE(Source.find(Backend.m_pTrueSdfExpr), std::string::npos) << Backend.m_pPath;
+		// 旧实现用 `w < -0.0015` 判定 Duotone，与真 SDF 的描边编码区间重叠，禁止回退。
+		EXPECT_EQ(Source.find("-0.0015"), std::string::npos) << Backend.m_pPath;
+		EXPECT_EQ(Source.find("w < -0.0005"), std::string::npos) << Backend.m_pPath;
+		// Duotone 的 secondary 必须与 primary 共用同一 px_range 的距离场解码，
+		// 不能退化成对光栅覆盖做乘增益。
+		EXPECT_NE(Source.find("(Sample.a - 0.5) * ScreenPxRange + 0.5"), std::string::npos) << Backend.m_pPath;
 	}
 }
 
@@ -42,11 +73,12 @@ TEST(QmIconShaderContract, MetalMsdfMatchesOpenGlAndVulkanSemantics)
 
 	// 屏幕像素范围推导必须保留 fwidth 导数，否则小字号图标会退化成硬边或糊边。
 	EXPECT_NE(Metal.find("const float4 Sample = Texture.sample(Sampler, Input.m_TexCoord);"), std::string::npos);
-		EXPECT_NE(Metal.find("const float SignedDistance = UseTrueSdf ? TrueSignedDistance : QmClientMedian(Sample.rgb) - 0.5;"), std::string::npos);
+	EXPECT_NE(Metal.find("const float SignedDistance = UseTrueSdf ? TrueSignedDistance : QmClientMedian(Sample.rgb) - 0.5;"), std::string::npos);
 	EXPECT_NE(Metal.find("const float TrueSignedDistance = Sample.a - 0.5;"), std::string::npos);
+	EXPECT_NE(Metal.find("const bool UseSecondarySdf"), std::string::npos);
 	EXPECT_NE(Metal.find("const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);"), std::string::npos);
 	EXPECT_NE(Metal.find("const float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);"), std::string::npos);
-		EXPECT_NE(Metal.find("if(RequestedOutline > 0.0)"), std::string::npos);
+	EXPECT_NE(Metal.find("if(RequestedOutline > 0.0)"), std::string::npos);
 	EXPECT_NE(Metal.find("const float FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);"), std::string::npos);
 	EXPECT_NE(Metal.find("const float OuterCoverage = clamp(TrueSignedDistance * ScreenPxRange + OutlineWidth + 0.5, 0.0, 1.0);"), std::string::npos);
 	EXPECT_NE(Metal.find("const float OutlineCoverage = max(OuterCoverage - FillCoverage, 0.0);"), std::string::npos);

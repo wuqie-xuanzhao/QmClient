@@ -1,10 +1,12 @@
 {
+  "alpha_sdf": true,
   "atlas": {
     "height": 640,
     "image": "qmclient/icons/qm_icons_thin_msdf.png",
     "padding": 8,
     "width": 640
   },
+  "distance_field": "mtsdf",
   "icons": {
     "arrow-clockwise": {
       "h": 48,
@@ -577,8 +579,8 @@
       "y": 584
     }
   },
-  "kind": "msdf",
+  "kind": "mtsdf",
   "px_range": 6,
-  "source": "QmClient SVG sources generated with msdfgen",
+  "source": "QmClient SVG sources generated with msdfgen MTSDF",
   "version": 2
 }

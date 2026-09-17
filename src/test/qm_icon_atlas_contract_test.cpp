@@ -35,6 +35,14 @@ namespace
 		return pValue->type == json_string ? pValue->u.string.ptr : "";
 	}
 
+	bool JsonBool(const json_value *pObject, const char *pName)
+	{
+		const json_value *pValue = json_object_get(pObject, pName);
+		EXPECT_NE(pValue, &json_value_none);
+		EXPECT_EQ(pValue->type, json_boolean);
+		return pValue->type == json_boolean && pValue->u.boolean;
+	}
+
 	const json_value *JsonObject(const json_value *pObject, const char *pName)
 	{
 		const json_value *pValue = json_object_get(pObject, pName);
@@ -76,11 +84,15 @@ TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
 	EXPECT_EQ(NormalizeQmIconWeight(1), 1);
 	EXPECT_EQ(NormalizeQmIconWeight(2), 2);
 	EXPECT_EQ(NormalizeQmIconWeight(3), 3);
-	EXPECT_EQ(NormalizeQmIconWeight(4), 1);
+	EXPECT_EQ(NormalizeQmIconWeight(4), 4);
+	EXPECT_EQ(NormalizeQmIconWeight(5), 5);
+	EXPECT_EQ(NormalizeQmIconWeight(6), 1);
 	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(0));
 	EXPECT_TRUE(QmIconWeightUsesBoldFontFallback(1));
 	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(2));
 	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(3));
+	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(4));
+	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(5));
 
 	EXPECT_EQ(SelectQmIconAtlasType(false, false), EQmIconAtlasType::ALPHA);
 	EXPECT_EQ(SelectQmIconAtlasType(false, true), EQmIconAtlasType::ALPHA);
@@ -238,7 +250,7 @@ TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
 
 TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)
 {
-	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill"};
+	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill", "light", "duotone"};
 	constexpr int aScales[] = {1, 2, 4};
 	for(const char *pWeight : apWeights)
 	{
@@ -286,7 +298,7 @@ TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)
 
 TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 {
-	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill"};
+	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill", "light", "duotone"};
 	for(const char *pWeight : apWeights)
 	{
 		char aPath[IO_MAX_PATH_LENGTH];
@@ -311,7 +323,9 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 			++Columns;
 		const int Rows = (IconCount + Columns - 1) / Columns;
 		EXPECT_EQ(JsonInt(pRoot, "version"), 2);
-		EXPECT_STREQ(JsonString(pRoot, "kind"), "msdf");
+		EXPECT_STREQ(JsonString(pRoot, "kind"), "mtsdf");
+		EXPECT_STREQ(JsonString(pRoot, "distance_field"), "mtsdf");
+		EXPECT_TRUE(JsonBool(pRoot, "alpha_sdf"));
 		EXPECT_EQ(JsonInt(pRoot, "px_range"), 6);
 		EXPECT_EQ(AtlasWidth, Columns * CellSize);
 		EXPECT_EQ(AtlasHeight, Rows * CellSize);
@@ -339,6 +353,13 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 
 		json_value_free(pRoot);
 	}
+}
+
+TEST(QmIconAtlas, DuotoneManifestDeclaresSecondaryMask)
+{
+	const std::string Json = ReadTextFile("data/qmclient/icons/qm_icons_duotone_msdf.json");
+	EXPECT_NE(Json.find("\"distance_field\": \"mtsdf\""), std::string::npos);
+	EXPECT_NE(Json.find("\"secondary_mask\": \"alpha\""), std::string::npos);
 }
 
 TEST(QmIconDiagnosticsContract, KeepsAtlasAndRendererCountersSeparated)

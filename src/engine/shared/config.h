@@ -255,6 +255,19 @@ struct SConfigVariable
 	// Note that this only applies to the console command and the SetValue function,
 	// but the underlying config variable can still be modified programmatically.
 	bool m_ReadOnly = false;
+	// 临时写盘覆盖：运行时值被程序临时改写时，Save() 改写出这里保存的用户真实值，
+	// 避免把临时状态写进配置文件。目前只有整数变量读取这两个字段。
+	bool m_HasSaveValueOverride = false;
+	int m_SaveValueOverride = 0;
+	// 接管来源标识（例如 "qm_zen_mode"），仅用于设置页提示，空表示未登记来源。
+	const char *m_pSaveValueOverrideOwner = nullptr;
+
+	void SetSaveValueOverride(bool Active, int Value, const char *pOwnerId = nullptr)
+	{
+		m_HasSaveValueOverride = Active;
+		m_SaveValueOverride = Value;
+		m_pSaveValueOverrideOwner = Active ? pOwnerId : nullptr;
+	}
 
 	SConfigVariable(IConsole *pConsole, const char *pScriptName, EVariableType Type, int Flags, const char *pHelp, const char *pHelpLocalizeKey) :
 		m_pConsole(pConsole),
@@ -417,6 +430,9 @@ public:
 	void ResetGameSettings() override;
 	void SetReadOnly(const char *pScriptName, bool ReadOnly) override;
 	void SetGameSettingsReadOnly(bool ReadOnly) override;
+	void SetSaveValueOverride(const char *pScriptName, bool Active, int Value = 0, const char *pOwnerId = nullptr) override;
+	const char *SaveValueOverrideOwner(const int *pValue) const override;
+	int RealValue(const int *pValue) const override;
 	bool Save(bool Force = false) override;
 
 	CConfig *Values() override { return &g_Config; }

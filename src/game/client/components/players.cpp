@@ -355,7 +355,7 @@ void CPlayers::RenderHookCollLine(
 	const CNetObj_Character *pPlayerChar,
 	int ClientId)
 {
-	if(ShouldHideFocusGuideLines(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideGuideLines != 0))
+	if(GetQmFocusModeDecisions().m_HideGuideLines)
 		return;
 
 	const bool ManualHookCollVisible = GameClient()->m_Controls.m_aShowHookColl[g_Config.m_ClDummy] != 0;
@@ -818,6 +818,8 @@ void CPlayers::RenderPlayer(
 	int ClientId,
 	float Intra)
 {
+	// 禅模式判定只取一次，避免在逐玩家渲染路径里重复解析配置。
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
 	CNetObj_Character Prev;
 	CNetObj_Character Player;
 	Prev = *pPrevChar;
@@ -1048,7 +1050,10 @@ void CPlayers::RenderPlayer(
 			bool IsSit = Inactive && !InAir && Stationary;
 			vec2 WeaponSwitchOffset = vec2(0.0f, 0.0f);
 			float WeaponSwitchAngle = 0.0f;
-			const bool WeaponSwitchAnimEnabled = g_Config.m_QmWeaponSwitchAnim && ShouldRenderWeaponAnimation(ClientId);
+			// Gores 自动切锤来回换武器，按选项跳过由此产生的切换动画。
+			const bool SkipGoresSwitchAnim = ClientId >= 0 && ClientId < MAX_CLIENTS &&
+							 GameClient()->m_TClient.ShouldSkipGoresHammerSwitchAnimation(ClientId, m_aWeaponSwitchLastWeapons[ClientId], Player.m_Weapon);
+			const bool WeaponSwitchAnimEnabled = g_Config.m_QmWeaponSwitchAnim && ShouldRenderWeaponAnimation(ClientId) && !SkipGoresSwitchAnim;
 			const bool WeaponReloadAnimEnabled = g_Config.m_QmWeaponReloadAnim && ShouldRenderWeaponAnimation(ClientId);
 			if(ClientId >= 0 && ClientId < MAX_CLIENTS)
 			{
@@ -1192,7 +1197,7 @@ void CPlayers::RenderPlayer(
 				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, WeaponPosition.x, WeaponPosition.y);
 
 				// HADOKEN
-				if(!ShouldHideFocusMuzzleEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideMuzzleEffects != 0) &&
+				if(!Focus.m_HideMuzzleEffects &&
 					AttackTime <= 1.0f / 6.0f &&
 					g_pData->m_Weapons.m_aId[CurrentWeapon].m_NumSpriteMuzzles)
 				{
@@ -1259,7 +1264,7 @@ void CPlayers::RenderPlayer(
 				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, WeaponPosition.x, WeaponPosition.y);
 			}
 
-			if(!ShouldHideFocusMuzzleEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideMuzzleEffects != 0) &&
+			if(!Focus.m_HideMuzzleEffects &&
 				(Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN) &&
 				g_pData->m_Weapons.m_aId[CurrentWeapon].m_NumSpriteMuzzles)
 			{
@@ -1466,6 +1471,8 @@ void CPlayers::RenderPlayerGhost(
 	int ClientId,
 	float Intra)
 {
+	// 禅模式判定只取一次，避免在逐玩家渲染路径里重复解析配置。
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
 	CNetObj_Character Prev;
 	CNetObj_Character Player;
 	Prev = *pPrevChar;
@@ -1766,7 +1773,7 @@ void CPlayers::RenderPlayerGhost(
 				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, WeaponPosition.x, WeaponPosition.y);
 
 				// HADOKEN
-				if(AllowEffects && !ShouldHideFocusMuzzleEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideMuzzleEffects != 0) &&
+				if(AllowEffects && !Focus.m_HideMuzzleEffects &&
 					AttackTime <= 1.0f / 6.0f &&
 					g_pData->m_Weapons.m_aId[CurrentWeapon].m_NumSpriteMuzzles)
 				{
@@ -1832,7 +1839,7 @@ void CPlayers::RenderPlayerGhost(
 				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, WeaponPosition.x, WeaponPosition.y);
 			}
 
-			if(AllowEffects && !ShouldHideFocusMuzzleEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideMuzzleEffects != 0) &&
+			if(AllowEffects && !Focus.m_HideMuzzleEffects &&
 				(Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN) &&
 				g_pData->m_Weapons.m_aId[CurrentWeapon].m_NumSpriteMuzzles)
 			{

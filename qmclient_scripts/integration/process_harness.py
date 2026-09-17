@@ -237,6 +237,10 @@ class ProcessEnvironment:
 		return self._temp_dir
 
 	@property
+	def build_dir(self) -> Path:
+		return self._build_dir
+
+	@property
 	def server(self) -> Process:
 		assert self._server is not None
 		return self._server
@@ -261,6 +265,18 @@ class ProcessEnvironment:
 			self._server.stop()
 		if not keep_temp:
 			shutil.rmtree(self._temp_dir, ignore_errors=True)
+
+	def process_tails(self, lines: int = 25) -> list[tuple[str, list[str]]]:
+		"""已启动进程的输出尾部。
+
+		场景失败时打印它，避免为了看一行日志（例如 "Nameplate MSDF ready: N page(s)"）
+		反复重跑整个真实进程场景。未启动的进程直接跳过。
+		"""
+		tails: list[tuple[str, list[str]]] = []
+		for label, process in (("server", self._server), ("client", self._client)):
+			if process is not None and process._lines:
+				tails.append((label, process._lines[-lines:]))
+		return tails
 
 
 # 兼容旧命名：既有冒烟场景与 runner 单测都以 SmokeEnvironment 引用该类。

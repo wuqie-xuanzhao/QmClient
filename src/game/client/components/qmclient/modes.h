@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <limits>
 
+struct CConfig;
+
 struct SQmStatisticsModeDisplay
 {
 	int m_Maps = 0;
@@ -20,6 +22,8 @@ struct SQmAirJumpEffectDecision
 struct SQmFocusModeConfig
 {
 	bool m_FocusActive = false;
+	// 录制视频期间为 true：禅模式的一切效果都不进视频，决策按总开关关闭处理。
+	bool m_VideoRecording = false;
 	bool m_HideJumpEffects = false;
 	bool m_HideKillEffects = false;
 	bool m_HideExplosionEffects = false;
@@ -31,10 +35,6 @@ struct SQmFocusModeConfig
 	bool m_MuteHammerSounds = false;
 	bool m_SoundEnabled = true;
 	bool m_HideMapProgress = false;
-	bool m_MapProgressEnabled = false;
-	int m_MapProgressStyle = 0;
-	bool m_PlayerStatsHudEnabled = false;
-	bool m_GoresMapProgressEnabled = false;
 	bool m_HideHud = false;
 	bool m_HideScoreboard = false;
 	bool m_HideNames = false;
@@ -48,9 +48,21 @@ struct SQmFocusModeConfig
 	bool m_HideEchoMessages = false;
 };
 
+// 禅模式的最终判定。总开关与子开关已经在这里合并，调用方只消费结果，
+// 不再自行拼 `g_Config.m_QmFocusMode != 0 && g_Config.m_QmFocusModeXxx`。
 struct SQmFocusModeDecisions
 {
+	bool m_FocusActive = false;
 	SQmAirJumpEffectDecision m_AirJump;
+	bool m_PlayDeathOrSpawnSound = false;
+	bool m_HideHud = false;
+	bool m_HideMapProgress = false;
+	bool m_HideScoreboard = false;
+	bool m_HideNames = false;
+	bool m_HideNameplates = false;
+	bool m_HideInfoMessages = false;
+	bool m_HideDirectionIndicators = false;
+	bool m_HideGuideLines = false;
 	bool m_HideKillEffects = false;
 	bool m_HideExplosionEffects = false;
 	bool m_HideFreezeEffects = false;
@@ -58,14 +70,6 @@ struct SQmFocusModeDecisions
 	bool m_HideMuzzleEffects = false;
 	bool m_MuteDeathSounds = false;
 	bool m_MuteHammerSounds = false;
-	bool m_RenderMapProgressBar = false;
-	bool m_HideHud = false;
-	bool m_HideScoreboard = false;
-	bool m_HideNames = false;
-	bool m_HideNameplates = false;
-	bool m_HideInfoMessages = false;
-	bool m_HideDirectionIndicators = false;
-	bool m_HideGuideLines = false;
 	bool m_HidePlayerMessages = false;
 	bool m_HideSystemInfoMessages = false;
 	bool m_HideSystemPromptMessages = false;
@@ -120,8 +124,9 @@ enum EQmNameplateTextDemoMode
 int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActive, int CurrentValue, int HiddenValue, bool &Changed);
 int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameModeEntered, bool GameModeLeft, bool AutoEnable, int CurrentValue, bool &Changed);
 int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActive, bool AutoToggle, int CurrentValue, bool &Changed);
-int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Changed);
-int ApplyQmGoresDummyHammerOverride(SQmFocusConfigOverrideState &State, bool GoresActive, bool Disable, int CurrentValue, bool &Changed);
+// Gores 模式开启的那一帧把分身锤关掉一次（由 qm_gores_disable_dummy_hammer 控制），
+// 之后不再干预用户自己的开关；持续接管会让开关看起来被锁住，也无法手动重新打开。
+int ApplyQmGoresDummyHammerOnEnter(bool GoresEntered, bool DisableOnEnter, int CurrentValue, bool &Changed);
 bool ShouldKeepQmGoresHammerInFreeze(bool GoresCycleActive, bool InFreeze, bool HammerRequested);
 bool ShouldTriggerQmGoresHammerWakeup(bool GoresCycleActive, bool HammerRequested, bool ExternalHammerWakeup);
 int QmGoresHammerWakeupFireState(int CurrentFire);
@@ -197,30 +202,16 @@ bool QmCollapseModeEntries(TList &vStats, TPred IsMode)
 	return Collapsed;
 }
 
-bool ShouldHideFocusHud(bool FocusActive, bool HideHud);
-bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool FocusActive, bool HideHud);
-bool ShouldHideFocusScoreboard(bool FocusActive, bool HideScoreboard);
-bool ShouldHideFocusNames(bool FocusActive, bool HideNames);
-bool ShouldHideFocusNameplates(bool FocusActive, bool HideNameplates);
-bool ShouldHideFocusJumpEffects(bool FocusActive, bool HideJumpEffects);
-bool ShouldHideFocusKillEffects(bool FocusActive, bool HideKillEffects);
-bool ShouldHideFocusExplosionEffects(bool FocusActive, bool HideExplosionEffects);
-bool ShouldHideFocusFreezeEffects(bool FocusActive, bool HideFreezeEffects);
-bool ShouldHideFocusHammerEffects(bool FocusActive, bool HideHammerEffects);
-bool ShouldHideFocusMuzzleEffects(bool FocusActive, bool HideMuzzleEffects);
-bool ShouldMuteFocusJumpSounds(bool FocusActive, bool MuteJumpSounds);
-bool ShouldMuteFocusDeathSounds(bool FocusActive, bool MuteDeathSounds);
-bool ShouldMuteFocusHammerSounds(bool FocusActive, bool MuteHammerSounds);
-bool ShouldPlayFocusJumpSound(bool FocusActive, bool MuteJumpSounds, bool SoundEnabled);
-bool ShouldPlayFocusDeathOrSpawnSound(bool FocusActive, bool MuteDeathSounds, bool SoundEnabled);
-SQmAirJumpEffectDecision GetQmAirJumpEffectDecision(bool FocusActive, bool HideJumpEffects, bool MuteJumpSounds, bool SoundEnabled);
-bool ShouldHideFocusMapProgress(bool FocusActive, bool HideMapProgress);
+// 禅模式决策入口：QmReadFocusModeConfig 把 20 个 qm_focus_mode_* 配置项读成快照，
+// GetQmFocusModeDecisions 把总开关与子开关合并成最终判定。无参重载读取当前全局配置，
+// 供界面/玩家/视觉/音效/聊天各处消费，避免每个调用点重复拼总开关条件。
+SQmFocusModeConfig QmReadFocusModeConfig(const CConfig &Config);
+SQmFocusModeDecisions GetQmFocusModeDecisions(const SQmFocusModeConfig &Config);
+SQmFocusModeDecisions GetQmFocusModeDecisions();
+
+bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool HideHud);
 bool ShouldRenderMapProgressBar(bool MapProgressEnabled, int MapProgressStyle, bool PlayerStatsHudEnabled, bool GoresMapProgressEnabled);
-bool ShouldHideFocusInfoMessages(bool FocusActive, bool HideInfoMessages);
-bool ShouldHideFocusDirectionIndicators(bool FocusActive, bool HideDirectionIndicators);
-bool ShouldHideFocusGuideLines(bool FocusActive, bool HideGuideLines);
 bool ShouldRenderFocusFilteredChatLine(bool FocusHidePlayerMessages, bool FocusHideSystemInfoMessages, bool FocusHideSystemPromptMessages, bool FocusHideEcho, int ClientId, bool ForceVisible, bool ServerMessageIsBasicInfo);
 bool ShouldRenderAnyFocusFilteredChat(bool FocusHidePlayerMessages, bool FocusHideSystemInfoMessages, bool FocusHideSystemPromptMessages, bool FocusHideEcho, bool HasForceVisibleLine);
-SQmFocusModeDecisions GetQmFocusModeDecisions(const SQmFocusModeConfig &Config);
 
 #endif

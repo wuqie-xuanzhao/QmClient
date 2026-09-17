@@ -846,6 +846,7 @@ public:
 
 	virtual void Minimize() = 0;
 	virtual void HideWindow() = 0;
+	virtual void ShowWindow() = 0;
 	virtual void SetWindowParams(int FullscreenMode, bool IsBorderless) = 0;
 	virtual bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) = 0;
 	virtual bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) = 0;
@@ -1484,6 +1485,7 @@ public:
 
 	void Minimize() override;
 	void HideWindow() override;
+	void ShowWindow() override;
 	void WarnPngliteIncompatibleImages(bool Warn) override;
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
 	bool SetWindowScreen(int Index, bool MoveToCenter) override;

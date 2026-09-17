@@ -1182,7 +1182,10 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 	}
 
 	// set flags
-	int SdlFlags = SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_ALLOW_HIGHDPI;
+	// QmClient: 窗口先以隐藏状态创建。首帧（CClient::Run() 里那帧纯黑清屏）到
+	// 加载界面真正 present 之间隔着语言/声音/视频初始化和主题加载，窗口若一开始就可见，
+	// 这段时间用户看到的就是整屏黑在"闪"。等第一帧有内容后再由 ShowWindow() 显示。
+	int SdlFlags = SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN;
 	SdlFlags |= (IsOpenGLFamilyBackend) ? SDL_WINDOW_OPENGL : SDL_WINDOW_VULKAN;
 	if(Flags & IGraphicsBackend::INITFLAG_RESIZABLE)
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
@@ -1522,6 +1525,14 @@ void CGraphicsBackend_SDL_GL::HideWindow()
 {
 	if(m_pWindow != nullptr)
 		SDL_HideWindow(m_pWindow);
+}
+
+void CGraphicsBackend_SDL_GL::ShowWindow()
+{
+	// QmClient: 窗口以 SDL_WINDOW_HIDDEN 创建，等第一帧真有内容后再显示，
+	// 避免启动时先闪一帧纯黑。重复调用无副作用。
+	if(m_pWindow != nullptr)
+		SDL_ShowWindow(m_pWindow);
 }
 
 void CGraphicsBackend_SDL_GL::SetWindowParams(int FullscreenMode, bool IsBorderless)

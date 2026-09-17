@@ -11,7 +11,6 @@
 #include <base/vmath.h>
 
 #include <engine/graphics.h>
-
 #include <engine/shared/config.h>
 
 #include <game/client/gameclient.h>

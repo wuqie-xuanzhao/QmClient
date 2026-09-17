@@ -50,6 +50,66 @@ namespace graphics_viewport
 	}
 }
 
+// MSDF 参数 w 分量的编码契约（非 ring 模式）。
+//
+// w 同时表达「描边宽度」和「字形采样模式」，因此四种状态必须落在互不重叠的区间；
+// 三个后端着色器按同一阈值解码（data/shader/textured_msdf.frag、
+// data/shader/vulkan/textured_msdf.frag、data/shader/metal/qmclient.metal）：
+//
+//   w >  0            → 普通 MSDF，w 即描边宽度（屏幕像素）
+//   w == 0            → 普通 MSDF 填充（无描边）
+//   -0.001 < w < 0    → Duotone：RGB 为 primary 距离场，Alpha 为 secondary 距离场
+//   w <= -0.001       → Alpha 真 SDF，描边宽度 = -w - 0.001
+//
+// 历史缺陷：Duotone 哨兵曾取 -0.002f，落进了真 SDF 的描边编码区间
+// （w = -(描边像素 + 0.001) 对任意描边宽度 >= 0.0015px 都会 <= -0.0015），
+// 于是名牌描边/辉光 pass 被误判成 Duotone，Alpha 被算成 max(Opacity, Sample.a*5) ≈ 1，
+// 整个字形 quad 变成实心块。Duotone 哨兵必须严格留在 (-0.001, 0) 内。
+namespace qm_msdf_param
+{
+	// 真 SDF 编码的固定偏移量：w = -(描边像素 + TRUESDF_OFFSET)。
+	constexpr float TRUESDF_OFFSET = 0.001f;
+	// Duotone 哨兵。必须满足 -TRUESDF_OFFSET < DUOTONE_W < 0。
+	constexpr float DUOTONE_W = -0.0005f;
+
+	static_assert(DUOTONE_W < 0.0f && DUOTONE_W > -TRUESDF_OFFSET, "Duotone 哨兵必须严格落在真 SDF 编码区间之外");
+
+	enum class EMode
+	{
+		MSDF,
+		TRUE_SDF,
+		DUOTONE,
+	};
+
+	// 把描边宽度编码成普通 MSDF 的 w。
+	constexpr float EncodeMsdf(const float OutlineWidthPx)
+	{
+		return OutlineWidthPx > 0.0f ? OutlineWidthPx : 0.0f;
+	}
+
+	// 把描边宽度编码成 Alpha 真 SDF 的 w。
+	constexpr float EncodeTrueSdf(const float OutlineWidthPx)
+	{
+		return -(EncodeMsdf(OutlineWidthPx) + TRUESDF_OFFSET);
+	}
+
+	// 解码 w 得到采样模式。着色器里的等价判定必须与此一致。
+	constexpr EMode Decode(const float W)
+	{
+		if(W <= -TRUESDF_OFFSET)
+			return EMode::TRUE_SDF;
+		return W < 0.0f ? EMode::DUOTONE : EMode::MSDF;
+	}
+
+	// 解码 w 得到描边宽度（屏幕像素）。
+	constexpr float DecodeOutline(const float W)
+	{
+		if(Decode(W) == EMode::TRUE_SDF)
+			return -W - TRUESDF_OFFSET;
+		return W > 0.0f ? W : 0.0f;
+	}
+}
+
 struct SBufferContainerInfo
 {
 	int m_Stride;
@@ -484,9 +544,12 @@ public:
 		float m_Rotation = 0.0f;
 		// 描边外扩量（屏幕像素）：>0 时覆盖阈值向外扩，画单层实心边框；0 为普通填充。
 		// 经 gMsdfParams.w 传给着色器；ring 模式忽略此字段（其 w 被 EndAngle 占用）。
+		// w 的完整编码契约见 qm_msdf_param 命名空间。
 		float m_OutlineWidthPx = 0.0f;
 		// 运行时 MTSDF 字形可选择 Alpha 真 SDF，避免简单轮廓的 MSDF 通道退化。
 		bool m_UseTrueSdf = false;
+		// Duotone 图标：RGB 为 primary 距离场，Alpha 为 secondary 距离场（同一 atlas）。
+		bool m_UseSecondarySdf = false;
 		// Procedural ring mode uses the existing MSDF command/shader with a
 		// signed-distance ring encoded as (-inner, outer, start, end).
 		bool m_ProceduralRing = false;
@@ -1081,6 +1144,9 @@ public:
 	virtual void Minimize() = 0;
 	// QmClient: 直接隐藏窗口（不经渲染线程），供退出清理前使用。
 	virtual void HideWindow() = 0;
+	// QmClient: 显示窗口。启动时窗口以隐藏状态创建，等第一帧真有内容
+	// （加载界面 + 主题背景）present 之后再显示，避免启动先闪一帧纯黑。
+	virtual void ShowWindow() = 0;
 
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;

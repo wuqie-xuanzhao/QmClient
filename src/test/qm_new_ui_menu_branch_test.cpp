@@ -1474,7 +1474,10 @@ TEST(QmNewUiMenuBranches, NameplateOthersModeSuppressesLocalIdentityRows)
 	EXPECT_EQ(RenderNamePlateGame.find("CoordXAlignState.m_Aligned || m_pData->m_CoordXAlignFrame.m_LocalAligned"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("IsLocalClient &&\n\t\tm_pData->m_CoordXAlignFrame.m_LocalAligned"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("const bool OwnNameplateScopeVisible"), std::string::npos);
-	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;"), std::string::npos);
+	// 录像机/禅模式重构后取值统一走 NameplateRenderValue(ConfigManager(), &...)：
+	// 录制中读回接管前的真实值，未接管时与直接读 g_Config 等价，与旧断言语义一致。
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowName = pPlayerInfo->m_Local ? NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) :"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates);"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan && !HideIdentity;"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("const bool NameplateScopeAllowsCoords"), std::string::npos);
@@ -1595,7 +1598,10 @@ TEST(QmNewUiMenuBranches, NameplateGameUsesFullScopeReferenceFrame)
 
 	EXPECT_NE(Source.find("CNamePlate m_aNamePlateFrameReferences[MAX_CLIENTS];"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("CNamePlate *pLayoutReference = nullptr;"), std::string::npos);
-	EXPECT_NE(RenderNamePlateGame.find("if(Alpha > 0.0f && NameplateFreeMoveEnabled() && (!g_Config.m_ClNamePlates || !g_Config.m_ClNamePlatesOwn))"), std::string::npos);
+	// 同一条件的可读化重构：NameplatePartiallyHidden 就是「本名或他人名牌被关掉」，
+	// 取值同样经 NameplateRenderValue 读回接管前的真实值。
+	EXPECT_NE(RenderNamePlateGame.find("const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) == 0 || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) == 0;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("if(Alpha > 0.0f && NameplateFreeMoveEnabled() && NameplatePartiallyHidden)"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("CNamePlateData FrameData = Data;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("FrameData.m_ShowName = true;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("const bool FrameShowLocalAlignedCoordX = CoordModuleAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;"), std::string::npos);
@@ -2519,7 +2525,7 @@ TEST(QmNewUiMenuBranches, AppearanceTabsUseQmCards)
 
 	const std::string NamePlateBranch = BlockBodyAfter(RenderSettingsAppearance, "else if(m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE)");
 	ASSERT_FALSE(NamePlateBranch.empty());
-	EXPECT_NE(NamePlateBranch.find("ResolveSettingsRowsHeight(12, LineSize, MarginSmall)"), std::string::npos);
+	EXPECT_NE(NamePlateBranch.find("ResolveSettingsRowsHeight(10, LineSize, MarginSmall)"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const auto NextNamePlateRow"), std::string::npos);
 	EXPECT_NE(NamePlateBranch.find("const auto DoNamePlateCheckBox"), std::string::npos);
 	EXPECT_NE(SettingsSource.find("AddMeasuredCard(5, ResolveNamePlateContentHeight"), std::string::npos);
@@ -3741,12 +3747,12 @@ TEST(QmNewUiMenuBranches, GraphicsIconCardSupportsDynamicCustomColorAndFourWeigh
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
 	EXPECT_NE(Graphics.find("s_aGraphicsIconColorButtons[4]"), std::string::npos);
-	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[4]"), std::string::npos);
+	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[6]"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Custom\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Rainbow\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Thin\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Fill\")"), std::string::npos);
-	EXPECT_NE(Graphics.find("static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};"), std::string::npos);
+	EXPECT_NE(Graphics.find("static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};"), std::string::npos);
 	EXPECT_NE(Graphics.find("DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId"), std::string::npos);
 	EXPECT_NE(Graphics.find("vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);"), std::string::npos);
 	EXPECT_NE(Graphics.find("vCards.back().m_PreLayoutInput = [this, GraphicsMetrics]"), std::string::npos);
@@ -3756,7 +3762,7 @@ TEST(QmNewUiMenuBranches, GraphicsIconCardSupportsDynamicCustomColorAndFourWeigh
 	const std::string Config = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	EXPECT_NE(Config.find("MACRO_CONFIG_COL(QmUiIconCustomColor, qm_ui_icon_custom_color"), std::string::npos);
 	EXPECT_NE(Config.find("Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow"), std::string::npos);
-	EXPECT_NE(Config.find("Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill"), std::string::npos);
+	EXPECT_NE(Config.find("Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone"), std::string::npos);
 }
 
 
@@ -3909,4 +3915,3 @@ TEST(QmUiScale, CenteredPopupMarginKeepsUsableContentAtTwoHundredPercent)
 	EXPECT_EQ(QmUiVisibleRows(126.0f, 20.0f, 20.0f, 8, 4), 4);
 	EXPECT_EQ(QmUiVisibleRows(19.0f, 20.0f, 20.0f, 4, 4), 0);
 }
-

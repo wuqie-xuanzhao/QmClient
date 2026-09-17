@@ -125,6 +125,7 @@ Add a colored skin to the dummy queue
 Add a colored skin to the queue
 Add a community as a favorite
 Add a community to the exclusion filter
+Add a country to the allowed filter list for a specific community (kept visible while its country filter is active)
 Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
 Add a dummy queue preset
 Add a foe
@@ -410,6 +411,7 @@ Automatically reply while the window is unfocused
 Automatically switch hammer/gun in Gores mode
 Automatically take game over screenshot
 Automatically take statboard screenshot
+Available for this bundled font
 Available practice commands: 
 Available rescue modes: auto, manual
 Available resolutions
@@ -492,6 +494,8 @@ Bind Wheel
 Bind Wheel Key
 Bit flags for disabling settings tabs
 Black
+Blank material
+Blank: hides this asset
 Blend mode
 Blink the active local tee
 Block enemy chat
@@ -522,6 +526,7 @@ Brutal
 Bubble opacity
 Build the status text shown above Tees
 Built-in
+Bundled vector profile:
 Button - Disabled
 Button - Enabled
 Button browser
@@ -610,7 +615,6 @@ Choose colors for weapons and entity lasers
 Choose country flag
 Choose default eyes when joining a server
 Choose export name first.
-Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.
 Choose the language used by the client
 Choose the menu font and cursor appearance
 Choose the menu font and font weight
@@ -790,6 +794,8 @@ Contributors
 Control custom background drawing
 Control latency compensation tools
 Control player (0) or dummy (1)
+Controlled by Gores mode
+Controlled by Zen mode
 Controller
 Controller axis for cursor X
 Controller axis for cursor Y
@@ -863,7 +869,6 @@ Custom community list fetch URL (must be https, leave empty to disable)
 Custom font
 Custom font weight (variable fonts)
 Custom Font:
-Custom fonts use FreeType automatically.
 Custom prompt template
 Custom Provider API Key
 Custom Provider endpoint
@@ -1015,6 +1020,7 @@ Disabled
 Disagree
 Disallow chat from blacklisted addresses
 Discard
+Discard cached server pings older than this many hours (0 = never expire)
 Discard changes
 Disconnect
 Disconnect dummy
@@ -1135,6 +1141,7 @@ Dump the current savestring
 Dump zone tuning in zone x
 dumps all sqlservers readservers = r, writeservers = w
 Dumps the antibot status
+Duotone
 Duplicate
 Duration
 Duration in seconds to mute a player for spam triggering. 0 = off
@@ -1950,6 +1957,7 @@ Lht.
 LibreTranslate
 LibreTranslate API Key
 LibreTranslate endpoint
+Light
 Limit information in spectator mode
 Limiter threshold (percent)
 Line width
@@ -2203,7 +2211,6 @@ Move to category
 Movement
 Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
-MSDF nameplate text
 Multi-resolution blur with a stronger result and balanced GPU cost.
 Multi-View
 Multiple exact Axiom players found
@@ -2376,6 +2383,7 @@ Normal
 Normal Color
 Normal message
 Normal message text gradient color
+Not available; FreeType is used
 NOT CONNECTED
 Not connected to a game server
 Not connected to server
@@ -2431,6 +2439,7 @@ Only affects custom Tee colors.
 Only allow authorized clients to vote
 Only save ghost if better than previous record
 Only save improvements
+Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
 Only show after joining a team
 Only show outlines in the entities layer
 Only show skins available in Vanilla Teeworlds
@@ -2439,6 +2448,7 @@ Only show with this nickname
 Only what you can't imagine, nothing Dream can't do
 Opacity
 Opacity of freeze bars inside freeze
+Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)
 Open a matching settings card directly
 Open bindwheel selector
 Open color picker
@@ -2755,7 +2765,7 @@ q = Connection quality
 Qm
 Qm UI custom icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
-Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
+Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
 qm_profile_queue: index must be between 1 and %d
 QmClient
 QmClient / Function
@@ -2899,6 +2909,7 @@ Remove a chat bind
 Remove a clan war entry
 Remove a community from the exclusion filter
 Remove a community from the favorites
+Remove a country from the allowed filter list for a specific community
 Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
 Remove a foe
 Remove a friend
@@ -3594,7 +3605,9 @@ Skin: %s
 Skins directory
 Skip render frames if waiting for previous frame during update cycle
 Skip start menu
+Skip switch animation when hammering
 Skip the main menu
+Skip the weapon switch animation for hammer switches in Gores mode
 Skip Tutorial
 Slide left
 Slow down the demo
@@ -3872,6 +3885,7 @@ Teleports player i (or you) to player i (or you to where you look at)
 Teleports you to checkpoint teleporter i
 Teleports you to teleporter i
 Teletile overlay alpha (0-100)
+Temporarily controlled by a mode toggle
 Temporarily disable dummy hammering
 Temporarily disable dummy hammering in Gores mode
 Temporarily set a config value while pressed
@@ -3890,7 +3904,6 @@ Thank you for your company and trust. This is what gives me the courage to keep 
 Thanks for supporting QmClient
 The audio device couldn't be initialised.
 The auth level you need to tele others
-The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.
 The downloaded file is not a valid demo
 The extra menu button which toggles visibility of buttons with "Extra Menu" visibilities. Also opens the ingame menu on long press.
 The extra menu with the given number is activated.
@@ -3923,6 +3936,7 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 Thin
 Thinking mode requires a reasoning model
+This font has no bundled vector profile. Nameplates will use FreeType.
 This ID is not connected
 This is the master switch for all interface animation categories
 This name cannot be used for files and folders
@@ -4082,7 +4096,7 @@ UI color
 UI controller sens.
 UI icon color
 UI icon custom color
-UI icon weight
+UI icon style
 UI motion level
 UI mouse sens.
 UI rounded corner segments (even numbers recommended)
@@ -4181,8 +4195,6 @@ Use enemy list to drive player indicators
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 Use mouse sensitivity when dynamic camera is on
-Use MSDF text rendering for nameplates (built-in fonts only)
-Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
 Use multi-char replacement based on word length
 Use native UI for IME (may break IME in fullscreen mode, requires restart)
 Use new smoothing algorithm
@@ -4202,11 +4214,12 @@ Use Tee icons instead of circles
 Use the mouse wheel on a hovered module to scale it by 5%
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
+Use vector font rendering for nameplates
+Use vector font rendering for nameplates when a bundled profile is available
 Use warlist colors instead of regular colors
 Use warlist groups for indicator
 Used by active shared text and numeric input fields
 Uses the active action with the current aiming position.
-Uses the built-in font; a custom font falls back to FreeType.
 v = Velocity
 V-Sync
 VAD allow list (comma-separated)
@@ -4214,6 +4227,7 @@ VAD release delay (ms)
 VAD threshold (percent)
 Vanilla skins only
 Variable custom font weight
+Vector nameplate text
 Velocity
 Version
 Version performing the analysis

@@ -70,20 +70,35 @@ inline const char *QmNameplateMsdfFontProfile(const char *pConfiguredFont)
 {
 	if(pConfiguredFont == nullptr || pConfiguredFont[0] == '\0')
 		return nullptr;
-	if(str_comp_nocase(pConfiguredFont, "DejaVu Sans") == 0 ||
-		str_comp_nocase(pConfiguredFont, "Noto Sans SC") == 0 || str_comp_nocase(pConfiguredFont, "NotoSansSC") == 0 ||
+	if(str_comp_nocase(pConfiguredFont, "Noto Sans SC") == 0 || str_comp_nocase(pConfiguredFont, "NotoSansSC") == 0 ||
 		str_comp_nocase(pConfiguredFont, "Glow Sans J Compressed Book") == 0 || str_comp_nocase(pConfiguredFont, "Glow Sans J") == 0 ||
 		str_comp_nocase(pConfiguredFont, "GlowSansJ-Compressed-Book") == 0)
 		return "noto_glow_cjk";
-	struct SFontProfile { const char *m_pFamily; const char *m_pProfile; };
+	struct SFontProfile
+	{
+		const char *m_pFamily;
+		const char *m_pProfile;
+	};
 	static constexpr SFontProfile s_aProfiles[] = {
-		{"Cabin", "cabin"}, {"FreeSans", "freesans"}, {"FreeSans Bold", "freesans"}, {"Google Sans", "google_sans"},
-		{"Inter", "inter_regular"}, {"Inter SemiBold", "inter_semibold"},
-		{"Maple Mono Normal", "maple_mono_regular"}, {"Maple Mono Normal CN", "maple_mono_regular"},
-		{"Maple Mono Normal Bold", "maple_mono_bold"}, {"Minecraft", "minecraft"}, {"Montserrat", "montserrat"},
-		{"Nunito Black", "nunito"}, {"Poppins", "poppins_regular"}, {"Poppins Medium", "poppins_medium"},
-		{"Poppins Bold", "poppins_bold"}, {"Rubik", "rubik"},
-		{"Times New Roman", "times_new_roman"}, {"LXGW WenKai", "lxgw_wenkai_regular"},
+		{"DejaVu Sans", "dejavu"},
+		{"Cabin", "cabin"},
+		{"FreeSans", "freesans"},
+		{"FreeSans Bold", "freesans"},
+		{"Google Sans", "google_sans"},
+		{"Inter", "inter_regular"},
+		{"Inter SemiBold", "inter_semibold"},
+		{"Maple Mono Normal", "maple_mono_regular"},
+		{"Maple Mono Normal CN", "maple_mono_regular"},
+		{"Maple Mono Normal Bold", "maple_mono_bold"},
+		{"Minecraft", "minecraft"},
+		{"Montserrat", "montserrat"},
+		{"Nunito", "nunito"},
+		{"Nunito Black", "nunito"},
+		{"Poppins", "poppins_regular"},
+		{"Poppins Medium", "poppins_medium"},
+		{"Poppins Bold", "poppins_bold"},
+		{"Rubik", "rubik"},
+		{"Times New Roman", "times_new_roman"},
 	};
 	for(const SFontProfile &Profile : s_aProfiles)
 		if(str_comp_nocase(pConfiguredFont, Profile.m_pFamily) == 0)
@@ -96,7 +111,47 @@ inline bool QmNameplateMsdfFontMatchesAtlas(const char *pConfiguredFont)
 	return QmNameplateMsdfFontProfile(pConfiguredFont) != nullptr;
 }
 
-// 遍历文本（换行/制表符按空白跳过），返回第一个 HasGlyph 判定为缺失的码点；
+// 该码点是否需要图集字形。返回 false 的码点在渲染器里既不出 quad 也不推进笔位。
+//
+// 两类：
+//  1) 空白（空格/换行/制表符）——渲染器用固定 em 比例单独推进笔位；
+//  2) Unicode Default_Ignorable_Code_Point——零宽、不可见，图集里永远没有 quad。
+//
+// 第 2 类必须一并跳过：昵称里最常见的 emoji 形态是「基础字符 + 变体选择符」
+// （⭐️ = U+2B50 U+FE0F，❤️、☺️ 同理），基础字符已经在图集里，但 U+FE0F 不在。
+// 若把它判成缺字，整条铭牌会因为一个看不见的字符回退 FreeType。
+inline bool QmNameplateMsdfCodepointNeedsGlyph(uint32_t Codepoint)
+{
+	if(Codepoint == ' ' || Codepoint == '\n' || Codepoint == '\r' || Codepoint == '\t')
+		return false;
+	// Default_Ignorable_Code_Point 的实用子集（只列昵称/文本里实际可能出现的区段；
+	// U+3164 / U+FFA0 这两个「填充符」在 CJK 字体里有实际宽度，故意不算不可见）。
+	static constexpr uint32_t s_aInvisibleRanges[][2] = {
+		{0x00AD, 0x00AD}, // SOFT HYPHEN
+		{0x034F, 0x034F}, // COMBINING GRAPHEME JOINER
+		{0x061C, 0x061C}, // ARABIC LETTER MARK
+		{0x115F, 0x1160}, // HANGUL CHOSEONG / JUNGSEONG FILLER
+		{0x17B4, 0x17B5}, // KHMER VOWEL INHERENT AQ / AA
+		{0x180B, 0x180E}, // MONGOLIAN FREE VARIATION SELECTOR ONE..FOUR / VOWEL SEPARATOR
+		{0x200B, 0x200F}, // ZWSP / ZWNJ / ZWJ / LRM / RLM
+		{0x202A, 0x202E}, // LRE / RLE / PDF / LRO / RLO
+		{0x2060, 0x206F}, // WORD JOINER..INVISIBLE PLUS 与已废弃格式符
+		{0xFE00, 0xFE0F}, // VARIATION SELECTOR ONE..SIXTEEN
+		{0xFEFF, 0xFEFF}, // ZERO WIDTH NO-BREAK SPACE
+		{0xFFF0, 0xFFF8}, // 保留区 / 行间注记控制符
+		{0x1BCA0, 0x1BCA3}, // SHORTHAND FORMAT LETTER OVERLAP..UP STEP
+		{0x1D173, 0x1D17A}, // MUSICAL SYMBOL BEGIN BEAM..END PHRASE
+		{0xE0000, 0xE0FFF}, // TAG 字符与 VARIATION SELECTOR 17..256
+	};
+	for(const auto &Range : s_aInvisibleRanges)
+	{
+		if(Codepoint >= Range[0] && Codepoint <= Range[1])
+			return false;
+	}
+	return true;
+}
+
+// 遍历文本，返回第一个需要字形但 HasGlyph 判定为缺失的码点；
 // 返回 0 表示全部可渲染。HasGlyph 由调用方提供（生产环境查图集字形表；测试可注入）。
 template<typename HasGlyphFn>
 uint32_t QmNameplateMsdfFirstMissingCodepoint(const char *pText, HasGlyphFn &&HasGlyph)
@@ -109,8 +164,7 @@ uint32_t QmNameplateMsdfFirstMissingCodepoint(const char *pText, HasGlyphFn &&Ha
 		const uint32_t Codepoint = QmNameplateMsdfDecodeUtf8(p);
 		if(Codepoint == 0)
 			break;
-		// 换行与制表符按空白处理，不需要字形
-		if(Codepoint == '\n' || Codepoint == '\r' || Codepoint == '\t')
+		if(!QmNameplateMsdfCodepointNeedsGlyph(Codepoint))
 			continue;
 		if(!HasGlyph(Codepoint))
 			return Codepoint;

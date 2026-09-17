@@ -380,6 +380,9 @@ Add a community as a favorite
 Add a community to the exclusion filter
 == コミュニティを除外フィルターに追加
 
+Add a country to the allowed filter list for a specific community (kept visible while its country filter is active)
+== 特定のコミュニティの許可フィルターリストに国を追加（その国のフィルターが有効な間は表示されたまま）
+
 Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
 == 特定のコミュニティの除外フィルターに国を追加（ISO 3166-1 数値コード）
 
@@ -1209,7 +1212,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Gores ゲームモードで自動的に Gores 自動切り替えを有効化
 
 Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
-== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== カスタムアセットのスプライトが完全に透明な場合は自動的に既定のアセットへ戻します。オフにすると空白スプライトは非表示のままになります（エフェクトを隠す用途など）
 
 Automatically re-join team 0 after finish (only if unlocked).
 == 完走後に自動でチーム 0 に再参加（ロック解除時のみ）
@@ -1234,6 +1237,9 @@ Automatically take game over screenshot
 
 Automatically take statboard screenshot
 == 統計ボードのスクリーンショットを自動撮影
+
+Available for this bundled font
+== この同梱フォントで利用可能
 
 Available practice commands: 
 == 使用可能な練習コマンド: 
@@ -1481,6 +1487,12 @@ Bit flags for disabling settings tabs
 Black
 == 黒
 
+Blank material
+== 空白素材
+
+Blank: hides this asset
+== 空白：このアセットを非表示にします
+
 Blend mode
 == ブレンドモード
 
@@ -1570,6 +1582,9 @@ Build the status text shown above Tees
 
 Built-in
 == 内蔵
+
+Bundled vector profile:
+== 同梱ベクタープロファイル:
 
 Button - Disabled
 == ボタン - 無効
@@ -1834,9 +1849,6 @@ Choose default eyes when joining a server
 
 Choose export name first.
 == 最初にエクスポート名を入力してください。
-
-Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.
-== 先にカスタムフォントを選択してからMSDFネームプレートを有効にしてください。初回読み込みには時間がかかる場合があります。
 
 Choose the language used by the client
 == Choose the language used by the client
@@ -2375,6 +2387,12 @@ Control latency compensation tools
 Control player (0) or dummy (1)
 == プレイヤー (0) またはダミー (1) を操作
 
+Controlled by Gores mode
+== Goresモードが管理中
+
+Controlled by Zen mode
+== 禅モードが管理中
+
 Controller
 == コントローラー
 
@@ -2593,9 +2611,6 @@ Custom font weight (variable fonts)
 
 Custom Font:
 == カスタムフォント：
-
-Custom fonts use FreeType automatically.
-== カスタムフォントは自動的に FreeType を使用します。
 
 Custom prompt template
 == カスタムプロンプトテンプレート
@@ -3050,6 +3065,9 @@ Disallow chat from blacklisted addresses
 Discard
 == 破棄
 
+Discard cached server pings older than this many hours (0 = never expire)
+== この時間数より古いキャッシュされたサーバー ping を破棄（0 = 無期限に保持）
+
 Discard changes
 == 変更を破棄
 
@@ -3409,6 +3427,9 @@ dumps all sqlservers readservers = r, writeservers = w
 
 Dumps the antibot status
 == アンチボットステータスをダンプ
+
+Duotone
+== デュオトーン
 
 Duplicate
 == 複製
@@ -5855,6 +5876,9 @@ LibreTranslate API Key
 LibreTranslate endpoint
 == LibreTranslate エンドポイント
 
+Light
+== ライト
+
 Limit information in spectator mode
 == 観戦モードの情報を制限する
 
@@ -6614,9 +6638,6 @@ Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
 == x/y 番号 ii のタイルに移動
 
-MSDF nameplate text
-== MSDFネームプレートテキスト
-
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == 強いぼかしとバランスの取れたGPU負荷を両立する多重解像度方式です。
 
@@ -7133,6 +7154,9 @@ Normal message
 Normal message text gradient color
 == 通常メッセージ文字グラデーション色
 
+Not available; FreeType is used
+== 利用できません。FreeType を使用します
+
 NOT CONNECTED
 == 未接続
 
@@ -7298,6 +7322,9 @@ Only save ghost if better than previous record
 Only save improvements
 == 改善のみ保存
 
+Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
+== 一部の同梱フォントのみベクターのネームプレートアトラスを持ちます。それ以外のフォントは FreeType を使用します。
+
 Only show after joining a team
 == チーム参加後にのみ表示
 
@@ -7321,6 +7348,9 @@ Opacity
 
 Opacity of freeze bars inside freeze
 == フリーズ内のフリーズバーの不透明度
+
+Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)
+== 観戦中のプレイヤーに表示されるゴースト Tee の不透明度（0 = 完全に透明）
 
 Open a matching settings card directly
 == Open a matching settings card directly
@@ -8270,8 +8300,8 @@ Qm UI custom icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Qm UI アイコンの色: 1=白、2=黒、3=カスタム、4=虹色
 
-Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
-== Qm UI アイコンの太さ: 0=標準、1=太字、2=細字、3=塗りつぶし
+Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
+== Qm UI アイコンのスタイル: 0=標準、1=太字、2=細字、3=塗りつぶし、4=ライト、5=デュオトーン
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：インデックスは 1 から %d の間でなければなりません
@@ -8701,6 +8731,9 @@ Remove a community from the exclusion filter
 
 Remove a community from the favorites
 == お気に入りからコミュニティを削除
+
+Remove a country from the allowed filter list for a specific community
+== 特定のコミュニティの許可フィルターリストから国を削除
 
 Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
 == 特定のコミュニティの除外フィルターから国を削除（ISO 3166-1 数値コード）
@@ -10431,7 +10464,7 @@ Show seconds on clock
 == 時計に秒を表示
 
 Show semi-transparent ghost tees for other players who are spectating
-== Show semi-transparent ghost tees for other players who are spectating
+== 観戦中の他プレイヤーに半透明のゴースト Tee を表示
 
 Show server chat messages
 == サーバーのチャットメッセージを表示
@@ -10787,8 +10820,14 @@ Skip render frames if waiting for previous frame during update cycle
 Skip start menu
 == スタートメニューをスキップ
 
+Skip switch animation when hammering
+== ハンマー使用時に武器切替アニメーションを再生しない
+
 Skip the main menu
 == メインメニューをスキップ
+
+Skip the weapon switch animation for hammer switches in Gores mode
+== Goresモードでハンマーに切り替える際に武器切替アニメーションを再生しない
 
 Skip Tutorial
 == チュートリアルをスキップ
@@ -10977,7 +11016,7 @@ Spectated player and friends
 == 観戦中のプレイヤーとフレンド
 
 Spectator ghost opacity
-== Spectator ghost opacity
+== 観戦ゴーストの不透明度
 
 Spectators
 == 観戦者
@@ -11621,6 +11660,9 @@ Teleports you to teleporter i
 Teletile overlay alpha (0-100)
 == テレポートタイルのエンティティアルファ (0-100)
 
+Temporarily controlled by a mode toggle
+== 現在モード設定によって一時的に管理されています
+
 Temporarily disable dummy hammering
 == ダミーハンマーを一時的に無効化
 
@@ -11674,9 +11716,6 @@ The audio device couldn't be initialised.
 
 The auth level you need to tele others
 == 他のプレイヤーをテレポートさせるのに必要な権限レベル
-
-The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.
-== カスタムフォントが変更されたため、MSDFネームプレートを無効にしました。フォントを選択してからMSDFを再度有効にしてください。
 
 The downloaded file is not a valid demo
 == ダウンロードしたファイルは有効なデモではありません
@@ -11773,6 +11812,9 @@ Thin
 
 Thinking mode requires a reasoning model
 == 思考モードを使用するには推論モデルが必要です
+
+This font has no bundled vector profile. Nameplates will use FreeType.
+== このフォントには同梱ベクタープロファイルがありません。ネームプレートは FreeType を使用します。
 
 This ID is not connected
 == この ID は接続されていません
@@ -12251,8 +12293,8 @@ UI icon color
 UI icon custom color
 == UI アイコンのカスタム色
 
-UI icon weight
-== UI アイコンの太さ
+UI icon style
+== UI アイコンのスタイル
 
 UI motion level
 == UIアニメーションの強度
@@ -12548,12 +12590,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
 
-Use MSDF text rendering for nameplates (built-in fonts only)
-== ネームプレートに MSDF テキストレンダリングを使用（内蔵フォントのみ）
-
-Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
-== ネームプレートにMSDFテキストレンダリングを使用する（内蔵フォントのみ、カスタムフォントはFreeTypeにフォールバック）
-
 Use multi-char replacement based on word length
 == 単語の長さに基づいて複数文字置換を使用
 
@@ -12611,6 +12647,12 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == `add_favorite` の前にこれを使用してお気に入りをグループ化します。`end_favorite_group` で終了します
 
+Use vector font rendering for nameplates
+== ネームプレートにベクター文字描画を使用
+
+Use vector font rendering for nameplates when a bundled profile is available
+== 同梱のベクタープロファイルがある場合にネームプレートでベクター文字描画を使用
+
 Use warlist colors instead of regular colors
 == 通常の色の代わりに敵対リストの色を使用
 
@@ -12622,9 +12664,6 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == 現在の照準位置でアクティブアクションを使用します。
-
-Uses the built-in font; a custom font falls back to FreeType.
-== 内蔵フォントを使用します。カスタムフォントはFreeTypeにフォールバックします。
 
 v = Velocity
 == v = 速度
@@ -12646,6 +12685,9 @@ Vanilla skins only
 
 Variable custom font weight
 == 可変フォントのカスタム太さ
+
+Vector nameplate text
+== ネームプレートのベクター文字
 
 Velocity
 == 速度

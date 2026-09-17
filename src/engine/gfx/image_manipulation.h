@@ -42,6 +42,9 @@ bool ResolveSpritePixelRect(size_t ImageWidth, size_t ImageHeight, int GridX, in
 // 有效，其它格式、空数据或越界矩形都返回 false。
 bool IsImageRectFullyTransparent(const CImageInfo &Image, size_t X, size_t Y, size_t Width, size_t Height);
 
+// 把整张图清成完全透明（所有通道归零）。用于按内置图的尺寸与格式造一张「空白材质」。
+void ClearImageToTransparent(CImageInfo &Image);
+
 // 空白 sprite 回退：当 Image 的 (X, Y, Width, Height) 完全透明时，用 FallbackImage 的
 // (FallbackX, FallbackY, FallbackWidth, FallbackHeight) 覆盖它。
 // 两个区域的像素尺寸一致时按行拷贝，不一致时按最近邻缩放——同一 sprite 在不同分辨率的画布上

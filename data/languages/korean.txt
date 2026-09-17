@@ -380,6 +380,9 @@ Add a community as a favorite
 Add a community to the exclusion filter
 == 커뮤니티를 제외 필터에 추가
 
+Add a country to the allowed filter list for a specific community (kept visible while its country filter is active)
+== 특정 커뮤니티의 허용 필터 목록에 국가 추가 (해당 국가 필터가 활성화되어 있는 동안 계속 표시됨)
+
 Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
 == 특정 커뮤니티의 제외 필터에 국가 추가 (ISO 3166-1 숫자 코드)
 
@@ -1209,7 +1212,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Gores 게임 모드에서 Gores 자동 전환 자동 활성화
 
 Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
-== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== 사용자 지정 에셋 스프라이트가 완전히 투명하면 자동으로 기본 에셋으로 대체합니다. 끄면 빈 스프라이트가 보이지 않는 상태로 유지됩니다 (효과 숨기기 등)
 
 Automatically re-join team 0 after finish (only if unlocked).
 == 완주 후 자동으로 0팀 재가입 (잠금 해제된 경우에만)
@@ -1234,6 +1237,9 @@ Automatically take game over screenshot
 
 Automatically take statboard screenshot
 == 통계판 스크린샷 자동 촬영
+
+Available for this bundled font
+== 이 번들 글꼴에서 사용 가능
 
 Available practice commands: 
 == 사용 가능한 연습 명령어: 
@@ -1481,6 +1487,12 @@ Bit flags for disabling settings tabs
 Black
 == 검정
 
+Blank material
+== 빈 소재
+
+Blank: hides this asset
+== 빈 값: 이 에셋을 숨깁니다
+
 Blend mode
 == 혼합 모드
 
@@ -1570,6 +1582,9 @@ Build the status text shown above Tees
 
 Built-in
 == 내장
+
+Bundled vector profile:
+== 번들 벡터 프로필:
 
 Button - Disabled
 == 버튼 - 비활성화
@@ -1834,9 +1849,6 @@ Choose default eyes when joining a server
 
 Choose export name first.
 == 내보내기 이름을 먼저 입력하세요.
-
-Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.
-== 먼저 사용자 지정 글꼴을 선택한 다음 MSDF 이름표를 활성화하세요. 처음 로드할 때 잠시 시간이 걸릴 수 있습니다.
 
 Choose the language used by the client
 == Choose the language used by the client
@@ -2375,6 +2387,12 @@ Control latency compensation tools
 Control player (0) or dummy (1)
 == 플레이어(0) 또는 더미(1) 제어
 
+Controlled by Gores mode
+== Gores 모드가 제어 중
+
+Controlled by Zen mode
+== 선 모드가 제어 중
+
 Controller
 == 컨트롤러
 
@@ -2593,9 +2611,6 @@ Custom font weight (variable fonts)
 
 Custom Font:
 == 사용자 정의 글꼴:
-
-Custom fonts use FreeType automatically.
-== 사용자 지정 글꼴은 자동으로 FreeType을 사용합니다.
 
 Custom prompt template
 == 사용자 정의 프롬프트 템플릿
@@ -3050,6 +3065,9 @@ Disallow chat from blacklisted addresses
 Discard
 == 취소
 
+Discard cached server pings older than this many hours (0 = never expire)
+== 이 시간보다 오래된 캐시된 서버 핑을 삭제 (0 = 만료되지 않음)
+
 Discard changes
 == 변경 사항 취소
 
@@ -3409,6 +3427,9 @@ dumps all sqlservers readservers = r, writeservers = w
 
 Dumps the antibot status
 == 안티봇 상태 덤프
+
+Duotone
+== 듀오톤
 
 Duplicate
 == 복제
@@ -5855,6 +5876,9 @@ LibreTranslate API Key
 LibreTranslate endpoint
 == LibreTranslate 엔드포인트
 
+Light
+== 라이트
+
 Limit information in spectator mode
 == 관전자 모드에서 정보 제한
 
@@ -6614,9 +6638,6 @@ Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
 == x/y 번호 ii 의 타일로 이동
 
-MSDF nameplate text
-== MSDF 이름표 텍스트
-
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == 더 강한 효과와 균형 잡힌 GPU 부하를 제공하는 다중 해상도 블러입니다.
 
@@ -7133,6 +7154,9 @@ Normal message
 Normal message text gradient color
 == 일반 메시지 텍스트 그라데이션 색상
 
+Not available; FreeType is used
+== 사용할 수 없음. FreeType을 사용합니다
+
 NOT CONNECTED
 == 연결되지 않음
 
@@ -7298,6 +7322,9 @@ Only save ghost if better than previous record
 Only save improvements
 == 개선된 기록만 저장
 
+Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
+== 일부 번들 글꼴에만 벡터 이름표 아틀라스가 있습니다. 다른 글꼴은 FreeType을 사용합니다.
+
 Only show after joining a team
 == 팀에 가입한 후에만 표시
 
@@ -7321,6 +7348,9 @@ Opacity
 
 Opacity of freeze bars inside freeze
 == 얼음 안에서의 해동 게이지 불투명도
+
+Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)
+== 관전 중인 플레이어에게 표시되는 유령 Tee의 불투명도 (0 = 완전 투명)
 
 Open a matching settings card directly
 == Open a matching settings card directly
@@ -8270,8 +8300,8 @@ Qm UI custom icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Qm UI 아이콘 색상: 1=흰색, 2=검정, 3=사용자 지정, 4=무지개
 
-Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
-== Qm UI 아이콘 굵기: 0=보통, 1=굵게, 2=얇게, 3=채우기
+Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
+== Qm UI 아이콘 스타일: 0=보통, 1=굵게, 2=얇게, 3=채우기, 4=라이트, 5=듀오톤
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: 인덱스는 1에서 %d 사이여야 합니다.
@@ -8701,6 +8731,9 @@ Remove a community from the exclusion filter
 
 Remove a community from the favorites
 == 즐겨찾기에서 커뮤니티 제거
+
+Remove a country from the allowed filter list for a specific community
+== 특정 커뮤니티의 허용 필터 목록에서 국가 제거
 
 Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
 == 특정 커뮤니티의 제외 필터에서 국가 제거 (ISO 3166-1 숫자 코드)
@@ -10431,7 +10464,7 @@ Show seconds on clock
 == 시계에 초 표시
 
 Show semi-transparent ghost tees for other players who are spectating
-== Show semi-transparent ghost tees for other players who are spectating
+== 관전 중인 다른 플레이어의 반투명 유령 Tee 표시
 
 Show server chat messages
 == 서버 채팅 메시지 표시
@@ -10787,8 +10820,14 @@ Skip render frames if waiting for previous frame during update cycle
 Skip start menu
 == 시작 메뉴 건너뛰기
 
+Skip switch animation when hammering
+== 해머 사용 시 무기 전환 애니메이션을 재생하지 않음
+
 Skip the main menu
 == 메인 메뉴 건너뛰기
+
+Skip the weapon switch animation for hammer switches in Gores mode
+== Gores 모드에서 해머로 전환할 때 무기 전환 애니메이션을 재생하지 않음
 
 Skip Tutorial
 == 튜토리얼 건너뛰기
@@ -10977,7 +11016,7 @@ Spectated player and friends
 == 관전 중인 플레이어와 친구
 
 Spectator ghost opacity
-== Spectator ghost opacity
+== 관전자 고스트 불투명도
 
 Spectators
 == 관전자
@@ -11621,6 +11660,9 @@ Teleports you to teleporter i
 Teletile overlay alpha (0-100)
 == 텔레타일 오버레이 엔티티 알파 (0-100)
 
+Temporarily controlled by a mode toggle
+== 현재 모드 설정에 의해 일시적으로 제어됩니다
+
 Temporarily disable dummy hammering
 == 더미 해머링을 일시적으로 비활성화
 
@@ -11674,9 +11716,6 @@ The audio device couldn't be initialised.
 
 The auth level you need to tele others
 == 다른 플레이어를 순간이동시키는 데 필요한 권한 레벨
-
-The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.
-== 사용자 지정 글꼴이 변경되어 MSDF 이름표가 비활성화되었습니다. 글꼴을 선택한 후 MSDF를 다시 활성화하세요.
 
 The downloaded file is not a valid demo
 == 다운로드한 파일은 유효한 데모가 아닙니다
@@ -11773,6 +11812,9 @@ Thin
 
 Thinking mode requires a reasoning model
 == 사고 모드를 사용하려면 추론 모델이 필요합니다
+
+This font has no bundled vector profile. Nameplates will use FreeType.
+== 이 글꼴에는 번들 벡터 프로필이 없습니다. 이름표는 FreeType을 사용합니다.
 
 This ID is not connected
 == 이 ID는 연결되지 않음
@@ -12251,8 +12293,8 @@ UI icon color
 UI icon custom color
 == UI 아이콘 사용자 지정 색상
 
-UI icon weight
-== UI 아이콘 굵기
+UI icon style
+== UI 아이콘 스타일
 
 UI motion level
 == UI 애니메이션 강도
@@ -12548,12 +12590,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
 
-Use MSDF text rendering for nameplates (built-in fonts only)
-== 이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만)
-
-Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
-== 이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만, 사용자 지정 글꼴은 FreeType으로 폴백)
-
 Use multi-char replacement based on word length
 == 단어 길이에 따른 다중 문자 대체 사용
 
@@ -12611,6 +12647,12 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == 즐겨찾기를 그룹화하려면 `add_favorite` 앞에 사용하세요. `end_favorite_group` 으로 종료
 
+Use vector font rendering for nameplates
+== 이름표에 벡터 글꼴 렌더링 사용
+
+Use vector font rendering for nameplates when a bundled profile is available
+== 번들 벡터 프로필이 있을 때 이름표에 벡터 글꼴 렌더링 사용
+
 Use warlist colors instead of regular colors
 == 일반 색상 대신 전쟁 목록 색상 사용
 
@@ -12622,9 +12664,6 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == 현재 조준 위치로 활성 작업을 사용합니다.
-
-Uses the built-in font; a custom font falls back to FreeType.
-== 내장 글꼴을 사용합니다. 사용자 지정 글꼴은 FreeType으로 폴백합니다.
 
 v = Velocity
 == v = 속도
@@ -12646,6 +12685,9 @@ Vanilla skins only
 
 Variable custom font weight
 == 가변 글꼴의 사용자 지정 굵기
+
+Vector nameplate text
+== 이름표 벡터 텍스트
 
 Velocity
 == 속도

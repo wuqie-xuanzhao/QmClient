@@ -404,6 +404,10 @@ public:
 	void OnRender() override;
 	bool OnInput(const IInput::CEvent &Event) override;
 	bool ShouldAppendGoresPrevWeapon() const;
+	// Gores 自动切锤是否正在接管武器（锤后自动切回，或拿到额外武器后的脉冲模式）。
+	bool IsGoresWeaponCycleActive() const;
+	// Gores 自动切锤引起的锤子切换是否要跳过切换动画（受 qm_gores_suppress_switch_anim 控制）。
+	bool ShouldSkipGoresHammerSwitchAnimation(int ClientId, int PreviousWeapon, int CurrentWeapon) const;
 	bool IsFinishRenamePending(int Dummy) const { return Dummy >= 0 && Dummy < NUM_DUMMIES && m_aFinishRenamePending[Dummy]; }
 
 	void OnStateChange(int NewState, int OldState) override;
@@ -504,6 +508,7 @@ public:
 	bool m_FocusModeStateKnown = false;
 	bool m_PrevFocusModeActive = false;
 	SQmFocusConfigOverrideState m_FocusHudOverrideState;
+	SQmFocusConfigOverrideState m_FocusStatusBarOverrideState;
 	SQmFocusConfigOverrideState m_FocusNamePlatesOverrideState;
 	SQmFocusConfigOverrideState m_FocusNamePlatesOwnOverrideState;
 	SQmFocusConfigOverrideState m_FocusNameplateCoordsOverrideState;
@@ -511,8 +516,6 @@ public:
 	SQmFocusConfigOverrideState m_FocusNameplateCoordXOverrideState;
 	SQmFocusConfigOverrideState m_FocusNameplateCoordYOverrideState;
 	SQmFocusConfigOverrideState m_FocusDirectionOverrideState;
-	SQmFocusConfigOverrideState m_FocusVideoHudOverrideState;
-	SQmFocusConfigOverrideState m_FocusVideoDirectionOverrideState;
 	void ApplyFocusModeEffects();
 
 	// Gores 快速输入临时覆盖
@@ -523,7 +526,6 @@ public:
 	SQmFocusConfigOverrideState m_GoresAutoEnableOverride;
 	SQmFocusConfigOverrideState m_GoresFastInputOverride;
 	SQmFocusConfigOverrideState m_GoresFastInputOthersOverride;
-	SQmFocusConfigOverrideState m_GoresDummyHammerOverride;
 	void ResetGoresConfigOverrides();
 	bool IsFastInputActive() const;
 	bool IsFastInputOthersActive() const;

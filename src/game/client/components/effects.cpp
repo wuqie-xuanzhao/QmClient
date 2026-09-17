@@ -25,9 +25,9 @@ CEffects::CEffects()
 
 void CEffects::AirJump(vec2 Pos, float Alpha, float Volume)
 {
-	const bool FocusMode = g_Config.m_QmFocusMode != 0;
-	const bool PlaySound = ShouldPlayFocusJumpSound(FocusMode, g_Config.m_QmFocusModeMuteJumpSounds != 0, g_Config.m_SndGame != 0);
-	if(ShouldHideFocusJumpEffects(FocusMode, g_Config.m_QmFocusModeHideJumpEffects != 0))
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool PlaySound = Focus.m_AirJump.m_PlaySound;
+	if(!Focus.m_AirJump.m_SpawnParticles)
 	{
 		if(PlaySound)
 			GameClient()->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, Volume, Pos);
@@ -91,7 +91,7 @@ void CEffects::FreezingFlakes(vec2 Pos, vec2 Size, float Alpha)
 	if(!m_Add5hz)
 		return;
 
-	if(ShouldHideFocusFreezeEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideFreezeEffects != 0))
+	if(GetQmFocusModeDecisions().m_HideFreezeEffects)
 		return;
 
 	CParticle p;
@@ -205,8 +205,9 @@ void CEffects::BulletTrail(vec2 Pos, float Alpha, float TimePassed)
 
 int CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 {
-	const bool PlaySound = ShouldPlayFocusDeathOrSpawnSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteDeathSounds != 0, g_Config.m_SndGame);
-	if(ShouldHideFocusKillEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideKillEffects != 0))
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool PlaySound = Focus.m_PlayDeathOrSpawnSound;
+	if(Focus.m_HideKillEffects)
 	{
 		++GameClient()->m_SpawnEffectsFiltered;
 		if(PlaySound)
@@ -243,7 +244,7 @@ int CEffects::PlayerSpawn(vec2 Pos, float Alpha, float Volume)
 
 void CEffects::PlayerDeath(vec2 Pos, int ClientId, float Alpha)
 {
-	if(ShouldHideFocusKillEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideKillEffects != 0))
+	if(GetQmFocusModeDecisions().m_HideKillEffects)
 		return;
 
 	ColorRGBA BloodColor(1.0f, 1.0f, 1.0f);
@@ -356,7 +357,7 @@ void CEffects::Confetti(vec2 Pos, float Alpha)
 
 void CEffects::Explosion(vec2 Pos, float Alpha)
 {
-	if(ShouldHideFocusExplosionEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideExplosionEffects != 0))
+	if(GetQmFocusModeDecisions().m_HideExplosionEffects)
 		return;
 
 	// add to flow
@@ -425,9 +426,9 @@ void CEffects::Explosion(vec2 Pos, float Alpha)
 
 void CEffects::HammerHit(vec2 Pos, float Alpha, float Volume)
 {
-	const bool FocusMode = g_Config.m_QmFocusMode != 0;
-	const bool HideEffect = ShouldHideFocusHammerEffects(FocusMode, g_Config.m_QmFocusModeHideHammerEffects != 0);
-	const bool MuteSound = ShouldMuteFocusHammerSounds(FocusMode, g_Config.m_QmFocusModeMuteHammerSounds != 0);
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool HideEffect = Focus.m_HideHammerEffects;
+	const bool MuteSound = Focus.m_MuteHammerSounds;
 
 	if(!HideEffect)
 	{

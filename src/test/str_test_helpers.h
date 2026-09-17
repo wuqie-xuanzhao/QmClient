@@ -1,3 +1,6 @@
+#ifndef TEST_STR_TEST_HELPERS_H
+#define TEST_STR_TEST_HELPERS_H
+
 #pragma once
 
 #include <gtest/gtest.h>
@@ -14,3 +17,5 @@ static void TestInplace(const char *pInput, const char *pOutput)
 	Func(aBuf);
 	EXPECT_STREQ(aBuf, pOutput);
 }
+
+#endif

@@ -208,6 +208,19 @@ TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectMapsEachCellAcrossCanvasSize
 	Default.Free();
 }
 
+TEST(QmBlankAssetFallback, ClearImageToTransparentBlanksEveryChannel)
+{
+	// 空白材质按内置图的尺寸/格式造全透明图：清空后整张都应判定为空白。
+	CImageInfo Image = MakeRgbaImage(3, 2);
+	SetPixel(Image, 1, 1, 200, 100, 50, 255);
+
+	ClearImageToTransparent(Image);
+
+	EXPECT_TRUE(IsImageRectFullyTransparent(Image, 0, 0, 3, 2));
+	EXPECT_TRUE(PixelEquals(Image, 1, 1, 0, 0, 0, 0));
+	Image.Free();
+}
+
 TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectRequiresMatchingFormat)
 {
 	CImageInfo Custom = MakeRgbaImage(4, 4);

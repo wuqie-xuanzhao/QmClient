@@ -322,6 +322,7 @@ public:
 
 	void Minimize() override;
 	void HideWindow() override;
+	void ShowWindow() override;
 	void SetWindowParams(int FullscreenMode, bool IsBorderless) override;
 	bool SetWindowScreen(int Index, bool MoveToCenter, ivec2 *pDesktopSize) override;
 	bool UpdateDisplayMode(int Index, ivec2 *pDesktopSize) override;

@@ -707,7 +707,6 @@ TEST(InputField, TrailingTextStaysInsideSingleShell)
 	EXPECT_GE(Layout.m_ContentRect.w, 52.0f);
 }
 
-
 TEST(UiV2AnimSpring, ReplaceInheritsVelocity)
 {
 	g_Config.m_QmUiMotionLevel = 2;
@@ -1300,7 +1299,6 @@ TEST(UiV2AnimEasing, MergeTargetRefreshesCustomEasing)
 	EXPECT_EQ(FastState.m_Calls, 0);
 	EXPECT_GT(Runtime.GetValue(206, EUiAnimProperty::ALPHA), 0.45f);
 }
-
 
 TEST(UiV2AnimColor, DefaultInterpolationUsesLinearSrgb)
 {

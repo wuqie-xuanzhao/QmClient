@@ -897,6 +897,11 @@ void CInputOverlay::OnRender()
 {
 	if(!g_Config.m_QmInputOverlay || (Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK))
 		return;
+#if defined(CONF_VIDEORECORDER)
+	// 渲染（录制）视频时跟随 cl_video_show_direction，仅当配置包含本机按键（2/3）时才录叠层
+	if(IVideo::Current() && g_Config.m_ClVideoShowDirection < 2)
+		return;
+#endif
 	// 计分板或 ESC 菜单打开时隐藏，仅游戏内显示。
 	if(GameClient()->m_Scoreboard.IsActive() || GameClient()->m_Menus.IsActive())
 		return;

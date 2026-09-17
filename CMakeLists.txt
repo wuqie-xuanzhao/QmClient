@@ -1834,9 +1834,23 @@ set(EXPECTED_DATA
   extras.png
   fonts/DejaVuSans.ttf
   fonts/GlowSansJ-Compressed-Book.otf
-  fonts/NotoSansSC-VF.ttf
   fonts/NotoEmoji-Regular.ttf
+  fonts/NotoSansBalinese-Regular.ttf
+  fonts/NotoSansBamum-Regular.ttf
+  fonts/NotoSansBatak-Regular.ttf
+  fonts/NotoSansEgyptianHieroglyphs-Regular.ttf
+  fonts/NotoSansJavanese-Regular.ttf
+  fonts/NotoSansMath-Regular.ttf
+  fonts/NotoSansOriya-Regular.ttf
+  fonts/NotoSansSC-VF.ttf
+  fonts/NotoSansSymbols-Regular.ttf
+  fonts/NotoSansSymbols2-Regular.ttf
+  fonts/NotoSansTaiLe-Regular.ttf
   fonts/NotoSansThai-Regular.ttf
+  fonts/NotoSansVai-Regular.ttf
+  fonts/NotoSansYi-Regular.ttf
+  fonts/NotoSerifTibetan-Regular.ttf
+  fonts/SourceHanSans.ttc
   fonts/index.json
   game.png
   gui_buttons.png
@@ -1906,6 +1920,22 @@ set(EXPECTED_DATA
   qmclient/icons/qm_icons_fill_4x.png
   qmclient/icons/qm_icons_fill_msdf.json
   qmclient/icons/qm_icons_fill_msdf.png
+  qmclient/icons/qm_icons_light_1x.json
+  qmclient/icons/qm_icons_light_1x.png
+  qmclient/icons/qm_icons_light_2x.json
+  qmclient/icons/qm_icons_light_2x.png
+  qmclient/icons/qm_icons_light_4x.json
+  qmclient/icons/qm_icons_light_4x.png
+  qmclient/icons/qm_icons_light_msdf.json
+  qmclient/icons/qm_icons_light_msdf.png
+  qmclient/icons/qm_icons_duotone_1x.json
+  qmclient/icons/qm_icons_duotone_1x.png
+  qmclient/icons/qm_icons_duotone_2x.json
+  qmclient/icons/qm_icons_duotone_2x.png
+  qmclient/icons/qm_icons_duotone_4x.json
+  qmclient/icons/qm_icons_duotone_4x.png
+  qmclient/icons/qm_icons_duotone_msdf.json
+  qmclient/icons/qm_icons_duotone_msdf.png
   qmclient/icons/qm_icons_regular_1x.json
   qmclient/icons/qm_icons_regular_1x.png
   qmclient/icons/qm_icons_regular_2x.json
@@ -2495,7 +2525,9 @@ add_custom_command(OUTPUT "src/generated/wordlist.h"
 
 file(GLOB QM_ICON_ATLAS_SVG_SOURCES
   datasrc/qm_icons/phosphor_bold/*.svg
+  datasrc/qm_icons/phosphor_duotone/*.svg
   datasrc/qm_icons/phosphor_fill/*.svg
+  datasrc/qm_icons/phosphor_light/*.svg
   datasrc/qm_icons/phosphor_regular/*.svg
   datasrc/qm_icons/phosphor_thin/*.svg
   datasrc/qm_icons/tabler/*.svg
@@ -2503,8 +2535,12 @@ file(GLOB QM_ICON_ATLAS_SVG_SOURCES
 set(QM_ICON_MORPH_SVG_SOURCES
   datasrc/qm_icons/phosphor_bold/icon-eye-off.svg
   datasrc/qm_icons/phosphor_bold/icon-eye.svg
+  datasrc/qm_icons/phosphor_duotone/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_duotone/icon-eye.svg
   datasrc/qm_icons/phosphor_fill/icon-eye-off.svg
   datasrc/qm_icons/phosphor_fill/icon-eye.svg
+  datasrc/qm_icons/phosphor_light/icon-eye-off.svg
+  datasrc/qm_icons/phosphor_light/icon-eye.svg
   datasrc/qm_icons/phosphor_regular/icon-eye-off.svg
   datasrc/qm_icons/phosphor_regular/icon-eye.svg
   datasrc/qm_icons/phosphor_thin/icon-eye-off.svg
@@ -2529,6 +2565,24 @@ if(TARGET sync_runtime_data)
   add_dependencies(sync_runtime_data qm-icon-morph)
 endif()
 add_custom_target(qm-icon-atlas
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_duotone
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_duotone
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_atlas.py
+    --source datasrc/qm_icons/phosphor_light
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_light
+    --sizes 1 2 4
+    --base-size 24
+    --padding 4
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_atlas.py
     --source datasrc/qm_icons/phosphor_bold
@@ -2574,6 +2628,18 @@ add_custom_target(qm-icon-atlas
 
 # msdfgen 只用于资源制作。生成产物已提交，普通构建不依赖本机安装。
 add_custom_target(qm-icon-msdf-atlas
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_duotone
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_duotone
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_msdf.py
+    --source datasrc/qm_icons/phosphor_light
+    --source datasrc/qm_icons/tabler
+    --output data/qmclient/icons
+    --atlas-name qm_icons_light
   COMMAND ${Python3_EXECUTABLE}
     qmclient_scripts/qm_build_icon_msdf.py
     --source datasrc/qm_icons/phosphor_bold
@@ -4223,6 +4289,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_icon_atlas_contract_test.cpp
     qm_font_icon_cmap_test.cpp
     qm_icon_shader_contract_test.cpp
+    qm_msdf_param_encoding_test.cpp
     qm_icon_loader_contract_test.cpp
     qm_icon_opengl_contract_test.cpp
     qm_icon_vulkan_contract_test.cpp
@@ -4379,6 +4446,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_spotify_token_test.cpp
     qm_spotify_parser_test.cpp
     qm_modes_test.cpp
+    qm_config_save_value_override_test.cpp
     qm_prediction_contract_test.cpp
     qm_nameplate_msdf_atlas_test.cpp
     qm_nameplate_msdf_gate_test.cpp

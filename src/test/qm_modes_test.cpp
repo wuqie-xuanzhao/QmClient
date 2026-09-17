@@ -125,15 +125,15 @@ TEST(QmStatisticsModeDisplay, DoesNotApplyDdnetHoursToNonDdnetMode)
 
 namespace
 {
-struct SQmTestModeStats
-{
-	std::string m_GameMode;
-	std::string m_CommunityId;
-	bool m_IsAxiom = false;
-	int m_Maps = 0;
-	int64_t m_Score = 0;
-	int64_t m_PlaytimeSeconds = 0;
-};
+	struct SQmTestModeStats
+	{
+		std::string m_GameMode;
+		std::string m_CommunityId;
+		bool m_IsAxiom = false;
+		int m_Maps = 0;
+		int64_t m_Score = 0;
+		int64_t m_PlaytimeSeconds = 0;
+	};
 } // namespace
 
 TEST(QmStatisticsModeCollapse, FoldsDuplicateDDraceVariantsIntoSingleEntry)
@@ -393,70 +393,112 @@ TEST(QmFocusMode, ConfigOverrideKeepsUserChangesMadeWhileActive)
 	EXPECT_FALSE(State.m_WasActive);
 }
 
-TEST(QmFocusMode, HudScoreboardNamesAndNameplatesRequireFocusModeAndTheirOwnToggle)
+TEST(QmFocusMode, EveryChildToggleRequiresMasterSwitchAndItsOwnFlag)
 {
-	EXPECT_TRUE(ShouldHideFocusHud(true, true));
-	EXPECT_FALSE(ShouldHideFocusHud(true, false));
-	EXPECT_FALSE(ShouldHideFocusHud(false, true));
+	// 禅模式每个子开关只有在"总开关开启 且 该子开关开启"时才生效；
+	// 这张矩阵同时覆盖总开关关闭 + 子开关开启这类此前容易漏掉的组合。
+	struct SCase
+	{
+		bool SQmFocusModeConfig::*m_pSetting;
+		bool SQmFocusModeDecisions::*m_pDecision;
+	};
+	const SCase aCases[] = {
+		{&SQmFocusModeConfig::m_HideHud, &SQmFocusModeDecisions::m_HideHud},
+		{&SQmFocusModeConfig::m_HideMapProgress, &SQmFocusModeDecisions::m_HideMapProgress},
+		{&SQmFocusModeConfig::m_HideScoreboard, &SQmFocusModeDecisions::m_HideScoreboard},
+		{&SQmFocusModeConfig::m_HideNames, &SQmFocusModeDecisions::m_HideNames},
+		{&SQmFocusModeConfig::m_HideNameplates, &SQmFocusModeDecisions::m_HideNameplates},
+		{&SQmFocusModeConfig::m_HideInfoMessages, &SQmFocusModeDecisions::m_HideInfoMessages},
+		{&SQmFocusModeConfig::m_HideDirectionIndicators, &SQmFocusModeDecisions::m_HideDirectionIndicators},
+		{&SQmFocusModeConfig::m_HideGuideLines, &SQmFocusModeDecisions::m_HideGuideLines},
+		{&SQmFocusModeConfig::m_HideKillEffects, &SQmFocusModeDecisions::m_HideKillEffects},
+		{&SQmFocusModeConfig::m_HideExplosionEffects, &SQmFocusModeDecisions::m_HideExplosionEffects},
+		{&SQmFocusModeConfig::m_HideFreezeEffects, &SQmFocusModeDecisions::m_HideFreezeEffects},
+		{&SQmFocusModeConfig::m_HideHammerEffects, &SQmFocusModeDecisions::m_HideHammerEffects},
+		{&SQmFocusModeConfig::m_HideMuzzleEffects, &SQmFocusModeDecisions::m_HideMuzzleEffects},
+		{&SQmFocusModeConfig::m_MuteDeathSounds, &SQmFocusModeDecisions::m_MuteDeathSounds},
+		{&SQmFocusModeConfig::m_MuteHammerSounds, &SQmFocusModeDecisions::m_MuteHammerSounds},
+		{&SQmFocusModeConfig::m_HidePlayerMessages, &SQmFocusModeDecisions::m_HidePlayerMessages},
+		{&SQmFocusModeConfig::m_HideSystemInfoMessages, &SQmFocusModeDecisions::m_HideSystemInfoMessages},
+		{&SQmFocusModeConfig::m_HideSystemPromptMessages, &SQmFocusModeDecisions::m_HideSystemPromptMessages},
+		{&SQmFocusModeConfig::m_HideEchoMessages, &SQmFocusModeDecisions::m_HideEchoMessages},
+	};
+	for(const SCase &Case : aCases)
+	{
+		SQmFocusModeConfig Config;
+		Config.*Case.m_pSetting = true;
+		EXPECT_FALSE(GetQmFocusModeDecisions(Config).*Case.m_pDecision);
 
-	EXPECT_TRUE(ShouldHideFocusScoreboard(true, true));
-	EXPECT_FALSE(ShouldHideFocusScoreboard(true, false));
-	EXPECT_FALSE(ShouldHideFocusScoreboard(false, true));
+		Config.m_FocusActive = true;
+		EXPECT_TRUE(GetQmFocusModeDecisions(Config).*Case.m_pDecision);
+	}
 
-	EXPECT_TRUE(ShouldHideFocusNames(true, true));
-	EXPECT_FALSE(ShouldHideFocusNames(true, false));
-	EXPECT_FALSE(ShouldHideFocusNames(false, true));
-
-	EXPECT_TRUE(ShouldHideFocusNameplates(true, true));
-	EXPECT_FALSE(ShouldHideFocusNameplates(true, false));
-	EXPECT_FALSE(ShouldHideFocusNameplates(false, true));
+	SQmFocusModeConfig Config;
+	Config.m_FocusActive = true;
+	const SQmFocusModeDecisions Decisions = GetQmFocusModeDecisions(Config);
+	for(const SCase &Case : aCases)
+		EXPECT_FALSE(Decisions.*Case.m_pDecision);
 }
 
 TEST(QmFocusMode, SpectatorHudStaysVisibleWhenFocusModeAutoHidesMainHud)
 {
-	EXPECT_TRUE(ShouldRenderFocusSpectatorHud(true, true, false, true, true));
-	EXPECT_TRUE(ShouldRenderFocusSpectatorHud(true, true, true, true, true));
-	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(false, true, false, true, true));
-	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, false, false, true, true));
-	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, true, false, false, true));
-	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, true, false, true, false));
+	EXPECT_TRUE(ShouldRenderFocusSpectatorHud(true, true, false, true));
+	EXPECT_TRUE(ShouldRenderFocusSpectatorHud(true, true, true, true));
+	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(false, true, false, true));
+	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, false, false, true));
+	EXPECT_FALSE(ShouldRenderFocusSpectatorHud(true, true, false, false));
 }
 
-TEST(QmFocusMode, VisualEffectChildrenDoNotInheritTheLegacyVisualParentToggle)
+TEST(QmFocusMode, SettingsSnapshotMapsEachSettingToItsOwnDecision)
 {
-	EXPECT_FALSE(ShouldHideFocusJumpEffects(true, false));
-	EXPECT_TRUE(ShouldHideFocusJumpEffects(true, true));
-	EXPECT_FALSE(ShouldHideFocusKillEffects(true, false));
-	EXPECT_TRUE(ShouldHideFocusKillEffects(true, true));
-	EXPECT_FALSE(ShouldHideFocusExplosionEffects(true, false));
-	EXPECT_TRUE(ShouldHideFocusExplosionEffects(true, true));
-	EXPECT_FALSE(ShouldHideFocusFreezeEffects(true, false));
-	EXPECT_TRUE(ShouldHideFocusFreezeEffects(true, true));
-	EXPECT_FALSE(ShouldHideFocusFreezeEffects(false, true));
-	EXPECT_FALSE(ShouldHideFocusHammerEffects(true, false));
-	EXPECT_TRUE(ShouldHideFocusHammerEffects(true, true));
-	EXPECT_FALSE(ShouldHideFocusHammerEffects(false, true));
-	EXPECT_FALSE(ShouldHideFocusMuzzleEffects(true, false));
-	EXPECT_TRUE(ShouldHideFocusMuzzleEffects(true, true));
-	EXPECT_FALSE(ShouldHideFocusMuzzleEffects(false, true));
-	EXPECT_FALSE(ShouldHideFocusJumpEffects(false, true));
-	EXPECT_FALSE(ShouldHideFocusKillEffects(false, true));
-	EXPECT_FALSE(ShouldHideFocusExplosionEffects(false, true));
-}
+	// 每个 qm_focus_mode_* 配置项都必须映射到唯一对应的决策字段。逐项单独打开，
+	// 并校验其余字段保持关闭，可以暴露 HideChat 与 HideSystemMessages 之类的错位映射。
+	// 跳跃特效/跳跃音效被折叠进 m_AirJump，单独在下面的用例覆盖。
+	struct SCase
+	{
+		const char *m_pName;
+		int CConfig::*m_pSetting;
+		bool SQmFocusModeDecisions::*m_pDecision;
+	};
+	const SCase aCases[] = {
+		{"qm_focus_mode_hide_hud", &CConfig::m_QmFocusModeHideHud, &SQmFocusModeDecisions::m_HideHud},
+		{"qm_focus_mode_hide_map_progress", &CConfig::m_QmFocusModeHideMapProgress, &SQmFocusModeDecisions::m_HideMapProgress},
+		{"qm_focus_mode_hide_info_messages", &CConfig::m_QmFocusModeHideInfoMessages, &SQmFocusModeDecisions::m_HideInfoMessages},
+		{"qm_focus_mode_hide_scoreboard", &CConfig::m_QmFocusModeHideScoreboard, &SQmFocusModeDecisions::m_HideScoreboard},
+		{"qm_focus_mode_hide_names", &CConfig::m_QmFocusModeHideNames, &SQmFocusModeDecisions::m_HideNames},
+		{"qm_focus_mode_hide_nameplates", &CConfig::m_QmFocusModeHideNameplates, &SQmFocusModeDecisions::m_HideNameplates},
+		{"qm_focus_mode_hide_direction_indicators", &CConfig::m_QmFocusModeHideDirectionIndicators, &SQmFocusModeDecisions::m_HideDirectionIndicators},
+		{"qm_focus_mode_hide_guide_lines", &CConfig::m_QmFocusModeHideGuideLines, &SQmFocusModeDecisions::m_HideGuideLines},
+		{"qm_focus_mode_hide_kill_effects", &CConfig::m_QmFocusModeHideKillEffects, &SQmFocusModeDecisions::m_HideKillEffects},
+		{"qm_focus_mode_hide_explosion_effects", &CConfig::m_QmFocusModeHideExplosionEffects, &SQmFocusModeDecisions::m_HideExplosionEffects},
+		{"qm_focus_mode_hide_freeze_effects", &CConfig::m_QmFocusModeHideFreezeEffects, &SQmFocusModeDecisions::m_HideFreezeEffects},
+		{"qm_focus_mode_hide_hammer_effects", &CConfig::m_QmFocusModeHideHammerEffects, &SQmFocusModeDecisions::m_HideHammerEffects},
+		{"qm_focus_mode_hide_muzzle_effects", &CConfig::m_QmFocusModeHideMuzzleEffects, &SQmFocusModeDecisions::m_HideMuzzleEffects},
+		{"qm_focus_mode_mute_death_sounds", &CConfig::m_QmFocusModeMuteDeathSounds, &SQmFocusModeDecisions::m_MuteDeathSounds},
+		{"qm_focus_mode_mute_hammer_sounds", &CConfig::m_QmFocusModeMuteHammerSounds, &SQmFocusModeDecisions::m_MuteHammerSounds},
+		{"qm_focus_mode_hide_chat", &CConfig::m_QmFocusModeHideChat, &SQmFocusModeDecisions::m_HidePlayerMessages},
+		{"qm_focus_mode_hide_system_info_messages", &CConfig::m_QmFocusModeHideSystemInfoMessages, &SQmFocusModeDecisions::m_HideSystemInfoMessages},
+		{"qm_focus_mode_hide_system_messages", &CConfig::m_QmFocusModeHideSystemMessages, &SQmFocusModeDecisions::m_HideSystemPromptMessages},
+		{"qm_focus_mode_hide_echo", &CConfig::m_QmFocusModeHideEcho, &SQmFocusModeDecisions::m_HideEchoMessages},
+	};
+	struct SConfigRestore
+	{
+		CConfig m_Config = g_Config;
+		~SConfigRestore() { g_Config = m_Config; }
+	} ConfigRestore;
 
-TEST(QmFocusMode, UncheckedJumpEffectsStayVisibleInFocusMode)
-{
-	EXPECT_FALSE(ShouldHideFocusJumpEffects(true, false));
-}
+	for(const SCase &Case : aCases)
+		g_Config.*Case.m_pSetting = 0;
+	g_Config.m_QmFocusMode = 1;
 
-TEST(QmFocusMode, MapProgressAndInfoMessagesUseTheirOwnChildToggles)
-{
-	EXPECT_FALSE(ShouldHideFocusMapProgress(true, false));
-	EXPECT_TRUE(ShouldHideFocusMapProgress(true, true));
-	EXPECT_FALSE(ShouldHideFocusInfoMessages(true, false));
-	EXPECT_TRUE(ShouldHideFocusInfoMessages(true, true));
-	EXPECT_FALSE(ShouldHideFocusMapProgress(false, true));
-	EXPECT_FALSE(ShouldHideFocusInfoMessages(false, true));
+	for(const SCase &Case : aCases)
+	{
+		g_Config.*Case.m_pSetting = 1;
+		const SQmFocusModeDecisions Decisions = GetQmFocusModeDecisions();
+		for(const SCase &Other : aCases)
+			EXPECT_EQ(Decisions.*Other.m_pDecision, &Case == &Other) << Case.m_pName << " 与 " << Other.m_pName << " 的映射错位";
+		g_Config.*Case.m_pSetting = 0;
+	}
 }
 
 TEST(QmFocusMode, IndependentMapProgressUsesItsOwnToggleAndBottomStyle)
@@ -468,59 +510,51 @@ TEST(QmFocusMode, IndependentMapProgressUsesItsOwnToggleAndBottomStyle)
 	EXPECT_TRUE(ShouldRenderMapProgressBar(true, 0, false, true));
 }
 
-TEST(QmFocusMode, JumpSoundMuteIsIndependentFromJumpVisualEffects)
+TEST(QmFocusMode, JumpEffectsAndJumpSoundAreDecidedIndependently)
 {
-	EXPECT_TRUE(ShouldPlayFocusJumpSound(true, false, true));
-	EXPECT_FALSE(ShouldPlayFocusJumpSound(true, true, true));
-	EXPECT_TRUE(ShouldPlayFocusJumpSound(false, true, true));
-	EXPECT_FALSE(ShouldPlayFocusJumpSound(true, false, false));
+	SQmFocusModeConfig Config;
+	Config.m_FocusActive = true;
+	Config.m_SoundEnabled = true;
+	Config.m_MuteJumpSounds = true;
+	SQmFocusModeDecisions Decisions = GetQmFocusModeDecisions(Config);
+	EXPECT_TRUE(Decisions.m_AirJump.m_SpawnParticles);
+	EXPECT_FALSE(Decisions.m_AirJump.m_PlaySound);
+
+	Config.m_MuteJumpSounds = false;
+	Config.m_HideJumpEffects = true;
+	Decisions = GetQmFocusModeDecisions(Config);
+	EXPECT_FALSE(Decisions.m_AirJump.m_SpawnParticles);
+	EXPECT_TRUE(Decisions.m_AirJump.m_PlaySound);
+
+	Config.m_FocusActive = false;
+	Decisions = GetQmFocusModeDecisions(Config);
+	EXPECT_TRUE(Decisions.m_AirJump.m_SpawnParticles);
+	EXPECT_TRUE(Decisions.m_AirJump.m_PlaySound);
 }
 
-TEST(QmFocusMode, DeathOrSpawnSoundUsesDeathSoundMuteToggle)
+TEST(QmFocusMode, SoundEnabledGatesOnlyAudibleDecisions)
 {
-	EXPECT_TRUE(ShouldPlayFocusDeathOrSpawnSound(true, false, true));
-	EXPECT_FALSE(ShouldPlayFocusDeathOrSpawnSound(true, true, true));
-	EXPECT_TRUE(ShouldPlayFocusDeathOrSpawnSound(false, true, true));
-	EXPECT_FALSE(ShouldPlayFocusDeathOrSpawnSound(true, false, false));
-}
+	// 关闭游戏音效时不能播放禅模式本来就该静音的声音，但静音判定本身仍然成立。
+	SQmFocusModeConfig Config;
+	Config.m_FocusActive = true;
+	Config.m_MuteJumpSounds = true;
+	Config.m_MuteDeathSounds = true;
+	Config.m_MuteHammerSounds = true;
+	Config.m_SoundEnabled = false;
 
-TEST(QmFocusMode, HammerSoundMuteRequiresFocusModeAndHammerSoundToggle)
-{
-	EXPECT_FALSE(ShouldMuteFocusHammerSounds(true, false));
-	EXPECT_TRUE(ShouldMuteFocusHammerSounds(true, true));
-	EXPECT_FALSE(ShouldMuteFocusHammerSounds(false, true));
-}
+	SQmFocusModeDecisions Decisions = GetQmFocusModeDecisions(Config);
+	EXPECT_FALSE(Decisions.m_AirJump.m_PlaySound);
+	EXPECT_FALSE(Decisions.m_PlayDeathOrSpawnSound);
+	EXPECT_TRUE(Decisions.m_MuteDeathSounds);
+	EXPECT_TRUE(Decisions.m_MuteHammerSounds);
+	EXPECT_TRUE(Decisions.m_AirJump.m_SpawnParticles);
 
-TEST(QmFocusMode, AirJumpDecisionSeparatesParticlesAndSound)
-{
-	SQmAirJumpEffectDecision Decision = GetQmAirJumpEffectDecision(true, false, true, true);
-	EXPECT_TRUE(Decision.m_SpawnParticles);
-	EXPECT_FALSE(Decision.m_PlaySound);
-
-	Decision = GetQmAirJumpEffectDecision(true, true, false, true);
-	EXPECT_FALSE(Decision.m_SpawnParticles);
-	EXPECT_TRUE(Decision.m_PlaySound);
-
-	Decision = GetQmAirJumpEffectDecision(true, false, false, false);
-	EXPECT_TRUE(Decision.m_SpawnParticles);
-	EXPECT_FALSE(Decision.m_PlaySound);
-}
-
-TEST(QmFocusMode, DirectionIndicatorsAndGuideLinesAreControlledSeparately)
-{
-	EXPECT_TRUE(ShouldHideFocusDirectionIndicators(true, true));
-	EXPECT_FALSE(ShouldHideFocusDirectionIndicators(true, false));
-	EXPECT_FALSE(ShouldHideFocusDirectionIndicators(false, true));
-
-	EXPECT_TRUE(ShouldHideFocusGuideLines(true, true));
-	EXPECT_FALSE(ShouldHideFocusGuideLines(true, false));
-	EXPECT_FALSE(ShouldHideFocusGuideLines(false, true));
-}
-
-TEST(QmFocusMode, UncheckedDirectionAndGuideIndicatorsStayVisibleInFocusMode)
-{
-	EXPECT_FALSE(ShouldHideFocusDirectionIndicators(true, false));
-	EXPECT_FALSE(ShouldHideFocusGuideLines(true, false));
+	Config.m_MuteJumpSounds = false;
+	Config.m_MuteDeathSounds = false;
+	Config.m_SoundEnabled = true;
+	Decisions = GetQmFocusModeDecisions(Config);
+	EXPECT_TRUE(Decisions.m_AirJump.m_PlaySound);
+	EXPECT_TRUE(Decisions.m_PlayDeathOrSpawnSound);
 }
 
 TEST(QmFocusMode, ForceVisibleClientLinesRemainVisibleWhenChatIsHidden)
@@ -584,6 +618,31 @@ TEST(QmFocusMode, ConfigSnapshotKeepsExplicitVisualChildrenIndependent)
 	EXPECT_TRUE(GetQmFocusModeDecisions(Config).m_HideMuzzleEffects);
 }
 
+TEST(QmFocusMode, AllEffectsSuppressedWhileRecordingVideo)
+{
+	// "禅模式的一切效果都不进视频"：录制期间决策按总开关关闭处理，实时画面不受影响。
+	SQmFocusModeConfig Config;
+	Config.m_FocusActive = true;
+	Config.m_HideHud = true;
+	Config.m_HideNameplates = true;
+	Config.m_HidePlayerMessages = true;
+	Config.m_MuteHammerSounds = true;
+	Config.m_HideMuzzleEffects = true;
+
+	EXPECT_TRUE(GetQmFocusModeDecisions(Config).m_HideHud);
+
+	Config.m_VideoRecording = true;
+	const SQmFocusModeDecisions Decisions = GetQmFocusModeDecisions(Config);
+	EXPECT_FALSE(Decisions.m_FocusActive);
+	EXPECT_FALSE(Decisions.m_HideHud);
+	EXPECT_FALSE(Decisions.m_HideNameplates);
+	EXPECT_FALSE(Decisions.m_HidePlayerMessages);
+	EXPECT_FALSE(Decisions.m_MuteHammerSounds);
+	EXPECT_FALSE(Decisions.m_HideMuzzleEffects);
+	EXPECT_TRUE(Decisions.m_AirJump.m_SpawnParticles);
+	EXPECT_TRUE(Decisions.m_AirJump.m_PlaySound);
+}
+
 TEST(QmFocusMode, ConfigSnapshotSeparatesNameTextFromWholeNameplate)
 {
 	SQmFocusModeConfig Config;
@@ -623,30 +682,6 @@ TEST(QmFocusMode, ConfigSnapshotSeparatesChatMessageClasses)
 	EXPECT_TRUE(ShouldRenderFocusFilteredChatLine(Decisions.m_HidePlayerMessages, Decisions.m_HideSystemInfoMessages, Decisions.m_HideSystemPromptMessages, Decisions.m_HideEchoMessages, -1, false, true));
 	EXPECT_FALSE(ShouldRenderFocusFilteredChatLine(Decisions.m_HidePlayerMessages, Decisions.m_HideSystemInfoMessages, Decisions.m_HideSystemPromptMessages, Decisions.m_HideEchoMessages, -1, false, false));
 	EXPECT_FALSE(ShouldRenderFocusFilteredChatLine(Decisions.m_HidePlayerMessages, Decisions.m_HideSystemInfoMessages, Decisions.m_HideSystemPromptMessages, Decisions.m_HideEchoMessages, -2, false, false));
-}
-
-TEST(QmFocusMode, ConfigSnapshotMapProgressRequiresStyleAndGoresProgressAndChildToggle)
-{
-	SQmFocusModeConfig Config;
-	Config.m_FocusActive = true;
-	Config.m_MapProgressEnabled = true;
-	Config.m_MapProgressStyle = 0;
-	Config.m_PlayerStatsHudEnabled = false;
-	Config.m_GoresMapProgressEnabled = true;
-	Config.m_HideMapProgress = false;
-
-	EXPECT_TRUE(GetQmFocusModeDecisions(Config).m_RenderMapProgressBar);
-
-	Config.m_MapProgressStyle = 1;
-	EXPECT_TRUE(GetQmFocusModeDecisions(Config).m_RenderMapProgressBar);
-
-	Config.m_PlayerStatsHudEnabled = true;
-	EXPECT_FALSE(GetQmFocusModeDecisions(Config).m_RenderMapProgressBar);
-
-	Config.m_MapProgressStyle = 0;
-	Config.m_PlayerStatsHudEnabled = false;
-	Config.m_HideMapProgress = true;
-	EXPECT_FALSE(GetQmFocusModeDecisions(Config).m_RenderMapProgressBar);
 }
 
 TEST(QmTranslateUiSettings, DefaultColorsMatchSettingsPreviewDefaults)

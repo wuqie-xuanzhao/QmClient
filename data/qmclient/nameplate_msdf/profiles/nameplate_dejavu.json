@@ -3,7 +3,6 @@
   "profile": "dejavu",
   "generator": "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd",
   "pages": [
-    "qmclient/nameplate_msdf/nameplate_dejavu_00.json",
-    "qmclient/nameplate_msdf/nameplate_dejavu_01.json"
+    "qmclient/nameplate_msdf/nameplate_dejavu_00.json"
   ]
 }

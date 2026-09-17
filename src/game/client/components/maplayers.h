@@ -32,7 +32,10 @@ public:
 	void OnInit() override;
 	void OnRender() override;
 	void OnMapLoad() override;
+	bool AdvanceMapLoad();
 	void RenderCustom(const vec2 &Center, float Zoom);
+	void RenderCustomWithCamera(const vec2 &Center, float Zoom);
+	void SwapState(CMapLayers &Other);
 
 	virtual CCamera *GetCurCamera();
 
@@ -46,6 +49,7 @@ private:
 	CMapRenderer m_MapRenderer;
 	CEnvelopeState m_EnvEvaluator;
 	bool m_MapLoaded = false;
+	bool m_MapLoadInProgress = false;
 };
 
 #endif

@@ -20,10 +20,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from typing import Callable, NamedTuple
 
 # 基础脚本区：拉丁、希腊、西里尔、常用标点与符号
 BASE_RANGES: tuple[tuple[int, int], ...] = (
@@ -91,6 +94,136 @@ COMPARE_DEFAULT_CODEPOINTS = (0x0041, 0x0067, 0x4E00, 0x4E2D, 0x56FD, 0x65E5, 0x
 # fallback 页覆盖；这样新增字体不会在每次全量重建时额外烤 8000 个重复字形。
 PROFILE_CJK_LIMITS = {"noto_sans_sc": 856}
 
+# 共享脚本兜底页（所有 profile 的缺字回退）。
+#
+# 名牌的 MTSDF 回退链是「选中 profile → dejavu → noto_glow_cjk → FreeType」，
+# 所以 noto_glow_cjk 是唯一的脚本兜底入口：随包字体能覆盖的脚本都要在这里补齐，
+# MTSDF 全部落空才允许回退 FreeType。每个脚本只用一种随包字体，同一批字形不会
+# 在多套 profile 里重复烘焙。
+#
+# 这套页历史上是临时命令的产物，仓库里没有脚本能复现它，结果是汉字只覆盖到
+# U+6F3F（8512/20976 ≈ 40%），常用字如「的/球/茶/空/王/爱」全部缺席；名牌是整条
+# 回退，命中一个缺失字就整条退回 FreeType。--fallback-scripts-only 固定了这个入口。
+#
+# 页名必须保持 noto_glow_* 前缀：渲染器对路径含 "noto_glow" 的页禁用 Alpha 真 SDF
+# （规避历史 Alpha 伪影导致字形变实心块），改名会连带改变渲染路径。
+HAN_RANGES: tuple[tuple[int, int], ...] = (
+    (0x4E00, 0x9FFF),  # CJK 统一表意文字（排在扩展 A 前：预算的剩余部分按此顺序填充，
+    (0x3400, 0x4DBF),  # CJK 扩展 A         罕用的扩展 A 因此落在最后）
+)
+HANGUL_RANGES: tuple[tuple[int, int], ...] = (
+    (0xAC00, 0xD7AF),  # Hangul Syllables（同理：音节优先于字母）
+    (0x3130, 0x318F),  # Hangul Compatibility Jamo
+    (0x1100, 0x11FF),  # Hangul Jamo
+)
+# 符号页范围：Noto Emoji 除 1F300+ 表情外还带一批 BMP 符号（♥ ⚔ ✨ ⭐ ☟ ❤ 等），
+# 一并收进来，避免这些常见符号落在 MTSDF 之外。
+SYMBOL_RANGES: tuple[tuple[int, int], ...] = (
+    (0x2000, 0x2BFF),  # 标点 / 箭头 / 数学 / 杂项符号 / 装饰符
+    (0x1F000, 0x1FAFF),  # 麻将 / 多米诺 / 扑克 / 表情与图形符号各段
+)
+
+
+def gb2312_han_order() -> list[int]:
+    """GB2312 汉字序：一级字表（3755 常用）→ 二级字表（3008 次常用）。
+
+    这是「常用优先」的离线依据。按码位升序取字会把 U+4E00..U+6F3F 当成常用段，
+    而「的」(U+7684)、茶(0x8336)、空(0x7A7A)、爱(0x7231)、球(0x7403) 全在截断线
+    之上——最常用的字反而缺席，实测项目自身简中语料只覆盖 59.4%。
+    """
+    order: list[int] = []
+    for high in range(0xB0, 0xF8):
+        for low in range(0xA1, 0xFF):
+            try:
+                text = bytes((high, low)).decode("gb2312")
+            except UnicodeDecodeError:
+                continue
+            if len(text) == 1:
+                order.append(ord(text))
+    return order
+
+
+def ksx1001_hangul_order() -> list[int]:
+    """KS X 1001 谚文序（2350 个常用音节），作为韩文的常用优先依据。"""
+    order: list[int] = []
+    for high in range(0xB0, 0xC9):
+        for low in range(0xA1, 0xFF):
+            try:
+                text = bytes((high, low)).decode("euc_kr")
+            except UnicodeDecodeError:
+                continue
+            if len(text) == 1:
+                order.append(ord(text))
+    return order
+
+
+def prioritize_codepoints(available: list[int], tiers: tuple[list[int], ...]) -> list[int]:
+    """按优先级分层重排：tiers 内先到先得，其余按原顺序（码位升序）追加在后。"""
+    allowed = set(available)
+    seen: set[int] = set()
+    ordered: list[int] = []
+    for tier in tiers:
+        for codepoint in tier:
+            if codepoint in allowed and codepoint not in seen:
+                seen.add(codepoint)
+                ordered.append(codepoint)
+    ordered.extend(codepoint for codepoint in available if codepoint not in seen)
+    return ordered
+
+
+class SFallbackScript(NamedTuple):
+    """一个兜底脚本：一种随包字体 + 一组范围 + 常用优先序 + 预算与分片。"""
+
+    tag: str
+    page_stem: str
+    font: str
+    face: int
+    ranges: tuple[tuple[int, int], ...]
+    tiers: Callable[[], tuple[list[int], ...]]
+    max_glyphs: int  # 字形预算；0 = 不限（范围内能覆盖的全收）
+    chunk: int = 0  # 每片字形数；0 = 用 --fallback-chunk
+    page_size: int = 0  # 图集边长；0 = 用 --cjk-size
+    # 图集是 RGBA8、无 mipmap、加载时整页上传显存，所以边长直接等于显存成本：
+    # 4096² = 64 MiB，2048² = 16 MiB。字形少的脚本必须显式降尺寸，否则一页
+    # 泰文（87 字形、填充率 1.2%）也要占掉 64 MiB。
+
+
+def _han_tiers() -> tuple[list[int], ...]:
+    return (gb2312_han_order(),)
+
+
+def _hangul_tiers() -> tuple[list[int], ...]:
+    return (ksx1001_hangul_order(),)
+
+
+def _no_tiers() -> tuple[list[int], ...]:
+    return ()
+
+
+# 假名、CJK 标点与全角形式由 nameplate_noto_glow_jp（Glow Sans J）提供，这里不重烤。
+# 预算是显式取舍：全量汉字 27558 字按 4096²/约 1900 字每页要 15 页（约 165MB），与
+# 「体积成本」冲突。改为常用优先后，4 页即覆盖项目自身简中语料 1125/1126 = 99.9%
+# （旧的码位升序只覆盖 669/1126 = 59.4%），这里给到 6 页，余量留给玩家昵称里的
+# 中频字。符号页字形复杂、页数少，用更小的分片换并行。
+DEFAULT_FALLBACK_CHUNK = 1800
+FALLBACK_SCRIPTS: tuple[SFallbackScript, ...] = (
+    SFallbackScript(
+        "cn", "nameplate_noto_glow_cn", "NotoSansSC-VF.ttf", 0, HAN_RANGES, _han_tiers, 6 * 1800, 1800, 4096
+    ),
+    SFallbackScript(
+        "kr", "nameplate_noto_glow_kr", "SourceHanSans.ttc", 1, HANGUL_RANGES, _hangul_tiers, 2 * 1900, 1900, 4096
+    ),
+    # 泰文只有 87 个字形，4096² 的填充率是 1.2%（实测占用 2627x645）；2048² 能装下
+    # 且填充率约 4.8%，直接省 48 MiB 显存，覆盖范围一点不少。
+    SFallbackScript("thai", "nameplate_noto_glow_thai", "NotoSansThai-Regular.ttf", 0, THAI_RANGES, _no_tiers, 0, 0, 2048),
+    # 符号页字形复杂、单个字形大：1415 个字形实测在 4096² 里只占约 3745 行高，
+    # 原来的 800/片会裂成两页（各 64 MiB）。改成整块一片即可装下，省 64 MiB。
+    SFallbackScript("emoji", "nameplate_noto_glow_emoji", "NotoEmoji-Regular.ttf", 0, SYMBOL_RANGES, _no_tiers, 0, 0, 4096),
+)
+FALLBACK_PROFILE = "noto_glow_cjk"
+# profile 里的页顺序：先加载的页在重码时优先（m_Glyphs.emplace 不覆盖），顺序固定便于复现。
+FALLBACK_PAGE_ORDER = ("_cn_", "_jp", "_kr_", "_thai_", "_emoji_")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -111,6 +244,39 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--compare-scale", type=float, action="append", help="对照缩放比例，可重复；默认 1.0")
     parser.add_argument("--compare-codepoint", action="append", help="对照码点，例如 U+4E2D；可重复")
     parser.add_argument("--compare-strict", action="store_true", help="对照出现 fail/missing 时让构建失败")
+    parser.add_argument(
+        "--fallback-scripts-only",
+        action="store_true",
+        help="只重建 noto_glow_cjk 兜底页（汉字/谚文/泰文/emoji，页名 nameplate_noto_glow_<脚本>_XX）",
+    )
+    parser.add_argument(
+        "--fallback-only-script",
+        action="append",
+        metavar="TAG",
+        help="只烘焙指定脚本的兜底页（cn/kr/thai/emoji），可重复；省略表示全部",
+    )
+    parser.add_argument(
+        "--skip-profile-write",
+        action="store_true",
+        help="烘焙完不写 profile 清单（并行跑多个脚本时用，最后单独跑一次 --profile-only 汇总）",
+    )
+    parser.add_argument(
+        "--profile-only",
+        action="store_true",
+        help="不烘焙，只按已落盘的页重写 noto_glow_cjk profile 清单",
+    )
+    parser.add_argument(
+        "--fallback-chunk",
+        type=int,
+        default=DEFAULT_FALLBACK_CHUNK,
+        help=f"兜底页每片字形数（默认 {DEFAULT_FALLBACK_CHUNK}）；4096 图集实测汉字容量 1859~1952 浮动，取 1800 避免溢出",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=0,
+        help="并行烘焙进程数；0 表示 CPU 核数的一半",
+    )
     return parser.parse_args()
 
 
@@ -329,12 +495,212 @@ def chunk_codepoints(codepoints: list[int], chunk_size: int) -> list[list[int]]:
     return [codepoints[index : index + chunk_size] for index in range(0, len(codepoints), chunk_size)]
 
 
+def run_tool_soft(
+    args: argparse.Namespace,
+    font: Path,
+    face_index: int,
+    codepoints: list[int],
+    prefix: Path,
+    size: int,
+) -> tuple[dict, list[int]]:
+    """运行自建生成工具；返回 (manifest, 未打包的码点)。
+
+    与 run_tool 的区别：工具装不下时只会静默截断并返回 0，这里把缺失码点回报给调用方
+    自己决定拆分，而不是直接终止整批烘焙。
+    """
+    write_charset(prefix.with_suffix(".charset.txt"), codepoints)
+    command = [
+        str(args.tool),
+        "--font", str(font),
+        "--font-index", str(face_index),
+        "--charset", str(prefix.with_suffix(".charset.txt")),
+        "--output", str(prefix),
+        "--em-pixels", str(args.em_pixels),
+        "--px-range", str(args.px_range),
+        "--size", str(size),
+    ]
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        sys.stderr.write(result.stderr)
+        raise SystemExit(f"atlas tool failed ({result.returncode}) for {prefix}")
+    manifest = json.loads(prefix.with_suffix(".json").read_text(encoding="utf-8"))
+    packed = {int(key) for key in manifest["glyphs"]}
+    return manifest, [cp for cp in codepoints if cp not in packed]
+
+
+def bake_chunk(
+    args: argparse.Namespace,
+    font: Path,
+    face_index: int,
+    codepoints: list[int],
+    size: int,
+    temp_dir: Path,
+    tag: str,
+) -> tuple[tuple[Path, dict], list[int]]:
+    """烤一片，返回 (落盘的页, 没装下的码点)。
+
+    装不下时**不再对半拆**：对半拆会把「只差几十个字」的片裂成两页，实测 6 页变 10 页
+    （约 110MB）。溢出的码点由调用方汇总后追加一页即可。
+    """
+    prefix = temp_dir / tag
+    manifest, missing = run_tool_soft(args, font, face_index, codepoints, prefix, size)
+    if not manifest["glyphs"]:
+        raise SystemExit(f"atlas page cannot hold U+{codepoints[0]:04X}")
+    return (prefix, manifest), missing
+
+
+def fallback_page_rank(path: Path) -> tuple[int, int, str]:
+    """兜底页排序键：先按 FALLBACK_PAGE_ORDER 的脚本序，再按页序号。"""
+    name = path.stem
+    order = len(FALLBACK_PAGE_ORDER)
+    for index, token in enumerate(FALLBACK_PAGE_ORDER):
+        if token in name:
+            order = index
+            break
+    suffix = name.rsplit("_", 1)[-1]
+    return (order, int(suffix) if suffix.isdigit() else -1, name)
+
+
+def collect_fallback_pages(out_dir: Path) -> list[str]:
+    """扫描已落盘的兜底页，按固定顺序返回 manifest 相对路径。
+
+    用扫描而不是只用本次生成的页：分脚本增量烘焙时，本次没参与的脚本页仍要留在
+    profile 里，否则下一次烘焙会把它们从 profile 里挤掉。
+    """
+    found: set[Path] = set()
+    for entry in FALLBACK_SCRIPTS:
+        found.update(out_dir.glob(f"{entry.page_stem}_*.json"))
+    jp_page = out_dir / "nameplate_noto_glow_jp.json"
+    if jp_page.is_file():
+        found.add(jp_page)
+    return [f"qmclient/nameplate_msdf/{path.name}" for path in sorted(found, key=fallback_page_rank)]
+
+
+def bake_fallback_scripts(args: argparse.Namespace, fonts_dir: Path) -> int:
+    """重建 noto_glow_cjk 兜底页：每个脚本一组页，每组只用一种随包字体。
+
+    这是名牌 MTSDF 的最后一道 MTSDF 防线——只有这里的页也覆盖不到，才允许回退
+    FreeType。页名必须保持 noto_glow_* 前缀（见文件头说明）。
+    """
+    requested = list(args.fallback_only_script or ())
+    unknown = set(requested) - {entry.tag for entry in FALLBACK_SCRIPTS}
+    if unknown:
+        raise SystemExit(f"unknown fallback script(s): {', '.join(sorted(unknown))}")
+    selected = [entry for entry in FALLBACK_SCRIPTS if not requested or entry.tag in requested]
+
+    jobs = args.jobs if args.jobs > 0 else max(1, (os.cpu_count() or 4) // 2)
+    baked = 0
+    for entry in selected:
+        font = fonts_dir / entry.font
+        if not font.is_file():
+            raise SystemExit(f"missing source font for '{entry.tag}': {font}")
+        coverage = font_coverage(font, entry.face)
+        available = [cp for cp in codepoints_in_ranges(entry.ranges) if cp in coverage]
+        if not available:
+            raise SystemExit(f"{entry.font} (face {entry.face}) covers none of the '{entry.tag}' ranges")
+
+        # 常用优先 + 字形预算：预算内取最常用的那批，剩下的交给 FreeType 兜底。
+        ordered = prioritize_codepoints(available, entry.tiers())
+        codepoints = ordered[: entry.max_glyphs] if entry.max_glyphs > 0 else ordered
+        if len(codepoints) < len(ordered):
+            print(
+                f"fallback '{entry.tag}': budget {len(codepoints)}/{len(ordered)} codepoints "
+                f"(most-used first); rest falls back to FreeType"
+            )
+
+        chunk_size = entry.chunk if entry.chunk > 0 else args.fallback_chunk
+        chunks = chunk_codepoints(codepoints, chunk_size)
+        page_size = entry.page_size if entry.page_size > 0 else args.cjk_size
+        print(f"fallback '{entry.tag}': {len(codepoints)} codepoints from {font.name} face {entry.face}")
+        print(f"  baking {len(chunks)} chunk(s) of {chunk_size} with {jobs} job(s), atlas {page_size}px")
+
+        groups: list[list[tuple[Path, dict]]] = [[] for _ in chunks]
+        overflow: list[int] = []
+        with tempfile.TemporaryDirectory(prefix=f"qm-nameplate-{entry.tag}-") as temp:
+            temp_dir = Path(temp)
+            with ThreadPoolExecutor(max_workers=jobs) as pool:
+                futures = {
+                    pool.submit(
+                        bake_chunk,
+                        args,
+                        font,
+                        entry.face,
+                        chunk,
+                        page_size,
+                        temp_dir,
+                        f"{entry.tag}_{index:02d}",
+                    ): index
+                    for index, chunk in enumerate(chunks)
+                }
+                for future in as_completed(futures):
+                    index = futures[future]
+                    page, missing = future.result()
+                    if page is not None:
+                        groups[index].append(page)
+                    if missing:
+                        overflow.extend(missing)
+
+            # 各片溢出的字形汇总后追加成页：溢出量通常只有几十个，不该为它多裂出整页。
+            extra = 0
+            while overflow:
+                page, remaining = bake_chunk(
+                    args, font, entry.face, overflow, page_size, temp_dir, f"{entry.tag}_x{extra:02d}"
+                )
+                if page is not None:
+                    groups.append([page])
+                if len(remaining) >= len(overflow):
+                    raise SystemExit(f"atlas cannot make progress on {len(remaining)} overflow codepoint(s)")
+                print(f"  {entry.tag}: {len(overflow)} overflow codepoint(s) -> extra page {extra}")
+                overflow = remaining
+                extra += 1
+
+            # 按首码点排序，保证页名顺序与码点顺序一致：运行时先加载的页在重码时优先。
+            pages = sorted(
+                (page for group in groups for page in group),
+                key=lambda item: min(int(key) for key in item[1]["glyphs"]),
+            )
+
+            # 页数可能变少，先清掉同一前缀的旧产物，避免残留页被误引用。
+            stale = list(args.output.glob(f"{entry.page_stem}_*.json")) + list(
+                args.output.glob(f"{entry.page_stem}_*.png")
+            )
+            for path in stale:
+                path.unlink()
+
+            for index, (prefix, manifest) in enumerate(pages):
+                stem = f"{entry.page_stem}_{index:02d}"
+                image_name = f"qmclient/nameplate_msdf/{stem}.png"
+                page = publish_page(args, prefix, manifest, image_name, font.stem, args.output, font, entry.face)
+                print(f"  {entry.tag} page {index:02d}: {len(page['glyphs'])} glyphs")
+                baked += 1
+
+    refs = collect_fallback_pages(args.output)
+    if args.skip_profile_write:
+        print(f"done: {baked} page(s) rebaked; profile write skipped ({len(refs)} page(s) present)")
+    else:
+        write_profile_manifest(args.output, FALLBACK_PROFILE, refs)
+        print(f"done: {FALLBACK_PROFILE}, {len(refs)} page(s) in profile, {baked} page(s) rebaked -> {args.output}")
+    return 0
+
+
 def main() -> int:
     args = parse_args()
     if not args.tool.is_file():
         raise SystemExit(f"atlas tool not found: {args.tool}")
 
     fonts_dir = args.data_root / "fonts"
+
+    # 只汇总 profile：并行烘焙各脚本后单独跑一次，避免多个进程同时写同一份清单。
+    if args.profile_only:
+        refs = collect_fallback_pages(args.output)
+        write_profile_manifest(args.output, FALLBACK_PROFILE, refs)
+        print(f"profile: {FALLBACK_PROFILE}, {len(refs)} page(s) -> {args.output}")
+        return 0
+
+    # 兜底页模式只依赖 data/fonts 下的随包字体，不碰其它 profile 页。
+    if args.fallback_scripts_only:
+        return bake_fallback_scripts(args, fonts_dir)
+
     dejavu = fonts_dir / "DejaVuSans.ttf"
     source_han = fonts_dir / "SourceHanSans.ttc"
     for font in (dejavu, source_han):

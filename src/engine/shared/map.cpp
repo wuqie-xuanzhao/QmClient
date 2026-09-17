@@ -190,6 +190,11 @@ bool CMap::Load(const char *pMapName, int StorageType)
 	return true;
 }
 
+void CMap::Adopt(CMap &&Other)
+{
+	m_DataFile = std::move(Other.m_DataFile);
+}
+
 void CMap::Unload()
 {
 	m_DataFile.Close();

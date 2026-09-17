@@ -1852,7 +1852,7 @@ void CScoreboard::OnRender()
 	UpdateTeamModeCache();
 	UpdateQmAxiomScoreMode();
 
-	if(ShouldHideFocusScoreboard(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideScoreboard != 0))
+	if(GetQmFocusModeDecisions().m_HideScoreboard)
 		return;
 
 	// 当记分板可见时（骗你的,不可见也查），为所有活跃玩家触发查询点

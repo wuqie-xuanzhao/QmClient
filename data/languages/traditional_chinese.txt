@@ -380,6 +380,9 @@ Add a community as a favorite
 Add a community to the exclusion filter
 == 將社區加入排除篩選
 
+Add a country to the allowed filter list for a specific community (kept visible while its country filter is active)
+== 將國家/地區加入指定社區的允許篩選清單（該國家/地區篩選生效時保持可見）
+
 Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
 == 將國家/地區加入指定社區的排除篩選（ISO 3166-1 數字編碼）
 
@@ -1235,6 +1238,9 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 自動對統計板截圖
 
+Available for this bundled font
+== 此隨包字型可用
+
 Available practice commands: 
 == 可用練習指令：
 
@@ -1481,6 +1487,12 @@ Bit flags for disabling settings tabs
 Black
 == 黑色
 
+Blank material
+== 空白材質
+
+Blank: hides this asset
+== 空白：隱藏此資源
+
 Blend mode
 == 疊加模式
 
@@ -1570,6 +1582,9 @@ Build the status text shown above Tees
 
 Built-in
 == 內置
+
+Bundled vector profile:
+== 隨包向量設定檔：
 
 Button - Disabled
 == 按鈕 - 未啟用
@@ -1834,9 +1849,6 @@ Choose default eyes when joining a server
 
 Choose export name first.
 == 請先填寫導出名稱。
-
-Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.
-== 請先選擇自訂字型，再啟用 MSDF 名牌。首次載入可能需要一些時間。
 
 Choose the language used by the client
 == Choose the language used by the client
@@ -2375,6 +2387,12 @@ Control latency compensation tools
 Control player (0) or dummy (1)
 == 控制玩家（0）還是分身（1）
 
+Controlled by Gores mode
+== 由 Gores 模式接管
+
+Controlled by Zen mode
+== 由禪模式接管
+
 Controller
 == 手柄
 
@@ -2593,9 +2611,6 @@ Custom font weight (variable fonts)
 
 Custom Font:
 == 自定義字體：
-
-Custom fonts use FreeType automatically.
-== 自訂字型會自動使用 FreeType。
 
 Custom prompt template
 == 自定義提示詞模板
@@ -3050,6 +3065,9 @@ Disallow chat from blacklisted addresses
 Discard
 == 捨棄更改
 
+Discard cached server pings older than this many hours (0 = never expire)
+== 丟棄快取中超過此小時數的伺服器 ping（0 = 永不過期）
+
 Discard changes
 == 放棄更改
 
@@ -3409,6 +3427,9 @@ dumps all sqlservers readservers = r, writeservers = w
 
 Dumps the antibot status
 == 導出反機器人狀態
+
+Duotone
+== 雙色調
 
 Duplicate
 == 複製
@@ -5855,6 +5876,9 @@ LibreTranslate API Key
 LibreTranslate endpoint
 == LibreTranslate 端點
 
+Light
+== 輕體
+
 Limit information in spectator mode
 == 限制觀戰模式中的信息
 
@@ -6614,9 +6638,6 @@ Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
 == 移動到 x/y 編號 ii 的圖塊
 
-MSDF nameplate text
-== MSDF 名牌文字
-
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == 多解析度模糊，效果更強，並兼顧 GPU 開銷。
 
@@ -7133,6 +7154,9 @@ Normal message
 Normal message text gradient color
 == 普通消息文字漸變顏色
 
+Not available; FreeType is used
+== 不可用；將使用 FreeType
+
 NOT CONNECTED
 == 連接未成功
 
@@ -7298,6 +7322,9 @@ Only save ghost if better than previous record
 Only save improvements
 == 只保存更佳記錄
 
+Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
+== 只有部分隨包字型帶有名牌向量圖集，其他字型會使用 FreeType。
+
 Only show after joining a team
 == 僅在加入隊伍後顯示
 
@@ -7321,6 +7348,9 @@ Opacity
 
 Opacity of freeze bars inside freeze
 == 解凍進度條不透明度
+
+Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)
+== 旁觀者虛擬 Tee 的不透明度（0 為完全透明）
 
 Open a matching settings card directly
 == Open a matching settings card directly
@@ -8270,8 +8300,8 @@ Qm UI custom icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Qm 介面圖示顏色：1=白色，2=黑色，3=自訂，4=彩虹
 
-Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
-== Qm 介面圖示字重：0=標準，1=粗體，2=細體，3=填滿
+Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
+== Qm 介面圖示樣式：0=標準，1=粗體，2=細體，3=填滿，4=輕體，5=雙色調
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue：序號必須在 1 到 %d 之間
@@ -8701,6 +8731,9 @@ Remove a community from the exclusion filter
 
 Remove a community from the favorites
 == 從收藏夾中刪除社區
+
+Remove a country from the allowed filter list for a specific community
+== 將國家/地區從指定社區的允許篩選清單中移除
 
 Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
 == 將國家/地區從指定社區的排除篩選中移除（ISO 3166-1 數字編碼）
@@ -10787,8 +10820,14 @@ Skip render frames if waiting for previous frame during update cycle
 Skip start menu
 == 跳過開始菜單
 
+Skip switch animation when hammering
+== 錘擊時不播放切換武器動畫
+
 Skip the main menu
 == 跳過主菜單
+
+Skip the weapon switch animation for hammer switches in Gores mode
+== 在 Gores 模式中錘擊切換武器時不播放切換動畫
 
 Skip Tutorial
 == 跳過教學
@@ -11621,6 +11660,9 @@ Teleports you to teleporter i
 Teletile overlay alpha (0-100)
 == Teletile 的覆蓋實體 alpha (0-100)
 
+Temporarily controlled by a mode toggle
+== 目前由模式開關暫時接管
+
 Temporarily disable dummy hammering
 == 暫時停用分身錘
 
@@ -11674,9 +11716,6 @@ The audio device couldn't be initialised.
 
 The auth level you need to tele others
 == 傳送其他玩家所需的權限等級
-
-The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.
-== 自訂字型已變更，因此 MSDF 名牌已關閉。請先選擇字型，再重新啟用 MSDF。
 
 The downloaded file is not a valid demo
 == 下載的檔案不是有效的示範
@@ -11773,6 +11812,9 @@ Thin
 
 Thinking mode requires a reasoning model
 == 啟用思考模式需要使用推理模型
+
+This font has no bundled vector profile. Nameplates will use FreeType.
+== 此字型沒有隨包向量設定檔，名牌將使用 FreeType。
 
 This ID is not connected
 == 該 ID 未連接
@@ -12251,8 +12293,8 @@ UI icon color
 UI icon custom color
 == 介面圖示自訂顏色
 
-UI icon weight
-== 介面圖示粗細
+UI icon style
+== 介面圖示樣式
 
 UI motion level
 == 介面動效強度
@@ -12548,12 +12590,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == 開啟動態攝像頭時使用鼠標感應
 
-Use MSDF text rendering for nameplates (built-in fonts only)
-== 使用 MSDF 渲染名牌文字（僅內建字型）
-
-Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
-== 為名牌啟用 MSDF 文字渲染（僅內建字型，自訂字型會自動回退至 FreeType）
-
 Use multi-char replacement based on word length
 == 根據詞語長度使用多字符替換
 
@@ -12611,6 +12647,12 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == 在 `add_favorite` 之前使用它來對收藏夾進行分組。以 `end_favorite_group` 結束
 
+Use vector font rendering for nameplates
+== 使用名牌向量字型
+
+Use vector font rendering for nameplates when a bundled profile is available
+== 存在隨包向量設定檔時為名牌啟用向量字型渲染
+
 Use warlist colors instead of regular colors
 == 使用敵對列表顏色而不是常規顏色
 
@@ -12622,9 +12664,6 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == 使用當前動作配合目前的瞄準位置。
-
-Uses the built-in font; a custom font falls back to FreeType.
-== 使用內建字型；自訂字型會自動回退至 FreeType。
 
 v = Velocity
 == v = 速度
@@ -12646,6 +12685,9 @@ Vanilla skins only
 
 Variable custom font weight
 == 可變字型的自訂字重
+
+Vector nameplate text
+== 名牌向量字型
 
 Velocity
 == 速度

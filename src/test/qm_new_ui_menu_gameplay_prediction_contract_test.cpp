@@ -64,7 +64,7 @@ TEST(QmNewUiMenuGameplayPredictionContract, GhostPlayersDoNotEmitDuplicateWeapon
 	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects)\n\t\tGameClient()->m_Flow.Add("), std::string::npos);
 	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects && !InAir && WantOtherDir"), std::string::npos);
 	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects)\n\t\t\t\t\t\tGameClient()->m_Effects.PowerupShine("), std::string::npos);
-	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects && !ShouldHideFocusMuzzleEffects("), std::string::npos);
+	EXPECT_NE(RenderPlayerGhost.find("if(AllowEffects && !Focus.m_HideMuzzleEffects &&"), std::string::npos);
 }
 
 TEST(QmNewUiMenuGameplayPredictionContract, HammerPredictionDeduplicatesSameTargetAndTick)

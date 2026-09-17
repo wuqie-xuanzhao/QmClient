@@ -380,6 +380,9 @@ Add a community as a favorite
 Add a community to the exclusion filter
 == Adicionar uma comunidade ao filtro de exclusão
 
+Add a country to the allowed filter list for a specific community (kept visible while its country filter is active)
+== Adicionar um país à lista de filtros permitidos para uma comunidade específica (permanece visível enquanto seu filtro de país estiver ativo)
+
 Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
 == Adicionar um país ao filtro de exclusão para uma comunidade específica (ISO 3166-1 numérico)
 
@@ -1209,7 +1212,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Ativar alternância automática do Gores automaticamente no modo de jogo Gores
 
 Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
-== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Voltar automaticamente ao asset padrão quando um sprite de um asset personalizado estiver totalmente transparente; desative para manter sprites em branco invisíveis (por exemplo, para ocultar efeitos)
 
 Automatically re-join team 0 after finish (only if unlocked).
 == Reentrar automaticamente no time 0 após terminar (apenas se desbloqueado)
@@ -1234,6 +1237,9 @@ Automatically take game over screenshot
 
 Automatically take statboard screenshot
 == Tirar screenshot do quadro de estatísticas automaticamente
+
+Available for this bundled font
+== Disponível para esta fonte incluída
 
 Available practice commands: 
 == Comandos de treino disponíveis: 
@@ -1481,6 +1487,12 @@ Bit flags for disabling settings tabs
 Black
 == Preto
 
+Blank material
+== Material em branco
+
+Blank: hides this asset
+== Em branco: oculta este asset
+
 Blend mode
 == Modo de mesclagem
 
@@ -1570,6 +1582,9 @@ Build the status text shown above Tees
 
 Built-in
 == Integrado
+
+Bundled vector profile:
+== Perfil vetorial incluído:
 
 Button - Disabled
 == Botão - Desativado
@@ -1834,9 +1849,6 @@ Choose default eyes when joining a server
 
 Choose export name first.
 == Escolha o nome de exportação primeiro.
-
-Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.
-== Escolha primeiro a fonte personalizada e depois ative as plaquinhas MSDF. O primeiro carregamento pode demorar um pouco.
 
 Choose the language used by the client
 == Choose the language used by the client
@@ -2375,6 +2387,12 @@ Control latency compensation tools
 Control player (0) or dummy (1)
 == Controlar jogador (0) ou dummy (1)
 
+Controlled by Gores mode
+== Controlado pelo modo Gores
+
+Controlled by Zen mode
+== Controlado pelo modo Zen
+
 Controller
 == Controle
 
@@ -2593,9 +2611,6 @@ Custom font weight (variable fonts)
 
 Custom Font:
 == Fonte Personalizada:
-
-Custom fonts use FreeType automatically.
-== As fontes personalizadas usam FreeType automaticamente.
 
 Custom prompt template
 == Modelo de prompt personalizado
@@ -3050,6 +3065,9 @@ Disallow chat from blacklisted addresses
 Discard
 == Descartar
 
+Discard cached server pings older than this many hours (0 = never expire)
+== Descartar pings de servidor em cache mais antigos que estas horas (0 = nunca expirar)
+
 Discard changes
 == Descartar alterações
 
@@ -3409,6 +3427,9 @@ dumps all sqlservers readservers = r, writeservers = w
 
 Dumps the antibot status
 == Despeja o status do antibot
+
+Duotone
+== Tom duplo
 
 Duplicate
 == Duplicar
@@ -5855,6 +5876,9 @@ LibreTranslate API Key
 LibreTranslate endpoint
 == Endpoint do LibreTranslate
 
+Light
+== Leve
+
 Limit information in spectator mode
 == Limitar informações no modo espectador
 
@@ -6614,9 +6638,6 @@ Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
 == Move para o tile com número x/y ii
 
-MSDF nameplate text
-== Texto de plaquinha MSDF
-
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Desfoque em múltiplas resoluções, com efeito mais forte e custo de GPU equilibrado.
 
@@ -7133,6 +7154,9 @@ Normal message
 Normal message text gradient color
 == Cor gradiente do texto de mensagens normais
 
+Not available; FreeType is used
+== Indisponível; o FreeType é usado
+
 NOT CONNECTED
 == NÃO CONECTADO
 
@@ -7298,6 +7322,9 @@ Only save ghost if better than previous record
 Only save improvements
 == Salvar apenas melhorias
 
+Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
+== Apenas algumas fontes incluídas têm atlas vetoriais de plaquinhas. As demais usam FreeType.
+
 Only show after joining a team
 == Mostrar apenas após entrar em uma equipe
 
@@ -7321,6 +7348,9 @@ Opacity
 
 Opacity of freeze bars inside freeze
 == Opacidade das barras de freeze dentro do freeze
+
+Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)
+== Opacidade dos tees fantasma exibidos para jogadores que estão espectando (0 = totalmente transparente)
 
 Open a matching settings card directly
 == Open a matching settings card directly
@@ -8270,8 +8300,8 @@ Qm UI custom icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Cor dos ícones da interface Qm: 1=branco, 2=preto, 3=personalizado, 4=arco-íris
 
-Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
-== Espessura dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido
+Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
+== Estilo dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido, 4=leve, 5=tom duplo
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: índice deve estar entre 1 e %d
@@ -8701,6 +8731,9 @@ Remove a community from the exclusion filter
 
 Remove a community from the favorites
 == Remover uma comunidade dos favoritos
+
+Remove a country from the allowed filter list for a specific community
+== Remover um país da lista de filtros permitidos para uma comunidade específica
 
 Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
 == Remover um país do filtro de exclusão para uma comunidade específica (ISO 3166-1 numérico)
@@ -10431,7 +10464,7 @@ Show seconds on clock
 == Mostrar segundos no relógio
 
 Show semi-transparent ghost tees for other players who are spectating
-== Show semi-transparent ghost tees for other players who are spectating
+== Mostrar tees fantasma semitransparentes para outros jogadores que estão espectando
 
 Show server chat messages
 == Mostrar mensagens de chat do servidor
@@ -10787,8 +10820,14 @@ Skip render frames if waiting for previous frame during update cycle
 Skip start menu
 == Pular menu inicial
 
+Skip switch animation when hammering
+== Não reproduzir a animação de troca de arma ao martelar
+
 Skip the main menu
 == Pular o menu principal
+
+Skip the weapon switch animation for hammer switches in Gores mode
+== Não reproduzir a animação de troca de arma ao trocar para o martelo no modo Gores
 
 Skip Tutorial
 == Pular Tutorial
@@ -10977,7 +11016,7 @@ Spectated player and friends
 == Jogador espectado e amigos
 
 Spectator ghost opacity
-== Spectator ghost opacity
+== Opacidade do fantasma do espectador
 
 Spectators
 == Espectadores
@@ -11621,6 +11660,9 @@ Teleports you to teleporter i
 Teletile overlay alpha (0-100)
 == Alpha da entidade de sobreposição do Teletile (0-100)
 
+Temporarily controlled by a mode toggle
+== Controlado temporariamente por um ajuste de modo
+
 Temporarily disable dummy hammering
 == Desativar temporariamente o martelo do dummy
 
@@ -11674,9 +11716,6 @@ The audio device couldn't be initialised.
 
 The auth level you need to tele others
 == Nível de autorização necessário para teleportar outros jogadores
-
-The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.
-== A fonte personalizada mudou, então as plaquinhas MSDF foram desativadas. Escolha a fonte e ative o MSDF novamente.
 
 The downloaded file is not a valid demo
 == O arquivo baixado não é uma demo válida
@@ -11773,6 +11812,9 @@ Thin
 
 Thinking mode requires a reasoning model
 == O modo de pensamento requer um modelo de raciocínio
+
+This font has no bundled vector profile. Nameplates will use FreeType.
+== Esta fonte não tem perfil vetorial incluído. As plaquinhas usarão FreeType.
 
 This ID is not connected
 == Este ID não está conectado
@@ -12251,8 +12293,8 @@ UI icon color
 UI icon custom color
 == Cor personalizada dos ícones da interface
 
-UI icon weight
-== Espessura dos ícones da interface
+UI icon style
+== Estilo dos ícones da interface
 
 UI motion level
 == Animação UI
@@ -12548,12 +12590,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Usar sensibilidade do mouse quando a câmera dinâmica estiver ativa
 
-Use MSDF text rendering for nameplates (built-in fonts only)
-== Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas)
-
-Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
-== Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas, fontes personalizadas recorrem ao FreeType)
-
 Use multi-char replacement based on word length
 == Usar substituição de múltiplos caracteres com base no comprimento da palavra
 
@@ -12611,6 +12647,12 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == Use isso antes de `add_favorite` para agrupar favoritos. Termine com `end_favorite_group`
 
+Use vector font rendering for nameplates
+== Usar renderização de fonte vetorial nas plaquinhas
+
+Use vector font rendering for nameplates when a bundled profile is available
+== Usar renderização de fonte vetorial nas plaquinhas quando houver um perfil incluído
+
 Use warlist colors instead of regular colors
 == Usar cores da lista de guerra em vez de cores normais
 
@@ -12622,9 +12664,6 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Usa a ação ativa com a posição de mira atual.
-
-Uses the built-in font; a custom font falls back to FreeType.
-== Usa a fonte integrada; uma fonte personalizada recorre ao FreeType.
 
 v = Velocity
 == v = Velocidade
@@ -12646,6 +12685,9 @@ Vanilla skins only
 
 Variable custom font weight
 == Espessura da fonte personalizada variável
+
+Vector nameplate text
+== Texto vetorial da plaquinha
 
 Velocity
 == Velocidade

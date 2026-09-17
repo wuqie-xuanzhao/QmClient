@@ -5,8 +5,8 @@
 
 #include <base/system.h>
 
-#include <engine/shared/config.h>
 #include <engine/http.h>
+#include <engine/shared/config.h>
 
 #include <game/client/components/qmclient/netease/netease_lyric_parser.h>
 #include <game/client/components/qmclient/netease/netease_lyric_timeline.h>

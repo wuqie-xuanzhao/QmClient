@@ -6744,7 +6744,7 @@ void CHud::RenderJumpHint()
 void CHud::RenderMapProgressBar()
 {
 	const bool Preview = GameClient()->m_HudEditor.IsActive();
-	if(ShouldHideFocusMapProgress(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideMapProgress != 0) && !Preview)
+	if(GetQmFocusModeDecisions().m_HideMapProgress && !Preview)
 		return;
 	if(!g_Config.m_QmPlayerStatsMapProgress && !Preview)
 		return;
@@ -7261,8 +7261,7 @@ void CHud::OnRender()
 		GameClient()->m_Snap.m_SpecInfo.m_Active,
 		g_Config.m_ClShowhudSpectator != 0,
 		MainHudVisible,
-		g_Config.m_QmFocusMode != 0,
-		g_Config.m_QmFocusModeHideHud != 0);
+		GetQmFocusModeDecisions().m_HideHud);
 	const bool LocalCharacterHudVisible = GameClient()->m_Snap.m_pLocalCharacter &&
 					      !GameClient()->m_Snap.m_SpecInfo.m_Active &&
 					      !(GameClient()->m_Snap.m_pGameInfoObj->m_GameStateFlags & GAMESTATEFLAG_GAMEOVER);

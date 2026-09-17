@@ -3,6 +3,9 @@
 
 #include <base/str.h>
 
+#include <engine/shared/config.h>
+#include <engine/shared/video.h>
+
 #include <generated/protocol.h>
 
 #include <algorithm>
@@ -94,18 +97,14 @@ int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameMo
 	return CurrentValue;
 }
 
-int ApplyQmGoresDummyHammerConfig(bool GoresActive, int CurrentValue, bool &Changed)
+int ApplyQmGoresDummyHammerOnEnter(bool GoresEntered, bool DisableOnEnter, int CurrentValue, bool &Changed)
 {
+	// 只处理"进入 Gores 模式"那一帧：一次性关闭，不保留接管状态，也不在之后压回 0。
 	Changed = false;
-	if(!GoresActive || CurrentValue == 0)
+	if(!GoresEntered || !DisableOnEnter || CurrentValue == 0)
 		return CurrentValue;
 	Changed = true;
 	return 0;
-}
-
-int ApplyQmGoresDummyHammerOverride(SQmFocusConfigOverrideState &State, bool GoresActive, bool Disable, int CurrentValue, bool &Changed)
-{
-	return ApplyQmFocusConfigOverride(State, GoresActive && Disable, CurrentValue, 0, Changed);
 }
 
 bool ShouldKeepQmGoresHammerInFreeze(bool GoresCycleActive, bool InFreeze, bool HammerRequested)
@@ -339,114 +338,15 @@ int64_t QmStatisticsChartWeight(int Maps, int64_t PlaytimeSeconds, bool UseMaps)
 	return UseMaps ? std::max(0, Maps) : std::max<int64_t>(0, PlaytimeSeconds);
 }
 
-bool ShouldHideFocusHud(bool FocusActive, bool HideHud)
+bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool HideHud)
 {
-	return FocusActive && HideHud;
-}
-
-bool ShouldRenderFocusSpectatorHud(bool SpectatorActive, bool SpectatorHudEnabled, bool MainHudVisible, bool FocusActive, bool HideHud)
-{
-	return SpectatorActive && SpectatorHudEnabled && ShouldHideFocusHud(FocusActive, HideHud);
-}
-
-bool ShouldHideFocusScoreboard(bool FocusActive, bool HideScoreboard)
-{
-	return FocusActive && HideScoreboard;
-}
-
-bool ShouldHideFocusNames(bool FocusActive, bool HideNames)
-{
-	return FocusActive && HideNames;
-}
-
-bool ShouldHideFocusNameplates(bool FocusActive, bool HideNameplates)
-{
-	return FocusActive && HideNameplates;
-}
-
-bool ShouldHideFocusJumpEffects(bool FocusActive, bool HideJumpEffects)
-{
-	return FocusActive && HideJumpEffects;
-}
-
-bool ShouldHideFocusKillEffects(bool FocusActive, bool HideKillEffects)
-{
-	return FocusActive && HideKillEffects;
-}
-
-bool ShouldHideFocusExplosionEffects(bool FocusActive, bool HideExplosionEffects)
-{
-	return FocusActive && HideExplosionEffects;
-}
-
-bool ShouldHideFocusFreezeEffects(bool FocusActive, bool HideFreezeEffects)
-{
-	return FocusActive && HideFreezeEffects;
-}
-
-bool ShouldHideFocusHammerEffects(bool FocusActive, bool HideHammerEffects)
-{
-	return FocusActive && HideHammerEffects;
-}
-
-bool ShouldHideFocusMuzzleEffects(bool FocusActive, bool HideMuzzleEffects)
-{
-	return FocusActive && HideMuzzleEffects;
-}
-
-bool ShouldMuteFocusJumpSounds(bool FocusActive, bool MuteJumpSounds)
-{
-	return FocusActive && MuteJumpSounds;
-}
-
-bool ShouldMuteFocusDeathSounds(bool FocusActive, bool MuteDeathSounds)
-{
-	return FocusActive && MuteDeathSounds;
-}
-
-bool ShouldMuteFocusHammerSounds(bool FocusActive, bool MuteHammerSounds)
-{
-	return FocusActive && MuteHammerSounds;
-}
-
-bool ShouldPlayFocusJumpSound(bool FocusActive, bool MuteJumpSounds, bool SoundEnabled)
-{
-	return SoundEnabled && !ShouldMuteFocusJumpSounds(FocusActive, MuteJumpSounds);
-}
-
-bool ShouldPlayFocusDeathOrSpawnSound(bool FocusActive, bool MuteDeathSounds, bool SoundEnabled)
-{
-	return SoundEnabled && !ShouldMuteFocusDeathSounds(FocusActive, MuteDeathSounds);
-}
-
-SQmAirJumpEffectDecision GetQmAirJumpEffectDecision(bool FocusActive, bool HideJumpEffects, bool MuteJumpSounds, bool SoundEnabled)
-{
-	return {!ShouldHideFocusJumpEffects(FocusActive, HideJumpEffects), ShouldPlayFocusJumpSound(FocusActive, MuteJumpSounds, SoundEnabled)};
-}
-
-bool ShouldHideFocusMapProgress(bool FocusActive, bool HideMapProgress)
-{
-	return FocusActive && HideMapProgress;
+	// 禅模式隐藏主 HUD 时旁观者 HUD 仍然保留：调用方传入已合并总开关的判定。
+	return SpectatorActive && SpectatorHudEnabled && HideHud;
 }
 
 bool ShouldRenderMapProgressBar(bool MapProgressEnabled, int MapProgressStyle, bool PlayerStatsHudEnabled, bool GoresMapProgressEnabled)
 {
 	return MapProgressEnabled && !(MapProgressStyle != 0 && PlayerStatsHudEnabled) && GoresMapProgressEnabled;
-}
-
-bool ShouldHideFocusInfoMessages(bool FocusActive, bool HideInfoMessages)
-{
-	return FocusActive && HideInfoMessages;
-}
-
-bool ShouldHideFocusDirectionIndicators(bool FocusActive, bool HideDirectionIndicators)
-{
-	return FocusActive && HideDirectionIndicators;
-}
-
-bool ShouldHideFocusGuideLines(bool FocusActive, bool HideGuideLines)
-{
-	return FocusActive && HideGuideLines;
 }
 
 bool ShouldRenderFocusFilteredChatLine(bool FocusHidePlayerMessages, bool FocusHideSystemInfoMessages, bool FocusHideSystemPromptMessages, bool FocusHideEcho, int ClientId, bool ForceVisible, bool ServerMessageIsBasicInfo)
@@ -469,28 +369,72 @@ bool ShouldRenderAnyFocusFilteredChat(bool FocusHidePlayerMessages, bool FocusHi
 	return !(FocusHidePlayerMessages && FocusHideSystemInfoMessages && FocusHideSystemPromptMessages && FocusHideEcho) || HasForceVisibleLine;
 }
 
+SQmFocusModeConfig QmReadFocusModeConfig(const CConfig &Config)
+{
+	SQmFocusModeConfig Focus;
+	Focus.m_FocusActive = Config.m_QmFocusMode != 0;
+	Focus.m_HideHud = Config.m_QmFocusModeHideHud != 0;
+	Focus.m_HideMapProgress = Config.m_QmFocusModeHideMapProgress != 0;
+	Focus.m_HideInfoMessages = Config.m_QmFocusModeHideInfoMessages != 0;
+	Focus.m_HideScoreboard = Config.m_QmFocusModeHideScoreboard != 0;
+	Focus.m_HideNames = Config.m_QmFocusModeHideNames != 0;
+	Focus.m_HideNameplates = Config.m_QmFocusModeHideNameplates != 0;
+	Focus.m_HideDirectionIndicators = Config.m_QmFocusModeHideDirectionIndicators != 0;
+	Focus.m_HideGuideLines = Config.m_QmFocusModeHideGuideLines != 0;
+	Focus.m_HideJumpEffects = Config.m_QmFocusModeHideJumpEffects != 0;
+	Focus.m_HideKillEffects = Config.m_QmFocusModeHideKillEffects != 0;
+	Focus.m_HideExplosionEffects = Config.m_QmFocusModeHideExplosionEffects != 0;
+	Focus.m_HideFreezeEffects = Config.m_QmFocusModeHideFreezeEffects != 0;
+	Focus.m_HideHammerEffects = Config.m_QmFocusModeHideHammerEffects != 0;
+	Focus.m_HideMuzzleEffects = Config.m_QmFocusModeHideMuzzleEffects != 0;
+	Focus.m_MuteJumpSounds = Config.m_QmFocusModeMuteJumpSounds != 0;
+	Focus.m_MuteDeathSounds = Config.m_QmFocusModeMuteDeathSounds != 0;
+	Focus.m_MuteHammerSounds = Config.m_QmFocusModeMuteHammerSounds != 0;
+	Focus.m_HidePlayerMessages = Config.m_QmFocusModeHideChat != 0;
+	Focus.m_HideSystemInfoMessages = Config.m_QmFocusModeHideSystemInfoMessages != 0;
+	Focus.m_HideSystemPromptMessages = Config.m_QmFocusModeHideSystemMessages != 0;
+	Focus.m_HideEchoMessages = Config.m_QmFocusModeHideEcho != 0;
+	Focus.m_SoundEnabled = Config.m_SndGame != 0;
+	return Focus;
+}
+
 SQmFocusModeDecisions GetQmFocusModeDecisions(const SQmFocusModeConfig &Config)
 {
+	// 录制视频期间禅模式的一切效果都不进视频：按总开关关闭处理。实时画面不受影响，
+	// 配置接管也照常生效，录制路径另行读取用户真实值（见 nameplates.cpp 的 RealValue）。
+	const bool FocusActive = Config.m_FocusActive && !Config.m_VideoRecording;
 	SQmFocusModeDecisions Decisions;
-	Decisions.m_AirJump = GetQmAirJumpEffectDecision(Config.m_FocusActive, Config.m_HideJumpEffects, Config.m_MuteJumpSounds, Config.m_SoundEnabled);
-	Decisions.m_HideKillEffects = ShouldHideFocusKillEffects(Config.m_FocusActive, Config.m_HideKillEffects);
-	Decisions.m_HideExplosionEffects = ShouldHideFocusExplosionEffects(Config.m_FocusActive, Config.m_HideExplosionEffects);
-	Decisions.m_HideFreezeEffects = ShouldHideFocusFreezeEffects(Config.m_FocusActive, Config.m_HideFreezeEffects);
-	Decisions.m_HideHammerEffects = ShouldHideFocusHammerEffects(Config.m_FocusActive, Config.m_HideHammerEffects);
-	Decisions.m_HideMuzzleEffects = ShouldHideFocusMuzzleEffects(Config.m_FocusActive, Config.m_HideMuzzleEffects);
-	Decisions.m_MuteDeathSounds = ShouldMuteFocusDeathSounds(Config.m_FocusActive, Config.m_MuteDeathSounds);
-	Decisions.m_MuteHammerSounds = ShouldMuteFocusHammerSounds(Config.m_FocusActive, Config.m_MuteHammerSounds);
-	Decisions.m_RenderMapProgressBar = ShouldRenderMapProgressBar(Config.m_MapProgressEnabled, Config.m_MapProgressStyle, Config.m_PlayerStatsHudEnabled, Config.m_GoresMapProgressEnabled) && !ShouldHideFocusMapProgress(Config.m_FocusActive, Config.m_HideMapProgress);
-	Decisions.m_HideHud = ShouldHideFocusHud(Config.m_FocusActive, Config.m_HideHud);
-	Decisions.m_HideScoreboard = ShouldHideFocusScoreboard(Config.m_FocusActive, Config.m_HideScoreboard);
-	Decisions.m_HideNames = ShouldHideFocusNames(Config.m_FocusActive, Config.m_HideNames);
-	Decisions.m_HideNameplates = ShouldHideFocusNameplates(Config.m_FocusActive, Config.m_HideNameplates);
-	Decisions.m_HideInfoMessages = ShouldHideFocusInfoMessages(Config.m_FocusActive, Config.m_HideInfoMessages);
-	Decisions.m_HideDirectionIndicators = ShouldHideFocusDirectionIndicators(Config.m_FocusActive, Config.m_HideDirectionIndicators);
-	Decisions.m_HideGuideLines = ShouldHideFocusGuideLines(Config.m_FocusActive, Config.m_HideGuideLines);
-	Decisions.m_HidePlayerMessages = Config.m_FocusActive && Config.m_HidePlayerMessages;
-	Decisions.m_HideSystemInfoMessages = Config.m_FocusActive && Config.m_HideSystemInfoMessages;
-	Decisions.m_HideSystemPromptMessages = Config.m_FocusActive && Config.m_HideSystemPromptMessages;
-	Decisions.m_HideEchoMessages = Config.m_FocusActive && Config.m_HideEchoMessages;
+	Decisions.m_FocusActive = FocusActive;
+	Decisions.m_HideHud = FocusActive && Config.m_HideHud;
+	Decisions.m_HideMapProgress = FocusActive && Config.m_HideMapProgress;
+	Decisions.m_HideScoreboard = FocusActive && Config.m_HideScoreboard;
+	Decisions.m_HideNames = FocusActive && Config.m_HideNames;
+	Decisions.m_HideNameplates = FocusActive && Config.m_HideNameplates;
+	Decisions.m_HideInfoMessages = FocusActive && Config.m_HideInfoMessages;
+	Decisions.m_HideDirectionIndicators = FocusActive && Config.m_HideDirectionIndicators;
+	Decisions.m_HideGuideLines = FocusActive && Config.m_HideGuideLines;
+	Decisions.m_HideKillEffects = FocusActive && Config.m_HideKillEffects;
+	Decisions.m_HideExplosionEffects = FocusActive && Config.m_HideExplosionEffects;
+	Decisions.m_HideFreezeEffects = FocusActive && Config.m_HideFreezeEffects;
+	Decisions.m_HideHammerEffects = FocusActive && Config.m_HideHammerEffects;
+	Decisions.m_HideMuzzleEffects = FocusActive && Config.m_HideMuzzleEffects;
+	Decisions.m_MuteDeathSounds = FocusActive && Config.m_MuteDeathSounds;
+	Decisions.m_MuteHammerSounds = FocusActive && Config.m_MuteHammerSounds;
+	Decisions.m_PlayDeathOrSpawnSound = Config.m_SoundEnabled && !Decisions.m_MuteDeathSounds;
+	Decisions.m_AirJump.m_SpawnParticles = !(FocusActive && Config.m_HideJumpEffects);
+	Decisions.m_AirJump.m_PlaySound = Config.m_SoundEnabled && !(FocusActive && Config.m_MuteJumpSounds);
+	Decisions.m_HidePlayerMessages = FocusActive && Config.m_HidePlayerMessages;
+	Decisions.m_HideSystemInfoMessages = FocusActive && Config.m_HideSystemInfoMessages;
+	Decisions.m_HideSystemPromptMessages = FocusActive && Config.m_HideSystemPromptMessages;
+	Decisions.m_HideEchoMessages = FocusActive && Config.m_HideEchoMessages;
 	return Decisions;
+}
+
+SQmFocusModeDecisions GetQmFocusModeDecisions()
+{
+	SQmFocusModeConfig Config = QmReadFocusModeConfig(g_Config);
+#if defined(CONF_VIDEORECORDER)
+	Config.m_VideoRecording = IVideo::Current() != nullptr;
+#endif
+	return GetQmFocusModeDecisions(Config);
 }

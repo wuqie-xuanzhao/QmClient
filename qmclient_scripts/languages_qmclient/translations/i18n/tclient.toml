@@ -9559,22 +9559,6 @@ turkish = "Özel yazı tipi kalınlığı (değişken yazı tipleri)"
 polish = "Grubość niestandardowej czcionki (czcionki zmienne)"
 
 [[message]]
-key = "Custom fonts use FreeType automatically."
-[message.translations]
-simplified_chinese = "自定义字体会自动使用 FreeType。"
-traditional_chinese = "自訂字型會自動使用 FreeType。"
-japanese = "カスタムフォントは自動的に FreeType を使用します。"
-korean = "사용자 지정 글꼴은 자동으로 FreeType을 사용합니다."
-russian = "Пользовательские шрифты автоматически используют FreeType."
-german = "Eigene Schriften verwenden automatisch FreeType."
-spanish = "Las fuentes personalizadas usan FreeType automáticamente."
-french = "Les polices personnalisées utilisent FreeType automatiquement."
-brazilian_portuguese = "As fontes personalizadas usam FreeType automaticamente."
-portuguese = "As fontes personalizadas usam FreeType automaticamente."
-turkish = "Özel yazı tipleri otomatik olarak FreeType kullanır."
-polish = "Niestandardowe czcionki automatycznie używają FreeType."
-
-[[message]]
 key = "Font style:"
 [message.translations]
 simplified_chinese = "字体样式："
@@ -9591,22 +9575,6 @@ turkish = "Yazı tipi stili:"
 polish = "Styl czcionki:"
 
 [[message]]
-key = "Use MSDF text rendering for nameplates (built-in fonts only)"
-[message.translations]
-simplified_chinese = "使用 MSDF 渲染铭牌文字（仅内置字体）"
-traditional_chinese = "使用 MSDF 渲染名牌文字（僅內建字型）"
-japanese = "ネームプレートに MSDF テキストレンダリングを使用（内蔵フォントのみ）"
-korean = "이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만)"
-russian = "Использовать рендеринг текста MSDF для табличек (только встроенные шрифты)"
-german = "MSDF-Textrendering für Namensschilder verwenden (nur integrierte Schriftarten)"
-spanish = "Usar renderizado de texto MSDF para placas de nombre (solo fuentes integradas)"
-french = "Utiliser le rendu de texte MSDF pour les plaques de nom (polices intégrées uniquement)"
-brazilian_portuguese = "Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas)"
-portuguese = "Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas)"
-turkish = "Ad plakaları için MSDF metin oluşturmayı kullan (yalnızca yerleşik yazı tipleri)"
-polish = "Użyj renderowania tekstu MSDF dla tabliczek (tylko wbudowane czcionki)"
-
-[[message]]
 key = "Variable custom font weight"
 [message.translations]
 simplified_chinese = "可变字体的自定义字重"
@@ -9621,3 +9589,115 @@ brazilian_portuguese = "Espessura da fonte personalizada variável"
 portuguese = "Espessura da fonte personalizada variável"
 turkish = "Değişken özel yazı tipi kalınlığı"
 polish = "Grubość zmiennej niestandardowej czcionki"
+
+[[message]]
+key = "Available for this bundled font"
+[message.translations]
+simplified_chinese = "该随包字体可用"
+traditional_chinese = "此隨包字型可用"
+japanese = "この同梱フォントで利用可能"
+korean = "이 번들 글꼴에서 사용 가능"
+russian = "Доступно для этого встроенного шрифта"
+german = "Für diese mitgelieferte Schrift verfügbar"
+spanish = "Disponible para esta fuente incluida"
+french = "Disponible pour cette police fournie"
+brazilian_portuguese = "Disponível para esta fonte incluída"
+portuguese = "Disponível para esta fonte incluída"
+turkish = "Bu paketlenmiş yazı tipi için kullanılabilir"
+polish = "Dostępne dla tej dołączonej czcionki"
+
+[[message]]
+key = "Bundled vector profile:"
+[message.translations]
+simplified_chinese = "随包矢量配置："
+traditional_chinese = "隨包向量設定檔："
+japanese = "同梱ベクタープロファイル:"
+korean = "번들 벡터 프로필:"
+russian = "Встроенный векторный профиль:"
+german = "Mitgeliefertes Vektorprofil:"
+spanish = "Perfil vectorial incluido:"
+french = "Profil vectoriel fourni :"
+brazilian_portuguese = "Perfil vetorial incluído:"
+portuguese = "Perfil vetorial incluído:"
+turkish = "Paketlenmiş vektör profili:"
+polish = "Dołączony profil wektorowy:"
+
+[[message]]
+key = "Not available; FreeType is used"
+[message.translations]
+simplified_chinese = "不可用；将使用 FreeType"
+traditional_chinese = "不可用；將使用 FreeType"
+japanese = "利用できません。FreeType を使用します"
+korean = "사용할 수 없음. FreeType을 사용합니다"
+russian = "Недоступно; используется FreeType"
+german = "Nicht verfügbar; FreeType wird verwendet"
+spanish = "No disponible; se usa FreeType"
+french = "Non disponible ; FreeType est utilisé"
+brazilian_portuguese = "Indisponível; o FreeType é usado"
+portuguese = "Indisponível; o FreeType é usado"
+turkish = "Kullanılamaz; FreeType kullanılır"
+polish = "Niedostępne; używany jest FreeType"
+
+[[message]]
+key = "Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType."
+[message.translations]
+simplified_chinese = "只有部分随包字体带有铭牌矢量图集，其他字体会使用 FreeType。"
+traditional_chinese = "只有部分隨包字型帶有名牌向量圖集，其他字型會使用 FreeType。"
+japanese = "一部の同梱フォントのみベクターのネームプレートアトラスを持ちます。それ以外のフォントは FreeType を使用します。"
+korean = "일부 번들 글꼴에만 벡터 이름표 아틀라스가 있습니다. 다른 글꼴은 FreeType을 사용합니다."
+russian = "Только у некоторых встроенных шрифтов есть векторные атласы табличек. Остальные шрифты используют FreeType."
+german = "Nur ausgewählte mitgelieferte Schriften haben Vektor-Namensschildatlanten. Andere Schriften verwenden FreeType."
+spanish = "Solo algunas fuentes incluidas tienen atlas vectoriales de placas. Las demás usan FreeType."
+french = "Seules certaines polices fournies disposent d'atlas vectoriels de plaques. Les autres utilisent FreeType."
+brazilian_portuguese = "Apenas algumas fontes incluídas têm atlas vetoriais de plaquinhas. As demais usam FreeType."
+portuguese = "Apenas algumas fontes incluídas têm atlas vetoriais de placas. As restantes usam FreeType."
+turkish = "Yalnızca seçili paketlenmiş yazı tiplerinde vektör ad plakası atlası vardır. Diğer yazı tipleri FreeType kullanır."
+polish = "Tylko wybrane dołączone czcionki mają wektorowe atlasy tabliczek. Pozostałe używają FreeType."
+
+[[message]]
+key = "This font has no bundled vector profile. Nameplates will use FreeType."
+[message.translations]
+simplified_chinese = "该字体没有随包矢量配置，铭牌将使用 FreeType。"
+traditional_chinese = "此字型沒有隨包向量設定檔，名牌將使用 FreeType。"
+japanese = "このフォントには同梱ベクタープロファイルがありません。ネームプレートは FreeType を使用します。"
+korean = "이 글꼴에는 번들 벡터 프로필이 없습니다. 이름표는 FreeType을 사용합니다."
+russian = "У этого шрифта нет встроенного векторного профиля. Таблички будут использовать FreeType."
+german = "Diese Schrift hat kein mitgeliefertes Vektorprofil. Namensschilder verwenden FreeType."
+spanish = "Esta fuente no tiene perfil vectorial incluido. Las placas usarán FreeType."
+french = "Cette police n'a pas de profil vectoriel fourni. Les plaques utiliseront FreeType."
+brazilian_portuguese = "Esta fonte não tem perfil vetorial incluído. As plaquinhas usarão FreeType."
+portuguese = "Esta fonte não tem perfil vetorial incluído. As placas usarão FreeType."
+turkish = "Bu yazı tipinin paketlenmiş vektör profili yok. Ad plakaları FreeType kullanacak."
+polish = "Ta czcionka nie ma dołączonego profilu wektorowego. Tabliczki będą używać FreeType."
+
+[[message]]
+key = "Use vector font rendering for nameplates"
+[message.translations]
+simplified_chinese = "使用铭牌矢量字体"
+traditional_chinese = "使用名牌向量字型"
+japanese = "ネームプレートにベクター文字描画を使用"
+korean = "이름표에 벡터 글꼴 렌더링 사용"
+russian = "Использовать векторный шрифт для табличек"
+german = "Vektor-Schriftdarstellung für Namensschilder verwenden"
+spanish = "Usar renderizado de fuente vectorial para las placas"
+french = "Utiliser le rendu de police vectorielle pour les plaques"
+brazilian_portuguese = "Usar renderização de fonte vetorial nas plaquinhas"
+portuguese = "Usar renderização de fonte vetorial nas placas"
+turkish = "Ad plakaları için vektör yazı tipi oluşturmayı kullan"
+polish = "Używaj renderowania czcionki wektorowej dla tabliczek"
+
+[[message]]
+key = "Vector nameplate text"
+[message.translations]
+simplified_chinese = "铭牌矢量字体"
+traditional_chinese = "名牌向量字型"
+japanese = "ネームプレートのベクター文字"
+korean = "이름표 벡터 텍스트"
+russian = "Векторный текст табличек"
+german = "Vektor-Namensschildtext"
+spanish = "Texto vectorial de la placa"
+french = "Texte vectoriel de plaque"
+brazilian_portuguese = "Texto vetorial da plaquinha"
+portuguese = "Texto vetorial da placa"
+turkish = "Vektör ad plakası metni"
+polish = "Tekst wektorowy tabliczki"

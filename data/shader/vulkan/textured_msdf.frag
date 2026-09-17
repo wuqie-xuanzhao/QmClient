@@ -38,7 +38,11 @@ void main()
 	}
 	const vec4 Sample = texture(gTextureSampler, TexCoord);
 	float TrueSignedDistance = Sample.a - 0.5;
-	const bool UseTrueSdf = gMsdf.gMsdfParams.w < -0.0005;
+	// w 编码契约见 src/engine/graphics.h 的 qm_msdf_param 命名空间，三个后端必须一致：
+	//   w > 0 → 普通 MSDF（w = 描边宽度）；-0.001 < w < 0 → Duotone；w <= -0.001 → Alpha 真 SDF。
+	// 注意 Duotone 区间必须严格避开真 SDF 的描边编码，否则带描边的真 SDF 字形会被误判。
+	const bool UseTrueSdf = gMsdf.gMsdfParams.w <= -0.001;
+	const bool UseSecondarySdf = gMsdf.gMsdfParams.w < 0.0 && !UseTrueSdf;
 	float SignedDistance = UseTrueSdf ? TrueSignedDistance : Median(Sample.rgb) - 0.5;
 	vec2 UnitRange = vec2(gMsdf.gMsdfParams.x) / gMsdf.gMsdfParams.yz;
 	vec2 ScreenTexSize = vec2(1.0) / fwidth(TexCoord);
@@ -67,5 +71,17 @@ void main()
 		return;
 	}
 	float Opacity = clamp(SignedDistance * ScreenPxRange + 0.5, 0.0, 1.0);
-	FragClr = vec4(Tint.rgb, Tint.a * Opacity);
+	if(UseSecondarySdf)
+	{
+		// Duotone atlas：RGB 与 Alpha 是同一 px_range 下的两张距离场（primary / secondary），
+		// 因此复用 ScreenPxRange 解码 secondary 覆盖，缩放到任意尺寸都保持锐利边缘。
+		const float SecondaryCoverage = clamp((Sample.a - 0.5) * ScreenPxRange + 0.5, 0.0, 1.0);
+		// secondary 配色目前由主 tint 向白偏移推导；真正的双色需要独立的 secondary 颜色输入。
+		const vec3 SecondaryColor = mix(Tint.rgb, vec3(1.0), 0.55);
+		const float Alpha = max(Opacity, SecondaryCoverage);
+		const vec3 Color = mix(SecondaryColor, Tint.rgb, Opacity);
+		FragClr = vec4(Color, Tint.a * Alpha);
+	}
+	else
+		FragClr = vec4(Tint.rgb, Tint.a * Opacity);
 }

@@ -1141,7 +1141,6 @@ public:
 		RenderTime(TimeRect, FontSize, Seconds, NotFinished, Millis, TrueMilliseconds, SecondsText, MillisText, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
-
 	// progress spinner
 	void RenderProgressSpinner(vec2 Center, float OuterRadius, const SProgressSpinnerProperties &Props = {}) const;
 

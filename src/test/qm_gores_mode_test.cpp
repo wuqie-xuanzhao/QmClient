@@ -3,6 +3,7 @@
 #include <generated/protocol.h>
 
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/weapon_animation.h>
 
 #include <gtest/gtest.h>
 
@@ -135,25 +136,35 @@ TEST(QmGoresMode, AutoEnableAndFastInputLinkComposeWithoutLockingTheUserToggle)
 	EXPECT_FALSE(FastInputChanged);
 }
 
-TEST(QmGoresMode, ActiveGoresClearsDummyHammerState)
+TEST(QmGoresMode, DummyHammerIsClearedOnceOnGoresEntry)
 {
+	// 进入 Gores 模式的那一帧按选项关闭分身锤，之后不再接管：用户重新打开就保持打开。
 	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(true, 1, Changed), 0);
+	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(true, true, 1, Changed), 0);
 	EXPECT_TRUE(Changed);
-	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(true, 0, Changed), 0);
+
+	// 后续帧不是进入事件，即使仍在 Gores 模式也不能把用户重新打开的分身锤压回 0。
+	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(false, true, 1, Changed), 1);
 	EXPECT_FALSE(Changed);
-	EXPECT_EQ(ApplyQmGoresDummyHammerConfig(false, 1, Changed), 1);
+
+	// 已经关闭时不重复写入；未开启该选项时不干预。
+	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(true, true, 0, Changed), 0);
+	EXPECT_FALSE(Changed);
+	EXPECT_EQ(ApplyQmGoresDummyHammerOnEnter(true, false, 1, Changed), 1);
 	EXPECT_FALSE(Changed);
 }
 
-TEST(QmGoresMode, DummyHammerOverrideRestoresOnlyAutomaticChanges)
+TEST(QmGoresMode, HammerSwitchAnimationCanBeSkipped)
 {
-	SQmFocusConfigOverrideState State;
-	bool Changed = false;
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 1, Changed), 0);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, true, true, 0, Changed), 0);
-	EXPECT_EQ(ApplyQmGoresDummyHammerOverride(State, false, true, 0, Changed), 1);
-	EXPECT_TRUE(Changed);
+	// 只有选项开启、Gores 武器循环确实接管武器、并且这次切换涉及锤子时才跳过动画。
+	EXPECT_TRUE(QmShouldSkipGoresHammerSwitchAnimation(true, true, WEAPON_GUN, WEAPON_HAMMER));
+	EXPECT_TRUE(QmShouldSkipGoresHammerSwitchAnimation(true, true, WEAPON_HAMMER, WEAPON_GUN));
+	EXPECT_FALSE(QmShouldSkipGoresHammerSwitchAnimation(true, true, WEAPON_GUN, WEAPON_LASER));
+	EXPECT_FALSE(QmShouldSkipGoresHammerSwitchAnimation(false, true, WEAPON_GUN, WEAPON_HAMMER));
+	EXPECT_FALSE(QmShouldSkipGoresHammerSwitchAnimation(true, false, WEAPON_GUN, WEAPON_HAMMER));
+	// 首次观察到该玩家时上一次武器为 -1：切到锤子仍算涉及锤子，切到别的武器不算。
+	EXPECT_TRUE(QmShouldSkipGoresHammerSwitchAnimation(true, true, -1, WEAPON_HAMMER));
+	EXPECT_FALSE(QmShouldSkipGoresHammerSwitchAnimation(true, true, -1, WEAPON_GUN));
 }
 
 TEST(QmGoresMode, HammerWakeupRequiresHeldHammerAndExternalWakeup)

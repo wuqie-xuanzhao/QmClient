@@ -1,12 +1,18 @@
 {
   "version": 1,
+  "kind": "msdf-profile",
   "profile": "noto_glow_cjk",
-  "generator": "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd",
   "pages": [
     "qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.json",
     "qmclient/nameplate_msdf/nameplate_noto_glow_cn_01.json",
     "qmclient/nameplate_msdf/nameplate_noto_glow_cn_02.json",
     "qmclient/nameplate_msdf/nameplate_noto_glow_cn_03.json",
-    "qmclient/nameplate_msdf/nameplate_noto_glow_jp.json"
+    "qmclient/nameplate_msdf/nameplate_noto_glow_cn_04.json",
+    "qmclient/nameplate_msdf/nameplate_noto_glow_cn_05.json",
+    "qmclient/nameplate_msdf/nameplate_noto_glow_jp.json",
+    "qmclient/nameplate_msdf/nameplate_noto_glow_kr_00.json",
+    "qmclient/nameplate_msdf/nameplate_noto_glow_kr_01.json",
+    "qmclient/nameplate_msdf/nameplate_noto_glow_thai_00.json",
+    "qmclient/nameplate_msdf/nameplate_noto_glow_emoji_00.json"
   ]
 }

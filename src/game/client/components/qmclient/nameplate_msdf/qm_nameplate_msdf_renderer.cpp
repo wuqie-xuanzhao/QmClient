@@ -448,8 +448,11 @@ bool CQmNameplateMsdfRenderer::ParseManifest(const char *pText, const std::strin
 			if(pField != nullptr && ReadBool(pField, pObjectEnd, Outline))
 				Glyph.m_HasOutline = Outline;
 			// 只有新生成且明确声明 alpha_sdf 的图集才能走 Alpha 真 SDF。
-			// 旧图集的 Alpha 可能只是常量通道，必须继续使用 RGB median。
-			Glyph.m_UseTrueSdf = AlphaSdf;
+			// 当前 Noto CJK 页的 Alpha 通道在部分字形上会被 PNG/上传链判成
+			// 实心 tile，导致中文变成白色方块；它们仍是 MTSDF 资源，改用
+			// RGB median 采样可保留距离场边缘，同时避开这个 Alpha 伪影。
+			const bool IsNotoCjkPage = ManifestPath.find("noto_glow") != std::string::npos;
+			Glyph.m_UseTrueSdf = AlphaSdf && !IsNotoCjkPage;
 			Glyph.m_Valid = true;
 
 			// 同名码位跨页时以先加载的页为准（基础页优先），避免 CJK 页覆盖拉丁字形
@@ -496,6 +499,24 @@ vec2 CQmNameplateMsdfRenderer::Measure(const char *pText, float FontSize) const
 		const uint32_t Cp = DecodeUtf8(p);
 		if(Cp == 0)
 			break;
+		// msdf-atlas-gen 不会为没有可见轮廓的空格写入 glyph quad，
+		// 但空格的 advance 仍属于排版度量，必须保留，否则英文文本会被拼接。
+		if(Cp == ' ')
+		{
+			Width += FontSize * 0.25f;
+			continue;
+		}
+		// 制表符同样没有字形；宽度必须与 DrawText 的 0.5em 推进一致，
+		// 否则同一串文本的测量宽度与绘制宽度不等，铭牌底板会错位。
+		if(Cp == '\t')
+		{
+			Width += FontSize * 0.5f;
+			continue;
+		}
+		// 其余零宽/不可见码点（换行、变体选择符、ZWJ 等）既没有字形也不推进笔位。
+		// 与门控共用同一判定，保证「测出来的宽度」与「画出来的宽度」永远一致。
+		if(!QmNameplateMsdfCodepointNeedsGlyph(Cp))
+			continue;
 		auto It = m_Glyphs.find(Cp);
 		if(It == m_Glyphs.end())
 		{
@@ -537,10 +558,10 @@ void CQmNameplateMsdfRenderer::EmitGlyphQuad(const SGlyph &Glyph, float X, float
 	const float HalfTexelX = 0.5f / (float)Page.m_Info.m_Width;
 	const float HalfTexelY = 0.5f / (float)Page.m_Info.m_Height;
 	Params.m_UvRect = vec4(
-			((float)Glyph.m_X / (float)Page.m_Info.m_Width) + HalfTexelX,
-			((float)Glyph.m_Y / (float)Page.m_Info.m_Height) + HalfTexelY,
-			((float)(Glyph.m_X + Glyph.m_W) / (float)Page.m_Info.m_Width) - HalfTexelX,
-			((float)(Glyph.m_Y + Glyph.m_H) / (float)Page.m_Info.m_Height) - HalfTexelY);
+		((float)Glyph.m_X / (float)Page.m_Info.m_Width) + HalfTexelX,
+		((float)Glyph.m_Y / (float)Page.m_Info.m_Height) + HalfTexelY,
+		((float)(Glyph.m_X + Glyph.m_W) / (float)Page.m_Info.m_Width) - HalfTexelX,
+		((float)(Glyph.m_Y + Glyph.m_H) / (float)Page.m_Info.m_Height) - HalfTexelY);
 	Params.m_Color = Color;
 	Params.m_PxRange = Page.m_PxRange;
 	Params.m_AtlasWidth = (float)Page.m_Info.m_Width;
@@ -580,6 +601,15 @@ vec2 CQmNameplateMsdfRenderer::Draw(const char *pText, float X, float Y, float F
 				PenX += FontSize * 0.5f;
 				continue;
 			}
+			if(Cp == ' ')
+			{
+				PenX += FontSize * 0.25f;
+				continue;
+			}
+			// 零宽/不可见码点（变体选择符、ZWJ、双向控制符等）：不出 quad、不推进笔位。
+			// 与 Measure 共用同一判定；否则「⭐️」会因为看不见的 U+FE0F 落到 '?' 上。
+			if(!QmNameplateMsdfCodepointNeedsGlyph(Cp))
+				continue;
 			auto It = m_Glyphs.find(Cp);
 			if(It == m_Glyphs.end())
 				It = m_Glyphs.find('?');
@@ -596,6 +626,23 @@ vec2 CQmNameplateMsdfRenderer::Draw(const char *pText, float X, float Y, float F
 	// 大写、小写、变音符、中英混排都落在同一条基线上，符合排版。
 	// 不能按本串最大 bearingY 推基线——那会让基线随内容漂移（纯小写串整体下沉）。
 	const float Baseline = Y + m_RefAscent * Scale;
+
+	const float TotalWidth = std::max(Measure(pText, FontSize).x, FontSize);
+	// 辉光：先画一层低透明度的宽距离外扩，再画描边和填充；仍然是同一个 MTSDF quad，
+	// 不会产生多份偏移字形造成的重影。
+	if(Style.m_GlowEnabled && Style.m_GlowColor.a > 0.0f && Style.m_GlowWidth > 0.0f)
+	{
+		const float GlowWidthPx = CanvasToScreenScale() * Style.m_GlowWidth;
+		for(const SPlaced &Placed : vPlaced)
+		{
+			const SGlyph &Glyph = *Placed.m_pGlyph;
+			const SPage &Page = m_vPages[Glyph.m_Page];
+			EmitGlyphQuad(Glyph,
+				Placed.m_PenX + (Glyph.m_BearingX - Page.m_PxRange) * Scale,
+				Baseline - (Glyph.m_BearingY + Page.m_PxRange) * Scale,
+				Glyph.m_W * Scale * Glyph.m_MetricScale, Glyph.m_H * Scale * Glyph.m_MetricScale, Style.m_GlowColor, GlowWidthPx);
+		}
+	}
 
 	// 描边：单 pass，8 向等距采样的覆盖并集（着色器内实现，半径 = OutlineWidthPx 屏幕像素，
 	// 上限 4 texel 防止越采相邻字形/整块饱和）。得到一层均匀、实心、单色的边框，
@@ -620,6 +667,15 @@ vec2 CQmNameplateMsdfRenderer::Draw(const char *pText, float X, float Y, float F
 		const SGlyph &Glyph = *Placed.m_pGlyph;
 		const SPage &Page = m_vPages[Glyph.m_Page];
 		ColorRGBA Color = Style.m_TextColor;
+		if(Style.m_GradientEnabled)
+		{
+			const float Amount = std::clamp((Placed.m_PenX - X) / TotalWidth, 0.0f, 1.0f);
+			Color = ColorRGBA(
+				Style.m_TextColor.r + (Style.m_GradientColor.r - Style.m_TextColor.r) * Amount,
+				Style.m_TextColor.g + (Style.m_GradientColor.g - Style.m_TextColor.g) * Amount,
+				Style.m_TextColor.b + (Style.m_GradientColor.b - Style.m_TextColor.b) * Amount,
+				Style.m_TextColor.a);
+		}
 		if(Style.m_RainbowEnabled)
 		{
 			const ColorRGBA Rb = RainbowAt(Style.m_RainbowTime + Placed.m_PenX * 0.01f);

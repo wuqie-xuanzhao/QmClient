@@ -9,7 +9,7 @@
   "source_font": "Glow Sans J Compressed Book",
   "generator": "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd",
   "atlas": {
-    "image": "tmp/glow_jp.png",
+    "image": "qmclient/nameplate_msdf/nameplate_noto_glow_jp.png",
     "width": 2048,
     "height": 2048
   },

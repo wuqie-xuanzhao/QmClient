@@ -46,7 +46,10 @@ TEST(QmNewUiMenuSettingsNameplateContract, NameplateOthersModeSuppressesLocalIde
 	EXPECT_EQ(RenderNamePlateGame.find("CoordXAlignState.m_Aligned || m_pData->m_CoordXAlignFrame.m_LocalAligned"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("IsLocalClient &&\n\t\tm_pData->m_CoordXAlignFrame.m_LocalAligned"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("const bool OwnNameplateScopeVisible"), std::string::npos);
-	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowName = pPlayerInfo->m_Local ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates;"), std::string::npos);
+	// 录像机/禅模式重构后取值统一走 NameplateRenderValue(ConfigManager(), &...)：
+	// 录制中读回接管前的真实值，未接管时与直接读 g_Config 等价，与旧断言语义一致。
+	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowName = pPlayerInfo->m_Local ? NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) :"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates);"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan && !HideIdentity;"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("const bool NameplateScopeAllowsCoords"), std::string::npos);
@@ -148,7 +151,10 @@ TEST(QmNewUiMenuSettingsNameplateContract, NameplateGameUsesFullScopeReferenceFr
 
 	EXPECT_NE(Source.find("CNamePlate m_aNamePlateFrameReferences[MAX_CLIENTS];"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("CNamePlate *pLayoutReference = nullptr;"), std::string::npos);
-	EXPECT_NE(RenderNamePlateGame.find("if(Alpha > 0.0f && NameplateFreeMoveEnabled() && (!g_Config.m_ClNamePlates || !g_Config.m_ClNamePlatesOwn))"), std::string::npos);
+	// 同一条件的可读化重构：NameplatePartiallyHidden 就是「本名或他人名牌被关掉」，
+	// 取值同样经 NameplateRenderValue 读回接管前的真实值。
+	EXPECT_NE(RenderNamePlateGame.find("const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) == 0 || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) == 0;"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("if(Alpha > 0.0f && NameplateFreeMoveEnabled() && NameplatePartiallyHidden)"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("CNamePlateData FrameData = Data;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("FrameData.m_ShowName = true;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("const bool FrameShowLocalAlignedCoordX = CoordModuleAllowsCoords && CoordXAlignHintEnabled && LocalCoordXAligned;"), std::string::npos);

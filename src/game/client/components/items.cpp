@@ -31,6 +31,7 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId, const
 {
 	int CurWeapon = std::clamp(pCurrent->m_Type, 0, NUM_WEAPONS - 1);
 	const bool AllowEffects = !GameClient()->IsRenderingDummyMiniMap();
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
 
 	// get positions
 	float Curvature = 0;
@@ -110,7 +111,7 @@ void CItems::RenderProjectile(const CProjectileData *pCurrent, int ItemId, const
 	// don't check for validity of the projectile for the current weapon here, so particle effects are rendered for mod compatibility
 	if(CurWeapon == WEAPON_GRENADE)
 	{
-		if(AllowEffects && !ShouldHideFocusExplosionEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideExplosionEffects != 0))
+		if(AllowEffects && !Focus.m_HideExplosionEffects)
 			GameClient()->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha, 0.0f);
 		static float s_Time = 0.0f;
 		static float s_LastLocalTime = LocalTime();
@@ -861,6 +862,7 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 		return;
 
 	int PredictionTick = Client()->GetPredictionTick();
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
 
 	if(PredictionTick == pCurrent->m_StartTick)
 		return;
@@ -915,7 +917,7 @@ void CItems::ReconstructSmokeTrail(const CProjectileData *pCurrent, int DestroyT
 		if(Pt - MinTrailSpan > 0.01f)
 			TimePassed = minimum(TimePassed, (TimePassed - MinTrailSpan) / (Pt - MinTrailSpan) * (MinTrailSpan * 0.5f) + MinTrailSpan);
 		// add particle for this projectile
-		if(pCurrent->m_Type == WEAPON_GRENADE && !ShouldHideFocusExplosionEffects(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideExplosionEffects != 0))
+		if(pCurrent->m_Type == WEAPON_GRENADE && !Focus.m_HideExplosionEffects)
 			GameClient()->m_Effects.SmokeTrail(Pos, Vel * -1, Alpha, TimePassed);
 		else
 			GameClient()->m_Effects.BulletTrail(Pos, Alpha, TimePassed);

@@ -885,17 +885,17 @@ void CQmClient::LoadQmClientLocalModeStats()
 						Stats.m_PlaytimeSeconds = ParsedPlaytime;
 				}
 			}
-		auto Existing = std::find_if(m_vQmClientLocalModeStats.begin(), m_vQmClientLocalModeStats.end(), [&Stats](const SQmClientLocalModeStats &Entry) {
-			return str_comp_nocase(Entry.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0 && Entry.m_CommunityId == Stats.m_CommunityId && Entry.m_IsAxiom == Stats.m_IsAxiom;
-		});
-		if(Existing == m_vQmClientLocalModeStats.end())
-		{
-			// 文件被手工改成超量条目时截断，保证内存与后续保存有界。
-			if((int)m_vQmClientLocalModeStats.size() >= QMCLIENT_MAX_LOCAL_MODE_STATS)
+			auto Existing = std::find_if(m_vQmClientLocalModeStats.begin(), m_vQmClientLocalModeStats.end(), [&Stats](const SQmClientLocalModeStats &Entry) {
+				return str_comp_nocase(Entry.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0 && Entry.m_CommunityId == Stats.m_CommunityId && Entry.m_IsAxiom == Stats.m_IsAxiom;
+			});
+			if(Existing == m_vQmClientLocalModeStats.end())
+			{
+				// 文件被手工改成超量条目时截断，保证内存与后续保存有界。
+				if((int)m_vQmClientLocalModeStats.size() >= QMCLIENT_MAX_LOCAL_MODE_STATS)
+					continue;
+				m_vQmClientLocalModeStats.push_back(std::move(Stats));
 				continue;
-			m_vQmClientLocalModeStats.push_back(std::move(Stats));
-			continue;
-		}
+			}
 			Existing->m_Maps = (int)std::min<int64_t>(std::numeric_limits<int>::max(), SaturatingAddInt64(Existing->m_Maps, Stats.m_Maps));
 			Existing->m_Score = SaturatingAddInt64(Existing->m_Score, Stats.m_Score);
 			Existing->m_PlaytimeSeconds = SaturatingAddInt64(Existing->m_PlaytimeSeconds, Stats.m_PlaytimeSeconds);

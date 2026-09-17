@@ -555,11 +555,11 @@ int CChat::CountInitializedLines() const
 
 int CChat::CountVisibleLinesFrom(int BacklogLine) const
 {
-	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
-	const bool FocusHideChat = FocusModeActive && g_Config.m_QmFocusModeHideChat;
-	const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
-	const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
-	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool FocusHideChat = Focus.m_HidePlayerMessages;
+	const bool FocusHideSystemInfoMessages = Focus.m_HideSystemInfoMessages;
+	const bool FocusHideSystemPromptMessages = Focus.m_HideSystemPromptMessages;
+	const bool FocusHideEcho = Focus.m_HideEchoMessages;
 
 	int Count = 0;
 	for(int i = BacklogLine; i < MAX_LINES; ++i)
@@ -777,7 +777,7 @@ void CChat::ConchainChatWidth(IConsole::IResult *pResult, void *pUserData, ICons
 
 void CChat::Echo(const char *pString)
 {
-	const bool FocusHideEcho = g_Config.m_QmFocusMode != 0 && g_Config.m_QmFocusModeHideEcho;
+	const bool FocusHideEcho = GetQmFocusModeDecisions().m_HideEchoMessages;
 	const unsigned EchoColor = g_Config.m_ClMessageClientColor;
 	if(!FocusHideEcho && GameClient()->m_QmHudNotifications.QueueEcho(pString, EchoColor))
 	{
@@ -791,7 +791,7 @@ void CChat::Echo(const char *pString)
 
 void CChat::Echo(const char *pString, bool ForceVisible)
 {
-	const bool FocusHideEcho = g_Config.m_QmFocusMode != 0 && g_Config.m_QmFocusModeHideEcho && !ForceVisible;
+	const bool FocusHideEcho = GetQmFocusModeDecisions().m_HideEchoMessages && !ForceVisible;
 	const unsigned EchoColor = g_Config.m_ClMessageClientColor;
 	if(!FocusHideEcho && GameClient()->m_QmHudNotifications.QueueEcho(pString, EchoColor))
 	{
@@ -1315,9 +1315,9 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 				str_copy(aBuf, pMsg->m_pMessage);
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/server", aBuf, color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageSystemColor)));
 			};
-			const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
-			const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
-			const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
+			const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+			const bool FocusHideSystemInfoMessages = Focus.m_HideSystemInfoMessages;
+			const bool FocusHideSystemPromptMessages = Focus.m_HideSystemPromptMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
 			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
 			char aLocalizedServerMessage[1024];
@@ -2063,11 +2063,11 @@ void CChat::OnPrepareLines(float y)
 {
 	float x = 5.0f;
 	float FontSize = this->FontSize();
-	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
-	const bool FocusHideChat = FocusModeActive && g_Config.m_QmFocusModeHideChat;
-	const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
-	const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
-	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool FocusHideChat = Focus.m_HidePlayerMessages;
+	const bool FocusHideSystemInfoMessages = Focus.m_HideSystemInfoMessages;
+	const bool FocusHideSystemPromptMessages = Focus.m_HideSystemPromptMessages;
+	const bool FocusHideEcho = Focus.m_HideEchoMessages;
 
 	const bool IsScoreBoardOpen = GameClient()->m_Scoreboard.IsActive();
 	const bool ShowLargeArea = m_Show || (m_Mode != MODE_NONE && g_Config.m_ClShowChat == 1) || g_Config.m_ClShowChat == 2;
@@ -2530,11 +2530,11 @@ void CChat::OnRender()
 	FlushPendingConsoleLine(false);
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
-	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
-	const bool FocusHideChat = FocusModeActive && g_Config.m_QmFocusModeHideChat;
-	const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
-	const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
-	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool FocusHideChat = Focus.m_HidePlayerMessages;
+	const bool FocusHideSystemInfoMessages = Focus.m_HideSystemInfoMessages;
+	const bool FocusHideSystemPromptMessages = Focus.m_HideSystemPromptMessages;
+	const bool FocusHideEcho = Focus.m_HideEchoMessages;
 	const bool HasForceVisibleLine = std::any_of(std::begin(m_aLines), std::end(m_aLines), [](const CLine &Line) { return Line.m_Initialized && Line.m_ForceVisible; });
 	if(!ShouldRenderAnyFocusFilteredChat(FocusHideChat, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, FocusHideEcho, HasForceVisibleLine))
 		return;
@@ -3336,11 +3336,11 @@ void CChat::RenderTranslateButton(const CUIRect &ButtonRect)
 
 bool CChat::TranslateVisibleChatLines()
 {
-	const bool FocusModeActive = g_Config.m_QmFocusMode != 0;
-	const bool FocusHideChat = FocusModeActive && g_Config.m_QmFocusModeHideChat;
-	const bool FocusHideSystemInfoMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemInfoMessages;
-	const bool FocusHideSystemPromptMessages = FocusModeActive && g_Config.m_QmFocusModeHideSystemMessages;
-	const bool FocusHideEcho = FocusModeActive && g_Config.m_QmFocusModeHideEcho;
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool FocusHideChat = Focus.m_HidePlayerMessages;
+	const bool FocusHideSystemInfoMessages = Focus.m_HideSystemInfoMessages;
+	const bool FocusHideSystemPromptMessages = Focus.m_HideSystemPromptMessages;
+	const bool FocusHideEcho = Focus.m_HideEchoMessages;
 	const bool IsScoreBoardOpen = GameClient()->m_Scoreboard.IsActive();
 	const bool ShowLargeArea = m_Show || (m_Mode != MODE_NONE && g_Config.m_ClShowChat == 1) || g_Config.m_ClShowChat == 2;
 	const int OffsetType = IsScoreBoardOpen ? 1 : 0;

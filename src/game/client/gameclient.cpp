@@ -463,6 +463,25 @@ namespace
 		if(ImageId < 0 || ImageId >= g_pData->m_NumImages || pCategoryId == nullptr || pActiveName == nullptr)
 			return;
 
+		if(IsBlankAssetName(pActiveName))
+		{
+			// 客户端自带空白材质：按内置默认图的尺寸与格式造一张全透明图。
+			// 开关关闭（默认）时显式留空优先；开关打开则按官方行为直接采用内置默认图。
+			CImageInfo BlankImgInfo;
+			if(pGameClient->Graphics()->LoadPng(BlankImgInfo, g_pData->m_aImages[ImageId].m_pFilename, IStorage::TYPE_ALL))
+			{
+				if(g_Config.m_QmBlankAssetFallback == 0)
+					ClearImageToTransparent(BlankImgInfo);
+				IGraphics::CTextureHandle BlankTexture = pGameClient->Graphics()->LoadTextureRawMove(BlankImgInfo, 0, QM_BLANK_ASSET_NAME);
+				if(BlankTexture.IsValid() && !BlankTexture.IsNullTexture())
+				{
+					pGameClient->Graphics()->UnloadTexture(&g_pData->m_aImages[ImageId].m_Id);
+					g_pData->m_aImages[ImageId].m_Id = BlankTexture;
+				}
+			}
+			return;
+		}
+
 		IGraphics::CTextureHandle NewTexture;
 
 		for(const std::string &Candidate : BuildNamedSingleFileAssetCandidates(pCategoryId, pActiveName))
@@ -923,6 +942,10 @@ void CGameClient::OnInit()
 	MigrateJumpHintConfig();
 	MigrateTranslateUiColorAlphaConfig(ConfigManager());
 
+	// qm_blank_asset_fallback 的回退语义在素材加载期读取：控制台等来源改值时统一触发热重载
+	// （设置页直改 g_Config 不经过控制台，由渲染处的对比钩子负责）。
+	Console()->Chain("qm_blank_asset_fallback", ConchainQmBlankAssetFallback, this);
+
 	// 启动赞助提醒：跨过阈值才写盘，避免每次启动都重写配置文件。
 	{
 		const int NudgeLaunchCount = qm_sponsor_nudge::OnLaunch(
@@ -1018,8 +1041,8 @@ void CGameClient::OnInit()
 	}
 	TextRender()->SetFontLanguageVariant(g_Config.m_ClLanguagefile);
 
-	// update and swap after font loading, they are quite huge
-	pClient->UpdateAndSwap();
+	// 不在主题背景初始化前呈现中间帧。字体加载后的这次 Swap 会把清屏色
+	// 直接显示出来，随后主题地图加载完成又切回主题，启动时就会看到灰屏。
 
 	const char *pLoadingDDNetCaption = Localize("Loading DDNet Client");
 	const char *pLoadingMessageComponents = Localize("Initializing components");
@@ -1030,6 +1053,14 @@ void CGameClient::OnInit()
 	if(!g_Config.m_ClThreadsoundloading)
 		LoadingTotal += g_pData->m_NumSounds;
 	m_Menus.StartLoading(LoadingTotal);
+
+	// QmClient: 组件 OnInit 按添加顺序逆序执行，m_MenuBackground 排在列表后段，
+	// 主题背景要等若干个组件初始化后才就绪——最前面的加载帧只能用占位背景，
+	// 与主题就绪后的帧交替就是启动阶段的背景闪动。这里提前同步加载主题背景
+	//（本地小地图，耗时很小），让第一个加载帧就能使用主题背景。
+	// OnInit 已做幂等保护，组件循环里的再次调用不会重复初始化。
+	m_MenuBackground.OnInit();
+	// 主题背景已经就绪，后续组件加载帧可以安全呈现。
 
 	// init all components
 	int SkippedComps = 1;
@@ -1064,6 +1095,7 @@ void CGameClient::OnInit()
 	// setup load amount, load textures
 	const char *pLoadingMessageAssets = Localize("Initializing assets");
 	LoadInitialGraphicsAssets();
+	m_LastBlankAssetFallback = g_Config.m_QmBlankAssetFallback;
 	m_Menus.RenderLoading(pLoadingDDNetCaption, pLoadingMessageAssets, 1);
 
 	m_GameWorld.Init(Collision(), m_aTuningList, &m_MapBugs);
@@ -1871,6 +1903,15 @@ void CGameClient::UpdatePositions()
 
 void CGameClient::OnRender()
 {
+	// qm_blank_asset_fallback 兜底轮询：设置页直改 g_Config、控制台命令等任何来源改值后，
+	// 下一帧在这里触发自定义素材热重载（-1 表示初始素材尚未加载）。
+	if(m_LastBlankAssetFallback >= 0 && g_Config.m_QmBlankAssetFallback != m_LastBlankAssetFallback)
+	{
+		m_LastBlankAssetFallback = g_Config.m_QmBlankAssetFallback;
+		ReloadCustomAssetImagery();
+	}
+	ProcessPendingCustomAssetImageryReload();
+
 	CPerfTimer FrameTimer;
 
 	m_pFrameScheduler->BeginFrame(Client()->PerfFrame());
@@ -3378,10 +3419,10 @@ void CGameClient::ProcessEvents()
 			if(!Config()->m_SndGame)
 				continue;
 
-			const bool FocusMode = g_Config.m_QmFocusMode != 0;
-			if(pEvent->m_SoundId == SOUND_PLAYER_JUMP && !ShouldPlayFocusJumpSound(FocusMode, g_Config.m_QmFocusModeMuteJumpSounds != 0, Config()->m_SndGame))
+			const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+			if(pEvent->m_SoundId == SOUND_PLAYER_JUMP && !Focus.m_AirJump.m_PlaySound)
 				continue;
-			if(pEvent->m_SoundId == SOUND_PLAYER_DIE && !ShouldPlayFocusDeathOrSpawnSound(FocusMode, g_Config.m_QmFocusModeMuteDeathSounds != 0, Config()->m_SndGame))
+			if(pEvent->m_SoundId == SOUND_PLAYER_DIE && !Focus.m_PlayDeathOrSpawnSound)
 				continue;
 
 			if(m_GameInfo.m_RaceSounds && ((pEvent->m_SoundId == SOUND_GUN_FIRE && !g_Config.m_SndGun) || (pEvent->m_SoundId == SOUND_PLAYER_PAIN_LONG && !g_Config.m_SndLongPain)))
@@ -5177,7 +5218,7 @@ void CGameClient::OnPredict()
 				// 找不到匹配记录而把同一服务端声音再播一次（双重声音）。
 				if(Events & COREEVENT_GROUND_JUMP)
 				{
-					if(ShouldPlayFocusJumpSound(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeMuteJumpSounds != 0, g_Config.m_SndGame))
+					if(GetQmFocusModeDecisions().m_AirJump.m_PlaySound)
 					{
 						m_Sounds.PlayAndRecord(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
 						m_PredictedWorld.CreateHandledPredictedSound(Pos, SOUND_PLAYER_JUMP, pLocalChar->GetCid());
@@ -7514,6 +7555,71 @@ void CGameClient::LoadInitialGraphicsAssets()
 	}
 }
 
+void CGameClient::ReloadCustomAssetImagery()
+{
+	// 回退语义等在加载期读取开关，所以开关一变就要重载自定义素材图片本身；
+	// 这里只排队：单帧解码全部图集会卡死渲染线程（表现为鼠标卡顿），
+	// 实际重载由 ProcessPendingCustomAssetImageryReload 每帧分摊一个类别。
+	// 重复触发会被覆盖合并，总是按最新配置执行。
+	m_PendingCustomAssetReloadStep = 0;
+}
+
+void CGameClient::ProcessPendingCustomAssetImageryReload()
+{
+	if(m_PendingCustomAssetReloadStep < 0)
+		return;
+
+	// default 选择与开关无关，跳过重载避免无谓的整包解码与 GPU 上传（blank 除外）。
+	switch(m_PendingCustomAssetReloadStep)
+	{
+	case 0:
+		if(str_comp(g_Config.m_ClAssetGame, "default") != 0)
+			LoadGameSkin(g_Config.m_ClAssetGame);
+		break;
+	case 1:
+		if(str_comp(g_Config.m_ClAssetEmoticons, "default") != 0)
+			LoadEmoticonsSkin(g_Config.m_ClAssetEmoticons);
+		break;
+	case 2:
+		if(str_comp(g_Config.m_ClAssetParticles, "default") != 0)
+			LoadParticlesSkin(g_Config.m_ClAssetParticles);
+		break;
+	case 3:
+		if(str_comp(g_Config.m_ClAssetHud, "default") != 0)
+			LoadHudSkin(g_Config.m_ClAssetHud);
+		break;
+	case 4:
+		if(str_comp(g_Config.m_ClAssetExtras, "default") != 0)
+			LoadExtrasSkin(g_Config.m_ClAssetExtras);
+		break;
+	case 5:
+		if(str_comp(g_Config.m_ClAssetGuiCursor, "default") != 0)
+			ReloadNamedSingleFileAssetImage(IMAGE_CURSOR, "gui_cursor", g_Config.m_ClAssetGuiCursor);
+		break;
+	case 6:
+		if(str_comp(g_Config.m_ClAssetArrow, "default") != 0)
+			ReloadNamedSingleFileAssetImage(IMAGE_ARROW, "arrow", g_Config.m_ClAssetArrow);
+		break;
+	case 7:
+		if(str_comp(g_Config.m_ClAssetStrongWeak, "default") != 0)
+			ReloadNamedSingleFileAssetImage(IMAGE_STRONGWEAK, "strong_weak", g_Config.m_ClAssetStrongWeak);
+		break;
+	}
+	m_PendingCustomAssetReloadStep = m_PendingCustomAssetReloadStep >= 7 ? -1 : m_PendingCustomAssetReloadStep + 1;
+}
+
+void CGameClient::ConchainQmBlankAssetFallback(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() == 0)
+		return;
+	auto *pSelf = static_cast<CGameClient *>(pUserData);
+	// 启动早期初始素材还没加载，交给正常启动流程，不在这里热重载。
+	if(!pSelf->m_GameSkinLoaded && !pSelf->m_HudSkinLoaded)
+		return;
+	pSelf->ReloadCustomAssetImagery();
+}
+
 void CGameClient::OnGraphicsResourcesReset()
 {
 	// 设备重建后所有 GPU 资源都已随设备消失。引擎侧的句柄已经通过纪元自增全部失效，
@@ -7653,7 +7759,10 @@ void CGameClient::LoadGameSkin(const char *pPath, bool AsDir)
 
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
-	if(str_comp(pPath, "default") == 0)
+	// "blank" 是客户端自带的空白材质：以内置默认图为基准造一张全透明图（尺寸与格式一致），
+	// 且显式留空优先于 qm_blank_asset_fallback，不参与回退。
+	const bool IsBlankAsset = IsBlankAssetName(pPath);
+	if(str_comp(pPath, "default") == 0 || IsBlankAsset)
 	{
 		str_copy(aPath, g_pData->m_aImages[IMAGE_GAME].m_pFilename);
 		IsDefault = true;
@@ -7668,10 +7777,14 @@ void CGameClient::LoadGameSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
+	// 开关打开时 blank 直接按默认图加载（不清空、不再另解码一份回退源），结果等价且省一半解码。
+	if(IsBlankAsset && PngLoaded && g_Config.m_QmBlankAssetFallback == 0)
+		ClearImageToTransparent(ImgInfo);
 
 	// 为不可见资源准备默认图回退
 	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
+	// 只有开关打开时才需要回退来源；关闭时（默认）不解码这张默认图集，省下它的内存与解码时间。
+	if(g_Config.m_QmBlankAssetFallback != 0 && PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
 		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_GAME].m_pFilename, IStorage::TYPE_ALL))
@@ -7835,7 +7948,10 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
-	if(str_comp(pPath, "default") == 0)
+	// "blank" 是客户端自带的空白材质：以内置默认图为基准造一张全透明图（尺寸与格式一致），
+	// 且显式留空优先于 qm_blank_asset_fallback，不参与回退。
+	const bool IsBlankAsset = IsBlankAssetName(pPath);
+	if(str_comp(pPath, "default") == 0 || IsBlankAsset)
 	{
 		str_copy(aPath, g_pData->m_aImages[IMAGE_EMOTICONS].m_pFilename);
 		IsDefault = true;
@@ -7850,11 +7966,15 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
+	// 开关打开时 blank 直接按默认图加载（不清空、不再另解码一份回退源），结果等价且省一半解码。
+	if(IsBlankAsset && PngLoaded && g_Config.m_QmBlankAssetFallback == 0)
+		ClearImageToTransparent(ImgInfo);
 
 	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
 	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
 	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
+	// 只有开关打开时才需要回退来源；关闭时（默认）不解码这张默认图集，省下它的内存与解码时间。
+	if(g_Config.m_QmBlankAssetFallback != 0 && PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
 		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_EMOTICONS].m_pFilename, IStorage::TYPE_ALL))
@@ -7887,7 +8007,8 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 		for(int i = 0; i < 16; ++i)
 		{
 			const auto *pSprite = &g_pData->m_aSprites[SPRITE_OOP + i];
-			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite) &&
+			// 空白材质整张留空是用户显式选择的结果，不必逐格告警。
+			if(!IsBlankAsset && Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite) &&
 				(g_Config.m_QmBlankAssetFallback == 0 || !FallbackImgInfo.has_value()))
 				log_warn("graphics", "Emoticon asset '%s' is empty and stays blank", pSprite->m_pName);
 			m_EmoticonsSkin.m_aSpriteEmoticons[i] = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, pSprite);
@@ -7903,7 +8024,10 @@ void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
 {
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
-	if(str_comp(pPath, "default") == 0)
+	// "blank" 是客户端自带的空白材质：以内置默认图为基准造一张全透明图（尺寸与格式一致），
+	// 且显式留空优先于 qm_blank_asset_fallback，不参与回退。
+	const bool IsBlankAsset = IsBlankAssetName(pPath);
+	if(str_comp(pPath, "default") == 0 || IsBlankAsset)
 	{
 		str_copy(aPath, g_pData->m_aImages[IMAGE_PARTICLES].m_pFilename);
 		IsDefault = true;
@@ -7918,11 +8042,15 @@ void CGameClient::LoadParticlesSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
+	// 开关打开时 blank 直接按默认图加载（不清空、不再另解码一份回退源），结果等价且省一半解码。
+	if(IsBlankAsset && PngLoaded && g_Config.m_QmBlankAssetFallback == 0)
+		ClearImageToTransparent(ImgInfo);
 
 	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
 	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
 	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
+	// 只有开关打开时才需要回退来源；关闭时（默认）不解码这张默认图集，省下它的内存与解码时间。
+	if(g_Config.m_QmBlankAssetFallback != 0 && PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
 		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_PARTICLES].m_pFilename, IStorage::TYPE_ALL))
@@ -8033,7 +8161,10 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
-	if(str_comp(pPath, "default") == 0)
+	// "blank" 是客户端自带的空白材质：以内置默认图为基准造一张全透明图（尺寸与格式一致），
+	// 且显式留空优先于 qm_blank_asset_fallback，不参与回退。
+	const bool IsBlankAsset = IsBlankAssetName(pPath);
+	if(str_comp(pPath, "default") == 0 || IsBlankAsset)
 	{
 		str_copy(aPath, g_pData->m_aImages[IMAGE_HUD].m_pFilename);
 		IsDefault = true;
@@ -8048,11 +8179,15 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
+	// 开关打开时 blank 直接按默认图加载（不清空、不再另解码一份回退源），结果等价且省一半解码。
+	if(IsBlankAsset && PngLoaded && g_Config.m_QmBlankAssetFallback == 0)
+		ClearImageToTransparent(ImgInfo);
 
 	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
 	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
 	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
+	// 只有开关打开时才需要回退来源；关闭时（默认）不解码这张默认图集，省下它的内存与解码时间。
+	if(g_Config.m_QmBlankAssetFallback != 0 && PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
 		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_HUD].m_pFilename, IStorage::TYPE_ALL))
@@ -8090,7 +8225,8 @@ void CGameClient::LoadHudSkin(const char *pPath, bool AsDir)
 		for(int SpriteId = SPRITE_HUD_AIRJUMP; SpriteId <= SPRITE_HUD_TEAM0_MODE; SpriteId++)
 		{
 			const auto *pSprite = &g_pData->m_aSprites[SpriteId];
-			if(Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite) &&
+			// 空白材质整张留空是用户显式选择的结果，不必逐格告警。
+			if(!IsBlankAsset && Graphics()->IsSpriteTextureFullyTransparent(ImgInfo, pSprite) &&
 				(g_Config.m_QmBlankAssetFallback == 0 || !FallbackImgInfo.has_value()))
 				log_warn("graphics", "HUD asset '%s' is empty and stays blank", pSprite->m_pName);
 		}
@@ -8144,7 +8280,10 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 
 	char aPath[IO_MAX_PATH_LENGTH];
 	bool IsDefault = false;
-	if(str_comp(pPath, "default") == 0)
+	// "blank" 是客户端自带的空白材质：以内置默认图为基准造一张全透明图（尺寸与格式一致），
+	// 且显式留空优先于 qm_blank_asset_fallback，不参与回退。
+	const bool IsBlankAsset = IsBlankAssetName(pPath);
+	if(str_comp(pPath, "default") == 0 || IsBlankAsset)
 	{
 		str_copy(aPath, g_pData->m_aImages[IMAGE_EXTRAS].m_pFilename);
 		IsDefault = true;
@@ -8159,11 +8298,15 @@ void CGameClient::LoadExtrasSkin(const char *pPath, bool AsDir)
 
 	CImageInfo ImgInfo;
 	bool PngLoaded = Graphics()->LoadPng(ImgInfo, aPath, IStorage::TYPE_ALL);
+	// 开关打开时 blank 直接按默认图加载（不清空、不再另解码一份回退源），结果等价且省一半解码。
+	if(IsBlankAsset && PngLoaded && g_Config.m_QmBlankAssetFallback == 0)
+		ClearImageToTransparent(ImgInfo);
 
 	// 为不可见资源准备默认图回退。回退图必须是**同一图集**的默认文件：
 	// sprite 的格坐标按各自 set 的网格换算，换成别的图集（列数不同）会取到完全不相干的区域。
 	std::optional<CImageInfo> FallbackImgInfo;
-	if(PngLoaded && !IsDefault)
+	// 只有开关打开时才需要回退来源；关闭时（默认）不解码这张默认图集，省下它的内存与解码时间。
+	if(g_Config.m_QmBlankAssetFallback != 0 && PngLoaded && !IsDefault)
 	{
 		CImageInfo ImgDefaultInfo;
 		if(Graphics()->LoadPng(ImgDefaultInfo, g_pData->m_aImages[IMAGE_EXTRAS].m_pFilename, IStorage::TYPE_ALL))

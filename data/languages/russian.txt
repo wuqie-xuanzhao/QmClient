@@ -380,6 +380,9 @@ Add a community as a favorite
 Add a community to the exclusion filter
 == Добавить сообщество в фильтр исключения
 
+Add a country to the allowed filter list for a specific community (kept visible while its country filter is active)
+== Добавить страну в список разрешённых фильтров для конкретного сообщества (остаётся видимой, пока активен её фильтр страны)
+
 Add a country to the exclusion filter for a specific community (ISO 3166-1 numeric)
 == Добавить страну в фильтр исключения для конкретного сообщества (ISO 3166-1 числовой)
 
@@ -1209,7 +1212,7 @@ Automatically enable Gores auto-switch in Gores game mode
 == Автоматически включать авто-переключение Gores в игровом режиме Gores
 
 Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
-== Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)
+== Автоматически возвращаться к ресурсу по умолчанию, когда спрайт пользовательского ресурса полностью прозрачен; отключите, чтобы пустые спрайты оставались невидимыми (например, для скрытия эффектов)
 
 Automatically re-join team 0 after finish (only if unlocked).
 == Автоматически возвращаться в команду 0 после финиша (только если не заблокировано)
@@ -1234,6 +1237,9 @@ Automatically take game over screenshot
 
 Automatically take statboard screenshot
 == Автоматически делать скриншот статистики
+
+Available for this bundled font
+== Доступно для этого встроенного шрифта
 
 Available practice commands: 
 == Доступные команды тренировки: 
@@ -1481,6 +1487,12 @@ Bit flags for disabling settings tabs
 Black
 == Чёрный
 
+Blank material
+== Пустой материал
+
+Blank: hides this asset
+== Пусто: скрывает этот ресурс
+
 Blend mode
 == Режим смешивания
 
@@ -1570,6 +1582,9 @@ Build the status text shown above Tees
 
 Built-in
 == Встроенный
+
+Bundled vector profile:
+== Встроенный векторный профиль:
 
 Button - Disabled
 == Кнопка - Отключена
@@ -1834,9 +1849,6 @@ Choose default eyes when joining a server
 
 Choose export name first.
 == Сначала введите имя экспорта.
-
-Choose the custom font first, then enable MSDF nameplates. The first load may take a moment.
-== Сначала выберите пользовательский шрифт, затем включите таблички MSDF. Первая загрузка может занять некоторое время.
 
 Choose the language used by the client
 == Choose the language used by the client
@@ -2375,6 +2387,12 @@ Control latency compensation tools
 Control player (0) or dummy (1)
 == Управление игроком (0) или дамми (1)
 
+Controlled by Gores mode
+== Управляется режимом Gores
+
+Controlled by Zen mode
+== Управляется режимом дзен
+
 Controller
 == Контроллер
 
@@ -2593,9 +2611,6 @@ Custom font weight (variable fonts)
 
 Custom Font:
 == Пользовательский шрифт:
-
-Custom fonts use FreeType automatically.
-== Пользовательские шрифты автоматически используют FreeType.
 
 Custom prompt template
 == Пользовательский шаблон промпта
@@ -3050,6 +3065,9 @@ Disallow chat from blacklisted addresses
 Discard
 == Отменить
 
+Discard cached server pings older than this many hours (0 = never expire)
+== Удалять кэшированные пинги серверов старше указанного количества часов (0 = не устаревать)
+
 Discard changes
 == Отменить изменения
 
@@ -3409,6 +3427,9 @@ dumps all sqlservers readservers = r, writeservers = w
 
 Dumps the antibot status
 == Выгружает статус антибота
+
+Duotone
+== Дуотон
 
 Duplicate
 == Дублировать
@@ -5855,6 +5876,9 @@ LibreTranslate API Key
 LibreTranslate endpoint
 == Конечная точка LibreTranslate
 
+Light
+== Лёгкий
+
 Limit information in spectator mode
 == Ограничить информацию в режиме наблюдателя
 
@@ -6614,9 +6638,6 @@ Moves to the point with x/y-coordinates ii
 Moves to the tile with x/y-number ii
 == Перемещает на тайл с номером x/y ii
 
-MSDF nameplate text
-== Текст табличек MSDF
-
 Multi-resolution blur with a stronger result and balanced GPU cost.
 == Многоуровневое размытие с более сильным эффектом и сбалансированной нагрузкой на GPU.
 
@@ -7133,6 +7154,9 @@ Normal message
 Normal message text gradient color
 == Цвет градиента текста обычных сообщений
 
+Not available; FreeType is used
+== Недоступно; используется FreeType
+
 NOT CONNECTED
 == НЕ ПОДКЛЮЧЕНО
 
@@ -7298,6 +7322,9 @@ Only save ghost if better than previous record
 Only save improvements
 == Сохранять только улучшения
 
+Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
+== Только у некоторых встроенных шрифтов есть векторные атласы табличек. Остальные шрифты используют FreeType.
+
 Only show after joining a team
 == Показывать только после присоединения к команде
 
@@ -7321,6 +7348,9 @@ Opacity
 
 Opacity of freeze bars inside freeze
 == Прозрачность полос разморозки внутри заморозки
+
+Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)
+== Непрозрачность призраков Tee, отображаемых для игроков в режиме наблюдения (0 = полностью прозрачный)
 
 Open a matching settings card directly
 == Open a matching settings card directly
@@ -8270,8 +8300,8 @@ Qm UI custom icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Цвет значков Qm UI: 1=белый, 2=черный, 3=пользовательский, 4=радуга
 
-Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill
-== Толщина значков Qm UI: 0=обычная, 1=жирная, 2=тонкая, 3=заливка
+Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
+== Стиль значков Qm UI: 0=обычный, 1=жирный, 2=тонкий, 3=заливка, 4=лёгкий, 5=дуотон
 
 qm_profile_queue: index must be between 1 and %d
 == qm_profile_queue: индекс должен быть от 1 до %d
@@ -8701,6 +8731,9 @@ Remove a community from the exclusion filter
 
 Remove a community from the favorites
 == Удалить сообщество из избранного
+
+Remove a country from the allowed filter list for a specific community
+== Удалить страну из списка разрешённых фильтров для конкретного сообщества
 
 Remove a country from the exclusion filter for a specific community (ISO 3166-1 numeric)
 == Удалить страну из фильтра исключения для конкретного сообщества (ISO 3166-1 числовой)
@@ -10431,7 +10464,7 @@ Show seconds on clock
 == Показывать секунды на часах
 
 Show semi-transparent ghost tees for other players who are spectating
-== Show semi-transparent ghost tees for other players who are spectating
+== Показывать полупрозрачных призраков Tee для игроков, находящихся в режиме наблюдения
 
 Show server chat messages
 == Показывать серверные сообщения чата
@@ -10787,8 +10820,14 @@ Skip render frames if waiting for previous frame during update cycle
 Skip start menu
 == Пропускать стартовое меню
 
+Skip switch animation when hammering
+== Не проигрывать анимацию смены оружия при ударе молотом
+
 Skip the main menu
 == Пропустить главное меню
+
+Skip the weapon switch animation for hammer switches in Gores mode
+== Не проигрывать анимацию смены оружия при переключении на молот в режиме Gores
 
 Skip Tutorial
 == Пропустить обучение
@@ -10977,7 +11016,7 @@ Spectated player and friends
 == Наблюдаемый игрок и друзья
 
 Spectator ghost opacity
-== Spectator ghost opacity
+== Непрозрачность призраков наблюдателей
 
 Spectators
 == Наблюдатели
@@ -11621,6 +11660,9 @@ Teleports you to teleporter i
 Teletile overlay alpha (0-100)
 == Альфа-канал наложения сущностей Teletile (0-100)
 
+Temporarily controlled by a mode toggle
+== Временно управляется настройкой режима
+
 Temporarily disable dummy hammering
 == Временно отключать удары манекена
 
@@ -11674,9 +11716,6 @@ The audio device couldn't be initialised.
 
 The auth level you need to tele others
 == Уровень прав, необходимый для телепортации других игроков
-
-The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again.
-== Пользовательский шрифт изменён, поэтому таблички MSDF отключены. Выберите шрифт и снова включите MSDF.
 
 The downloaded file is not a valid demo
 == Скачанный файл не является допустимым демо
@@ -11773,6 +11812,9 @@ Thin
 
 Thinking mode requires a reasoning model
 == Для режима размышления требуется модель рассуждения
+
+This font has no bundled vector profile. Nameplates will use FreeType.
+== У этого шрифта нет встроенного векторного профиля. Таблички будут использовать FreeType.
 
 This ID is not connected
 == Этот ID не подключён
@@ -12251,8 +12293,8 @@ UI icon color
 UI icon custom color
 == Пользовательский цвет значков интерфейса
 
-UI icon weight
-== Толщина значков интерфейса
+UI icon style
+== Стиль значков интерфейса
 
 UI motion level
 == Анимация UI
@@ -12548,12 +12590,6 @@ Use k key to kill (restart), q to pause and watch other players. See settings fo
 Use mouse sensitivity when dynamic camera is on
 == Использовать чувствительность мыши при включённой динамической камере
 
-Use MSDF text rendering for nameplates (built-in fonts only)
-== Использовать рендеринг текста MSDF для табличек (только встроенные шрифты)
-
-Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)
-== Использовать рендеринг текста MSDF для табличек (только встроенные шрифты, пользовательские шрифты переходят на FreeType)
-
 Use multi-char replacement based on word length
 == Использовать замену несколькими символами в зависимости от длины слова
 
@@ -12611,6 +12647,12 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == Используйте это перед `add_favorite` для группировки избранного. Завершите с `end_favorite_group`
 
+Use vector font rendering for nameplates
+== Использовать векторный шрифт для табличек
+
+Use vector font rendering for nameplates when a bundled profile is available
+== Использовать векторный шрифт для табличек, когда доступен встроенный профиль
+
 Use warlist colors instead of regular colors
 == Использовать цвета списка врагов вместо обычных
 
@@ -12622,9 +12664,6 @@ Used by active shared text and numeric input fields
 
 Uses the active action with the current aiming position.
 == Использует активное действие с текущей позицией прицеливания.
-
-Uses the built-in font; a custom font falls back to FreeType.
-== Используется встроенный шрифт; пользовательский шрифт переходит на FreeType.
 
 v = Velocity
 == v = Скорость
@@ -12646,6 +12685,9 @@ Vanilla skins only
 
 Variable custom font weight
 == Толщина вариативного пользовательского шрифта
+
+Vector nameplate text
+== Векторный текст табличек
 
 Velocity
 == Скорость

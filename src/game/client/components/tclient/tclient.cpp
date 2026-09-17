@@ -34,6 +34,7 @@
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/update_manifest.h>
 #include <game/client/components/qmclient/update_version.h>
+#include <game/client/components/qmclient/weapon_animation.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
 #include <game/client/render.h>
@@ -2605,10 +2606,15 @@ void CTClient::CheckFriendOnline()
 	if(Now >= m_FriendAutoRefreshNext && !pServerBrowser->IsGettingServerlist())
 	{
 		const int CurrentType = pServerBrowser->GetCurrentType();
-		if(g_Config.m_QmFriendOnlineAutoRefresh && CurrentType != IServerBrowser::TYPE_LAN)
-			pServerBrowser->Refresh(CurrentType, false);
-		else
-			pServerBrowser->RefreshHttpServerList();
+		// LAN 标签不消费主服务器列表；自动刷新关闭时跳过后台 HTTP 刷新，避免好友扫描在局域网页面触发主服务器请求
+		const bool AutoRefresh = g_Config.m_QmFriendOnlineAutoRefresh != 0;
+		if(!(CurrentType == IServerBrowser::TYPE_LAN && !AutoRefresh))
+		{
+			if(AutoRefresh && CurrentType != IServerBrowser::TYPE_LAN)
+				pServerBrowser->Refresh(CurrentType, false);
+			else
+				pServerBrowser->RefreshHttpServerList();
+		}
 		m_FriendAutoRefreshNext = Now + RefreshInterval;
 	}
 
@@ -3775,6 +3781,26 @@ bool CTClient::ShouldAppendGoresPrevWeapon() const
 	       !HasExtraGoresWeapon();
 }
 
+bool CTClient::IsGoresWeaponCycleActive() const
+{
+	if(Client()->State() != IClient::STATE_ONLINE ||
+		GameClient()->m_Snap.m_SpecInfo.m_Active ||
+		GameClient()->m_Snap.m_pLocalCharacter == nullptr ||
+		!IsGoresModuleEnabled() ||
+		g_Config.m_QmGoresAutoWeaponSwitch == 0)
+		return false;
+	// 没有额外武器时走"锤后自动切回"，拿到额外武器时只有允许禁用才走脉冲模式。
+	return !HasExtraGoresWeapon() || g_Config.m_QmGoresDisableIfWeapons != 0;
+}
+
+bool CTClient::ShouldSkipGoresHammerSwitchAnimation(int ClientId, int PreviousWeapon, int CurrentWeapon) const
+{
+	// 只作用于自己的武器循环：动画范围设成"所有玩家"时不应连带压掉别人的切换动画。
+	return ClientId >= 0 &&
+	       ClientId == GameClient()->m_aLocalIds[g_Config.m_ClDummy] &&
+	       QmShouldSkipGoresHammerSwitchAnimation(g_Config.m_QmGoresSuppressSwitchAnim != 0, IsGoresWeaponCycleActive(), PreviousWeapon, CurrentWeapon);
+}
+
 void CTClient::UpdateGoresWeaponCycle()
 {
 	const int Dummy = g_Config.m_ClDummy;
@@ -3787,14 +3813,7 @@ void CTClient::UpdateGoresWeaponCycle()
 	m_aGoresHammerWakeupFirePendingRelease[Dummy] = false;
 
 	const bool GoresCycleActive = ShouldAppendGoresPrevWeapon();
-	const bool MultiWeaponPulseActive =
-		Client()->State() == IClient::STATE_ONLINE &&
-		!GameClient()->m_Snap.m_SpecInfo.m_Active &&
-		GameClient()->m_Snap.m_pLocalCharacter != nullptr &&
-		IsGoresModuleEnabled() &&
-		g_Config.m_QmGoresAutoWeaponSwitch != 0 &&
-		g_Config.m_QmGoresDisableIfWeapons != 0 &&
-		HasExtraGoresWeapon();
+	const bool MultiWeaponPulseActive = IsGoresWeaponCycleActive() && !GoresCycleActive;
 	if(!GoresCycleActive && !MultiWeaponPulseActive)
 	{
 		for(bool &WasInFreeze : m_aWasInFreezeForGoresHammer)
@@ -4436,17 +4455,34 @@ void CTClient::StepGoresDistanceFieldReachableStartCheck(int Budget)
 
 void CTClient::ApplyFocusModeEffects()
 {
-	const bool FocusActive = g_Config.m_QmFocusMode != 0;
-	const auto ApplyFocusOverride = [](SQmFocusConfigOverrideState &State, bool HideActive, int &ConfigValue, int HiddenValue) {
-		bool Changed = false;
-		const int NextValue = ApplyQmFocusConfigOverride(State, HideActive, ConfigValue, HiddenValue, Changed);
-		if(Changed)
-			ConfigValue = NextValue;
+	const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+	const bool FocusActive = Focus.m_FocusActive;
+	// 被禅模式临时改写的配置项集中在这张表里：配置名、运行值、隐藏值与覆盖状态一一对应，
+	// 新增目标只需加一行。改写值只属于运行时状态，因此同时登记写盘覆盖，让 Save() 仍写出
+	// 用户自己的设置；否则隐藏值会落盘，下次启动无法还原（名字板/HUD 关不掉）。
+	struct SFocusOverrideTarget
+	{
+		const char *m_pScriptName;
+		int *m_pValue;
+		int m_HiddenValue;
+		bool m_HideActive;
+		SQmFocusConfigOverrideState *m_pState;
+	};
+	const SFocusOverrideTarget aTargets[] = {
+		{"cl_showhud", &g_Config.m_ClShowhud, 0, Focus.m_HideHud, &m_FocusHudOverrideState},
+		{"tc_statusbar", &g_Config.m_TcStatusBar, 0, Focus.m_HideHud, &m_FocusStatusBarOverrideState},
+		// 名字文本行：禅模式"隐藏名字"与"隐藏名字板"都会隐藏它；坐标行只跟随"隐藏名字板"。
+		{"cl_nameplates", &g_Config.m_ClNamePlates, 0, Focus.m_HideNames || Focus.m_HideNameplates, &m_FocusNamePlatesOverrideState},
+		{"cl_nameplates_own", &g_Config.m_ClNamePlatesOwn, 0, Focus.m_HideNames || Focus.m_HideNameplates, &m_FocusNamePlatesOwnOverrideState},
+		{"qm_nameplate_coords", &g_Config.m_QmNameplateCoords, 0, Focus.m_HideNameplates, &m_FocusNameplateCoordsOverrideState},
+		{"qm_nameplate_coords_own", &g_Config.m_QmNameplateCoordsOwn, 0, Focus.m_HideNameplates, &m_FocusNameplateCoordsOwnOverrideState},
+		{"qm_nameplate_coord_x", &g_Config.m_QmNameplateCoordX, 0, Focus.m_HideNameplates, &m_FocusNameplateCoordXOverrideState},
+		{"qm_nameplate_coord_y", &g_Config.m_QmNameplateCoordY, 0, Focus.m_HideNameplates, &m_FocusNameplateCoordYOverrideState},
+		{"cl_show_direction", &g_Config.m_ClShowDirection, 0, Focus.m_HideDirectionIndicators, &m_FocusDirectionOverrideState},
+		// 禅模式只接管实时观感，不接管录像配置（cl_video_showhud / cl_video_show_direction）：
+		// 那两个是录像输出的独立偏好，进出禅模式时改动它们会让录制中途画面突变。
 	};
 	const bool StateWasKnown = m_FocusModeStateKnown;
-	const bool HideFocusHud = ShouldHideFocusHud(FocusActive, g_Config.m_QmFocusModeHideHud != 0);
-	const bool HideFocusNameplates = ShouldHideFocusNameplates(FocusActive, g_Config.m_QmFocusModeHideNameplates != 0);
-	const bool HideFocusDirectionIndicators = ShouldHideFocusDirectionIndicators(FocusActive, g_Config.m_QmFocusModeHideDirectionIndicators != 0);
 	if(!m_FocusModeStateKnown)
 	{
 		m_FocusModeStateKnown = true;
@@ -4468,16 +4504,16 @@ void CTClient::ApplyFocusModeEffects()
 		GameClient()->Echo(aFocusMsg);
 	}
 
-	ApplyFocusOverride(m_FocusHudOverrideState, HideFocusHud, g_Config.m_ClShowhud, 0);
-	ApplyFocusOverride(m_FocusNamePlatesOverrideState, HideFocusNameplates, g_Config.m_ClNamePlates, 0);
-	ApplyFocusOverride(m_FocusNamePlatesOwnOverrideState, HideFocusNameplates, g_Config.m_ClNamePlatesOwn, 0);
-	ApplyFocusOverride(m_FocusNameplateCoordsOverrideState, HideFocusNameplates, g_Config.m_QmNameplateCoords, 0);
-	ApplyFocusOverride(m_FocusNameplateCoordsOwnOverrideState, HideFocusNameplates, g_Config.m_QmNameplateCoordsOwn, 0);
-	ApplyFocusOverride(m_FocusNameplateCoordXOverrideState, HideFocusNameplates, g_Config.m_QmNameplateCoordX, 0);
-	ApplyFocusOverride(m_FocusNameplateCoordYOverrideState, HideFocusNameplates, g_Config.m_QmNameplateCoordY, 0);
-	ApplyFocusOverride(m_FocusDirectionOverrideState, HideFocusDirectionIndicators, g_Config.m_ClShowDirection, 0);
-	ApplyFocusOverride(m_FocusVideoHudOverrideState, HideFocusHud, g_Config.m_ClVideoShowhud, 0);
-	ApplyFocusOverride(m_FocusVideoDirectionOverrideState, HideFocusDirectionIndicators, g_Config.m_ClVideoShowDirection, 0);
+	for(const SFocusOverrideTarget &Target : aTargets)
+	{
+		bool Changed = false;
+		const bool OwnedBefore = Target.m_pState->m_AutoChangedValue;
+		const int NextValue = ApplyQmFocusConfigOverride(*Target.m_pState, Target.m_HideActive, *Target.m_pValue, Target.m_HiddenValue, Changed);
+		if(Changed)
+			*Target.m_pValue = NextValue;
+		if(Target.m_pState->m_AutoChangedValue != OwnedBefore)
+			ConfigManager()->SetSaveValueOverride(Target.m_pScriptName, Target.m_pState->m_AutoChangedValue, Target.m_pState->m_SavedValue, "qm_zen_mode");
+	}
 	m_PrevFocusModeActive = FocusActive;
 }
 
@@ -4499,10 +4535,18 @@ void CTClient::ApplyGoresFastInputLink()
 	// 都会被当成进入 Gores 模式，从而误触发 qm_gores 自动开启。
 	const bool GoresGameModeEntered = GoresGameMode && (!m_GoresGameModeStateKnown || !m_PrevGoresGameMode);
 	const bool GoresGameModeLeft = m_GoresGameModeStateKnown && m_PrevGoresGameMode && !GoresGameMode;
+	// 与禅模式同理：临时接管生效期间必须登记写盘覆盖，否则在 Gores 状态下退出会把这几个
+	// 接管值写进配置，下次启动就分不清是自动接管还是用户自己开的。
+	const auto ApplyGoresSaveOverride = [this](const char *pScriptName, const SQmFocusConfigOverrideState &State, bool OwnedBefore) {
+		if(State.m_AutoChangedValue != OwnedBefore)
+			ConfigManager()->SetSaveValueOverride(pScriptName, State.m_AutoChangedValue, State.m_SavedValue, "qm_gores_mode");
+	};
+	const bool GoresAutoEnableOwnedBefore = m_GoresAutoEnableOverride.m_AutoChangedValue;
 	bool GoresAutoEnableChanged = false;
 	const int GoresEnabled = ApplyQmGoresAutoEnableConfig(m_GoresAutoEnableOverride, GoresGameModeEntered, GoresGameModeLeft, g_Config.m_QmGoresAutoEnable != 0, g_Config.m_QmGores, GoresAutoEnableChanged);
 	if(GoresAutoEnableChanged)
 		g_Config.m_QmGores = GoresEnabled;
+	ApplyGoresSaveOverride("qm_gores", m_GoresAutoEnableOverride, GoresAutoEnableOwnedBefore);
 	m_GoresGameModeStateKnown = true;
 	m_PrevGoresGameMode = GoresGameMode;
 	if(!m_GoresModeStateKnown)
@@ -4511,14 +4555,21 @@ void CTClient::ApplyGoresFastInputLink()
 	bool TcFastInputChanged = false;
 	bool TcFastInputOthersChanged = false;
 	const bool GoresActive = g_Config.m_QmGores != 0;
+	const bool TcFastInputOwnedBefore = m_GoresFastInputOverride.m_AutoChangedValue;
+	const bool TcFastInputOthersOwnedBefore = m_GoresFastInputOthersOverride.m_AutoChangedValue;
 	const int TcFastInput = ApplyQmGoresLinkedConfig(m_GoresFastInputOverride, GoresActive, g_Config.m_QmGoresFastInput != 0, g_Config.m_TcFastInput, TcFastInputChanged);
 	const int TcFastInputOthers = ApplyQmGoresLinkedConfig(m_GoresFastInputOthersOverride, GoresActive, g_Config.m_QmGoresFastInputOthers != 0, g_Config.m_TcFastInputOthers, TcFastInputOthersChanged);
 	if(TcFastInputChanged)
 		g_Config.m_TcFastInput = TcFastInput;
 	if(TcFastInputOthersChanged)
 		g_Config.m_TcFastInputOthers = TcFastInputOthers;
+	ApplyGoresSaveOverride("tc_fast_input", m_GoresFastInputOverride, TcFastInputOwnedBefore);
+	ApplyGoresSaveOverride("tc_fast_input_others", m_GoresFastInputOthersOverride, TcFastInputOthersOwnedBefore);
+	// 分身锤只在"进入 Gores 模式"那一帧关一次，之后不再持续接管 cl_dummy_hammer：
+	// 持续覆盖会让用户重新打开的分身锤被反复压回 0，看起来像开关被锁住。
+	const bool GoresEntered = StateWasKnown && GoresActive && !m_PrevGoresModeActive;
 	bool DummyHammerChanged = false;
-	const int DummyHammer = ApplyQmGoresDummyHammerOverride(m_GoresDummyHammerOverride, GoresActive, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
+	const int DummyHammer = ApplyQmGoresDummyHammerOnEnter(GoresEntered, g_Config.m_QmGoresDisableDummyHammer != 0, g_Config.m_ClDummyHammer, DummyHammerChanged);
 	if(DummyHammerChanged)
 		g_Config.m_ClDummyHammer = DummyHammer;
 	if(!StateWasKnown)
@@ -4553,7 +4604,10 @@ void CTClient::ResetGoresConfigOverrides()
 	RestoreOverride(m_GoresAutoEnableOverride, g_Config.m_QmGores, 1);
 	RestoreOverride(m_GoresFastInputOverride, g_Config.m_TcFastInput, 1);
 	RestoreOverride(m_GoresFastInputOthersOverride, g_Config.m_TcFastInputOthers, 1);
-	RestoreOverride(m_GoresDummyHammerOverride, g_Config.m_ClDummyHammer, 0);
+	// 恢复之后必须解除写盘覆盖，否则这些配置项会一直按接管前的旧值保存。
+	ConfigManager()->SetSaveValueOverride("qm_gores", false);
+	ConfigManager()->SetSaveValueOverride("tc_fast_input", false);
+	ConfigManager()->SetSaveValueOverride("tc_fast_input_others", false);
 	m_GoresGameModeStateKnown = false;
 	m_PrevGoresGameMode = false;
 }

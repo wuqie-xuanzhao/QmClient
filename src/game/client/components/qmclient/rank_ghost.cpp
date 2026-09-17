@@ -2569,12 +2569,10 @@ void CRankGhost::DispatchViewEvent(const SViewEvent &Event)
 		if(!Config()->m_SndGame)
 			break;
 		const int SoundId = Event.m_aData[2];
-		const bool FocusMode = g_Config.m_QmFocusMode != 0;
-		if(SoundId == SOUND_PLAYER_JUMP &&
-			!ShouldPlayFocusJumpSound(FocusMode, g_Config.m_QmFocusModeMuteJumpSounds != 0, Config()->m_SndGame))
+		const SQmFocusModeDecisions Focus = GetQmFocusModeDecisions();
+		if(SoundId == SOUND_PLAYER_JUMP && !Focus.m_AirJump.m_PlaySound)
 			break;
-		if(SoundId == SOUND_PLAYER_DIE &&
-			!ShouldPlayFocusDeathOrSpawnSound(FocusMode, g_Config.m_QmFocusModeMuteDeathSounds != 0, Config()->m_SndGame))
+		if(SoundId == SOUND_PLAYER_DIE && !Focus.m_PlayDeathOrSpawnSound)
 			break;
 		if(pGameClient->m_GameInfo.m_RaceSounds &&
 			((SoundId == SOUND_GUN_FIRE && !g_Config.m_SndGun) || (SoundId == SOUND_PLAYER_PAIN_LONG && !g_Config.m_SndLongPain)))

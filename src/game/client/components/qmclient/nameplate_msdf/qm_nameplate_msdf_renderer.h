@@ -28,6 +28,11 @@ struct SQmNameplateMsdfTextStyle
 	// 描边宽度（画布单位；渲染时按当前映射换算成屏幕像素，单层实心边框）
 	float m_OutlineWidth = 1.0f;
 	ColorRGBA m_OutlineColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f);
+	bool m_GradientEnabled = false;
+	ColorRGBA m_GradientColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+	bool m_GlowEnabled = false;
+	ColorRGBA m_GlowColor = ColorRGBA(0.3f, 0.78f, 1.0f, 0.4f);
+	float m_GlowWidth = 0.0f;
 	bool m_RainbowEnabled = false;
 	float m_RainbowTime = 0.0f;
 };

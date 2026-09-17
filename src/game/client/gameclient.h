@@ -1104,6 +1104,15 @@ public:
 	void LoadHudSkin(const char *pPath, bool AsDir = false);
 	void LoadExtrasSkin(const char *pPath, bool AsDir = false);
 	void ReloadNamedSingleFileAssetImage(int ImageId, const char *pCategoryId, const char *pActiveName);
+	// 影响加载结果的开关（例如 qm_blank_asset_fallback）变化后重载全部自定义素材图片。
+	// 只把任务排队，实际重载由 ProcessPendingCustomAssetImageryReload 每帧一个类别分摊执行。
+	void ReloadCustomAssetImagery();
+	void ProcessPendingCustomAssetImageryReload();
+	static void ConchainQmBlankAssetFallback(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	// 上次完成素材加载时的 qm_blank_asset_fallback 值（-1 = 初始素材未加载），用于每帧兜底轮询。
+	int m_LastBlankAssetFallback = -1;
+	// 待处理的热重载步骤（-1 = 空闲，0..7 = 逐帧执行对应类别的重载）。
+	int m_PendingCustomAssetReloadStep = -1;
 
 	struct SClientGameSkin
 	{

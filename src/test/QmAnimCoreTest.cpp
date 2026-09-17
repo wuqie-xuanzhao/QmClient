@@ -2,7 +2,6 @@
 
 #include <gtest/gtest.h>
 
-
 TEST(UiV2Anim, QueuePolicyRunsInOrder)
 {
 	CUiV2AnimationRuntime Runtime;
@@ -22,8 +21,6 @@ TEST(UiV2Anim, QueuePolicyRunsInOrder)
 	EXPECT_FALSE(Runtime.HasActiveAnimation(7, EUiAnimProperty::ALPHA));
 	EXPECT_NEAR(Runtime.GetValue(7, EUiAnimProperty::ALPHA), 20.0f, 0.001f);
 }
-
-
 
 TEST(UiV2Anim, DelayDefersAnimationStart)
 {
@@ -216,7 +213,6 @@ TEST(UiV2Anim, AwaitTracksSupportsMultipleGroupsForSameTrack)
 	ASSERT_TRUE(Runtime.PollGroupCompletedEvent(GroupEvent));
 	EXPECT_EQ(GroupEvent.m_GroupId, GroupB);
 }
-
 
 TEST(UiV2Anim, AwaitTracksRejectsAlreadyCompletedOrUnknownTrackIds)
 {

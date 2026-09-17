@@ -1660,7 +1660,21 @@ int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const 
 		pRect->HSplitTop(RowSpacing, nullptr, pRect);
 
 	SLabelProperties LabelProps;
-	const int Logic = DoSettingsButton_CheckBox(Page, Tab, -1, pId, pTextId, pText, *pValue, &CheckBoxRect, LabelProps, true, BodySize);
+	// 被禅模式/Gores 临时接管的配置项：灰化、拒绝点击并提示接管来源。
+	const char *pOverrideTooltip = TemporaryOverrideTooltip(pValue);
+	if(pOverrideTooltip != nullptr)
+	{
+		LabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+		// 灰化行用 ProcessInput=false 绘制，自己不会占 hover，而 CTooltips 只在
+		// Ui()->HotItem() 等于登记 id 时才激活提示；这里补一次只读的按钮逻辑占住 hover
+		// （返回值丢弃，不写任何值），提示才会跟着鼠标出现。
+		if(!m_MenuTextPlanCollecting)
+		{
+			Ui()->DoButtonLogic(pId, 0, &CheckBoxRect, BUTTONFLAG_LEFT);
+			GameClient()->m_Tooltips.DoToolTip(pId, &CheckBoxRect, pOverrideTooltip);
+		}
+	}
+	const int Logic = DoSettingsButton_CheckBox(Page, Tab, -1, pId, pTextId, pText, *pValue, &CheckBoxRect, LabelProps, pOverrideTooltip == nullptr, BodySize);
 	if(Logic)
 		*pValue ^= 1;
 	return Logic;
@@ -1903,7 +1917,7 @@ bool CMenus::DoLine_RadioMenu(CUIRect &View, const char *pLabel, std::vector<CBu
 	return Pressed;
 }
 
-bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value, const SSettingsContentMetrics &Metrics)
+bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &View, const char *pLabelTextId, const char *pLabel, std::vector<CButtonContainer> &vButtonContainers, const std::vector<const char *> &vButtonTextIds, const std::vector<const char *> &vLabels, const std::vector<int> &vValues, int &Value, const SSettingsContentMetrics &Metrics, const int *pOverrideSource)
 {
 	dbg_assert(vButtonContainers.size() == vValues.size(), "vButtonContainers and vValues must have the same size");
 	dbg_assert(vButtonContainers.size() == vLabels.size(), "vButtonContainers and vLabels must have the same size");
@@ -1913,7 +1927,24 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	CUIRect Label = Layout.m_LabelRect;
 	CUIRect Buttons = Layout.m_ButtonsRect;
 	View.HSplitTop(Layout.m_Height, nullptr, &View);
-	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, Metrics.m_BodySize, TEXTALIGN_ML);
+	// 被禅模式/Gores 临时接管的配置项：整行灰化、拒绝点击并提示接管来源。
+	// 调用方按返回值决定是否写回配置，所以这里返回 false 就足以阻止用户改写被接管的值。
+	const char *pOverrideTooltip = pOverrideSource != nullptr ? TemporaryOverrideTooltip(pOverrideSource) : nullptr;
+	const bool Locked = pOverrideTooltip != nullptr;
+	SLabelProperties LabelProps;
+	ColorRGBA ButtonColor(1.0f, 1.0f, 1.0f, 0.5f);
+	if(Locked)
+	{
+		LabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+		ButtonColor = ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f);
+	}
+	DoSettingsLabel(Page, Tab, pLabelTextId, &Label, pLabel, Metrics.m_BodySize, TEXTALIGN_ML, LabelProps);
+	if(Locked && !m_MenuTextPlanCollecting)
+	{
+		// 标签本身不是控件，先用只读的按钮逻辑占住 hover，提示才会在悬停标签时出现。
+		Ui()->DoButtonLogic(pOverrideSource, 0, &Layout.m_LabelRect, BUTTONFLAG_LEFT);
+		GameClient()->m_Tooltips.DoToolTip(pOverrideSource, &Layout.m_LabelRect, pOverrideTooltip);
+	}
 	const float W = Buttons.w / N;
 	bool Pressed = false;
 	for(int i = 0; i < N; ++i)
@@ -1925,13 +1956,17 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 			Corner = IGraphics::CORNER_L;
 		if(i == N - 1)
 			Corner = IGraphics::CORNER_R;
-		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner, 5.0f, ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, Metrics.m_BodySize))
+		if(DoSettingsButton_Menu(Page, Tab, Subtab, &vButtonContainers[i], vButtonTextIds[i], vLabels[i], vValues[i] == Value, &Button, BUTTONFLAG_LEFT, Corner, 5.0f, ButtonColor, 0.0f, Metrics.m_BodySize))
 		{
 			Pressed = true;
-			Value = vValues[i];
+			if(!Locked)
+				Value = vValues[i];
 		}
+		// 提示必须登记在真正被 hover 的按钮 id 上，否则 CTooltips 不会激活。
+		if(Locked && !m_MenuTextPlanCollecting)
+			GameClient()->m_Tooltips.DoToolTip(&vButtonContainers[i], &Button, pOverrideTooltip);
 	}
-	return Pressed;
+	return Locked ? false : Pressed;
 }
 
 ColorHSLA CMenus::DoLine_ColorPicker(CButtonContainer *pResetId, const SSettingsContentMetrics &Metrics, CUIRect *pMainRect, const char *pText, unsigned int *pColorValue, const ColorRGBA DefaultColor, bool CheckBoxSpacing, int *pCheckBoxValue, bool Alpha, bool TrailingSpacing)
@@ -2897,13 +2932,16 @@ void CMenus::RenderLoadingDirect(const char *pCaption, const char *pContent, std
 
 	if(GameClient()->m_MenuBackground.IsLoading())
 	{
-		// Avoid rendering while loading the menu background as this would otherwise
-		// cause the regular menu background to be rendered for a few frames while
-		// the menu background is not loaded yet.
+		// 背景未就绪时本帧不呈现：呈现就会把程序化背景（(none) 棋盘格）画出来，
+		// 就是启动时看到的灰屏 / None 背景。上游在此直接 return，这里多一步推进——
+		// 本地菜单背景图层是分帧初始化的，只跳过不推进会让加载永远走不完。
+		GameClient()->m_MenuBackground.AdvanceLoading();
 		if(g_Config.m_QmGraphicsTrace >= 1)
 			dbg_msg("ui/loading", "frame skip: menu background still loading");
 		return;
 	}
+
+	const CUIRect Screen = *Ui()->Screen();
 	if(!GameClient()->m_MenuBackground.Render())
 	{
 		if(g_Config.m_QmGraphicsTrace >= 1)
@@ -2914,7 +2952,6 @@ void CMenus::RenderLoadingDirect(const char *pCaption, const char *pContent, std
 	m_LoadingState.m_LastRender = Now;
 
 	CUIRect Box;
-	const CUIRect Screen = *Ui()->Screen();
 	Screen.Margin(QmUiCenteredMargin(Screen, 160.0f, 320.0f, 180.0f), &Box);
 
 	Graphics()->TextureClear();
@@ -3030,7 +3067,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	{
 		auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [&Stats](const SQmClientLocalModeStats &Existing) {
 			return str_comp_nocase(Existing.m_GameMode.c_str(), Stats.m_GameMode.c_str()) == 0 &&
-				Existing.m_CommunityId == Stats.m_CommunityId && Existing.m_IsAxiom == Stats.m_IsAxiom;
+			       Existing.m_CommunityId == Stats.m_CommunityId && Existing.m_IsAxiom == Stats.m_IsAxiom;
 		});
 		if(It == vModeStats.end())
 		{
@@ -3081,7 +3118,7 @@ void CMenus::RenderStatistics(CUIRect MainView)
 		for(const SQmDdStatsGameType &GameType : *pDdStatsGameTypes)
 		{
 			auto It = std::find_if(vModeStats.begin(), vModeStats.end(), [&GameType](const SQmClientLocalModeStats &Stats) {
-			return str_comp_nocase(Stats.m_GameMode.c_str(), GameType.m_Name.c_str()) == 0 && Stats.m_CommunityId == "ddstats";
+				return str_comp_nocase(Stats.m_GameMode.c_str(), GameType.m_Name.c_str()) == 0 && Stats.m_CommunityId == "ddstats";
 			});
 			if(It == vModeStats.end())
 			{
@@ -3191,12 +3228,12 @@ void CMenus::RenderStatistics(CUIRect MainView)
 	{
 		const bool IsRemoteDDrace = IsStatsDDraceMode(Stats.m_GameMode) && RemoteDdnetPlaytimeHours >= 0;
 		const bool IsRemoteGores = IsStatsGoresMode(Stats.m_GameMode) && Stats.m_IsAxiom && HasAxiomGoresStats;
-			const bool IsRemoteDdStatsMode = Stats.m_CommunityId == "ddstats";
-			if(IsRemoteDDrace || IsRemoteGores || IsRemoteDdStatsMode)
-			{
-				RemotePlaytimeSeconds = SaturatingAdd(RemotePlaytimeSeconds, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
-				HasRemotePlaytime = true;
-			}
+		const bool IsRemoteDdStatsMode = Stats.m_CommunityId == "ddstats";
+		if(IsRemoteDDrace || IsRemoteGores || IsRemoteDdStatsMode)
+		{
+			RemotePlaytimeSeconds = SaturatingAdd(RemotePlaytimeSeconds, std::max<int64_t>(0, Stats.m_PlaytimeSeconds));
+			HasRemotePlaytime = true;
+		}
 	}
 	std::vector<SQmClientLocalModeStats> vSortedModeStats = std::move(vModeStats);
 	std::stable_sort(vSortedModeStats.begin(), vSortedModeStats.end(), [](const SQmClientLocalModeStats &Left, const SQmClientLocalModeStats &Right) {

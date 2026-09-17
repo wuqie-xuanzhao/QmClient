@@ -15,23 +15,23 @@
 
 namespace
 {
-void AdvanceFor(CUiV2AnimationRuntime &Runtime, float Seconds)
-{
-	AdvanceQmAnimFor(Runtime, Seconds);
-}
+	void AdvanceFor(CUiV2AnimationRuntime &Runtime, float Seconds)
+	{
+		AdvanceQmAnimFor(Runtime, Seconds);
+	}
 
-SUiAnimRequest MakeSpringRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, uint32_t TrackId)
-{
-	g_Config.m_QmUiMotionLevel = 2;
-	SUiAnimRequest Request;
-	Request.m_NodeKey = NodeKey;
-	Request.m_Property = Property;
-	Request.m_Target = Target;
-	Request.m_Transition.m_Driver = EUiAnimDriver::SPRING;
-	Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
-	Request.m_TrackId = TrackId;
-	return Request;
-}
+	SUiAnimRequest MakeSpringRequest(uint64_t NodeKey, EUiAnimProperty Property, float Target, uint32_t TrackId)
+	{
+		g_Config.m_QmUiMotionLevel = 2;
+		SUiAnimRequest Request;
+		Request.m_NodeKey = NodeKey;
+		Request.m_Property = Property;
+		Request.m_Target = Target;
+		Request.m_Transition.m_Driver = EUiAnimDriver::SPRING;
+		Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::REPLACE;
+		Request.m_TrackId = TrackId;
+		return Request;
+	}
 } // namespace
 
 TEST(UiV2AnimSpring, ConvergesToTarget)
@@ -110,7 +110,6 @@ TEST(UiV2AnimSpring, MergeTargetPreservesVelocity)
 	EXPECT_NEAR(Runtime.GetValue(301, EUiAnimProperty::POS_X), -100.0f, 0.5f);
 	EXPECT_FALSE(Runtime.HasActiveAnimation(301, EUiAnimProperty::POS_X));
 }
-
 
 TEST(UiV2AnimSpring, ResolveSpringRectXYAnimatesOnlyPosition)
 {

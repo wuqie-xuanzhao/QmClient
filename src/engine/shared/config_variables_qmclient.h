@@ -36,7 +36,7 @@ MACRO_CONFIG_COL(QmUiCardColor, qm_ui_card_color, 0x000000, CFGFLAG_CLIENT | CFG
 MACRO_CONFIG_INT(QmUiCardOpacity, qm_ui_card_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings card background transparency")
 MACRO_CONFIG_INT(QmUiIconColor, qm_ui_icon_color, 1, 1, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow")
 MACRO_CONFIG_COL(QmUiIconCustomColor, qm_ui_icon_custom_color, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI custom icon color")
-MACRO_CONFIG_INT(QmUiIconWeight, qm_ui_icon_weight, 1, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill")
+MACRO_CONFIG_INT(QmUiIconWeight, qm_ui_icon_weight, 1, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone")
 MACRO_CONFIG_INT(QmUiColorInterpolation, qm_ui_color_interpolation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform")
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 16, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI rounded corner segments (even numbers recommended)")
 MACRO_CONFIG_STR(QmGlobalCardOrder, qm_global_card_order, 8000, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Global card ordering (format: stableId|tab|col|order; semicolon-separated)")
@@ -103,7 +103,7 @@ MACRO_CONFIG_COL(QmNameplateCoordXAlignHintColor, qm_nameplate_coord_x_align_hin
 MACRO_CONFIG_INT(QmNameplateCoordY, qm_nameplate_coord_y, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Nameplate position Y")
 MACRO_CONFIG_INT(QmNameplateCoordsOwn, qm_nameplate_coords_own, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show own nameplate coordinates")
 MACRO_CONFIG_INT(QmNameplateCoords, qm_nameplate_coords, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show others' nameplate coordinates")
-MACRO_CONFIG_INT(QmNameplateMsdf, qm_nameplate_msdf, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)")
+MACRO_CONFIG_INT(QmNameplateMsdf, qm_nameplate_msdf, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use vector font rendering for nameplates when a bundled profile is available")
 MACRO_CONFIG_INT(QmNameplateMsdfDebug, qm_nameplate_msdf_debug, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Output nameplate MSDF path debug log")
 
 // Enhanced Laser Effects (Glow + Pulse) / 增强激光效果（辉光+脉冲）
@@ -369,6 +369,7 @@ MACRO_CONFIG_INT(QmGoresFastInput, qm_gores_fast_input, 0, 0, 1, CFGFLAG_CLIENT 
 MACRO_CONFIG_INT(QmGoresFastInputOthers, qm_gores_fast_input_others, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable fast input for other players in Gores mode")
 MACRO_CONFIG_INT(QmGoresHideGuides, qm_gores_hide_guides, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Hide helper lines in Gores mode")
 MACRO_CONFIG_INT(QmGoresDisableDummyHammer, qm_gores_disable_dummy_hammer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Temporarily disable dummy hammering in Gores mode")
+MACRO_CONFIG_INT(QmGoresSuppressSwitchAnim, qm_gores_suppress_switch_anim, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Skip the weapon switch animation for hammer switches in Gores mode")
 MACRO_CONFIG_INT(QmAxiomAutoLogin, qm_axiom_auto_login, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto-login after entering Axiom community server")
 MACRO_CONFIG_STR(QmAxiomLoginPassword, qm_axiom_login_password, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Password for Axiom main account auto-login")
 MACRO_CONFIG_STR(QmAxiomDummyLoginPassword, qm_axiom_dummy_login_password, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Password for Axiom alt account auto-login")

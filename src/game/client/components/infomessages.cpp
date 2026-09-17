@@ -447,7 +447,7 @@ void CInfoMessages::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	if(ShouldHideFocusInfoMessages(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideInfoMessages != 0))
+	if(GetQmFocusModeDecisions().m_HideInfoMessages)
 		return;
 
 	const float Height = 1.5f * 400.0f * 3.0f;

@@ -2897,9 +2897,13 @@ void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams
 	Cmd.m_State.m_BlendMode = EBlendMode::ALPHA;
 	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
 	Cmd.m_State.m_Texture = Params.m_ProceduralRing ? m_NullTexture.Id() : Params.m_Texture.Id();
-	float MsdfW = maximum(std::abs(Params.m_OutlineWidthPx), 0.0f);
-	if(!Params.m_ProceduralRing && Params.m_UseTrueSdf)
-		MsdfW = -MsdfW - 0.001f;
+	float MsdfW = qm_msdf_param::EncodeMsdf(std::abs(Params.m_OutlineWidthPx));
+	// w 的三种状态互斥（普通 MSDF / Alpha 真 SDF / Duotone），编码契约见 qm_msdf_param。
+	// 必须用 else if：若两个分支都执行，Duotone 哨兵会被真 SDF 编码覆盖。
+	if(!Params.m_ProceduralRing && Params.m_UseSecondarySdf)
+		MsdfW = qm_msdf_param::DUOTONE_W;
+	else if(!Params.m_ProceduralRing && Params.m_UseTrueSdf)
+		MsdfW = qm_msdf_param::EncodeTrueSdf(std::abs(Params.m_OutlineWidthPx));
 	Cmd.m_MsdfParams = Params.m_ProceduralRing ? vec4(-Params.m_RingInnerRadius, Params.m_RingOuterRadius, Params.m_RingStartAngle, Params.m_RingEndAngle) : vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, MsdfW);
 
 	const float CenterX = Params.m_Rect.x + Params.m_Rect.z * 0.5f;
@@ -4205,6 +4209,13 @@ void CGraphics_Threaded::HideWindow()
 	// QmClient: 退出清理前隐藏窗口。直接转发到后端的 SDL 调用，不经过渲染线程，
 	// 避免渲染队列卡住时窗口无法隐藏。
 	m_pBackend->HideWindow();
+}
+
+void CGraphics_Threaded::ShowWindow()
+{
+	// QmClient: 与 HideWindow 对称，同样直接转发到后端。启动时窗口是隐藏创建的，
+	// 等第一帧真有内容 present 之后再显示（重复调用无副作用）。
+	m_pBackend->ShowWindow();
 }
 
 void CGraphics_Threaded::WarnPngliteIncompatibleImages(bool Warn)

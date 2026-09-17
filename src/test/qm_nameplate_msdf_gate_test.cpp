@@ -9,7 +9,8 @@
 
 TEST(QmNameplateMsdfGate, FontMatchesAtlasFamilies)
 {
-	// 当前没有提交任何正式 profile；验证产物不能冒充随包发布字体。
+	EXPECT_STREQ(QmNameplateMsdfFontProfile("DejaVu Sans"), "dejavu");
+	// 只有随包且已生成 profile 的字体命中；其余字体继续走 FreeType。
 	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Noto Sans SC"));
 	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Glow Sans J Compressed Book"));
 	EXPECT_EQ(QmNameplateMsdfFontProfile("NotoSansCJKsc-Thin"), nullptr);
@@ -26,7 +27,8 @@ TEST(QmNameplateMsdfGate, OtherFontsDoNotMatchAtlas)
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Arial"));
 	// 未随包字体仍必须完整回退 FreeType，不能拿相近字体图形冒充
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Source Han Serif SC"));
-	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Nunito Black"));
+	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Nunito Black"));
+	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Nunito"));
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("PingFang SC"));
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas(""));
 	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas(nullptr));
@@ -43,8 +45,20 @@ TEST(QmNameplateMsdfGate, FirstMissingCodepointFindsFirstUnsupported)
 	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("ni\u2605ck", AsciiOnly), 0x2605u);
 	// 多个缺失码点时返回文本中第一个出现的
 	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("\u2605\u2665", AsciiOnly), 0x2605u);
-	// 换行与制表符按空白处理，不需要字形
+	// 换行、制表符与空格按空白处理，不需要字形
 	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("a\nb\tc", AsciiOnly), 0u);
+	// 空格必须被跳过：图集里没有 U+0020 的 quad，但渲染器会为它推进笔位。
+	// 这里一旦判成缺字，「John Doe」这类最常见的昵称会整条回退 FreeType。
+	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("John Doe", AsciiOnly), 0u);
+	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("a b c", AllSupported), 0u);
+
+	// 零宽/不可见码点同样不需要字形。昵称里最常见的 emoji 形态是
+	// 「基础字符 + 变体选择符」：基础字符在图集里，U+FE0F 永远不在。
+	const auto StarsOnly = [](uint32_t Codepoint) { return Codepoint == 0x2B50; };
+	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("\u2B50\uFE0F", StarsOnly), 0u);
+	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("\u2B50\u200D\u2B50", StarsOnly), 0u);
+	// 不可见码点不能掩盖真缺失：后面的 U+2605 仍必须被报出来
+	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("\u2B50\uFE0F\u2605", StarsOnly), 0x2605u);
 	// 空文本与空指针没有缺失
 	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint("", AsciiOnly), 0u);
 	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint(nullptr, AsciiOnly), 0u);
@@ -56,6 +70,32 @@ TEST(QmNameplateMsdfGate, FirstMissingCodepointReportsInvalidUtf8AsReplacement)
 	// 非法 UTF-8 序列解码为 U+FFFD（替换字符），同样参与覆盖判定
 	const char aInvalid[] = {'a', (char)0xFF, 'b', '\0'};
 	EXPECT_EQ(QmNameplateMsdfFirstMissingCodepoint(aInvalid, AsciiOnly), 0xFFFDu);
+}
+
+TEST(QmNameplateMsdfGate, InvisibleCodepointsNeedNoGlyph)
+{
+	// 空白：渲染器用固定 em 比例单独推进笔位，图集里没有它们的 quad
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(' '));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph('\t'));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph('\n'));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph('\r'));
+	// 变体选择符、零宽连接/分隔符、软连字符：昵称里最常见的不可见修饰
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0xFE0E));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0xFE0F));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0x200B));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0x200C));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0x200D));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0x00AD));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0x202E));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0xFEFF));
+	EXPECT_FALSE(QmNameplateMsdfCodepointNeedsGlyph(0xE0100));
+	// 有实际宽度的填充符与普通字符必须仍然需要字形，否则会被静默画丢
+	EXPECT_TRUE(QmNameplateMsdfCodepointNeedsGlyph(0x3164));
+	EXPECT_TRUE(QmNameplateMsdfCodepointNeedsGlyph(0xFFA0));
+	EXPECT_TRUE(QmNameplateMsdfCodepointNeedsGlyph('A'));
+	EXPECT_TRUE(QmNameplateMsdfCodepointNeedsGlyph(0x2B50));
+	EXPECT_TRUE(QmNameplateMsdfCodepointNeedsGlyph(0x4E2D));
+	EXPECT_TRUE(QmNameplateMsdfCodepointNeedsGlyph(0x1F600));
 }
 
 TEST(QmNameplateMsdfGate, FallbackReporterDedupsByCodepoint)

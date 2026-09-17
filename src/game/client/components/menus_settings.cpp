@@ -3853,7 +3853,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const float GraphicsInteractionContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight});
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 	static CButtonContainer s_aGraphicsIconColorButtons[4];
-	static CButtonContainer s_aGraphicsIconWeightButtons[4];
+	static CButtonContainer s_aGraphicsIconWeightButtons[6];
 	static CButtonContainer s_aGraphicsBlurModeButtons[3];
 	static CButtonContainer s_GraphicsIconCustomColorResetId;
 
@@ -4315,8 +4315,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				}
 			};
 			const char *apIconColorLabels[] = {Localize("White"), Localize("Black"), Localize("Custom"), Localize("Rainbow")};
-			const char *apIconWeightLabels[] = {Localize("Thin"), Localize("Regular"), Localize("Bold"), Localize("Fill")};
-			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+			const char *apIconWeightLabels[] = {Localize("Thin"), Localize("Regular"), Localize("Bold"), Localize("Fill"), Localize("Light"), Localize("Duotone")};
+			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
 			int IconWeightIndex = 1;
 			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
 				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
@@ -4332,8 +4332,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CUIRect CustomColorRow = Rows.NextButton();
 				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, ColorMetrics, &CustomColorRow, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
 			}
-			DoIconChoiceRow(Rows.NextLine(), Localize("UI icon weight"), apIconWeightLabels, std::size(apIconWeightLabels), IconWeightIndex, s_aGraphicsIconWeightButtons, [this](int NewValue) {
-				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+			DoIconChoiceRow(Rows.NextLine(), Localize("UI icon style"), apIconWeightLabels, std::size(apIconWeightLabels), IconWeightIndex, s_aGraphicsIconWeightButtons, [this](int NewValue) {
+				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
 				const int NewWeight = s_aIconWeightValues[NewValue];
 				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					return;
@@ -4404,13 +4404,13 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Changed = Changed || OldCustomColor != g_Config.m_QmUiIconCustomColor;
 			}
 			int IconWeightIndex = 1;
-			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
 			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
 				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					IconWeightIndex = i;
 			Row = Rows.NextLine();
-			ProcessChoiceRow(Row, IconWeightIndex, 4, s_aGraphicsIconWeightButtons, [this](int NewValue) {
-				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3};
+			ProcessChoiceRow(Row, IconWeightIndex, 6, s_aGraphicsIconWeightButtons, [this](int NewValue) {
+				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
 				const int NewWeight = s_aIconWeightValues[NewValue];
 				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					return;
@@ -6637,7 +6637,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					 m_AppearanceSettingsTab == APPEARANCE_TAB_NAME_PLATE     ? "appearance-name-plate" :
 					 m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION ? "appearance-hook-collision" :
 					 m_AppearanceSettingsTab == APPEARANCE_TAB_INFO_MESSAGES  ? "appearance-info-messages" :
-													    "appearance-laser";
+												    "appearance-laser";
 	const auto BuildDefinitions = [=, this](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(std::size(aAppearanceIds));
 		const auto AddCard = [&vCards, &CardSpec](size_t Index, float ContentHeight, FSettingsCardRender Render) {
@@ -7258,8 +7258,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			const auto NamePlateStrongEnabled = [] { return g_Config.m_ClNamePlatesStrong != 0; };
 			const float NamePlateSectionHeaderHeight = MarginBetweenViews + HeadlineHeight + MarginSmall;
 			const float NamePlateColorPickerHeight = ColorPickerRowHeight;
-			// Nameplate text 区域：10 行效果控件 + MSDF 开关与内置字体说明各 1 行
-			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(12, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
+			// Nameplate text 区域：仅保留文字效果控件；矢量字体开关位于字体卡片。
+			const float NamePlateTextContentHeight = NamePlateSectionHeaderHeight + ResolveSettingsRowsHeight(10, LineSize, MarginSmall) + MarginSmall + NamePlateColorPickerHeight * 3.0f;
 			static int s_NamePlatesStrong = 0;
 			const auto ResolveNamePlateContentHeight = [=](float ContentWidth) {
 				const auto RadioHeight = [&](const int OptionCount) {
@@ -7291,6 +7291,10 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				// ***** Name Plate ***** //
 				// General name plate settings
 				{
+					// 名字板被禅模式接管时整行灰化：这一项同时控制 ClNamePlates/ClNamePlatesOwn，
+					// 任一被接管都算被接管（禅模式隐藏名字板会同时接管两者）。
+					const int *pNamePlateOverrideSource =
+						TemporaryOverrideTooltip(&g_Config.m_ClNamePlates) != nullptr ? &g_Config.m_ClNamePlates : (TemporaryOverrideTooltip(&g_Config.m_ClNamePlatesOwn) != nullptr ? &g_Config.m_ClNamePlatesOwn : nullptr);
 					int Pressed = (g_Config.m_ClNamePlates ? 2 : 0) + (g_Config.m_ClNamePlatesOwn ? 1 : 0);
 					if(DoSettingsLine_RadioMenu(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, LeftView, "appearance-show-name-plates-label", Localize("Show name plates"),
 						   m_vButtonContainersNamePlateShow,
@@ -7298,7 +7302,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 						   {Localize("None", "Show name plates"), Localize("Own", "Show name plates"), Localize("Others", "Show name plates"), Localize("All", "Show name plates")},
 						   {0, 1, 2, 3},
 						   Pressed,
-						   AppearanceMetrics))
+						   AppearanceMetrics,
+						   pNamePlateOverrideSource))
 					{
 						g_Config.m_ClNamePlates = Pressed & 2 ? 1 : 0;
 						g_Config.m_ClNamePlatesOwn = Pressed & 1 ? 1 : 0;
@@ -7336,14 +7341,6 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				LeftView.HSplitTop(MarginBetweenViews, nullptr, &LeftView);
 				DoAppearanceHeading(LeftView, "appearance-nameplate-text-title", Localize("Nameplate text"), HeadlineFontSize, HeadlineHeight);
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
-
-				// MSDF 文字渲染使用内置图集字体；自定义字体与图集不符时整条铭牌自动回退 FreeType
-				DoNamePlateCheckBox(&g_Config.m_QmNameplateMsdf, "appearance-nameplate-text-msdf", Localize("MSDF nameplate text"), &g_Config.m_QmNameplateMsdf);
-				{
-					CUIRect MsdfNoteRow;
-					NextNamePlateRow(MsdfNoteRow);
-					Ui()->DoLabel(&MsdfNoteRow, Localize("Uses the built-in font; a custom font falls back to FreeType."), maximum(8.0f, AppearanceBodySize - 2.0f), TEXTALIGN_ML);
-				}
 
 				auto RenderNameplateTextEffectToggle = [&](int Effect, const void *pId, const char *pTextId, const char *pText) {
 					CUIRect CheckBox;
@@ -7506,7 +7503,8 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					{Localize("None", "Show players' key presses"), Localize("Own", "Show players' key presses"), Localize("Others", "Show players' key presses"), Localize("All", "Show players' key presses")},
 						{0, 3, 1, 2},
 						g_Config.m_ClShowDirection,
-						AppearanceMetrics);
+						AppearanceMetrics,
+						&g_Config.m_ClShowDirection);
 
 					LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
 					if(g_Config.m_ClShowDirection > 0)
@@ -7589,14 +7587,21 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				CUIRect KeyButtons = KeyPressLayout.m_ButtonsRect;
 				const int KeyPressValues[] = {0, 3, 1, 2};
 				const float KeyButtonWidth = KeyButtons.w / 4.0f;
+				// 禅模式接管按键指示时：图标仍显示当前值，但不接受用户改写，并提示接管来源。
+				const char *pKeyPressOverrideTooltip = TemporaryOverrideTooltip(&g_Config.m_ClShowDirection);
 				for(int Index = 0; Index < 4; ++Index)
 				{
 					CUIRect KeyButton;
 					KeyButtons.VSplitLeft(KeyButtonWidth, &KeyButton, &KeyButtons);
+					if(pKeyPressOverrideTooltip != nullptr && !m_MenuTextPlanCollecting)
+						GameClient()->m_Tooltips.DoToolTip(&m_vButtonContainersNamePlateKeyPresses[Index], &KeyButton, pKeyPressOverrideTooltip);
 					if(Ui()->DoButtonLogic(&m_vButtonContainersNamePlateKeyPresses[Index], KeyPressValues[Index] == g_Config.m_ClShowDirection, &KeyButton, BUTTONFLAG_LEFT))
 					{
-						g_Config.m_ClShowDirection = KeyPressValues[Index];
-						Changed = true;
+						if(pKeyPressOverrideTooltip == nullptr)
+						{
+							g_Config.m_ClShowDirection = KeyPressValues[Index];
+							Changed = true;
+						}
 					}
 				}
 				LeftView.HSplitTop(KeyPressLayout.m_Height, nullptr, &LeftView);

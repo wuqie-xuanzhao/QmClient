@@ -3503,24 +3503,64 @@ key = "Show semi-transparent ghost tees for other players who are spectating"
 [message.translations]
 simplified_chinese = "为正在旁观的其他玩家渲染半透明虚拟 Tee（官方行为）"
 traditional_chinese = "為正在旁觀的其他玩家渲染半透明虛擬 Tee（官方行為）"
+japanese = "観戦中の他プレイヤーに半透明のゴースト Tee を表示"
+korean = "관전 중인 다른 플레이어의 반투명 유령 Tee 표시"
+russian = "Показывать полупрозрачных призраков Tee для игроков, находящихся в режиме наблюдения"
+german = "Halbtransparente Geister-Tees für andere Spieler anzeigen, die zuschauen"
+spanish = "Mostrar tees fantasma semitransparentes para otros jugadores que están espectando"
+french = "Afficher des tees fantômes semi-transparents pour les autres joueurs en spectateur"
+brazilian_portuguese = "Mostrar tees fantasma semitransparentes para outros jogadores que estão espectando"
+portuguese = "Mostrar tees fantasma semitransparentes para outros jogadores que estão a assistir"
+turkish = "İzleyen diğer oyuncular için yarı saydam hayalet Tee göster"
+polish = "Pokaż półprzezroczyste duchy Tee dla innych graczy w trybie obserwatora"
 
 [[message]]
 key = "Spectator ghost opacity"
 [message.translations]
 simplified_chinese = "旁观者虚化程度"
 traditional_chinese = "旁觀者虛化程度"
+japanese = "観戦ゴーストの不透明度"
+korean = "관전자 고스트 불투명도"
+russian = "Непрозрачность призраков наблюдателей"
+german = "Deckkraft der Zuschauer-Geister"
+spanish = "Opacidad del fantasma del espectador"
+french = "Opacité du fantôme du spectateur"
+brazilian_portuguese = "Opacidade do fantasma do espectador"
+portuguese = "Opacidade do fantasma do espectador"
+turkish = "İzleyici hayaleti opaklığı"
+polish = "Krycie ducha obserwatora"
 
 [[message]]
 key = "Opacity of the ghost tees shown for players who are spectating (0 = fully transparent)"
 [message.translations]
 simplified_chinese = "旁观者虚拟 Tee 的不透明度（0 为完全透明）"
 traditional_chinese = "旁觀者虛擬 Tee 的不透明度（0 為完全透明）"
+japanese = "観戦中のプレイヤーに表示されるゴースト Tee の不透明度（0 = 完全に透明）"
+korean = "관전 중인 플레이어에게 표시되는 유령 Tee의 불투명도 (0 = 완전 투명)"
+russian = "Непрозрачность призраков Tee, отображаемых для игроков в режиме наблюдения (0 = полностью прозрачный)"
+german = "Deckkraft der Geister-Tees, die für zuschauende Spieler angezeigt werden (0 = vollständig transparent)"
+spanish = "Opacidad de los tees fantasma mostrados para jugadores que están espectando (0 = totalmente transparente)"
+french = "Opacité des tees fantômes affichés pour les joueurs en spectateur (0 = entièrement transparent)"
+brazilian_portuguese = "Opacidade dos tees fantasma exibidos para jogadores que estão espectando (0 = totalmente transparente)"
+portuguese = "Opacidade dos tees fantasma mostrados para jogadores que estão a assistir (0 = totalmente transparente)"
+turkish = "İzleyen oyuncular için gösterilen hayalet Tee'lerin opaklığı (0 = tamamen saydam)"
+polish = "Krycie duchów Tee pokazywanych graczom w trybie obserwatora (0 = całkowicie przezroczyste)"
 
 [[message]]
 key = "Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)"
 [message.translations]
 simplified_chinese = "自定义资源的贴图全透明时自动回退到默认资源；关闭后空白贴图保持不可见（可用于屏蔽特效）"
 traditional_chinese = "自訂資源的貼圖全透明時自動回退到預設資源；關閉後空白貼圖保持不可見（可用於遮蔽特效）"
+japanese = "カスタムアセットのスプライトが完全に透明な場合は自動的に既定のアセットへ戻します。オフにすると空白スプライトは非表示のままになります（エフェクトを隠す用途など）"
+korean = "사용자 지정 에셋 스프라이트가 완전히 투명하면 자동으로 기본 에셋으로 대체합니다. 끄면 빈 스프라이트가 보이지 않는 상태로 유지됩니다 (효과 숨기기 등)"
+russian = "Автоматически возвращаться к ресурсу по умолчанию, когда спрайт пользовательского ресурса полностью прозрачен; отключите, чтобы пустые спрайты оставались невидимыми (например, для скрытия эффектов)"
+german = "Automatisch auf das Standard-Asset zurückfallen, wenn ein Sprite eines eigenen Assets vollständig transparent ist; deaktivieren, um leere Sprites unsichtbar zu lassen (z. B. zum Ausblenden von Effekten)"
+spanish = "Volver automáticamente al recurso predeterminado cuando un sprite de un recurso personalizado es totalmente transparente; desactívalo para mantener invisibles los sprites en blanco (por ejemplo, para ocultar efectos)"
+french = "Revenir automatiquement à l'élément par défaut lorsqu'un sprite d'un élément personnalisé est entièrement transparent ; désactivez pour garder les sprites vides invisibles (par exemple pour masquer des effets)"
+brazilian_portuguese = "Voltar automaticamente ao asset padrão quando um sprite de um asset personalizado estiver totalmente transparente; desative para manter sprites em branco invisíveis (por exemplo, para ocultar efeitos)"
+portuguese = "Voltar automaticamente ao recurso predefinido quando um sprite de um recurso personalizado estiver totalmente transparente; desative para manter os sprites em branco invisíveis (por exemplo, para ocultar efeitos)"
+turkish = "Özel bir varlığın sprite'ı tamamen saydamsa otomatik olarak varsayılan varlığa geri dön; boş sprite'ları görünmez tutmak için kapat (örneğin efektleri gizlemek için)"
+polish = "Automatycznie wracaj do domyślnego zasobu, gdy sprite zasobu niestandardowego jest całkowicie przezroczysty; wyłącz, aby puste sprite'y pozostały niewidoczne (np. do ukrywania efektów)"
 
 [[message]]
 key = "Combo"
@@ -25299,22 +25339,6 @@ turkish = "Qm arayüzü simgesi özel rengi"
 polish = "Niestandardowy kolor ikon interfejsu Qm"
 
 [[message]]
-key = "Qm UI icon weight: 0=Regular, 1=Bold, 2=Thin, 3=Fill"
-[message.translations]
-simplified_chinese = "Qm 界面图标字重：0=常规，1=粗体，2=细体，3=填充"
-traditional_chinese = "Qm 介面圖示字重：0=標準，1=粗體，2=細體，3=填滿"
-japanese = "Qm UI アイコンの太さ: 0=標準、1=太字、2=細字、3=塗りつぶし"
-korean = "Qm UI 아이콘 굵기: 0=보통, 1=굵게, 2=얇게, 3=채우기"
-russian = "Толщина значков Qm UI: 0=обычная, 1=жирная, 2=тонкая, 3=заливка"
-german = "Qm-UI-Symbolstärke: 0=Normal, 1=Fett, 2=Dünn, 3=Gefüllt"
-spanish = "Grosor de iconos de Qm UI: 0=normal, 1=negrita, 2=fino, 3=relleno"
-french = "Épaisseur des icônes Qm UI : 0=normal, 1=gras, 2=fin, 3=rempli"
-brazilian_portuguese = "Espessura dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido"
-portuguese = "Espessura dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido"
-turkish = "Qm arayüz simgesi kalınlığı: 0=Normal, 1=Kalın, 2=İnce, 3=Dolgulu"
-polish = "Grubość ikon interfejsu Qm: 0=zwykła, 1=pogrubiona, 2=cienka, 3=wypełniona"
-
-[[message]]
 key = "Enable client stutter diagnostics at startup"
 [message.translations]
 simplified_chinese = "启动时启用客户端卡顿诊断"
@@ -28376,70 +28400,6 @@ turkish = "Şikayet hizmeti imzalama anahtarı"
 polish = "Klucz podpisywania usługi zgłoszeń"
 
 [[message]]
-key = "MSDF nameplate text"
-[message.translations]
-simplified_chinese = "MSDF 铭牌文字"
-traditional_chinese = "MSDF 名牌文字"
-japanese = "MSDFネームプレートテキスト"
-korean = "MSDF 이름표 텍스트"
-russian = "Текст табличек MSDF"
-german = "MSDF-Namensschildtext"
-spanish = "Texto de placa MSDF"
-french = "Texte de plaque MSDF"
-brazilian_portuguese = "Texto de plaquinha MSDF"
-portuguese = "Texto de plaquinha MSDF"
-turkish = "MSDF ad plakası metni"
-polish = "Tekst tabliczki MSDF"
-
-[[message]]
-key = "Use MSDF text rendering for nameplates"
-[message.translations]
-simplified_chinese = "使用 MSDF 渲染铭牌文字"
-traditional_chinese = "使用 MSDF 渲染名牌文字"
-japanese = "ネームプレートにMSDFテキスト描画を使用"
-korean = "이름표 텍스트에 MSDF 렌더링 사용"
-russian = "Использовать MSDF для текста табличек"
-german = "MSDF-Textdarstellung für Namensschilder verwenden"
-spanish = "Usar renderizado de texto MSDF para placas"
-french = "Utiliser le rendu de texte MSDF pour les plaques"
-brazilian_portuguese = "Usar renderização de texto MSDF nas plaquinhas"
-portuguese = "Usar renderização de texto MSDF nas plaquinhas"
-turkish = "Ad plakaları için MSDF metin oluşturmayı kullan"
-polish = "Używaj renderowania tekstu MSDF dla tabliczek"
-
-[[message]]
-key = "Choose the custom font first, then enable MSDF nameplates. The first load may take a moment."
-[message.translations]
-simplified_chinese = "请先选择自定义字体，再启用 MSDF 铭牌。首次加载可能需要一些时间。"
-traditional_chinese = "請先選擇自訂字型，再啟用 MSDF 名牌。首次載入可能需要一些時間。"
-japanese = "先にカスタムフォントを選択してからMSDFネームプレートを有効にしてください。初回読み込みには時間がかかる場合があります。"
-korean = "먼저 사용자 지정 글꼴을 선택한 다음 MSDF 이름표를 활성화하세요. 처음 로드할 때 잠시 시간이 걸릴 수 있습니다."
-russian = "Сначала выберите пользовательский шрифт, затем включите таблички MSDF. Первая загрузка может занять некоторое время."
-german = "Wähle zuerst die benutzerdefinierte Schrift und aktiviere dann MSDF-Namensschilder. Das erste Laden kann etwas dauern."
-spanish = "Elige primero la fuente personalizada y luego activa las placas MSDF. La primera carga puede tardar un momento."
-french = "Choisissez d'abord la police personnalisée, puis activez les plaques MSDF. Le premier chargement peut prendre un moment."
-brazilian_portuguese = "Escolha primeiro a fonte personalizada e depois ative as plaquinhas MSDF. O primeiro carregamento pode demorar um pouco."
-portuguese = "Escolha primeiro a fonte personalizada e depois ative as plaquinhas MSDF. O primeiro carregamento pode demorar um pouco."
-turkish = "Önce özel yazı tipini seçin, ardından MSDF ad plakalarını etkinleştirin. İlk yükleme biraz sürebilir."
-polish = "Najpierw wybierz niestandardową czcionkę, a następnie włącz tabliczki MSDF. Pierwsze ładowanie może chwilę potrwać."
-
-[[message]]
-key = "The custom font changed, so MSDF nameplates were disabled. Select the font first, then enable MSDF again."
-[message.translations]
-simplified_chinese = "自定义字体已更改，因此 MSDF 铭牌已关闭。请先选择字体，再重新启用 MSDF。"
-traditional_chinese = "自訂字型已變更，因此 MSDF 名牌已關閉。請先選擇字型，再重新啟用 MSDF。"
-japanese = "カスタムフォントが変更されたため、MSDFネームプレートを無効にしました。フォントを選択してからMSDFを再度有効にしてください。"
-korean = "사용자 지정 글꼴이 변경되어 MSDF 이름표가 비활성화되었습니다. 글꼴을 선택한 후 MSDF를 다시 활성화하세요."
-russian = "Пользовательский шрифт изменён, поэтому таблички MSDF отключены. Выберите шрифт и снова включите MSDF."
-german = "Die benutzerdefinierte Schrift wurde geändert, daher wurden MSDF-Namensschilder deaktiviert. Wähle zuerst die Schrift und aktiviere MSDF erneut."
-spanish = "La fuente personalizada cambió, así que se desactivaron las placas MSDF. Elige la fuente y vuelve a activar MSDF."
-french = "La police personnalisée a changé, les plaques MSDF ont donc été désactivées. Choisissez la police puis réactivez MSDF."
-brazilian_portuguese = "A fonte personalizada mudou, então as plaquinhas MSDF foram desativadas. Escolha a fonte e ative o MSDF novamente."
-portuguese = "A fonte personalizada mudou, então as plaquinhas MSDF foram desativadas. Escolha a fonte e ative o MSDF novamente."
-turkish = "Özel yazı tipi değiştiği için MSDF ad plakaları devre dışı bırakıldı. Yazı tipini seçin ve MSDF'yi yeniden etkinleştirin."
-polish = "Zmieniono niestandardową czcionkę, więc tabliczki MSDF zostały wyłączone. Wybierz czcionkę i ponownie włącz MSDF."
-
-[[message]]
 key = "Output nameplate MSDF path debug log"
 [message.translations]
 simplified_chinese = "输出铭牌 MSDF 路径调试日志"
@@ -28454,38 +28414,6 @@ brazilian_portuguese = "Registrar log de depuração de caminhos MSDF das plaqui
 portuguese = "Registar log de depuração dos caminhos MSDF das plaquinhas"
 turkish = "Ad plakası MSDF yolu hata ayıklama günlüğünü çıktıla"
 polish = "Wyjście dziennika debugowania ścieżek MSDF tabliczek"
-
-[[message]]
-key = "Use MSDF text rendering for nameplates (built-in fonts only, custom fonts fall back to FreeType)"
-[message.translations]
-simplified_chinese = "为铭牌启用 MSDF 文字渲染（仅内置字体，自定义字体会自动回退到 FreeType）"
-traditional_chinese = "為名牌啟用 MSDF 文字渲染（僅內建字型，自訂字型會自動回退至 FreeType）"
-japanese = "ネームプレートにMSDFテキストレンダリングを使用する（内蔵フォントのみ、カスタムフォントはFreeTypeにフォールバック）"
-korean = "이름표에 MSDF 텍스트 렌더링 사용(내장 글꼴만, 사용자 지정 글꼴은 FreeType으로 폴백)"
-russian = "Использовать рендеринг текста MSDF для табличек (только встроенные шрифты, пользовательские шрифты переходят на FreeType)"
-german = "MSDF-Textrendering für Namensschilder verwenden (nur integrierte Schriftarten, benutzerdefinierte Schriftarten fallen auf FreeType zurück)"
-spanish = "Usar renderizado de texto MSDF para placas de nombre (solo fuentes integradas, las fuentes personalizadas recurren a FreeType)"
-french = "Utiliser le rendu de texte MSDF pour les plaques de nom (polices intégrées uniquement, les polices personnalisées reviennent à FreeType)"
-brazilian_portuguese = "Usar renderização de texto MSDF para plaquinhas (apenas fontes integradas, fontes personalizadas recorrem ao FreeType)"
-portuguese = "Utilizar renderização de texto MSDF para plaquinhas (apenas tipos de letra integrados, os personalizados recorrem ao FreeType)"
-turkish = "Ad plakaları için MSDF metin oluşturmayı kullan (yalnızca yerleşik yazı tipleri, özel yazı tipleri FreeType'a geri döner)"
-polish = "Użyj renderowania tekstu MSDF dla tabliczek (tylko wbudowane czcionki, czcionki niestandardowe wracają do FreeType)"
-
-[[message]]
-key = "Uses the built-in font; a custom font falls back to FreeType."
-[message.translations]
-simplified_chinese = "使用内置字体；自定义字体会自动回退到 FreeType。"
-traditional_chinese = "使用內建字型；自訂字型會自動回退至 FreeType。"
-japanese = "内蔵フォントを使用します。カスタムフォントはFreeTypeにフォールバックします。"
-korean = "내장 글꼴을 사용합니다. 사용자 지정 글꼴은 FreeType으로 폴백합니다."
-russian = "Используется встроенный шрифт; пользовательский шрифт переходит на FreeType."
-german = "Verwendet die integrierte Schriftart; eine benutzerdefinierte Schriftart fällt auf FreeType zurück."
-spanish = "Usa la fuente integrada; una fuente personalizada recurre a FreeType."
-french = "Utilise la police intégrée ; une police personnalisée revient à FreeType."
-brazilian_portuguese = "Usa a fonte integrada; uma fonte personalizada recorre ao FreeType."
-portuguese = "Utiliza o tipo de letra integrado; um tipo de letra personalizado recorre ao FreeType."
-turkish = "Yerleşik yazı tipini kullanır; özel bir yazı tipi FreeType'a geri döner."
-polish = "Używa wbudowanej czcionki; czcionka niestandardowa wraca do FreeType."
 
 [[message]]
 key = "Dummy skin queue switch interval (ms, 0=no timed rotation, random start only)"
@@ -28998,3 +28926,131 @@ brazilian_portuguese = "Modo de visualização do fantasma: ESC alterna o painel
 portuguese = "Modo de visualização do fantasma: ESC alterna o painel de controlo. Prima ESC duas vezes para abrir o menu do jogo (sair da repetição). Mantenha premida a tecla de espetador para a lista de membros."
 turkish = "Hayalet görüntüleme modu: ESC kontrol panelini değiştirir. Oyun menüsünü açmak için ESC'ye iki kez basın (tekrardan çıkılır). Üye listesi için izleme tuşunu basılı tutun."
 polish = "Tryb podglądu ducha: ESC przełącza panel sterowania. Dwukrotne naciśnięcie ESC otwiera menu gry (wyjście z powtórki). Przytrzymaj klawisz obserwatora, aby wyświetlić listę członków."
+
+[[message]]
+key = "Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone"
+[message.translations]
+simplified_chinese = "Qm 界面图标样式：0=常规，1=粗体，2=细体，3=填充，4=轻体，5=双色调"
+traditional_chinese = "Qm 介面圖示樣式：0=標準，1=粗體，2=細體，3=填滿，4=輕體，5=雙色調"
+japanese = "Qm UI アイコンのスタイル: 0=標準、1=太字、2=細字、3=塗りつぶし、4=ライト、5=デュオトーン"
+korean = "Qm UI 아이콘 스타일: 0=보통, 1=굵게, 2=얇게, 3=채우기, 4=라이트, 5=듀오톤"
+russian = "Стиль значков Qm UI: 0=обычный, 1=жирный, 2=тонкий, 3=заливка, 4=лёгкий, 5=дуотон"
+german = "Qm-UI-Symbolstil: 0=Normal, 1=Fett, 2=Dünn, 3=Gefüllt, 4=Leicht, 5=Duoton"
+spanish = "Estilo de iconos de Qm UI: 0=normal, 1=negrita, 2=fino, 3=relleno, 4=ligera, 5=dúotono"
+french = "Style des icônes Qm UI : 0=normal, 1=gras, 2=fin, 3=rempli, 4=léger, 5=bichromie"
+brazilian_portuguese = "Estilo dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido, 4=leve, 5=tom duplo"
+portuguese = "Estilo dos ícones da interface Qm: 0=regular, 1=negrito, 2=fino, 3=preenchido, 4=leve, 5=tom duplo"
+turkish = "Qm arayüz simgesi stili: 0=Normal, 1=Kalın, 2=İnce, 3=Dolgulu, 4=Hafif, 5=Çift ton"
+polish = "Styl ikon interfejsu Qm: 0=zwykły, 1=pogrubiony, 2=cienki, 3=wypełniona, 4=lekki, 5=dwuton"
+
+[[message]]
+key = "Use vector font rendering for nameplates when a bundled profile is available"
+[message.translations]
+simplified_chinese = "存在随包矢量配置时为铭牌启用矢量字体渲染"
+traditional_chinese = "存在隨包向量設定檔時為名牌啟用向量字型渲染"
+japanese = "同梱のベクタープロファイルがある場合にネームプレートでベクター文字描画を使用"
+korean = "번들 벡터 프로필이 있을 때 이름표에 벡터 글꼴 렌더링 사용"
+russian = "Использовать векторный шрифт для табличек, когда доступен встроенный профиль"
+german = "Vektor-Schriftdarstellung für Namensschilder verwenden, wenn ein mitgeliefertes Profil verfügbar ist"
+spanish = "Usar renderizado de fuente vectorial para las placas cuando haya un perfil incluido"
+french = "Utiliser le rendu de police vectorielle pour les plaques lorsqu'un profil fourni est disponible"
+brazilian_portuguese = "Usar renderização de fonte vetorial nas plaquinhas quando houver um perfil incluído"
+portuguese = "Usar renderização de fonte vetorial nas placas quando existir um perfil incluído"
+turkish = "Paketlenmiş bir profil varsa ad plakaları için vektör yazı tipi oluşturmayı kullan"
+polish = "Używaj renderowania czcionki wektorowej dla tabliczek, gdy dostępny jest dołączony profil"
+
+[[message]]
+key = "Skip switch animation when hammering"
+[message.translations]
+simplified_chinese = "锤击时不播放切换武器动画"
+traditional_chinese = "錘擊時不播放切換武器動畫"
+japanese = "ハンマー使用時に武器切替アニメーションを再生しない"
+korean = "해머 사용 시 무기 전환 애니메이션을 재생하지 않음"
+russian = "Не проигрывать анимацию смены оружия при ударе молотом"
+german = "Beim Hämmern keine Waffenwechsel-Animation abspielen"
+spanish = "No reproducir la animación de cambio de arma al martillar"
+french = "Ne pas jouer l'animation de changement d'arme en martelant"
+brazilian_portuguese = "Não reproduzir a animação de troca de arma ao martelar"
+portuguese = "Não reproduzir a animação de troca de arma ao martelar"
+turkish = "Çekiçle vururken silah değiştirme animasyonunu oynatma"
+polish = "Nie odtwarzaj animacji zmiany broni przy uderzeniu młotkiem"
+
+[[message]]
+key = "Skip the weapon switch animation for hammer switches in Gores mode"
+[message.translations]
+simplified_chinese = "在 Gores 模式中锤击切换武器时不播放切换动画"
+traditional_chinese = "在 Gores 模式中錘擊切換武器時不播放切換動畫"
+japanese = "Goresモードでハンマーに切り替える際に武器切替アニメーションを再生しない"
+korean = "Gores 모드에서 해머로 전환할 때 무기 전환 애니메이션을 재생하지 않음"
+russian = "Не проигрывать анимацию смены оружия при переключении на молот в режиме Gores"
+german = "Im Gores-Modus keine Waffenwechsel-Animation beim Wechsel zum Hammer abspielen"
+spanish = "No reproducir la animación de cambio de arma al cambiar al martillo en modo Gores"
+french = "Ne pas jouer l'animation de changement d'arme en passant au marteau en mode Gores"
+brazilian_portuguese = "Não reproduzir a animação de troca de arma ao trocar para o martelo no modo Gores"
+portuguese = "Não reproduzir a animação de troca de arma ao trocar para o martelo no modo Gores"
+turkish = "Gores modunda çekice geçerken silah değiştirme animasyonunu oynatma"
+polish = "Nie odtwarzaj animacji zmiany broni przy przełączaniu na młotek w trybie Gores"
+
+[[message]]
+key = "Controlled by Zen mode"
+[message.translations]
+simplified_chinese = "由禅模式接管"
+traditional_chinese = "由禪模式接管"
+japanese = "禅モードが管理中"
+korean = "선 모드가 제어 중"
+russian = "Управляется режимом дзен"
+german = "Wird vom Zen-Modus gesteuert"
+spanish = "Controlado por el modo Zen"
+french = "Contrôlé par le mode Zen"
+brazilian_portuguese = "Controlado pelo modo Zen"
+portuguese = "Controlado pelo modo Zen"
+turkish = "Zen modu tarafından yönetiliyor"
+polish = "Kontrolowane przez tryb Zen"
+
+[[message]]
+key = "Controlled by Gores mode"
+[message.translations]
+simplified_chinese = "由 Gores 模式接管"
+traditional_chinese = "由 Gores 模式接管"
+japanese = "Goresモードが管理中"
+korean = "Gores 모드가 제어 중"
+russian = "Управляется режимом Gores"
+german = "Wird vom Gores-Modus gesteuert"
+spanish = "Controlado por el modo Gores"
+french = "Contrôlé par le mode Gores"
+brazilian_portuguese = "Controlado pelo modo Gores"
+portuguese = "Controlado pelo modo Gores"
+turkish = "Gores modu tarafından yönetiliyor"
+polish = "Kontrolowane przez tryb Gores"
+
+[[message]]
+key = "Temporarily controlled by a mode toggle"
+[message.translations]
+simplified_chinese = "当前由模式开关临时接管"
+traditional_chinese = "目前由模式開關暫時接管"
+japanese = "現在モード設定によって一時的に管理されています"
+korean = "현재 모드 설정에 의해 일시적으로 제어됩니다"
+russian = "Временно управляется настройкой режима"
+german = "Wird vorübergehend von einer Modus-Einstellung gesteuert"
+spanish = "Controlado temporalmente por un ajuste de modo"
+french = "Temporairement contrôlé par un réglage de mode"
+brazilian_portuguese = "Controlado temporariamente por um ajuste de modo"
+portuguese = "Controlado temporariamente por uma opção de modo"
+turkish = "Geçici olarak bir mod ayarı tarafından yönetiliyor"
+polish = "Tymczasowo kontrolowane przez ustawienie trybu"
+
+[[message]]
+key = "Discard cached server pings older than this many hours (0 = never expire)"
+[message.translations]
+simplified_chinese = "丢弃缓存中超过此小时数的服务器 ping（0 = 永不过期）"
+traditional_chinese = "丟棄快取中超過此小時數的伺服器 ping（0 = 永不過期）"
+japanese = "この時間数より古いキャッシュされたサーバー ping を破棄（0 = 無期限に保持）"
+korean = "이 시간보다 오래된 캐시된 서버 핑을 삭제 (0 = 만료되지 않음)"
+russian = "Удалять кэшированные пинги серверов старше указанного количества часов (0 = не устаревать)"
+german = "Zwischengespeicherte Server-Pings verwerfen, die älter als diese Anzahl Stunden sind (0 = nie ablaufen)"
+spanish = "Descartar los pings de servidor en caché con más antigüedad que estas horas (0 = nunca caducan)"
+french = "Supprimer les pings de serveurs en cache plus anciens que ce nombre d'heures (0 = aucune expiration)"
+brazilian_portuguese = "Descartar pings de servidor em cache mais antigos que estas horas (0 = nunca expirar)"
+portuguese = "Descartar pings de servidor em cache mais antigos do que estas horas (0 = nunca expirar)"
+turkish = "Bu saatten eski önbelleğe alınmış sunucu pinglerini yok say (0 = hiç sona ermez)"
+polish = "Odrzuć zbuforowane pingi serwerów starsze niż podana liczba godzin (0 = nigdy nie wygasają)"

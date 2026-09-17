@@ -144,13 +144,15 @@ class QmBuildIconMsdfTest(unittest.TestCase):
 
     def test_committed_msdf_atlases_are_rgba_distance_fields_with_padding(self) -> None:
         manifests = {}
-        for weight in ("regular", "bold"):
+        for weight in ("regular", "bold", "thin", "fill", "light", "duotone"):
             manifest_path = ICON_ROOT / f"qm_icons_{weight}_msdf.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             manifests[weight] = manifest
 
             self.assertEqual(manifest["version"], 2)
-            self.assertEqual(manifest["kind"], "msdf")
+            self.assertEqual(manifest["kind"], "mtsdf")
+            self.assertEqual(manifest["distance_field"], "mtsdf")
+            self.assertTrue(manifest["alpha_sdf"])
             self.assertEqual(manifest["px_range"], 6)
             self.assertIn("msdfgen", manifest["source"])
 
@@ -161,8 +163,8 @@ class QmBuildIconMsdfTest(unittest.TestCase):
                 self.assertEqual(image.mode, "RGBA")
                 self.assertEqual(image.size, (atlas_info["width"], atlas_info["height"]))
 
-                atlas_pixels = pixels(image.convert("RGB"))
-                self.assertTrue(any(red != green or green != blue for red, green, blue in atlas_pixels))
+                atlas_pixels = list(image.convert("RGBA").getdata())
+                self.assertGreater(len({pixel[3] for pixel in atlas_pixels}), 1)
 
                 for name, entry in manifest["icons"].items():
                     x = entry["x"]
@@ -210,7 +212,8 @@ class QmBuildIconMsdfTest(unittest.TestCase):
 
             image = Image.open(output).convert("RGBA")
             self.assertGreater(len(set(pixels(image.convert("RGB")))), 1)
-            self.assertEqual(image.getpixel((0, 0))[3], 255)
+            self.assertEqual(image.getpixel((0, 0))[3], image.getpixel((0, 0))[0])
+            self.assertGreater(len({pixel[3] for pixel in image.getdata()}), 1)
 
 
 if __name__ == "__main__":
