@@ -1182,7 +1182,7 @@ void CScoreboard::RenderSoundMuteBar(CUIRect ScoreboardRect)
 void CScoreboard::UpdateTeamModeCache()
 {
 	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aTeamModes{};
-	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasSpecPlayer{};
+	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasPlayer{};
 	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
 	{
 		if(GameClient()->m_Snap.m_apPlayerInfos[ClientId] == nullptr)
@@ -1192,17 +1192,18 @@ void CScoreboard::UpdateTeamModeCache()
 		if(DDTeam < TEAM_FLOCK || DDTeam >= NUM_DDRACE_TEAMS)
 			continue;
 
+		aTeamHasPlayer[DDTeam] = true;
 		const auto &Character = GameClient()->m_Snap.m_aCharacters[ClientId];
 		AccumulateQmScoreboardTeamModeState(aTeamModes[DDTeam], Character.m_HasExtendedDisplayInfo, Character.m_ExtendedData.m_Flags);
 	}
-	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, m_aCachedTeamModes);
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasPlayer, m_aCachedTeamModes);
 }
 
 void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan)
 {
 	Plan.m_Count = 0;
 	Plan.m_aTeamModes = {};
-	Plan.m_aTeamHasSpecPlayer = {};
+	Plan.m_aTeamHasPlayer = {};
 	std::array<int, MAX_CLIENTS> aPreviousSourceDDTeam{};
 	std::array<int, MAX_CLIENTS> aNextSourceDDTeam{};
 	const bool IsTeamPlay = GameClient()->IsTeamPlay();
@@ -1244,7 +1245,7 @@ void CScoreboard::BuildPlayerRowPlan(int Team, CScoreboardPlayerRowPlan &Plan)
 			Row.m_DDTeam = GameClient()->m_Teams.Team(pInfo->m_ClientId);
 			if(Row.m_DDTeam >= TEAM_FLOCK && Row.m_DDTeam < NUM_DDRACE_TEAMS)
 			{
-				Plan.m_aTeamHasSpecPlayer[Row.m_DDTeam] = Plan.m_aTeamHasSpecPlayer[Row.m_DDTeam] || GameClient()->m_aClients[pInfo->m_ClientId].m_Spec;
+				Plan.m_aTeamHasPlayer[Row.m_DDTeam] = true;
 				const auto &Character = GameClient()->m_Snap.m_aCharacters[pInfo->m_ClientId];
 				AccumulateQmScoreboardTeamModeState(Plan.m_aTeamModes[Row.m_DDTeam], Character.m_HasExtendedDisplayInfo, Character.m_ExtendedData.m_Flags);
 			}

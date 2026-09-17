@@ -67,24 +67,24 @@ TEST(QmScoreboardTeamModes, SpecPlayersKeepTheirScoreboardTeamAndLastKnownModeSt
 	constexpr int DdTeam = 3;
 	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aTeamModes{};
 	std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> aCachedTeamModes{};
-	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasSpecPlayer{};
+	std::array<bool, NUM_DDRACE_TEAMS> aTeamHasPlayer{};
 
 	aTeamModes[DdTeam].m_Known = true;
 	aTeamModes[DdTeam].m_Flags = CHARACTERFLAG_PRACTICE_MODE | CHARACTERFLAG_LOCK_MODE;
-	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasPlayer, aCachedTeamModes);
 	EXPECT_TRUE(aCachedTeamModes[DdTeam].Practice());
 	EXPECT_TRUE(aCachedTeamModes[DdTeam].Locked());
 
 	aTeamModes = {};
-	aTeamHasSpecPlayer[DdTeam] = true;
-	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	aTeamHasPlayer[DdTeam] = true;
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasPlayer, aCachedTeamModes);
 	EXPECT_TRUE(aTeamModes[DdTeam].m_Known);
 	EXPECT_TRUE(aTeamModes[DdTeam].Practice());
 	EXPECT_TRUE(aTeamModes[DdTeam].Locked());
 
 	aTeamModes = {};
-	aTeamHasSpecPlayer = {};
-	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasSpecPlayer, aCachedTeamModes);
+	aTeamHasPlayer = {};
+	CacheAndRestoreQmScoreboardTeamModes(aTeamModes, aTeamHasPlayer, aCachedTeamModes);
 	EXPECT_FALSE(aTeamModes[DdTeam].m_Known);
 }
 

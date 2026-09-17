@@ -93,7 +93,7 @@ class CScoreboard : public CComponent
 	{
 		std::array<CScoreboardPlayerRow, MAX_CLIENTS> m_aRows{};
 		std::array<SQmScoreboardTeamModeState, NUM_DDRACE_TEAMS> m_aTeamModes{};
-		std::array<bool, NUM_DDRACE_TEAMS> m_aTeamHasSpecPlayer{};
+		std::array<bool, NUM_DDRACE_TEAMS> m_aTeamHasPlayer{};
 		int m_Count = 0;
 	};
 
