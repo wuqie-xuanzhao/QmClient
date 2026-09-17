@@ -3156,6 +3156,8 @@ Screen resolution width (only fullscreen)
 Screenshot
 Screenshots
 Screenshots directory
+Scroll mode: Off
+Scroll mode: On
 Search
 Search and navigate settings
 Search donor asset

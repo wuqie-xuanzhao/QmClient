@@ -9473,6 +9473,12 @@ Screenshots
 Screenshots directory
 == Diretório de capturas de tela
 
+Scroll mode: Off
+== Modo de rolagem: desativado
+
+Scroll mode: On
+== Modo de rolagem: ativado
+
 Search
 == Pesquisar
 

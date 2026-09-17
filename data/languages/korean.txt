@@ -9473,6 +9473,12 @@ Screenshots
 Screenshots directory
 == 스크린샷 디렉터리
 
+Scroll mode: Off
+== 스크롤 모드: 끄기
+
+Scroll mode: On
+== 스크롤 모드: 켜기
+
 Search
 == 검색
 

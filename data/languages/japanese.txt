@@ -9473,6 +9473,12 @@ Screenshots
 Screenshots directory
 == スクリーンショットディレクトリ
 
+Scroll mode: Off
+== スクロールモード: オフ
+
+Scroll mode: On
+== スクロールモード: オン
+
 Search
 == 検索
 

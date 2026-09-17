@@ -9473,6 +9473,12 @@ Screenshots
 Screenshots directory
 == Каталог скриншотов
 
+Scroll mode: Off
+== Режим прокрутки: выкл.
+
+Scroll mode: On
+== Режим прокрутки: вкл.
+
 Search
 == Поиск
 

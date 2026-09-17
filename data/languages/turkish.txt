@@ -9473,6 +9473,12 @@ Screenshots
 Screenshots directory
 == Ekran görüntüleri dizini
 
+Scroll mode: Off
+== Kaydırma modu: kapalı
+
+Scroll mode: On
+== Kaydırma modu: açık
+
 Search
 == Ara
 

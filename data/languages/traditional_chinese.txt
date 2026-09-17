@@ -9473,6 +9473,12 @@ Screenshots
 Screenshots directory
 == 截圖目錄
 
+Scroll mode: Off
+== 滾動模式：關
+
+Scroll mode: On
+== 滾動模式：開
+
 Search
 == 搜索
 

@@ -1,9 +1,9 @@
 {
   "summary": {
-    "must_i18n": 7395,
+    "must_i18n": 7397,
     "business_data": 9822,
     "test_only": 7219,
-    "needs_review": 310,
+    "needs_review": 313,
     "violation": 0
   },
   "must_i18n": [
@@ -36234,49 +36234,63 @@
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2506,
+      "line": 2208,
+      "text": "Scroll mode: Off",
+      "category": "must_i18n",
+      "reason": "active source key (localize_or_localizable)"
+    },
+    {
+      "file": "src/game/client/components/scoreboard.cpp",
+      "line": 2208,
+      "text": "Scroll mode: On",
+      "category": "must_i18n",
+      "reason": "active source key (localize_or_localizable)"
+    },
+    {
+      "file": "src/game/client/components/scoreboard.cpp",
+      "line": 2532,
       "text": "Add friend",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2506,
+      "line": 2532,
       "text": "Remove friend",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2514,
+      "line": 2540,
       "text": "Mute",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2514,
+      "line": 2540,
       "text": "Unmute",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2523,
+      "line": 2549,
       "text": "Mute emoticons",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2523,
+      "line": 2549,
       "text": "Unmute emoticons",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2546,
+      "line": 2572,
       "text": "Spectate",
       "category": "must_i18n",
       "reason": "active source key (localize_or_localizable)"
@@ -96534,21 +96548,21 @@
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2380,
+      "line": 2406,
       "text": "Team invalid",
       "category": "business_data",
       "reason": "machine/log/matcher call argument"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2551,
+      "line": 2577,
       "text": "say /spec",
       "category": "business_data",
       "reason": "scoreboard sound category or command data"
     },
     {
       "file": "src/game/client/components/scoreboard.cpp",
-      "line": 2563,
+      "line": 2589,
       "text": "say /spec \"",
       "category": "business_data",
       "reason": "scoreboard sound category or command data"
@@ -171264,7 +171278,28 @@
     {
       "file": "src/game/client/components/qmclient/axiom_auto_login.h",
       "line": 59,
+      "text": "in game",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/qmclient/axiom_auto_login.h",
+      "line": 59,
       "text": "logged in",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/qmclient/axiom_auto_login.h",
+      "line": 59,
+      "text": "在線",
+      "category": "needs_review",
+      "reason": "unclassified human-readable client string"
+    },
+    {
+      "file": "src/game/client/components/qmclient/axiom_auto_login.h",
+      "line": 59,
+      "text": "在线",
       "category": "needs_review",
       "reason": "unclassified human-readable client string"
     },

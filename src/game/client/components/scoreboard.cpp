@@ -2203,6 +2203,10 @@ void CScoreboard::OnRender()
 		ScoreboardContentBody.HSplitTop(TitleHeight, &Title, &ScoreboardContentBody);
 		CUIRect SortButton;
 		CUIRect ServerPlayers;
+		CUIRect ScrollButton;
+		const bool ShowScrollButton = !Teams && NumPlayers > 16;
+		const char *pScrollLabel = g_Config.m_QmScoreboardScroll ? Localize("Scroll mode: On") : Localize("Scroll mode: Off");
+		const float ScrollButtonWidth = TextRender()->TextWidth(SortButtonFontSize, pScrollLabel) + 18.0f;
 		{
 			CUiV2LayoutEngine LayoutEngine;
 			SUiStyle TitleSplitStyle;
@@ -2211,20 +2215,42 @@ void CScoreboard::OnRender()
 			TitleSplitStyle.m_JustifyContent = EUiAlign::START;
 			static thread_local std::vector<SUiLayoutChild> s_vTitleChildren;
 			std::vector<SUiLayoutChild> &vTitleChildren = s_vTitleChildren;
-			vTitleChildren.assign(ShowServerPlayers ? 3 : 2, SUiLayoutChild{});
-			const int SortButtonIndex = ShowServerPlayers ? 2 : 1;
-			vTitleChildren[0].m_Style.m_Width = SUiLength::Flex(1.0f);
+			int ChildCount = 1;
 			if(ShowServerPlayers)
-				vTitleChildren[1].m_Style.m_Width = SUiLength::Px(ServerPlayersWidth);
+				++ChildCount;
+			if(ShowScrollButton)
+				++ChildCount;
+			++ChildCount; // 排序按钮
+			vTitleChildren.assign(ChildCount, SUiLayoutChild{});
+			int ChildIndex = 0;
+			vTitleChildren[ChildIndex++].m_Style.m_Width = SUiLength::Flex(1.0f);
+			if(ShowServerPlayers)
+				vTitleChildren[ChildIndex++].m_Style.m_Width = SUiLength::Px(ServerPlayersWidth);
+			const int ScrollButtonIndex = ShowScrollButton ? ChildIndex++ : -1;
+			if(ShowScrollButton)
+				vTitleChildren[ScrollButtonIndex].m_Style.m_Width = SUiLength::Px(ScrollButtonWidth);
+			const int SortButtonIndex = ChildIndex++;
 			vTitleChildren[SortButtonIndex].m_Style.m_Width = SUiLength::Px(SortButtonWidth);
 			LayoutEngine.ComputeChildren(TitleSplitStyle, CUiV2LegacyAdapter::FromCUIRect(Title), vTitleChildren);
 			Title = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[0].m_Box);
 			if(ShowServerPlayers)
 				ServerPlayers = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[1].m_Box);
+			if(ShowScrollButton)
+				ScrollButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[ScrollButtonIndex].m_Box);
 			SortButton = CUiV2LegacyAdapter::ToCUIRect(vTitleChildren[SortButtonIndex].m_Box);
 		}
 		RenderTitleBar(Title, TEAM_GAME, pTitle);
 		DoServerPlayers(ServerPlayers);
+		if(ShowScrollButton)
+		{
+			static CButtonContainer s_ScoreboardScrollButton;
+			const ColorRGBA ScrollButtonColor = g_Config.m_QmScoreboardScroll ? ScoreboardWithUiAlpha(ColorRGBA(0.25f, 0.55f, 0.8f, 0.6f), m_AnimContentAlpha) : ScoreboardUiColorSurface(m_AnimContentAlpha, 0.18f);
+			if(Ui()->DoButton_PopupMenu(&s_ScoreboardScrollButton, pScrollLabel, &ScrollButton, SortButtonFontSize, TEXTALIGN_MC, 0.0f, false, m_RenderInteractions, ScrollButtonColor))
+			{
+				g_Config.m_QmScoreboardScroll ^= 1;
+				m_ScrollOffset = 0.0f;
+			}
+		}
 		DoSortButton(SortButton);
 
 		if(ScrollMode)

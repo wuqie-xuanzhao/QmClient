@@ -1993,7 +1993,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2506
+      "line": 2532
     },
     {
       "key": "Add friends by entering their name below or by clicking their name in the player list.",
@@ -25702,7 +25702,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2514
+      "line": 2540
     },
     {
       "key": "Mute death/respawn sound in Zen Mode",
@@ -25723,7 +25723,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2523
+      "line": 2549
     },
     {
       "key": "Mute flag sounds",
@@ -34200,7 +34200,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2506
+      "line": 2532
     },
     {
       "key": "Remove from favorites",
@@ -36861,6 +36861,20 @@
       "source": "src/game/client/components/menus_demo.cpp",
       "context": "",
       "line": 3394
+    },
+    {
+      "key": "Scroll mode: Off",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/scoreboard.cpp",
+      "context": "",
+      "line": 2208
+    },
+    {
+      "key": "Scroll mode: On",
+      "category": "localize_or_localizable",
+      "source": "src/game/client/components/scoreboard.cpp",
+      "context": "",
+      "line": 2208
     },
     {
       "key": "Search",
@@ -42026,7 +42040,7 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2546
+      "line": 2572
     },
     {
       "key": "Spectate a player by Id",
@@ -47836,14 +47850,14 @@
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2514
+      "line": 2540
     },
     {
       "key": "Unmute emoticons",
       "category": "localize_or_localizable",
       "source": "src/game/client/components/scoreboard.cpp",
       "context": "",
-      "line": 2523
+      "line": 2549
     },
     {
       "key": "Unmute player with client ID",
