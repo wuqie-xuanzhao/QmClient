@@ -942,10 +942,6 @@ void CGameClient::OnInit()
 	MigrateJumpHintConfig();
 	MigrateTranslateUiColorAlphaConfig(ConfigManager());
 
-	// qm_blank_asset_fallback 的回退语义在素材加载期读取：控制台等来源改值时统一触发热重载
-	// （设置页直改 g_Config 不经过控制台，由渲染处的对比钩子负责）。
-	Console()->Chain("qm_blank_asset_fallback", ConchainQmBlankAssetFallback, this);
-
 	// 启动赞助提醒：跨过阈值才写盘，避免每次启动都重写配置文件。
 	{
 		const int NudgeLaunchCount = qm_sponsor_nudge::OnLaunch(
@@ -7560,8 +7556,11 @@ void CGameClient::ReloadCustomAssetImagery()
 	// 回退语义等在加载期读取开关，所以开关一变就要重载自定义素材图片本身；
 	// 这里只排队：单帧解码全部图集会卡死渲染线程（表现为鼠标卡顿），
 	// 实际重载由 ProcessPendingCustomAssetImageryReload 每帧分摊一个类别。
-	// 重复触发会被覆盖合并，总是按最新配置执行。
+	// 正在按同一开关值重载时忽略重复触发；进行中开关又变了才从头重跑，保证各类别一致。
+	if(m_PendingCustomAssetReloadStep >= 0 && m_PendingCustomAssetReloadFallback == g_Config.m_QmBlankAssetFallback)
+		return;
 	m_PendingCustomAssetReloadStep = 0;
+	m_PendingCustomAssetReloadFallback = g_Config.m_QmBlankAssetFallback;
 }
 
 void CGameClient::ProcessPendingCustomAssetImageryReload()
@@ -7606,18 +7605,6 @@ void CGameClient::ProcessPendingCustomAssetImageryReload()
 		break;
 	}
 	m_PendingCustomAssetReloadStep = m_PendingCustomAssetReloadStep >= 7 ? -1 : m_PendingCustomAssetReloadStep + 1;
-}
-
-void CGameClient::ConchainQmBlankAssetFallback(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
-{
-	pfnCallback(pResult, pCallbackUserData);
-	if(pResult->NumArguments() == 0)
-		return;
-	auto *pSelf = static_cast<CGameClient *>(pUserData);
-	// 启动早期初始素材还没加载，交给正常启动流程，不在这里热重载。
-	if(!pSelf->m_GameSkinLoaded && !pSelf->m_HudSkinLoaded)
-		return;
-	pSelf->ReloadCustomAssetImagery();
 }
 
 void CGameClient::OnGraphicsResourcesReset()

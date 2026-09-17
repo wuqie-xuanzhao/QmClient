@@ -2061,13 +2061,9 @@ void CMenus::RenderQmFunctionMiniFeaturesContent(CUIRect &Content, float LineHei
 	RenderCheckbox(&g_Config.m_QmScoreboardOnDeath, "Show scoreboard after death", &g_Config.m_QmScoreboardOnDeath);
 	RenderCheckbox(&g_Config.m_QmHideJoinServerInfo, "Hide server information on join", &g_Config.m_QmHideJoinServerInfo);
 	RenderCheckboxTipped(&g_Config.m_QmShowTuneZoneColors, "Show tune zone colors", Localize("Color map tune zones by their tune zone number"), &g_Config.m_QmShowTuneZoneColors);
-	{
-		const int BlankAssetFallbackBefore = g_Config.m_QmBlankAssetFallback;
-		RenderCheckboxTipped(&g_Config.m_QmBlankAssetFallback, "Blank asset auto fallback", Localize("Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)"), &g_Config.m_QmBlankAssetFallback);
-		// 回退语义在加载期生效：开关一变立刻重载自定义素材，否则要重新选一次素材或重启才看得到变化。
-		if(!PrewarmOnly && g_Config.m_QmBlankAssetFallback != BlankAssetFallbackBefore)
-			GameClient()->ReloadCustomAssetImagery();
-	}
+	// 回退语义在加载期读取：开关变化由 CGameClient::OnRender 的兜底轮询统一触发热重载，
+	// 这里只负责渲染复选框，不在渲染遍里做加载副作用。
+	RenderCheckboxTipped(&g_Config.m_QmBlankAssetFallback, "Blank asset auto fallback", Localize("Automatically fall back to the default asset when a custom asset sprite is fully transparent; turn off to keep blank sprites invisible (e.g. to hide effects)"), &g_Config.m_QmBlankAssetFallback);
 	RenderCheckboxTipped(&g_Config.m_QmShowSpectatorGhosts, "Show spectator ghost tees", Localize("Show semi-transparent ghost tees for other players who are spectating"), &g_Config.m_QmShowSpectatorGhosts);
 	static int s_QmSpectatorGhostAlphaInputId;
 	RenderValue("qmclient-spectator-ghost-alpha", "Spectator ghost opacity", &s_QmSpectatorGhostAlphaInputId, &g_Config.m_QmSpectatorGhostAlpha, 0, 100, "%");

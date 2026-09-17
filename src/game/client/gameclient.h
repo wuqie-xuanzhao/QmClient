@@ -1108,11 +1108,11 @@ public:
 	// 只把任务排队，实际重载由 ProcessPendingCustomAssetImageryReload 每帧一个类别分摊执行。
 	void ReloadCustomAssetImagery();
 	void ProcessPendingCustomAssetImageryReload();
-	static void ConchainQmBlankAssetFallback(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	// 上次完成素材加载时的 qm_blank_asset_fallback 值（-1 = 初始素材未加载），用于每帧兜底轮询。
 	int m_LastBlankAssetFallback = -1;
-	// 待处理的热重载步骤（-1 = 空闲，0..7 = 逐帧执行对应类别的重载）。
+	// 待处理的热重载步骤（-1 = 空闲，0..7 = 逐帧执行对应类别的重载）及其对应的开关值。
 	int m_PendingCustomAssetReloadStep = -1;
+	int m_PendingCustomAssetReloadFallback = -1;
 
 	struct SClientGameSkin
 	{
