@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == 分身名稱
 
+Dummy not connected
+== 分身未連接
+
 Dummy skin
 == 分身皮膚
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == 靈動島背景顏色
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== 本體和分身分別進隊，讓 solo 開局同步（部分地圖 team-0 不好同步時使用）
 
 Ease in out quad
 == 緩入緩出二次
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == 主菜單
+
+Main team %d / Dummy team %d
+== 本體隊伍 %d / 分身隊伍 %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == 讓排球模式中的凍結玩家看起來更像排球（0=禁用，1=僅排球地圖，2=始終）
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == 單人
 
+Solo Split
+== 單刷模式
+
+Solo split
+== 單刷模式
+
+Solo split key
+== 單刷模式按鍵
+
 Some fonts could not be loaded. Check the local console for details.
 == 未能加載某些字體。檢查本地控制台以獲取詳情。
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == 旋轉彈出
+
+Split main and dummy into different teams for solo-run sync
+== 本體和分身分別進隊，方便開局 solo 同步（部分地圖不好同步時使用）
+
+Split main/dummy into two free teams; press again to return to team 0
+== 本體/分身分別進入兩個空閒隊伍；再按一次回到隊伍 0
 
 Sponsor code
 == 認證碼

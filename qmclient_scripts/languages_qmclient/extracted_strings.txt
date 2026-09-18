@@ -1127,6 +1127,7 @@ Dummy mini view
 Dummy mini view size (percent)
 Dummy mini view zoom (percent)
 Dummy name
+Dummy not connected
 Dummy skin
 Dummy skin decoration
 Dummy skin eyes
@@ -1157,6 +1158,7 @@ Dynamic Island
 Dynamic island
 Dynamic Island background alpha
 Dynamic Island background color
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
 Ease in out quad
 Ease out cubic
 Echo follows the original chat color
@@ -2043,6 +2045,7 @@ Low to high
 Lyrics
 Main Asset
 Main menu
+Main team %d / Dummy team %d
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 Make sure the backend supports OpenAI-compatible thinking parameters
 Make sure you use the same name as you had when saving. 
@@ -3642,6 +3645,9 @@ SodaMusic hook helper path (empty=beside QmClient)
 Solid
 Solid tile outline opacity
 Solo
+Solo Split
+Solo split
+Solo split key
 Some fonts could not be loaded. Check the local console for details.
 Some map images could not be loaded. Check the local console for details.
 Some map sounds could not be loaded. Check the local console for details.
@@ -3693,6 +3699,8 @@ Speedrun timer seconds
 Speedrun timer time (MM:SS, legacy)
 Sphere
 Spin pop
+Split main and dummy into different teams for solo-run sync
+Split main/dummy into two free teams; press again to return to team 0
 Sponsor code
 Sponsor code already claimed
 Sponsor reminder

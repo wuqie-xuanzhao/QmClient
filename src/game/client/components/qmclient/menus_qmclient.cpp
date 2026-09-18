@@ -143,7 +143,8 @@ namespace
 		{qm_module::EQmModuleId::Lyrics, qm_module::EQmModuleColumn::Right, 16, "lyrics"},
 		{qm_module::EQmModuleId::Background3D, qm_module::EQmModuleColumn::Right, 17, "background_3d"},
 		{qm_module::EQmModuleId::DebugMode, qm_module::EQmModuleColumn::Right, 19, "debug_mode"},
-		{qm_module::EQmModuleId::BindStatusHud, qm_module::EQmModuleColumn::Right, 20, "bind_status_hud"}}};
+		{qm_module::EQmModuleId::BindStatusHud, qm_module::EQmModuleColumn::Right, 20, "bind_status_hud"},
+		{qm_module::EQmModuleId::SoloSplit, qm_module::EQmModuleColumn::Left, 17, "solo_split"}}};
 }
 
 using SQmGlobalSearchCard = qm_card_registry::SCardSearchResult;
@@ -1914,6 +1915,57 @@ void CMenus::RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, fl
 	else
 	{
 		g_CommandBindCache.erase("toggle qm_gores 0 1");
+	}
+	(void)PrewarmOnly;
+}
+
+void CMenus::RenderQmFunctionSoloSplitContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
+{
+	static CButtonContainer s_ReaderButtonSoloSplit, s_ClearButtonSoloSplit;
+	CUIRect Row, BindLabel, BindKey;
+
+	// 说明行：告诉用户这功能干嘛的——分队是为了让 solo 图开局同步。
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Ui()->DoLabel(&Row, Localize("Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)"), BodySize * 0.85f, TEXTALIGN_ML);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	// 状态行：本体/dummy 当前队伍，未连接 dummy 时提示。
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	char aStatus[128];
+	if(Client()->DummyConnected())
+	{
+		const int MainTeam = GameClient()->m_Teams.Team(GameClient()->m_Snap.m_LocalClientId);
+		const int DummyTeam = GameClient()->m_Teams.Team(GameClient()->m_aLocalIds[1]);
+		str_format(aStatus, sizeof(aStatus), Localize("Main team %d / Dummy team %d"), MainTeam, DummyTeam);
+	}
+	else
+	{
+		str_copy(aStatus, Localize("Dummy not connected"), sizeof(aStatus));
+	}
+	Ui()->DoLabel(&Row, aStatus, BodySize, TEXTALIGN_ML);
+	Content.HSplitTop(LineSpacing, nullptr, &Content);
+
+	// 键位行：按下触发 qm_solo_split（toggle 语义，非 toggle 命令）。
+	Content.HSplitTop(LineHeight, &Row, &Content);
+	Row.VSplitLeft(LabelWidth, &BindLabel, &BindKey);
+	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-solo-split-key", &BindLabel, Localize("Solo split key"), BodySize, TEXTALIGN_ML, {}, (int)BindLabel.w);
+	CBindSlot SoloSplitBind(KEY_UNKNOWN, KeyModifier::NONE);
+	const auto SoloSplitIt = g_CommandBindCache.find("qm_solo_split");
+	if(SoloSplitIt != g_CommandBindCache.end())
+		SoloSplitBind = SoloSplitIt->second;
+	const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_ReaderButtonSoloSplit, &s_ClearButtonSoloSplit, &BindKey, SoloSplitBind, false);
+	if(Result.m_Bind == SoloSplitBind)
+		return;
+	if(SoloSplitBind.m_Key != KEY_UNKNOWN)
+		GameClient()->m_Binds.Bind(SoloSplitBind.m_Key, "", false, SoloSplitBind.m_ModifierMask);
+	if(Result.m_Bind.m_Key != KEY_UNKNOWN)
+	{
+		GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, "qm_solo_split", false, Result.m_Bind.m_ModifierMask);
+		g_CommandBindCache.insert_or_assign("qm_solo_split", Result.m_Bind);
+	}
+	else
+	{
+		g_CommandBindCache.erase("qm_solo_split");
 	}
 	(void)PrewarmOnly;
 }
@@ -4935,7 +4987,11 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 			// 3 行固定项 + Axiom 登录的 2 行密码框 + 开关组 7 行（与 RenderQmFunctionGoresContent 逐项对应）+ 键位行。
 			return Row() * (3.0f + (g_Config.m_QmAxiomAutoLogin ? 2.0f : 0.0f) + ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? 7.0f : 0.0f)) + LineHeight;
 		case EQmModuleId::KeyBinds: return Rows(8.0f);
-		case EQmModuleId::MiniFeatures: return Rows(20.0f);
+		case EQmModuleId::MiniFeatures:
+			// 21 个 RenderCheckbox/Tipped + RenderValue(旁观者虚化不透明度) + CLineInput(计分板过滤器)
+			// + NewIme/SponsorNudge 两个手写 RenderQmFunctionCheckbox = 25 行。
+			// 与 RenderQmFunctionMiniFeaturesContent 逐行对应；新增控件时须同步更新此计数。
+			return Rows(25.0f);
 		case EQmModuleId::JumpHint: return Row() * 5.0f;
 		case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 6.0f;
 		case EQmModuleId::FriendNotify:
@@ -5011,11 +5067,28 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 	};
 	auto BuildDefinitions = [&](std::vector<SSettingsCardDefinition> &vCards) {
 		vCards.reserve(14);
-		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render) {
+		// 自适应高度路径：m_Measure 时用 PrewarmOnly=true 的探测渲染跑一遍函数，
+		// 量 CUIRect.h 被 HSplitTop 消耗掉多少。行数不再手写，新增控件自动跟随。
+		// 注意：必须显式传 PrewarmOnly=true——m_Measure 在 deck 布局阶段调用，
+		// 不在渲染帧内，Ui()->RenderOnly() 是 false，不传会真改配置值。
+		const auto AddCard = [&](EQmModuleId Id, const char *pStableId, const char *pTitle, const char *pSubtitle, const FSettingsCardRenderMeasured &Render, const FSettingsCardRenderMeasured &MeasureRender = {}) {
 			SSettingsCardDefinition Definition;
 			const char *pRegisteredSubtitle = qm_card_registry::ResolveLocalizedDescription(pStableId);
 			Definition.m_Spec = {pStableId, Localize(pTitle), pRegisteredSubtitle != nullptr ? pRegisteredSubtitle : Localize(pSubtitle)};
-			Definition.m_Measure = [Id, MeasureContentHeight](float ContentWidth) { return MeasureContentHeight(Id, ContentWidth); };
+			if(MeasureRender)
+			{
+				// 自适应高度：MeasureRender 是 PrewarmOnly=true 的探测版，量 Content.h 消耗。
+				// 与 Render（实际渲染版，ReadOnly 由调用方传）分开，避免测量时真改配置值。
+				Definition.m_Measure = [MeasureRender](float ContentWidth) {
+					CUIRect Probe{0.0f, 0.0f, ContentWidth, 9999.0f};
+					MeasureRender(Probe);
+					return 9999.0f - Probe.h;
+				};
+			}
+			else
+			{
+				Definition.m_Measure = [Id, MeasureContentHeight](float ContentWidth) { return MeasureContentHeight(Id, ContentWidth); };
+			}
 			Definition.m_Render = [Render](CUIRect Content) { Render(Content); };
 			Definition.m_DefaultCollapsed = s_aCollapsed[ModuleStateIndex(Id)];
 			Definition.m_OnCollapseChanged = [this, Id, ToggleCollapsed](bool Collapsed) { ToggleCollapsed(Id, Collapsed); };
@@ -5025,13 +5098,20 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 
 		AddCard(EQmModuleId::GoresActor, "qm:gores_actor", "Gores Actor", "Auto chat when dying in water", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionGoresActorContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::Gores, "qm:gores", "Gores Mode", "Gores auto weapon switch", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionGoresContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
+		AddCard(EQmModuleId::SoloSplit, "qm:solo_split", "Solo Split", "Split main and dummy into different teams for solo-run sync",
+			[this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionSoloSplitContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); },
+			[this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmFunctionSoloSplitContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, true); });
 		AddCard(EQmModuleId::KeyBinds, "qm:key_binds", "Key Bindings", "Common key bindings", [this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmFunctionKeyBindsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth); });
-		AddCard(EQmModuleId::MiniFeatures, "qm:mini_features", "Dream Features", "Only what you can't imagine, nothing Dream can't do", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionMiniFeaturesContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
+		AddCard(EQmModuleId::MiniFeatures, "qm:mini_features", "Dream Features", "Only what you can't imagine, nothing Dream can't do",
+			[this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionMiniFeaturesContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); },
+			[this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmFunctionMiniFeaturesContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, true); });
 		AddCard(EQmModuleId::JumpHint, "qm:jump_hint", "Position jump hint", "Jump hint text", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionJumpHintContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::WeaponTrajectory, "qm:weapon_trajectory", "Weapon Trajectory", "Show grenade and laser trajectory preview", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionWeaponTrajectoryContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::FriendNotify, "qm:friend_notify", "Friend Notifications", "Friend online and join notifications", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionFriendNotifyContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::BlockWords, "qm:block_words", "Word Filter", "Chat word filtering", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionBlockWordsContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
-		AddCard(EQmModuleId::Translate, "qm:translate", "Translate", "Chat translation settings", [this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionTranslateContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
+		AddCard(EQmModuleId::Translate, "qm:translate", "Translate", "Chat translation settings",
+			[this, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionTranslateContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); },
+			[this, LineHeight, BodySize, LineSpacing, LabelWidth](CUIRect &Content) { RenderQmFunctionTranslateContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, true); });
 		AddCard(EQmModuleId::TranslateUi, "qm:translate_ui", "Translate button", "Customize translate button and menu colors", [this, LineHeight, BodySize, LineSpacing](CUIRect &Content) { RenderQmVisualTranslateUiContent(Content, LineHeight, BodySize, LineSpacing); });
 		AddCard(EQmModuleId::QiaFen, "qm:qiafen", "Keyword Reply", "I am a robot", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { RenderQmFunctionKeywordReplyContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 		AddCard(EQmModuleId::PieMenu, "qm:pie_menu", "Pie Menu", "Quick action menu for players", [this, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ButtonHeight = Metrics.m_ButtonHeight, CardStyle, ReadOnly](CUIRect &Content) { RenderQmFunctionPieMenuContent(Content, UiScale, LineHeight, BodySize, LineSpacing, LabelWidth, ButtonHeight, CardStyle.m_Padding, CardStyle.m_CornerRadius, ReadOnly); });

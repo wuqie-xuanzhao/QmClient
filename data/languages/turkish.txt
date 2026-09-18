@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == Kukla adı
 
+Dummy not connected
+== Kukla bağlı değil
+
 Dummy skin
 == Kukla derisi
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == Dinamik Ada arka plan rengi
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== Her biri farklı bir takıma girer; böylece solo koşular senkron başlar (takım-0 başlangıcının güvenilmez olduğu haritalarda kullanışlı)
 
 Ease in out quad
 == Yavaş giriş yavaş çıkış ikinci derece
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == Ana menü
+
+Main team %d / Dummy team %d
+== Ana takım %d / kukla takım %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == Donmuş oyuncuları daha çok voleybol topuna benzet (0=Devre dışı, 1=Sadece voleybol haritaları, 2=Her zaman)
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == Solo
 
+Solo Split
+== Solo bölme
+
+Solo split
+== Solo bölme
+
+Solo split key
+== Solo bölme tuşu
+
 Some fonts could not be loaded. Check the local console for details.
 == Bazı yazı tipleri yüklenemedi. Ayrıntılar için yerel konsolu kontrol edin.
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == Döndürerek aç
+
+Split main and dummy into different teams for solo-run sync
+== Ana karakter ve kuklayı solo koşu senkronizasyonu için farklı takımlara dağıtır
+
+Split main/dummy into two free teams; press again to return to team 0
+== Ana/kukla karakteri iki boş takıma böler; takım 0'a dönmek için tekrar basın
 
 Sponsor code
 == Destekçi kodu

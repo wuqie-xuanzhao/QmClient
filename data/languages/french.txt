@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == Nom du Dummy
 
+Dummy not connected
+== Clone non connecté
+
 Dummy skin
 == Apparence du Dummy
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == Couleur de l'arrière-plan du Dynamic Island
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== Chacun rejoint une équipe différente pour que les runs solo démarrent en synchronisation (utile sur les cartes où le départ en équipe 0 est peu fiable)
 
 Ease in out quad
 == Ease in-out quad
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == Menu principal
+
+Main team %d / Dummy team %d
+== Équipe principale %d / équipe clone %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == Donner aux joueurs gelés l'apparence de ballons de volley (0=Désactivé, 1=Cartes volley uniquement, 2=Toujours)
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == Solo
 
+Solo Split
+== Séparation solo
+
+Solo split
+== Séparation solo
+
+Solo split key
+== Touche de séparation solo
+
 Some fonts could not be loaded. Check the local console for details.
 == Certaines polices n'ont pas pu être chargées. Consultez la console locale pour plus de détails.
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == Popup tournante
+
+Split main and dummy into different teams for solo-run sync
+== Répartit le personnage principal et le clone dans des équipes différentes pour synchroniser les runs solo
+
+Split main/dummy into two free teams; press again to return to team 0
+== Sépare principal/clone dans deux équipes libres ; appuyez à nouveau pour revenir à l'équipe 0
 
 Sponsor code
 == Code de soutien

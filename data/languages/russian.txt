@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == Имя дамми
 
+Dummy not connected
+== Двойник не подключён
+
 Dummy skin
 == Скин дамми
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == Цвет фона Dynamic Island
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== Каждый входит в отдельную команду для синхронизации соло-забегов (на картах, где старт в team-0 ненадёжен)
 
 Ease in out quad
 == Ease in-out quad
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == Главное меню
+
+Main team %d / Dummy team %d
+== Команда основного %d / команда двойника %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == Делать замороженных игроков похожими на волейбольные мячи (0=Отключено, 1=Только на картах волейбола, 2=Всегда)
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == Соло
 
+Solo Split
+== Соло-разделение
+
+Solo split
+== Соло-разделение
+
+Solo split key
+== Клавиша соло-разделения
+
 Some fonts could not be loaded. Check the local console for details.
 == Некоторые шрифты не удалось загрузить. Подробности смотрите в локальной консоли.
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == Вращающееся появление
+
+Split main and dummy into different teams for solo-run sync
+== Распределяет основного и двойника по разным командам для синхронизации соло-забегов
+
+Split main/dummy into two free teams; press again to return to team 0
+== Разделить основного/двойника по двум свободным командам; повторное нажатие возвращает в команду 0
 
 Sponsor code
 == Код спонсора

@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == ダミー名
 
+Dummy not connected
+== 分身未接続
+
 Dummy skin
 == ダミースキン
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == ダイナミックアイランドの背景色
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== それぞれ別のチームに入り、solo ランの開始を同期します（team-0 で同期しにくいマップ向け）
 
 Ease in out quad
 == イーズインアウトクワッド
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == メインメニュー
+
+Main team %d / Dummy team %d
+== 本体チーム %d / 分身チーム %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == 凍結プレイヤーをバレーボールのように見せる（0=無効、1=バレーボールマップのみ、2=常時）
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == ソロ
 
+Solo Split
+== ソロスプリット
+
+Solo split
+== ソロスプリット
+
+Solo split key
+== ソロスプリットキー
+
 Some fonts could not be loaded. Check the local console for details.
 == 一部のフォントを読み込めませんでした。詳細はローカルコンソールを確認してください。
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == スピンポップ
+
+Split main and dummy into different teams for solo-run sync
+== 本体と分身を別々のチームに入れ、solo ランの開始を同期します（team-0 で同期しにくいマップ向け）
+
+Split main/dummy into two free teams; press again to return to team 0
+== 本体/分身を2つの空きチームに分け、もう一度押すとチーム0に戻る
 
 Sponsor code
 == 認証コード

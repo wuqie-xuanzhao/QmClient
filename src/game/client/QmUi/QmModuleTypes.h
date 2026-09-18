@@ -15,6 +15,7 @@ namespace qm_module
 		ChatBubble,
 		GoresActor,
 		Gores,
+		SoloSplit,
 		FocusMode,
 		KeyBinds,
 		MiniFeatures,
@@ -66,7 +67,7 @@ namespace qm_module
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 38;
+	constexpr size_t QmModuleCount = 39;
 } // namespace qm_module
 
 #endif // GAME_CLIENT_QMUI_QMMODULETYPES_H

@@ -1581,6 +1581,69 @@ void CTClient::SpecId(int ClientId)
 	GameClient()->m_Chat.SendChat(0, aBuf);
 }
 
+void CTClient::ConSoloSplit(IConsole::IResult *pResult, void *pUserData)
+{
+	((CTClient *)pUserData)->SoloSplitToggle();
+}
+
+void CTClient::SoloSplitToggle()
+{
+	if(Client()->State() != IClient::STATE_ONLINE)
+		return;
+	if(!Client()->DummyConnected())
+		return;
+
+	const int MainId = GameClient()->m_aLocalIds[0];
+	const int DummyId = GameClient()->m_aLocalIds[1];
+	if(MainId < 0 || DummyId < 0)
+		return;
+
+	const int MainTeam = GameClient()->m_Teams.Team(MainId);
+	const int DummyTeam = GameClient()->m_Teams.Team(DummyId);
+
+	// 已分队（各自在非 0 的不同 team）→ 恢复：两者都回 team 0
+	if(MainTeam > 0 && DummyTeam > 0 && MainTeam != DummyTeam)
+	{
+		GameClient()->m_Chat.SendChatOnConn(IClient::CONN_MAIN, 0, "/team 0");
+		GameClient()->m_Chat.SendChatOnConn(IClient::CONN_DUMMY, 0, "/team 0");
+		return;
+	}
+
+	// 未分队 → 找两个未被占用的合法 team（DDRace team 从 1 开始；0 是公共队，TEAM_SUPER 保留）
+	const int TeamSuper = GameClient()->m_Teams.TeamSuper();
+	bool aTeamUsed[NUM_DDRACE_TEAMS] = {};
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(!GameClient()->m_aClients[i].m_Active)
+			continue;
+		const int Team = GameClient()->m_Teams.Team(i);
+		if(Team > 0 && Team < TeamSuper && Team < NUM_DDRACE_TEAMS)
+			aTeamUsed[Team] = true;
+	}
+
+	int First = -1, Second = -1;
+	for(int Team = 1; Team < TeamSuper && Team < NUM_DDRACE_TEAMS; ++Team)
+	{
+		if(aTeamUsed[Team])
+			continue;
+		if(First < 0)
+			First = Team;
+		else if(Second < 0)
+		{
+			Second = Team;
+			break;
+		}
+	}
+	if(First < 0 || Second < 0)
+		return; // 无两个空闲 team 可用
+
+	char aCmd[32];
+	str_format(aCmd, sizeof(aCmd), "/team %d", First);
+	GameClient()->m_Chat.SendChatOnConn(IClient::CONN_MAIN, 0, aCmd);
+	str_format(aCmd, sizeof(aCmd), "/team %d", Second);
+	GameClient()->m_Chat.SendChatOnConn(IClient::CONN_DUMMY, 0, aCmd);
+}
+
 void CTClient::ConEmoteCycle(IConsole::IResult *pResult, void *pUserData)
 {
 	CTClient &This = *(CTClient *)pUserData;
@@ -1662,6 +1725,9 @@ void CTClient::OnConsoleInit()
 	Console()->Chain("tc_random_player", ConchainRandomColor, this);
 
 	Console()->Register("spec_id", "v[id]", CFGFLAG_CLIENT, ConSpecId, this, "Spectate a player by Id");
+
+	// 单刷模式：一键分队（本体/分身各进一个空闲 team），再按恢复 team 0
+	Console()->Register("qm_solo_split", "", CFGFLAG_CLIENT, ConSoloSplit, this, "Split main/dummy into two free teams; press again to return to team 0");
 
 	Console()->Register("emote_cycle", "", CFGFLAG_CLIENT, ConEmoteCycle, this, "Cycle through emotes");
 

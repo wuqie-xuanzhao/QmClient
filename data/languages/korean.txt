@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == 더미 이름
 
+Dummy not connected
+== 분신 미연결
+
 Dummy skin
 == 더미 스킨
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == 다이나믹 아일랜드 배경 색상
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== 각자 다른 팀에 들어가 solo 런 시작을 동기화합니다（team-0 동기화가 어려운 맵용）
 
 Ease in out quad
 == 이즈 인 아웃 쿼드
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == 메인 메뉴
+
+Main team %d / Dummy team %d
+== 본체 팀 %d / 분신 팀 %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == 얼은 플레이어를 배구공처럼 보이게 만들기 (0=비활성화, 1=배구 맵만, 2=항상)
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == 솔로
 
+Solo Split
+== 솔로 스플릿
+
+Solo split
+== 솔로 스플릿
+
+Solo split key
+== 솔로 스플릿 키
+
 Some fonts could not be loaded. Check the local console for details.
 == 일부 글꼴을 불러올 수 없습니다. 자세한 내용은 로컬 콘솔을 확인하세요.
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == 회전 팝
+
+Split main and dummy into different teams for solo-run sync
+== 본체와 분신을 서로 다른 팀에 넣어 solo 런 시작을 동기화합니다（team-0 동기화가 어려운 맵용）
+
+Split main/dummy into two free teams; press again to return to team 0
+== 본체/분신을 두 개의 빈 팀에 나누고, 다시 누르면 팀 0으로 돌아감
 
 Sponsor code
 == 인증 코드

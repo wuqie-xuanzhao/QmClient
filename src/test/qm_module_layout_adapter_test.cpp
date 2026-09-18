@@ -62,6 +62,7 @@ static std::vector<SQmModuleEntry> MakeAllDefaults()
 		{EQmModuleId::FocusMode, EQmModuleColumn::Left, 2, "focus_mode"},
 		{EQmModuleId::GoresActor, EQmModuleColumn::Left, 3, "gores_actor"},
 		{EQmModuleId::Gores, EQmModuleColumn::Left, 4, "gores"},
+		{EQmModuleId::SoloSplit, EQmModuleColumn::Left, 17, "solo_split"},
 		{EQmModuleId::KeyBinds, EQmModuleColumn::Left, 5, "key_binds"},
 		{EQmModuleId::MiniFeatures, EQmModuleColumn::Left, 6, "mini_features"},
 		{EQmModuleId::JumpHint, EQmModuleColumn::Left, 7, "jump_hint"},

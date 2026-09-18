@@ -90,6 +90,7 @@ namespace qm_module
 		case EQmModuleId::ChatBubble: return "qm:chat_bubble";
 		case EQmModuleId::GoresActor: return "qm:gores_actor";
 		case EQmModuleId::Gores: return "qm:gores";
+		case EQmModuleId::SoloSplit: return "qm:solo_split";
 		case EQmModuleId::FocusMode: return "qm:focus_mode";
 		case EQmModuleId::KeyBinds: return "qm:key_binds";
 		case EQmModuleId::MiniFeatures: return "qm:mini_features";

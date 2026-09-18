@@ -3386,6 +3386,9 @@ Dummy mini view zoom (percent)
 Dummy name
 == Nazwa dummy
 
+Dummy not connected
+== Dummy niepołączony
+
 Dummy skin
 == Skóra dummy
 
@@ -3475,6 +3478,9 @@ Dynamic Island background alpha
 
 Dynamic Island background color
 == Kolor tła Dynamic Island
+
+Each joins a separate team so solo runs start in sync (useful on maps where team-0 start is unreliable)
+== Każdy dołącza do osobnej drużyny, aby biegi solo zaczynały się synchronicznie (przydatne na mapach, gdzie start w drużynie 0 jest zawodny)
 
 Ease in out quad
 == Łagodne wejście-wyjście kwadratowe
@@ -6133,6 +6139,9 @@ Main Asset
 
 Main menu
 == Menu główne
+
+Main team %d / Dummy team %d
+== Drużyna główna %d / drużyna dummy %d
 
 Make frozen players look more like volleyballs (0=Disabled, 1=Only volleyball maps, 2=Always)
 == Spraw, aby zamrożeni gracze wyglądali bardziej jak piłki do siatkówki (0=Wyłączone, 1=Tylko mapy siatkówki, 2=Zawsze)
@@ -10931,6 +10940,15 @@ Solid tile outline opacity
 Solo
 == Solo
 
+Solo Split
+== Podział solo
+
+Solo split
+== Podział solo
+
+Solo split key
+== Klawisz podziału solo
+
 Some fonts could not be loaded. Check the local console for details.
 == Niektóre czcionki nie mogły zostać załadowane. Sprawdź konsolę lokalną, aby uzyskać szczegóły.
 
@@ -11083,6 +11101,12 @@ Sphere
 
 Spin pop
 == Obrót z wyskokiem
+
+Split main and dummy into different teams for solo-run sync
+== Rozdziela główną postać i dummy do różnych drużyn w celu synchronizacji biegów solo
+
+Split main/dummy into two free teams; press again to return to team 0
+== Dzieli główną postać/dummy na dwie wolne drużyny; ponowne naciśnięcie wraca do drużyny 0
 
 Sponsor code
 == Kod wspierającego
