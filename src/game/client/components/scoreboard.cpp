@@ -1497,14 +1497,17 @@ void CScoreboard::RenderScoreboard(CUIRect Scoreboard, int Team, int CountStart,
 		if(DDTeam != TEAM_FLOCK)
 		{
 			const ColorRGBA Color = ScoreboardDecorationColor(GameClient()->GetDDTeamColor(DDTeam).WithAlpha(0.5f * ItemAlpha));
+			// 面板最后一行的队伍背景要贴着卡片圆角收口：用卡片圆角而不是缩放后的行圆角，
+			// 否则小圆角填不满面板底部圆角，颜色会溢出到圆角外。
+			const bool IsPanelLastRow = &PlannedRow == &Plan.m_aRows[Plan.m_Count - 1];
 			int TeamRectCorners = 0;
 			if(PrevDDTeam != DDTeam)
 			{
 				TeamRectCorners |= IGraphics::CORNER_T;
 			}
-			if(NextDDTeam != DDTeam)
+			if(NextDDTeam != DDTeam || IsPanelLastRow)
 				TeamRectCorners |= IGraphics::CORNER_B;
-			RowAndSpacing.Draw(Color, TeamRectCorners, RoundRadius);
+			RowAndSpacing.Draw(Color, TeamRectCorners, IsPanelLastRow ? (float)ui_token::radius::CARD : RoundRadius);
 
 			CurrentDDTeamSize++;
 
@@ -2269,10 +2272,10 @@ void CScoreboard::OnRender()
 			if(ScrollMaxStart > 0)
 			{
 				// 复用全局竖向滚动条组件：可拖拽，样式与其它界面一致。
+				// 注意组件内部会 pRect->Margin(5)，轨道必须留足宽度（>= 10px + 想要的轨道宽）。
 				static int s_ScoreboardScrollBarId = 0;
 				CUIRect ScrollBarTrack = ScoreboardContentBody;
-				ScrollBarTrack.VSplitRight(12.0f, nullptr, &ScrollBarTrack);
-				ScrollBarTrack.VSplitRight(3.0f, nullptr, &ScrollBarTrack);
+				ScrollBarTrack.VSplitRight(18.0f, nullptr, &ScrollBarTrack);
 				const float ScrollCurrent = (float)m_ScrollTarget / (float)ScrollMaxStart;
 				const float ScrollNew = Ui()->DoScrollbarV(&s_ScoreboardScrollBarId, &ScrollBarTrack, ScrollCurrent);
 				if(ScrollNew != ScrollCurrent)

@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "profile": "phosphor_bold",
-  "generator": "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd",
-  "pages": [
-    "qmclient/nameplate_msdf/nameplate_phosphor_bold_00.json"
-  ]
-}

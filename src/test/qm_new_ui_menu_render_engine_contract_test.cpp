@@ -78,7 +78,7 @@ TEST(QmNewUiMenuRenderEngineContract, GraphicsDriverCrashRecoveryUsesSafeStartup
 	EXPECT_NE(Recovery.find("SafeConfig.m_FsaaSamples"), std::string::npos);
 	EXPECT_NE(Recovery.find("RecoveryFullscreen"), std::string::npos);
 	EXPECT_NE(Recovery.find("graphics_backend::RecoveryFullscreenMode(g_Config.m_GfxFullscreen)"), std::string::npos);
-	EXPECT_NE(StartupHook.find("resetting safe graphics settings without FSAA while preserving a desktop-sized display mode"), std::string::npos);
+	EXPECT_NE(StartupHook.find("previous crash report '%s' points to the graphics driver; this launch uses safe graphics settings"), std::string::npos);
 	EXPECT_EQ(StartupHook.find("resetting safe graphics settings in windowed mode without FSAA"), std::string::npos);
 	EXPECT_EQ(StartupHook.find("CONF_PLATFORM_MACOS"), std::string::npos);
 

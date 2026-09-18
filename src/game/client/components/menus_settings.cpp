@@ -597,6 +597,21 @@ bool CMenus::DoMessageGradientLine(CChat &Chat, CUIRect *pView, int Tab, const c
 
 namespace
 {
+	// UI 图标风格分段控件：段索引 -> 配置值。Thin 未随包（值 2 仍兼容，渲染为 Light），
+	// 不再提供按钮，因此索引与配置值不是同一个序列。绘制与点击路径必须共用这一张表——
+	// 历史上点击路径残留了含 Thin 的 6 项旧表，导致点击整体错位一位（点「双色调」选中「轻体」）。
+	constexpr int s_aIconWeightValues[] = {4, 0, 1, 3, 5};
+
+	int QmIconWeightSegmentIndex(const int Weight)
+	{
+		const int Normalized = NormalizeQmIconWeight(Weight);
+		for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
+			if(s_aIconWeightValues[i] == Normalized)
+				return i;
+		// 配置值不在按钮序列里（例如仍是 Thin）：高亮 Light。
+		return 0;
+	}
+
 	CScrollRegion gs_LanguageScrollRegion;
 	bool gs_LanguageScrollToSelected = false;
 	std::array<unsigned char, QM_LANGUAGE_ROW_CACHE_CAPACITY> gs_aLanguageRowIds{};
@@ -3848,14 +3863,15 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	const uint64_t GraphicsDisplayMeasureRevision = (static_cast<uint64_t>(std::max(0, GraphicsDisplayRowCount)) << 32) ^ static_cast<uint64_t>(std::max(0, OldWindowMode));
 	const float GraphicsVisualContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsVisualMinCardHeight = VisualChromeHeight + GraphicsVisualContentHeight;
-	const float GraphicsIconsContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
+	const float GraphicsIconsContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight});
 	const float GraphicsIconsMinCardHeight = IconsChromeHeight + GraphicsIconsContentHeight;
 	const float GraphicsInteractionContentHeight = ResolveSettingsContentFlowHeight(GraphicsMetrics, {GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight});
 	const float GraphicsInteractionMinCardHeight = InteractionChromeHeight + GraphicsInteractionContentHeight;
 	static CButtonContainer s_aGraphicsIconColorButtons[4];
-	static CButtonContainer s_aGraphicsIconWeightButtons[6];
+	static CButtonContainer s_aGraphicsIconWeightButtons[5];
 	static CButtonContainer s_aGraphicsBlurModeButtons[3];
 	static CButtonContainer s_GraphicsIconCustomColorResetId;
+	static CButtonContainer s_GraphicsIconDuotoneSecondaryColorResetId;
 
 	const bool RenderOnly = Ui()->RenderOnly();
 	const auto BuildDefinitions = [this, pModesDefault, pDisplayDefault, pVisualDefault, pIconsDefault, pInteractionDefault, GraphicsPage, GraphicsModesMinCardHeight, ModesChromeHeight, GraphicsDisplayMinCardHeight, DisplayChromeHeight, GraphicsVisualMinCardHeight, VisualChromeHeight, GraphicsIconsMinCardHeight, IconsChromeHeight, GraphicsInteractionMinCardHeight, InteractionChromeHeight, GraphicsModesMeasureRevision, GraphicsDisplayMeasureRevision, GraphicsDisplayRowCount, GraphicsBackendRowCount, FoundBackendCount, OldWindowMode, GraphicsMetrics, BodySize, DoGraphicsNumericField](std::vector<SSettingsCardDefinition> &vCards) {
@@ -4280,6 +4296,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		AddCard(IconsSpec, GraphicsIconsMinCardHeight, IconsChromeHeight, [this, GraphicsMetrics, BodySize](CUIRect ContentRect) {
 			CSettingsContentRowFlow Rows(ContentRect, GraphicsMetrics);
 			const bool CustomColor = g_Config.m_QmUiIconColor == 3;
+			const bool DuotoneStyle = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight) == 5;
 			const auto DoIconChoiceRow = [this, BodySize](CUIRect Row, const char *pLabel, const char *const *ppLabels, int Count, int Current, CButtonContainer *pButtons, auto &&OnChanged) {
 				CUIRect Label, Segments;
 				Row.VSplitLeft(std::clamp(Row.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
@@ -4315,12 +4332,9 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				}
 			};
 			const char *apIconColorLabels[] = {Localize("White"), Localize("Black"), Localize("Custom"), Localize("Rainbow")};
-			const char *apIconWeightLabels[] = {Localize("Thin"), Localize("Regular"), Localize("Bold"), Localize("Fill"), Localize("Light"), Localize("Duotone")};
-			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
-			int IconWeightIndex = 1;
-			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
-				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
-					IconWeightIndex = i;
+			// Thin 未随包字体，不再提供该样式；weight 2 配置值仍兼容（渲染为 Light）。
+			const char *apIconWeightLabels[] = {Localize("Light"), Localize("Regular"), Localize("Bold"), Localize("Fill"), Localize("Duotone")};
+			const int IconWeightIndex = QmIconWeightSegmentIndex(g_Config.m_QmUiIconWeight);
 			DoIconChoiceRow(Rows.NextLine(), Localize("UI icon color"), apIconColorLabels, std::size(apIconColorLabels), std::clamp(g_Config.m_QmUiIconColor, 1, 4) - 1, s_aGraphicsIconColorButtons, [this](int NewValue) {
 				g_Config.m_QmUiIconColor = NewValue + 1;
 				Client()->OnWindowResize();
@@ -4332,8 +4346,14 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				CUIRect CustomColorRow = Rows.NextButton();
 				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, ColorMetrics, &CustomColorRow, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
 			}
+			if(DuotoneStyle)
+			{
+				SSettingsContentMetrics ColorMetrics = GraphicsMetrics;
+				ColorMetrics.m_LineSpacing = 0.0f;
+				CUIRect SecondaryColorRow = Rows.NextButton();
+				DoLine_ColorPicker(&s_GraphicsIconDuotoneSecondaryColorResetId, ColorMetrics, &SecondaryColorRow, Localize("UI icon duotone secondary color"), &g_Config.m_QmUiIconDuotoneSecondaryColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
+			}
 			DoIconChoiceRow(Rows.NextLine(), Localize("UI icon style"), apIconWeightLabels, std::size(apIconWeightLabels), IconWeightIndex, s_aGraphicsIconWeightButtons, [this](int NewValue) {
-				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
 				const int NewWeight = s_aIconWeightValues[NewValue];
 				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					return;
@@ -4342,14 +4362,16 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			});
 		});
 		vCards.back().m_Measure = [GraphicsMetrics](float) {
-			return ResolveSettingsContentFlowHeight(GraphicsMetrics, g_Config.m_QmUiIconColor == 3 ? std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight} : std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
+			return ResolveSettingsContentFlowHeight(GraphicsMetrics, (g_Config.m_QmUiIconColor == 3 && NormalizeQmIconWeight(g_Config.m_QmUiIconWeight) == 5) ? std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight} : g_Config.m_QmUiIconColor == 3 || NormalizeQmIconWeight(g_Config.m_QmUiIconWeight) == 5 ? std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight} :
+																																																				std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_LineHeight});
 		};
-		vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);
+		vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3) | (static_cast<uint64_t>(NormalizeQmIconWeight(g_Config.m_QmUiIconWeight) == 5) << 1);
 		vCards.back().m_PreLayoutInput = [this, GraphicsMetrics](CUIRect ContentRect) {
 			if(m_MenuTextPlanCollecting)
 				return false;
 			bool Changed = false;
 			const bool CustomColor = g_Config.m_QmUiIconColor == 3;
+			const bool DuotoneStyle = NormalizeQmIconWeight(g_Config.m_QmUiIconWeight) == 5;
 			const auto ProcessChoiceRow = [this, &Changed](CUIRect Row, int Current, int Count, CButtonContainer *pButtons, auto &&OnChanged) {
 				CUIRect Label, Segments;
 				Row.VSplitLeft(std::clamp(Row.w * 0.36f, 96.0f, 150.0f), &Label, &Segments);
@@ -4403,14 +4425,18 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId, ColorMetrics, &CustomColorRow, Localize("UI icon custom color"), &g_Config.m_QmUiIconCustomColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
 				Changed = Changed || OldCustomColor != g_Config.m_QmUiIconCustomColor;
 			}
-			int IconWeightIndex = 1;
-			static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
-			for(int i = 0; i < (int)std::size(s_aIconWeightValues); ++i)
-				if(s_aIconWeightValues[i] == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
-					IconWeightIndex = i;
+			if(DuotoneStyle)
+			{
+				const unsigned OldSecondaryColor = g_Config.m_QmUiIconDuotoneSecondaryColor;
+				SSettingsContentMetrics ColorMetrics = GraphicsMetrics;
+				ColorMetrics.m_LineSpacing = 0.0f;
+				CUIRect SecondaryColorRow = Rows.NextButton();
+				DoLine_ColorPicker(&s_GraphicsIconDuotoneSecondaryColorResetId, ColorMetrics, &SecondaryColorRow, Localize("UI icon duotone secondary color"), &g_Config.m_QmUiIconDuotoneSecondaryColor, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), false, nullptr, false, false);
+				Changed = Changed || OldSecondaryColor != g_Config.m_QmUiIconDuotoneSecondaryColor;
+			}
+			const int IconWeightIndex = QmIconWeightSegmentIndex(g_Config.m_QmUiIconWeight);
 			Row = Rows.NextLine();
-			ProcessChoiceRow(Row, IconWeightIndex, 6, s_aGraphicsIconWeightButtons, [this](int NewValue) {
-				static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};
+			ProcessChoiceRow(Row, IconWeightIndex, 5, s_aGraphicsIconWeightButtons, [this](int NewValue) {
 				const int NewWeight = s_aIconWeightValues[NewValue];
 				if(NewWeight == NormalizeQmIconWeight(g_Config.m_QmUiIconWeight))
 					return;

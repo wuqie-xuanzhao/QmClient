@@ -40,6 +40,8 @@ struct SQmIconMorphPlan
 };
 
 // 解析一个归一化路径点。极坐标变换保持整体旋转和缩放连续，剩余几何线性变形。
+// 同一表面的内外轮廓共享 m_Theta / m_LogScale（生成端保证）：各持一套参数时内外圈
+// 差速旋转会把连接带拧成碎片，在实机上渲染为散点。
 vec2 ResolveQmIconMorphPoint(const SQmIconMorphPathData &Path, int PointIndex, float Progress);
 
 const SQmIconMorphPlan *QmEyeMorphPlanForWeight(int Weight);

@@ -20230,6 +20230,22 @@ turkish = "Özel arayüz simgesi rengi"
 polish = "Niestandardowy kolor ikon interfejsu"
 
 [[message]]
+key = "UI icon duotone secondary color"
+[message.translations]
+simplified_chinese = "界面双色调图标次要颜色"
+traditional_chinese = "介面雙色調圖示次要顏色"
+japanese = "UI アイコンのデュオトーン副色"
+korean = "UI 듀오톤 아이콘 보조 색상"
+russian = "Вторичный цвет двухцветных значков интерфейса"
+german = "Sekundärfarbe der Duotone-UI-Symbole"
+spanish = "Color secundario de los iconos de interfaz duotono"
+french = "Couleur secondaire des icônes d'interface Duotone"
+brazilian_portuguese = "Cor secundária dos ícones Duotone da interface"
+portuguese = "Cor secundária dos ícones Duotone da interface"
+turkish = "Duotone arayüz simgelerinin ikincil rengi"
+polish = "Drugi kolor ikonów interfejsu Duotone"
+
+[[message]]
 key = "Thin"
 [message.translations]
 simplified_chinese = "细体"

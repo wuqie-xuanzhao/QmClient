@@ -56,7 +56,7 @@ def _expected_nameplate_msdf_totals(env: ProcessEnvironment) -> tuple[int, int]:
 	"""按渲染器的加载顺序算出运行时应当报告的 (页数, 去重字形数)。
 
 	`CQmNameplateMsdfRenderer::Init` 先加载选中的 profile，再依次加载 `dejavu` 与
-	`noto_glow_cjk`（与选中项同名则跳过）；`ParseManifest` 用 emplace 先到先得，
+	`symbols`（与选中项同名则跳过）；`ParseManifest` 用 emplace 先到先得，
 	所以字形数是各页码点的**并集**而不是简单相加。
 
 	页数比对专门用来抓「整页被静默跳过」：`LoadProfile` 在 `LoadPage` 失败时只打一行
@@ -65,7 +65,7 @@ def _expected_nameplate_msdf_totals(env: ProcessEnvironment) -> tuple[int, int]:
 	"""
 	atlas_dir = env.build_dir / "data" / "qmclient" / "nameplate_msdf"
 	# 选中 DejaVu Sans 时 dejavu 既是主 profile 又是回退链第一项（同名跳过）
-	profiles = ("dejavu", "noto_glow_cjk")
+	profiles = ("dejavu", "symbols")
 	pages: list[str] = []
 	for profile in profiles:
 		manifest = json.loads((atlas_dir / "profiles" / f"nameplate_{profile}.json").read_text(encoding="utf-8"))
@@ -184,7 +184,7 @@ def scenario_vector_font_and_icon_resources(env: ProcessEnvironment) -> None:
 	# 打开真实设置页，确保 UI 图标绘制路径实际运行，而不是只验证资源文件存在。
 	env.client.command("ui_page 16")
 	time.sleep(2.0)
-	for style in ("thin", "light", "regular", "bold", "fill", "duotone"):
+	for style in ("light", "regular", "bold", "fill", "duotone"):
 		icon_manifest = env.build_dir / "data" / "qmclient" / "icons" / f"qm_icons_{style}_msdf.json"
 		manifest = json.loads(icon_manifest.read_text(encoding="utf-8"))
 		if manifest.get("kind") != "mtsdf" or manifest.get("distance_field") != "mtsdf" or manifest.get("alpha_sdf") is not True:

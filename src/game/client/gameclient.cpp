@@ -7494,24 +7494,6 @@ bool CGameClient::IsOtherTeam(int ClientId) const
 	return m_Teams.Team(ClientId) != m_Teams.Team(m_Snap.m_LocalClientId);
 }
 
-bool CGameClient::IsSoloHidden(int ClientId) const
-{
-	// 跟随旁观的 solo 语义是"完全隐藏"而不是淡化：被旁观者处于 solo 时，服务器本就不给
-	// 他下发其他玩家，跟随他的视角应与之一致（不受 cl_show_others_alpha 影响）。
-	if(m_Snap.m_LocalClientId < 0 || ClientId < 0 || ClientId >= MAX_CLIENTS)
-		return false;
-	if(ClientId == m_Snap.m_LocalClientId)
-		return false;
-	if(m_Snap.m_SpecInfo.m_Active)
-	{
-		const int SpectatorId = m_Snap.m_SpecInfo.m_SpectatorId;
-		return SpectatorId != SPEC_FREEVIEW && SpectatorId >= 0 && SpectatorId < MAX_CLIENTS && SpectatorId != ClientId &&
-		       (m_aClients[SpectatorId].m_Solo || m_aClients[ClientId].m_Solo);
-	}
-	return ClientId != m_Snap.m_LocalClientId &&
-	       (m_aClients[m_Snap.m_LocalClientId].m_Solo || m_aClients[ClientId].m_Solo);
-}
-
 int CGameClient::SwitchStateTeam() const
 {
 	if(m_aSwitchStateTeam[g_Config.m_ClDummy] >= 0)

@@ -8303,6 +8303,9 @@ Qm
 Qm UI custom icon color
 == Пользовательский цвет значков Qm UI
 
+Qm UI duotone secondary icon color
+== Вторичный цвет двухцветных значков Qm UI
+
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Цвет значков Qm UI: 1=белый, 2=черный, 3=пользовательский, 4=радуга
 
@@ -11822,9 +11825,6 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == В редакторе есть несохранённая карта, возможно, стоит её сохранить.
 
-Thin
-== Тонкий
-
 Thinking mode requires a reasoning model
 == Для режима размышления требуется модель рассуждения
 
@@ -12307,6 +12307,9 @@ UI icon color
 
 UI icon custom color
 == Пользовательский цвет значков интерфейса
+
+UI icon duotone secondary color
+== Вторичный цвет двухцветных значков интерфейса
 
 UI icon style
 == Стиль значков интерфейса

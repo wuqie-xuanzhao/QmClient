@@ -8303,6 +8303,9 @@ Qm
 Qm UI custom icon color
 == Qm UI 아이콘 사용자 지정 색상
 
+Qm UI duotone secondary icon color
+== Qm UI 듀오톤 아이콘 보조 색상
+
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Qm UI 아이콘 색상: 1=흰색, 2=검정, 3=사용자 지정, 4=무지개
 
@@ -11822,9 +11825,6 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == 편집기에 저장되지 않은 맵이 있습니다. 저장하는 것이 좋습니다.
 
-Thin
-== 얇게
-
 Thinking mode requires a reasoning model
 == 사고 모드를 사용하려면 추론 모델이 필요합니다
 
@@ -12307,6 +12307,9 @@ UI icon color
 
 UI icon custom color
 == UI 아이콘 사용자 지정 색상
+
+UI icon duotone secondary color
+== UI 듀오톤 아이콘 보조 색상
 
 UI icon style
 == UI 아이콘 스타일

@@ -190,10 +190,10 @@ bool CQmNameplateMsdfRenderer::Init(IStorage *pStorage, IGraphics *pGraphics, co
 		Shutdown();
 		return false;
 	}
-	// 主字体只负责自身字形；语言缺口由客户端随包的通用 profile 补齐。
+	// 主字体只负责自身字形；symbols profile 只补符号/emoji（MTSDF 名牌不做 CJK）。
 	// 先加载主 profile，ParseManifest 使用 emplace 保证主字体字形优先，
-	// 因而英文仍保持用户选择的字体，中文/日文/韩文则来自内置 CJK 字体。
-	const char *pFallbackProfiles[] = {"dejavu", "noto_glow_cjk"};
+	// 图集覆盖不到的脚本（汉字/假名/谚文等）由门控整条回退 FreeType。
+	const char *pFallbackProfiles[] = {"dejavu", "symbols"};
 	for(const char *pFallback : pFallbackProfiles)
 	{
 		if(str_comp(pFallback, pProfile) == 0)

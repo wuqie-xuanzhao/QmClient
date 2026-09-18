@@ -8303,6 +8303,9 @@ Qm
 Qm UI custom icon color
 == Couleur personnalisée des icônes Qm UI
 
+Qm UI duotone secondary icon color
+== Couleur secondaire des icônes Duotone de l'interface Qm
+
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Couleur des icônes Qm UI : 1=blanc, 2=noir, 3=personnalisée, 4=arc-en-ciel
 
@@ -11822,9 +11825,6 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == Il y a une carte non sauvegardée dans l'éditeur, vous devriez la sauvegarder.
 
-Thin
-== Fin
-
 Thinking mode requires a reasoning model
 == Le mode réflexion nécessite un modèle de raisonnement
 
@@ -12307,6 +12307,9 @@ UI icon color
 
 UI icon custom color
 == Couleur personnalisée des icônes de l'interface
+
+UI icon duotone secondary color
+== Couleur secondaire des icônes d'interface Duotone
 
 UI icon style
 == Style des icônes de l'interface

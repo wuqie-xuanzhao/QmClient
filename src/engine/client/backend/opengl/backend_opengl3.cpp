@@ -485,17 +485,19 @@ bool CCommandProcessorFragment_OpenGL3_3::Cmd_Init(const SCommand_Init *pCommand
 			m_pTexturedMsdfProgram->m_LocPos = m_pTexturedMsdfProgram->GetUniformLoc("gPos");
 			m_pTexturedMsdfProgram->m_LocTextureSampler = m_pTexturedMsdfProgram->GetUniformLoc("gTextureSampler");
 			m_pTexturedMsdfProgram->m_LocParams = m_pTexturedMsdfProgram->GetUniformLoc("gMsdfParams");
-			m_TexturedMsdfProgramValid = m_pTexturedMsdfProgram->m_LocPos >= 0 && m_pTexturedMsdfProgram->m_LocTextureSampler >= 0 && m_pTexturedMsdfProgram->m_LocParams >= 0;
+			m_pTexturedMsdfProgram->m_LocSecondaryColor = m_pTexturedMsdfProgram->GetUniformLoc("gMsdfSecondaryColor");
+			m_TexturedMsdfProgramValid = m_pTexturedMsdfProgram->m_LocPos >= 0 && m_pTexturedMsdfProgram->m_LocTextureSampler >= 0 && m_pTexturedMsdfProgram->m_LocParams >= 0 && m_pTexturedMsdfProgram->m_LocSecondaryColor >= 0;
 			if(m_TexturedMsdfProgramValid)
 				m_pTexturedMsdfProgram->SetUniform(m_pTexturedMsdfProgram->m_LocTextureSampler, 0);
 		}
-		log_info("gfx/opengl", "Textured MSDF program: vertex=%d fragment=%d linked=%d uniforms=%d/%d/%d valid=%d context=%d.%d.%d",
+		log_info("gfx/opengl", "Textured MSDF program: vertex=%d fragment=%d linked=%d uniforms=%d/%d/%d/%d valid=%d context=%d.%d.%d",
 			VertexAdded,
 			FragmentAdded,
 			Linked,
 			m_pTexturedMsdfProgram->m_LocPos,
 			m_pTexturedMsdfProgram->m_LocTextureSampler,
 			m_pTexturedMsdfProgram->m_LocParams,
+			m_pTexturedMsdfProgram->m_LocSecondaryColor,
 			m_TexturedMsdfProgramValid,
 			ShaderMajor,
 			ShaderMinor,
@@ -1072,6 +1074,7 @@ void CCommandProcessorFragment_OpenGL3_3::Cmd_RenderTexturedMsdf(const CCommandB
 	UseProgram(m_pTexturedMsdfProgram);
 	SetState(pCommand->m_State, m_pTexturedMsdfProgram);
 	m_pTexturedMsdfProgram->SetUniformVec4(m_pTexturedMsdfProgram->m_LocParams, 1, (const float *)&pCommand->m_MsdfParams);
+	m_pTexturedMsdfProgram->SetUniformVec4(m_pTexturedMsdfProgram->m_LocSecondaryColor, 1, (const float *)&pCommand->m_MsdfSecondaryColor);
 	UploadStreamBufferData(pCommand->m_PrimType, pCommand->m_pVertices, sizeof(CCommandBuffer::SVertex), pCommand->m_PrimCount);
 	glBindVertexArray(m_aPrimitiveDrawVertexId[m_LastStreamBuffer]);
 	if(m_aLastIndexBufferBound[m_LastStreamBuffer] != m_QuadDrawIndexBufferId)

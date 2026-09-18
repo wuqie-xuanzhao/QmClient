@@ -182,6 +182,8 @@ namespace ui_widget
 	{
 		const char *m_pPlaceholder = nullptr;
 		const char *m_pLeadingIcon = nullptr;
+		// -1 时按 SEARCH 模式取放大镜；>= 0 时用指定的图集图标（例如排除框用 BAN）。
+		int m_LeadingQmIcon = -1;
 		const char *m_pTrailingText = nullptr;
 		const void *m_pTrailingActionId = nullptr;
 		const char *m_pTrailingActionIcon = nullptr;

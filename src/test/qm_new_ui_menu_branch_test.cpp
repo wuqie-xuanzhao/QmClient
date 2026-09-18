@@ -18,12 +18,11 @@
 #include <game/client/ui.h>
 #include <game/localization.h>
 
-#include <regex>
-
 #include <gtest/gtest.h>
 #include <test/test.h>
 
 #include <algorithm>
+#include <regex>
 
 namespace
 {
@@ -109,7 +108,6 @@ namespace
 
 } // namespace
 
-
 TEST(QmTooltips, OwnsCallerTextAndBoundsFriendNotes)
 {
 	char aCallerText[] = "rabbit";
@@ -139,7 +137,6 @@ TEST(TClientStatusBarScore, RegistersUniqueScoreSchemeCode)
 	EXPECT_NE(ApplyScheme.find("m_StatusBarItems.push_back(&ItemType);"), std::string::npos);
 	EXPECT_NE(UpdateScheme.find("pScheme[Index++] = pItem->m_aLetters[0];"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, SettingsShellAndOuterScrollbarUseStableContracts)
 {
@@ -190,8 +187,6 @@ TEST(QmNewUiMenuBranches, P6QmClientContributorsUsesCanonicalDeck)
 	EXPECT_NE(Body.find("!ReadOnly && g_QmClientEnsureSponsorQrTexture"), std::string::npos);
 	EXPECT_NE(Body.find("CardDeck.RenderCached("), std::string::npos);
 }
-
-
 
 TEST(QmNewUiMenuBranches, CapsuleTabBarRowRectSpansSlotsAndGaps)
 {
@@ -244,8 +239,6 @@ TEST(QmNewUiMenuBranches, CapsuleTabBarChromeDrawsContainerThenSpringIndicatorUn
 	EXPECT_NE(Header.find("inline ColorRGBA CapsuleTabBarActiveLabelColor(const ColorRGBA &SurfaceColor)"), std::string::npos);
 	EXPECT_NE(Header.find("inline ColorRGBA CapsuleTabBarInactiveLabelColor(const ColorRGBA &SurfaceColor)"), std::string::npos);
 }
-
-
 
 TEST(QmNewUiMenuBranches, SettingsSubTabRowsUseCapsuleTabBar)
 {
@@ -624,8 +617,6 @@ TEST(QmNewUiMenuBranches, SettingsInputFieldsReserveTrailingActionsAndKeepQueueU
 	EXPECT_EQ(SkinQueueSection.find("Ui()->DoLabel(&IntervalUnit"), std::string::npos);
 }
 
-
-
 TEST(QmUiScaleSource, TouchMenusRespectCallerProvidedScaledHeight)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_ingame_touch_controls.cpp");
@@ -653,7 +644,6 @@ TEST(QmDemoCutRender, UsesExportedCutAsRenderSource)
 	EXPECT_NE(SlicePopup.find("str_format(m_aPendingDemoRenderSelectionName, sizeof(m_aPendingDemoRenderSelectionName), \"%s.demo\", m_DemoSliceInput.GetString());"), std::string::npos);
 	EXPECT_EQ(SlicePopup.find("str_copy(m_aPendingDemoRenderSelectionName, m_aCurrentDemoSelectionName"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 {
@@ -756,7 +746,6 @@ TEST(QmNewUiMenuBranches, DemoBrowserUsesExplicitLegacyShellBranches)
 	EXPECT_NE(LegacyButtonsBranch.find("ButtonsView.HSplitMid(&ButtonBarTop, &ButtonBarBottom, 5.0f);"), std::string::npos);
 	EXPECT_EQ(RenderDemoBrowser.find("MainView.Draw(MenuPanelColor()"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
 {
@@ -974,8 +963,6 @@ TEST(QmNewUiMenuBranches, AssetsPreviewUsesInnerFrameRectForPreviewImage)
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureHeight);"), std::string::npos);
 	EXPECT_EQ(Source.find("const CUIRect PreviewRect = ComputePreviewDrawRect(HeaderLayout.m_TextureRect, TextureWidth, TextureWidth);"), std::string::npos);
 }
-
-
 
 TEST(QmNewUiMenuBranches, SettingsColorLabelsUseQmLocalizedKeys)
 {
@@ -1320,7 +1307,6 @@ TEST(QmNewUiMenuBranches, DefaultUiSurfacesUseBlackThirtyPercent)
 	EXPECT_NE(ConfigSource.find("MACRO_CONFIG_INT(ClSettingsTabbarOpacity, cl_settings_tabbar_opacity, 30"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, WeaponTrajectoryExposesDefaultOnPistolGuideToggle)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
@@ -1358,7 +1344,6 @@ TEST(QmNewUiMenuBranches, QmDefaultOffMigrationKeepsExplicitLegacyValues)
 	EXPECT_NE(ConfigSource.find("WriteLine(vLineBuf.data(), ConfigDomain);"), std::string::npos);
 	EXPECT_EQ(ConfigSource.find("Reset(\"qm_"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 {
@@ -1405,8 +1390,6 @@ TEST(QmNewUiMenuBranches, WeaponAnimationAdvancedControlsAreConfigurable)
 	EXPECT_NE(VisualDeck.find("HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmWeaponReloadAnim, &g_Config.m_QmWeaponReloadAnim)"), std::string::npos);
 	EXPECT_NE(RegistrySource.find("装填动画 zhuangtian donghua reload animation"), std::string::npos);
 }
-
-
 
 TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 {
@@ -1616,7 +1599,6 @@ TEST(QmNewUiMenuBranches, NameplateGameUsesFullScopeReferenceFrame)
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowDirection = pPlayerInfo->m_Local;"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, HudNotificationsKeepEdgeGeometryStableDuringSlide)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/qmclient/hud_notifications/hud_notifications.cpp");
@@ -1650,9 +1632,6 @@ TEST(QmNewUiMenuBranches, SpectatorSpecTeeDoesNotFallbackToMissingSkin)
 	EXPECT_NE(Render.find("Alpha = minimum(Alpha, g_Config.m_ClShowOthersAlpha / 100.f);"), std::string::npos);
 	EXPECT_NE(Render.find("continue;\n\t\tRenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo()"), std::string::npos);
 }
-
-
-
 
 TEST(QmNewUiMenuBranches, SettingsCardMigrationsKeepVersionPendingWhenExactMigrationFails)
 {
@@ -1775,7 +1754,6 @@ TEST(QmNewUiMenuBranches, ScoreboardUsesOneRowPlanAndDenseTeeLod)
 	EXPECT_NE(RenderScoreboard.find("m_PlayerPoints.GetPoints"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, GaussianBlurCoversRequestedHudAndVoteBackgroundsOnly)
 {
 	const std::string HudSource = ReadTextFile("src/game/client/components/hud.cpp");
@@ -1795,8 +1773,6 @@ TEST(QmNewUiMenuBranches, GaussianBlurCoversRequestedHudAndVoteBackgroundsOnly)
 	EXPECT_NE(Vote.find("View.Draw(ui_token::color::SURFACE_GLASS"), std::string::npos);
 	EXPECT_NE(MiniVote.find("View.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.4f)"), std::string::npos);
 }
-
-
 
 TEST(QmNewUiMenuBranches, IngameMenuPrimaryActionLabelsUseEnglishKeys)
 {
@@ -1947,11 +1923,6 @@ TEST(QmNewUiMenuBranches, FriendAddPopupExposesCreateCategoryAction)
 	EXPECT_NE(Source.find("Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext"), std::string::npos);
 }
 
-
-
-
-
-
 TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnects)
 {
 	const std::string Header = ReadTextFile("src/game/client/components/menus.h");
@@ -1969,7 +1940,6 @@ TEST(QmNewUiMenuBranches, FriendAutoFollowDistinguishesManualAndAutomaticConnect
 	EXPECT_NE(FriendNotifyBody.find("&g_Config.m_QmFriendAutoFollowDelay, 0, 30, \"s\""), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, ShortServerNamesKeepDisplayNameHighlightPath)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
@@ -1978,7 +1948,6 @@ TEST(QmNewUiMenuBranches, ShortServerNamesKeepDisplayNameHighlightPath)
 	EXPECT_NE(Source.find("PrintHighlighted(pDisplayServerName"), std::string::npos);
 	EXPECT_EQ(Source.find("!g_Config.m_QmShortServerNames && g_Config.m_BrFilterString"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, ClientSourceDoesNotUseChineseLocalizeKeys)
 {
@@ -2219,7 +2188,6 @@ TEST(QmNewUiMenuBranches, NameplatePreviewRebuildsTextContainerInsteadOfAppendin
 	EXPECT_NE(Body.find("QmNameplateTextEffectPadding"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 {
 	const std::string QmSource = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -2262,7 +2230,6 @@ TEST(QmNewUiMenuBranches, QmLaserSettingsMovedToAppearanceLaserTab)
 	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserFreezeOutlineColor, LaserFreezeInnerColor, LASERTYPE_FREEZE);"), std::string::npos);
 	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserDraggerOutlineColor, LaserDraggerInnerColor, LASERTYPE_DRAGGER);"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, SettingsCardUsesOneCanonicalSurfaceWithoutLegacyGlass)
 {
@@ -2314,7 +2281,6 @@ TEST(QmNewUiMenuBranches, EditBoxesActivateFromTheirConfiguredHitRect)
 	EXPECT_EQ(Body.find("else if(HotItem() == pLineInput)"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
@@ -2322,7 +2288,7 @@ TEST(QmNewUiMenuBranches, GraphicsFsaaSelectionDefersBackendReconfigure)
 	ASSERT_FALSE(Body.empty());
 
 	EXPECT_NE(Body.find("static constexpr int s_aFsaaSamples[] = {0, 2, 4, 8, 16, 32, 64};"), std::string::npos);
-	EXPECT_NE(Body.find("g_Config.m_GfxFsaaSamples = s_aFsaaSamples[FsaaSampleIndex];"), std::string::npos);
+	EXPECT_NE(Source.find("g_Config.m_GfxFsaaSamples = s_aFsaaSamples[NewValue];"), std::string::npos);
 	EXPECT_NE(Body.find("CheckSettings = true;"), std::string::npos);
 	EXPECT_EQ(Body.find("Graphics()->SetMultiSampling"), std::string::npos);
 	EXPECT_NE(Body.find("m_NeedRestartGraphics = !(s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples"), std::string::npos);
@@ -2570,7 +2536,6 @@ TEST(QmNewUiMenuBranches, SettingsCardDeckResetsStateWhenDefinitionViewChanges)
 	EXPECT_NE(SettingsDeck.find("m_ProjectionCache = {};"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, TClientSettingsCardsUseSharedQmCardStyle)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");
@@ -2718,7 +2683,6 @@ TEST(QmNewUiMenuBranches, DDNetSettingsPageUsesSharedQmCards)
 	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(130.0f, &Demo, &MainView);"), std::string::npos);
 	EXPECT_EQ(RenderSettingsDDNet.find("MainView.HSplitTop(GameplayHeight, &Gameplay, &MainView);"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, SettingsDisplayCycleUpdatesAfterTabInputBeforePageRender)
 {
@@ -3037,7 +3001,6 @@ TEST(QmNewUiMenuBranches, TClientProfilesAndStatusBarClampUiIndices)
 	EXPECT_NE(RenderSettingsTClientStatusBar.find("s_SelectedItem < (int)GameClient()->m_StatusBar.m_StatusBarItems.size()"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, BackgroundMapPickerUsesMapsRootAndSupportedFiles)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
@@ -3063,7 +3026,6 @@ TEST(QmNewUiMenuBranches, EditorSaveFileDialogKeepsFilenameInputInControl)
 	EXPECT_NE(OnRender.find("const bool SyncFilenameInput = !m_SaveAction || (ListChoseItem && m_SelectedFileIndex >= 0);"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, KcpLogUsesBoundedFormatting)
 {
 	const std::string Source = ReadTextFile("src/engine/external/kcp/ikcp.c");
@@ -3085,9 +3047,6 @@ TEST(QmNewUiMenuBranches, DisplayChangedDoesNotUseDisplayUnionData)
 	EXPECT_NE(Body.find("Event.window.data1"), std::string::npos);
 	EXPECT_NE(Body.find("Graphics()->SwitchWindowScreen(DisplayIndex, false);"), std::string::npos);
 }
-
-
-
 
 TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
 {
@@ -3129,7 +3088,6 @@ TEST(QmNewUiMenuBranches, OpenGLSelectionUsesRuntimeContextDetection)
 	EXPECT_TRUE(ShouldSyncActualOpenGLVersion(EBackendType::BACKEND_TYPE_OPENGL_ES, {3, 0, 0}, {3, 2, 0}));
 	EXPECT_FALSE(ShouldSyncActualOpenGLVersion(EBackendType::BACKEND_TYPE_OPENGL_ES, {1, 0, 0}, {3, 2, 0}));
 }
-
 
 TEST(QmNewUiMenuBranches, GraphicsCurrentModeLabelSanitizesScaleAndAspectRatio)
 {
@@ -3202,9 +3160,6 @@ TEST(QmNewUiMenuBranches, TClientQueuesAspectRefreshFromSnapshots)
 	EXPECT_NE(UpdateBody.find("SetForcedAspect();"), std::string::npos);
 }
 
-
-
-
 TEST(QmNewUiMenuBranches, SettingsDropdownWrapperAndNestedListsKeepSharedVisualAndScrollContracts)
 {
 	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
@@ -3244,7 +3199,6 @@ TEST(QmNewUiMenuBranches, CallVoteSearchSupportsIndependentExclusion)
 	EXPECT_NE(RenderControl.find("const float FilterWidth = std::min(220.0f, std::max(1.0f, (Bottom.w - 5.0f - MapSortWidth - MapSortGap) * 0.5f));"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuBranches, IngameFavoriteMapsUsesSharedBookmarkIcon)
 {
 	const std::string Ingame = FunctionBody(ReadTextFile("src/game/client/components/menus_ingame.cpp"), "void CMenus::RenderInGameNetwork(CUIRect MainView)");
@@ -3266,7 +3220,6 @@ TEST(QmNewUiMenuBranches, TeePresetListUsesTheSameRowSpacingAsItsMeasuredViewpor
 	EXPECT_NE(Settings.find("s_PresetListBox.DoAutoSpacing(PresetRowSpacing);"), std::string::npos);
 	EXPECT_NE(Settings.find("s_PresetListBox.DoNextItem(&s_vPresetItemIds[i], ActivePresetIndex == (int)i, PresetRowSpacing)"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, GeneralStandardPageUsesUnifiedSettingsStack)
 {
@@ -3739,32 +3692,36 @@ TEST(QmNewUiMenuBranches, ShutdownReleasesUiResourcesBeforeRendererProviders)
 	EXPECT_LT(ComponentsShutdown, UiShutdownCall);
 }
 
-
-
 TEST(QmNewUiMenuBranches, GraphicsIconCardSupportsDynamicCustomColorAndFourWeights)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings.cpp");
 	const std::string Graphics = FunctionBody(Source, "void CMenus::RenderSettingsGraphics(CUIRect MainView)");
 	ASSERT_FALSE(Graphics.empty());
 	EXPECT_NE(Graphics.find("s_aGraphicsIconColorButtons[4]"), std::string::npos);
-	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[6]"), std::string::npos);
+	EXPECT_NE(Graphics.find("s_aGraphicsIconWeightButtons[5]"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Custom\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Rainbow\")"), std::string::npos);
-	EXPECT_NE(Graphics.find("Localize(\"Thin\")"), std::string::npos);
+	// Thin 未随包字体，设置页不再提供该样式。
+	EXPECT_EQ(Graphics.find("Localize(\"Thin\")"), std::string::npos);
 	EXPECT_NE(Graphics.find("Localize(\"Fill\")"), std::string::npos);
-	EXPECT_NE(Graphics.find("static constexpr int s_aIconWeightValues[] = {2, 0, 1, 3, 4, 5};"), std::string::npos);
+	// 图标风格分段控件：索引 -> 配置值表必须唯一一份、由绘制与点击路径共用。
+	// 历史上点击路径残留了含 Thin 的 6 项旧表，导致点击整体错位一位。
+	EXPECT_NE(Source.find("constexpr int s_aIconWeightValues[] = {4, 0, 1, 3, 5};"), std::string::npos);
+	EXPECT_EQ(Source.find("{2, 0, 1, 3, 4, 5}"), std::string::npos);
+	EXPECT_NE(Source.find("QmIconWeightSegmentIndex(g_Config.m_QmUiIconWeight)"), std::string::npos);
+	EXPECT_NE(Source.find("const int NewWeight = s_aIconWeightValues[NewValue];"), std::string::npos);
 	EXPECT_NE(Graphics.find("DoLine_ColorPicker(&s_GraphicsIconCustomColorResetId"), std::string::npos);
-	EXPECT_NE(Graphics.find("vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3);"), std::string::npos);
+	EXPECT_NE(Graphics.find("vCards.back().m_MeasureRevision = static_cast<uint64_t>(g_Config.m_QmUiIconColor == 3) |"), std::string::npos);
 	EXPECT_NE(Graphics.find("vCards.back().m_PreLayoutInput = [this, GraphicsMetrics]"), std::string::npos);
-	EXPECT_NE(Graphics.find("return ResolveSettingsContentFlowHeight(GraphicsMetrics, g_Config.m_QmUiIconColor == 3"), std::string::npos);
+	EXPECT_NE(Graphics.find("g_Config.m_QmUiIconColor == 3 && NormalizeQmIconWeight"), std::string::npos);
+	EXPECT_NE(Graphics.find("g_Config.m_QmUiIconColor == 3 || NormalizeQmIconWeight"), std::string::npos);
 	EXPECT_NE(Graphics.find("std::initializer_list<float>{GraphicsMetrics.m_LineHeight, GraphicsMetrics.m_ButtonHeight, GraphicsMetrics.m_LineHeight}"), std::string::npos);
 
 	const std::string Config = ReadTextFile("src/engine/shared/config_variables_qmclient.h");
 	EXPECT_NE(Config.find("MACRO_CONFIG_COL(QmUiIconCustomColor, qm_ui_icon_custom_color"), std::string::npos);
 	EXPECT_NE(Config.find("Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow"), std::string::npos);
-	EXPECT_NE(Config.find("Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone"), std::string::npos);
+	EXPECT_NE(Config.find("MACRO_CONFIG_COL(QmUiIconDuotoneSecondaryColor, qm_ui_icon_duotone_secondary_color"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuBranches, OrdinaryUiRoundedSurfacesUseSharedPath)
 {
@@ -3898,7 +3855,6 @@ TEST(QmUiScale, VirtualHeightUsesClampedPercentage)
 	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(0), 1200.0f);
 	EXPECT_FLOAT_EQ(QmUiVirtualScreenHeight(300), 300.0f);
 }
-
 
 TEST(QmUiScale, CenteredPopupMarginKeepsUsableContentAtTwoHundredPercent)
 {

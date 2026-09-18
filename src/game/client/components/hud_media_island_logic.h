@@ -828,6 +828,11 @@ struct SHudMediaIslandSpectatorIconPose
 	float m_CountOffsetX = -QmHudMediaIslandScaled(3.0f);
 };
 
+// 观战眼睛的睁眼动画**刻意**使用各向异性缩放（纵向压扁 0.44 → 1.0 展开），
+// 因此显式豁免「图标等比绘制」契约：这是全工程唯一一处允许非等比缩放的图标动画。
+// 静止态 X/Y 缩放均为 1.0，所以静止时仍按 1:1 绘制。
+inline constexpr bool QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT = false;
+
 inline float QmHudAdvanceMediaIslandSpectatorIconProgress(float Current, float DeltaSeconds, int MotionLevel)
 {
 	Current = std::clamp(Current, 0.0f, 1.0f);

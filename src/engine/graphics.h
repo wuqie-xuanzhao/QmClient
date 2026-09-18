@@ -538,6 +538,7 @@ public:
 		vec4 m_Rect{};
 		vec4 m_UvRect{};
 		ColorRGBA m_Color{};
+		ColorRGBA m_SecondaryColor{1.0f, 1.0f, 1.0f, 1.0f};
 		float m_PxRange = 0.0f;
 		float m_AtlasWidth = 0.0f;
 		float m_AtlasHeight = 0.0f;

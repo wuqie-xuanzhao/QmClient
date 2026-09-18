@@ -108,8 +108,13 @@ TEST(QmNewUiMenuRenderBrowserContract, BrowserSearchUsesSharedIconAndExcludeKeep
 
 	ASSERT_FALSE(Browser.empty());
 	EXPECT_NE(Browser.find("ui_widget::InputField(ServerBrowserSearchCtx, &s_FilterInput, QuickSearch, SearchOptions)"), std::string::npos);
+	// 两个标签都不得带图标：图标只出现在输入框内部。
 	EXPECT_EQ(Browser.find("Ui()->DoLabel(&QuickSearch, FONT_ICON_MAGNIFYING_GLASS"), std::string::npos);
-	EXPECT_NE(Browser.find("Ui()->DoLabel_QmIcon(&QuickExclude, EQmIcon::BAN, FONT_ICON_BAN"), std::string::npos);
+	EXPECT_EQ(Browser.find("DoLabel_QmIcon(&QuickExclude"), std::string::npos);
+	// 排除框保留自己的图标语义（BAN，而非放大镜）与「排除」占位符。
+	EXPECT_NE(Browser.find("ExcludeOptions.m_pLeadingIcon = FONT_ICON_BAN"), std::string::npos);
+	EXPECT_NE(Browser.find("ExcludeOptions.m_LeadingQmIcon = static_cast<int>(EQmIcon::BAN)"), std::string::npos);
+	EXPECT_NE(Browser.find("ExcludeOptions.m_pPlaceholder = Localize(\"Exclude\")"), std::string::npos);
 	EXPECT_NE(Browser.find("DoToolTip(&s_ExcludeInput, &QuickExclude"), std::string::npos);
 }
 

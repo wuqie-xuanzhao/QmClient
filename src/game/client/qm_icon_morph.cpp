@@ -17,14 +17,11 @@ namespace
 
 	const SQmIconMorphPlan *PlanForWeight(const int Weight)
 	{
-		switch(std::clamp(Weight, 0, 3))
-		{
-		case 0: return &s_EyeMorphPlan_regular;
-		case 1: return &s_EyeMorphPlan_bold;
-		case 2: return &s_EyeMorphPlan_thin;
-		case 3: return &s_EyeMorphPlan_fill;
-		default: return nullptr;
-		}
+		// 只有 Bold 字重有运行时的样例数据（默认 UI 字重，由随包 Phosphor-Bold.ttf
+		// 生成）；其余字重返回 nullptr，调用方保留 atlas/MSDF/字形回退。
+		if(Weight == 1)
+			return &s_EyeMorphPlan_bold;
+		return nullptr;
 	}
 
 	vec2 ResolvePathPointUnclamped(const SQmIconMorphPathData &Path, const int PointIndex, const float Progress)
@@ -62,9 +59,6 @@ const SQmIconMorphPlan *QmEyeMorphPlanForWeight(const int Weight)
 
 bool RenderQmEyeMorph(IGraphics *pGraphics, const int Weight, const CUIRect &Rect, const ColorRGBA &Color, const float Progress)
 {
-	// 首个样例固定使用当前默认的 Bold 路径；其他字重继续使用原 atlas/MSDF/glyph 回退。
-	if(Weight != 1)
-		return false;
 	const SQmIconMorphPlan *pPlan = PlanForWeight(Weight);
 	if(pGraphics == nullptr || pPlan == nullptr || pPlan->m_pSurfaces == nullptr || pPlan->m_NumSurfaces <= 0 || Rect.w <= 0.0f || Rect.h <= 0.0f || Color.a <= 0.0f)
 		return false;

@@ -66,14 +66,12 @@ inline uint32_t QmNameplateMsdfDecodeUtf8(const char *&p)
 
 // 返回当前已验收字体对应的图集 profile。未知字体必须返回 nullptr。
 // profile 名称同时作为 data/qmclient/nameplate_msdf/profiles/ 下的 manifest 文件名。
+// CJK 字体（Noto Sans SC / Glow Sans J 等）不映射任何 profile：MTSDF 名牌只做
+// 英文与图标，选这些字体的玩家整条名牌走 FreeType（与图集覆盖取舍一致）。
 inline const char *QmNameplateMsdfFontProfile(const char *pConfiguredFont)
 {
 	if(pConfiguredFont == nullptr || pConfiguredFont[0] == '\0')
 		return nullptr;
-	if(str_comp_nocase(pConfiguredFont, "Noto Sans SC") == 0 || str_comp_nocase(pConfiguredFont, "NotoSansSC") == 0 ||
-		str_comp_nocase(pConfiguredFont, "Glow Sans J Compressed Book") == 0 || str_comp_nocase(pConfiguredFont, "Glow Sans J") == 0 ||
-		str_comp_nocase(pConfiguredFont, "GlowSansJ-Compressed-Book") == 0)
-		return "noto_glow_cjk";
 	struct SFontProfile
 	{
 		const char *m_pFamily;

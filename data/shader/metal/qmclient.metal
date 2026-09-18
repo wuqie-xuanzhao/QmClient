@@ -79,8 +79,15 @@ float QmClientMedian(float3 Value)
 	return max(min(Value.r, Value.g), min(max(Value.r, Value.g), Value.b));
 }
 
-fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant float4 &MsdfParams [[buffer(1)]])
+struct QmClientMsdfParams
 {
+	float4 m_Params;
+	float4 m_SecondaryColor;
+};
+
+fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in]], texture2d<float> Texture [[texture(0)]], sampler Sampler [[sampler(0)]], constant QmClientMsdfParams &Msdf [[buffer(1)]])
+{
+	const float4 MsdfParams = Msdf.m_Params;
 	if(MsdfParams.x < 0.0)
 	{
 		const float InnerRadius = -MsdfParams.x;
@@ -137,8 +144,7 @@ fragment float4 qmclient_textured_msdf_fragment(SMetalVertexOut Input [[stage_in
 		// Duotone atlas：RGB 与 Alpha 是同一 px_range 下的两张距离场（primary / secondary），
 		// 因此复用 ScreenPxRange 解码 secondary 覆盖，缩放到任意尺寸都保持锐利边缘。
 		const float SecondaryCoverage = clamp((Sample.a - 0.5) * ScreenPxRange + 0.5, 0.0, 1.0);
-		// secondary 配色目前由主 tint 向白偏移推导；真正的双色需要独立的 secondary 颜色输入。
-		const float3 SecondaryColor = mix(Input.m_Color.rgb, float3(1.0), 0.55);
+		const float3 SecondaryColor = Msdf.m_SecondaryColor.rgb;
 		const float Alpha = max(Opacity, SecondaryCoverage);
 		const float3 Color = mix(SecondaryColor, Input.m_Color.rgb, Opacity);
 		return float4(Color, Input.m_Color.a * Alpha);

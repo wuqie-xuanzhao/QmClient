@@ -36,6 +36,7 @@ MACRO_CONFIG_COL(QmUiCardColor, qm_ui_card_color, 0x000000, CFGFLAG_CLIENT | CFG
 MACRO_CONFIG_INT(QmUiCardOpacity, qm_ui_card_opacity, 30, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Settings card background transparency")
 MACRO_CONFIG_INT(QmUiIconColor, qm_ui_icon_color, 1, 1, 4, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow")
 MACRO_CONFIG_COL(QmUiIconCustomColor, qm_ui_icon_custom_color, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI custom icon color")
+MACRO_CONFIG_COL(QmUiIconDuotoneSecondaryColor, qm_ui_icon_duotone_secondary_color, 0xFFFFFF, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI duotone secondary icon color")
 MACRO_CONFIG_INT(QmUiIconWeight, qm_ui_icon_weight, 1, 0, 5, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone")
 MACRO_CONFIG_INT(QmUiColorInterpolation, qm_ui_color_interpolation, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform")
 MACRO_CONFIG_INT(QmRectCornerSegments, qm_rect_corner_segments, 16, 8, 48, CFGFLAG_CLIENT | CFGFLAG_SAVE, "UI rounded corner segments (even numbers recommended)")

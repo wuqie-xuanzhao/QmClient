@@ -63,6 +63,15 @@ int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActi
 	return CurrentValue;
 }
 
+int ResetQmConfigOverride(SQmFocusConfigOverrideState &State, int CurrentValue, int OverrideValue, bool &Changed)
+{
+	Changed = State.m_WasActive && State.m_AutoChangedValue && CurrentValue == OverrideValue;
+	if(Changed)
+		CurrentValue = State.m_SavedValue;
+	State = {};
+	return CurrentValue;
+}
+
 int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActive, bool AutoToggle, int CurrentValue, bool &Changed)
 {
 	// Gores 只在进入时临时开启快速输入；离开或取消联动时恢复自动改动前的值。

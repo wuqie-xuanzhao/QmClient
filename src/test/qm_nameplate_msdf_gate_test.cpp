@@ -10,9 +10,9 @@
 TEST(QmNameplateMsdfGate, FontMatchesAtlasFamilies)
 {
 	EXPECT_STREQ(QmNameplateMsdfFontProfile("DejaVu Sans"), "dejavu");
-	// 只有随包且已生成 profile 的字体命中；其余字体继续走 FreeType。
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Noto Sans SC"));
-	EXPECT_TRUE(QmNameplateMsdfFontMatchesAtlas("Glow Sans J Compressed Book"));
+	// MTSDF 名牌只做英文与图标：CJK 字体不映射任何 profile，整条名牌走 FreeType。
+	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Noto Sans SC"));
+	EXPECT_FALSE(QmNameplateMsdfFontMatchesAtlas("Glow Sans J Compressed Book"));
 	EXPECT_EQ(QmNameplateMsdfFontProfile("NotoSansCJKsc-Thin"), nullptr);
 }
 

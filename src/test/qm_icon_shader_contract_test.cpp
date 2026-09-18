@@ -17,6 +17,8 @@ TEST(QmIconShaderContract, UsesDerivativeAntialiasingOnBothBackends)
 		EXPECT_NE(Source.find("RequestedOutline > 0.0"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("UseTrueSdf"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("UseSecondarySdf"), std::string::npos) << pPath;
+		EXPECT_NE(Source.find("SecondaryColor"), std::string::npos) << pPath;
+		EXPECT_EQ(Source.find("mix(Tint.rgb, vec3(1.0), 0.55)"), std::string::npos) << pPath;
 		EXPECT_NE(Source.find("FillCoverage = clamp(SignedDistance * ScreenPxRange + 0.5"), std::string::npos) << pPath;
 		// MTSDF：RGB median 负责填充，Alpha 真 SDF 负责描边外缘。
 		EXPECT_NE(Source.find("vec4 Sample = texture(gTextureSampler, TexCoord)"), std::string::npos) << pPath;
@@ -76,6 +78,8 @@ TEST(QmIconShaderContract, MetalMsdfMatchesOpenGlAndVulkanSemantics)
 	EXPECT_NE(Metal.find("const float SignedDistance = UseTrueSdf ? TrueSignedDistance : QmClientMedian(Sample.rgb) - 0.5;"), std::string::npos);
 	EXPECT_NE(Metal.find("const float TrueSignedDistance = Sample.a - 0.5;"), std::string::npos);
 	EXPECT_NE(Metal.find("const bool UseSecondarySdf"), std::string::npos);
+	EXPECT_NE(Metal.find("m_SecondaryColor"), std::string::npos);
+	EXPECT_EQ(Metal.find("mix(Input.m_Color.rgb, float3(1.0), 0.55)"), std::string::npos);
 	EXPECT_NE(Metal.find("const float2 ScreenTexSize = 1.0 / fwidth(Input.m_TexCoord);"), std::string::npos);
 	EXPECT_NE(Metal.find("const float ScreenPxRange = max(0.5 * dot(UnitRange, ScreenTexSize), 1.0);"), std::string::npos);
 	EXPECT_NE(Metal.find("if(RequestedOutline > 0.0)"), std::string::npos);
@@ -86,5 +90,5 @@ TEST(QmIconShaderContract, MetalMsdfMatchesOpenGlAndVulkanSemantics)
 
 	// 入口必须绑定专用 MSDF 管线，并在片段阶段接收 MSDF 参数缓冲。
 	EXPECT_NE(Metal.find("fragment float4 qmclient_textured_msdf_fragment("), std::string::npos);
-	EXPECT_NE(Metal.find("constant float4 &MsdfParams [[buffer(1)]]"), std::string::npos);
+	EXPECT_NE(Metal.find("constant QmClientMsdfParams &Msdf [[buffer(1)]]"), std::string::npos);
 }

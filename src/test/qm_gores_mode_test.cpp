@@ -142,6 +142,30 @@ TEST(QmGoresMode, AutoEnableAndFastInputLinkComposeWithoutLockingTheUserToggle)
 	EXPECT_FALSE(FastInputChanged);
 }
 
+TEST(QmGoresMode, DisconnectResetRestoresAutomaticValuesAndClearsState)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
+
+	EXPECT_EQ(ResetQmConfigOverride(State, 1, 1, Changed), 0);
+	EXPECT_TRUE(Changed);
+	EXPECT_FALSE(State.m_WasActive);
+	EXPECT_FALSE(State.m_AutoChangedValue);
+}
+
+TEST(QmGoresMode, DisconnectResetDoesNotOverwriteUserValue)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmGoresLinkedConfig(State, true, true, 0, Changed), 1);
+
+	EXPECT_EQ(ResetQmConfigOverride(State, 0, 1, Changed), 0);
+	EXPECT_FALSE(Changed);
+	EXPECT_FALSE(State.m_WasActive);
+	EXPECT_FALSE(State.m_AutoChangedValue);
+}
+
 TEST(QmGoresMode, DummyHammerIsClearedOnceOnGoresEntry)
 {
 	// 进入 Gores 模式的那一帧按选项一次性关闭分身锤；期间帧不接管，用户改值即释放接管。

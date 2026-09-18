@@ -274,6 +274,7 @@ public:
 			SCommand(CMD_RENDER_TEXTURED_MSDF) {}
 		SState m_State;
 		vec4 m_MsdfParams{};
+		vec4 m_MsdfSecondaryColor{1.0f, 1.0f, 1.0f, 1.0f};
 		EPrimitiveType m_PrimType = EPrimitiveType::QUADS;
 		unsigned m_PrimCount = 1;
 		SVertex *m_pVertices = nullptr;

@@ -585,9 +585,9 @@ protected:
 		const uint32_t MissingCodepoint = QmNameplateMsdf().FindUnsupportedCodepoint(m_aMsdfText);
 		if(MissingCodepoint == 0)
 			return true;
-		// 图集（含 noto_glow_cjk 兜底页：汉字/假名/谚文/泰文/符号）覆盖不到就整条交回
-		// FreeType。MTSDF 侧已把随包字体能覆盖的脚本尽量补齐，剩下的只有 FreeType
-		// 才有字形的罕见码点；旧实现按区段白名单判断，装饰符号会被留在 MSDF 路径
+		// 图集只做英文（拉丁）与图标（符号/emoji）；汉字/假名/谚文等脚本一律不在
+		// 图集内，覆盖不到就整条交回 FreeType。MTSDF 侧已把随包字体能覆盖的符号
+		// 尽量补齐；旧实现按区段白名单判断，装饰符号会被留在 MSDF 路径
 		// 画成 '?'，既丢信息又让用户误以为「渲染坏了」。
 		LogNameplateMsdfFallbackOnce(MissingCodepoint, m_aMsdfText);
 		return false;

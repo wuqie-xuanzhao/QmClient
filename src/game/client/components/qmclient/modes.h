@@ -122,6 +122,8 @@ enum EQmNameplateTextDemoMode
 };
 
 int ApplyQmFocusConfigOverride(SQmFocusConfigOverrideState &State, bool HideActive, int CurrentValue, int HiddenValue, bool &Changed);
+// 断线/退出时清理一次性接管：只恢复仍保持自动值的配置，并始终清空接管状态。
+int ResetQmConfigOverride(SQmFocusConfigOverrideState &State, int CurrentValue, int OverrideValue, bool &Changed);
 int ApplyQmGoresAutoEnableConfig(SQmFocusConfigOverrideState &State, bool GameModeEntered, bool GameModeLeft, bool AutoEnable, int CurrentValue, bool &Changed);
 int ApplyQmGoresLinkedConfig(SQmFocusConfigOverrideState &State, bool GoresActive, bool AutoToggle, int CurrentValue, bool &Changed);
 // Gores 模式开启的那一帧把分身锤关掉一次（由 qm_gores_disable_dummy_hammer 控制），

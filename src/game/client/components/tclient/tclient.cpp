@@ -4605,15 +4605,11 @@ void CTClient::ApplyGoresFastInputLink()
 
 void CTClient::ResetGoresConfigOverrides()
 {
-	const auto RestoreOverride = [](SQmFocusConfigOverrideState &State, int &ConfigValue, int OverrideValue) {
-		if(State.m_WasActive && State.m_AutoChangedValue && ConfigValue == OverrideValue)
-			ConfigValue = State.m_SavedValue;
-		State = {};
-	};
-	RestoreOverride(m_GoresAutoEnableOverride, g_Config.m_QmGores, 1);
-	RestoreOverride(m_GoresFastInputOverride, g_Config.m_TcFastInput, 1);
-	RestoreOverride(m_GoresFastInputOthersOverride, g_Config.m_TcFastInputOthers, 1);
-	RestoreOverride(m_GoresDummyHammerOverride, g_Config.m_ClDummyHammer, 0);
+	bool Changed = false;
+	g_Config.m_QmGores = ResetQmConfigOverride(m_GoresAutoEnableOverride, g_Config.m_QmGores, 1, Changed);
+	g_Config.m_TcFastInput = ResetQmConfigOverride(m_GoresFastInputOverride, g_Config.m_TcFastInput, 1, Changed);
+	g_Config.m_TcFastInputOthers = ResetQmConfigOverride(m_GoresFastInputOthersOverride, g_Config.m_TcFastInputOthers, 1, Changed);
+	g_Config.m_ClDummyHammer = ResetQmConfigOverride(m_GoresDummyHammerOverride, g_Config.m_ClDummyHammer, 0, Changed);
 	// 恢复之后必须解除写盘覆盖，否则这些配置项会一直按接管前的旧值保存。
 	ConfigManager()->SetSaveValueOverride("qm_gores", false);
 	ConfigManager()->SetSaveValueOverride("tc_fast_input", false);

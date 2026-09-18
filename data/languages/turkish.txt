@@ -8303,6 +8303,9 @@ Qm
 Qm UI custom icon color
 == Qm arayüzü simgesi özel rengi
 
+Qm UI duotone secondary icon color
+== Qm arayüzü Duotone simgelerinin ikincil rengi
+
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Qm arayüz simgesi rengi: 1=Beyaz, 2=Siyah, 3=Özel, 4=Gökkuşağı
 
@@ -11822,9 +11825,6 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == Düzenleyicide kaydedilmemiş bir harita var, kaydetmek isteyebilirsiniz.
 
-Thin
-== İnce
-
 Thinking mode requires a reasoning model
 == Düşünme modu bir akıl yürütme modeli gerektirir
 
@@ -12307,6 +12307,9 @@ UI icon color
 
 UI icon custom color
 == Özel arayüz simgesi rengi
+
+UI icon duotone secondary color
+== Duotone arayüz simgelerinin ikincil rengi
 
 UI icon style
 == Arayüz simgesi stili

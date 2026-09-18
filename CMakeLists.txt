@@ -184,7 +184,7 @@ option(QM_DISABLE_PARALLEL_COMPILE "Disable /MP for compiler warnings-sensitive 
 option(QM_MSVC_USE_EMBEDDED_DEBUG_INFO "Use embedded MSVC debug information instead of per-target PDB files" OFF)
 option(QM_MSVC_ANALYZE "Enable MSVC /analyze static analysis (Windows only)" OFF)
 option(QM_STRICT_WARNINGS "Treat compiler warnings as errors" OFF)
-option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor PNG icon atlases from SVG sources" ON)
+option(QM_BUILD_ICON_ATLAS "Build QmClient Phosphor MTSDF icon atlases from bundled fonts" ON)
 
 if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
   add_subdirectory(vendor/minhook EXCLUDE_FROM_ALL)
@@ -1904,54 +1904,16 @@ set(EXPECTED_DATA
   languages/turkish.txt
   languages/ukrainian.txt
   qmclient/icons/README.md
-  qmclient/icons/qm_icons_bold_1x.json
-  qmclient/icons/qm_icons_bold_1x.png
-  qmclient/icons/qm_icons_bold_2x.json
-  qmclient/icons/qm_icons_bold_2x.png
-  qmclient/icons/qm_icons_bold_4x.json
-  qmclient/icons/qm_icons_bold_4x.png
   qmclient/icons/qm_icons_bold_msdf.json
   qmclient/icons/qm_icons_bold_msdf.png
-  qmclient/icons/qm_icons_fill_1x.json
-  qmclient/icons/qm_icons_fill_1x.png
-  qmclient/icons/qm_icons_fill_2x.json
-  qmclient/icons/qm_icons_fill_2x.png
-  qmclient/icons/qm_icons_fill_4x.json
-  qmclient/icons/qm_icons_fill_4x.png
   qmclient/icons/qm_icons_fill_msdf.json
   qmclient/icons/qm_icons_fill_msdf.png
-  qmclient/icons/qm_icons_light_1x.json
-  qmclient/icons/qm_icons_light_1x.png
-  qmclient/icons/qm_icons_light_2x.json
-  qmclient/icons/qm_icons_light_2x.png
-  qmclient/icons/qm_icons_light_4x.json
-  qmclient/icons/qm_icons_light_4x.png
   qmclient/icons/qm_icons_light_msdf.json
   qmclient/icons/qm_icons_light_msdf.png
-  qmclient/icons/qm_icons_duotone_1x.json
-  qmclient/icons/qm_icons_duotone_1x.png
-  qmclient/icons/qm_icons_duotone_2x.json
-  qmclient/icons/qm_icons_duotone_2x.png
-  qmclient/icons/qm_icons_duotone_4x.json
-  qmclient/icons/qm_icons_duotone_4x.png
   qmclient/icons/qm_icons_duotone_msdf.json
   qmclient/icons/qm_icons_duotone_msdf.png
-  qmclient/icons/qm_icons_regular_1x.json
-  qmclient/icons/qm_icons_regular_1x.png
-  qmclient/icons/qm_icons_regular_2x.json
-  qmclient/icons/qm_icons_regular_2x.png
-  qmclient/icons/qm_icons_regular_4x.json
-  qmclient/icons/qm_icons_regular_4x.png
   qmclient/icons/qm_icons_regular_msdf.json
   qmclient/icons/qm_icons_regular_msdf.png
-  qmclient/icons/qm_icons_thin_1x.json
-  qmclient/icons/qm_icons_thin_1x.png
-  qmclient/icons/qm_icons_thin_2x.json
-  qmclient/icons/qm_icons_thin_2x.png
-  qmclient/icons/qm_icons_thin_4x.json
-  qmclient/icons/qm_icons_thin_4x.png
-  qmclient/icons/qm_icons_thin_msdf.json
-  qmclient/icons/qm_icons_thin_msdf.png
   mapres/basic_freeze.png
   mapres/bg_cloud1.png
   mapres/bg_cloud2.png
@@ -2501,6 +2463,25 @@ add_custom_target(generate_content_types
     src/generated/data_types.h
 )
 
+# 眼睛 morph 的采样几何数据：从随包 Phosphor-Bold.ttf 提取字形轮廓生成，
+# 被 src/game/client/qm_icon_morph.cpp 直接包含（见 qm_build_icon_morph.py）。
+set(QM_ICON_MORPH_GENERATED ${PROJECT_BINARY_DIR}/src/generated/qm_icon_morph_generated.inc)
+add_custom_command(OUTPUT ${QM_ICON_MORPH_GENERATED}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/src/generated
+  COMMAND ${Python3_EXECUTABLE}
+    qmclient_scripts/qm_build_icon_morph.py
+    --fonts-dir data/qmclient/fonts/Phosphor
+    --codepoints datasrc/qm_icons/phosphor.codepoints
+    --output ${QM_ICON_MORPH_GENERATED}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  DEPENDS
+    qmclient_scripts/qm_build_icon_morph.py
+    datasrc/qm_icons/phosphor.codepoints
+    data/qmclient/fonts/Phosphor/Phosphor-Bold.ttf
+  COMMENT "Building QmClient eye path morph data"
+)
+add_custom_target(qm-icon-morph DEPENDS ${QM_ICON_MORPH_GENERATED})
+
 generate_source7("src/generated/protocol7.cpp" "network_source")
 generate_source7("src/generated/protocol7.h" "network_header")
 generate_source7("src/generated/client_data7.cpp" "client_content_source")
@@ -2523,157 +2504,32 @@ add_custom_command(OUTPUT "src/generated/wordlist.h"
     scripts/wordlist.py
 )
 
-file(GLOB QM_ICON_ATLAS_SVG_SOURCES
-  datasrc/qm_icons/phosphor_bold/*.svg
-  datasrc/qm_icons/phosphor_duotone/*.svg
-  datasrc/qm_icons/phosphor_fill/*.svg
-  datasrc/qm_icons/phosphor_light/*.svg
-  datasrc/qm_icons/phosphor_regular/*.svg
-  datasrc/qm_icons/phosphor_thin/*.svg
-  datasrc/qm_icons/tabler/*.svg
-)
-set(QM_ICON_MORPH_SVG_SOURCES
-  datasrc/qm_icons/phosphor_bold/icon-eye-off.svg
-  datasrc/qm_icons/phosphor_bold/icon-eye.svg
-  datasrc/qm_icons/phosphor_duotone/icon-eye-off.svg
-  datasrc/qm_icons/phosphor_duotone/icon-eye.svg
-  datasrc/qm_icons/phosphor_fill/icon-eye-off.svg
-  datasrc/qm_icons/phosphor_fill/icon-eye.svg
-  datasrc/qm_icons/phosphor_light/icon-eye-off.svg
-  datasrc/qm_icons/phosphor_light/icon-eye.svg
-  datasrc/qm_icons/phosphor_regular/icon-eye-off.svg
-  datasrc/qm_icons/phosphor_regular/icon-eye.svg
-  datasrc/qm_icons/phosphor_thin/icon-eye-off.svg
-  datasrc/qm_icons/phosphor_thin/icon-eye.svg
-)
-set(QM_ICON_MORPH_GENERATED ${PROJECT_BINARY_DIR}/src/generated/qm_icon_morph_generated.inc)
-add_custom_command(OUTPUT ${QM_ICON_MORPH_GENERATED}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/src/generated
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_morph.py
-    --source-root datasrc/qm_icons
-    --output ${QM_ICON_MORPH_GENERATED}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  DEPENDS
-    qmclient_scripts/qm_build_icon_atlas.py
-    qmclient_scripts/qm_build_icon_morph.py
-    ${QM_ICON_MORPH_SVG_SOURCES}
-  COMMENT "Building QmClient eye path morph data"
-)
-add_custom_target(qm-icon-morph DEPENDS ${QM_ICON_MORPH_GENERATED})
-if(TARGET sync_runtime_data)
-  add_dependencies(sync_runtime_data qm-icon-morph)
-endif()
-add_custom_target(qm-icon-atlas
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/phosphor_duotone
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_duotone
-    --sizes 1 2 4
-    --base-size 24
-    --padding 4
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/phosphor_light
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_light
-    --sizes 1 2 4
-    --base-size 24
-    --padding 4
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/phosphor_bold
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_bold
-    --sizes 1 2 4
-    --base-size 24
-    --padding 4
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/phosphor_fill
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_fill
-    --sizes 1 2 4
-    --base-size 24
-    --padding 4
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/phosphor_regular
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_regular
-    --sizes 1 2 4
-    --base-size 24
-    --padding 4
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_atlas.py
-    --source datasrc/qm_icons/phosphor_thin
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_thin
-    --sizes 1 2 4
-    --base-size 24
-    --padding 4
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  DEPENDS
-    qmclient_scripts/qm_build_icon_atlas.py
-    ${QM_ICON_ATLAS_SVG_SOURCES}
-  COMMENT "Building QmClient Phosphor icon PNG atlases"
-)
-
-# msdfgen 只用于资源制作。生成产物已提交，普通构建不依赖本机安装。
+# 图标源是随包 Phosphor TTF（全量字形）+ 官方码点映射；精选 SVG 子集已移除。
+# msdfgen / msdf-atlas-gen 只用于资源制作。生成产物已提交，普通构建不依赖本机安装。
+set(QM_ICON_MSDF_STYLES duotone light regular bold fill)
 add_custom_target(qm-icon-msdf-atlas
   COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_msdf.py
-    --source datasrc/qm_icons/phosphor_duotone
-    --source datasrc/qm_icons/tabler
+    qmclient_scripts/qm_build_icon_msdf_font.py
+    --tool cmake-build-official/bin/Release/msdf-atlas-gen.exe
+    --fonts-dir data/qmclient/fonts/Phosphor
+    --codepoints datasrc/qm_icons/phosphor.codepoints
     --output data/qmclient/icons
-    --atlas-name qm_icons_duotone
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_msdf.py
-    --source datasrc/qm_icons/phosphor_light
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_light
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_msdf.py
-    --source datasrc/qm_icons/phosphor_bold
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_bold
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_msdf.py
-    --source datasrc/qm_icons/phosphor_fill
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_fill
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_msdf.py
-    --source datasrc/qm_icons/phosphor_regular
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_regular
-  COMMAND ${Python3_EXECUTABLE}
-    qmclient_scripts/qm_build_icon_msdf.py
-    --source datasrc/qm_icons/phosphor_thin
-    --source datasrc/qm_icons/tabler
-    --output data/qmclient/icons
-    --atlas-name qm_icons_thin
+    --styles ${QM_ICON_MSDF_STYLES}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   DEPENDS
-    qmclient_scripts/qm_build_icon_msdf.py
-    ${QM_ICON_ATLAS_SVG_SOURCES}
-  COMMENT "Building QmClient Phosphor MSDF icon atlases"
+    qmclient_scripts/qm_build_icon_msdf_font.py
+    datasrc/qm_icons/phosphor.codepoints
+    data/qmclient/fonts/Phosphor/Phosphor-Regular.ttf
+    data/qmclient/fonts/Phosphor/Phosphor-Light.ttf
+    data/qmclient/fonts/Phosphor/Phosphor-Bold.ttf
+    data/qmclient/fonts/Phosphor/Phosphor-Fill.ttf
+    data/qmclient/fonts/Phosphor/Phosphor-Duotone.ttf
+  COMMENT "Building QmClient Phosphor MSDF icon atlases from bundled fonts"
 )
 
 if(QM_BUILD_ICON_ATLAS)
   if(TARGET sync_runtime_data)
-    add_dependencies(sync_runtime_data qm-icon-atlas)
+    add_dependencies(sync_runtime_data qm-icon-msdf-atlas)
   endif()
 endif()
 
@@ -3015,6 +2871,7 @@ add_library(engine-shared EXCLUDE_FROM_ALL OBJECT ${ENGINE_EXTERNAL} ${ENGINE_IN
 add_library(game-shared EXCLUDE_FROM_ALL OBJECT ${GAME_SHARED} ${GAME_GENERATED_SHARED})
 add_dependencies(engine-shared generate_protocol)
 add_dependencies(game-shared generate_protocol)
+add_dependencies(game-shared qm-icon-morph)
 if(TARGET_OS STREQUAL "ios")
   add_dependencies(game-shared generate_content_types)
 endif()
@@ -3823,7 +3680,9 @@ if(CLIENT)
     )
   endif()
   add_dependencies(game-client generate_content_types)
-  add_dependencies(game-client qm-icon-morph)
+# qm_icon_morph.cpp（game-client）直接包含生成的 morph 数据，必须等生成目标完成：
+# 只挂在 game-shared 上无法保证干净构建时对象先于 .inc 编译。
+add_dependencies(game-client qm-icon-morph)
   if(TARGET qm-nmt-hook64)
     add_dependencies(game-client qm-nmt-hook64 qm-nmt-helper qm-nmt-bootstrap)
     add_custom_command(TARGET game-client POST_BUILD

@@ -8303,6 +8303,9 @@ Qm
 Qm UI custom icon color
 == Qm 介面圖示自訂顏色
 
+Qm UI duotone secondary icon color
+== Qm 介面雙色調圖示次要顏色
+
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 == Qm 介面圖示顏色：1=白色，2=黑色，3=自訂，4=彩虹
 
@@ -11822,9 +11825,6 @@ There's an unsaved change in the touch controls editor, you might want to save i
 There's an unsaved map in the editor, you might want to save it.
 == 編輯器中有尚未保存的地圖，建議先保存。
 
-Thin
-== 細體
-
 Thinking mode requires a reasoning model
 == 啟用思考模式需要使用推理模型
 
@@ -12307,6 +12307,9 @@ UI icon color
 
 UI icon custom color
 == 介面圖示自訂顏色
+
+UI icon duotone secondary color
+== 介面雙色調圖示次要顏色
 
 UI icon style
 == 介面圖示樣式

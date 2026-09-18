@@ -71,7 +71,7 @@ class QmClientE2ERunnerTest(unittest.TestCase):
 			build_dir = Path(temp)
 			_write_fake_atlas(build_dir)
 			atlas = build_dir / "data" / "qmclient" / "nameplate_msdf"
-			(atlas / "profiles" / "nameplate_noto_glow_cjk.json").write_text(
+			(atlas / "profiles" / "nameplate_symbols.json").write_text(
 				json.dumps({"pages": ["qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.json"]}),
 				encoding="utf-8",
 			)
@@ -83,7 +83,7 @@ class QmClientE2ERunnerTest(unittest.TestCase):
 			build_dir = Path(temp)
 			_write_fake_atlas(build_dir)
 			atlas = build_dir / "data" / "qmclient" / "nameplate_msdf"
-			(atlas / "profiles" / "nameplate_noto_glow_cjk.json").write_text(
+			(atlas / "profiles" / "nameplate_symbols.json").write_text(
 				json.dumps({"pages": []}), encoding="utf-8"
 			)
 			self.assertEqual(_expected_nameplate_msdf_totals(SimpleNamespace(build_dir=build_dir)), (2, 3))
@@ -94,7 +94,7 @@ class QmClientE2ERunnerTest(unittest.TestCase):
 			build_dir = Path(temp)
 			_write_fake_atlas(build_dir)
 			atlas = build_dir / "data" / "qmclient" / "nameplate_msdf"
-			(atlas / "profiles" / "nameplate_noto_glow_cjk.json").write_text(
+			(atlas / "profiles" / "nameplate_symbols.json").write_text(
 				json.dumps({"pages": ["qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.json"]}),
 				encoding="utf-8",
 			)
@@ -111,7 +111,7 @@ class QmClientE2ERunnerTest(unittest.TestCase):
 			build_dir = Path(temp)
 			_write_fake_atlas(build_dir)
 			atlas = build_dir / "data" / "qmclient" / "nameplate_msdf"
-			(atlas / "profiles" / "nameplate_noto_glow_cjk.json").write_text(
+			(atlas / "profiles" / "nameplate_symbols.json").write_text(
 				json.dumps({"pages": ["qmclient/nameplate_msdf/nameplate_noto_glow_cn_00.json"]}),
 				encoding="utf-8",
 			)

@@ -25339,6 +25339,22 @@ turkish = "Qm arayüzü simgesi özel rengi"
 polish = "Niestandardowy kolor ikon interfejsu Qm"
 
 [[message]]
+key = "Qm UI duotone secondary icon color"
+[message.translations]
+simplified_chinese = "Qm 界面双色调图标次要颜色"
+traditional_chinese = "Qm 介面雙色調圖示次要顏色"
+japanese = "Qm UI デュオトーンアイコンの副色"
+korean = "Qm UI 듀오톤 아이콘 보조 색상"
+russian = "Вторичный цвет двухцветных значков Qm UI"
+german = "Sekundärfarbe der Duotone-Symbole der Qm-UI"
+spanish = "Color secundario de los iconos duotono de Qm UI"
+french = "Couleur secondaire des icônes Duotone de l'interface Qm"
+brazilian_portuguese = "Cor secundária dos ícones Duotone da interface Qm"
+portuguese = "Cor secundária dos ícones Duotone da interface Qm"
+turkish = "Qm arayüzü Duotone simgelerinin ikincil rengi"
+polish = "Drugi kolor ikonów Duotone interfejsu Qm"
+
+[[message]]
 key = "Enable client stutter diagnostics at startup"
 [message.translations]
 simplified_chinese = "启动时启用客户端卡顿诊断"

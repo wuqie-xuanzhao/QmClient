@@ -187,11 +187,13 @@ class CGLSLTexturedMsdfProgram : public CGLSLTWProgram
 {
 public:
 	CGLSLTexturedMsdfProgram() :
-		m_LocParams(-1)
+		m_LocParams(-1),
+		m_LocSecondaryColor(-1)
 	{
 	}
 
 	int m_LocParams;
+	int m_LocSecondaryColor;
 };
 
 class CGLSLGaussianBlurProgram : public CGLSLTWProgram

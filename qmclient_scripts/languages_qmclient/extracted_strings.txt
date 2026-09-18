@@ -2766,6 +2766,7 @@ Pyramid
 q = Connection quality
 Qm
 Qm UI custom icon color
+Qm UI duotone secondary icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
 qm_profile_queue: index must be between 1 and %d
@@ -3939,7 +3940,6 @@ There's a %s second delay between map-votes, please wait %s seconds.
 There's a %s second wait time between kick votes for each player please wait %s second(s)
 There's an unsaved change in the touch controls editor, you might want to save it.
 There's an unsaved map in the editor, you might want to save it.
-Thin
 Thinking mode requires a reasoning model
 This font has no bundled vector profile. Nameplates will use FreeType.
 This ID is not connected
@@ -4101,6 +4101,7 @@ UI color
 UI controller sens.
 UI icon color
 UI icon custom color
+UI icon duotone secondary color
 UI icon style
 UI motion level
 UI mouse sens.

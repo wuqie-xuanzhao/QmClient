@@ -1,5 +1,6 @@
 uniform sampler2D gTextureSampler;
 uniform vec4 gMsdfParams;
+uniform vec4 gMsdfSecondaryColor;
 
 noperspective in vec2 TexCoord;
 noperspective in vec4 Tint;
@@ -73,8 +74,7 @@ void main()
 		// Duotone atlas：RGB 与 Alpha 是同一 px_range 下的两张距离场（primary / secondary），
 		// 因此复用 ScreenPxRange 解码 secondary 覆盖，缩放到任意尺寸都保持锐利边缘。
 		const float SecondaryCoverage = clamp((Sample.a - 0.5) * ScreenPxRange + 0.5, 0.0, 1.0);
-		// secondary 配色目前由主 tint 向白偏移推导；真正的双色需要独立的 secondary 颜色输入。
-		const vec3 SecondaryColor = mix(Tint.rgb, vec3(1.0), 0.55);
+		const vec3 SecondaryColor = gMsdfSecondaryColor.rgb;
 		const float Alpha = max(Opacity, SecondaryCoverage);
 		const vec3 Color = mix(SecondaryColor, Tint.rgb, Opacity);
 		FragClr = vec4(Color, Tint.a * Alpha);

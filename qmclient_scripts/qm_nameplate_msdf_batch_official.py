@@ -34,13 +34,10 @@ RANGES = (
 )
 
 LATIN_RANGES = ((0x20, 0x24F), (0x370, 0x3FF), (0x400, 0x52F), (0x2000, 0x27BF))
-# 注意：CJK_RANGES 含 2 万多个汉字，只适合「汉字兜底页」那种有页数预算的用途。
-# 用在 profile 页上会一次烤出十几页（每页 4096² = 64 MiB 显存），见 KANA_RANGES 的说明。
-CJK_RANGES = ((0x3000, 0x303F), (0x3040, 0x30FF), (0x31F0, 0x31FF), (0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0xAC00, 0xD7AF), (0xF900, 0xFAFF), (0xFF00, 0xFFEF))
-# glow_sans_j 只负责假名 / CJK 标点 / 全角形式：汉字由 noto_glow_cn 兜底页提供
-# （见 qm_nameplate_msdf_build.py 的 FALLBACK_SCRIPTS 注释）。用 CJK_RANGES 会连
-# 2.8 万个汉字一起烤成 16 页（约 1 GB 显存），与已发布产物（425 字形）完全不符。
-KANA_RANGES = ((0x3000, 0x303F), (0x3040, 0x30FF), (0x31F0, 0x31FF), (0xFF00, 0xFFEF))
+# 覆盖范围是有意取舍：MTSDF 名牌只做英文（拉丁/希腊/西里尔）与图标（符号/emoji），
+# 汉字/假名/谚文/泰文一律不烤——名牌缺字由门控整条回退 FreeType（见
+# qm_nameplate_msdf_build.py 的 FALLBACK_SCRIPTS 注释）。不要往这个表里加 CJK 条目：
+# 一次烤出十几页 4096²（约 1 GB 显存）的孤儿产物就是从这里来的。
 GENERATOR = "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd"
 
 # 图集是 RGBA8、无 mipmap、加载时整页上传显存，所以边长直接等于显存成本：
@@ -52,6 +49,11 @@ PAGE_SIZE_LADDER = (1024, 2048, 4096)
 GLYPH_AREA_BUDGET = 5000
 # 打包器是扫描线填充，同一行内的字形会填得比较满，按这个系数估算所需边长。
 PACK_EFFICIENCY = 0.85
+# 已发布的 profile 与 gate.h 的字体映射一一对应（src/game/client/components/
+# qmclient/nameplate_msdf/qm_nameplate_msdf_gate.h 的 s_aProfiles 表）。新增条目前
+# 必须同时加 gate 映射，否则产出的 profile 运行时不可达（历史上的 phosphor 系列
+# 就是烤了页却忘了映射，白占 27 MB 发布包）。符号/emoji 由 symbols profile 的
+# noto_glow_emoji 页提供（见 qm_nameplate_msdf_build.py），不在这里烤。
 FONTS = (
     ("dejavu", "data/fonts/DejaVuSans.ttf", "DejaVu Sans", LATIN_RANGES),
     ("cabin", "data/qmclient/fonts/Cabin-Regular.ttf", "Cabin", LATIN_RANGES),
@@ -60,7 +62,6 @@ FONTS = (
     ("inter_regular", "data/qmclient/fonts/Inter/Inter_24pt-Regular.ttf", "Inter", LATIN_RANGES),
     ("inter_semibold", "data/qmclient/fonts/Inter/Inter_24pt-SemiBold.ttf", "Inter SemiBold", LATIN_RANGES),
     ("maple_mono_regular", "data/qmclient/fonts/Maple Mono Normal/MapleMonoNormal-CN-Regular.ttf", "Maple Mono Normal", LATIN_RANGES),
-    ("maple_mono_medium", "data/qmclient/fonts/Maple Mono Normal/MapleMonoNormal-CN-Medium.ttf", "Maple Mono Normal Medium", LATIN_RANGES),
     ("maple_mono_bold", "data/qmclient/fonts/Maple Mono Normal/MapleMonoNormal-CN-Bold.ttf", "Maple Mono Normal Bold", LATIN_RANGES),
     ("minecraft", "data/qmclient/fonts/Minecraft.ttf", "Minecraft", LATIN_RANGES),
     ("montserrat", "data/qmclient/fonts/Montserrat-Regular.ttf", "Montserrat", LATIN_RANGES),
@@ -70,21 +71,6 @@ FONTS = (
     ("poppins_bold", "data/qmclient/fonts/Poppins/Poppins-Bold.ttf", "Poppins Bold", LATIN_RANGES),
     ("rubik", "data/qmclient/fonts/Rubik-Regular.ttf", "Rubik", LATIN_RANGES),
     ("times_new_roman", "data/qmclient/fonts/Times New Roman.TTF", "Times New Roman", LATIN_RANGES),
-    ("glow_sans_j", "data/fonts/GlowSansJ-Compressed-Book.otf", "Glow Sans J Compressed Book", KANA_RANGES),
-    # 下面三个条目目前**没有已发布的页、也没有 profile 引用它们**（脚本只写过
-    # glow_sans_j 与 Latin/Phosphor 页）。留着是为了让「随包字体覆盖表」完整，
-    # 但直接跑会把 noto_sans_sc 按 CJK_RANGES 烤成十几页孤儿产物——真要用它们，
-    # 请先给 noto_sans_sc 加上页数预算（参照 qm_nameplate_msdf_build.py 的
-    # PROFILE_CJK_LIMITS），并让某个 profile 引用产出的页。
-    ("noto_sans_sc", "data/fonts/NotoSansSC-VF.ttf", "Noto Sans SC", CJK_RANGES),
-    ("noto_emoji", "data/fonts/NotoEmoji-Regular.ttf", "Noto Emoji", ((0x1F300, 0x1FAFF),)),
-    ("noto_thai", "data/fonts/NotoSansThai-Regular.ttf", "Noto Sans Thai", ((0x0E00, 0x0E7F),)),
-    # Phosphor is bundled under qmclient/fonts and is intentionally retained.
-    ("phosphor_regular", "data/qmclient/fonts/Phosphor/Phosphor-Regular.ttf", "Phosphor", ((0xE000, 0xF8FF),)),
-    ("phosphor_bold", "data/qmclient/fonts/Phosphor/Phosphor-Bold.ttf", "Phosphor Bold", ((0xE000, 0xF8FF),)),
-    ("phosphor_duotone", "data/qmclient/fonts/Phosphor/Phosphor-Duotone.ttf", "Phosphor Duotone", ((0xE000, 0xF8FF),)),
-    ("phosphor_fill", "data/qmclient/fonts/Phosphor/Phosphor-Fill.ttf", "Phosphor Fill", ((0xE000, 0xF8FF),)),
-    ("phosphor_light", "data/qmclient/fonts/Phosphor/Phosphor-Light.ttf", "Phosphor Light", ((0xE000, 0xF8FF),)),
 )
 
 

@@ -526,6 +526,7 @@ public:
 	SQmFocusConfigOverrideState m_GoresAutoEnableOverride;
 	SQmFocusConfigOverrideState m_GoresFastInputOverride;
 	SQmFocusConfigOverrideState m_GoresFastInputOthersOverride;
+	SQmFocusConfigOverrideState m_GoresDummyHammerOverride;
 	void ResetGoresConfigOverrides();
 	bool IsFastInputActive() const;
 	bool IsFastInputOthersActive() const;

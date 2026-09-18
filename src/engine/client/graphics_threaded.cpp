@@ -2905,6 +2905,7 @@ void CGraphics_Threaded::RenderTexturedMsdf(const IGraphics::STexturedMsdfParams
 	else if(!Params.m_ProceduralRing && Params.m_UseTrueSdf)
 		MsdfW = qm_msdf_param::EncodeTrueSdf(std::abs(Params.m_OutlineWidthPx));
 	Cmd.m_MsdfParams = Params.m_ProceduralRing ? vec4(-Params.m_RingInnerRadius, Params.m_RingOuterRadius, Params.m_RingStartAngle, Params.m_RingEndAngle) : vec4(Params.m_PxRange, Params.m_AtlasWidth, Params.m_AtlasHeight, MsdfW);
+	Cmd.m_MsdfSecondaryColor = vec4(Params.m_SecondaryColor.r, Params.m_SecondaryColor.g, Params.m_SecondaryColor.b, Params.m_SecondaryColor.a);
 
 	const float CenterX = Params.m_Rect.x + Params.m_Rect.z * 0.5f;
 	const float CenterY = Params.m_Rect.y + Params.m_Rect.w * 0.5f;

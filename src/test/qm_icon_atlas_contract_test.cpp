@@ -50,6 +50,25 @@ namespace
 		EXPECT_EQ(pValue->type, json_object);
 		return pValue;
 	}
+
+	const json_value *JsonArray(const json_value *pObject, const char *pName)
+	{
+		const json_value *pValue = json_object_get(pObject, pName);
+		EXPECT_NE(pValue, &json_value_none);
+		EXPECT_EQ(pValue->type, json_array);
+		return pValue;
+	}
+
+	double JsonDouble(const json_value *pObject, const char *pName)
+	{
+		const json_value *pValue = json_object_get(pObject, pName);
+		EXPECT_NE(pValue, &json_value_none);
+		if(pValue->type == json_double)
+			return pValue->u.dbl;
+		if(pValue->type == json_integer)
+			return static_cast<double>(pValue->u.integer);
+		return 0.0;
+	}
 }
 
 TEST(QmIconAtlas, RuntimeIconNamesAreStable)
@@ -57,19 +76,19 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::STAR), "star");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::BOOKMARK), "bookmark");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SEARCH), "magnifying-glass");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::CLOSE), "close");
+	// 名字必须与 Phosphor 官方一致（datasrc/qm_icons/phosphor.codepoints）。
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::CLOSE), "x");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::EYE), "eye");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::EYE_OFF), "eye-off");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::EYE_OFF), "eye-slash");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::CHEVRON_DOWN), "chevron-down");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::PLUS), "plus");
 	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::TRASH), "trash");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWAP_INCOMING), "satellite-swap-incoming");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWAP_OUTGOING), "satellite-swap-outgoing");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SWITCH), "satellite-switch");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_MUTE), "satellite-mute");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_CHECK), "satellite-check");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE), "satellite-spectator-eye");
-	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED), "satellite-spectator-eye-closed");
+	// 原自制 satellite 图标已替换为官方 Phosphor 图标。
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::ARROWS_IN), "arrows-in");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::ARROWS_OUT), "arrows-out");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SWAP), "swap");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::SPEAKER_SLASH), "speaker-slash");
+	EXPECT_STREQ(CQmIconManager::IconName(EQmIcon::CHECK), "check");
 
 	const std::string Menus = ReadTextFile("src/game/client/components/menus.cpp");
 	EXPECT_NE(Menus.find("RenderFavoriteMapsIcon"), std::string::npos);
@@ -77,7 +96,7 @@ TEST(QmIconAtlas, RuntimeIconNamesAreStable)
 	EXPECT_EQ(Menus.find("\xF0\x9F\x94\x96"), std::string::npos);
 }
 
-TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
+TEST(QmIconAtlas, MsdfOnlyReloadPolicy)
 {
 	EXPECT_EQ(NormalizeQmIconWeight(-1), 1);
 	EXPECT_EQ(NormalizeQmIconWeight(0), 0);
@@ -94,46 +113,19 @@ TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
 	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(4));
 	EXPECT_FALSE(QmIconWeightUsesBoldFontFallback(5));
 
-	EXPECT_EQ(SelectQmIconAtlasType(false, false), EQmIconAtlasType::ALPHA);
-	EXPECT_EQ(SelectQmIconAtlasType(false, true), EQmIconAtlasType::ALPHA);
-	EXPECT_EQ(SelectQmIconAtlasType(true, false), EQmIconAtlasType::ALPHA);
-	EXPECT_EQ(SelectQmIconAtlasType(true, true), EQmIconAtlasType::MSDF);
-
-	EXPECT_TRUE(QmIconAtlasNeedsReload(false, EQmIconAtlasType::MSDF, EQmIconAtlasType::MSDF, 1, 1, 0, 0));
-	EXPECT_TRUE(QmIconAtlasNeedsReload(true, EQmIconAtlasType::MSDF, EQmIconAtlasType::MSDF, 0, 1, 0, 0));
-	EXPECT_FALSE(QmIconAtlasNeedsReload(true, EQmIconAtlasType::MSDF, EQmIconAtlasType::MSDF, 1, 1, 0, 4));
-	EXPECT_TRUE(QmIconAtlasNeedsReload(true, EQmIconAtlasType::ALPHA, EQmIconAtlasType::MSDF, 1, 1, 1, 0));
-	EXPECT_TRUE(QmIconAtlasNeedsReload(true, EQmIconAtlasType::MSDF, EQmIconAtlasType::ALPHA, 1, 1, 0, 2));
-	EXPECT_TRUE(QmIconAtlasNeedsReload(true, EQmIconAtlasType::ALPHA, EQmIconAtlasType::ALPHA, 1, 1, 1, 2));
-	EXPECT_FALSE(QmIconAtlasNeedsReload(true, EQmIconAtlasType::ALPHA, EQmIconAtlasType::ALPHA, 1, 1, 2, 2));
+	// 位图 alpha 图集已移除：图集不可用即字体兜底，仅剩 MSDF 单一路径。
+	EXPECT_TRUE(QmIconAtlasNeedsReload(false, 1, 1));
+	EXPECT_TRUE(QmIconAtlasNeedsReload(true, 0, 1));
+	EXPECT_FALSE(QmIconAtlasNeedsReload(true, 1, 1));
 	EXPECT_TRUE(QmIconAtlasRetryCooldownActive(99, 100));
 	EXPECT_FALSE(QmIconAtlasRetryCooldownActive(100, 100));
 	EXPECT_FALSE(QmIconAtlasRetryCooldownActive(101, 100));
-	EXPECT_TRUE(QmIconReloadCooldownActive(99, 100, true, 1, 2, true, 1, 2, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(100, 100, true, 1, 2, true, 1, 2, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, false, 1, 2, true, 1, 2, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, 2, true, 0, 2, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, 2, true, 1, 4, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, 2, true, 1, 2, false));
+	EXPECT_TRUE(QmIconReloadCooldownActive(99, 100, true, 1, true, 1, true));
+	EXPECT_FALSE(QmIconReloadCooldownActive(100, 100, true, 1, true, 1, true));
+	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, false, 1, true, 1, true));
+	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, true, 0, true));
+	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, false, 1, true));
 
-	EXPECT_EQ(QmIconRefreshAction(false, false, false, false), EQmIconRefreshAction::NONE);
-	EXPECT_EQ(QmIconRefreshAction(false, false, true, false), EQmIconRefreshAction::RETRY_MSDF);
-	EXPECT_EQ(QmIconRefreshAction(false, false, true, true), EQmIconRefreshAction::NONE);
-	EXPECT_EQ(QmIconRefreshAction(true, false, false, false), EQmIconRefreshAction::RELOAD);
-	EXPECT_EQ(QmIconRefreshAction(true, false, true, true), EQmIconRefreshAction::RELOAD);
-	EXPECT_EQ(QmIconRefreshAction(true, true, false, false), EQmIconRefreshAction::NONE);
-	EXPECT_EQ(QmIconRefreshAction(true, true, true, false), EQmIconRefreshAction::NONE);
-
-	// MSDF probe 失败但 alpha resident 可用时，冷却结束只允许 probe，不触发完整 reload。
-	const SQmIconRefreshState AlphaResidentAfterMsdfFailure{false, false, true, false};
-	EXPECT_EQ(QmIconRefreshAction(AlphaResidentAfterMsdfFailure), EQmIconRefreshAction::RETRY_MSDF);
-	const SQmIconRefreshState AlphaResidentDuringMsdfCooldown{false, false, true, true};
-	EXPECT_EQ(QmIconRefreshAction(AlphaResidentDuringMsdfCooldown), EQmIconRefreshAction::NONE);
-
-	// 完整 reload 失败时，只有相同目标仍受 cooldown 阻塞；权重、DPI 或 capability 变化必须脱离 cooldown。
-	EXPECT_EQ(QmIconRefreshAction({true, true, false, false}), EQmIconRefreshAction::NONE);
-	EXPECT_EQ(QmIconRefreshAction({true, false, false, false}), EQmIconRefreshAction::RELOAD);
-	EXPECT_EQ(QmIconRefreshAction({true, true, true, false}), EQmIconRefreshAction::NONE);
 	EXPECT_EQ(QmIconMsdfRunBucket(1), 0u);
 	EXPECT_EQ(QmIconMsdfRunBucket(2), 1u);
 	EXPECT_EQ(QmIconMsdfRunBucket(3), 2u);
@@ -143,45 +135,14 @@ TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
 	EXPECT_EQ(QmIconMsdfRunBucket(32), 5u);
 	EXPECT_EQ(QmIconMsdfRunBucket(64), 6u);
 	EXPECT_EQ(QmIconMsdfRunBucket(65), 7u);
-	EXPECT_TRUE(QmIconReloadCooldownActive(99, 100, true, 0, 1, true, 0, 1, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, 1, true, 0, 1, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 0, 1, true, 0, 2, true));
-	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 0, 1, true, 0, 1, false));
+	EXPECT_TRUE(QmIconReloadCooldownActive(99, 100, true, 0, true, 0, true));
+	EXPECT_FALSE(QmIconReloadCooldownActive(99, 100, true, 1, true, 0, true));
 
-	// 候选 atlas 失败只能保留可用 resident atlas；没有 resident atlas 才需要完整清理后重试。
-	EXPECT_TRUE(QmIconAtlasCanRetainOnReloadFailure(true, EQmIconAtlasType::ALPHA, true));
-	EXPECT_FALSE(QmIconAtlasCanRetainOnReloadFailure(false, EQmIconAtlasType::ALPHA, true));
 	EXPECT_TRUE(QmIconTextureCanCommit(true, false));
 	EXPECT_FALSE(QmIconTextureCanCommit(false, false));
 	EXPECT_FALSE(QmIconTextureCanCommit(true, true));
 	EXPECT_FALSE(QmIconTextureCanCommit(false, true));
 
-	EXPECT_FALSE(QmIconAtlasCanRetainOnReloadFailure(false, EQmIconAtlasType::ALPHA, false));
-	EXPECT_FALSE(QmIconAtlasCanRetainOnReloadFailure(false, EQmIconAtlasType::MSDF, true));
-	EXPECT_TRUE(QmIconAtlasCanRetainOnReloadFailure(true, EQmIconAtlasType::ALPHA, false));
-	EXPECT_TRUE(QmIconAtlasCanRetainOnReloadFailure(true, EQmIconAtlasType::ALPHA, true));
-	EXPECT_FALSE(QmIconAtlasCanRetainOnReloadFailure(true, EQmIconAtlasType::MSDF, false));
-	EXPECT_TRUE(QmIconAtlasCanRetainOnReloadFailure(true, EQmIconAtlasType::MSDF, true));
-
-	EXPECT_FALSE(QmIconAtlasMustDropMsdf(false, EQmIconAtlasType::ALPHA));
-	EXPECT_TRUE(QmIconAtlasMustDropMsdf(false, EQmIconAtlasType::MSDF));
-	EXPECT_FALSE(QmIconAtlasMustDropMsdf(true, EQmIconAtlasType::ALPHA));
-	EXPECT_FALSE(QmIconAtlasMustDropMsdf(true, EQmIconAtlasType::MSDF));
-
-	EXPECT_FALSE(QmIconAtlasNeedsMsdfProbe(false, false));
-	EXPECT_FALSE(QmIconAtlasNeedsMsdfProbe(false, true));
-	EXPECT_TRUE(QmIconAtlasNeedsMsdfProbe(true, false));
-	EXPECT_FALSE(QmIconAtlasNeedsMsdfProbe(true, true));
-
-	EXPECT_EQ(QmIconPreferredAtlasScale(0.5f), 1);
-	EXPECT_EQ(QmIconPreferredAtlasScale(1.0f), 1);
-	EXPECT_EQ(QmIconPreferredAtlasScale(1.499f), 1);
-	EXPECT_EQ(QmIconPreferredAtlasScale(1.5f), 2);
-	EXPECT_EQ(QmIconPreferredAtlasScale(2.999f), 2);
-	EXPECT_EQ(QmIconPreferredAtlasScale(3.0f), 4);
-	EXPECT_EQ(QmIconAtlasScaleFallbackOrder(1), (std::array<int, 3>{1, 2, 4}));
-	EXPECT_EQ(QmIconAtlasScaleFallbackOrder(2), (std::array<int, 3>{2, 4, 1}));
-	EXPECT_EQ(QmIconAtlasScaleFallbackOrder(4), (std::array<int, 3>{4, 2, 1}));
 	EXPECT_FLOAT_EQ(QmIconPixelScale(0, 100.0f), 0.0f);
 	EXPECT_FLOAT_EQ(QmIconPixelScale(100, 0.0f), 0.0f);
 	EXPECT_FLOAT_EQ(QmIconPixelScale(100, -1.0f), 0.0f);
@@ -190,12 +151,11 @@ TEST(QmIconAtlas, MsdfSelectionAndReloadPolicyKeepsAlphaFallbackUsable)
 	const std::string Header = ReadTextFile("src/game/client/qm_icon_manager.h");
 	const std::string Source = ReadTextFile("src/game/client/qm_icon_manager.cpp");
 	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
-	EXPECT_NE(Header.find("LoadedType != DesiredType"), std::string::npos);
-	EXPECT_NE(Source.find("QmIconAtlasNeedsReload(IsReady(), m_Atlas.Type(), DesiredType"), std::string::npos);
-	EXPECT_NE(Source.find("QmIconAtlasNeedsMsdfProbe(MsdfSupported, m_MsdfManifestAvailable)"), std::string::npos);
-	EXPECT_NE(Source.find("const SQmIconRefreshState RefreshState"), std::string::npos);
-	EXPECT_NE(Source.find("QmIconRefreshAction(RefreshState)"), std::string::npos);
-	EXPECT_NE(Source.find("RetryMsdfAtlas();"), std::string::npos);
+	EXPECT_NE(Header.find("bool PreferFontFallback() const { return !IsReady(); }"), std::string::npos);
+	EXPECT_EQ(Header.find("EQmIconAtlasType"), std::string::npos);
+	EXPECT_NE(Source.find("QmIconAtlasNeedsReload(IsReady(), m_AtlasWeight, Weight)"), std::string::npos);
+	EXPECT_NE(Source.find("QmIconReloadCooldownActive(Now, m_NextReloadAttemptTime, m_HasFailedReloadTarget"), std::string::npos);
+	EXPECT_EQ(Source.find("RetryMsdfAtlas();"), std::string::npos) << "probe 重试机制已随 alpha 图集移除";
 	EXPECT_NE(Source.find("m_NextReloadAttemptTime"), std::string::npos);
 	EXPECT_NE(Source.find("FinishMsdfManagerCallRun();"), std::string::npos);
 	EXPECT_NE(Header.find("SQmIconDiagnostics"), std::string::npos);
@@ -232,9 +192,11 @@ TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
 	EXPECT_FLOAT_EQ(Rainbow.g, ExpectedRainbow.g);
 	EXPECT_FLOAT_EQ(Rainbow.b, ExpectedRainbow.b);
 	EXPECT_FLOAT_EQ(Rainbow.a, SemanticColor.a);
+	const ColorRGBA Secondary = ConfiguredQmUiIconSecondaryColor(SemanticColor);
+	EXPECT_FLOAT_EQ(Secondary.a, SemanticColor.a);
 
 	const std::string Source = ReadTextFile("src/game/client/qm_icon_manager.cpp");
-	const size_t DirectRender = Source.find("bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color) const");
+	const size_t DirectRender = Source.find("bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, const ColorRGBA &Color, const bool PreserveAspect) const");
 	const size_t RotatedRender = Source.find("bool CQmIconManager::RenderIconRotated", DirectRender);
 	const size_t StateRender = Source.find("bool CQmIconManager::RenderIcon(EQmIcon Icon, const CUIRect &Rect, EQmIconState State", RotatedRender);
 	ASSERT_NE(DirectRender, std::string::npos);
@@ -248,57 +210,10 @@ TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
 	EXPECT_NE(Buttons.find("IconRect, IconState, IconStyle"), std::string::npos);
 }
 
-TEST(QmIconAtlas, GeneratedManifestsContainEveryRuntimeIcon)
-{
-	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill", "light", "duotone"};
-	constexpr int aScales[] = {1, 2, 4};
-	for(const char *pWeight : apWeights)
-	{
-		for(const int Scale : aScales)
-		{
-			char aPath[IO_MAX_PATH_LENGTH];
-			str_format(aPath, sizeof(aPath), "data/qmclient/icons/qm_icons_%s_%dx.json", pWeight, Scale);
-			const std::string Json = ReadTextFile(aPath);
-			ASSERT_FALSE(Json.empty()) << aPath;
-
-			json_value *pRoot = JsonParse(Json.c_str(), Json.size());
-			ASSERT_NE(pRoot, nullptr) << aPath;
-
-			const json_value *pAtlas = JsonObject(pRoot, "atlas");
-			const json_value *pIcons = JsonObject(pRoot, "icons");
-			const int AtlasWidth = JsonInt(pAtlas, "width");
-			const int AtlasHeight = JsonInt(pAtlas, "height");
-			EXPECT_EQ(JsonInt(pRoot, "scale"), Scale);
-			EXPECT_EQ(JsonInt(pAtlas, "padding"), 4 * Scale);
-
-			for(int IconIndex = 0; IconIndex < static_cast<int>(EQmIcon::COUNT); ++IconIndex)
-			{
-				const EQmIcon Icon = static_cast<EQmIcon>(IconIndex);
-				const char *pIconName = CQmIconManager::IconName(Icon);
-				ASSERT_NE(pIconName[0], '\0');
-
-				const json_value *pEntry = JsonObject(pIcons, pIconName);
-				const int X = JsonInt(pEntry, "x");
-				const int Y = JsonInt(pEntry, "y");
-				const int W = JsonInt(pEntry, "w");
-				const int H = JsonInt(pEntry, "h");
-
-				EXPECT_EQ(W, 24 * Scale) << pIconName;
-				EXPECT_EQ(H, 24 * Scale) << pIconName;
-				EXPECT_GE(X, 0) << pIconName;
-				EXPECT_GE(Y, 0) << pIconName;
-				EXPECT_LE(X + W, AtlasWidth) << pIconName;
-				EXPECT_LE(Y + H, AtlasHeight) << pIconName;
-			}
-
-			json_value_free(pRoot);
-		}
-	}
-}
-
 TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 {
-	constexpr const char *apWeights[] = {"thin", "regular", "bold", "fill", "light", "duotone"};
+	// Thin 未随包字体，不再烘焙（weight 2 复用 light 图集）。
+	constexpr const char *apWeights[] = {"regular", "bold", "fill", "light", "duotone"};
 	for(const char *pWeight : apWeights)
 	{
 		char aPath[IO_MAX_PATH_LENGTH];
@@ -314,22 +229,20 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 		const int AtlasWidth = JsonInt(pAtlas, "width");
 		const int AtlasHeight = JsonInt(pAtlas, "height");
 		constexpr int FieldSize = 48;
-		constexpr int Padding = 8;
-		constexpr int CellSize = FieldSize + Padding * 2;
+		constexpr int ToolPadding = 8;   // 官方工具的字形 pxrange 出血
+		constexpr int CellSize = 72;     // 48 + 2×12 网格间距（字形外轮廓可略超 em 框）
 		const int IconCount = static_cast<int>(pIcons->u.object.length);
 		EXPECT_GE(IconCount, static_cast<int>(EQmIcon::COUNT));
-		int Columns = 1;
-		while(Columns * Columns < IconCount)
-			++Columns;
-		const int Rows = (IconCount + Columns - 1) / Columns;
+		// 新旧官方名共用码点 → manifest 条目数可大于唯一格数；网格按唯一格数布局。
+		EXPECT_EQ(AtlasWidth, AtlasHeight);
+		EXPECT_EQ(AtlasWidth % CellSize, 0) << AtlasWidth;
+		// manifest 条目可多于唯一格数（新旧官方名共享码点格子），网格以唯一格数布局。
 		EXPECT_EQ(JsonInt(pRoot, "version"), 2);
 		EXPECT_STREQ(JsonString(pRoot, "kind"), "mtsdf");
 		EXPECT_STREQ(JsonString(pRoot, "distance_field"), "mtsdf");
 		EXPECT_TRUE(JsonBool(pRoot, "alpha_sdf"));
 		EXPECT_EQ(JsonInt(pRoot, "px_range"), 6);
-		EXPECT_EQ(AtlasWidth, Columns * CellSize);
-		EXPECT_EQ(AtlasHeight, Rows * CellSize);
-		EXPECT_EQ(JsonInt(pAtlas, "padding"), Padding);
+		EXPECT_EQ(JsonInt(pAtlas, "padding"), ToolPadding);
 
 		for(int IconIndex = 0; IconIndex < static_cast<int>(EQmIcon::COUNT); ++IconIndex)
 		{
@@ -343,8 +256,12 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 			const int W = JsonInt(pEntry, "w");
 			const int H = JsonInt(pEntry, "h");
 
-			EXPECT_EQ(W, FieldSize) << pIconName;
-			EXPECT_EQ(H, FieldSize) << pIconName;
+			// 字体烘焙的字形包围盒随图标外轮廓变化（不再是固定 48×48），
+			// 但每个格子必须完整落在网格内，且不超过格子尺寸。
+			EXPECT_GT(W, 1) << pIconName;
+			EXPECT_GT(H, 1) << pIconName;
+			EXPECT_LE(W, CellSize) << pIconName;
+			EXPECT_LE(H, CellSize) << pIconName;
 			EXPECT_GE(X, 0) << pIconName;
 			EXPECT_GE(Y, 0) << pIconName;
 			EXPECT_LE(X + W, AtlasWidth) << pIconName;
@@ -380,7 +297,6 @@ TEST(QmIconDiagnosticsContract, KeepsAtlasAndRendererCountersSeparated)
 	EXPECT_NE(IconManager.find("m_DiagnosticsEnabled = IconDiagnosticsEnabled();"), std::string::npos);
 	EXPECT_NE(IconManager.find("m_DiagnosticsEnabled && Atlas.m_Texture.IsValid() && !Atlas.m_Texture.IsNullTexture()"), std::string::npos);
 	EXPECT_NE(IconManager.find("m_Diagnostics.m_ReloadAttempts++"), std::string::npos);
-	EXPECT_NE(IconManager.find("m_Diagnostics.m_MsdfProbes++"), std::string::npos);
 	EXPECT_NE(IconManager.find("m_Diagnostics.m_TextureLoads++"), std::string::npos);
 	EXPECT_NE(IconManager.find("m_Diagnostics.m_TextureUnloads++"), std::string::npos);
 
@@ -481,4 +397,137 @@ TEST(QmVulkanRenderTargetDestroy, GuardsPausedRenderingAndActiveRenderPass)
 	const size_t NextFn = Source.find("[[nodiscard]] bool Cmd_TextTextures_Create", BlurPassFn);
 	ASSERT_NE(NextFn, std::string::npos);
 	EXPECT_NE(Source.substr(BlurPassFn, NextFn - BlurPassFn).find("if(m_RenderingPaused)"), std::string::npos);
+}
+
+TEST(QmIconAtlasContract, IconDrawsPreserveGlyphAspectRatio)
+{
+	// manifest 存的是每个字形自己的紧贴框（宽高比各异），绘制必须等比适配调用方方框，
+	// 否则每个图标都会按自己的宽高比被拉伸——历史症状就是「图标不是 1:1」。
+	const CUIRect Square{10.0f, 20.0f, 32.0f, 32.0f};
+
+	// 宽字形：宽度填满、高度按比例收窄并垂直居中
+	const CUIRect Wide = QmIconAspectFittedRect(Square, 60, 44);
+	EXPECT_FLOAT_EQ(Wide.w, 32.0f);
+	EXPECT_NEAR(Wide.h, 32.0f * 44.0f / 60.0f, 0.001f);
+	EXPECT_NEAR(Wide.y, Square.y + (Square.h - Wide.h) * 0.5f, 0.001f);
+	EXPECT_NEAR(Wide.x, Square.x, 0.001f);
+
+	// 高字形：高度填满、宽度按比例收窄并水平居中
+	const CUIRect Tall = QmIconAspectFittedRect(Square, 44, 60);
+	EXPECT_FLOAT_EQ(Tall.h, 32.0f);
+	EXPECT_NEAR(Tall.w, 32.0f * 44.0f / 60.0f, 0.001f);
+	EXPECT_NEAR(Tall.x, Square.x + (Square.w - Tall.w) * 0.5f, 0.001f);
+
+	// 等比方框原样返回；适配结果永不超出原方框
+	const CUIRect Same = QmIconAspectFittedRect(Square, 48, 48);
+	EXPECT_FLOAT_EQ(Same.w, Square.w);
+	EXPECT_FLOAT_EQ(Same.h, Square.h);
+	for(const CUIRect &Fitted : {Wide, Tall, Same})
+	{
+		EXPECT_GE(Fitted.x, Square.x - 0.001f);
+		EXPECT_GE(Fitted.y, Square.y - 0.001f);
+		EXPECT_LE(Fitted.x + Fitted.w, Square.x + Square.w + 0.001f);
+		EXPECT_LE(Fitted.y + Fitted.h, Square.y + Square.h + 0.001f);
+	}
+
+	// 核心断言：绘制宽高比 == 字形宽高比
+	EXPECT_NEAR(Wide.w / Wide.h, 60.0f / 44.0f, 0.001f);
+	EXPECT_NEAR(Tall.w / Tall.h, 44.0f / 60.0f, 0.001f);
+
+	// 非方形调用方方框同样等比适配（例如媒体岛眨眼用的压缩方框）
+	const CUIRect Squashed{0.0f, 0.0f, 88.0f, 44.0f};
+	const CUIRect FittedInSquashed = QmIconAspectFittedRect(Squashed, 60, 44);
+	EXPECT_NEAR(FittedInSquashed.w / FittedInSquashed.h, 60.0f / 44.0f, 0.001f);
+}
+
+TEST(QmIconAtlasContract, MorphFrameBlendSelectsAdjacentFrames)
+{
+	// 端点必须精确落在首/末帧上：否则动画结束交回静态图标时会有形状跳变。
+	constexpr int Frames = 8;
+	const SQmIconMorphFrameBlend Start = QmIconMorphFrameBlend(0.0f, Frames);
+	EXPECT_EQ(Start.m_Index0, 0);
+	EXPECT_FLOAT_EQ(Start.m_Alpha0, 1.0f);
+	EXPECT_FLOAT_EQ(Start.m_Alpha1, 0.0f);
+
+	const SQmIconMorphFrameBlend End = QmIconMorphFrameBlend(1.0f, Frames);
+	EXPECT_EQ(End.m_Index0, Frames - 1);
+	EXPECT_EQ(End.m_Index1, Frames - 1);
+	EXPECT_FLOAT_EQ(End.m_Alpha0, 1.0f);
+	EXPECT_FLOAT_EQ(End.m_Alpha1, 0.0f);
+
+	// 弹簧会 over/undershoot，越界进度必须被夹紧。
+	const SQmIconMorphFrameBlend Under = QmIconMorphFrameBlend(-0.35f, Frames);
+	EXPECT_EQ(Under.m_Index0, 0);
+	EXPECT_FLOAT_EQ(Under.m_Alpha1, 0.0f);
+	const SQmIconMorphFrameBlend Over = QmIconMorphFrameBlend(1.45f, Frames);
+	EXPECT_EQ(Over.m_Index0, Frames - 1);
+	EXPECT_FLOAT_EQ(Over.m_Alpha0, 1.0f);
+
+	// 单帧退化：不得产生越界索引。
+	const SQmIconMorphFrameBlend Single = QmIconMorphFrameBlend(0.5f, 1);
+	EXPECT_EQ(Single.m_Index0, 0);
+	EXPECT_EQ(Single.m_Index1, 0);
+	EXPECT_FLOAT_EQ(Single.m_Alpha1, 0.0f);
+
+	for(int Step = 0; Step <= 40; ++Step)
+	{
+		const SQmIconMorphFrameBlend Blend = QmIconMorphFrameBlend(Step / 40.0f, Frames);
+		EXPECT_GE(Blend.m_Index0, 0);
+		EXPECT_LT(Blend.m_Index1, Frames);
+		EXPECT_GE(Blend.m_Index1, Blend.m_Index0);
+		EXPECT_NEAR(Blend.m_Alpha0 + Blend.m_Alpha1, 1.0f, 1e-4f);
+	}
+}
+
+TEST(QmIconAtlasContract, BoldAtlasCarriesMorphKeyFrames)
+{
+	// 眼睛 morph 的 MSDF 关键帧只随 Bold 图集烘焙；显示框必须在图集内，
+	// 且首末帧的框与两个眼睛图标一致（端点与静态图标同尺寸基准）。
+	const std::string Json = ReadTextFile("data/qmclient/icons/qm_icons_bold_msdf.json");
+	ASSERT_FALSE(Json.empty());
+	json_value *pRoot = JsonParse(Json.c_str(), Json.size());
+	ASSERT_NE(pRoot, nullptr);
+
+	const json_value *pAtlas = JsonObject(pRoot, "atlas");
+	const json_value *pIcons = JsonObject(pRoot, "icons");
+	const json_value *pFrames = JsonArray(pRoot, "morph_frames");
+	const int AtlasWidth = JsonInt(pAtlas, "width");
+	const int AtlasHeight = JsonInt(pAtlas, "height");
+	const unsigned int FrameCount = pFrames->u.array.length;
+	EXPECT_GE(FrameCount, 2u);
+	EXPECT_LE(FrameCount, static_cast<unsigned int>(CQmIconAtlas::MORPH_FRAME_CAPACITY));
+
+	const json_value *pEye = JsonObject(pIcons, "eye");
+	const json_value *pEyeSlash = JsonObject(pIcons, "eye-slash");
+
+	double PreviousProgress = -1.0;
+	for(unsigned int Index = 0; Index < FrameCount; ++Index)
+	{
+		const json_value *pFrame = pFrames->u.array.values[Index];
+		ASSERT_NE(pFrame, nullptr);
+		ASSERT_EQ(pFrame->type, json_object);
+		const int X = JsonInt(pFrame, "x");
+		const int Y = JsonInt(pFrame, "y");
+		const int W = JsonInt(pFrame, "w");
+		const int H = JsonInt(pFrame, "h");
+		const double Progress = JsonDouble(pFrame, "progress");
+		EXPECT_GE(X, 0);
+		EXPECT_GE(Y, 0);
+		EXPECT_GT(W, 0);
+		EXPECT_GT(H, 0);
+		EXPECT_LE(X + W, AtlasWidth);
+		EXPECT_LE(Y + H, AtlasHeight);
+		EXPECT_GT(Progress, PreviousProgress) << Index;
+		PreviousProgress = Progress;
+	}
+	// 进度必须覆盖 [0,1] 两端。
+	EXPECT_NEAR(JsonDouble(pFrames->u.array.values[0], "progress"), 0.0, 1e-6);
+	EXPECT_NEAR(JsonDouble(pFrames->u.array.values[FrameCount - 1], "progress"), 1.0, 1e-6);
+
+	const json_value *pFirst = pFrames->u.array.values[0];
+	const json_value *pLast = pFrames->u.array.values[FrameCount - 1];
+	EXPECT_NEAR(JsonInt(pFirst, "w"), JsonInt(pEye, "w"), 2);
+	EXPECT_NEAR(JsonInt(pFirst, "h"), JsonInt(pEye, "h"), 2);
+	EXPECT_NEAR(JsonInt(pLast, "w"), JsonInt(pEyeSlash, "w"), 4);
+	EXPECT_NEAR(JsonInt(pLast, "h"), JsonInt(pEyeSlash, "h"), 4);
 }

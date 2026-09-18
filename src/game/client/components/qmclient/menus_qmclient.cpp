@@ -811,7 +811,7 @@ bool CMenus::RenderQmFunctionCheckbox(const void *pId, const char *pTextId, cons
 		// 让 HotItem 指向本行，CTooltips 才会激活提示（返回值丢弃，不写值）。
 		if(!PrewarmOnly && !Ui()->RenderOnly())
 		{
-			Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_LEFT);
+			Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_NONE);
 			GameClient()->m_Tooltips.DoToolTip(pId, pRect, pOverrideTooltip);
 		}
 	}
@@ -838,7 +838,7 @@ bool CMenus::RenderQmVisualCheckbox(CUIRect &Content, float LineHeight, float Li
 		// 灰化行不占 hover，补一次只读的按钮逻辑让提示能激活（返回值丢弃，不写值）。
 		if(!Ui()->RenderOnly())
 		{
-			Ui()->DoButtonLogic(pId, 0, &Row, BUTTONFLAG_LEFT);
+			Ui()->DoButtonLogic(pId, 0, &Row, BUTTONFLAG_NONE);
 			GameClient()->m_Tooltips.DoToolTip(pId, &Row, pOverrideTooltip);
 		}
 	}
@@ -3684,12 +3684,18 @@ void CMenus::RenderQmHudCoordsContent(CUIRect &Content, const SSettingsContentMe
 		const char *pOverrideTooltip = TemporaryOverrideTooltip(pValue);
 		SLabelProperties LabelProps;
 		if(pOverrideTooltip != nullptr)
+		{
 			LabelProps.SetColor(ui_token::color::TEXT_DISABLED);
+			// 灰化行不占 hover，补一次只读的按钮逻辑让提示能激活（返回值丢弃，不写值）。
+			if(!Ui()->RenderOnly())
+			{
+				Ui()->DoButtonLogic(pId, 0, pRect, BUTTONFLAG_NONE);
+				GameClient()->m_Tooltips.DoToolTip(pId, pRect, pOverrideTooltip);
+			}
+		}
 		const bool Changed = DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pId, pTextId, pText, *pValue, pRect, LabelProps, pOverrideTooltip == nullptr) != 0;
 		if(Changed)
 			*pValue ^= 1;
-		if(pOverrideTooltip != nullptr && !Ui()->RenderOnly())
-			GameClient()->m_Tooltips.DoToolTip(pId, pRect, pOverrideTooltip);
 		return Changed;
 	};
 	auto DoQmSettingsLabel = [this](const char *pTextId, CUIRect *pRect, const char *pText, float FontSize) {

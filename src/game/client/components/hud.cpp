@@ -856,12 +856,12 @@ namespace
 	EQmIcon MediaIslandCountdownIcon(EHudMediaIslandCountdownType Type, bool Completed = false, bool SwapOutgoing = false)
 	{
 		if(Completed)
-			return EQmIcon::SATELLITE_CHECK;
+			return EQmIcon::CHECK;
 		switch(Type)
 		{
-		case EHudMediaIslandCountdownType::SWAP: return SwapOutgoing ? EQmIcon::SATELLITE_SWAP_OUTGOING : EQmIcon::SATELLITE_SWAP_INCOMING;
-		case EHudMediaIslandCountdownType::SWITCH: return EQmIcon::SATELLITE_SWITCH;
-		case EHudMediaIslandCountdownType::MUTE: return EQmIcon::SATELLITE_MUTE;
+		case EHudMediaIslandCountdownType::SWAP: return SwapOutgoing ? EQmIcon::ARROWS_OUT : EQmIcon::ARROWS_IN;
+		case EHudMediaIslandCountdownType::SWITCH: return EQmIcon::SWAP;
+		case EHudMediaIslandCountdownType::MUTE: return EQmIcon::SPEAKER_SLASH;
 		}
 		return EQmIcon::COUNT;
 	}
@@ -4993,8 +4993,9 @@ void CHud::RenderMediaIsland()
 		}
 		else if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
 		{
-			pIconManager->RenderIcon(EQmIcon::SATELLITE_SPECTATOR_EYE_CLOSED, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_ClosedAlpha));
-			pIconManager->RenderIcon(EQmIcon::SATELLITE_SPECTATOR_EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_OpenAlpha));
+			// 等比契约的显式豁免只作用于这条眼睛动画（见常量处的说明）。
+			pIconManager->RenderIcon(EQmIcon::EYE_OFF, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_ClosedAlpha), QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT);
+			pIconManager->RenderIcon(EQmIcon::EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_OpenAlpha), QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT);
 		}
 		const float CountAlpha = QmHudMediaIslandSpectatorCountAlpha(ShowSpectator, SpectatorIconPose);
 		if(CountAlpha > 0.001f)

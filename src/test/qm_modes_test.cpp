@@ -393,6 +393,30 @@ TEST(QmFocusMode, ConfigOverrideKeepsUserChangesMadeWhileActive)
 	EXPECT_FALSE(State.m_WasActive);
 }
 
+TEST(QmFocusMode, ConfigOverrideResetRestoresAutomaticValueAndClearsState)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 1, 0, Changed), 0);
+
+	EXPECT_EQ(ResetQmConfigOverride(State, 0, 0, Changed), 1);
+	EXPECT_TRUE(Changed);
+	EXPECT_FALSE(State.m_WasActive);
+	EXPECT_FALSE(State.m_AutoChangedValue);
+}
+
+TEST(QmFocusMode, ConfigOverrideResetKeepsUserValueButClearsState)
+{
+	SQmFocusConfigOverrideState State;
+	bool Changed = false;
+	EXPECT_EQ(ApplyQmFocusConfigOverride(State, true, 1, 0, Changed), 0);
+
+	EXPECT_EQ(ResetQmConfigOverride(State, 1, 0, Changed), 1);
+	EXPECT_FALSE(Changed);
+	EXPECT_FALSE(State.m_WasActive);
+	EXPECT_FALSE(State.m_AutoChangedValue);
+}
+
 TEST(QmFocusMode, EveryChildToggleRequiresMasterSwitchAndItsOwnFlag)
 {
 	// 禅模式每个子开关只有在"总开关开启 且 该子开关开启"时才生效；
@@ -641,6 +665,15 @@ TEST(QmFocusMode, AllEffectsSuppressedWhileRecordingVideo)
 	EXPECT_FALSE(Decisions.m_HideMuzzleEffects);
 	EXPECT_TRUE(Decisions.m_AirJump.m_SpawnParticles);
 	EXPECT_TRUE(Decisions.m_AirJump.m_PlaySound);
+
+	Config.m_VideoRecording = false;
+	const SQmFocusModeDecisions AfterRecording = GetQmFocusModeDecisions(Config);
+	EXPECT_TRUE(AfterRecording.m_FocusActive);
+	EXPECT_TRUE(AfterRecording.m_HideHud);
+	EXPECT_TRUE(AfterRecording.m_HideNameplates);
+	EXPECT_TRUE(AfterRecording.m_HidePlayerMessages);
+	EXPECT_TRUE(AfterRecording.m_MuteHammerSounds);
+	EXPECT_TRUE(AfterRecording.m_HideMuzzleEffects);
 }
 
 TEST(QmFocusMode, ConfigSnapshotSeparatesNameTextFromWholeNameplate)

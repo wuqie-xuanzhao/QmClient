@@ -1178,13 +1178,10 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 
 	// render quick exclude
 	{
-		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-		TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
-		Ui()->DoLabel_QmIcon(&QuickExclude, EQmIcon::BAN, FONT_ICON_BAN, 16.0f, TEXTALIGN_ML);
-		TextRender()->SetRenderFlags(0);
-		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		// 标签不再带图标（与「搜索:」同行对齐）：排除语义由图标的输入框自身表达，
+		// 输入框内用 BAN 图标并把占位符写成「排除」。
 		CUIRect ExcludeLabel;
-		QuickExclude.VSplitLeft(ExcludeIconWidth + 5.0f, nullptr, &ExcludeLabel);
+		QuickExclude.VSplitLeft(SearchExcludeAddrStrMax, &ExcludeLabel, nullptr);
 		QuickExclude.VSplitLeft(SearchExcludeAddrInputOffset, nullptr, &QuickExclude);
 
 		char aBufExclude[64];
@@ -1201,11 +1198,14 @@ void CMenus::RenderServerbrowserStatusBox(CUIRect StatusBox, bool WasListboxItem
 			s_ExcludeInput.SelectAll();
 		}
 		const IUiContext ServerBrowserExcludeCtx = SettingsUiContext("server_browser_exclude");
-		ui_widget::SInputFieldOptions SearchOptions;
-		SearchOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
-		SearchOptions.m_Clearable = true;
-		SearchOptions.m_FontSize = 12.0f;
-		if(ui_widget::InputField(ServerBrowserExcludeCtx, &s_ExcludeInput, QuickExclude, SearchOptions).m_Changed)
+		ui_widget::SInputFieldOptions ExcludeOptions;
+		ExcludeOptions.m_Mode = ui_widget::EInputFieldMode::SEARCH;
+		ExcludeOptions.m_Clearable = true;
+		ExcludeOptions.m_FontSize = 12.0f;
+		ExcludeOptions.m_pPlaceholder = Localize("Exclude");
+		ExcludeOptions.m_pLeadingIcon = FONT_ICON_BAN;
+		ExcludeOptions.m_LeadingQmIcon = static_cast<int>(EQmIcon::BAN);
+		if(ui_widget::InputField(ServerBrowserExcludeCtx, &s_ExcludeInput, QuickExclude, ExcludeOptions).m_Changed)
 			Client()->ServerBrowserUpdate();
 	}
 

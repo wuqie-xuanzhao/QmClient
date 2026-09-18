@@ -1670,7 +1670,7 @@ int CMenus::DoSettingsButton_CheckBoxAutoVMarginAndSet(int Page, int Tab, const 
 		// （返回值丢弃，不写任何值），提示才会跟着鼠标出现。
 		if(!m_MenuTextPlanCollecting)
 		{
-			Ui()->DoButtonLogic(pId, 0, &CheckBoxRect, BUTTONFLAG_LEFT);
+			Ui()->DoButtonLogic(pId, 0, &CheckBoxRect, BUTTONFLAG_NONE);
 			GameClient()->m_Tooltips.DoToolTip(pId, &CheckBoxRect, pOverrideTooltip);
 		}
 	}
@@ -1942,7 +1942,7 @@ bool CMenus::DoSettingsLine_RadioMenu(int Page, int Tab, int Subtab, CUIRect &Vi
 	if(Locked && !m_MenuTextPlanCollecting)
 	{
 		// 标签本身不是控件，先用只读的按钮逻辑占住 hover，提示才会在悬停标签时出现。
-		Ui()->DoButtonLogic(pOverrideSource, 0, &Layout.m_LabelRect, BUTTONFLAG_LEFT);
+		Ui()->DoButtonLogic(pOverrideSource, 0, &Layout.m_LabelRect, BUTTONFLAG_NONE);
 		GameClient()->m_Tooltips.DoToolTip(pOverrideSource, &Layout.m_LabelRect, pOverrideTooltip);
 	}
 	const float W = Buttons.w / N;
