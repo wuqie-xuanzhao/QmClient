@@ -65,7 +65,7 @@ inline EQmAxiomLoginReply QmClassifyAxiomLoginReply(const char *pText)
 		return EQmAxiomLoginReply::SUCCESS;
 
 	if(TextContainsAny(pText, {"incorrect password", "password incorrect", "invalid password", "password invalid", "wrong password", "password wrong", "incorrect token", "token incorrect", "invalid token", "token invalid", "wrong token", "token wrong", "incorrect credential", "credential incorrect", "invalid credential", "credential invalid", "wrong credential", "credential wrong", "unauthenticated", "not authenticated", "密码错误", "密码不正确", "密碼錯誤", "密碼不正確", "凭证无效", "凭证错误", "憑證無效", "憑證錯誤", "令牌无效", "令牌错误", "令牌無效", "令牌錯誤", "token 无效", "token 無效", "无效 token", "無效 token",
-		"already in game", "player already online", "已有玩家在线", "已有玩家在線", "已在游戏中", "已在遊戲中"}))
+					  "already in game", "player already online", "已有玩家在线", "已有玩家在線", "已在游戏中", "已在遊戲中"}))
 		return EQmAxiomLoginReply::HARD_FAILURE;
 
 	if(TextContainsAny(pText, {"fail", "failed", "unsuccessful", "not successful", "not succeeded", "did not succeed", "denied", "error", "went wrong", "not logged in", "登入失败", "登录失败", "登入失敗", "登录失敗", "失败", "失敗", "错误", "錯誤", "拒绝", "拒絕", "无法连接", "無法連接"}))

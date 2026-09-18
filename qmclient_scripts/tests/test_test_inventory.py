@@ -7,8 +7,8 @@ from qmclient_scripts.test_inventory import build_inventory, classify_cpp
 
 class TestInventoryTest(unittest.TestCase):
 	def test_contract_suffix_is_static_contract(self):
-		self.assertEqual(classify_cpp(Path("qmclient_monitoring_text_contract_test.cpp")), "static_contract")
-		self.assertEqual(classify_cpp(Path("qm_chat_interactions_test.cpp")), "unit_or_behavior")
+		self.assertEqual(classify_cpp(Path("qmclient_monitoring_text_contract_test.cpp"), 1, 1), "static_contract")
+		self.assertEqual(classify_cpp(Path("qm_chat_interactions_test.cpp"), 1, 0), "unit_or_behavior")
 
 	def test_inventory_reports_behavior_contract_mixing(self):
 		with tempfile.TemporaryDirectory() as directory:

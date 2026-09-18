@@ -10,27 +10,40 @@ import zipfile
 from pathlib import Path
 from unittest import mock
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-    Ed25519PrivateKey,
-    Ed25519PublicKey,
-)
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PrivateKey,
+        Ed25519PublicKey,
+    )
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+except ModuleNotFoundError:
+    Ed25519PrivateKey = None
+    Ed25519PublicKey = None
+    Encoding = None
+    PublicFormat = None
+    CRYPTOGRAPHY_AVAILABLE = False
+else:
+    CRYPTOGRAPHY_AVAILABLE = True
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_PATH = REPO_ROOT / "qmclient_scripts/sign_update_release.py"
 SPEC = importlib.util.spec_from_file_location("sign_update_release", SCRIPT_PATH)
 assert SPEC is not None and SPEC.loader is not None
-SIGN_UPDATE_RELEASE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(SIGN_UPDATE_RELEASE)
+if CRYPTOGRAPHY_AVAILABLE:
+    SIGN_UPDATE_RELEASE = importlib.util.module_from_spec(SPEC)
+    SPEC.loader.exec_module(SIGN_UPDATE_RELEASE)
 
 
+@unittest.skipUnless(CRYPTOGRAPHY_AVAILABLE, "cryptography is required for release signing tests")
 class SignUpdateReleaseTest(unittest.TestCase):
     PRIVATE_SEED = bytes(range(32))
     PUBLIC_KEY = (
         Ed25519PrivateKey.from_private_bytes(PRIVATE_SEED)
         .public_key()
         .public_bytes(Encoding.Raw, PublicFormat.Raw)
+        if CRYPTOGRAPHY_AVAILABLE
+        else b""
     )
 
     def _write_package(self, path: Path, *, include_server: bool = True) -> None:
