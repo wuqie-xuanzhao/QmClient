@@ -2101,12 +2101,6 @@ void CPlayers::OnRender()
 			continue;
 		}
 
-		// 跟随 solo 玩家的旁观视角：其他玩家完全隐藏（服务器本就不向被旁观者下发他们）。
-		if(GameClient()->IsSoloHidden(ClientId))
-		{
-			continue;
-		}
-
 		RenderHookCollLine(ScreenRect, &GameClient()->m_aClients[ClientId].m_RenderPrev, &GameClient()->m_aClients[ClientId].m_RenderCur, ClientId);
 
 		if(!in_range(GameClient()->m_aClients[ClientId].m_RenderPos.x, ScreenX0, ScreenX1) || !in_range(GameClient()->m_aClients[ClientId].m_RenderPos.y, ScreenY0, ScreenY1))

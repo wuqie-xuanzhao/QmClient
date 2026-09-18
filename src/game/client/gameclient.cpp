@@ -119,8 +119,7 @@ namespace
 		if(!QmPerfEnabled())
 			return;
 		char aPayload[1024];
-		str_format(aPayload, sizeof(aPayload), "event=icon_frame alpha_draws=%" PRIu64 " msdf_draws=%" PRIu64 " msdf_manager_call_run_max=%" PRIu64 " msdf_manager_call_run_1=%" PRIu64 " msdf_manager_call_run_2=%" PRIu64 " msdf_manager_call_run_3_4=%" PRIu64 " msdf_manager_call_run_5_8=%" PRIu64 " msdf_manager_call_run_9_16=%" PRIu64 " msdf_manager_call_run_17_32=%" PRIu64 " msdf_manager_call_run_33_64=%" PRIu64 " msdf_manager_call_run_65_plus=%" PRIu64 " reload_attempts=%" PRIu64 " reload_successes=%" PRIu64 " msdf_probe_attempts=%" PRIu64 " msdf_probe_successes=%" PRIu64 " atlas_swaps=%" PRIu64 " texture_load_successes=%" PRIu64 " texture_load_failures=%" PRIu64 " texture_unloads=%" PRIu64,
-			Diagnostics.m_AlphaIconDraws,
+		str_format(aPayload, sizeof(aPayload), "event=icon_frame msdf_draws=%" PRIu64 " msdf_manager_call_run_max=%" PRIu64 " msdf_manager_call_run_1=%" PRIu64 " msdf_manager_call_run_2=%" PRIu64 " msdf_manager_call_run_3_4=%" PRIu64 " msdf_manager_call_run_5_8=%" PRIu64 " msdf_manager_call_run_9_16=%" PRIu64 " msdf_manager_call_run_17_32=%" PRIu64 " msdf_manager_call_run_33_64=%" PRIu64 " msdf_manager_call_run_65_plus=%" PRIu64 " reload_attempts=%" PRIu64 " reload_successes=%" PRIu64 " atlas_swaps=%" PRIu64 " texture_load_successes=%" PRIu64 " texture_load_failures=%" PRIu64 " texture_unloads=%" PRIu64,
 			Diagnostics.m_MsdfIconDraws,
 			Diagnostics.m_MaxMsdfManagerCallRun,
 			Diagnostics.m_MsdfManagerCallRunBuckets[0],
@@ -133,8 +132,6 @@ namespace
 			Diagnostics.m_MsdfManagerCallRunBuckets[7],
 			Diagnostics.m_ReloadAttempts,
 			Diagnostics.m_ReloadSuccesses,
-			Diagnostics.m_MsdfProbes,
-			Diagnostics.m_MsdfProbeSuccesses,
 			Diagnostics.m_AtlasSwaps,
 			Diagnostics.m_TextureLoads,
 			Diagnostics.m_TextureLoadFailures,
