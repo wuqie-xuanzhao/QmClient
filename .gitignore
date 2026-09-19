@@ -19,6 +19,7 @@ docs/dyl/BestClient/
 !.env.example
 .workbuddy-ai
 .zcode/
+.workbuddy
 
 # Local perf tooling artifacts
 qmclient_scripts/perf/node_modules/
