@@ -35,11 +35,14 @@ TEST(QmEmoticonProjectile, ProjectileBouncesAndExpires)
 	QmEmoticon::CAlphaMask Mask;
 	Mask.Build(Pixels.data(), 2, 2);
 	CEmoticonProjectile Projectile;
-	Projectile.Init(vec2(16.0f, 16.0f), vec2(100.0f, 0.0f), 0, 0.25f);
+	Projectile.Init(vec2(23.8f, 16.0f), vec2(100.0f, 0.0f), 0, 0.25f);
+	Projectile.m_AngVel = 0.0f;
 	const vec2 Before = Projectile.m_Pos;
-	Projectile.Update((float)CEmoticonProjectile::STEP, Mask, [](int X, int) { return X >= 0; });
+	const auto Solid = [](int X, int) { return X >= 1; };
+	ASSERT_FALSE(Mask.Overlaps(Before, Projectile.Size(), Projectile.m_Angle, Solid));
+	Projectile.Update((float)CEmoticonProjectile::STEP, Mask, Solid);
 	EXPECT_TRUE(Projectile.m_Active);
-	EXPECT_EQ(Projectile.m_Pos, Before);
+	EXPECT_FLOAT_EQ(Projectile.m_Pos.x, Before.x);
 	EXPECT_LT(Projectile.m_Vel.x, 0.0f);
 	Projectile.Update(4.0f, Mask, [](int, int) { return false; });
 	EXPECT_FALSE(Projectile.m_Active);

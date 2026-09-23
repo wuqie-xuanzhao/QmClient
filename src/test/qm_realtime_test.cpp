@@ -1,6 +1,6 @@
-#include <game/client/components/qmclient/qm_realtime.h>
-
 #include <engine/shared/json.h>
+
+#include <game/client/components/qmclient/qm_realtime.h>
 
 #include <gtest/gtest.h>
 

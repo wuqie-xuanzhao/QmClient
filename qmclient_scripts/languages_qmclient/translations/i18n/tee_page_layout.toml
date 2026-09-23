@@ -1,0 +1,65 @@
+# Tee 皮肤设置页双栏布局（左列表 / 右预览与颜色 / 下方整宽选项）
+
+[[message]]
+key = "Search and pick skins and manage the skin queue"
+[message.translations]
+simplified_chinese = "搜索并选择皮肤，同时管理皮肤轮换队列"
+traditional_chinese = "搜尋並選擇外觀，同時管理外觀輪換佇列"
+japanese = "スキンを検索して選択し、スキンローテーションキューを管理"
+korean = "스킨을 검색하고 선택하며 스킨 순환 대기열을 관리합니다"
+russian = "Поиск и выбор скинов, а также управление очередью ротации"
+german = "Skins suchen, auswählen und die Skin-Rotationswarteschlange verwalten"
+spanish = "Busca y elige skins, y gestiona la cola de rotación"
+french = "Rechercher et choisir des skins, et gérer la file de rotation"
+brazilian_portuguese = "Pesquise e escolha skins e gerencie a fila de rotação"
+portuguese = "Pesquise e escolha skins e gerencie a fila de rotação"
+turkish = "Skinleri arayın, seçin ve skin döngü kuyruğunu yönetin"
+polish = "Wyszukuj i wybieraj skórki oraz zarządzaj kolejką rotacji"
+
+[[message]]
+key = "Preview player and dummy appearance and colors"
+[message.translations]
+simplified_chinese = "预览本体与分身的外观和颜色"
+traditional_chinese = "預覽本體與分身的外觀和顏色"
+japanese = "本体とダミーの外見と色をプレビュー"
+korean = "본체와 더미의 외형과 색상을 미리 봅니다"
+russian = "Предпросмотр внешнего вида и цветов игрока и дубликата"
+german = "Vorschau von Aussehen und Farben für Spieler und Dummy"
+spanish = "Vista previa del aspecto y los colores del jugador y el dummy"
+french = "Aperçu de l'apparence et des couleurs du joueur et du dummy"
+brazilian_portuguese = "Pré-visualize a aparência e as cores do jogador e do dummy"
+portuguese = "Pré-visualize a aparência e as cores do jogador e do dummy"
+turkish = "Oyuncu ve dummy görünümünü ve renklerini önizleyin"
+polish = "Podgląd wyglądu i kolorów gracza oraz dummy"
+
+[[message]]
+key = "Configure skin downloads, prefix, and default eyes"
+[message.translations]
+simplified_chinese = "配置皮肤下载、皮肤前缀和默认眼睛"
+traditional_chinese = "設定外觀下載、外觀前綴和預設眼睛"
+japanese = "スキンのダウンロード、プレフィックス、既定の目を設定"
+korean = "스킨 다운로드, 접두사 및 기본 눈을 설정합니다"
+russian = "Настройка загрузки скинов, префикса и глаз по умолчанию"
+german = "Skin-Downloads, Präfix und Standardaugen konfigurieren"
+spanish = "Configura las descargas de skins, el prefijo y los ojos por defecto"
+french = "Configurer les téléchargements de skins, le préfixe et les yeux par défaut"
+brazilian_portuguese = "Configure downloads de skins, prefixo e olhos padrão"
+portuguese = "Configure downloads de skins, prefixo e olhos predefinidos"
+turkish = "Skin indirmelerini, ön eki ve varsayılan gözleri yapılandırın"
+polish = "Skonfiguruj pobieranie skórek, prefiks i domyślne oczy"
+
+[[message]]
+key = "Double-click: left applies to main, right applies to dummy"
+[message.translations]
+simplified_chinese = "双击：左键应用到本体，右键应用到分身"
+traditional_chinese = "雙擊：左鍵套用到本體，右鍵套用到分身"
+japanese = "ダブルクリック：左で本体、右でダミーに適用"
+korean = "더블 클릭: 왼쪽은 본체, 오른쪽은 더미에 적용"
+russian = "Двойной щелчок: левая кнопка — игрок, правая — дубликат"
+german = "Doppelklick: links auf Spieler, rechts auf Dummy anwenden"
+spanish = "Doble clic: izquierda al jugador, derecha al dummy"
+french = "Double-clic : gauche pour le joueur, droite pour le dummy"
+brazilian_portuguese = "Clique duplo: esquerdo no jogador, direito no dummy"
+portuguese = "Clique duplo: esquerdo no jogador, direito no dummy"
+turkish = "Çift tıklama: sol oyuncuya, sağ dummy'ye uygular"
+polish = "Podwójne kliknięcie: lewy dla gracza, prawy dla dummy"

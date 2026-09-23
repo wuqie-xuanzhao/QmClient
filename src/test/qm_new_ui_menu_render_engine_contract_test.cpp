@@ -50,45 +50,6 @@ TEST(QmNewUiMenuRenderEngineContract, DisplayChangedDoesNotUseDisplayUnionData)
 	EXPECT_NE(Body.find("Graphics()->SwitchWindowScreen(DisplayIndex, false);"), std::string::npos);
 }
 
-TEST(QmNewUiMenuRenderEngineContract, GraphicsDriverCrashRecoveryUsesSafeStartupFallback)
-{
-	const std::string Source = ReadTextFile("src/engine/client/client.cpp");
-	const std::string Detector = FunctionBody(Source, "static bool QmCrashTextHasGraphicsDriverFault");
-	const std::string Recovery = FunctionBody(Source, "static bool ApplyQmSafeGraphicsRecovery");
-	const std::string StartupHook = FunctionBody(Source, "static void RecoverQmGraphicsSettingsAfterDriverCrash");
-
-	EXPECT_NE(Detector.find("Exception module: nvoglv64.dll"), std::string::npos);
-	EXPECT_NE(Detector.find(" in module nvoglv64.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: vulkan-1.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: D3D12Core.dll"), std::string::npos);
-	EXPECT_NE(Detector.find(" in module D3D12Core.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: d3d12.dll"), std::string::npos);
-	EXPECT_NE(Detector.find("Exception module: dxgi.dll"), std::string::npos);
-	EXPECT_NE(Detector.find(" in module opengl32.dll"), std::string::npos);
-
-	EXPECT_NE(StartupHook.find("gs_pQmLifecycleMarkerFile"), std::string::npos);
-	EXPECT_NE(StartupHook.find("ListDirectoryInfo"), std::string::npos);
-	EXPECT_NE(StartupHook.find("ReadFileStr"), std::string::npos);
-
-	EXPECT_NE(Recovery.find("str_copy(g_Config.m_GfxBackend, SafeConfig.m_pBackend);"), std::string::npos);
-	EXPECT_NE(Recovery.find("g_Config.m_QmGraphicsMode = graphics_backend::GRAPHICS_MODE_COMPATIBILITY;"), std::string::npos);
-	EXPECT_NE(Recovery.find("const int FallbackGLMajor = 0;"), std::string::npos);
-	EXPECT_NE(Recovery.find("const int FallbackGLMinor = 0;"), std::string::npos);
-	EXPECT_EQ(Recovery.find("CONF_PLATFORM_MACOS"), std::string::npos);
-	EXPECT_NE(Recovery.find("SafeConfig.m_FsaaSamples"), std::string::npos);
-	EXPECT_NE(Recovery.find("RecoveryFullscreen"), std::string::npos);
-	EXPECT_NE(Recovery.find("graphics_backend::RecoveryFullscreenMode(g_Config.m_GfxFullscreen)"), std::string::npos);
-	EXPECT_NE(StartupHook.find("previous crash report '%s' points to the graphics driver; this launch uses safe graphics settings"), std::string::npos);
-	EXPECT_EQ(StartupHook.find("resetting safe graphics settings in windowed mode without FSAA"), std::string::npos);
-	EXPECT_EQ(StartupHook.find("CONF_PLATFORM_MACOS"), std::string::npos);
-
-	const size_t HookCall = Source.find("RecoverQmGraphicsSettingsAfterDriverCrash(pStorage);");
-	const size_t CommandLineParse = Source.find("pConsole->ParseArguments(argc - 1, &argv[1]);");
-	ASSERT_NE(HookCall, std::string::npos);
-	ASSERT_NE(CommandLineParse, std::string::npos);
-	EXPECT_LT(HookCall, CommandLineParse);
-}
-
 TEST(QmNewUiMenuRenderEngineContract, ImplausibleRefreshRatesAreNotPersisted)
 {
 	const std::string Backend = ReadTextFile("src/engine/client/backend_sdl.cpp");

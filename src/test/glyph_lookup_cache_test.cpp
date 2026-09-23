@@ -55,9 +55,15 @@ TEST(GlyphOutline, ZeroRadiusCopiesPixels)
 TEST(GlyphOutline, ClipsNeighborsAtEdgesAndPreservesSaturatedCenter)
 {
 	const unsigned char aInput[] = {
-		255, 0, 0,
-		0, 0, 0,
-		0, 0, 0,
+		255,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
 	};
 	unsigned char aOutput[9] = {};
 	QmGrowGlyphOutline(aInput, aOutput, 3, 3, 1);
@@ -71,8 +77,10 @@ TEST(GlyphOutline, ClipsNeighborsAtEdgesAndPreservesSaturatedCenter)
 TEST(GlyphOutline, MaximumRadiusSpreadsInsideSmallBitmap)
 {
 	const unsigned char aInput[] = {
-		0, 0,
-		0, 200,
+		0,
+		0,
+		0,
+		200,
 	};
 	unsigned char aOutput[4] = {};
 	QmGrowGlyphOutline(aInput, aOutput, 2, 2, 4);

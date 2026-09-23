@@ -22,6 +22,18 @@ TEST(QmMapUpload, BuildsAndParses)
 	EXPECT_TRUE(R.m_Success);
 }
 
+TEST(QmMapUpload, RejectsMultipartBoundaryInFields)
+{
+	const unsigned char Data[] = {'m', 'a', 'p'};
+	std::string Body;
+	EXPECT_FALSE(QmMapUpload::BuildMultipart("test.map", "player", Data, sizeof(Data), "test", Body));
+	EXPECT_TRUE(Body.empty());
+	EXPECT_FALSE(QmMapUpload::BuildMultipart("test.map", "player", Data, sizeof(Data), "player", Body));
+	EXPECT_TRUE(Body.empty());
+	EXPECT_FALSE(QmMapUpload::BuildMultipart("test.map", "player", Data, sizeof(Data), "map", Body));
+	EXPECT_TRUE(Body.empty());
+}
+
 TEST(QmMapUpload, UploadLifecycleRejectsUnconfiguredEndpoints)
 {
 	QmMapUpload::CUpload Upload;

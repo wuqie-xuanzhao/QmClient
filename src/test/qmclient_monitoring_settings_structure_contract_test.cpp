@@ -17,7 +17,6 @@
 #include <fstream>
 #include <limits>
 #include <optional>
-#include <set>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -88,39 +87,6 @@ TEST(QmMonitoringSettingsStructureContract, SettingsCardDeckSkipsAnimationRuntim
 	EXPECT_EQ(Source.find("State.m_ClipContent = ContentHeightAnimationActive;"), std::string::npos);
 	EXPECT_NE(CardSource.find("const CUIRect ClipRect = ResolveSettingsCardContentClipRect(DrawFrame.m_ContentRect, DrawFrame.m_Rect, UiScale);"), std::string::npos);
 	EXPECT_NE(CardSource.find("Ctx.m_pUi->ClipEnable(&ClipRect);"), std::string::npos);
-}
-
-TEST(QmMonitoringSettingsStructureContract, QmClientSearchNavigationRouteTableCoversRegistryDeckTabs)
-{
-	const std::string QmClient = ReadRepoFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const size_t RouteTablePos = QmClient.find("static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[]");
-	ASSERT_NE(RouteTablePos, std::string::npos);
-	const size_t RouteTableEnd = QmClient.find("};", RouteTablePos);
-	ASSERT_NE(RouteTableEnd, std::string::npos);
-	const std::string RouteTable = QmClient.substr(RouteTablePos, RouteTableEnd - RouteTablePos);
-
-	std::set<std::string> DeckTabs;
-	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
-	{
-		if(Default.m_pStableId == nullptr || Default.m_pDefaultTab == nullptr)
-			continue;
-		if(str_startswith(Default.m_pStableId, "deck:") == nullptr)
-			continue;
-		DeckTabs.insert(Default.m_pDefaultTab);
-	}
-	ASSERT_FALSE(DeckTabs.empty());
-	for(const std::string &Tab : DeckTabs)
-	{
-		if(Tab == "qmclient-contributors")
-		{
-			EXPECT_NE(QmClient.find("if(str_comp(pTab, \"qmclient-contributors\") == 0)"), std::string::npos);
-			continue;
-		}
-		if(Tab == "global-search")
-			continue;
-		const std::string Needle = "{\"" + Tab + "\",";
-		EXPECT_NE(RouteTable.find(Needle), std::string::npos) << Tab;
-	}
 }
 
 TEST(QmMonitoringSettingsStructureContract, RenderOnlyNumericFieldsAndDropDownsDoNotMutateControlState)

@@ -1,5 +1,5 @@
-#include <base/detect.h>
 #include <base/crashdump.h>
+#include <base/detect.h>
 
 #ifndef CONF_BACKEND_OPENGL_ES
 #include <GL/glew.h>

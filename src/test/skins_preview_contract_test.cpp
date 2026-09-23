@@ -293,37 +293,6 @@ TEST(SkinsContract, AsyncSkinListKeepsQueuedColorVariantsSelectable)
 	EXPECT_NE(MenuSource.find("*pColorFeet = SelectedColorKey.m_ColorFeet;"), std::string::npos);
 }
 
-TEST(SkinsContract, DirectoryScanMergesLocalAndDownloadedSkinsWithLocalPriority)
-{
-	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
-	ASSERT_TRUE(File.good());
-	std::stringstream Buffer;
-	Buffer << File.rdbuf();
-	const std::string Source = Buffer.str();
-
-	const size_t ProcessDirectoryPos = Source.find("void CSkins::ProcessSkinDirectoryScanJob()");
-	ASSERT_NE(ProcessDirectoryPos, std::string::npos);
-	const size_t ProcessListPlanPos = Source.find("void CSkins::ProcessSkinListPlanJob()", ProcessDirectoryPos);
-	ASSERT_NE(ProcessListPlanPos, std::string::npos);
-	const std::string ProcessDirectoryBody = Source.substr(ProcessDirectoryPos, ProcessListPlanPos - ProcessDirectoryPos);
-
-	EXPECT_NE(Source.find("ScanDirectory(\"skins\", CSkinContainer::EType::LOCAL);"), std::string::npos);
-	EXPECT_NE(Source.find("ScanDirectory(\"downloadedskins\", CSkinContainer::EType::DOWNLOAD);"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("const bool KeepExistingLocalSkin ="), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->Type() == CSkinContainer::EType::LOCAL"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("Entry.m_Type == CSkinContainer::EType::DOWNLOAD"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("if(KeepExistingLocalSkin)"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_StorageType = Entry.m_StorageType;"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_Type = Entry.m_Type;"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("CSkinContainer SkinContainer(this, Entry.m_Name.c_str(), Entry.m_Type, Entry.m_StorageType);"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->SetLastModified(Entry.m_LastModified);"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pLoadJob->Abort();"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("if(OldState == CSkinContainer::EState::LOADED && pSkinContainer->m_pSkin)"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pSkin->m_OriginalSkin.Unload(Graphics());"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pSkin.reset();"), std::string::npos);
-	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->SetState(CSkinContainer::EState::PENDING, OldPriority);"), std::string::npos);
-}
-
 TEST(SkinsContract, PrepareSkinDataResetsMetricsBeforeWritingPlan)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");

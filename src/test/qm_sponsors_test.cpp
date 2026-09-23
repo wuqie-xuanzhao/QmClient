@@ -1,5 +1,5 @@
-#include <game/client/components/qmclient/qm_sponsors.h>
 #include <game/client/components/qmclient/qm_realtime.h>
+#include <game/client/components/qmclient/qm_sponsors.h>
 
 #include <gtest/gtest.h>
 

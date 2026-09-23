@@ -53,55 +53,55 @@ TEST(VoiceUtils, VoiceWebSocketUrlMigratesOnlyOfficialUdpDefault)
 
 namespace
 {
-class CVoiceTransportTestClient final : public IQmWebSocketClient
-{
-public:
-	STuning m_Tuning;
-	EQmWebSocketState m_State = EQmWebSocketState::IDLE;
-	bool m_Desired = false;
-	bool m_SendAccepted = true;
-	int64_t m_ConnectedTick = 0;
-	std::deque<SQmWebSocketMessage> m_Incoming;
+	class CVoiceTransportTestClient final : public IQmWebSocketClient
+	{
+	public:
+		STuning m_Tuning;
+		EQmWebSocketState m_State = EQmWebSocketState::IDLE;
+		bool m_Desired = false;
+		bool m_SendAccepted = true;
+		int64_t m_ConnectedTick = 0;
+		std::deque<SQmWebSocketMessage> m_Incoming;
 
-	bool Available() const override { return true; }
-	const char *UnavailableReason() const override { return ""; }
-	bool Connect(const SQmWebSocketConnectConfig &, std::string &) override
-	{
-		m_Desired = true;
-		m_State = EQmWebSocketState::CONNECTING;
-		return true;
-	}
-	void Disconnect() override
-	{
-		m_Desired = false;
-		m_State = EQmWebSocketState::IDLE;
-		m_Incoming.clear();
-	}
-	bool Desired() const override { return m_Desired; }
-	EQmWebSocketState State() const override { return m_State; }
-	const char *StateName() const override { return "test"; }
-	bool SendText(const char *, size_t) override { return false; }
-	bool SendBinary(const char *, size_t) override { return m_SendAccepted; }
-	void SetTuning(const STuning &Tuning) override { m_Tuning = Tuning; }
-	bool PollMessage(SQmWebSocketMessage &Out) override
-	{
-		if(m_Incoming.empty())
-			return false;
-		Out = std::move(m_Incoming.front());
-		m_Incoming.pop_front();
-		return true;
-	}
-	size_t PendingMessages() const override { return m_Incoming.size(); }
-	int64_t LastConnectedTick() const override { return m_ConnectedTick; }
-	int64_t LastMessageTick() const override { return 0; }
-	int64_t SendCount() const override { return 0; }
-	int64_t RecvCount() const override { return 0; }
-	int64_t DroppedIncomingCount() const override { return 0; }
-	int64_t DroppedOutgoingCount() const override { return 0; }
-	int64_t ReconnectCount() const override { return 0; }
-	int LastPingRttMs() const override { return -1; }
-	const char *LastError() const override { return ""; }
-};
+		bool Available() const override { return true; }
+		const char *UnavailableReason() const override { return ""; }
+		bool Connect(const SQmWebSocketConnectConfig &, std::string &) override
+		{
+			m_Desired = true;
+			m_State = EQmWebSocketState::CONNECTING;
+			return true;
+		}
+		void Disconnect() override
+		{
+			m_Desired = false;
+			m_State = EQmWebSocketState::IDLE;
+			m_Incoming.clear();
+		}
+		bool Desired() const override { return m_Desired; }
+		EQmWebSocketState State() const override { return m_State; }
+		const char *StateName() const override { return "test"; }
+		bool SendText(const char *, size_t) override { return false; }
+		bool SendBinary(const char *, size_t) override { return m_SendAccepted; }
+		void SetTuning(const STuning &Tuning) override { m_Tuning = Tuning; }
+		bool PollMessage(SQmWebSocketMessage &Out) override
+		{
+			if(m_Incoming.empty())
+				return false;
+			Out = std::move(m_Incoming.front());
+			m_Incoming.pop_front();
+			return true;
+		}
+		size_t PendingMessages() const override { return m_Incoming.size(); }
+		int64_t LastConnectedTick() const override { return m_ConnectedTick; }
+		int64_t LastMessageTick() const override { return 0; }
+		int64_t SendCount() const override { return 0; }
+		int64_t RecvCount() const override { return 0; }
+		int64_t DroppedIncomingCount() const override { return 0; }
+		int64_t DroppedOutgoingCount() const override { return 0; }
+		int64_t ReconnectCount() const override { return 0; }
+		int LastPingRttMs() const override { return -1; }
+		const char *LastError() const override { return ""; }
+	};
 }
 
 TEST(VoiceUtils, WebSocketVoiceBoundsOutgoingQueueAndResetsAfterReconnect)
@@ -453,15 +453,16 @@ TEST(VoiceCore, ProcessIncomingNormalPayload)
 
 TEST(VoiceCore, ProcessIncomingTruncatedPayload)
 {
+	uint8_t aPayload[200] = {};
 	uint8_t aPacket[1200];
 	const size_t PacketSize = BuildVoicePacket(aPacket, 3, VOICE_TYPE_AUDIO,
-		200, 0x12345678u, 0u, 0, 1, 100, 50.0f, 50.0f, nullptr);
+		sizeof(aPayload), 0x12345678u, 0u, 0, 1, 100, 50.0f, 50.0f, aPayload);
+	ASSERT_EQ(PacketSize, VOICE_PACKET_HEADER_SIZE + sizeof(aPayload));
 
 	uint16_t PayloadSize = 0;
-	ASSERT_TRUE(ParseVoicePacketPayloadSize(aPacket, (int)PacketSize, PayloadSize));
-	EXPECT_EQ(PayloadSize, 200);
-
-	EXPECT_FALSE(ShouldProcessPayload(PayloadSize, VOICE_PACKET_HEADER_SIZE, (int)PacketSize));
+	EXPECT_FALSE(ParseVoicePacketPayloadSize(aPacket, (int)PacketSize - 1, PayloadSize));
+	EXPECT_EQ(ClassifyBuiltVoicePacket(aPacket, PacketSize - 1, 0x12345678u, 0u),
+		EVoiceIncomingPacketDecision::DROP_HEADER);
 }
 
 TEST(VoiceCore, ProcessIncomingBadMagic)

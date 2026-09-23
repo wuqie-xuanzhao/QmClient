@@ -31,6 +31,8 @@ const CUIRect *CUi::GetPopupMenuRect(const SPopupMenuId *pId) const
 
 void CUi::DoPopupMenu(const SPopupMenuId *pId, float X, float Y, float Width, float Height, void *pContext, FPopupMenuFunction pfnFunc, const SPopupMenuProperties &Props)
 {
+	if(RenderOnly())
+		return;
 	if(Props.m_AutoReposition)
 	{
 		constexpr float Margin = SPopupMenu::POPUP_BORDER + SPopupMenu::POPUP_MARGIN;

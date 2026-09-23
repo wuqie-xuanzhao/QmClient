@@ -14,6 +14,7 @@
 #include <engine/shared/json.h>
 #include <engine/sqlite.h>
 #include <engine/storage.h>
+
 #include <game/client/components/qmclient/browser_friend_list.h>
 
 #include <gtest/gtest.h>
@@ -284,11 +285,11 @@ TEST_F(CServerBrowserStateTest, UpdatingExistingServerInfoInvalidatesFriendListS
 	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8303"));
 	AddServer(Address);
 	const uint64_t Revision = m_Browser.FriendListRevision();
-	CServerInfo Updated = *m_Browser.Find(Address);
+	CServerInfo Updated = m_Browser.Find(Address)->m_Info;
 	str_copy(Updated.m_aName, "Updated server");
 	CServerBrowserTestAccess::SetFirstInfo(m_Browser, Updated);
 	EXPECT_NE(m_Browser.FriendListRevision(), Revision);
-	EXPECT_STREQ(m_Browser.Find(Address)->m_aName, "Updated server");
+	EXPECT_STREQ(m_Browser.Find(Address)->m_Info.m_aName, "Updated server");
 }
 
 TEST(ServerBrowser, PingCache)

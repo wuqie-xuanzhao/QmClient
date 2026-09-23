@@ -61,6 +61,9 @@
 %d users
 == %d utilizadores
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | principal: %s | dummy: %s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d KiB (%.1f KiB/s)
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == É necessário um nome de jogador.
+
+A save is already being restored. Please wait.
+== Um jogo guardado já está a ser restaurado. Aguarda.
 
 A screenshot with this name already exists
 == Já existe uma captura de ecrã com este nome
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == Avançado
 
+Advanced mode
+== Modo avançado
+
 Advanced options
 == Opções avançadas
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == Aparência
 
-Appearance / Chat
-== Aparência / Chat
-
-Appearance / Hook Collision
-== Aparência / Colisão do Gancho
-
-Appearance / HUD
-== Aparência / HUD
-
-Appearance / Info Messages
-== Aparência / Mensagens de Informação
-
-Appearance / Laser
-== Aparência / Laser
-
-Appearance / Name Plate
-== Aparência / Placa de Nome
-
 Append to log file instead of overwriting
 == Anexar ao ficheiro de registo em vez de sobrescrever
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == Aplique um preset editável primeiro
 
-Apply Best input to other Tees
-== Aplicar Best input a outros Tees
-
 Apply Changes
 == Aplicar Alterações
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == Aplicar entrada rápida também a outros Tees
-
-Apply Saiko+ to other Tees
-== Aplicar Saiko+ a outros Tees
 
 Apply squishy Tee deformation to other players
 == Aplicar deformação de Tee elástico a outros jogadores
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Tirar automaticamente screenshot do quadro de estatísticas
 
-Available for this bundled font
-== Disponível para esta fonte incluída
-
 Available practice commands: 
 == Comandos de treino disponíveis: 
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Melhor
 
-Best input
-== Melhor entrada
-
-Best input delay compensation percentage
-== Melhor entrada compensação de atraso percentual
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Melhor entrada modo de interpolação (1=linear 2=cúbico 3=suave)
-
-Best input others
-== Melhor entrada (outros)
-
-Best input prediction offset (0.01 tick)
-== Melhor entrada deslocamento de previsão (0.01 tick)
-
-Best input smooth percentage
-== Melhor entrada suavização percentual
-
 Better scoreboard
 == Placar melhorado
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == Integrado
-
-Bundled vector profile:
-== Perfil vetorial incluído:
 
 Button - Disabled
 == Botão - Desativado
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == Clássico pro
+
+Classic title glow
+== Brilho clássico
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== Brilho clássico do título: 0 = desligado, 1 = subtil (6 camadas), 2 = Calamity completo (16 camadas)
 
 Clear
 == Limpar
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == Depuração de recorte de camada de tiles.
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== Endereço WebSocket dedicado (vazio usa wss://qmclient.icu/ws)
+
 Deep freeze color
 == Cor de congelamento profundo
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == Reduzido (0.78)
 
+Draft file is empty
+== O ficheiro de rascunho está vazio
+
 Drag HUD modules with the left mouse button
 == Arrasta os módulos HUD com o botão esquerdo do rato
+
+Drag to another category to move this friend.
+== Arraste este amigo para outra categoria para o mover.
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== Arraste para reordenar; clique para expandir ou recolher. Clique com o botão direito ou use a engrenagem para gerir categorias
 
 Dragger Inner Color
 == Cor interior do arrastador
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Força de redução de ruído simples de fallback
 
-Fast input
-== Entrada rápida
-
 Fast input (reduce visual latency)
 == Entrada rápida (reduz latência visual)
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == Nome na Chegada:
+
+Finish or reset the current race before restoring a save.
+== Termina ou reinicia a corrida atual antes de restaurar um jogo guardado.
 
 Finished
 == Concluído
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == Posição Y da sobreposição de entrada (percentagem)
 
-Input smoothing
-== Suavização de entrada
-
 Input switch
 == Interruptor de entrada
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == Internet (De fonte online)
 
-Interpolation
-== Interpolação
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == Intervalo para salvar automaticamente a cópia do mapa atual do editor na pasta "auto" (0=desligado)
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == Opção inválida
+
+Invalid save number. Use a number from the save list.
+== Número de jogo guardado inválido. Usa um número da lista.
 
 Invalid spectator id used
 == ID de espectador inválido usado
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == Latência
 
-Latency compensation
-== Compensação de latência
-
 Latency Jitter
 == Variação de latência
-
-Launch a large emote
-== Lançar um emote grande
 
 Launch count threshold for the next sponsor reminder
 == Limite de arranques para o próximo lembrete
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == Deixe vazio para usar o prompt padrão
 
-Leave empty to use UDP
-== Deixe vazio para usar UDP
-
 Left jump
 == Salto esquerdo
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == Largura do canal esquerdo/direito
+
+Legacy option: connections that skip TLS verification are rejected
+== Opção legada: ligações que ignoram a verificação TLS são recusadas
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== URL WebSocket em tempo real antiga (migrada para qm_websocket_url)
 
 Length
 == Duração
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == Leve
+
+Light band (0 = style default)
+== Fase da cor (0 = estilo)
 
 Limit information in spectator mode
 == Limitar informações no modo espectador
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == Apenas local
 
+Locate
+== Localizar
+
 Lock delay
 == Atraso do bloqueio
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == Registar a criação/reprodução de eventos previstos e a confirmação de snapshots para depurar sons duplicados.
+
+Log realtime WebSocket channel events
+== Registar eventos do canal WebSocket em tempo real
 
 Log the network
 == Registar a rede
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == Cor gradiente do texto de mensagens normais
 
-Not available; FreeType is used
-== Indisponível; o FreeType é usado
-
 NOT CONNECTED
 == NÃO CONECTADO
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == Guardar apenas melhorias
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== Apenas algumas fontes incluídas têm atlas vetoriais de placas. As restantes usam FreeType.
-
 Only show after joining a team
 == Mostrar apenas após entrar numa equipa
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == Abrir DDNet Wiki
 
-Open editor
-== Abrir editor
-
 Open emote selector
 == Abrir seletor de emotes
+
+Open folder
+== Abrir pasta
 
 Open map editor
 == Abrir editor de mapas
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == Chave de autenticação opcional para o provedor DNSBL
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== Endpoint WebSocket de voz opcional (vazio mantém o transporte UDP)
-
 Or visit DDNet.org
 == Ou visita DDNet.org
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == Registar logs de depuração de negociação KCP, fallback e ciclo de vida da sessão
-
-Output nameplate MSDF path debug log
-== Registar log de depuração dos caminhos MSDF das plaquinhas
 
 Output switch
 == Interruptor de saída
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == Último ano
+
+Paste sp_dc from Spotify web cookies
+== Cole o cookie sp_dc do navegador
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Caminho para o certificado CA usado para verificar o certificado do servidor MySQL/MariaDB
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == Pontos
 
+Polished
+== Polido
+
 Popup animation
 == Animação pop-up
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == Margem de previsão quando congelado
 
-Prediction offset
-== Deslocamento de previsão
-
 Preparing chat export: %d%%
 == A preparar a exportação da conversa: %d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == Visibilidade do botão de pré-visualização enquanto o editor está ativo.
+
+Preview cut (P)
+== Pré-visualizar corte (P)
 
 Preview dummy nameplate
 == Pré-visualizar placa de nome do Dummy
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == Envia publicamente a todos o teu tempo atual nesta corrida atual
 
+Publish
+== Publicar
+
+Publish failed
+== Falha ao publicar
+
+Published
+== Publicado
+
+Publishing…
+== A publicar…
+
 Pulse
 == Pulsar
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == QmClient
 
-QmClient / Function
-== QmClient / Função
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / Visual
-
 QmClient chat log
 == Registo de chat do QmClient
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == Distribuição online do QmClient
-
-QmClient realtime WebSocket URL (empty disables transport)
-== URL do WebSocket em tempo real do QmClient (vazio desativa o transporte)
 
 QmClient Settings
 == Definições do QmClient
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Menu de ação rápida para jogadores
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== Modo de entrada rápida (0=Fast 3=Best 4=Saiko+; 1/2 compatível com valores antigos e mapeado para Best)
 
 Quit
 == Sair
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == A sério? Nem um pouquinho?
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== Intervalo de heartbeat do canal em tempo real (segundos, 0 usa a predefinição)
+
+Realtime channel reconnect backoff base (ms)
+== Base do backoff de reconexão do canal em tempo real (ms)
+
+Realtime channel reconnect backoff cap (ms)
+== Limite do backoff de reconexão do canal em tempo real (ms)
 
 Reason
 == Motivo
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == A reiniciar. Por favor, aguarda…
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== Restaurar um jogo guardado de dois jogadores? /qm Yes carrega o mais recente; /qm Yes número escolhe outro; /qm No ignora.
+
 Restore Kugou files
 == Restaurar ficheiros do Kugou
 
 Restore old single-segment hook collision line behavior
 == Restaurar comportamento antigo da linha de colisão de gancho de segmento único
+
+Restoring save %d: main '%s', dummy '%s'.
+== A restaurar o jogo guardado %d: principal '%s', dummy '%s'.
 
 Retry remote stats
 == Tentar novamente as estatísticas remotas
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == Salto direito
-
-Right-click or use the gear to manage categories
-== Clique com o botão direito ou use a engrenagem para gerir categorias
 
 Right-click to disable auto-translate
 == Clique direito para desativar tradução automática
@@ -9452,12 +9437,6 @@ Run server
 SA
 == SA
 
-Saiko+ input amount (0.01 tick)
-== Quantidade de entrada Saiko+ (0.01 tick)
-
-Saiko+ others
-== Saiko+ outros
-
 Same as "vote no"
 == O mesmo que "votar não"
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == Guardar últimos %d min
 
+Save loaded; local record removed.
+== Jogo guardado carregado; registo local removido.
+
+Save loaded; the local record could not be removed.
+== Jogo guardado carregado, mas não foi possível remover o registo local.
+
 Save player names in replay
 == Guardar nomes de jogadores na repetição
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == Guardar repetição do melhor tempo por jogo
+
+Save restore dismissed.
+== Restauração cancelada.
+
+Save restore stopped without confirming success. The local record was kept.
+== O carregamento não foi confirmado. A restauração parou e o registo local foi mantido.
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== Restauração interrompida: ligação, nomes ou equipa não estavam prontos. O registo local foi mantido.
 
 Save settings file on exit
 == Guardar ficheiro de configurações ao sair
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == A pesquisar em todas as pastas de mapas...
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== Sec-WebSocket-Protocol enviado durante o handshake em tempo real
 
 Secondary
 == Secundário
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == Informações do servidor
 
-Server IP
-== IP do servidor
-
 Server kick/spec votes are no longer actively moderated.
 == As votações de expulsão/espetador do servidor já não são moderadas ativamente.
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == Tipo de servidor (novice, moderate, etc.)
+
+Server URL
+== URL do servidor
+
+Server-assigned style
+== Estilo atribuído pelo servidor
 
 Set a voice server to enable QmClient distribution
 == Defina um servidor de voz para ativar a distribuição do QmClient
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == Parte da divisão nome/mapa do navegador de servidores dada à coluna de nome (por mil)
 
+Shimmer speed (polished)
+== Velocidade do brilho (polido)
+
 Short server names
 == Nomes de servidor curtos
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == Mostrar uma pequena visão do Dummy
+
+Show advanced title settings (collapsing keeps configured effects)
+== Mostrar definições avançadas do título (recolher mantém os efeitos configurados)
 
 Show air jump indicator
 == Mostrar indicador de salto aéreo
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == Intensidade da redução de ruído simples
 
+Single color
+== Cor única
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== Cor única e arco-íris substituem as cores dos estilos animados; o movimento do estilo é mantido
+
 Size
 == Tamanho
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == Alinhar o deslocamento da oscilação a pixels inteiros (glifos mais nítidos, movimento mais travado)
 
+Snap wave to pixels
+== Alinhar onda a píxeis inteiros
+
 Snapshot Age
 == Idade do snapshot
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == Proteção contra spam: evita spam de troca de equipa, chat, mudanças de skin, emotes, votos
+
+Spatial effect
+== Efeito espacial
 
 Speaker
 == Altifalante
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == Parar prática
 
+Stop preview (P)
+== Parar pré-visualização (P)
+
 Stop record
 == Parar gravação
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Mira Sub-Tick
+
+Subtle
+== Subtil
 
 Successfully saved the replay!
 == Repetição guardada com sucesso!
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / Roda de Atalhos
-
-TClient / Status Bar
-== TClient / Barra de Status
 
 TClient Developers
 == Programadores do TClient
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == Não há nenhum teletransportador de checkpoint com esse índice no mapa.
 
+There is no pending save restore prompt.
+== Não há nenhum pedido de restauração pendente.
+
 There is no teleporter with that index on the map.
 == Não há nenhum teletransportador com esse índice no mapa.
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == O modo de pensamento requer um modelo de raciocínio
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== Esta fonte não tem perfil vetorial incluído. As placas usarão FreeType.
+This connection cannot change names while connected. Reconnect with the saved names first.
+== Esta ligação não permite mudar nomes durante a sessão. Volta a ligar com os nomes guardados.
 
 This ID is not connected
 == Este ID não está conectado
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == Este save existe, mas não fazes parte dele.
+
+This save is no longer in the local save file.
+== Este jogo guardado já não está no ficheiro local.
 
 This save-code already exists
 == Este código de save já existe
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == Comprimento de onda da oscilação do título em pixels
 
+Title color
+== Cor do título
+
+Title color (single color)
+== Cor do título (única)
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == Velocidade do varrimento de luz do título em 1/100 de linha por segundo (0 = desligado)
+
+Title opacity (custom color)
+== Opacidade (cor própria)
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == Fase por caractere e pixel em 1/1000 px (0 = padrão do estilo, 20 = faixa de luz visível)
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == Amplitude de oscilação vertical por caractere em pixels (0 = desativado)
 
+Title preview
+== Pré-visualização do título
+
 Title server unavailable; retry
 == Servidor de títulos indisponível; tenta novamente
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == Efeito espacial do título: 0 = polido, 1 = sólido, 2 = Calamity clássico, 3 = desligado
+
+Title style
+== Estilo do título
 
 Title too long or contains unsupported characters
 == Título demasiado longo ou com caracteres não suportados
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == Alternar dyncam
+
+Toggle emote launcher
+== Alternar lançador de emotes
 
 Toggle fast practice mode
 == Alternar modo de prática rápida
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == Estado desconhecido
 
+Unknown title style
+== Estilo de título desconhecido
+
 Unload the rank ghost
 == Descarregar o fantasma de rank
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == Usa /pause primeiro, depois poderás morrer
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== Usa /qm Yes [número] para restaurar um jogo guardado ou /qm No para ignorar.
+
 Use 12 hour clock
 == Usar relógio de 12 horas
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == Usa a tecla k para matar (reiniciar), q para pausar e ver outros jogadores. Vê as definições para outros atalhos de teclas.
+
+Use large emote
+== Usar emote grande
 
 Use mouse sensitivity when dynamic camera is on
 == Usar sensibilidade do rato quando a câmara dinâmica está ativa
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == Use isto antes de `add_favorite` para agrupar favoritos. Termine com `end_favorite_group`
 
-Use vector font rendering for nameplates
-== Usar renderização de fonte vetorial nas placas
-
-Use vector font rendering for nameplates when a bundled profile is available
-== Usar renderização de fonte vetorial nas placas quando existir um perfil incluído
-
 Use warlist colors instead of regular colors
 == Usar cores da lista de guerra em vez de cores normais
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == Espessura da fonte personalizada variável
-
-Vector nameplate text
-== Texto vetorial da placa
 
 Velocity
 == Velocidade
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == Token da sala de voz (opcional)
 
-Voice server address host:port
-== Endereço do servidor de voz host:porta
+Voice server URL (ws:// or wss://)
+== URL do servidor de voz (ws:// ou wss://)
 
 Voice stereo output
 == Saída estéreo de voz
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == Aviso
 
+Wave amount
+== Amplitude da onda
+
+Wave speed (0.01 rad/s)
+== Velocidade da onda (0,01 rad/s)
+
+Wave wavelength
+== Comprimento de onda
+
 Weak hook
 == Gancho fraco
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == Site
-
-WebSocket endpoint (optional)
-== Endpoint WebSocket (opcional)
 
 Welcome to DDNet
 == Bem-vindo ao DDNet
@@ -14330,6 +14378,10 @@ required
 [Team status]
 solo
 == Solo
+
+[Title color mode]
+Use style colors
+== Usar as cores do estilo
 
 [Touch button behavior]
 Bind

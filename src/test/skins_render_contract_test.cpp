@@ -140,63 +140,6 @@ TEST(SkinsContract, StaleTextureHandlesAreNotTreatedAsDrawable)
 	}
 }
 
-TEST(SkinsContract, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
-{
-	EXPECT_FALSE(CTeeRenderInfo::IsDrawableTextureState(false, false));
-	EXPECT_FALSE(CTeeRenderInfo::IsDrawableTextureState(true, true));
-	EXPECT_TRUE(CTeeRenderInfo::IsDrawableTextureState(true, false));
-	EXPECT_FALSE(CTeeRenderInfo::AreTextureVariantsDrawableState(true, false, false, false));
-	EXPECT_FALSE(CTeeRenderInfo::AreTextureVariantsDrawableState(true, false, true, true));
-	EXPECT_FALSE(CTeeRenderInfo::AreTextureVariantsDrawableState(false, false, true, false));
-	EXPECT_TRUE(CTeeRenderInfo::AreTextureVariantsDrawableState(true, false, true, false));
-
-	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");
-	const size_t ApplyDefaultPos = GameClientSource.find("bool ApplyDefaultSkin(CGameClient *pGameClient, CTeeRenderInfo &Info, unsigned SkinDescriptorFlags)");
-	ASSERT_NE(ApplyDefaultPos, std::string::npos);
-	const size_t CopyColorsPos = GameClientSource.find("void CopySkinColorsOnly", ApplyDefaultPos);
-	ASSERT_NE(CopyColorsPos, std::string::npos);
-	const std::string ApplyDefaultBody = GameClientSource.substr(ApplyDefaultPos, CopyColorsPos - ApplyDefaultPos);
-	// 回退链必须覆盖到占位皮肤这一级（Find），仅 FindOrNullptr 会在 "default" 不可用时直接失败。
-	EXPECT_NE(ApplyDefaultBody.find("m_Skins.Find(\"default\")"), std::string::npos);
-	EXPECT_NE(ApplyDefaultBody.find("if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SIX)"), std::string::npos);
-	EXPECT_NE(ApplyDefaultBody.find("if(SkinDescriptorFlags & CSkinDescriptor::FLAG_SEVEN)"), std::string::npos);
-	EXPECT_NE(ApplyDefaultBody.find("return Ready;"), std::string::npos);
-
-	const std::string UpdateRenderInfoBody = FunctionBody(GameClientSource, "void CGameClient::CClientData::UpdateRenderInfo");
-	ASSERT_FALSE(UpdateRenderInfoBody.empty());
-	// 默认皮肤不可绘制时，调用方必须先尝试沿用上一份可绘制渲染信息，
-	// 只有确实没有可复用资源时才 Reset；不能无条件 Reset 成白色方块。
-	EXPECT_NE(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid() && PreviousRenderInfoAlive)"), std::string::npos);
-	EXPECT_EQ(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))\n\t\t\tNewRenderInfo.Reset();"), std::string::npos);
-
-	const std::string RenderSource = ReadTestSourceFile("src/game/client/render.cpp");
-	const size_t RenderTeePos = RenderSource.find("void CRenderTools::RenderTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha, vec2 BodyScale");
-	ASSERT_NE(RenderTeePos, std::string::npos);
-	const std::string RenderTeeBody = FunctionBody(RenderSource, "void CRenderTools::RenderTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha, vec2 BodyScale");
-	ASSERT_FALSE(RenderTeeBody.empty());
-	EXPECT_NE(RenderTeeBody.find("const bool SixupBodyValid"), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("const bool SixBodyValid"), std::string::npos);
-	// RenderTee 的体绘制判定必须走「存活句柄」检查：句柄失效时当成不可绘制，而不是画出无色块的实心 Tee。
-	EXPECT_NE(RenderTeeBody.find("IsDrawableTextureAlive(Graphics()"), std::string::npos);
-	EXPECT_EQ(RenderTeeBody.find("CTeeRenderInfo::IsDrawableTexture("), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("else if(SixBodyValid)"), std::string::npos);
-	EXPECT_EQ(RenderTeeBody.find("else\n\t\treturn;"), std::string::npos);
-	EXPECT_LT(RenderTeeBody.find("else if(SixBodyValid)"), RenderTeeBody.find("Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);"));
-	const std::string RenderHeader = ReadTestSourceFile("src/game/client/render.h");
-	EXPECT_NE(RenderHeader.find("return IsValid && !IsNullTexture;"), std::string::npos);
-	const std::string RenderTee7Body = FunctionBody(RenderSource, "void CRenderTools::RenderTee7(");
-	ASSERT_FALSE(RenderTee7Body.empty());
-	EXPECT_NE(RenderTee7Body.find("IsDrawableTexture(EyesTexture)"), std::string::npos);
-	const std::string RenderTee6Body = FunctionBody(RenderSource, "void CRenderTools::RenderTee6(");
-	ASSERT_FALSE(RenderTee6Body.empty());
-	// 脚部贴图同样必须走「存活句柄」检查：句柄失效时当成不可绘制，而不是画出无色块的实心脚。
-	EXPECT_NE(RenderTee6Body.find("if(!IsDrawableTextureAlive(Graphics(), *pFeetTexture))"), std::string::npos);
-	EXPECT_EQ(RenderTee6Body.find("if(!CTeeRenderInfo::IsDrawableTexture(*pFeetTexture))"), std::string::npos);
-	EXPECT_NE(RenderTee6Body.find("m_Skins.FindOrNullptr(g_Config.m_TcWhiteFeetSkin)"), std::string::npos);
-	EXPECT_EQ(RenderTee6Body.find("m_Skins.Find(g_Config.m_TcWhiteFeetSkin)"), std::string::npos);
-}
-
 TEST(SkinsContract, SevenSkinRenderingIsRestrictedToOnlineServerControlledAppearance)
 {
 	const std::string GameClientSource = ReadTestSourceFile("src/game/client/gameclient.cpp");

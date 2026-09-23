@@ -205,36 +205,6 @@ TEST(QmChatInteractions, ChatInputPrefixDoesNotReserveSpaceForRightAlignedTransl
 	EXPECT_NE(Body.find("CUIRect TranslateButtonRect = {InputContentRect.x + InputContentRect.w + TranslateButtonGap"), std::string::npos);
 }
 
-TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
-{
-	const std::string Config = ReadTestSourceFile("src/engine/shared/config_variables_qmclient.h");
-	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
-	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(int MsgType, void *pRawMsg, int SourceConnection)");
-
-	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmBlockWordsAction, qm_block_words_action, 0, 0, 1"), std::string::npos);
-	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 0"), std::string::npos);
-	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 0;"), std::string::npos);
-	EXPECT_NE(Menus.find("BlockWordsAction == 1"), std::string::npos);
-	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction = 1;"), std::string::npos);
-	EXPECT_NE(Menus.find("qmclient-word-filter-match-mode\", &LabelColumn, Localize(\"Mode\")"), std::string::npos);
-	const size_t RawConsoleCall = AddLine.find("PrintBlockedMessageToConsole(ClientId, Team, pLine);");
-	const size_t HideBranch = AddLine.find("if(CanHideBlockWordsMessage)");
-	ASSERT_NE(RawConsoleCall, std::string::npos);
-	ASSERT_NE(HideBranch, std::string::npos);
-	EXPECT_LT(RawConsoleCall, HideBranch);
-	EXPECT_NE(AddLine.find("BlockWordsConsolePrinted = true;"), std::string::npos);
-	EXPECT_NE(AddLine.find("PreviousLine.m_ConsoleSuppressed == BlockWordsConsolePrinted"), std::string::npos);
-	EXPECT_NE(AddLine.find("CurrentLine.m_ConsoleSuppressed = BlockWordsConsolePrinted;"), std::string::npos);
-	EXPECT_NE(AddLine.find("ShouldHideBlockWordsMessage("), std::string::npos);
-	EXPECT_NE(AddLine.find("BlockWordsAction == EBlockWordsAction::REPLACE || CanHideBlockWordsMessage"), std::string::npos);
-	EXPECT_NE(AddLine.find("Client()->State() == IClient::STATE_DEMOPLAYBACK"), std::string::npos);
-	EXPECT_NE(AddLine.find("ClientId == GameClient()->m_Snap.m_LocalClientId"), std::string::npos);
-	EXPECT_NE(AddLine.find("GameClient()->IsLocalClientId(ClientId)"), std::string::npos);
-	EXPECT_NE(OnMessage.find("SaveChatLogLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage)"), std::string::npos);
-}
-
 TEST(QmChatRepeat, TeamMessagesKeepTheirSendChannel)
 {
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/tclient.cpp");

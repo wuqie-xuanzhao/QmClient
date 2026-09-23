@@ -93,7 +93,7 @@ bool ParseQmRealtimeMessage(const char *pData, size_t Size, SQmRealtimeMessage &
 		const json_value *pPresences = ObjectField(pPayload, "presences");
 		int64_t ServerTime = 0;
 		OutMessage.m_HasTitles = pPresences && pPresences->type == json_array &&
-			Int64Field(pPayload, "server_time", ServerTime) && ServerTime > 0;
+					 Int64Field(pPayload, "server_time", ServerTime) && ServerTime > 0;
 		OutMessage.m_HasRealtimeData = pPayload != pRoot;
 		OutMessage.m_pTitlePayload = std::shared_ptr<const json_value>(pPayload, [pRoot](const json_value *) { json_value_free(pRoot); });
 		OutMessage.m_pPayload = OutMessage.m_pTitlePayload;

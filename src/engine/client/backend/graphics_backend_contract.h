@@ -171,7 +171,8 @@ namespace graphics_backend
 	inline int ModeForRecoveryBackend(EBackendType Backend)
 	{
 		return Backend == ParseBackendName(BackendNameForGraphicsMode(GRAPHICS_MODE_COMPATIBILITY), BACKEND_TYPE_AUTO) ?
-			       GRAPHICS_MODE_COMPATIBILITY : GRAPHICS_MODE_PERFORMANCE;
+			       GRAPHICS_MODE_COMPATIBILITY :
+			       GRAPHICS_MODE_PERFORMANCE;
 	}
 
 	inline EBackendType RecoveryBackend(const SRecoveryFailures &Failures, EBackendType CrashedBackend)

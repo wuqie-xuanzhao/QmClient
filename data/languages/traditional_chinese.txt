@@ -61,6 +61,9 @@
 %d users
 == %d 個用戶
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | 本體：%s | 分身：%s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d KiB（%.1f KiB/s）
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == 玩家名稱不能為空。
+
+A save is already being restored. Please wait.
+== 正在恢復存檔，請稍候。
 
 A screenshot with this name already exists
 == 已有同名截圖
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == 高階
 
+Advanced mode
+== 進階模式
+
 Advanced options
 == 高級選項
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == 遊戲界面
 
-Appearance / Chat
-== 外觀/聊天
-
-Appearance / Hook Collision
-== 外觀 / 鉤子輔助線
-
-Appearance / HUD
-== 外觀 /HUD
-
-Appearance / Info Messages
-== 外觀/信息消息
-
-Appearance / Laser
-== 外觀/激光
-
-Appearance / Name Plate
-== 外觀/名牌
-
 Append to log file instead of overwriting
 == 追加到日誌文件而不是每次覆蓋
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == 先應用一個可編輯的預設
 
-Apply Best input to other Tees
-== 將 Best input 應用於其他 Tee
-
 Apply Changes
 == 應用更改
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == 對其他 Tee 也應用快速輸入
-
-Apply Saiko+ to other Tees
-== 將 Saiko+ 應用於其他 Tee
 
 Apply squishy Tee deformation to other players
 == 將 Q 彈 Tee 形變應用到其他玩家
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 自動對統計板截圖
 
-Available for this bundled font
-== 此隨包字型可用
-
 Available practice commands: 
 == 可用練習指令：
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 最高
 
-Best input
-== 最佳輸入
-
-Best input delay compensation percentage
-== Best input 延遲補償百分比
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Best input 插值模式（1=linear 2=cubic 3=smooth）
-
-Best input others
-== 最佳輸入其他
-
-Best input prediction offset (0.01 tick)
-== Best input 預測偏移（0.01 tick）
-
-Best input smooth percentage
-== Best input 平滑百分比
-
 Better scoreboard
 == 更好的計分板
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == 內置
-
-Bundled vector profile:
-== 隨包向量設定檔：
 
 Button - Disabled
 == 按鈕 - 未啟用
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == 古典 pro
+
+Classic title glow
+== 經典效果光暈
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== 經典頭銜光暈：0 = 關閉，1 = 柔和（6 層），2 = 完整 Calamity（16 層）
 
 Clear
 == 清空
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == 調試圖塊圖層裁剪
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== 專用 WebSocket 位址（留空使用 wss://qmclient.icu/ws）
+
 Deep freeze color
 == 深度凍結顏色
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == 降採樣縮放 (0.78)
 
+Draft file is empty
+== 草稿檔案為空
+
 Drag HUD modules with the left mouse button
 == 按住鼠標左鍵拖動 HUD 模塊
+
+Drag to another category to move this friend.
+== 拖曳到其他分類以移動此好友。
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== 拖曳調整順序，點擊展開或收起。右鍵或使用齒輪管理分類
 
 Dragger Inner Color
 == 光索實心顏色
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == 回退後的簡單降噪強度
 
-Fast input
-== 快速輸入
-
 Fast input (reduce visual latency)
 == 快速輸入（降低視覺延遲）
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == 恰分名稱：
+
+Finish or reset the current race before restoring a save.
+== 請先結束或重設目前的比賽，再恢復存檔。
 
 Finished
 == 已完成
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == 輸入疊加 Y 位置（百分比）
 
-Input smoothing
-== 輸入平滑
-
 Input switch
 == 輸入切換
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == Internet（來源於網絡）
 
-Interpolation
-== 插值
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 當前編輯器地圖副本自動保存到“auto”文件夾的時間間隔（0 表示關閉）
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == 無效的投票選項
+
+Invalid save number. Use a number from the save list.
+== 存檔序號無效，請使用清單中的序號。
 
 Invalid spectator id used
 == 無效的旁觀目標 ID
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == 延遲
 
-Latency compensation
-== 延遲補償
-
 Latency Jitter
 == 延遲抖動
-
-Launch a large emote
-== 發射大型表情
 
 Launch count threshold for the next sponsor reminder
 == 下次贊助提醒的啟動次數閾值
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == 留空使用默認提示詞
 
-Leave empty to use UDP
-== 留空則使用 UDP
-
 Left jump
 == 左跳
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == 左右聲道寬度
+
+Legacy option: connections that skip TLS verification are rejected
+== 舊版選項：跳過 TLS 驗證的連線會被拒絕
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== 舊即時 WebSocket 位址（已遷移至 qm_websocket_url）
 
 Length
 == 時長
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == 輕體
+
+Light band (0 = style default)
+== 色帶相位（0 = 風格預設）
 
 Limit information in spectator mode
 == 限制觀戰模式中的信息
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == 僅本地資源
 
+Locate
+== 定位
+
 Lock delay
 == 鎖隊延遲
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == 記錄預測事件的建立/播放與快照確認，以除錯重複聲音。
+
+Log realtime WebSocket channel events
+== 記錄即時 WebSocket 通道事件
 
 Log the network
 == 記錄網絡
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == 普通消息文字漸變顏色
 
-Not available; FreeType is used
-== 不可用；將使用 FreeType
-
 NOT CONNECTED
 == 連接未成功
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == 只保存更佳記錄
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== 只有部分隨包字型帶有名牌向量圖集，其他字型會使用 FreeType。
-
 Only show after joining a team
 == 僅在加入隊伍後顯示
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == 開啟 DDNet Wiki
 
-Open editor
-== 開啟編輯器
-
 Open emote selector
 == 打開表情選擇器
+
+Open folder
+== 開啟資料夾
 
 Open map editor
 == 打開地圖編輯器
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == 指定 DNSBL 提供商的可選身份驗證密鑰
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== 選用語音 WebSocket 端點（留空則保持 UDP 傳輸）
-
 Or visit DDNet.org
 == 或造訪 DDNet.org
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == 輸出 KCP 協商、fallback 和會話生命週期調試日誌
-
-Output nameplate MSDF path debug log
-== 輸出名牌 MSDF 路徑調試日誌
 
 Output switch
 == 輸出切換
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == 最近一年
+
+Paste sp_dc from Spotify web cookies
+== 貼上瀏覽器中的 sp_dc cookie
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == 用於驗證 MySQL/MariaDB 伺服器憑證的 CA 憑證路徑
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == 分數
 
+Polished
+== 拋光
+
 Popup animation
 == 彈出動畫
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == 凍結時的預測邊距
 
-Prediction offset
-== 預測偏移
-
 Preparing chat export: %d%%
 == 正在準備聊天匯出：%d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == 按鍵編輯器打開時用於預覽按鍵的可見度
+
+Preview cut (P)
+== 預覽片段 (P)
 
 Preview dummy nameplate
 == 預覽分身名牌
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == 公開發送你當前競速時間給所有人
 
+Publish
+== 發佈
+
+Publish failed
+== 發佈失敗
+
+Published
+== 已發佈
+
+Publishing…
+== 發佈中…
+
 Pulse
 == 脈衝
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == 棲夢
 
-QmClient / Function
-== QmClient / 功能
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / 視覺
-
 QmClient chat log
 == QmClient 聊天記錄
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == 棲夢客戶端在線分佈
-
-QmClient realtime WebSocket URL (empty disables transport)
-== QmClient 即時 WebSocket 位址（留空則停用傳輸）
 
 QmClient Settings
 == QmClient 設置
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == 對玩家快捷操作菜單
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== 快速輸入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容舊值並映射到 Best）
 
 Quit
 == 退出
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == 真的？一點都不考慮一下嗎？
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== 即時通道心跳間隔（秒，0 使用預設值）
+
+Realtime channel reconnect backoff base (ms)
+== 即時通道重連退避基準（毫秒）
+
+Realtime channel reconnect backoff cap (ms)
+== 即時通道重連退避上限（毫秒）
 
 Reason
 == 原因
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == 正在重啟，請稍等
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== 是否恢復雙人存檔？/qm Yes 讀取最新一筆，/qm Yes 序號 選擇其他存檔，/qm No 忽略本次提示。
+
 Restore Kugou files
 == 還原酷狗原始檔案
 
 Restore old single-segment hook collision line behavior
 == 恢復舊版單段鉤子輔助線行為
+
+Restoring save %d: main '%s', dummy '%s'.
+== 正在恢復存檔 %d：本體「%s」，分身「%s」。
 
 Retry remote stats
 == 重試遠程統計
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == 右跳
-
-Right-click or use the gear to manage categories
-== 右鍵或使用齒輪管理分類
 
 Right-click to disable auto-translate
 == 右鍵關閉自動翻譯
@@ -9452,12 +9437,6 @@ Run server
 SA
 == 南美
 
-Saiko+ input amount (0.01 tick)
-== Saiko+ 輸入量（0.01 tick）
-
-Saiko+ others
-== Saiko+ 其他
-
 Same as "vote no"
 == 與“投反對票”相同
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == 保存前 %d 分鐘
 
+Save loaded; local record removed.
+== 存檔讀取成功，已刪除本機紀錄。
+
+Save loaded; the local record could not be removed.
+== 存檔讀取成功，但未能刪除本機紀錄。
+
 Save player names in replay
 == 在回放中保存玩家名稱
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == 保存每場遊戲最佳記錄的回放
+
+Save restore dismissed.
+== 已取消本次存檔恢復。
+
+Save restore stopped without confirming success. The local record was kept.
+== 未確認讀檔成功，恢復流程已停止。本機紀錄已保留。
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== 連線、名字或隊伍尚未就緒，存檔恢復已停止。本機紀錄已保留。
 
 Save settings file on exit
 == 退出時保存設置文件
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == 正在搜尋全部地圖資料夾…
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== 即時握手時傳送的 Sec-WebSocket-Protocol
 
 Secondary
 == 次要
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == 伺服器信息
 
-Server IP
-== 伺服器 IP
-
 Server kick/spec votes are no longer actively moderated.
 == 伺服器的踢人/旁觀投票已不再由主動管理員模式接管
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == 伺服器類型（novice、moderate 等）
+
+Server URL
+== 伺服器 URL
+
+Server-assigned style
+== 伺服器分配風格
 
 Set a voice server to enable QmClient distribution
 == 需要先配置語音伺服器，才能啟用棲夢客戶端在線分佈
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == 伺服器瀏覽器名稱/地圖分欄中分配給名稱列的千分比
 
+Shimmer speed (polished)
+== 掠光速度（拋光檔）
+
 Short server names
 == 短伺服器名稱
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == 顯示分身的小視窗
+
+Show advanced title settings (collapsing keeps configured effects)
+== 顯示頭銜進階設定（收起後保留已設定效果）
 
 Show air jump indicator
 == 顯示空中跳指示器
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == 簡單降噪強度
 
+Single color
+== 單色
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== 單色與彩虹檔會覆蓋動態風格自帶的顏色；風格只保留浮動與掠光
+
 Size
 == 大小
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == 浮動偏移吸附到整數像素（字體更銳利，但更頓挫）
 
+Snap wave to pixels
+== 波浪位移對齊整數像素
+
 Snapshot Age
 == 快照年齡
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == 刷屏保護：防止切換隊伍、聊天、換皮膚、表情和投票的刷屏
+
+Spatial effect
+== 空間效果
 
 Speaker
 == 揚聲器
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == 停止練習
 
+Stop preview (P)
+== 停止預覽 (P)
+
 Stop record
 == 停止錄製
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Sub-Tick 瞄準
+
+Subtle
+== 柔和
 
 Successfully saved the replay!
 == 成功保存短時回放！
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / 綁定輪盤
-
-TClient / Status Bar
-== TClient / 狀態欄
 
 TClient Developers
 == TClient 開發人員
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == 這張地圖上沒有這個編號的檢查點傳送器
 
+There is no pending save restore prompt.
+== 目前沒有待處理的存檔恢復提示。
+
 There is no teleporter with that index on the map.
 == 這張地圖上沒有這個編號的傳送器
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == 啟用思考模式需要使用推理模型
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== 此字型沒有隨包向量設定檔，名牌將使用 FreeType。
+This connection cannot change names while connected. Reconnect with the saved names first.
+== 此連線不支援線上改名，請使用存檔中的名字重新連線。
 
 This ID is not connected
 == 該 ID 未連接
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == 這個存檔存在，但你不在其中。
+
+This save is no longer in the local save file.
+== 本機存檔檔案中已沒有這筆紀錄。
 
 This save-code already exists
 == 這個存檔碼已存在
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == 頭銜浮動波長（像素）
 
+Title color
+== 頭銜顏色
+
+Title color (single color)
+== 頭銜顏色（單色）
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == 頭銜掠光速度（每秒 1/100 行，0 = 關閉）
+
+Title opacity (custom color)
+== 透明度（自訂配色）
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == 頭銜逐字元相位（每像素，1/1000 像素；0 = 用風格預設值，20 = 可見光帶）
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == 頭銜逐字元垂直浮動幅度（像素，0 = 關閉）
 
+Title preview
+== 頭銜成品預覽
+
 Title server unavailable; retry
 == 頭銜服務暫不可用，請重試
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == 頭銜空間效果：0 = 拋光，1 = 實體，2 = 經典 Calamity，3 = 關閉
+
+Title style
+== 頭銜風格
 
 Title too long or contains unsupported characters
 == 頭銜過長或包含不支援的字符
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == 動態視野開關
+
+Toggle emote launcher
+== 切換表情發射器
 
 Toggle fast practice mode
 == 切換快速練習模式
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == 未知狀態
 
+Unknown title style
+== 未知的頭銜風格
+
 Unload the rank ghost
 == 卸載 Rank 影子
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == 請先使用 /pause，然後才能自殺
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== 輸入 /qm Yes [序號] 恢復存檔，或 /qm No 忽略本次提示。
+
 Use 12 hour clock
 == 使用 12 小時制
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == 使用 K 鍵自殺（重新開始），Q 鍵暫停並旁觀其他玩家。其他按鍵綁定可在設置中查看。
+
+Use large emote
+== 使用大表情
 
 Use mouse sensitivity when dynamic camera is on
 == 開啟動態攝像頭時使用鼠標感應
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == 在 `add_favorite` 之前使用它來對收藏夾進行分組。以 `end_favorite_group` 結束
 
-Use vector font rendering for nameplates
-== 使用名牌向量字型
-
-Use vector font rendering for nameplates when a bundled profile is available
-== 存在隨包向量設定檔時為名牌啟用向量字型渲染
-
 Use warlist colors instead of regular colors
 == 使用敵對列表顏色而不是常規顏色
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == 可變字型的自訂字重
-
-Vector nameplate text
-== 名牌向量字型
 
 Velocity
 == 速度
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == 語音房間 Token（可選）
 
-Voice server address host:port
-== 語音伺服器地址 host:port
+Voice server URL (ws:// or wss://)
+== 語音伺服器 URL（ws:// 或 wss://）
 
 Voice stereo output
 == 語音立體聲輸出
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == 警告
 
+Wave amount
+== 波浪幅度
+
+Wave speed (0.01 rad/s)
+== 波浪速度（0.01 弧度/秒）
+
+Wave wavelength
+== 波浪波長
+
 Weak hook
 == 弱鉤
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == 官網
-
-WebSocket endpoint (optional)
-== WebSocket 端點（選用）
 
 Welcome to DDNet
 == 歡迎加入 DDNet
@@ -14330,6 +14378,10 @@ required
 [Team status]
 solo
 == 單人
+
+[Title color mode]
+Use style colors
+== 使用風格顏色
 
 [Touch button behavior]
 Bind

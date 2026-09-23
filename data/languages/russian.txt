@@ -61,6 +61,9 @@
 %d users
 == %d пользователей
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | основной: %s | дамми: %s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d КиБ (%.1f КиБ/с)
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == Требуется имя игрока.
+
+A save is already being restored. Please wait.
+== Сохранение уже восстанавливается. Подождите.
 
 A screenshot with this name already exists
 == Скриншот с таким именем уже существует
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == Расширенные
 
+Advanced mode
+== Расширенный режим
+
 Advanced options
 == Расширенные настройки
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == Внешний вид
 
-Appearance / Chat
-== Внешний вид / Чат
-
-Appearance / Hook Collision
-== Внешний вид / Вспомогательные линии крюка
-
-Appearance / HUD
-== Внешний вид / HUD
-
-Appearance / Info Messages
-== Внешний вид / Информационные сообщения
-
-Appearance / Laser
-== Внешний вид / Лазер
-
-Appearance / Name Plate
-== Внешний вид / Табличка с именем
-
 Append to log file instead of overwriting
 == Добавлять в файл журнала вместо перезаписи
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == Сначала примените редактируемый пресет
 
-Apply Best input to other Tees
-== Применить Best input к другим Tee
-
 Apply Changes
 == Применить изменения
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == Также применять быстрый ввод к другим Tee
-
-Apply Saiko+ to other Tees
-== Применить Saiko+ к другим Tee
 
 Apply squishy Tee deformation to other players
 == Применять деформацию Q-мяча Tee к другим игрокам
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == Автоматически делать скриншот статистики
 
-Available for this bundled font
-== Доступно для этого встроенного шрифта
-
 Available practice commands: 
 == Доступные команды тренировки: 
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == Лучший
 
-Best input
-== Лучший ввод
-
-Best input delay compensation percentage
-== Процент компенсации задержки Best input
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Режим интерполяции Best input (1=linear 2=cubic 3=smooth)
-
-Best input others
-== Лучший ввод других
-
-Best input prediction offset (0.01 tick)
-== Смещение прогноза Best input (0.01 tick)
-
-Best input smooth percentage
-== Процент сглаживания Best input
-
 Better scoreboard
 == Улучшенная таблица лидеров
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == Встроенный
-
-Bundled vector profile:
-== Встроенный векторный профиль:
 
 Button - Disabled
 == Кнопка - Отключена
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == Классический pro
+
+Classic title glow
+== Классическое свечение
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== Классическое свечение титула: 0 = выкл., 1 = мягкое (6 слоёв), 2 = полное Calamity (16 слоёв)
 
 Clear
 == Очистить
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == Отладка обрезки тайловых слоёв.
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== Адрес выделенного WebSocket (пусто — используется wss://qmclient.icu/ws)
+
 Deep freeze color
 == Цвет глубокой заморозки
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == Уменьшенный масштаб (0.78)
 
+Draft file is empty
+== Файл черновика пуст
+
 Drag HUD modules with the left mouse button
 == Перетаскивайте модули HUD левой кнопкой мыши
+
+Drag to another category to move this friend.
+== Перетащите этого друга в другую категорию, чтобы переместить его.
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== Перетащите, чтобы изменить порядок; нажмите, чтобы развернуть или свернуть. Щелкните правой кнопкой мыши или используйте шестеренку для управления категориями
 
 Dragger Inner Color
 == Внутренний цвет драггера
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Запасная простая сила шумоподавления
 
-Fast input
-== Быстрый ввод
-
 Fast input (reduce visual latency)
 == Быстрый ввод (уменьшает визуальную задержку)
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == Имя на финише:
+
+Finish or reset the current race before restoring a save.
+== Завершите или сбросьте текущую гонку перед восстановлением.
 
 Finished
 == Завершённые
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == Положение наложения ввода по Y (в процентах)
 
-Input smoothing
-== Сглаживание ввода
-
 Input switch
 == Переключение ввода
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == Интернет (из онлайн-источника)
 
-Interpolation
-== Интерполяция
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == Интервал автосохранения копии текущей карты редактора в папку "auto" (0=выкл)
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == Неверная опция
+
+Invalid save number. Use a number from the save list.
+== Неверный номер сохранения. Выберите номер из списка.
 
 Invalid spectator id used
 == Использован неверный ID зрителя
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == Задержка
 
-Latency compensation
-== Компенсация задержки
-
 Latency Jitter
 == Джиттер задержки
-
-Launch a large emote
-== Запустить большое эмовыражение
 
 Launch count threshold for the next sponsor reminder
 == Порог числа запусков до следующего напоминания
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == Оставьте пустым для использования промпта по умолчанию
 
-Leave empty to use UDP
-== Оставьте пустым для использования UDP
-
 Left jump
 == Левый прыжок
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == Ширина левого/правого канала
+
+Legacy option: connections that skip TLS verification are rejected
+== Устаревшая опция: подключения без проверки TLS отклоняются
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== Старый адрес WebSocket для канала реального времени (перенесён в qm_websocket_url)
 
 Length
 == Длительность
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == Лёгкий
+
+Light band (0 = style default)
+== Фаза цвета (0 = по стилю)
 
 Limit information in spectator mode
 == Ограничить информацию в режиме наблюдателя
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == Только локально
 
+Locate
+== Найти
+
 Lock delay
 == Задержка блокировки
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == Записывать создание/воспроизведение предсказанных событий и подтверждение снимков для отладки двойных звуков.
+
+Log realtime WebSocket channel events
+== Записывать события канала WebSocket реального времени
 
 Log the network
 == Логировать сеть
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == Цвет градиента текста обычных сообщений
 
-Not available; FreeType is used
-== Недоступно; используется FreeType
-
 NOT CONNECTED
 == НЕ ПОДКЛЮЧЕНО
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == Сохранять только улучшения
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== Только у некоторых встроенных шрифтов есть векторные атласы табличек. Остальные шрифты используют FreeType.
-
 Only show after joining a team
 == Показывать только после присоединения к команде
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == Открыть DDNet Wiki
 
-Open editor
-== Открыть редактор
-
 Open emote selector
 == Открыть выбор эмоций
+
+Open folder
+== Открыть папку
 
 Open map editor
 == Открыть редактор карт
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == Необязательный ключ аутентификации для провайдера DNSBL
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== Необязательная конечная точка голосового WebSocket (пусто сохраняет транспорт UDP)
-
 Or visit DDNet.org
 == Или посетите DDNet.org
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == Выводить отладочные логи переговоров KCP, отката и жизненного цикла сессии
-
-Output nameplate MSDF path debug log
-== Выводить отладочный лог путей MSDF табличек
 
 Output switch
 == Переключение вывода
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == За последний год
+
+Paste sp_dc from Spotify web cookies
+== Вставьте sp_dc cookie из браузера
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == Путь к сертификату CA для проверки сертификата сервера MySQL/MariaDB
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == Очки
 
+Polished
+== Глянец
+
 Popup animation
 == Анимация всплытия
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == Отступ предсказания при заморозке
 
-Prediction offset
-== Смещение предсказания
-
 Preparing chat export: %d%%
 == Подготовка экспорта чата: %d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == Видимость кнопки при активном редакторе.
+
+Preview cut (P)
+== Просмотр отрезка (P)
 
 Preview dummy nameplate
 == Предпросмотр таблички дамми
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == Публично сообщает всем ваше текущее время в этом забеге
 
+Publish
+== Опубликовать
+
+Publish failed
+== Не удалось опубликовать
+
+Published
+== Опубликовано
+
+Publishing…
+== Публикация…
+
 Pulse
 == Пульс
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == QmClient
 
-QmClient / Function
-== QmClient / Функция
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / Визуальные
-
 QmClient chat log
 == Лог чата QmClient
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == Онлайн-распределение QmClient
-
-QmClient realtime WebSocket URL (empty disables transport)
-== URL WebSocket реального времени QmClient (пусто отключает транспорт)
 
 QmClient Settings
 == Настройки QmClient
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Меню быстрых действий для игроков
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== Режим быстрого ввода (0=Fast 3=Best 4=Saiko+; 1/2 совместимы со старыми значениями и отображаются на Best)
 
 Quit
 == Выйти
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == Серьёзно? Даже чуть-чуть?
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== Интервал heartbeat канала реального времени (секунды, 0 — значение по умолчанию)
+
+Realtime channel reconnect backoff base (ms)
+== Базовый интервал backoff переподключения канала реального времени (мс)
+
+Realtime channel reconnect backoff cap (ms)
+== Предел backoff переподключения канала реального времени (мс)
 
 Reason
 == Причина
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == Перезапуск. Пожалуйста, подождите…
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== Восстановить сохранение для двоих? /qm Yes — последнее, /qm Yes номер — другое, /qm No — отмена.
+
 Restore Kugou files
 == Восстановить файлы Kugou
 
 Restore old single-segment hook collision line behavior
 == Восстановить старое поведение линии столкновения крюка с одним сегментом
+
+Restoring save %d: main '%s', dummy '%s'.
+== Восстановление сохранения %d: основной '%s', дамми '%s'.
 
 Retry remote stats
 == Повторить запрос статистики
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == Кольцо
-
-Right-click or use the gear to manage categories
-== Щелкните правой кнопкой мыши или используйте шестеренку для управления категориями
 
 Right-click to disable auto-translate
 == Правый клик для отключения автоперевода
@@ -9452,12 +9437,6 @@ Run server
 SA
 == Южная Америка
 
-Saiko+ input amount (0.01 tick)
-== Saiko+ входной объём (0.01 тик)
-
-Saiko+ others
-== Saiko+ других
-
 Same as "vote no"
 == То же, что и "vote no"
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == Сохранить последние %d мин
 
+Save loaded; local record removed.
+== Сохранение загружено, локальная запись удалена.
+
+Save loaded; the local record could not be removed.
+== Сохранение загружено, но удалить локальную запись не удалось.
+
 Save player names in replay
 == Сохранять имена игроков в записи
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == Сохранять запись лучшего времени за игру
+
+Save restore dismissed.
+== Восстановление сохранения отменено.
+
+Save restore stopped without confirming success. The local record was kept.
+== Успешная загрузка не подтверждена, восстановление остановлено. Локальная запись сохранена.
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== Восстановление остановлено: соединение, имена или команда не готовы. Локальная запись сохранена.
 
 Save settings file on exit
 == Сохранять файл настроек при выходе
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == Поиск во всех папках карт...
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== Sec-WebSocket-Protocol, отправляемый при рукопожатии реального времени
 
 Secondary
 == Вторичная
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == Информация о сервере
 
-Server IP
-== IP сервера
-
 Server kick/spec votes are no longer actively moderated.
 == Голосования за кик/спек на сервере больше не контролируются активным модератором.
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == Тип сервера (novice, moderate и т.д.)
+
+Server URL
+== URL сервера
+
+Server-assigned style
+== Стиль, назначенный сервером
 
 Set a voice server to enable QmClient distribution
 == Установите голосовой сервер, чтобы включить распределение QmClient
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == Доля разделения имени и карты в браузере серверов для столбца имени (промилле)
 
+Shimmer speed (polished)
+== Скорость блика (глянец)
+
 Short server names
 == Короткие названия серверов
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == Показать небольшой вид дамми
+
+Show advanced title settings (collapsing keeps configured effects)
+== Показать расширенные настройки титула (при сворачивании эффекты сохраняются)
 
 Show air jump indicator
 == Показывать индикатор прыжка в воздухе
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == Сила простого шумоподавления
 
+Single color
+== Один цвет
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== Однотонный и радужный режимы перекрывают цвета анимированного стиля; движение стиля сохраняется
+
 Size
 == Размер
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == Привязывать смещение покачивания к целым пикселям (чётче глифы, резче движение)
 
+Snap wave to pixels
+== Привязать волну к целым пикселям
+
 Snapshot Age
 == Возраст снапшота
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == Защита от спама: предотвращает спам при смене команды, в чате, смене скина, эмоциях и голосовании
+
+Spatial effect
+== Объёмный эффект
 
 Speaker
 == Динамик
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == Остановить практику
 
+Stop preview (P)
+== Остановить просмотр (P)
+
 Stop record
 == Остановить запись
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Прицеливание Sub-Tick
+
+Subtle
+== Мягкое
 
 Successfully saved the replay!
 == Повтор успешно сохранён!
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / Колесо привязок
-
-TClient / Status Bar
-== TClient / Строка состояния
 
 TClient Developers
 == Разработчики TClient
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == На карте нет телепорта к чекпоинту с таким индексом.
 
+There is no pending save restore prompt.
+== Сейчас нет запроса на восстановление сохранения.
+
 There is no teleporter with that index on the map.
 == На карте нет телепорта с таким индексом.
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == Для режима размышления требуется модель рассуждения
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== У этого шрифта нет встроенного векторного профиля. Таблички будут использовать FreeType.
+This connection cannot change names while connected. Reconnect with the saved names first.
+== Это соединение не поддерживает смену имени во время игры. Переподключитесь с сохранёнными именами.
 
 This ID is not connected
 == Этот ID не подключён
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == Это сохранение существует, но вы не в его составе.
+
+This save is no longer in the local save file.
+== Этого сохранения больше нет в локальном файле.
 
 This save-code already exists
 == Такой код сохранения уже существует
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == Длина волны покачивания титула в пикселях
 
+Title color
+== Цвет титула
+
+Title color (single color)
+== Цвет титула (однотонный)
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == Скорость блика титула в 1/100 строки в секунду (0 = выкл.)
+
+Title opacity (custom color)
+== Непрозрачность (свой цвет)
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == Фаза на пиксель для символов титула в 1/1000 px (0 = по умолчанию стиля, 20 = заметная световая полоса)
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == Амплитуда вертикального покачивания символов титула в пикселях (0 = выкл.)
 
+Title preview
+== Предпросмотр титула
+
 Title server unavailable; retry
 == Сервер титулов недоступен; повторите попытку
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == Объёмный эффект титула: 0 = глянец, 1 = сплошной, 2 = классический Calamity, 3 = выкл.
+
+Title style
+== Стиль титула
 
 Title too long or contains unsupported characters
 == Титул слишком длинный или содержит недопустимые символы
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == Переключить dyncam
+
+Toggle emote launcher
+== Переключить запуск смайлов
 
 Toggle fast practice mode
 == Переключить режим быстрой практики
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == Неизвестный статус
 
+Unknown title style
+== Неизвестный стиль титула
+
 Unload the rank ghost
 == Выгрузить ghost ранга
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == Сначала используйте /pause, потом сможете умереть
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== Введите /qm Yes [номер] для восстановления или /qm No для отмены.
+
 Use 12 hour clock
 == Использовать 12-часовой формат
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == Используйте клавишу K, чтобы убить (перезапустить), Q, чтобы поставить на паузу и смотреть за другими игроками. Другие привязки клавиш смотрите в настройках.
+
+Use large emote
+== Использовать большой смайл
 
 Use mouse sensitivity when dynamic camera is on
 == Использовать чувствительность мыши при включённой динамической камере
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == Используйте это перед `add_favorite` для группировки избранного. Завершите с `end_favorite_group`
 
-Use vector font rendering for nameplates
-== Использовать векторный шрифт для табличек
-
-Use vector font rendering for nameplates when a bundled profile is available
-== Использовать векторный шрифт для табличек, когда доступен встроенный профиль
-
 Use warlist colors instead of regular colors
 == Использовать цвета списка врагов вместо обычных
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == Толщина вариативного пользовательского шрифта
-
-Vector nameplate text
-== Векторный текст табличек
 
 Velocity
 == Скорость
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == Токен голосовой комнаты (необязательно)
 
-Voice server address host:port
-== Адрес голосового сервера host:port
+Voice server URL (ws:// or wss://)
+== URL голосового сервера (ws:// или wss://)
 
 Voice stereo output
 == Стереовыход голоса
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == Предупреждение
 
+Wave amount
+== Амплитуда волны
+
+Wave speed (0.01 rad/s)
+== Скорость волны (0,01 рад/с)
+
+Wave wavelength
+== Длина волны
+
 Weak hook
 == Слабый крюк
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == Веб-сайт
-
-WebSocket endpoint (optional)
-== Конечная точка WebSocket (необязательно)
 
 Welcome to DDNet
 == Добро пожаловать в DDNet
@@ -14330,6 +14378,10 @@ required
 [Team status]
 solo
 == соло
+
+[Title color mode]
+Use style colors
+== Использовать цвета стиля
 
 [Touch button behavior]
 Bind

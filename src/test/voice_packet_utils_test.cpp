@@ -115,7 +115,7 @@ TEST(VoiceUtils, WriteReadVoicePacketHeader)
 	Header.m_PosX = 321.5f;
 	Header.m_PosY = -654.25f;
 
-	uint8_t aBuf[VOICE_PACKET_HEADER_SIZE];
+	uint8_t aBuf[VOICE_PACKET_HEADER_SIZE + 123] = {};
 	ASSERT_TRUE(WriteVoicePacketHeader(aBuf, sizeof(aBuf), Header));
 
 	SVoicePacketHeader Parsed;
@@ -299,7 +299,7 @@ TEST(VoiceUtils, WriteReadVoicePacketHeaderKeepsContextTokenAndSender)
 	Header.m_PosX = 64.0f;
 	Header.m_PosY = -48.0f;
 
-	uint8_t aBuf[VOICE_PACKET_HEADER_SIZE];
+	uint8_t aBuf[VOICE_PACKET_HEADER_SIZE + 32] = {};
 	ASSERT_TRUE(WriteVoicePacketHeader(aBuf, sizeof(aBuf), Header));
 
 	SVoicePacketHeader Parsed;

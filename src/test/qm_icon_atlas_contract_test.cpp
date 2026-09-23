@@ -161,9 +161,67 @@ TEST(QmIconAtlas, MsdfOnlyReloadPolicy)
 	EXPECT_NE(Header.find("SQmIconDiagnostics"), std::string::npos);
 	EXPECT_NE(Header.find("QmIconMsdfRunBucket"), std::string::npos);
 	EXPECT_NE(GameClient.find("m_QmIconManager.RefreshForCurrentDpi();"), std::string::npos);
-	EXPECT_NE(GameClient.find("LogQmIconDiagnostics(m_QmIconManager.TakeDiagnostics(), Client());"), std::string::npos);
-	EXPECT_NE(GameClient.find("event=icon_frame"), std::string::npos);
 	EXPECT_NE(GameClient.find("m_QmIconManager.Shutdown();"), std::string::npos);
+}
+
+TEST(QmIconDiagnosticsWindow, AccumulatesDrawsAndRunBucketsUntilInterval)
+{
+	SQmIconDiagnosticsWindow Window;
+	SQmIconDiagnostics First;
+	First.m_MsdfIconDraws = 3;
+	First.m_MaxMsdfManagerCallRun = 2;
+	First.m_MsdfManagerCallRunBuckets[1] = 2;
+	EXPECT_FALSE(Window.Add(First, 100, 10));
+
+	SQmIconDiagnostics Second;
+	Second.m_MsdfIconDraws = 5;
+	Second.m_MaxMsdfManagerCallRun = 4;
+	Second.m_MsdfManagerCallRunBuckets[1] = 1;
+	Second.m_MsdfManagerCallRunBuckets[2] = 1;
+	EXPECT_FALSE(Window.Add(Second, 109, 10));
+	EXPECT_TRUE(Window.Add({}, 110, 10));
+	EXPECT_EQ(Window.m_Frames, 3u);
+	EXPECT_EQ(Window.m_Total.m_MsdfIconDraws, 8u);
+	EXPECT_EQ(Window.m_MaxMsdfDraws, 5u);
+	EXPECT_EQ(Window.m_Total.m_MaxMsdfManagerCallRun, 4u);
+	EXPECT_EQ(Window.m_Total.m_MsdfManagerCallRunBuckets[1], 3u);
+	EXPECT_EQ(Window.m_Total.m_MsdfManagerCallRunBuckets[2], 1u);
+
+	Window.Clear(110);
+	EXPECT_FALSE(Window.Add(First, 111, 10));
+	EXPECT_EQ(Window.m_Frames, 1u);
+	EXPECT_EQ(Window.m_Total.m_MsdfIconDraws, 3u);
+	EXPECT_EQ(Window.m_Total.m_MsdfManagerCallRunBuckets[1], 2u);
+}
+
+TEST(QmIconDiagnosticsWindow, ResourceChangesFlushImmediatelyAndOnlyOnce)
+{
+	SQmIconDiagnosticsWindow Window;
+	SQmIconDiagnostics Draw;
+	Draw.m_MsdfIconDraws = 7;
+	EXPECT_FALSE(Window.Add(Draw, 100, 10));
+
+	SQmIconDiagnostics Resources;
+	Resources.m_ReloadAttempts = 1;
+	Resources.m_ReloadSuccesses = 1;
+	Resources.m_AtlasSwaps = 1;
+	Resources.m_TextureLoads = 1;
+	EXPECT_TRUE(Window.Add(Resources, 101, 10));
+	EXPECT_EQ(Window.m_Frames, 2u);
+	EXPECT_EQ(Window.m_Total.m_MsdfIconDraws, 7u);
+	EXPECT_EQ(Window.m_Total.m_TextureLoads, 1u);
+	Window.Clear(101);
+	EXPECT_FALSE(Window.Add({}, 102, 10));
+	EXPECT_EQ(Window.m_Total.m_ReloadAttempts, 0u);
+	EXPECT_EQ(Window.m_Total.m_TextureLoads, 0u);
+
+	SQmIconDiagnostics Failure;
+	Failure.m_TextureLoadFailures = 1;
+	EXPECT_TRUE(Window.Add(Failure, 103, 10));
+	Window.Clear(103);
+	SQmIconDiagnostics Unload;
+	Unload.m_TextureUnloads = 1;
+	EXPECT_TRUE(Window.Add(Unload, 104, 10));
 }
 
 TEST(QmIconAtlas, UiTintKeepsAlphaAndDoesNotDefineSemanticDirectColor)
@@ -285,7 +343,6 @@ TEST(QmIconDiagnosticsContract, KeepsAtlasAndRendererCountersSeparated)
 	const std::string IconManager = ReadTextFile("src/game/client/qm_icon_manager.cpp");
 	const std::string Graphics = ReadTextFile("src/engine/client/graphics_threaded.cpp");
 	const std::string GraphicsHeader = ReadTextFile("src/engine/client/graphics_threaded.h");
-	const std::string GameClient = ReadTextFile("src/game/client/gameclient.cpp");
 
 	EXPECT_NE(Header.find("struct SQmIconDiagnostics"), std::string::npos);
 	EXPECT_NE(Header.find("m_MsdfManagerCallRunBuckets"), std::string::npos);
@@ -331,11 +388,6 @@ TEST(QmIconDiagnosticsContract, KeepsAtlasAndRendererCountersSeparated)
 	EXPECT_NE(Graphics.find("cl_refresh_rate_inactive=%d"), std::string::npos);
 	EXPECT_NE(Graphics.find("dbg_graphs=%d"), std::string::npos);
 	EXPECT_NE(Graphics.find("async_render_old=%d"), std::string::npos);
-	EXPECT_NE(GameClient.find("QmPerfLogPayload(\"perf/icons\""), std::string::npos);
-	EXPECT_NE(GameClient.find("if(QmPerfEnabled())\n\t\tLogQmIconDiagnostics(m_QmIconManager.TakeDiagnostics(), Client());"), std::string::npos);
-	EXPECT_NE(GameClient.find("LogQmIconDiagnostics(m_QmIconManager.TakeDiagnostics(), Client());"), std::string::npos);
-	EXPECT_NE(GameClient.find("msdf_manager_call_run_max"), std::string::npos);
-
 	const size_t Shutdown = Graphics.find("void CGraphics_Threaded::Shutdown()");
 	const size_t NextFunctionAfterShutdown = Graphics.find("int CGraphics_Threaded::GetNumScreens() const", Shutdown);
 	ASSERT_NE(Shutdown, std::string::npos);

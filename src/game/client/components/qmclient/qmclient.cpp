@@ -1421,7 +1421,7 @@ void CQmClient::ApplyQmRealtimeServiceData(const SQmRealtimeMessage &Message)
 		const json_value *pStatus = JsonObjectField(pPayload, "status");
 		const bool Authenticated = pStatus->type == json_integer && pStatus->u.integer == 200 && IsValidQmTitle(pTitle);
 		const bool Changed = m_TitleAuthenticated != Authenticated ||
-			str_comp(m_aTitleText, pTitle) || str_comp(m_aTitleBoundName, pName) || str_comp(m_aTitleProfileStyle, pStyle);
+				     str_comp(m_aTitleText, pTitle) || str_comp(m_aTitleBoundName, pName) || str_comp(m_aTitleProfileStyle, pStyle);
 		m_TitleAuthenticated = Authenticated;
 		str_copy(m_aTitleText, pTitle);
 		str_copy(m_aTitleBoundName, pName);
@@ -2748,7 +2748,6 @@ void CQmClient::InitQmClientLifecycle()
 	m_QmClientPlaytimeLastSuccessfulSyncTimestamp = 0;
 	m_QmClientPlaytimeManualRefreshActive = false;
 	m_QmClientPlaytimeManualRefreshFailed = false;
-
 }
 
 void CQmClient::InitQmDeveloperAuthentication()
@@ -2880,9 +2879,9 @@ void CQmClient::FinishQmClientUsers()
 		if(Client()->State() == IClient::STATE_ONLINE && Client()->ServerAddress())
 			net_addr_str(Client()->ServerAddress(), aCurrentServer, sizeof(aCurrentServer), true);
 		const bool StaleServer = str_comp(pParseJob->ServerAddress(), aCurrentServer) != 0 ||
-			pParseJob->ConnectionTick() != m_QmRealtimeConnectedTick ||
-			!m_pQmRealtimeTransport || m_pQmRealtimeTransport->State() != EQmWebSocketState::CONNECTED ||
-			m_pQmRealtimeTransport->LastConnectedTick() != m_QmRealtimeConnectedTick;
+					 pParseJob->ConnectionTick() != m_QmRealtimeConnectedTick ||
+					 !m_pQmRealtimeTransport || m_pQmRealtimeTransport->State() != EQmWebSocketState::CONNECTED ||
+					 m_pQmRealtimeTransport->LastConnectedTick() != m_QmRealtimeConnectedTick;
 		m_pQmClientUsersParseJob = nullptr;
 		if(StaleServer)
 			return;

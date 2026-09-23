@@ -61,6 +61,9 @@
 %d users
 == %d ユーザー
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | メイン：%s | ダミー：%s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d KiB (%.1f KiB/s)
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == プレイヤー名が必要です。
+
+A save is already being restored. Please wait.
+== セーブを復元中です。お待ちください。
 
 A screenshot with this name already exists
 == この名前のスクリーンショットは既に存在します
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == 詳細設定
 
+Advanced mode
+== 詳細モード
+
 Advanced options
 == 詳細オプション
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == 外観
 
-Appearance / Chat
-== 外観 / チャット
-
-Appearance / Hook Collision
-== 外観/フック補助線
-
-Appearance / HUD
-== 外観 / HUD
-
-Appearance / Info Messages
-== 外観 / 情報メッセージ
-
-Appearance / Laser
-== 外観 / レーザー
-
-Appearance / Name Plate
-== 外観 / ネームプレート
-
 Append to log file instead of overwriting
 == 上書きではなくログファイルに追記
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == まず書き込み可能なプリセットを適用して編集
 
-Apply Best input to other Tees
-== Best input を他の Tee に適用
-
 Apply Changes
 == 変更を適用
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == 他の Tee にもクイック入力を適用
-
-Apply Saiko+ to other Tees
-== Saiko+ を他の Tee に適用
 
 Apply squishy Tee deformation to other players
 == Q 弾 Tee 変形を他のプレイヤーに適用
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 統計ボードのスクリーンショットを自動撮影
 
-Available for this bundled font
-== この同梱フォントで利用可能
-
 Available practice commands: 
 == 使用可能な練習コマンド: 
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 最高
 
-Best input
-== ベスト入力
-
-Best input delay compensation percentage
-== Best input 遅延補正パーセンテージ
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Best input 補間モード（1=linear 2=cubic 3=smooth）
-
-Best input others
-== ベスト入力（他人）
-
-Best input prediction offset (0.01 tick)
-== Best input 予測オフセット（0.01 tick）
-
-Best input smooth percentage
-== Best input スムージングパーセンテージ
-
 Better scoreboard
 == より良いスコアボード
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == 内蔵
-
-Bundled vector profile:
-== 同梱ベクタープロファイル:
 
 Button - Disabled
 == ボタン - 無効
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == クラシック pro
+
+Classic title glow
+== クラシックの光彩
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== クラシックの光彩：0 = 無効、1 = 控えめ（6 層）、2 = 完全な Calamity（16 層）
 
 Clear
 == クリア
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == デバッグタイルレイヤークリッピング
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== 専用 WebSocket エンドポイント（空欄なら wss://qmclient.icu/ws を使用）
+
 Deep freeze color
 == ディープフリーズ色
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == ダウンスケール (0.78)
 
+Draft file is empty
+== 下書きファイルが空です
+
 Drag HUD modules with the left mouse button
 == マウスの左ボタンで HUD モジュールをドラッグ
+
+Drag to another category to move this friend.
+== 別のカテゴリにドラッグして、このフレンドを移動します。
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== ドラッグで並べ替え、クリックで展開・折りたたみ。右クリックまたは歯車アイコンでカテゴリを管理
 
 Dragger Inner Color
 == ドラッガー内側の色
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == フォールバック簡易ノイズ低減強度
 
-Fast input
-== 高速入力
-
 Fast input (reduce visual latency)
 == Fast input（視覚的な遅延を低減）
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == フィニッシュネーム:
+
+Finish or reset the current race before restoring a save.
+== 現在のレースを終了またはリセットしてからセーブを復元してください。
 
 Finished
 == 完了
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == 入力オーバーレイ Y 位置（パーセント）
 
-Input smoothing
-== 入力スムージング
-
 Input switch
 == 入力切り替え
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == インターネット（オンラインソースから）
 
-Interpolation
-== 補間
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 現在のエディターマップコピーを「auto」フォルダーに自動保存する間隔（0 = オフ）
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == 無効なオプションです
+
+Invalid save number. Use a number from the save list.
+== セーブ番号が無効です。一覧の番号を指定してください。
 
 Invalid spectator id used
 == 無効な観戦対象IDです
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == レイテンシ
 
-Latency compensation
-== レイテンシ補正
-
 Latency Jitter
 == レイテンシジッター
-
-Launch a large emote
-== 大きなエモートを発射
 
 Launch count threshold for the next sponsor reminder
 == 次のスポンサー通知までの起動回数しきい値
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == 空欄にしてデフォルトプロンプトを使用
 
-Leave empty to use UDP
-== 空欄にすると UDP を使用
-
 Left jump
 == 左ジャンプ
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == 左右チャンネル幅
+
+Legacy option: connections that skip TLS verification are rejected
+== 旧オプション：TLS 検証を省略する接続は拒否されます
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== 旧リアルタイム WebSocket URL（qm_websocket_url に移行済み）
 
 Length
 == 長さ
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == ライト
+
+Light band (0 = style default)
+== 色の位相（0 = スタイル既定値）
 
 Limit information in spectator mode
 == 観戦モードの情報を制限する
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == ローカルのみ
 
+Locate
+== 場所を表示
+
 Lock delay
 == ロック遅延
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == 二重再生音をデバッグするため、予測イベント的创建/播放とスナップショット確認を記録します。
+
+Log realtime WebSocket channel events
+== リアルタイム WebSocket チャンネルのイベントを記録
 
 Log the network
 == ネットワークをログに記録
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == 通常メッセージ文字グラデーション色
 
-Not available; FreeType is used
-== 利用できません。FreeType を使用します
-
 NOT CONNECTED
 == 未接続
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == 改善のみ保存
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== 一部の同梱フォントのみベクターのネームプレートアトラスを持ちます。それ以外のフォントは FreeType を使用します。
-
 Only show after joining a team
 == チーム参加後にのみ表示
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == DDNet Wiki を開く
 
-Open editor
-== エディターを開く
-
 Open emote selector
 == 絵文字セレクターを開く
+
+Open folder
+== フォルダを開く
 
 Open map editor
 == マップエディターを開く
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == DNSBL プロバイダーのオプションの認証キー
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== 省略可能な音声 WebSocket エンドポイント（空欄なら UDP を使用）
-
 Or visit DDNet.org
 == または DDNet.org をご覧ください
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP ネゴシエーション、フォールバック、セッションライフサイクルのデバッグログを出力
-
-Output nameplate MSDF path debug log
-== ネームプレートのMSDFパスデバッグログを出力
 
 Output switch
 == 出力切り替え
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == 過去1年間
+
+Paste sp_dc from Spotify web cookies
+== ブラウザの sp_dc クッキーを貼り付け
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB サーバー証明書の検証に使用する CA 証明書のパス
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == ポイント
 
+Polished
+== 光沢
+
 Popup animation
 == ポップアップアニメーション
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == フリーズ時の予測マージン
 
-Prediction offset
-== 予測オフセット
-
 Preparing chat export: %d%%
 == チャットのエクスポートを準備中：%d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == エディターがアクティブな間、ボタンの表示状態をプレビューします。
+
+Preview cut (P)
+== カットをプレビュー (P)
 
 Preview dummy nameplate
 == ダミーのネームプレートをプレビュー
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == 現在のレース中の自分のタイムを全員に公開メッセージで送信
 
+Publish
+== 公開
+
+Publish failed
+== 公開に失敗しました
+
+Published
+== 公開しました
+
+Publishing…
+== 公開中…
+
 Pulse
 == パルス
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == QmClient
 
-QmClient / Function
-== QmClient / 機能
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / ビジュアル
-
 QmClient chat log
 == QmClient チャットログ
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == QmClient オンライン分布
-
-QmClient realtime WebSocket URL (empty disables transport)
-== QmClient リアルタイム WebSocket URL（空欄で無効）
 
 QmClient Settings
 == QmClient 設定
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == プレイヤー向けクイックアクションメニュー
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== クイック入力モード（0=Fast 3=Best 4=Saiko+；1/2 は旧値互換で Best にマッピング）
 
 Quit
 == 終了
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == 本当に？少しも考えてくれないんですか？
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== リアルタイムチャンネルのハートビート間隔（秒、0 で既定値）
+
+Realtime channel reconnect backoff base (ms)
+== リアルタイムチャンネルの再接続バックオフ基準（ミリ秒）
+
+Realtime channel reconnect backoff cap (ms)
+== リアルタイムチャンネルの再接続バックオフ上限（ミリ秒）
 
 Reason
 == 理由
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == 再起動しています。お待ちください…
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== 2人用セーブを復元しますか？ /qm Yes で最新、/qm Yes 番号 で別のセーブを選択、/qm No で閉じます。
+
 Restore Kugou files
 == Kugou の元ファイルを復元
 
 Restore old single-segment hook collision line behavior
 == 旧式の単一セグメントフック衝突線動作を復元
+
+Restoring save %d: main '%s', dummy '%s'.
+== セーブ %d を復元中：メイン「%s」、ダミー「%s」。
 
 Retry remote stats
 == リモート統計を再試行
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == 右ジャンプ
-
-Right-click or use the gear to manage categories
-== 右クリックまたは歯車アイコンでカテゴリを管理
 
 Right-click to disable auto-translate
 == 右クリックで自動翻訳を無効化
@@ -9452,12 +9437,6 @@ Run server
 SA
 == 南米
 
-Saiko+ input amount (0.01 tick)
-== Saiko+ 入力量（0.01 tick）
-
-Saiko+ others
-== Saiko+ その他
-
 Same as "vote no"
 == 「vote no」と同じ
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == 最後の %d 分を保存
 
+Save loaded; local record removed.
+== セーブを読み込み、ローカルの記録を削除しました。
+
+Save loaded; the local record could not be removed.
+== セーブは読み込まれましたが、ローカルの記録を削除できませんでした。
+
 Save player names in replay
 == リプレイにプレイヤー名を保存
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == ゲームごとのベストタイムのリプレイを保存
+
+Save restore dismissed.
+== セーブの復元をキャンセルしました。
+
+Save restore stopped without confirming success. The local record was kept.
+== 読み込み成功を確認できなかったため復元を停止しました。ローカルの記録は保持されています。
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== 接続、名前、またはチームの準備が整わず、復元を停止しました。ローカルの記録は保持されています。
 
 Save settings file on exit
 == 終了時に設定ファイルを保存
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == すべてのマップフォルダーを検索中…
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== リアルタイムハンドシェイクで送信する Sec-WebSocket-Protocol
 
 Secondary
 == セカンダリ
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == サーバー情報
 
-Server IP
-== サーバー IP
-
 Server kick/spec votes are no longer actively moderated.
 == サーバーのキック/観戦投票は、アクティブモデレーションの対象ではなくなりました。
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == サーバータイプ（novice、moderate など）
+
+Server URL
+== サーバー URL
+
+Server-assigned style
+== サーバー指定のスタイル
 
 Set a voice server to enable QmClient distribution
 == ボイスサーバーを設定して QmClient オンライン分布を有効にする
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == サーバーブラウザーの名前/マップ分割で名前列に割り当てる割合（パーミル）
 
+Shimmer speed (polished)
+== 光の走査速度（光沢）
+
 Short server names
 == 短いサーバー名
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == ダミーの小さなビューを表示
+
+Show advanced title settings (collapsing keeps configured effects)
+== タイトルの詳細設定を表示（閉じても設定した効果を維持）
 
 Show air jump indicator
 == 空中ジャンプインジケーターを表示
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == 簡易ノイズリダクション強度
 
+Single color
+== 単色
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== 単色とレインボーはアニメーションスタイルの色を上書きします（スタイルの動きは残ります）
+
 Size
 == サイズ
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == 揺れのオフセットを整数ピクセルに合わせる（字形は鮮明、動きはぎこちない）
 
+Snap wave to pixels
+== 波の変位を整数ピクセルに合わせる
+
 Snapshot Age
 == スナップショット経過時間
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == スパム対策：チーム切り替え、チャット、スキン変更、エモート、投票のスパムを防止
+
+Spatial effect
+== 立体効果
 
 Speaker
 == スピーカー
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == 練習を停止
 
+Stop preview (P)
+== プレビューを停止 (P)
+
 Stop record
 == 録画を停止
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Sub-Tick エイミング
+
+Subtle
+== 控えめ
 
 Successfully saved the replay!
 == リプレイの保存に成功しました！
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / バインドホイール
-
-TClient / Status Bar
-== TClient / ステータスバー
 
 TClient Developers
 == TClient 開発者
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == そのマップにはそのインデックスのチェックポイントテレポーターはありません
 
+There is no pending save restore prompt.
+== 現在、セーブ復元の確認待ちはありません。
+
 There is no teleporter with that index on the map.
 == そのマップにはそのインデックスのテレポーターはありません
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == 思考モードを使用するには推論モデルが必要です
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== このフォントには同梱ベクタープロファイルがありません。ネームプレートは FreeType を使用します。
+This connection cannot change names while connected. Reconnect with the saved names first.
+== この接続では接続中に名前を変更できません。保存された名前で再接続してください。
 
 This ID is not connected
 == この ID は接続されていません
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == このセーブは存在しますが、あなたは含まれていません。
+
+This save is no longer in the local save file.
+== このセーブはローカルのセーブファイルに存在しません。
 
 This save-code already exists
 == このセーブコードは既に存在します
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == タイトルの波長（ピクセル）
 
+Title color
+== タイトル色
+
+Title color (single color)
+== タイトル色（単色）
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == タイトルの光の走査速度（毎秒 1/100 行、0 = 無効）
+
+Title opacity (custom color)
+== 不透明度（カスタム色）
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == タイトルの文字ごとの位相（1 ピクセルあたり 1/1000 px、0 = スタイル既定値、20 = 光の帯が見える）
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == タイトルの文字ごとの上下振幅（ピクセル、0 = 無効）
 
+Title preview
+== タイトルの仕上がりプレビュー
+
 Title server unavailable; retry
 == 称号サーバーに接続できません。再試行してください
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == タイトルの立体効果：0 = 光沢、1 = ソリッド、2 = クラシック Calamity、3 = 無効
+
+Title style
+== 称号スタイル
 
 Title too long or contains unsupported characters
 == 称号が長すぎるか使用できない文字を含んでいます
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == ダイナミックカメラ切り替え
+
+Toggle emote launcher
+== エモートランチャーを切り替え
 
 Toggle fast practice mode
 == 高速練習モードを切り替え
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == 不明なステータス
 
+Unknown title style
+== 不明なタイトルスタイル
+
 Unload the rank ghost
 == Rankゴーストを解除
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == 先に /pause を使ってから自殺してください
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== /qm Yes [番号] でセーブを復元、/qm No で通知を閉じます。
+
 Use 12 hour clock
 == 12 時間制を使用
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == K キーで自殺（再スタート）、Q キーで一時停止して他のプレイヤーを観戦します。他のキーバインドは設定で確認してください。
+
+Use large emote
+== 大きなエモートを使用
 
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == `add_favorite` の前にこれを使用してお気に入りをグループ化します。`end_favorite_group` で終了します
 
-Use vector font rendering for nameplates
-== ネームプレートにベクター文字描画を使用
-
-Use vector font rendering for nameplates when a bundled profile is available
-== 同梱のベクタープロファイルがある場合にネームプレートでベクター文字描画を使用
-
 Use warlist colors instead of regular colors
 == 通常の色の代わりに敵対リストの色を使用
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == 可変フォントのカスタム太さ
-
-Vector nameplate text
-== ネームプレートのベクター文字
 
 Velocity
 == 速度
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == ボイスルームトークン（オプション）
 
-Voice server address host:port
-== ボイスサーバーアドレス host:port
+Voice server URL (ws:// or wss://)
+== ボイスサーバー URL（ws:// または wss://）
 
 Voice stereo output
 == 音声ステレオ出力
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == 警告
 
+Wave amount
+== 波の振幅
+
+Wave speed (0.01 rad/s)
+== 波の速度（0.01 rad/秒）
+
+Wave wavelength
+== 波の波長
+
 Weak hook
 == 弱いフック
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == ウェブサイト
-
-WebSocket endpoint (optional)
-== WebSocket エンドポイント（任意）
 
 Welcome to DDNet
 == DDNet へようこそ
@@ -14330,6 +14378,10 @@ required
 [Team status]
 solo
 == ソロ
+
+[Title color mode]
+Use style colors
+== スタイルの色を使用
 
 [Touch button behavior]
 Bind

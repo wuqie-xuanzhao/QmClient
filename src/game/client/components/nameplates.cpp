@@ -806,13 +806,13 @@ protected:
 		const SQmTitleColorStyle ColorStyle = ResolveQmTitleColorStyle(g_Config.m_QmTitleColorMode, g_Config.m_QmTitleColor, g_Config.m_QmTitleOpacity, Data.m_DeveloperRainbow);
 		const SQmTitleRenderStyle RenderStyle = QmTitleResolveRenderStyle(pStyle);
 		const bool Changed = m_FontSize != FontSize || m_TitleColorStyle != ColorStyle || str_comp(m_aText, Data.m_aQmTitle) != 0 ||
-			str_comp(m_aStyle, pStyle) != 0 || m_TitleRenderStyle.m_pStyle != RenderStyle.m_pStyle ||
-			m_TitleRenderStyle.m_Bob.m_Amplitude != RenderStyle.m_Bob.m_Amplitude ||
-			m_TitleRenderStyle.m_Bob.m_WaveLength != RenderStyle.m_Bob.m_WaveLength ||
-			m_TitleRenderStyle.m_Bob.m_Speed != RenderStyle.m_Bob.m_Speed ||
-			m_TitleRenderStyle.m_Bob.m_QuantizeStep != RenderStyle.m_Bob.m_QuantizeStep ||
-			m_TitleRenderStyle.m_PhasePerPxOverride != RenderStyle.m_PhasePerPxOverride ||
-			m_ShimmerSpeed != g_Config.m_QmTitleShimmerSpeed;
+				     str_comp(m_aStyle, pStyle) != 0 || m_TitleRenderStyle.m_pStyle != RenderStyle.m_pStyle ||
+				     m_TitleRenderStyle.m_Bob.m_Amplitude != RenderStyle.m_Bob.m_Amplitude ||
+				     m_TitleRenderStyle.m_Bob.m_WaveLength != RenderStyle.m_Bob.m_WaveLength ||
+				     m_TitleRenderStyle.m_Bob.m_Speed != RenderStyle.m_Bob.m_Speed ||
+				     m_TitleRenderStyle.m_Bob.m_QuantizeStep != RenderStyle.m_Bob.m_QuantizeStep ||
+				     m_TitleRenderStyle.m_PhasePerPxOverride != RenderStyle.m_PhasePerPxOverride ||
+				     m_ShimmerSpeed != g_Config.m_QmTitleShimmerSpeed;
 		m_ReuseTextContainer = m_TextContainerIndex.Valid() && m_TitleAnimated && !Changed;
 		return Changed || m_TitleAnimated;
 	}
@@ -903,10 +903,12 @@ protected:
 		const bool VertexColored = DynamicStyle || m_TitleColorStyle.m_Rainbow;
 		const float Alpha = m_Alpha * (m_TitleColorStyle.m_Mode == EQmTitleColorMode::FOLLOW_SERVER ? 1.0f : m_TitleColorStyle.m_Alpha);
 		const ColorRGBA Color = VertexColored ? ColorRGBA(1.0f, 1.0f, 1.0f, Alpha) :
-			m_TitleColorStyle.m_Mode == EQmTitleColorMode::SINGLE ?
-				m_TitleColorStyle.m_Color.WithMultipliedAlpha(m_Alpha) : ColorRGBA(0.0f, 0.0f, 0.0f, m_Alpha);
+					m_TitleColorStyle.m_Mode == EQmTitleColorMode::SINGLE ?
+							m_TitleColorStyle.m_Color.WithMultipliedAlpha(m_Alpha) :
+							ColorRGBA(0.0f, 0.0f, 0.0f, m_Alpha);
 		const ColorRGBA OutlineColor = VertexColored || m_TitleColorStyle.m_Mode == EQmTitleColorMode::SINGLE ?
-			s_OutlineColor.WithMultipliedAlpha(m_Alpha) : ColorRGBA(0.85f, 0.85f, 0.85f, m_Alpha);
+						       s_OutlineColor.WithMultipliedAlpha(m_Alpha) :
+						       ColorRGBA(0.85f, 0.85f, 0.85f, m_Alpha);
 		const float X = Pos.x - m_RenderSize.x / 2.0f;
 		const float Y = Pos.y - m_RenderSize.y / 2.0f;
 		const int Effect = std::clamp(g_Config.m_QmTitleEffect, 0, 3);
@@ -2238,92 +2240,92 @@ static void BuildNamePlatePreviewData(CGameClient &This, int DummyIdx, CNamePlat
 	const float FontSizeDirection = 18.0f + 20.0f * g_Config.m_ClDirectionSize / 100.0f;
 	const float FontSizeHookStrongWeak = 18.0f + 20.0f * g_Config.m_ClNamePlatesStrongSize / 100.0f;
 
-		Data.m_InGame = false;
-		Data.m_Color = g_Config.m_ClNamePlatesTeamcolors ? This.GetDDTeamColor(13, 0.75f) : This.TextRender()->DefaultTextColor();
-		Data.m_Color.a = 1.0f;
-		const bool IsOwnPreview = DummyIdx == 0;
-		// 设置页预览：DummyIdx==0 视作当前操控角色，其余视作本机分身，两者都算本机。
-		const bool NameplateScopeAllowsPreview = ForceNameplateScopeAll || ShouldShowQmNameplateName(g_Config.m_QmNameplateShowScope, IsOwnPreview, true);
-		const bool CoordModuleAllowsPreview = IsOwnPreview ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
+	Data.m_InGame = false;
+	Data.m_Color = g_Config.m_ClNamePlatesTeamcolors ? This.GetDDTeamColor(13, 0.75f) : This.TextRender()->DefaultTextColor();
+	Data.m_Color.a = 1.0f;
+	const bool IsOwnPreview = DummyIdx == 0;
+	// 设置页预览：DummyIdx==0 视作当前操控角色，其余视作本机分身，两者都算本机。
+	const bool NameplateScopeAllowsPreview = ForceNameplateScopeAll || ShouldShowQmNameplateName(g_Config.m_QmNameplateShowScope, IsOwnPreview, true);
+	const bool CoordModuleAllowsPreview = IsOwnPreview ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
 
-		Data.m_ShowName = NameplateScopeAllowsPreview;
-		Data.m_aQmTitle[0] = '\0';
-		Data.m_DeveloperRainbow = false;
-		// 设置页预览必须展示当前选择的效果，不能受游戏中 Playing/Spectate/Demo scope 限制。
-		Data.m_UseTextEffects = g_Config.m_QmNameplateTextEffects != 0;
-		const char *pName = DummyIdx == 0 ? This.Client()->PlayerName() : This.Client()->DummyName();
-		str_copy(Data.m_aName, str_utf8_skip_whitespaces(pName));
-		str_utf8_trim_right(Data.m_aName);
-		Data.m_FontSize = FontSize;
+	Data.m_ShowName = NameplateScopeAllowsPreview;
+	Data.m_aQmTitle[0] = '\0';
+	Data.m_DeveloperRainbow = false;
+	// 设置页预览必须展示当前选择的效果，不能受游戏中 Playing/Spectate/Demo scope 限制。
+	Data.m_UseTextEffects = g_Config.m_QmNameplateTextEffects != 0;
+	const char *pName = DummyIdx == 0 ? This.Client()->PlayerName() : This.Client()->DummyName();
+	str_copy(Data.m_aName, str_utf8_skip_whitespaces(pName));
+	str_utf8_trim_right(Data.m_aName);
+	Data.m_FontSize = FontSize;
 
-		Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark;
+	Data.m_ShowFriendMark = Data.m_ShowName && g_Config.m_ClNamePlatesFriendMark;
 
-		Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);
-		Data.m_ClientId = DummyIdx;
-		Data.m_ClientIdSeparateLine = g_Config.m_ClNamePlatesIdsSeparateLine;
-		Data.m_FontSizeClientId = Data.m_ClientIdSeparateLine ? (18.0f + 20.0f * g_Config.m_ClNamePlatesIdsSize / 100.0f) : Data.m_FontSize;
+	Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);
+	Data.m_ClientId = DummyIdx;
+	Data.m_ClientIdSeparateLine = g_Config.m_ClNamePlatesIdsSeparateLine;
+	Data.m_FontSizeClientId = Data.m_ClientIdSeparateLine ? (18.0f + 20.0f * g_Config.m_ClNamePlatesIdsSize / 100.0f) : Data.m_FontSize;
 
-		Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan;
-		const char *pClan = DummyIdx == 0 ? g_Config.m_PlayerClan : g_Config.m_ClDummyClan;
-		str_copy(Data.m_aClan, str_utf8_skip_whitespaces(pClan));
-		str_utf8_trim_right(Data.m_aClan);
-		if(Data.m_aClan[0] == '\0')
-			str_copy(Data.m_aClan, Localize("Clan Name"));
-		Data.m_FontSizeClan = FontSizeClan;
+	Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan;
+	const char *pClan = DummyIdx == 0 ? g_Config.m_PlayerClan : g_Config.m_ClDummyClan;
+	str_copy(Data.m_aClan, str_utf8_skip_whitespaces(pClan));
+	str_utf8_trim_right(Data.m_aClan);
+	if(Data.m_aClan[0] == '\0')
+		str_copy(Data.m_aClan, Localize("Clan Name"));
+	Data.m_FontSizeClan = FontSizeClan;
 
-		Data.m_ShowCoords = CoordModuleAllowsPreview;
-		Data.m_ShowCoordX = Data.m_ShowCoords && g_Config.m_QmNameplateCoordX != 0;
-		Data.m_ShowCoordY = Data.m_ShowCoords && g_Config.m_QmNameplateCoordY != 0;
-		Data.m_Coords = vec2(12.34f + DummyIdx, 56.78f + DummyIdx);
-		Data.m_FontSizeCoords = FontSizeCoords;
-		Data.m_CoordXAlignHint = false;
-		Data.m_CoordXAlignHintStrict = false;
-		Data.m_CoordXAligned = false;
-		Data.m_CoordXAlignColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateCoordXAlignHintColor));
+	Data.m_ShowCoords = CoordModuleAllowsPreview;
+	Data.m_ShowCoordX = Data.m_ShowCoords && g_Config.m_QmNameplateCoordX != 0;
+	Data.m_ShowCoordY = Data.m_ShowCoords && g_Config.m_QmNameplateCoordY != 0;
+	Data.m_Coords = vec2(12.34f + DummyIdx, 56.78f + DummyIdx);
+	Data.m_FontSizeCoords = FontSizeCoords;
+	Data.m_CoordXAlignHint = false;
+	Data.m_CoordXAlignHintStrict = false;
+	Data.m_CoordXAligned = false;
+	Data.m_CoordXAlignColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateCoordXAlignHintColor));
 
-		// Preview has no player info; treat the active dummy as local (mirrors pPlayerInfo->m_Local),
-		// so Others/Only self show different direction across the two dummies.
-		const bool PreviewIsLocal = DummyIdx == g_Config.m_ClDummy;
-		switch(g_Config.m_ClShowDirection)
-		{
-		case 0: // Off
-			Data.m_ShowDirection = false;
-			break;
-		case 1: // Others
-			Data.m_ShowDirection = !PreviewIsLocal;
-			break;
-		case 2: // Everyone
-			Data.m_ShowDirection = true;
-			break;
-		case 3: // Only self
-			Data.m_ShowDirection = PreviewIsLocal;
-			break;
-		default:
-			Data.m_ShowDirection = false;
-			dbg_assert_failed("ShowDirectionConfig invalid");
-		}
-		Data.m_DirLeft = Data.m_DirJump = Data.m_DirRight = true;
-		Data.m_FontSizeDirection = FontSizeDirection;
+	// Preview has no player info; treat the active dummy as local (mirrors pPlayerInfo->m_Local),
+	// so Others/Only self show different direction across the two dummies.
+	const bool PreviewIsLocal = DummyIdx == g_Config.m_ClDummy;
+	switch(g_Config.m_ClShowDirection)
+	{
+	case 0: // Off
+		Data.m_ShowDirection = false;
+		break;
+	case 1: // Others
+		Data.m_ShowDirection = !PreviewIsLocal;
+		break;
+	case 2: // Everyone
+		Data.m_ShowDirection = true;
+		break;
+	case 3: // Only self
+		Data.m_ShowDirection = PreviewIsLocal;
+		break;
+	default:
+		Data.m_ShowDirection = false;
+		dbg_assert_failed("ShowDirectionConfig invalid");
+	}
+	Data.m_DirLeft = Data.m_DirJump = Data.m_DirRight = true;
+	Data.m_FontSizeDirection = FontSizeDirection;
 
-		Data.m_FontSizeHookStrongWeak = FontSizeHookStrongWeak;
-		Data.m_HookStrongWeakId = Data.m_ClientId;
-		Data.m_ReserveHookStrongWeakRow = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
-		Data.m_ShowHookStrongWeakId = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong == 2;
-		if(DummyIdx == g_Config.m_ClDummy)
-		{
-			Data.m_HookStrongWeakState = EHookStrongWeakState::NEUTRAL;
-			Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && (Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false)));
-		}
-		else
-		{
-			Data.m_HookStrongWeakState = Data.m_HookStrongWeakId == 2 ? EHookStrongWeakState::STRONG : EHookStrongWeakState::WEAK;
-			const bool Strong = Data.m_HookStrongWeakState == EHookStrongWeakState::STRONG;
-			const bool Weak = Data.m_HookStrongWeakState == EHookStrongWeakState::WEAK;
-			Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak);
-		}
+	Data.m_FontSizeHookStrongWeak = FontSizeHookStrongWeak;
+	Data.m_HookStrongWeakId = Data.m_ClientId;
+	Data.m_ReserveHookStrongWeakRow = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
+	Data.m_ShowHookStrongWeakId = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong == 2;
+	if(DummyIdx == g_Config.m_ClDummy)
+	{
+		Data.m_HookStrongWeakState = EHookStrongWeakState::NEUTRAL;
+		Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && (Data.m_ShowHookStrongWeakId || (g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, true, false, false)));
+	}
+	else
+	{
+		Data.m_HookStrongWeakState = Data.m_HookStrongWeakId == 2 ? EHookStrongWeakState::STRONG : EHookStrongWeakState::WEAK;
+		const bool Strong = Data.m_HookStrongWeakState == EHookStrongWeakState::STRONG;
+		const bool Weak = Data.m_HookStrongWeakState == EHookStrongWeakState::WEAK;
+		Data.m_ShowHookStrongWeak = NameplateScopeAllowsPreview && g_Config.m_ClNamePlatesStrong > 0 && ShouldShowQmHookStrongWeakScope(g_Config.m_QmNameplateHookStrongWeakScope, false, Strong, Weak);
+	}
 
-		// TClient
-		Data.m_Local = false;
+	// TClient
+	Data.m_Local = false;
 }
 
 float CNamePlates::MeasurePreviewAreaHeight() const
@@ -3010,7 +3012,6 @@ void CNamePlates::OnRender()
 		GameClient()->RenderFreezeWakeupPopups();
 
 	QmNameplateEffectLodEndFrame();
-
 }
 
 void CNamePlates::OnWindowResize()

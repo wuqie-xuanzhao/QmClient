@@ -39,9 +39,9 @@
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/qm_bind_status_hud.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
-#include <game/client/components/qmclient/tee_skin_apply.h>
 #include <game/client/components/qmclient/tee_color_code.h>
 #include <game/client/components/qmclient/tee_hue_cycle.h>
+#include <game/client/components/qmclient/tee_skin_apply.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <game/client/qm_icon_manager.h>
@@ -7683,16 +7683,33 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 			};
 			const auto ResolveNamePlatePreviewMeasureRevision = [this]() {
 				const int aInputs[] = {
-					g_Config.m_QmNameplateShowScope, g_Config.m_ClNamePlatesClan, g_Config.m_ClNamePlatesFriendMark,
-					g_Config.m_ClNamePlatesIds, g_Config.m_ClNamePlatesIdsSeparateLine, g_Config.m_ClNamePlatesStrong,
-					g_Config.m_Debug, g_Config.m_ClNamePlatesSize, g_Config.m_ClNamePlatesClanSize,
-					g_Config.m_ClNamePlatesIdsSize, g_Config.m_ClNamePlatesCoordsSize, g_Config.m_ClDirectionSize,
-					g_Config.m_ClNamePlatesStrongSize, g_Config.m_QmNameplateCoords, g_Config.m_QmNameplateCoordsOwn,
-					g_Config.m_QmNameplateCoordX, g_Config.m_QmNameplateCoordY, g_Config.m_ClShowDirection,
-					g_Config.m_QmNameplateHookStrongWeakScope, g_Config.m_QmNameplateFreeMove,
-					g_Config.m_QmNameplateFreeMoveX, g_Config.m_QmNameplateFreeMoveY, g_Config.m_ClDummy,
-					g_Config.m_ClNamePlatesOffset, g_Config.m_ClNamePlatesTeamcolors,
-					g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange,
+					g_Config.m_QmNameplateShowScope,
+					g_Config.m_ClNamePlatesClan,
+					g_Config.m_ClNamePlatesFriendMark,
+					g_Config.m_ClNamePlatesIds,
+					g_Config.m_ClNamePlatesIdsSeparateLine,
+					g_Config.m_ClNamePlatesStrong,
+					g_Config.m_Debug,
+					g_Config.m_ClNamePlatesSize,
+					g_Config.m_ClNamePlatesClanSize,
+					g_Config.m_ClNamePlatesIdsSize,
+					g_Config.m_ClNamePlatesCoordsSize,
+					g_Config.m_ClDirectionSize,
+					g_Config.m_ClNamePlatesStrongSize,
+					g_Config.m_QmNameplateCoords,
+					g_Config.m_QmNameplateCoordsOwn,
+					g_Config.m_QmNameplateCoordX,
+					g_Config.m_QmNameplateCoordY,
+					g_Config.m_ClShowDirection,
+					g_Config.m_QmNameplateHookStrongWeakScope,
+					g_Config.m_QmNameplateFreeMove,
+					g_Config.m_QmNameplateFreeMoveX,
+					g_Config.m_QmNameplateFreeMoveY,
+					g_Config.m_ClDummy,
+					g_Config.m_ClNamePlatesOffset,
+					g_Config.m_ClNamePlatesTeamcolors,
+					g_Config.m_QmNameplateTextEffects,
+					g_Config.m_QmNameplateTextBorderRange,
 					g_Config.m_QmNameplateTextGlowRange,
 				};
 				uint64_t Revision = 1469598103934665603ull;
@@ -7749,8 +7766,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 					g_Config.m_QmNameplateNameOffsetY = 0;
 				}
 				int Dummy = g_Config.m_ClDummy != (m_DummyNamePlatePreview ? 1 : 0);
-				GameClient()->m_NamePlates.RenderNamePlatePreview(PreviewArea, Dummy);
-			}, ResolveNamePlatePreviewMeasureRevision());
+				GameClient()->m_NamePlates.RenderNamePlatePreview(PreviewArea, Dummy); }, ResolveNamePlatePreviewMeasureRevision());
 		}
 		else if(m_AppearanceSettingsTab == APPEARANCE_TAB_HOOK_COLLISION)
 		{

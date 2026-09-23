@@ -45,14 +45,14 @@
 #include <game/client/components/qmclient/input_overlay.h>
 #include <game/client/components/qmclient/keyword_reply_rules.h>
 #include <game/client/components/qmclient/perf_logging.h>
-#include <game/client/components/qmclient/qm_title_color.h>
-#include <game/client/components/qmclient/qm_title_render.h>
-#include <game/client/components/qmclient/qm_title_style.h>
-#include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/components/qmclient/qm_map_upload.h>
 #include <game/client/components/qmclient/qm_markdown.h>
 #include <game/client/components/qmclient/qm_music_hook_registry.h>
 #include <game/client/components/qmclient/qm_sponsor_authors.h>
+#include <game/client/components/qmclient/qm_title_color.h>
+#include <game/client/components/qmclient/qm_title_render.h>
+#include <game/client/components/qmclient/qm_title_style.h>
+#include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/components/qmclient/translate/translate_ui_settings.h>
 #include <game/client/components/skins.h>
 #include <game/client/components/tclient/bindchat.h>
@@ -362,8 +362,15 @@ static CScrollRegion s_TitleStyleListScrollRegion;
 // 按风格序号分配稳定 id；滚动时首尾可能同时露出半行，不能复用可见槽位的 id。
 static std::array<CButtonContainer, 64> s_aTitleStyleItemIds;
 
+struct SQmTitleStylePreviewEntryContext
+{
+	CUIRect m_RowRect;
+	float m_Padding;
+	float m_FontSize;
+};
+
 // 风格条目的自定义前景：画「[赞助者] + 该风格」的实时效果。pEntry 只用于判空，文本固定取自上下文。
-static void RenderQmTitleStylePreviewEntry(void *pContext, const CUi::SSelectionPopupContext::SEntryCustomRenderContext &EntryCtx, int Index, const char *pEntry)
+static void RenderQmTitleStylePreviewEntry(void *pContext, const SQmTitleStylePreviewEntryContext &EntryCtx, int Index, const char *pEntry)
 {
 	const SQmTitleStylePreviewContext *pPreview = static_cast<const SQmTitleStylePreviewContext *>(pContext);
 	if(pPreview == nullptr || pEntry == nullptr)
@@ -1886,7 +1893,7 @@ void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOn
 						if(Selected || ItemHovered)
 							DrawRoundedSurface(Ui(), Item, ColorRGBA(1.0f, 1.0f, 1.0f, Selected ? 0.22f : 0.10f), ColorRGBA(), ui_token::radius::TIGHT);
 						// 预览只画效果本体：第 0 项画服务端当前风格，其余画对应风格。
-						const CUi::SSelectionPopupContext::SEntryCustomRenderContext ItemCtx{Item, STYLE_ITEM_INSET, TipSize};
+						const SQmTitleStylePreviewEntryContext ItemCtx{Item, STYLE_ITEM_INSET, TipSize};
 						RenderQmTitleStylePreviewEntry(&s_TitleStylePreviewContext, ItemCtx, ItemIndex, "");
 						if(!ReadOnly && Ui()->DoButtonLogic(&s_aTitleStyleItemIds[ItemIndex], Selected ? 1 : 0, &Item, BUTTONFLAG_LEFT))
 						{

@@ -1172,10 +1172,11 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	NameBar.VSplitRight(ButtonbarHeight, &NameBar, &PreviewButton);
 	const SDemoCutSegment PendingCut = NormalizePendingSlice();
 	const bool PreviewEnabled = !VideoRendering && m_DemoPlayerState == DEMOPLAYER_NONE && !Ui()->IsPopupOpen() &&
-		((PendingCut.m_StartTick >= 0 && PendingCut.m_StartTick < PendingCut.m_EndTick) || m_DemoCutPreview.IsActive());
+				    ((PendingCut.m_StartTick >= 0 && PendingCut.m_StartTick < PendingCut.m_EndTick) || m_DemoCutPreview.IsActive());
 	static CButtonContainer s_CutPreviewButton;
 	if(Ui()->DoButton_QmIcon(&s_CutPreviewButton, m_DemoCutPreview.IsActive() ? EQmIcon::STOP : EQmIcon::PLAY,
-		m_DemoCutPreview.IsActive() ? FONT_ICON_STOP : FONT_ICON_PLAY, 0, &PreviewButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, PreviewEnabled) && PreviewEnabled)
+		   m_DemoCutPreview.IsActive() ? FONT_ICON_STOP : FONT_ICON_PLAY, 0, &PreviewButton, BUTTONFLAG_LEFT, IGraphics::CORNER_ALL, PreviewEnabled) &&
+		PreviewEnabled)
 		PreviewCut();
 	GameClient()->m_Tooltips.DoToolTip(&s_CutPreviewButton, &PreviewButton, m_DemoCutPreview.IsActive() ? Localize("Stop preview (P)") : Localize("Preview cut (P)"));
 	char aDemoName[IO_MAX_PATH_LENGTH];

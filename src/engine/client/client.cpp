@@ -479,8 +479,8 @@ static bool WriteQmGraphicsRecoveryState(IStorage *pStorage, const SQmGraphicsRe
 
 	char aBuf[IO_MAX_PATH_LENGTH + 1280];
 	str_format(aBuf, sizeof(aBuf), "report_time=%lld\nreport_path=%s\nmode=%d\nbackend=%s\nrecovery_backend=%s\nfailed_backend=%s\n"
-		"gl_major=%d\ngl_minor=%d\ngl_patch=%d\nfsaa_samples=%d\nfullscreen=%d\nborderless=%d\nanalysis_ran=%d\ndriver_blocked=%d\npref_complete=%d\n"
-		"failed_opengl=%d\nfailed_gles=%d\nfailed_vulkan=%d\nfailed_metal=%d\napplied=%d\n",
+				       "gl_major=%d\ngl_minor=%d\ngl_patch=%d\nfsaa_samples=%d\nfullscreen=%d\nborderless=%d\nanalysis_ran=%d\ndriver_blocked=%d\npref_complete=%d\n"
+				       "failed_opengl=%d\nfailed_gles=%d\nfailed_vulkan=%d\nfailed_metal=%d\napplied=%d\n",
 		(long long)State.m_ReportTimeModified, State.m_aReportPath, State.m_Mode, State.m_aBackend, State.m_aRecoveryBackend, State.m_aFailedBackend,
 		State.m_GLMajor, State.m_GLMinor, State.m_GLPatch, State.m_FsaaSamples, State.m_Fullscreen, State.m_Borderless,
 		State.m_3DTextureAnalysisRan, State.m_DriverIsBlocked, State.m_HasFullPreference ? 1 : 0,

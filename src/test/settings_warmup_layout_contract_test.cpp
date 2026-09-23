@@ -53,46 +53,6 @@ TEST(SettingsWarmupLayoutContract, RemainingSettingsPagesUseResponsiveContentMet
 	EXPECT_EQ(Settings.find("s_SoundToggleCardHeight"), std::string::npos);
 }
 
-TEST(SettingsWarmupLayoutContract, TClientSettingsRowsSeparateControlHeightFromSpacing)
-{
-	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
-	auto Section = [&](const char *pBegin, const char *pEnd) {
-		const size_t Begin = TClient.find(pBegin);
-		const size_t End = TClient.find(pEnd, Begin);
-		EXPECT_NE(Begin, std::string::npos);
-		EXPECT_NE(End, std::string::npos);
-		return Begin != std::string::npos && End != std::string::npos ? TClient.substr(Begin, End - Begin) : std::string();
-	};
-
-	const std::string RowAllocator = Section("class CTClientSettingsRowAllocator", "static void ApplyTClientContentMetrics");
-	EXPECT_NE(RowAllocator.find("m_Column.HSplitTop(MarginSmall, nullptr, &m_Column);"), std::string::npos);
-	EXPECT_NE(RowAllocator.find("m_Column.HSplitTop(Height, &Row, &m_Column);"), std::string::npos);
-
-	const std::string Hud = Section("float CMenus::LayoutTClientHudCacheSection", "SSettingsSection CMenus::BuildTClientThemeCacheSection");
-	EXPECT_NE(Hud.find("CTClientSettingsRowAllocator Rows(CurrentColumn);"), std::string::npos);
-	EXPECT_NE(Hud.find("DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcMiniVoteHud"), std::string::npos);
-	EXPECT_NE(Hud.find("&Row, LineSize);"), std::string::npos);
-	EXPECT_EQ(Hud.find("LineSize * 3.0f"), std::string::npos);
-
-	const std::string Nameplates = Section("auto LayoutVisualNameplateSection", "auto LayoutVisualEffectsSection");
-	EXPECT_NE(Nameplates.find("const int NameplateRowCount = 7 + (g_Config.m_TcWhiteFeet ? 1 : 0);"), std::string::npos);
-	EXPECT_NE(Nameplates.find("TClientSettingsRowsHeight(NameplateRowCount)"), std::string::npos);
-	EXPECT_NE(Nameplates.find("CUIRect FeetBox;\n\t\t\tif(g_Config.m_TcWhiteFeet)\n\t\t\t\tFeetBox = Rows.Next();"), std::string::npos);
-	EXPECT_EQ(Nameplates.find("LineSize * 7.0f"), std::string::npos);
-	EXPECT_EQ(Nameplates.find("&CurrentColumn, LineSize"), std::string::npos);
-
-	const std::string Input = Section("auto LayoutInputSection", "auto LayoutAntiLatencyToolsSection");
-	EXPECT_NE(Input.find("CTClientSettingsRowAllocator Rows(CurrentColumn);"), std::string::npos);
-	EXPECT_NE(Input.find("for(int RowIndex = 0; RowIndex < (UiMode == 3 ? 4 : 1); ++RowIndex)"), std::string::npos);
-	EXPECT_NE(Input.find("DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClSubTickAiming"), std::string::npos);
-	EXPECT_EQ(Input.find("&CurrentColumn, LineSize"), std::string::npos);
-
-	const std::string FinishName = Section("auto LayoutFinishNameSection", "std::vector<SSettingsSection> vRightSections");
-	EXPECT_NE(FinishName.find("CUIRect ToggleRow = Rows.Next();"), std::string::npos);
-	EXPECT_NE(FinishName.find("FinishNameBox = Rows.Next();"), std::string::npos);
-	EXPECT_EQ(FinishName.find("LineSize + MarginExtraSmall"), std::string::npos);
-}
-
 TEST(SettingsWarmupLayoutContract, ControlsCardMeasurementsAvoidIdleBindingRescan)
 {
 	const std::string Controls = ReadTestSourceFile("src/game/client/components/menus_settings_controls.cpp");

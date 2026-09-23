@@ -61,6 +61,9 @@
 %d users
 == %d kullanıcı
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | ana oyuncu: %s | kukla: %s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d KiB (%.1f KiB/s)
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == Oyuncu adı gereklidir.
+
+A save is already being restored. Please wait.
+== Bir kayıt zaten geri yükleniyor. Lütfen bekleyin.
 
 A screenshot with this name already exists
 == Bu isimde bir ekran görüntüsü zaten mevcut
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == Gelişmiş
 
+Advanced mode
+== Gelişmiş mod
+
 Advanced options
 == Gelişmiş seçenekler
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == Görünüm
 
-Appearance / Chat
-== Görünüm / Sohbet
-
-Appearance / Hook Collision
-== Görünüm / Kanca yardım çizgileri
-
-Appearance / HUD
-== Görünüm / HUD
-
-Appearance / Info Messages
-== Görünüm / Bilgi Mesajları
-
-Appearance / Laser
-== Görünüm / Lazer
-
-Appearance / Name Plate
-== Görünüm / İsim Plakası
-
 Append to log file instead of overwriting
 == Günlük dosyasının üzerine yazmak yerine sonuna ekle
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == Önce düzenlenebilir bir ön ayar uygulayın
 
-Apply Best input to other Tees
-== Best input'u diğer Tee'lere uygula
-
 Apply Changes
 == Değişiklikleri Uygula
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == Hızlı girdiyi diğer Tee'lere de uygula
-
-Apply Saiko+ to other Tees
-== Saiko+'yı diğer Tee'lere uygula
 
 Apply squishy Tee deformation to other players
 == Q弹 Tee deformasyonunu diğer oyunculara uygula
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == İstatistik tablosunun otomatik ekran görüntüsünü al
 
-Available for this bundled font
-== Bu paketlenmiş yazı tipi için kullanılabilir
-
 Available practice commands: 
 == Kullanılabilir alıştırma komutları: 
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == En iyi
 
-Best input
-== En iyi giriş
-
-Best input delay compensation percentage
-== Best input gecikme telafisi yüzdesi
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Best input enterpolasyon modu (1=linear 2=cubic 3=smooth)
-
-Best input others
-== En iyi giriş (diğerleri)
-
-Best input prediction offset (0.01 tick)
-== Best input tahmin kayması (0.01 tick)
-
-Best input smooth percentage
-== Best input yumuşatma yüzdesi
-
 Better scoreboard
 == Geliştirilmiş skor tablosu
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == Dahili
-
-Bundled vector profile:
-== Paketlenmiş vektör profili:
 
 Button - Disabled
 == Düğme - Devre Dışı
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == Klasik profesyonel
+
+Classic title glow
+== Klasik unvan parıltısı
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== Klasik unvan parıltısı: 0 = kapalı, 1 = hafif (6 katman), 2 = tam Calamity (16 katman)
 
 Clear
 == Temizle
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == Döşeme katmanı kırpma hata ayıklaması.
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== Özel WebSocket adresi (boşsa wss://qmclient.icu/ws kullanılır)
+
 Deep freeze color
 == Derin donma rengi
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == Küçültülmüş (0.78)
 
+Draft file is empty
+== Taslak dosyası boş
+
 Drag HUD modules with the left mouse button
 == HUD modüllerini sol fare tuşuyla sürükleyin
+
+Drag to another category to move this friend.
+== Bu arkadaşı taşımak için başka bir kategoriye sürükleyin.
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== Sıralamayı değiştirmek için sürükleyin; genişletmek veya daraltmak için tıklayın. Kategorileri yönetmek için sağ tıklayın veya dişli simgesini kullanın
 
 Dragger Inner Color
 == Sürükleyici İç Rengi
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == Yedek basit gürültü azaltma gücü
 
-Fast input
-== Hızlı giriş
-
 Fast input (reduce visual latency)
 == Hızlı giriş (görsel gecikmeyi azaltır)
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == Bitiş İsmi:
+
+Finish or reset the current race before restoring a save.
+== Bir kaydı geri yüklemeden önce mevcut yarışı bitirin veya sıfırlayın.
 
 Finished
 == Tamamlandı
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == Giriş Katmanı Y Konumu (Yüzde)
 
-Input smoothing
-== Giriş yumuşatma
-
 Input switch
 == Giriş anahtarı
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == İnternet (Çevrimiçi kaynaktan)
 
-Interpolation
-== Enterpolasyon
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == Geçerli düzenleyici harita kopyasını "auto" klasörüne otomatik kaydetme aralığı (0=kapalı)
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == Geçersiz seçenek
+
+Invalid save number. Use a number from the save list.
+== Geçersiz kayıt numarası. Listedeki bir numarayı kullanın.
 
 Invalid spectator id used
 == Geçersiz izleyici kimliği kullanıldı
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == Gecikme
 
-Latency compensation
-== Gecikme telafisi
-
 Latency Jitter
 == Gecikme dalgalanması
-
-Launch a large emote
-== Büyük bir emote fırlat
 
 Launch count threshold for the next sponsor reminder
 == Sonraki hatırlatma için başlatma eşiği
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == Varsayılan istemi kullanmak için boş bırakın
 
-Leave empty to use UDP
-== UDP kullanmak için boş bırakın
-
 Left jump
 == Sol zıplama
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == Sol/sağ kanal genişliği
+
+Legacy option: connections that skip TLS verification are rejected
+== Eski seçenek: TLS doğrulamasını atlayan bağlantılar reddedilir
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== Eski gerçek zamanlı WebSocket URL'si (qm_websocket_url adresine taşındı)
 
 Length
 == Uzunluk
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == Hafif
+
+Light band (0 = style default)
+== Renk fazı (0 = stil varsayılanı)
 
 Limit information in spectator mode
 == Seyirci modunda bilgiyi sınırla
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == Yalnızca yerel
 
+Locate
+== Konumunu bul
+
 Lock delay
 == Kilit gecikmesi
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == Çift sesleri ayıklamak için tahmin edilen olayların oluşturulmasını/oynatılmasını ve anlık görüntü onayını günlüğe kaydet.
+
+Log realtime WebSocket channel events
+== Gerçek zamanlı WebSocket kanalı olaylarını kaydet
 
 Log the network
 == Ağı günlüğe kaydet
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == Normal mesaj metni gradyan rengi
 
-Not available; FreeType is used
-== Kullanılamaz; FreeType kullanılır
-
 NOT CONNECTED
 == BAĞLI DEĞİL
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == Yalnızca iyileştirmeleri kaydet
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== Yalnızca seçili paketlenmiş yazı tiplerinde vektör ad plakası atlası vardır. Diğer yazı tipleri FreeType kullanır.
-
 Only show after joining a team
 == Yalnızca bir takıma katıldıktan sonra göster
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == DDNet Wiki'yi aç
 
-Open editor
-== Düzenleyiciyi aç
-
 Open emote selector
 == İfade seçiciyi aç
+
+Open folder
+== Klasörü aç
 
 Open map editor
 == Harita düzenleyiciyi aç
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == DNSBL sağlayıcısı için isteğe bağlı kimlik doğrulama anahtarı
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== İsteğe bağlı ses WebSocket uç noktası (boşsa UDP taşıması korunur)
-
 Or visit DDNet.org
 == Veya DDNet.org adresini ziyaret edin
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP anlaşması, geri dönüş ve oturum yaşam döngüsü hata ayıklama günlüklerini çıktıla
-
-Output nameplate MSDF path debug log
-== Ad plakası MSDF yolu hata ayıklama günlüğünü çıktıla
 
 Output switch
 == Çıkış anahtarı
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == Geçen yıl
+
+Paste sp_dc from Spotify web cookies
+== Tarayıcıdan sp_dc çerezini yapıştırın
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB sunucu sertifikasını doğrulamak için CA sertifikasının yolu
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == Puanlar
 
+Polished
+== Cilalı
+
 Popup animation
 == Açılır animasyon
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == Donduğunda tahmin marjı
 
-Prediction offset
-== Tahmin kayması
-
 Preparing chat export: %d%%
 == Sohbet dışa aktarımı hazırlanıyor: %d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == Düzenleyici etkinken önizleme düğmesi görünürlüğü.
+
+Preview cut (P)
+== Kesiti önizle (P)
 
 Preview dummy nameplate
 == Dummy isim plakasını önizle
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == Bu devam eden yarıştaki geçerli süreni herkese açık olarak mesajla
 
+Publish
+== Yayınla
+
+Publish failed
+== Yayınlama başarısız
+
+Published
+== Yayınlandı
+
+Publishing…
+== Yayınlanıyor…
+
 Pulse
 == Darbe
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == QmClient
 
-QmClient / Function
-== QmClient / Fonksiyon
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / Görsel
-
 QmClient chat log
 == QmClient sohbet günlüğü
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == QmClient çevrimiçi dağılımı
-
-QmClient realtime WebSocket URL (empty disables transport)
-== QmClient gerçek zamanlı WebSocket adresi (boşsa taşıma kapanır)
 
 QmClient Settings
 == QmClient Ayarları
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == Oyuncular için hızlı işlem menüsü
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== Hızlı giriş modu (0=Fast 3=Best 4=Saiko+; 1/2 eski değerlerle uyumludur ve Best'e eşlenir)
 
 Quit
 == Çıkış
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == Gerçekten mi? Hiç mi düşünmezsin?
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== Gerçek zamanlı kanal kalp atışı aralığı (saniye, 0 varsayılanı kullanır)
+
+Realtime channel reconnect backoff base (ms)
+== Gerçek zamanlı kanal yeniden bağlanma bekleme tabanı (ms)
+
+Realtime channel reconnect backoff cap (ms)
+== Gerçek zamanlı kanal yeniden bağlanma bekleme üst sınırı (ms)
 
 Reason
 == Sebep
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == Yeniden başlatılıyor. Lütfen bekleyin…
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== İki kişilik kayıt geri yüklensin mi? /qm Yes en yeniyi yükler; /qm Yes numara başka kayıt seçer; /qm No kapatır.
+
 Restore Kugou files
 == Kugou dosyalarını geri yükle
 
 Restore old single-segment hook collision line behavior
 == Eski tek parçalı kanca çarpışma çizgisi davranışını geri yükle
+
+Restoring save %d: main '%s', dummy '%s'.
+== %d numaralı kayıt geri yükleniyor: ana oyuncu '%s', kukla '%s'.
 
 Retry remote stats
 == Uzak istatistikleri yeniden dene
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == Sağ zıplama
-
-Right-click or use the gear to manage categories
-== Kategorileri yönetmek için sağ tıklayın veya dişli simgesini kullanın
 
 Right-click to disable auto-translate
 == Otomatik çeviriyi devre dışı bırakmak için sağ tıklayın
@@ -9452,12 +9437,6 @@ Run server
 SA
 == Güney Amerika
 
-Saiko+ input amount (0.01 tick)
-== Saiko+ giriş miktarı (0.01 tick)
-
-Saiko+ others
-== Saiko+ diğerleri
-
 Same as "vote no"
 == "hayır oyu" ile aynı
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == Son %d dakikayı kaydet
 
+Save loaded; local record removed.
+== Kayıt yüklendi; yerel kayıt girdisi silindi.
+
+Save loaded; the local record could not be removed.
+== Kayıt yüklendi ancak yerel kayıt girdisi silinemedi.
+
 Save player names in replay
 == Tekrar oynatmada oyuncu adlarını kaydet
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == Oyun başına en iyi sürenin tekrar oynatmasını kaydet
+
+Save restore dismissed.
+== Geri yükleme iptal edildi.
+
+Save restore stopped without confirming success. The local record was kept.
+== Yükleme başarısı doğrulanamadı. Geri yükleme durduruldu ve yerel kayıt korundu.
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== Bağlantı, adlar veya takım hazır olmadığından geri yükleme durduruldu. Yerel kayıt korundu.
 
 Save settings file on exit
 == Çıkışta ayar dosyasını kaydet
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == Tüm harita klasörleri aranıyor...
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== Gerçek zamanlı el sıkışmada gönderilen Sec-WebSocket-Protocol
 
 Secondary
 == İkincil
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == Sunucu bilgisi
 
-Server IP
-== Sunucu IP
-
 Server kick/spec votes are no longer actively moderated.
 == Sunucu atma/seyirci oyları artık aktif olarak yönetilmiyor.
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == Sunucu türü (novice, moderate vb.)
+
+Server URL
+== Sunucu URL’si
+
+Server-assigned style
+== Sunucunun atadığı stil
 
 Set a voice server to enable QmClient distribution
 == QmClient dağılımını etkinleştirmek için bir ses sunucusu ayarlayın
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == Sunucu tarayıcısı ad/harita bölünmesinden ad sütununa ayrılan oran (binde)
 
+Shimmer speed (polished)
+== Işık hızı (cilalı)
+
 Short server names
 == Kısa sunucu adları
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == Dummy'nin küçük bir görünümünü göster
+
+Show advanced title settings (collapsing keeps configured effects)
+== Gelişmiş unvan ayarlarını göster (daraltmak ayarlanan efektleri korur)
 
 Show air jump indicator
 == Havada zıplama göstergesini göster
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == Basit gürültü azaltma gücü
 
+Single color
+== Tek renk
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== Tek renk ve gökkuşağı animasyonlu stillerin rengini geçersiz kılar; stilin hareketi korunur
+
 Size
 == Boyut
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == Salınım kaymasını tam piksele hizala (daha keskin glifler, daha kesik hareket)
 
+Snap wave to pixels
+== Dalgayı tam piksellere hizala
+
 Snapshot Age
 == Anlık görüntü yaşı
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == Spam koruması: takım değiştirme, sohbet, skin değiştirme, ifade ve oylama spamını önler
+
+Spatial effect
+== Uzamsal efekt
 
 Speaker
 == Hoparlör
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == Pratiği durdur
 
+Stop preview (P)
+== Önizlemeyi durdur (P)
+
 Stop record
 == Kaydı durdur
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Alt-Tik nişan alma
+
+Subtle
+== Hafif
 
 Successfully saved the replay!
 == Tekrar oynatma başarıyla kaydedildi!
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / Bağlama Çarkı
-
-TClient / Status Bar
-== TClient / Durum Çubuğu
 
 TClient Developers
 == TClient Geliştiricileri
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == Haritada bu dizine sahip bir kontrol noktası ışınlayıcısı yok.
 
+There is no pending save restore prompt.
+== Bekleyen bir geri yükleme sorusu yok.
+
 There is no teleporter with that index on the map.
 == Haritada bu dizine sahip bir ışınlayıcı yok.
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == Düşünme modu bir akıl yürütme modeli gerektirir
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== Bu yazı tipinin paketlenmiş vektör profili yok. Ad plakaları FreeType kullanacak.
+This connection cannot change names while connected. Reconnect with the saved names first.
+== Bu bağlantıda bağlıyken ad değiştirilemez. Önce kayıtlı adlarla yeniden bağlanın.
 
 This ID is not connected
 == Bu ID bağlı değil
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == Bu kayıt var, ancak siz bu kaydın parçası değilsiniz.
+
+This save is no longer in the local save file.
+== Bu kayıt artık yerel kayıt dosyasında bulunmuyor.
 
 This save-code already exists
 == Bu kayıt kodu zaten var
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == Unvan salınım dalga boyu (piksel)
 
+Title color
+== Unvan rengi
+
+Title color (single color)
+== Unvan rengi (tek renk)
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == Unvan ışık tarama hızı (saniyede 1/100 satır, 0 = kapalı)
+
+Title opacity (custom color)
+== Opaklık (özel renk)
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == Karakter başına piksel başına faz (1/1000 px, 0 = stil varsayılanı, 20 = görünür ışık şeridi)
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == Karakter başına dikey salınım genliği (piksel, 0 = kapalı)
 
+Title preview
+== Unvan önizlemesi
+
 Title server unavailable; retry
 == Unvan sunucusu kullanılamıyor; tekrar dene
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == Unvan uzamsal efekti: 0 = cilalı, 1 = katı, 2 = klasik Calamity, 3 = kapalı
+
+Title style
+== Unvan stili
 
 Title too long or contains unsupported characters
 == Unvan çok uzun veya desteklenmeyen karakterler içeriyor
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == Dinamik kamerayı değiştir
+
+Toggle emote launcher
+== İfade fırlatıcısını aç/kapat
 
 Toggle fast practice mode
 == Hızlı pratik modunu değiştir
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == Bilinmeyen durum
 
+Unknown title style
+== Bilinmeyen unvan stili
+
 Unload the rank ghost
 == Rank hayaletini kaldır
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == Önce /pause kullanın, sonra ölebilirsiniz
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== Geri yüklemek için /qm Yes [numara], kapatmak için /qm No kullanın.
+
 Use 12 hour clock
 == 12 saatlik saat kullan
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == Yeniden başlamak için k tuşunu (öldür), duraklatmak ve diğer oyuncuları izlemek için q tuşunu kullanın. Diğer tuş bağlantıları için ayarlara bakın.
+
+Use large emote
+== Büyük ifade kullan
 
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == Favorileri gruplamak için `add_favorite`'den önce kullanın. `end_favorite_group` ile bitirin
 
-Use vector font rendering for nameplates
-== Ad plakaları için vektör yazı tipi oluşturmayı kullan
-
-Use vector font rendering for nameplates when a bundled profile is available
-== Paketlenmiş bir profil varsa ad plakaları için vektör yazı tipi oluşturmayı kullan
-
 Use warlist colors instead of regular colors
 == Normal renkler yerine savaş listesi renklerini kullan
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == Değişken özel yazı tipi kalınlığı
-
-Vector nameplate text
-== Vektör ad plakası metni
 
 Velocity
 == Hız
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == Ses Odası Token’ı (İsteğe Bağlı)
 
-Voice server address host:port
-== Ses Sunucu Adresi host:port
+Voice server URL (ws:// or wss://)
+== Ses sunucusu URL’si (ws:// veya wss://)
 
 Voice stereo output
 == Ses Stereo Çıkışı
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == Uyarı
 
+Wave amount
+== Dalga miktarı
+
+Wave speed (0.01 rad/s)
+== Dalga hızı (0,01 rad/sn)
+
+Wave wavelength
+== Dalga boyu
+
 Weak hook
 == Zayıf kanca
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == Web Sitesi
-
-WebSocket endpoint (optional)
-== WebSocket uç noktası (isteğe bağlı)
 
 Welcome to DDNet
 == DDNet'e Hoş Geldiniz
@@ -14330,6 +14378,10 @@ required
 [Team status]
 solo
 == solo
+
+[Title color mode]
+Use style colors
+== Stilin renklerini kullan
 
 [Touch button behavior]
 Bind

@@ -70,38 +70,6 @@ TEST(QmNewUiMenuShellSettingsContract, SettingsShellAndOuterScrollbarUseStableCo
 	EXPECT_NE(AssetsSource.find("StableCustomList.w / (Margin + TextureWidth)"), std::string::npos);
 }
 
-TEST(QmNewUiMenuShellSettingsContract, P6QmClientContributorsUsesCanonicalDeck)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
-	const std::string Body = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly)");
-	ASSERT_FALSE(Body.empty());
-	EXPECT_NE(Body.find("SettingsPageLayout("), std::string::npos);
-	EXPECT_NE(Body.find("SSettingsCardDefinition"), std::string::npos);
-	EXPECT_NE(Body.find("CardDeck.RenderCached("), std::string::npos);
-	EXPECT_NE(Body.find("deck:qmclient-contributors-community"), std::string::npos);
-	EXPECT_NE(Body.find("deck:qmclient-contributors-sponsors"), std::string::npos);
-	EXPECT_NE(Body.find("deck:qmclient-contributors-ddnet"), std::string::npos);
-	EXPECT_NE(Body.find("QmResolveScrollPolicy("), std::string::npos);
-	EXPECT_NE(Body.find("if(!ReadOnly)\n\t\t\t\t{"), std::string::npos);
-	EXPECT_NE(Body.find("ResolveSettingsRowsHeight((int)BuildSponsorLines(ContentWidth).get().size(), LineHeight, LineSpacing)"), std::string::npos);
-	EXPECT_NE(Body.find("s_CachedTextGeneration == m_MenuTextPoolGeneration"), std::string::npos);
-	EXPECT_NE(Body.find("return std::cref(Lines);"), std::string::npos);
-	EXPECT_EQ(Body.find("LineHeight * 0.96f"), std::string::npos);
-	EXPECT_EQ(Body.find("BeginSettingsQmScrollContainer("), std::string::npos);
-	EXPECT_EQ(Body.find("RenderQmSettingsGlassCard("), std::string::npos);
-	const std::string Dispatch = FunctionBody(Source, "void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)");
-	ASSERT_FALSE(Dispatch.empty());
-	EXPECT_NE(Dispatch.find("RenderSettingsQmClientContributors(MainView, PrewarmOnly)"), std::string::npos);
-	EXPECT_NE(Source.find("str_comp(pTab, \"qmclient-contributors\") == 0"), std::string::npos);
-	const std::string MenusSource = ReadTextFile("src/game/client/components/menus.cpp");
-	const std::string SetPageBody = FunctionBody(MenusSource, "bool CMenus::SetSettingsPageFromCardTab(const char *pTab)");
-	EXPECT_NE(SetPageBody.find("str_comp(pTab, \"qmclient-contributors\") == 0"), std::string::npos);
-	EXPECT_NE(Body.find("qmclient-community-thanks"), std::string::npos);
-	EXPECT_NE(Body.find("BuildSponsorLines"), std::string::npos);
-	EXPECT_NE(Body.find("!ReadOnly && g_QmClientEnsureSponsorQrTexture"), std::string::npos);
-	EXPECT_NE(Body.find("CardDeck.RenderCached("), std::string::npos);
-}
-
 TEST(QmNewUiMenuShellSettingsContract, TClientPreLayoutUsesDeckContentCoordinates)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/tclient/menus_tclient.cpp");

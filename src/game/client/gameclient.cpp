@@ -118,25 +118,33 @@ namespace
 	{
 		if(!QmPerfEnabled())
 			return;
+		static SQmIconDiagnosticsWindow s_Window;
+		const int64_t Now = time_get();
+		if(!s_Window.Add(Diagnostics, Now, time_freq()))
+			return;
+		const SQmIconDiagnostics &Total = s_Window.m_Total;
 		char aPayload[1024];
-		str_format(aPayload, sizeof(aPayload), "event=icon_frame msdf_draws=%" PRIu64 " msdf_manager_call_run_max=%" PRIu64 " msdf_manager_call_run_1=%" PRIu64 " msdf_manager_call_run_2=%" PRIu64 " msdf_manager_call_run_3_4=%" PRIu64 " msdf_manager_call_run_5_8=%" PRIu64 " msdf_manager_call_run_9_16=%" PRIu64 " msdf_manager_call_run_17_32=%" PRIu64 " msdf_manager_call_run_33_64=%" PRIu64 " msdf_manager_call_run_65_plus=%" PRIu64 " reload_attempts=%" PRIu64 " reload_successes=%" PRIu64 " atlas_swaps=%" PRIu64 " texture_load_successes=%" PRIu64 " texture_load_failures=%" PRIu64 " texture_unloads=%" PRIu64,
-			Diagnostics.m_MsdfIconDraws,
-			Diagnostics.m_MaxMsdfManagerCallRun,
-			Diagnostics.m_MsdfManagerCallRunBuckets[0],
-			Diagnostics.m_MsdfManagerCallRunBuckets[1],
-			Diagnostics.m_MsdfManagerCallRunBuckets[2],
-			Diagnostics.m_MsdfManagerCallRunBuckets[3],
-			Diagnostics.m_MsdfManagerCallRunBuckets[4],
-			Diagnostics.m_MsdfManagerCallRunBuckets[5],
-			Diagnostics.m_MsdfManagerCallRunBuckets[6],
-			Diagnostics.m_MsdfManagerCallRunBuckets[7],
-			Diagnostics.m_ReloadAttempts,
-			Diagnostics.m_ReloadSuccesses,
-			Diagnostics.m_AtlasSwaps,
-			Diagnostics.m_TextureLoads,
-			Diagnostics.m_TextureLoadFailures,
-			Diagnostics.m_TextureUnloads);
-		QmPerfLogPayload("perf/icons", aPayload, pClient);
+		str_format(aPayload, sizeof(aPayload), "event=icon_summary sample_frames=%" PRIu64 " msdf_draws_max=%" PRIu64 " msdf_draws=%" PRIu64 " msdf_manager_call_run_max=%" PRIu64 " msdf_manager_call_run_1=%" PRIu64 " msdf_manager_call_run_2=%" PRIu64 " msdf_manager_call_run_3_4=%" PRIu64 " msdf_manager_call_run_5_8=%" PRIu64 " msdf_manager_call_run_9_16=%" PRIu64 " msdf_manager_call_run_17_32=%" PRIu64 " msdf_manager_call_run_33_64=%" PRIu64 " msdf_manager_call_run_65_plus=%" PRIu64 " reload_attempts=%" PRIu64 " reload_successes=%" PRIu64 " atlas_swaps=%" PRIu64 " texture_load_successes=%" PRIu64 " texture_load_failures=%" PRIu64 " texture_unloads=%" PRIu64,
+			s_Window.m_Frames,
+			s_Window.m_MaxMsdfDraws,
+			Total.m_MsdfIconDraws,
+			Total.m_MaxMsdfManagerCallRun,
+			Total.m_MsdfManagerCallRunBuckets[0],
+			Total.m_MsdfManagerCallRunBuckets[1],
+			Total.m_MsdfManagerCallRunBuckets[2],
+			Total.m_MsdfManagerCallRunBuckets[3],
+			Total.m_MsdfManagerCallRunBuckets[4],
+			Total.m_MsdfManagerCallRunBuckets[5],
+			Total.m_MsdfManagerCallRunBuckets[6],
+			Total.m_MsdfManagerCallRunBuckets[7],
+			Total.m_ReloadAttempts,
+			Total.m_ReloadSuccesses,
+			Total.m_AtlasSwaps,
+			Total.m_TextureLoads,
+			Total.m_TextureLoadFailures,
+			Total.m_TextureUnloads);
+		QmPerfLogPayloadForce("perf/icons", aPayload, pClient);
+		s_Window.Clear(Now);
 	}
 
 } // namespace
@@ -1256,6 +1264,9 @@ void CGameClient::OnUpdate()
 			pComponent->OnUpdate();
 	}
 
+	// 皮肤组件的 OnUpdate 已处理卸载/加载通知，绘制前再修复失效句柄。
+	RepairStaleTeeRenderInfos();
+
 	RefreshPredictionAfterConfigChange();
 
 	RecordDemoHudState(false);
@@ -1895,7 +1906,8 @@ void CGameClient::OnRender()
 	}
 	ProcessPendingCustomAssetImageryReload();
 
-	CPerfTimer FrameTimer;
+	const bool PerfEnabled = QmPerfEnabled();
+	CPerfTimer FrameTimer(PerfEnabled);
 
 	m_pFrameScheduler->BeginFrame(Client()->PerfFrame());
 	if(m_TClient.IsPreparingUpdateForShutdown())
@@ -1952,7 +1964,7 @@ void CGameClient::OnRender()
 
 	// update the local character and spectate position
 	{
-		CPerfTimer StageTimer;
+		CPerfTimer StageTimer(PerfEnabled);
 		UpdatePositions();
 		LogPerfStage(this, "update_positions", StageTimer.ElapsedMs());
 	}
@@ -1974,14 +1986,14 @@ void CGameClient::OnRender()
 
 	// update camera data prior to CControls::OnRender to allow CControls::m_aTargetPos to compensate using camera data
 	{
-		CPerfTimer StageTimer;
+		CPerfTimer StageTimer(PerfEnabled);
 		m_Camera.UpdateCamera();
 		UpdateSpectatorCursor();
 		LogPerfStage(this, "camera_and_cursor", StageTimer.ElapsedMs());
 	}
 
 	{
-		CPerfTimer StageTimer;
+		CPerfTimer StageTimer(PerfEnabled);
 		const char *pPerfPage = m_Menus.CurrentQmUiPerfPage();
 		if(pPerfPage != nullptr)
 			m_UiRuntimeV2.SetPerfContext(pPerfPage, m_Menus.CurrentQmUiPerfOperation());
@@ -1992,11 +2004,11 @@ void CGameClient::OnRender()
 	}
 
 	// render all systems
-	CPerfTimer ComponentsTimer;
+	CPerfTimer ComponentsTimer(PerfEnabled);
 	const auto RenderComponent = [&](CComponent *pComponent) {
 		if(pComponent == &m_Menus)
 		{
-			CPerfTimer StageTimer;
+			CPerfTimer StageTimer(PerfEnabled);
 			pComponent->OnRender();
 			LogPerfStage(this, "component_menus", StageTimer.ElapsedMs());
 		}
@@ -2023,7 +2035,7 @@ void CGameClient::OnRender()
 
 	// clear all events/input for this frame
 	{
-		CPerfTimer StageTimer;
+		CPerfTimer StageTimer(PerfEnabled);
 		m_QmImeManager.RenderCandidatePopup();
 		m_QmImeManager.OnFrame();
 		Input()->Clear();
@@ -2119,8 +2131,6 @@ void CGameClient::OnRender()
 	}
 
 	UpdateManagedTeeRenderInfos();
-	// 皮肤组件的 OnUpdate 已经处理完卸载/加载通知，这里再统一兜一次失效句柄。
-	RepairStaleTeeRenderInfos();
 }
 
 void CGameClient::RecordComponentUpdate(size_t ComponentIndex, double DurationMs)
@@ -7592,7 +7602,6 @@ void CGameClient::OnGraphicsResourcesReset()
 
 	// 文本渲染器缓存了字体纹理，必须同样重建。
 	TextRender()->OnGraphicsResourcesReset();
-
 
 	log_info("gfx", "game assets reloaded after graphics resources reset");
 }

@@ -1033,7 +1033,9 @@ TEST(QmCardRegistry, SkinSettingsSearchFindsOwningCard)
 		EXPECT_STREQ(It->m_Target.m_pStableId, pOwner) << pQuery;
 		EXPECT_EQ(std::count_if(Results.begin(), Results.end(), [pOther](const auto &Result) {
 			return std::string(Result.m_pStableId) == pOther;
-		}), 0) << pQuery;
+		}),
+			0)
+			<< pQuery;
 	};
 	for(const char *pQuery : {"皮肤描边", "循环色调", "表情阴影", "skin outline"})
 		ExpectOwner(pQuery, "qm:skin_appearance", "qm:skin_transition");

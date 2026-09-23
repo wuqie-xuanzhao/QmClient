@@ -177,6 +177,44 @@ struct SQmIconDiagnostics
 	uint64_t m_TextureUnloads = 0;
 };
 
+// 高频绘制计数按时间窗口汇总，资源变化立即触发汇总。
+struct SQmIconDiagnosticsWindow
+{
+	SQmIconDiagnostics m_Total;
+	uint64_t m_Frames = 0;
+	uint64_t m_MaxMsdfDraws = 0;
+	int64_t m_LastLog = 0;
+
+	bool Add(const SQmIconDiagnostics &Frame, const int64_t Now, const int64_t Interval)
+	{
+		if(m_Frames == 0 && m_LastLog == 0)
+			m_LastLog = Now;
+		++m_Frames;
+		m_Total.m_MsdfIconDraws += Frame.m_MsdfIconDraws;
+		m_Total.m_MaxMsdfManagerCallRun = std::max(m_Total.m_MaxMsdfManagerCallRun, Frame.m_MaxMsdfManagerCallRun);
+		for(size_t i = 0; i < SQmIconDiagnostics::MSDF_RUN_BUCKET_COUNT; ++i)
+			m_Total.m_MsdfManagerCallRunBuckets[i] += Frame.m_MsdfManagerCallRunBuckets[i];
+		m_MaxMsdfDraws = std::max(m_MaxMsdfDraws, Frame.m_MsdfIconDraws);
+		m_Total.m_ReloadAttempts += Frame.m_ReloadAttempts;
+		m_Total.m_ReloadSuccesses += Frame.m_ReloadSuccesses;
+		m_Total.m_AtlasSwaps += Frame.m_AtlasSwaps;
+		m_Total.m_TextureLoads += Frame.m_TextureLoads;
+		m_Total.m_TextureLoadFailures += Frame.m_TextureLoadFailures;
+		m_Total.m_TextureUnloads += Frame.m_TextureUnloads;
+		const bool ResourceEvent = Frame.m_ReloadAttempts || Frame.m_ReloadSuccesses || Frame.m_AtlasSwaps ||
+					   Frame.m_TextureLoads || Frame.m_TextureLoadFailures || Frame.m_TextureUnloads;
+		return ResourceEvent || Now - m_LastLog >= Interval;
+	}
+
+	void Clear(const int64_t Now)
+	{
+		m_Total = {};
+		m_Frames = 0;
+		m_MaxMsdfDraws = 0;
+		m_LastLog = Now;
+	}
+};
+
 inline bool QmIconTextureCanCommit(const bool IsValid, const bool IsNullTexture)
 {
 	return IsValid && !IsNullTexture;

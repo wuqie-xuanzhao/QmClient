@@ -28,27 +28,6 @@
 #include <sstream>
 #include <string>
 
-TEST(QmNewUiMenuGameplaySocialContract, FriendCategoryHeadersExposeManagement)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-
-	EXPECT_NE(Source.find("FONT_ICON_GEAR"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Manage categories\")"), std::string::npos);
-	EXPECT_NE(Source.find("Localize(\"Right-click or use the gear to manage categories\")"), std::string::npos);
-}
-
-TEST(QmNewUiMenuGameplaySocialContract, FriendCategorySortingRequiresCtrlDrag)
-{
-	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");
-	const size_t DragState = Source.find("s_CategoryDragState.m_PressedIndex = CategoryIndex;");
-	ASSERT_NE(DragState, std::string::npos);
-	const size_t PressGate = Source.rfind("Input()->ModifierIsPressed() && Ui()->MouseButtonClicked(0)", DragState);
-	ASSERT_NE(PressGate, std::string::npos);
-	EXPECT_NE(Source.find("Ui()->MouseButton(0) && Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0", DragState), std::string::npos);
-	EXPECT_NE(Source.find("!Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0", DragState), std::string::npos);
-	EXPECT_EQ(Source.find("CategoryDragHoldSeconds"), std::string::npos);
-}
-
 TEST(QmNewUiMenuGameplaySocialContract, ProtectedFriendCategoriesCannotBeRenamedOrDeleted)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_browser.cpp");

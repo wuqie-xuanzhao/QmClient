@@ -61,6 +61,9 @@
 %d users
 == %d 명의 사용자
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | 본체: %s | 더미: %s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d KiB (%.1f KiB/s)
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == 플레이어 이름이 필요합니다.
+
+A save is already being restored. Please wait.
+== 저장 데이터를 복원 중입니다. 잠시 기다려 주세요.
 
 A screenshot with this name already exists
 == 이 이름의 스크린샷이 이미 존재합니다.
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == 고급
 
+Advanced mode
+== 고급 모드
+
 Advanced options
 == 고급 옵션
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == 외형
 
-Appearance / Chat
-== 외형 / 채팅
-
-Appearance / Hook Collision
-== 외관 / 갈고리 보조선
-
-Appearance / HUD
-== 외형 / HUD
-
-Appearance / Info Messages
-== 외형 / 정보 메시지
-
-Appearance / Laser
-== 외형 / 레이저
-
-Appearance / Name Plate
-== 외형 / 이름표
-
 Append to log file instead of overwriting
 == 덮어쓰기 대신 로그 파일에 추가
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == 먼저 편집 가능한 프리셋을 적용하세요
 
-Apply Best input to other Tees
-== Best input을 다른 Tee에 적용
-
 Apply Changes
 == 변경 사항 적용
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == 다른 Tee에도 빠른 입력 적용
-
-Apply Saiko+ to other Tees
-== Saiko+를 다른 Tee에 적용
 
 Apply squishy Tee deformation to other players
 == Q弹 Tee 변형을 다른 플레이어에 적용
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 통계판 스크린샷 자동 촬영
 
-Available for this bundled font
-== 이 번들 글꼴에서 사용 가능
-
 Available practice commands: 
 == 사용 가능한 연습 명령어: 
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 최고
 
-Best input
-== 최고 입력
-
-Best input delay compensation percentage
-== Best input 지연 보상 비율
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Best input 보간 모드 (1=linear 2=cubic 3=smooth)
-
-Best input others
-== 최고 입력 (다른 사람)
-
-Best input prediction offset (0.01 tick)
-== Best input 예측 오프셋 (0.01 tick)
-
-Best input smooth percentage
-== Best input 평활화 비율
-
 Better scoreboard
 == 더 나은 점수판
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == 내장
-
-Bundled vector profile:
-== 번들 벡터 프로필:
 
 Button - Disabled
 == 버튼 - 비활성화
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == 클래식 pro
+
+Classic title glow
+== 클래식 칭호 광채
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== 클래식 칭호 광채: 0 = 끔, 1 = 은은함 (6겹), 2 = 전체 Calamity (16겹)
 
 Clear
 == 지우기
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == 디버그 타일 레이어 클리핑
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== 전용 WebSocket 주소 (비우면 wss://qmclient.icu/ws 사용)
+
 Deep freeze color
 == 깊은 얼음 색상
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == 축소됨 (0.78)
 
+Draft file is empty
+== 초안 파일이 비어 있습니다
+
 Drag HUD modules with the left mouse button
 == 마우스 왼쪽 버튼으로 HUD 모듈 드래그
+
+Drag to another category to move this friend.
+== 이 친구를 다른 카테고리로 드래그하여 이동합니다.
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== 드래그하여 순서를 바꾸고 클릭하여 펼치거나 접습니다. 마우스 오른쪽 버튼을 클릭하거나 톱니바퀴를 사용하여 카테고리를 관리합니다
 
 Dragger Inner Color
 == 드래거 내부 색상
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == 대체 단순 노이즈 감소 강도
 
-Fast input
-== 빠른 입력
-
 Fast input (reduce visual latency)
 == 빠른 입력 (시각적 지연 감소)
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == 결승선 이름:
+
+Finish or reset the current race before restoring a save.
+== 현재 레이스를 끝내거나 초기화한 뒤 저장 데이터를 복원하세요.
 
 Finished
 == 완료됨
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == 입력 오버레이 Y 위치 (백분율)
 
-Input smoothing
-== 입력 평활화
-
 Input switch
 == 입력 전환
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == 인터넷 (온라인 소스에서)
 
-Interpolation
-== 보간
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 현재 편집기 맵 사본을 "auto" 폴더에 자동 저장하는 간격 (0=끄기)
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == 잘못된 옵션
+
+Invalid save number. Use a number from the save list.
+== 유효하지 않은 저장 번호입니다. 목록의 번호를 사용하세요.
 
 Invalid spectator id used
 == 잘못된 관전자 ID 가 사용됨
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == 지연 시간
 
-Latency compensation
-== 지연 보상
-
 Latency Jitter
 == 지연 시간 지터
-
-Launch a large emote
-== 큰 이모트 발사
 
 Launch count threshold for the next sponsor reminder
 == 다음 후원 알림까지의 실행 횟수 임계값
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == 기본 프롬프트를 사용하려면 비워 두세요
 
-Leave empty to use UDP
-== 비워 두면 UDP 사용
-
 Left jump
 == 왼쪽 점프
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == 좌/우 채널 폭
+
+Legacy option: connections that skip TLS verification are rejected
+== 레거시 옵션: TLS 검증을 건너뛰는 연결은 거부됩니다
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== 기존 실시간 WebSocket URL (qm_websocket_url로 이전됨)
 
 Length
 == 길이
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == 라이트
+
+Light band (0 = style default)
+== 색상 위상 (0 = 스타일 기본값)
 
 Limit information in spectator mode
 == 관전자 모드에서 정보 제한
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == 로컬 전용
 
+Locate
+== 위치 찾기
+
 Lock delay
 == 잠금 지연
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == 중복 사운드를 디버깅하기 위해 예측 이벤트 생성/재생과 스냅샷 확인을 기록합니다.
+
+Log realtime WebSocket channel events
+== 실시간 WebSocket 채널 이벤트 기록
 
 Log the network
 == 네트워크 로그 기록
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == 일반 메시지 텍스트 그라데이션 색상
 
-Not available; FreeType is used
-== 사용할 수 없음. FreeType을 사용합니다
-
 NOT CONNECTED
 == 연결되지 않음
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == 개선된 기록만 저장
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== 일부 번들 글꼴에만 벡터 이름표 아틀라스가 있습니다. 다른 글꼴은 FreeType을 사용합니다.
-
 Only show after joining a team
 == 팀에 가입한 후에만 표시
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == DDNet Wiki 열기
 
-Open editor
-== 편집기 열기
-
 Open emote selector
 == 이모트 선택기 열기
+
+Open folder
+== 폴더 열기
 
 Open map editor
 == 맵 에디터 열기
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == DNSBL 제공자의 선택적 인증 키
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== 선택적 음성 WebSocket 엔드포인트(비워 두면 UDP 전송 유지)
-
 Or visit DDNet.org
 == 또는 DDNet.org 를 방문하세요
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == KCP 협상, 폴백 및 세션 수명 주기 디버그 로그 출력
-
-Output nameplate MSDF path debug log
-== 이름표 MSDF 경로 디버그 로그 출력
 
 Output switch
 == 출력 전환
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == 지난 1년
+
+Paste sp_dc from Spotify web cookies
+== 브라우저의 sp_dc 쿠키 붙여넣기
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == MySQL/MariaDB 서버 인증서 확인에 사용할 CA 인증서 경로
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == 점수
 
+Polished
+== 광택
+
 Popup animation
 == 팝업 애니메이션
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == 얼었을 때 예측 여백
 
-Prediction offset
-== 예측 오프셋
-
 Preparing chat export: %d%%
 == 채팅 내보내기 준비 중: %d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == 편집기 활성화 시 버튼 가시성 미리보기
+
+Preview cut (P)
+== 구간 미리 보기 (P)
 
 Preview dummy nameplate
 == 더미 이름표 미리보기
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == 현재 진행 중인 레이스의 당신 시간을 모든 사람에게 공개 메시지로 보냅니다
 
+Publish
+== 게시
+
+Publish failed
+== 게시 실패
+
+Published
+== 게시됨
+
+Publishing…
+== 게시 중…
+
 Pulse
 == 펄스
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == QmClient
 
-QmClient / Function
-== QmClient / 기능
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / 시각
-
 QmClient chat log
 == QmClient 채팅 로그
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == QmClient 온라인 배포
-
-QmClient realtime WebSocket URL (empty disables transport)
-== QmClient 실시간 WebSocket URL(비워 두면 전송 사용 안 함)
 
 QmClient Settings
 == QmClient 설정
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == 플레이어 빠른 작업 메뉴
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== 빠른 입력 모드（0=Fast 3=Best 4=Saiko+；1/2는 이전 값 호환 및 Best로 매핑）
 
 Quit
 == 종료
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == 정말요? 조금도 생각해 보실 생각이 없나요?
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== 실시간 채널 하트비트 간격 (초, 0이면 기본값)
+
+Realtime channel reconnect backoff base (ms)
+== 실시간 채널 재연결 백오프 기준 (밀리초)
+
+Realtime channel reconnect backoff cap (ms)
+== 실시간 채널 재연결 백오프 상한 (밀리초)
 
 Reason
 == 이유
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == 재시작 중입니다. 잠시 기다려 주세요…
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== 2인 저장 데이터를 복원할까요? /qm Yes는 최신 데이터, /qm Yes 번호는 다른 데이터 선택, /qm No는 알림 닫기입니다.
+
 Restore Kugou files
 == Kugou 원본 파일 복원
 
 Restore old single-segment hook collision line behavior
 == 이전 단일 세그먼트 갈고리 충돌선 동작 복원
+
+Restoring save %d: main '%s', dummy '%s'.
+== 저장 데이터 %d 복원 중: 본체 '%s', 더미 '%s'.
 
 Retry remote stats
 == 원격 통계 재시도
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == 오른쪽 점프
-
-Right-click or use the gear to manage categories
-== 마우스 오른쪽 버튼을 클릭하거나 톱니바퀴를 사용하여 카테고리 관리
 
 Right-click to disable auto-translate
 == 우클릭하여 자동 번역 비활성화
@@ -9452,12 +9437,6 @@ Run server
 SA
 == 남미
 
-Saiko+ input amount (0.01 tick)
-== Saiko+ 입력량（0.01 tick）
-
-Saiko+ others
-== Saiko+ 기타
-
 Same as "vote no"
 == "투표 반대"와 동일
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == 마지막 %d분 저장
 
+Save loaded; local record removed.
+== 저장 데이터를 불러왔으며 로컬 기록을 삭제했습니다.
+
+Save loaded; the local record could not be removed.
+== 저장 데이터를 불러왔지만 로컬 기록을 삭제하지 못했습니다.
+
 Save player names in replay
 == 리플레이에 플레이어 이름 저장
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == 게임당 최고 기록의 리플레이 저장
+
+Save restore dismissed.
+== 저장 데이터 복원을 취소했습니다.
+
+Save restore stopped without confirming success. The local record was kept.
+== 불러오기 성공을 확인하지 못해 복원을 중단했습니다. 로컬 기록은 유지됩니다.
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== 연결, 이름 또는 팀이 준비되지 않아 복원을 중단했습니다. 로컬 기록은 유지됩니다.
 
 Save settings file on exit
 == 종료 시 설정 파일 저장
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == 모든 맵 폴더 검색 중...
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== 실시간 핸드셰이크에서 보내는 Sec-WebSocket-Protocol
 
 Secondary
 == 보조
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == 서버 정보
 
-Server IP
-== 서버 IP
-
 Server kick/spec votes are no longer actively moderated.
 == 서버 추방/관전 투표가 더 이상 적극적으로 관리되지 않습니다.
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == 서버 유형 (novice, moderate 등)
+
+Server URL
+== 서버 URL
+
+Server-assigned style
+== 서버 지정 스타일
 
 Set a voice server to enable QmClient distribution
 == 음성 서버를 설정해야 QmClient 온라인 배포를 활성화할 수 있습니다
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == 서버 브라우저 이름/맵 분할에서 이름 열에 할당할 비율(천분율)
 
+Shimmer speed (polished)
+== 빛 이동 속도 (광택)
+
 Short server names
 == 짧은 서버 이름
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == 더미의 작은 화면 표시
+
+Show advanced title settings (collapsing keeps configured effects)
+== 고급 칭호 설정 표시 (접어도 설정한 효과 유지)
 
 Show air jump indicator
 == 공중 점프 표시기 표시
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == 간단한 노이즈 감소 강도
 
+Single color
+== 단색
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== 단색과 무지개는 애니메이션 스타일의 색상을 덮어씁니다. 스타일의 움직임은 그대로 유지됩니다
+
 Size
 == 크기
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == 흔들림 오프셋을 정수 픽셀에 맞춤 (글자는 선명, 움직임은 끊김)
 
+Snap wave to pixels
+== 물결 변위를 정수 픽셀에 맞추기
+
 Snapshot Age
 == 스냅샷 경과 시간
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == 스팸 방지: 팀 전환, 채팅, 스킨 변경, 이모트, 투표 스팸 방지
+
+Spatial effect
+== 입체 효과
 
 Speaker
 == 스피커
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == 연습 중지
 
+Stop preview (P)
+== 미리 보기 중지 (P)
+
 Stop record
 == 녹화 중지
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Sub-Tick 조준
+
+Subtle
+== 은은함
 
 Successfully saved the replay!
 == 리플레이를 성공적으로 저장했습니다!
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / 바인드 휠
-
-TClient / Status Bar
-== TClient / 상태 표시줄
 
 TClient Developers
 == TClient 개발자
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == 해당 맵에 그 인덱스의 체크포인트 텔레포터가 없습니다
 
+There is no pending save restore prompt.
+== 현재 응답을 기다리는 저장 데이터 복원 알림이 없습니다.
+
 There is no teleporter with that index on the map.
 == 해당 맵에 그 인덱스의 텔레포터가 없습니다
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == 사고 모드를 사용하려면 추론 모델이 필요합니다
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== 이 글꼴에는 번들 벡터 프로필이 없습니다. 이름표는 FreeType을 사용합니다.
+This connection cannot change names while connected. Reconnect with the saved names first.
+== 이 연결에서는 접속 중 이름을 변경할 수 없습니다. 저장된 이름으로 다시 접속하세요.
 
 This ID is not connected
 == 이 ID는 연결되지 않음
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == 이 저장 기록은 존재하지만 당신은 포함되어 있지 않습니다.
+
+This save is no longer in the local save file.
+== 이 저장 데이터는 로컬 저장 파일에 더 이상 없습니다.
 
 This save-code already exists
 == 이 저장 코드는 이미 존재합니다
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == 칭호 흔들림 파장 (픽셀)
 
+Title color
+== 칭호 색상
+
+Title color (single color)
+== 칭호 색상 (단색)
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == 칭호 빛 이동 속도 (초당 1/100줄, 0 = 끔)
+
+Title opacity (custom color)
+== 불투명도 (사용자 지정 색상)
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == 칭호 글자별 위상 (픽셀당 1/1000 px, 0 = 스타일 기본값, 20 = 빛 띠 보임)
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == 칭호 글자별 상하 흔들림 진폭 (픽셀, 0 = 끔)
 
+Title preview
+== 칭호 완성 미리보기
+
 Title server unavailable; retry
 == 칭호 서버에 연결할 수 없습니다. 다시 시도하세요
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == 칭호 입체 효과: 0 = 광택, 1 = 솔리드, 2 = 클래식 Calamity, 3 = 끔
+
+Title style
+== 칭호 스타일
 
 Title too long or contains unsupported characters
 == 칭호가 너무 길거나 지원하지 않는 문자가 있습니다
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == 동적 카메라 전환
+
+Toggle emote launcher
+== 이모트 발사기 전환
 
 Toggle fast practice mode
 == 빠른 연습 모드 전환
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == 알 수 없는 상태
 
+Unknown title style
+== 알 수 없는 칭호 스타일
+
 Unload the rank ghost
 == Rank 고스트 해제
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == 먼저 /pause 를 사용한 다음 자살할 수 있습니다
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== /qm Yes [번호]로 복원하거나 /qm No로 알림을 닫으세요.
+
 Use 12 hour clock
 == 12시간제 사용
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == K 키를 사용하여 죽기(재시작), Q 키를 사용하여 일시 중지 및 다른 플레이어 관전. 다른 키 바인딩은 설정에서 확인하세요.
+
+Use large emote
+== 큰 이모트 사용
 
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == 즐겨찾기를 그룹화하려면 `add_favorite` 앞에 사용하세요. `end_favorite_group` 으로 종료
 
-Use vector font rendering for nameplates
-== 이름표에 벡터 글꼴 렌더링 사용
-
-Use vector font rendering for nameplates when a bundled profile is available
-== 번들 벡터 프로필이 있을 때 이름표에 벡터 글꼴 렌더링 사용
-
 Use warlist colors instead of regular colors
 == 일반 색상 대신 전쟁 목록 색상 사용
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == 가변 글꼴의 사용자 지정 굵기
-
-Vector nameplate text
-== 이름표 벡터 텍스트
 
 Velocity
 == 속도
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == 음성 방 Token (선택 사항)
 
-Voice server address host:port
-== 음성 서버 주소 host:port
+Voice server URL (ws:// or wss://)
+== 음성 서버 URL (ws:// 또는 wss://)
 
 Voice stereo output
 == 음성 스테레오 출력
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == 경고
 
+Wave amount
+== 파도 크기
+
+Wave speed (0.01 rad/s)
+== 물결 속도 (0.01 rad/s)
+
+Wave wavelength
+== 물결 파장
+
 Weak hook
 == 약한 갈고리
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == 웹사이트
-
-WebSocket endpoint (optional)
-== WebSocket 엔드포인트(선택)
 
 Welcome to DDNet
 == DDNet에 오신 것을 환영합니다
@@ -14330,6 +14378,10 @@ required
 [Team status]
 solo
 == 솔로
+
+[Title color mode]
+Use style colors
+== 스타일 색상 사용
 
 [Touch button behavior]
 Bind

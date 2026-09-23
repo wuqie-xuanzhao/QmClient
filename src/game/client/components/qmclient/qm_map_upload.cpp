@@ -235,7 +235,9 @@ namespace QmMapUpload
 		for(const char Character : Boundary)
 			if(!((Character >= 'a' && Character <= 'z') || (Character >= 'A' && Character <= 'Z') || (Character >= '0' && Character <= '9') || Character == '-'))
 				return false;
-		if(std::string_view(reinterpret_cast<const char *>(pData), Size).find(Boundary) != std::string_view::npos)
+		if(std::string_view(reinterpret_cast<const char *>(pData), Size).find(Boundary) != std::string_view::npos ||
+			std::string_view(pFilename).find(Boundary) != std::string_view::npos ||
+			std::string_view(pPlayerName).find(Boundary) != std::string_view::npos)
 			return false;
 		Body.reserve(Size + 256);
 		Body = "--" + std::string(Boundary) + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"" + pFilename + "\"\r\nContent-Type: application/octet-stream\r\n\r\n";

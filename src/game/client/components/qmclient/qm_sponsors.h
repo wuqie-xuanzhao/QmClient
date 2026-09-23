@@ -2,6 +2,7 @@
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QM_SPONSORS_H
 
 #include <base/str.h>
+
 #include <engine/shared/json.h>
 
 #include <cstddef>

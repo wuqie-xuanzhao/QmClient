@@ -61,6 +61,9 @@
 %d users
 == %d 个用户
 
+%d. %s | main: %s | dummy: %s
+== %d. %s | 本体：%s | 分身：%s
+
 %d/%d KiB (%.1f KiB/s)
 == %d/%d KiB（%.1f KiB/s）
 
@@ -298,6 +301,9 @@ A folder with this name already exists
 
 A player name is required.
 == 玩家名不能为空。
+
+A save is already being restored. Please wait.
+== 正在恢复存档，请稍候。
 
 A screenshot with this name already exists
 == 已有同名截图
@@ -581,6 +587,9 @@ Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings
 Advanced
 == 高阶
 
+Advanced mode
+== 高级模式
+
 Advanced options
 == 高级选项
 
@@ -785,24 +794,6 @@ API key
 Appearance
 == 游戏界面
 
-Appearance / Chat
-== 外观/聊天
-
-Appearance / Hook Collision
-== 外观/钩子辅助线
-
-Appearance / HUD
-== 外观 /HUD
-
-Appearance / Info Messages
-== 外观/信息消息
-
-Appearance / Laser
-== 外观/激光
-
-Appearance / Name Plate
-== 外观/名牌
-
 Append to log file instead of overwriting
 == 追加到日志文件而不是每次覆盖
 
@@ -827,9 +818,6 @@ Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
 == 先应用一个可编辑的预设
 
-Apply Best input to other Tees
-== 将 Best input 应用于其他 Tee
-
 Apply Changes
 == 应用更改
 
@@ -838,9 +826,6 @@ Apply input early before next tick for prediction
 
 Apply quick input to other Tees as well
 == 对其他 Tee 也应用快速输入
-
-Apply Saiko+ to other Tees
-== 将 Saiko+ 应用于其他 Tee
 
 Apply squishy Tee deformation to other players
 == 将 Q 弹 Tee 形变应用到其他玩家
@@ -1247,9 +1232,6 @@ Automatically take game over screenshot
 Automatically take statboard screenshot
 == 自动对统计板截图
 
-Available for this bundled font
-== 该随包字体可用
-
 Available practice commands: 
 == 可用练习命令：
 
@@ -1436,24 +1418,6 @@ Benchmark frame times for number of seconds to file, then quit
 Best
 == 最高
 
-Best input
-== 最佳输入
-
-Best input delay compensation percentage
-== Best input 延迟补偿百分比
-
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-== Best input 插值模式（1=线性，2=三次，3=平滑）
-
-Best input others
-== 最佳输入（他人）
-
-Best input prediction offset (0.01 tick)
-== Best input 预测偏移（0.01 tick）
-
-Best input smooth percentage
-== Best input 平滑百分比
-
 Better scoreboard
 == 更好的计分板
 
@@ -1606,9 +1570,6 @@ Build the status text shown above Tees
 
 Built-in
 == 内置
-
-Bundled vector profile:
-== 随包矢量配置：
 
 Button - Disabled
 == 按钮 - 未启用
@@ -1948,6 +1909,12 @@ Classic Pro
 
 Classic pro
 == 古典 pro
+
+Classic title glow
+== 经典效果光晕
+
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
+== 经典头衔光晕：0 = 关闭，1 = 柔和（6 层），2 = 完整 Calamity（16 层）
 
 Clear
 == 清空
@@ -2858,6 +2825,9 @@ Debug SQL.
 Debug tile layer clipping.
 == 调试图块图层裁剪
 
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
+== 专用 WebSocket 地址（留空使用 wss://qmclient.icu/ws）
+
 Deep freeze color
 == 深度冻结颜色
 
@@ -3290,8 +3260,17 @@ Downloading update...
 Downscaled (0.78)
 == 缩小 (0.78)
 
+Draft file is empty
+== 草稿文件为空
+
 Drag HUD modules with the left mouse button
 == 按住鼠标左键拖动 HUD 模块
+
+Drag to another category to move this friend.
+== 拖动到其他分类以移动此好友。
+
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
+== 拖动调整顺序，点击展开或收起。右键或使用齿轮管理分类
 
 Dragger Inner Color
 == 光索实心颜色
@@ -4295,9 +4274,6 @@ Fake CTF flags
 Fallback simple noise reduction strength
 == 回退后的简单降噪强度
 
-Fast input
-== 快速输入
-
 Fast input (reduce visual latency)
 == 快速输入（降低视觉延迟）
 
@@ -4429,6 +4405,9 @@ Finish name
 
 Finish Name:
 == 恰分名称：
+
+Finish or reset the current race before restoring a save.
+== 请先结束或重置当前比赛，再恢复存档。
 
 Finished
 == 已完成
@@ -5537,9 +5516,6 @@ Input overlay X position (percent)
 Input overlay Y position (percent)
 == 输入叠加 Y 位置（百分比）
 
-Input smoothing
-== 输入平滑
-
 Input switch
 == 输入切换
 
@@ -5585,9 +5561,6 @@ Internet
 Internet (From online source)
 == Internet（来源于网络）
 
-Interpolation
-== 插值
-
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 == 当前编辑器地图副本自动保存到“auto”文件夹的时间间隔（0 表示关闭）
 
@@ -5614,6 +5587,9 @@ Invalid map file or filename.
 
 Invalid option
 == 无效的投票选项
+
+Invalid save number. Use a number from the save list.
+== 存档序号无效，请使用列表中的序号。
 
 Invalid spectator id used
 == 无效的旁观目标 ID
@@ -5903,14 +5879,8 @@ Last successful sync: %s
 Latency
 == 延迟
 
-Latency compensation
-== 延迟补偿
-
 Latency Jitter
 == 延迟抖动
-
-Launch a large emote
-== 发射大型表情
 
 Launch count threshold for the next sponsor reminder
 == 下次赞助提醒的启动次数阈值
@@ -5945,9 +5915,6 @@ Leave empty to show everyone
 Leave empty to use default prompt
 == 留空使用默认提示词
 
-Leave empty to use UDP
-== 留空则使用 UDP
-
 Left jump
 == 左跳
 
@@ -5956,6 +5923,12 @@ Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-cli
 
 Left/right channel width
 == 左右声道宽度
+
+Legacy option: connections that skip TLS verification are rejected
+== 旧版选项：跳过 TLS 校验的连接会被拒绝
+
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
+== 旧实时 WebSocket 地址（已迁移至 qm_websocket_url）
 
 Length
 == 时长
@@ -5986,6 +5959,9 @@ LibreTranslate endpoint
 
 Light
 == 轻体
+
+Light band (0 = style default)
+== 色带相位（0 = 风格默认）
 
 Limit information in spectator mode
 == 限制观战模式中的信息
@@ -6197,6 +6173,9 @@ Local Time
 Local-only
 == 仅本地资源
 
+Locate
+== 定位
+
 Lock delay
 == 锁队延迟
 
@@ -6211,6 +6190,9 @@ Log output filename
 
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
 == 记录预测事件的创建/播放和快照确认，以调试重复声音。
+
+Log realtime WebSocket channel events
+== 记录实时 WebSocket 通道事件
 
 Log the network
 == 记录网络
@@ -7328,9 +7310,6 @@ Normal message
 Normal message text gradient color
 == 普通消息文字渐变颜色
 
-Not available; FreeType is used
-== 不可用；将使用 FreeType
-
 NOT CONNECTED
 == 连接未成功
 
@@ -7493,9 +7472,6 @@ Only save ghost if better than previous record
 Only save improvements
 == 只保存更佳记录
 
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
-== 只有部分随包字体带有铭牌矢量图集，其他字体会使用 FreeType。
-
 Only show after joining a team
 == 仅在加入队伍后显示
 
@@ -7532,11 +7508,11 @@ Open color picker
 Open DDNet Wiki
 == 打开 DDNet Wiki
 
-Open editor
-== 打开编辑器
-
 Open emote selector
 == 打开表情选择器
+
+Open folder
+== 打开目录
 
 Open map editor
 == 打开地图编辑器
@@ -7631,9 +7607,6 @@ Option color
 Optional authentication key for the DNSBL provider
 == 指定 DNSBL 提供商的可选身份验证密钥
 
-Optional voice WebSocket endpoint (empty keeps UDP transport)
-== 可选语音 WebSocket 端点（留空则保持 UDP 传输）
-
 Or visit DDNet.org
 == 或访问 DDNet.org
 
@@ -7681,9 +7654,6 @@ Output device open failed, try reconnecting speakers/headphones or reselecting o
 
 Output KCP negotiation, fallback, and session lifecycle debug logs
 == 输出 KCP 协商、回退和会话生命周期调试日志
-
-Output nameplate MSDF path debug log
-== 输出铭牌 MSDF 路径调试日志
 
 Output switch
 == 输出切换
@@ -7813,6 +7783,9 @@ Password required to use reserved slots.
 
 Past year
 == 最近一年
+
+Paste sp_dc from Spotify web cookies
+== 粘贴浏览器中的 sp_dc cookie
 
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 == 用于验证 MySQL/MariaDB 服务器证书的 CA 证书路径
@@ -8147,6 +8120,9 @@ Please wait…
 Points
 == 分数
 
+Polished
+== 抛光
+
 Popup animation
 == 弹出动画
 
@@ -8255,9 +8231,6 @@ Prediction margin
 Prediction margin when frozen
 == 冻结时的预测边距
 
-Prediction offset
-== 预测偏移
-
 Preparing chat export: %d%%
 == 正在准备聊天导出：%d%%
 
@@ -8302,6 +8275,9 @@ Preview built with %d skipped slot(s).
 
 Preview button visibility while the editor is active.
 == 按键编辑器打开时用于预览按键的可见度
+
+Preview cut (P)
+== 预览片段 (P)
 
 Preview dummy nameplate
 == 预览分身名牌
@@ -8411,6 +8387,18 @@ PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
 == 公开发送你当前竞速时间给所有人
 
+Publish
+== 发布
+
+Publish failed
+== 发布失败
+
+Published
+== 已发布
+
+Publishing…
+== 发布中…
+
 Pulse
 == 脉冲
 
@@ -8486,15 +8474,6 @@ qm_profile_queue: index must be between 1 and %d
 QmClient
 == 栖梦
 
-QmClient / Function
-== QmClient / 功能
-
-QmClient / HUD
-== QmClient / HUD
-
-QmClient / Visual
-== QmClient / 视觉
-
 QmClient chat log
 == QmClient 聊天记录
 
@@ -8509,9 +8488,6 @@ QmClient information and project links
 
 QmClient online distribution
 == 栖梦客户端在线分布
-
-QmClient realtime WebSocket URL (empty disables transport)
-== QmClient 实时 WebSocket 地址（留空则禁用传输）
 
 QmClient Settings
 == QmClient 设置
@@ -8548,9 +8524,6 @@ Queue preset: %s
 
 Quick action menu for players
 == 对玩家快捷操作菜单
-
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
-== 快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）
 
 Quit
 == 退出
@@ -8743,6 +8716,15 @@ Ready
 
 Really? Not even a little?
 == 真的？一点都不考虑一下吗？
+
+Realtime channel heartbeat interval (seconds, 0 uses default)
+== 实时通道心跳间隔（秒，0 使用默认值）
+
+Realtime channel reconnect backoff base (ms)
+== 实时通道重连退避基准（毫秒）
+
+Realtime channel reconnect backoff cap (ms)
+== 实时通道重连退避上限（毫秒）
 
 Reason
 == 原因
@@ -9311,11 +9293,17 @@ Restart the client
 Restarting. Please wait…
 == 正在重启，请稍等
 
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
+== 是否恢复双人存档？/qm Yes 读取最新一条，/qm Yes 序号 选择其他存档，/qm No 忽略本次提示。
+
 Restore Kugou files
 == 恢复酷狗原始文件
 
 Restore old single-segment hook collision line behavior
 == 恢复旧版单段钩子辅助线行为
+
+Restoring save %d: main '%s', dummy '%s'.
+== 正在恢复存档 %d：本体“%s”，分身“%s”。
 
 Retry remote stats
 == 重试远程统计
@@ -9346,9 +9334,6 @@ Rifle laser outline color
 
 Right jump
 == 右跳
-
-Right-click or use the gear to manage categories
-== 右键或使用齿轮管理分类
 
 Right-click to disable auto-translate
 == 右键关闭自动翻译
@@ -9452,12 +9437,6 @@ Run server
 SA
 == 南美
 
-Saiko+ input amount (0.01 tick)
-== Saiko+ 输入量（0.01 tick）
-
-Saiko+ others
-== Saiko+ 他人
-
 Same as "vote no"
 == 与“投反对票”相同
 
@@ -9512,6 +9491,12 @@ Save ghost
 Save last %d min
 == 保存前 %d 分钟
 
+Save loaded; local record removed.
+== 存档读取成功，已删除本地记录。
+
+Save loaded; the local record could not be removed.
+== 存档读取成功，但未能删除本地记录。
+
 Save player names in replay
 == 在回放中保存玩家名称
 
@@ -9520,6 +9505,15 @@ Save power by lowering update rate (higher input latency)
 
 Save replay of best time per game
 == 保存每场游戏最佳记录的回放
+
+Save restore dismissed.
+== 已取消本次存档恢复。
+
+Save restore stopped without confirming success. The local record was kept.
+== 未确认读档成功，恢复流程已停止。本地记录已保留。
+
+Save restore stopped: connection, names or team were not ready. The local record was kept.
+== 连接、名字或队伍尚未就绪，存档恢复已停止。本地记录已保留。
 
 Save settings file on exit
 == 退出时保存设置文件
@@ -9694,6 +9688,9 @@ Searching
 
 Searching all map folders...
 == 正在搜索全部地图文件夹…
+
+Sec-WebSocket-Protocol sent during the realtime handshake
+== 实时握手时发送的 Sec-WebSocket-Protocol
 
 Secondary
 == 次要
@@ -9881,9 +9878,6 @@ Server hostname (0.7 only)
 Server info
 == 服务器信息
 
-Server IP
-== 服务器 IP
-
 Server kick/spec votes are no longer actively moderated.
 == 服务器的踢人/旁观投票已不再由主动管理员模式接管
 
@@ -9913,6 +9907,12 @@ Server stress (debug builds only).
 
 Server type (novice, moderate, etc.)
 == 服务器类型（novice、moderate 等）
+
+Server URL
+== 服务器 URL
+
+Server-assigned style
+== 服务器分配风格
 
 Set a voice server to enable QmClient distribution
 == 需要先配置语音服务器，才能启用栖梦客户端在线分布
@@ -10016,6 +10016,9 @@ Shape
 Share of the server browser name/map split given to the name column (per mille)
 == 服务器浏览器名称/地图分栏中分配给名称列的千分比
 
+Shimmer speed (polished)
+== 掠光速度（抛光档）
+
 Short server names
 == 短服务器名称
 
@@ -10039,6 +10042,9 @@ Show %s group
 
 Show a small view of the dummy
 == 显示分身小视图
+
+Show advanced title settings (collapsing keeps configured effects)
+== 显示头衔高级设置（收起后保留已设置效果）
 
 Show air jump indicator
 == 显示空中跳指示器
@@ -10952,6 +10958,12 @@ Simple noise reduction
 Simple noise reduction strength
 == 简单降噪强度
 
+Single color
+== 单色
+
+Single color and Rainbow override the color of animated styles; the style keeps its motion
+== 单色与彩虹档会覆盖动态风格自带的颜色；风格只保留浮动与掠光
+
 Size
 == 大小
 
@@ -11135,6 +11147,9 @@ Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
 == 浮动偏移吸附到整数像素（字体更锐利，但更顿挫）
 
+Snap wave to pixels
+== 波浪位移对齐整数像素
+
 Snapshot Age
 == 快照年龄
 
@@ -11230,6 +11245,9 @@ Space
 
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
 == 刷屏保护：防止切换队伍、聊天、换皮肤、表情和投票的刷屏
+
+Spatial effect
+== 空间效果
 
 Speaker
 == 扬声器
@@ -11462,6 +11480,9 @@ Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
 == 停止练习
 
+Stop preview (P)
+== 停止预览 (P)
+
 Stop record
 == 停止录制
 
@@ -11524,6 +11545,9 @@ Style kill, finish, and system messages
 
 Sub-Tick aiming
 == Sub-Tick 瞄准
+
+Subtle
+== 柔和
 
 Successfully saved the replay!
 == 成功保存短时回放！
@@ -11689,12 +11713,6 @@ Task running ...
 
 TClient
 == TClient
-
-TClient / Bind Wheel
-== TClient / 绑定轮盘
-
-TClient / Status Bar
-== TClient / 状态栏
 
 TClient Developers
 == TClient 开发人员
@@ -12056,6 +12074,9 @@ There are unsaved changes in the touch controls editor. Saving first is recommen
 There is no checkpoint teleporter with that index on the map.
 == 这张地图上没有这个编号的检查点传送器
 
+There is no pending save restore prompt.
+== 当前没有待处理的存档恢复提示。
+
 There is no teleporter with that index on the map.
 == 这张地图上没有这个编号的传送器
 
@@ -12083,8 +12104,8 @@ There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
 == 启用思考模式需要使用推理模型
 
-This font has no bundled vector profile. Nameplates will use FreeType.
-== 该字体没有随包矢量配置，铭牌将使用 FreeType。
+This connection cannot change names while connected. Reconnect with the saved names first.
+== 此连接不支持在线改名，请使用存档中的名字重新连接。
 
 This ID is not connected
 == 该 ID 未连接
@@ -12100,6 +12121,9 @@ This person has disabled receiving whispers
 
 This save exists, but you are not part of it. 
 == 这个存档存在，但你不在其中。
+
+This save is no longer in the local save file.
+== 本地存档文件中已没有这条记录。
 
 This save-code already exists
 == 这个存档码已存在
@@ -12236,8 +12260,17 @@ Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
 == 头衔浮动波长（像素）
 
+Title color
+== 头衔颜色
+
+Title color (single color)
+== 头衔颜色（单色）
+
 Title light sweep speed in 1/100 row per second (0 = off)
 == 头衔掠光速度（每秒 1/100 行，0 = 关闭）
+
+Title opacity (custom color)
+== 透明度（自定义配色）
 
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 == 头衔逐字符相位（每像素，1/1000 像素；0 = 用风格默认值，20 = 可见光带）
@@ -12245,11 +12278,17 @@ Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visibl
 Title per-character vertical bob amplitude in pixels (0 = off)
 == 头衔逐字符垂直浮动幅度（像素，0 = 关闭）
 
+Title preview
+== 头衔成品预览
+
 Title server unavailable; retry
 == 头衔服务暂不可用，请重试
 
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
 == 头衔空间效果：0 = 抛光，1 = 实体，2 = 经典 Calamity，3 = 关闭
+
+Title style
+== 头衔风格
 
 Title too long or contains unsupported characters
 == 头衔过长或包含不支持的字符
@@ -12286,6 +12325,9 @@ Toggle dummy
 
 Toggle dyncam
 == 动态视野开关
+
+Toggle emote launcher
+== 切换表情发射器
 
 Toggle fast practice mode
 == 切换快速练习模式
@@ -12734,6 +12776,9 @@ Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
 == 未知状态
 
+Unknown title style
+== 未知的头衔风格
+
 Unload the rank ghost
 == 卸载 Rank 影子
 
@@ -12824,6 +12869,9 @@ Usage: %s %s
 Use /pause first then you can kill
 == 请先使用 /pause，然后才能自杀
 
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
+== 输入 /qm Yes [序号] 恢复存档，或 /qm No 忽略本次提示。
+
 Use 12 hour clock
 == 使用 12 小时制
 
@@ -12889,6 +12937,9 @@ Use high bandwidth mode (doubles server bandwidth, LAN only)
 
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 == 使用 K 键自杀（重新开始），Q 键暂停并旁观其他玩家。其他按键绑定可在设置中查看。
+
+Use large emote
+== 使用大表情
 
 Use mouse sensitivity when dynamic camera is on
 == 启用动态摄像机时使用鼠标灵敏度
@@ -12959,12 +13010,6 @@ Use this after `add_favorite` to group favorites. Start with `begin_favorite_gro
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
 == 在 `add_favorite` 之前使用它来对收藏夹进行分组。以 `end_favorite_group` 结束
 
-Use vector font rendering for nameplates
-== 使用铭牌矢量字体
-
-Use vector font rendering for nameplates when a bundled profile is available
-== 存在随包矢量配置时为铭牌启用矢量字体渲染
-
 Use warlist colors instead of regular colors
 == 使用敌对列表颜色而不是常规颜色
 
@@ -12997,9 +13042,6 @@ Vanilla skins only
 
 Variable custom font weight
 == 可变字体的自定义字重
-
-Vector nameplate text
-== 铭牌矢量字体
 
 Velocity
 == 速度
@@ -13151,8 +13193,8 @@ Voice protocol version
 Voice room token (optional)
 == 语音房间 Token（可选）
 
-Voice server address host:port
-== 语音服务器地址 host:port
+Voice server URL (ws:// or wss://)
+== 语音服务器 URL（ws:// 或 wss://）
 
 Voice stereo output
 == 语音立体声输出
@@ -13280,6 +13322,15 @@ Warn about team balance
 Warning
 == 警告
 
+Wave amount
+== 波浪幅度
+
+Wave speed (0.01 rad/s)
+== 波浪速度（0.01 弧度/秒）
+
+Wave wavelength
+== 波浪波长
+
 Weak hook
 == 弱钩
 
@@ -13363,9 +13414,6 @@ Weapons
 
 Website
 == 官网
-
-WebSocket endpoint (optional)
-== WebSocket 端点（可选）
 
 Welcome to DDNet
 == 欢迎加入 DDNet
@@ -14672,6 +14720,10 @@ Collaboration connection cancelled
 == 已取消协作连接
 
 [Editor]
+Collaboration connection lost; please try again
+== 协作连接已断开，请重试
+
+[Editor]
 Collapse all
 == 折叠全部
 
@@ -14738,14 +14790,6 @@ Confirm editing of this command.
 [Editor]
 Confirm overwrite
 == 确认覆盖
-
-[Editor]
-Connection failed: the collaboration service address is too long
-== 连接失败：协作服务地址过长
-
-[Editor]
-Connection failed: the HTTP service is unavailable
-== 连接失败：HTTP 服务不可用
 
 [Editor]
 Construct '%s' game tiles (x%d)
@@ -17388,14 +17432,6 @@ Sync interrupted: connection failed
 == 同步中断：连接失败
 
 [Editor]
-Sync interrupted: the collaboration service address is too long
-== 同步中断：协作服务地址过长
-
-[Editor]
-Sync interrupted: the HTTP service is unavailable
-== 同步中断：HTTP 服务不可用
-
-[Editor]
 Sync interrupted: the room does not exist or has expired
 == 同步中断：房间不存在或已过期
 
@@ -18250,6 +18286,10 @@ required
 [Team status]
 solo
 == 单人
+
+[Title color mode]
+Use style colors
+== 使用风格颜色
 
 [Touch button behavior]
 Bind

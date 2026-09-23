@@ -19,6 +19,7 @@
 %d teams
 %d user
 %d users
+%d. %s | main: %s | dummy: %s
 %d/%d KiB (%.1f KiB/s)
 %ds left
 %i minute left
@@ -98,6 +99,7 @@ a = View angle
 A demo with this name already exists
 A folder with this name already exists
 A player name is required.
+A save is already being restored. Please wait.
 A screenshot with this name already exists
 A Tee
 A vote is currently active.
@@ -192,6 +194,7 @@ Adjust the opacity of entities belonging to other teams, such as tees and name p
 Adjust trails rendered behind Tees
 Adjust verbosity in external console (-3 = none, -2 = errors only, -1 = warnings, 0 = info, 1 = debug, 2 = trace).
 Advanced
+Advanced mode
 Advanced options
 AFR
 After hammer fly, whether dummy switches back to previous weapon
@@ -260,12 +263,6 @@ AntiPing: predict other players
 AntiPing: predict weapons
 API key
 Appearance
-Appearance / Chat
-Appearance / Hook Collision
-Appearance / HUD
-Appearance / Info Messages
-Appearance / Laser
-Appearance / Name Plate
 Append to log file instead of overwriting
 Applied to %d same-family part(s).
 Apply
@@ -274,11 +271,9 @@ Apply a random skin from the dummy queue
 Apply a random skin from the queue
 Apply a saved profile by 1-based index to the current tee
 Apply a writable preset and edit first
-Apply Best input to other Tees
 Apply Changes
 Apply input early before next tick for prediction
 Apply quick input to other Tees as well
-Apply Saiko+ to other Tees
 Apply squishy Tee deformation to other players
 Apply this preset
 Are you sure that you want to delete %d selected items?
@@ -414,7 +409,6 @@ Automatically reply while the window is unfocused
 Automatically switch hammer/gun in Gores mode
 Automatically take game over screenshot
 Automatically take statboard screenshot
-Available for this bundled font
 Available practice commands: 
 Available rescue modes: auto, manual
 Available resolutions
@@ -477,12 +471,6 @@ Behavior
 Behavior type
 Benchmark frame times for number of seconds to file, then quit
 Best
-Best input
-Best input delay compensation percentage
-Best input interpolation mode (1=linear 2=cubic 3=smooth)
-Best input others
-Best input prediction offset (0.01 tick)
-Best input smooth percentage
 Better scoreboard
 Bind address for client/server
 Bind chat, team chat, and history actions
@@ -534,7 +522,6 @@ Brutal
 Bubble opacity
 Build the status text shown above Tees
 Built-in
-Bundled vector profile:
 Button - Disabled
 Button - Enabled
 Button browser
@@ -648,6 +635,8 @@ Classic Nut
 Classic nut
 Classic Pro
 Classic pro
+Classic title glow
+Classic title glow: 0 = off, 1 = subtle (6 draws), 2 = full Calamity (16 draws)
 Clear
 Clear all favorite maps
 Clear all history
@@ -951,6 +940,7 @@ Debug quad layer clipping.
 Debug quad layer cluster clipping.
 Debug SQL.
 Debug tile layer clipping.
+Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)
 Deep freeze color
 Deep freeze opacity
 Deep freeze tile outline color
@@ -1095,7 +1085,10 @@ Downloading map
 Downloading rank 1 demo
 Downloading update...
 Downscaled (0.78)
+Draft file is empty
 Drag HUD modules with the left mouse button
+Drag to another category to move this friend.
+Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories
 Dragger Inner Color
 Dragger laser inner color
 Dragger laser outline color
@@ -1430,7 +1423,6 @@ Failed to read saves file
 Failed to write PNG export.
 Fake CTF flags
 Fallback simple noise reduction strength
-Fast input
 Fast input (reduce visual latency)
 Fast input others
 Fast practice
@@ -1475,6 +1467,7 @@ Finish data source
 Finish Name
 Finish name
 Finish Name:
+Finish or reset the current race before restoring a save.
 Finished
 Finished maps
 Fire
@@ -1844,7 +1837,6 @@ Input overlay mouse scale (percent)
 Input overlay opacity (percent)
 Input overlay X position (percent)
 Input overlay Y position (percent)
-Input smoothing
 Input switch
 Insane
 Installing update. Please wait...
@@ -1860,7 +1852,6 @@ Interface transparency
 Intermediate
 Internet
 Internet (From online source)
-Interpolation
 Interval for auto-saving current editor map copy to "auto" folder (0=off)
 Invalid Axiom API response
 Invalid bound name
@@ -1870,6 +1861,7 @@ Invalid Demo
 Invalid ID
 Invalid map file or filename.
 Invalid option
+Invalid save number. Use a number from the save list.
 Invalid spectator id used
 Invalid sponsor code
 Invalid translation backend
@@ -1966,9 +1958,7 @@ Last entered
 Last page in console
 Last successful sync: %s
 Latency
-Latency compensation
 Latency Jitter
-Launch a large emote
 Launch count threshold for the next sponsor reminder
 Launch emote
 Launch emote key
@@ -1980,10 +1970,11 @@ Leave empty to disable
 Leave empty to join public room
 Leave empty to show everyone
 Leave empty to use default prompt
-Leave empty to use UDP
 Left jump
 Left-click a Frankenstein part to tint it. Drag parts to replace them. Right-click resets.
 Left/right channel width
+Legacy option: connections that skip TLS verification are rejected
+Legacy realtime WebSocket URL (migrated to qm_websocket_url)
 Length
 Lenny:
 Let server start ghost
@@ -1994,6 +1985,7 @@ LibreTranslate
 LibreTranslate API Key
 LibreTranslate endpoint
 Light
+Light band (0 = style default)
 Limit information in spectator mode
 Limiter threshold (percent)
 Line width
@@ -2064,11 +2056,13 @@ Local test mode
 Local test mode, no server needed
 Local Time
 Local-only
+Locate
 Lock delay
 Lock team
 Locked
 Log output filename
 Log predicted event creation/playback and snapshot confirmation to debug double sounds.
+Log realtime WebSocket channel events
 Log the network
 Logout of econ
 Logout of rcon
@@ -2441,7 +2435,6 @@ Normal
 Normal Color
 Normal message
 Normal message text gradient color
-Not available; FreeType is used
 NOT CONNECTED
 Not connected to a game server
 Not connected to server
@@ -2496,7 +2489,6 @@ Only affects custom Tee colors.
 Only allow authorized clients to vote
 Only save ghost if better than previous record
 Only save improvements
-Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType.
 Only show after joining a team
 Only show outlines in the entities layer
 Only show skins available in Vanilla Teeworlds
@@ -2509,8 +2501,8 @@ Open a matching settings card directly
 Open bindwheel selector
 Open color picker
 Open DDNet Wiki
-Open editor
 Open emote selector
+Open folder
 Open map editor
 Open modal
 Open pie menu
@@ -2542,7 +2534,6 @@ Opt out of spectator count and hide auth status to non-authed players (1 = hidde
 Optimistic prediction along stable direction
 Option color
 Optional authentication key for the DNSBL provider
-Optional voice WebSocket endpoint (empty keeps UDP transport)
 Or visit DDNet.org
 Original
 Other
@@ -2559,7 +2550,6 @@ Output device not found
 Output device open failed
 Output device open failed, try reconnecting speakers/headphones or reselecting output device
 Output KCP negotiation, fallback, and session lifecycle debug logs
-Output nameplate MSDF path debug log
 Output switch
 Output voice debug log
 Overlay entities
@@ -2603,6 +2593,7 @@ Password for Axiom main account auto-login
 Password incorrect
 Password required to use reserved slots.
 Past year
+Paste sp_dc from Spotify web cookies
 Path to CA certificate for verifying the MySQL/MariaDB server certificate
 Path to client certificate for the MySQL/MariaDB SSL connection
 Path to client key for the MySQL/MariaDB SSL connection
@@ -2714,6 +2705,7 @@ Please use %s as friend name
 Please use a different filename
 Please wait…
 Points
+Polished
 Popup animation
 Port for client to server connection (0=random, >=1024 sets manual port)
 Port for dummy connection to server (0=random, >=1024 sets manual port)
@@ -2750,7 +2742,6 @@ Prediction lead
 Prediction lead is high, check prediction settings and server timing
 Prediction margin
 Prediction margin when frozen
-Prediction offset
 Preparing chat export: %d%%
 Preparing demo playback
 Presentation animations
@@ -2766,6 +2757,7 @@ Preview
 Preview 'Hook collisions' being pressed
 Preview built with %d skipped slot(s).
 Preview button visibility while the editor is active.
+Preview cut (P)
 Preview dummy nameplate
 Preview hook collision colors and line styles
 Preview import file
@@ -2802,6 +2794,10 @@ Projectile / explosion range
 Protect names and skins while streaming
 PTT release delay (ms)
 Publicly messages everyone your current time in this current running race
+Publish
+Publish failed
+Published
+Publishing…
 Pulse
 Pulse amplitude
 Pulse Amplitude (0-100)
@@ -2827,15 +2823,11 @@ Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
 Qm UI icon style: 0=Regular, 1=Bold, 2=Thin, 3=Fill, 4=Light, 5=Duotone
 qm_profile_queue: index must be between 1 and %d
 QmClient
-QmClient / Function
-QmClient / HUD
-QmClient / Visual
 QmClient chat log
 QmClient Community
 QmClient community and project information
 QmClient information and project links
 QmClient online distribution
-QmClient realtime WebSocket URL (empty disables transport)
 QmClient Settings
 QmClient sidebar module collapse state
 QmClient sidebar module order
@@ -2848,7 +2840,6 @@ Quads are used for background decoration
 Queue is empty
 Queue preset: %s
 Quick action menu for players
-Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)
 Quit
 Quit the client
 Quitting. Please wait…
@@ -2913,6 +2904,9 @@ Ratio
 Ratio threshold for local target language detection
 Ready
 Really? Not even a little?
+Realtime channel heartbeat interval (seconds, 0 uses default)
+Realtime channel reconnect backoff base (ms)
+Realtime channel reconnect backoff cap (ms)
 Reason
 Reason:
 Rebinds the client's listening address and port
@@ -3102,8 +3096,10 @@ Restart
 Restart in x seconds (0 = abort)
 Restart the client
 Restarting. Please wait…
+Restore a two-player save? /qm Yes uses the newest; /qm Yes number selects another. /qm No dismisses.
 Restore Kugou files
 Restore old single-segment hook collision line behavior
+Restoring save %d: main '%s', dummy '%s'.
 Retry remote stats
 Retrying…
 Reverse zoom direction instantly when the opposite zoom key is pressed (0=keep original smooth zoom)
@@ -3114,7 +3110,6 @@ Rifle laser inner color
 Rifle Laser Outline Color
 Rifle laser outline color
 Right jump
-Right-click or use the gear to manage categories
 Right-click to disable auto-translate
 Right-click to enable auto-translate
 Ring
@@ -3149,8 +3144,6 @@ Run profiler to check 3D/2D array texture sampling works correctly
 Run selected commands after joining a server
 Run server
 SA
-Saiko+ input amount (0.01 tick)
-Saiko+ others
 Same as "vote no"
 Same clan color in scoreboard
 Same group full map listening
@@ -3169,9 +3162,14 @@ Save drawings to a given csv file (defaults to map name)
 Save failed!
 Save ghost
 Save last %d min
+Save loaded; local record removed.
+Save loaded; the local record could not be removed.
 Save player names in replay
 Save power by lowering update rate (higher input latency)
 Save replay of best time per game
+Save restore dismissed.
+Save restore stopped without confirming success. The local record was kept.
+Save restore stopped: connection, names or team were not ready. The local record was kept.
 Save settings file on exit
 Save skin
 Save team with code r.
@@ -3230,6 +3228,7 @@ Search settings by title, feature, or keyword
 Search, filter, and manage skins
 Searching
 Searching all map folders...
+Sec-WebSocket-Protocol sent during the realtime handshake
 Secondary
 Seconds
 Seconds to wait before reconnecting (0=off, when server is full)
@@ -3292,7 +3291,6 @@ Server executable not found, can't run server
 Server filter
 Server hostname (0.7 only)
 Server info
-Server IP
 Server kick/spec votes are no longer actively moderated.
 Server kick/spec votes will now be actively moderated.
 Server name
@@ -3303,6 +3301,8 @@ Server preset
 Server region. Used for region bans
 Server stress (debug builds only).
 Server type (novice, moderate, etc.)
+Server URL
+Server-assigned style
 Set a voice server to enable QmClient distribution
 Set all to Rifle
 Set camera position relative to current view in the map
@@ -3337,6 +3337,7 @@ Settings page right panel opacity
 Severe
 Shape
 Share of the server browser name/map split given to the name column (per mille)
+Shimmer speed (polished)
 Short server names
 Shotgun
 Shotgun Laser Inner Color
@@ -3345,6 +3346,7 @@ Shotgun Laser Outline Color
 Shotgun laser outline color
 Show %s group
 Show a small view of the dummy
+Show advanced title settings (collapsing keeps configured effects)
 Show air jump indicator
 Show all
 Show all buttons
@@ -3649,6 +3651,8 @@ Silently disconnect from the current server while keeping Tee timeout protection
 Simple
 Simple noise reduction
 Simple noise reduction strength
+Single color
+Single color and Rainbow override the color of animated styles; the style keeps its motion
 Size
 Size of entity text data (20% to 100%)
 Size of hook strength icon and number indicator
@@ -3710,6 +3714,7 @@ Smooth scroll animation duration in menu/editor (ms, 0=off)
 Smooth zoom animation time in editor (in ms, 0=off)
 Smoothness of multi-view zoom (in ms, higher = slower)
 Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
+Snap wave to pixels
 Snapshot Age
 Snapshot age
 Snapshot Latency
@@ -3742,6 +3747,7 @@ Source file is empty.
 Source language code for translation (auto=auto-detect)
 Space
 Spam protection: prevent spamming of team switching, chat, skin changes, emotes, votes
+Spatial effect
 Speaker
 Specifies whether zoom should be limited in game (0 = unlimited)
 Specify command accessibility for given access level
@@ -3819,6 +3825,7 @@ Steam profile name
 Still free after %d sponsors. Take a look?
 Stop key input on switch (0=off, 1=dummy, 2=player)
 Stop practice
+Stop preview (P)
 Stop record
 Stop recording
 Stop recording a demo
@@ -3840,6 +3847,7 @@ Strong Weak Hook
 Style chat names, text, and message colors
 Style kill, finish, and system messages
 Sub-Tick aiming
+Subtle
 Successfully saved the replay!
 Sudden Death
 Suicides
@@ -3895,8 +3903,6 @@ Target language ratio
 Target server: %s
 Task running ...
 TClient
-TClient / Bind Wheel
-TClient / Status Bar
 TClient Developers
 TClient Links
 Tclient settings card ordering (format: id:col:order; semicolon-separated)
@@ -4017,6 +4023,7 @@ There are no times in the specified range
 There are no Tutorial servers available
 There are unsaved changes in the touch controls editor. Saving first is recommended.
 There is no checkpoint teleporter with that index on the map.
+There is no pending save restore prompt.
 There is no teleporter with that index on the map.
 There is not enough space available for the button. Check its visibilities and size.
 There is not enough space available to place another button.
@@ -4026,12 +4033,13 @@ There's a %s second wait time between kick votes for each player please wait %s 
 There's an unsaved change in the touch controls editor, you might want to save it.
 There's an unsaved map in the editor, you might want to save it.
 Thinking mode requires a reasoning model
-This font has no bundled vector profile. Nameplates will use FreeType.
+This connection cannot change names while connected. Reconnect with the saved names first.
 This ID is not connected
 This is the master switch for all interface animation categories
 This name cannot be used for files and folders
 This person has disabled receiving whispers
 This save exists, but you are not part of it. 
+This save is no longer in the local save file.
 This save-code already exists
 This server has an initial chat delay, you will be able to talk in %s seconds.
 This skin name cannot be used.
@@ -4077,11 +4085,16 @@ Timer isn't displayed.
 Tiny Tee Size
 Title bob angular speed in 1/100 rad/s
 Title bob wavelength in pixels
+Title color
+Title color (single color)
 Title light sweep speed in 1/100 row per second (0 = off)
+Title opacity (custom color)
 Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
 Title per-character vertical bob amplitude in pixels (0 = off)
+Title preview
 Title server unavailable; retry
 Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
+Title style
 Title too long or contains unsupported characters
 to check a server setting say /settings and setting's name, setting names are:
 To save all players in your team have to be alive and not in '/spec'
@@ -4094,6 +4107,7 @@ Toggle custom color
 Toggle Do Not Disturb (no chat and server messages)
 Toggle dummy
 Toggle dyncam
+Toggle emote launcher
 Toggle fast practice mode
 Toggle ghost
 Toggle ghost key
@@ -4243,6 +4257,7 @@ Unknown argument. Check '/rescuemode list'
 Unknown emote. Use /emote to see available emotes.
 Unknown parameter. Accepted values: default, gametimer, broadcast, both, none
 Unknown status
+Unknown title style
 Unload the rank ghost
 Unlock a team
 Unmute
@@ -4273,6 +4288,7 @@ URL for downloading skins
 Usage: %s
 Usage: %s %s
 Use /pause first then you can kill
+Use /qm Yes [number] to restore a save, or /qm No to dismiss.
 Use 12 hour clock
 Use 12-hour clock for local time
 Use a fixed prediction margin while frozen
@@ -4295,6 +4311,7 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
+Use large emote
 Use mouse sensitivity when dynamic camera is on
 Use multi-char replacement based on word length
 Use native UI for IME (may break IME in fullscreen mode, requires restart)
@@ -4318,8 +4335,6 @@ Use the scoreboard cursor mode to scroll the list
 Use the selected tee trail style palette
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 Use this before `add_favorite` to group favorites. End with `end_favorite_group`
-Use vector font rendering for nameplates
-Use vector font rendering for nameplates when a bundled profile is available
 Use warlist colors instead of regular colors
 Use warlist groups for indicator
 Used by active shared text and numeric input fields
@@ -4331,7 +4346,6 @@ VAD release delay (ms)
 VAD threshold (percent)
 Vanilla skins only
 Variable custom font weight
-Vector nameplate text
 Velocity
 Version
 Version performing the analysis
@@ -4382,7 +4396,7 @@ Voice output device (empty=default)
 Voice playback volume (percent)
 Voice protocol version
 Voice room token (optional)
-Voice server address host:port
+Voice server URL (ws:// or wss://)
 Voice stereo output
 Voice stereo width (percent)
 Voice test mode (0=Off 1=Local 2=Server Loopback)
@@ -4425,6 +4439,9 @@ Warmup
 Warmup time before round (in seconds)
 Warn about team balance
 Warning
+Wave amount
+Wave speed (0.01 rad/s)
+Wave wavelength
 Weak hook
 Weak hook color
 Weak network test: server receive extra reorder probability percentage
@@ -4453,7 +4470,6 @@ Weapon trajectory helper mode (0=Off, 1=On key, 2=Always)
 Weapon trajectory helper width
 Weapons
 Website
-WebSocket endpoint (optional)
 Welcome to DDNet
 What level DDRace binding is set to (automatic, you don't need to use it).
 When TClient rainbow Tee is enabled, this feature has no effect.
@@ -4825,6 +4841,7 @@ Zoom to current mouse target
 [Editor]	Close this dialog.
 [Editor]	Collaboration
 [Editor]	Collaboration connection cancelled
+[Editor]	Collaboration connection lost; please try again
 [Editor]	Collapse all
 [Editor]	COLLISION OFF: You can't collide with others.
 [Editor]	COLLISION: You can collide with others.
@@ -4842,8 +4859,6 @@ Zoom to current mouse target
 [Editor]	Confirm delete
 [Editor]	Confirm editing of this command.
 [Editor]	Confirm overwrite
-[Editor]	Connection failed: the collaboration service address is too long
-[Editor]	Connection failed: the HTTP service is unavailable
 [Editor]	Construct '%s' game tiles (x%d)
 [Editor]	Construct 'tele' game tiles (x%d)
 [Editor]	Construct game tiles from this layer.
@@ -5504,8 +5519,6 @@ Zoom to current mouse target
 [Editor]	Sync failed: the map snapshot data is invalid
 [Editor]	Sync failed: the received map snapshot is too large
 [Editor]	Sync interrupted: connection failed
-[Editor]	Sync interrupted: the collaboration service address is too long
-[Editor]	Sync interrupted: the HTTP service is unavailable
 [Editor]	Sync interrupted: the room does not exist or has expired
 [Editor]	Sync interrupted: you are no longer in this room
 [Editor]	Sync the current editor map snapshot by room code, with up to 4 people collaborating.
@@ -5720,6 +5733,7 @@ Zoom to current mouse target
 [Team status]	forbidden
 [Team status]	required
 [Team status]	solo
+[Title color mode]	Use style colors
 [Touch button behavior]	Bind
 [Touch button behavior]	Bind Toggle
 [Touch button behavior]	Predefined

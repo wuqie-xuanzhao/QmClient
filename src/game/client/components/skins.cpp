@@ -1136,8 +1136,8 @@ static bool LoadSkinSpriteTexture(IGraphics *pGraphics, IGraphics::CTextureHandl
 	if(pGraphics == nullptr || pTargetTexture == nullptr)
 		return false;
 	IGraphics::CTextureHandle Texture = PreparedAvailable ?
-					      pGraphics->LoadTextureRawMove(PreparedImage, 0, pSprite->m_pName) :
-					      pGraphics->LoadSpriteTexture(SourceImage, std::nullopt, pSprite);
+						    pGraphics->LoadTextureRawMove(PreparedImage, 0, pSprite->m_pName) :
+						    pGraphics->LoadSpriteTexture(SourceImage, std::nullopt, pSprite);
 	if(!Texture.IsValid())
 		return false;
 	if(pTargetTexture->IsValid())

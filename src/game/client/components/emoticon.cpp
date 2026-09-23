@@ -203,7 +203,8 @@ void CEmoticon::UpdateSelection()
 	const auto PositiveMod = [](float x, float y) -> int { return static_cast<int>(std::fmod(x + y, y)); };
 	m_SelectedEmote = length(m_SelectorMouse) > 110.0f ? PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTICONS), NUM_EMOTICONS) : -1;
 	m_SelectedEyeEmote = m_SelectedEmote == -1 && length(m_SelectorMouse) > 40.0f ?
-				     PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTES), NUM_EMOTES) : -1;
+				     PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTES), NUM_EMOTES) :
+				     -1;
 	if(!GameClient()->m_GameInfo.m_AllowEyeWheel || !g_Config.m_ClEyeWheel || GameClient()->m_aLocalIds[g_Config.m_ClDummy] < 0)
 		m_SelectedEyeEmote = -1;
 	m_SuperChargeProgress = m_SuperCharge.Update(m_SelectedEmote, time_get(), time_freq());
