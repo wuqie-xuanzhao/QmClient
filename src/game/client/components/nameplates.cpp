@@ -784,6 +784,7 @@ private:
 	float m_Alpha = 1.0f;
 	SQmTitleColorStyle m_TitleColorStyle;
 	SQmTitleRenderStyle m_TitleRenderStyle;
+	CQmTitleTextMetrics m_TitleTextMetrics;
 	int m_ShimmerSpeed = -1;
 	char m_aStyle[48] = "";
 	// 上一帧的内容是否随时间变化。由称号渲染器自己的判定回填，而不是在这里镜像它的条件：
@@ -841,9 +842,22 @@ protected:
 		const SQmTitleColorStyle &ColorStyle = m_TitleColorStyle;
 		// 逐字符浮动需要逐字符位移顶点。
 		const bool TitleHasBob = TitleStyle.m_Bob.m_Amplitude != 0.0f && TitleStyle.m_Bob.m_WaveLength > 0.0f;
+		if(!m_TextContainerIndex.Valid())
+			m_TitleTextMetrics.Reset();
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		const float TitleTimeSec = (float)This.m_QmClient.TitleAnimationTime();
+		if(TitleStyle.m_pStyle != nullptr)
+		{
+			float X0, Y0, X1, Y1;
+			This.Graphics()->GetScreen(&X0, &Y0, &X1, &Y1);
+			CQmTitleTextMetrics::SContext Context;
+			Context.m_FontSize = m_FontSize;
+			Context.m_ScreenScale = vec2(This.Graphics()->ScreenWidth() / (X1 - X0), This.Graphics()->ScreenHeight() / (Y1 - Y0));
+			Context.m_RenderFlags = This.TextRender()->GetRenderFlags();
+			Context.m_FontPreset = (int)This.TextRender()->GetFontPreset();
+			m_TitleTextMetrics.Update(m_aText, Context, [&](const char *pPrefix) { return This.TextRender()->TextWidth(m_FontSize, pPrefix); });
+		}
 		if(ColorStyle.m_Rainbow)
 		{
 			// 彩虹档（开发者彩虹或本地彩虹配色）：逐字符上色，字符内不渐变（左右同色）。
@@ -859,7 +873,7 @@ protected:
 				Cursor.m_vColorSplits.emplace_back((int)(pCurrent - m_aText), (int)(pNext - pCurrent), Color);
 				pCurrent = pNext;
 			}
-			QmTitleRenderFillMotionOffsets(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, TitleShimmer);
+			QmTitleRenderFillMotionOffsets(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, TitleShimmer, &m_TitleTextMetrics);
 			// 彩虹档的逐字符颜色是静态的，只有浮动与掠光会让顶点逐帧变化。
 			m_TitleAnimated = TitleShimmer.m_Enabled || TitleHasBob;
 		}
@@ -868,7 +882,7 @@ protected:
 			// 单色档把本地颜色与透明度交给渲染器；跟随服务器档不覆盖颜色（渲染器自己采样风格），
 			// 此时 Alpha 固定 1.0，名牌淡入淡出仍由 Render 的 m_Alpha 负责。
 			const bool ColorOverride = ColorStyle.m_Mode == EQmTitleColorMode::SINGLE;
-			m_TitleAnimated = QmTitleRenderFillCursor(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, 1.0f, TitleShimmer, nullptr, ColorStyle.m_Color);
+			m_TitleAnimated = QmTitleRenderFillCursor(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, 1.0f, TitleShimmer, &m_TitleTextMetrics, ColorStyle.m_Color);
 		}
 		else
 		{

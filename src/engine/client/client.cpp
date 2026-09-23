@@ -6101,6 +6101,9 @@ bool CClient::HandleQmGraphicsFatalError()
 	str_timestamp(aDate, sizeof(aDate));
 	char aBackend[64];
 	str_copy(aBackend, g_Config.m_GfxBackend);
+	EBackendType FailedBackend = graphics_backend::BackendFromCrashReport(aGpuInfo);
+	if(FailedBackend == BACKEND_TYPE_AUTO)
+		FailedBackend = graphics_backend::ParseBackendName(aBackend, BACKEND_TYPE_AUTO);
 	char aServerAddr[NETADDR_MAXSTRSIZE];
 	const NETADDR *pAddr = ServerAddress();
 	if(!pAddr || pAddr->type == NETTYPE_INVALID)
@@ -6126,6 +6129,7 @@ bool CClient::HandleQmGraphicsFatalError()
 			"Report type: graphics_fatal_error\n"
 			"Timestamp: %s\n"
 			"Process ID: %d\n"
+			"Graphics backend: %s\n"
 			"Configured graphics backend: %s\n"
 			"Client state: %s (%d)\n"
 			"Current map: %s\n"
@@ -6135,7 +6139,7 @@ bool CClient::HandleQmGraphicsFatalError()
 			"Graphics error:\n%s\n"
 			"\n"
 			"%s\n",
-			aDate, pid(), aBackend, ClientStateToString(m_State), m_State,
+			aDate, pid(), graphics_backend::BackendName(FailedBackend), aBackend, ClientStateToString(m_State), m_State,
 			m_aCurrentMap[0] != '\0' ? m_aCurrentMap : "(none)",
 			aServerAddr,
 			GAME_NAME, GAME_RELEASE_VERSION, GIT_SHORTREV_HASH != nullptr ? GIT_SHORTREV_HASH : "",
@@ -6152,9 +6156,6 @@ bool CClient::HandleQmGraphicsFatalError()
 
 	SQmGraphicsRecoveryState RecoveryState;
 	ReadQmGraphicsRecoveryState(Storage(), RecoveryState);
-	EBackendType FailedBackend = graphics_backend::BackendFromCrashReport(aGpuInfo);
-	if(FailedBackend == BACKEND_TYPE_AUTO)
-		FailedBackend = graphics_backend::ParseBackendName(aBackend, BACKEND_TYPE_AUTO);
 	RecoveryState.m_Failures.Record(FailedBackend);
 	if(graphics_backend::RecoveryBackend(RecoveryState.m_Failures, FailedBackend) == BACKEND_TYPE_AUTO)
 	{

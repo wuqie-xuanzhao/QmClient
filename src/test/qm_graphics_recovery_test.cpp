@@ -22,6 +22,7 @@ TEST(QmGraphicsRecovery, CrashReportIdentifiesActualBackend)
 	EXPECT_EQ(graphics_backend::BackendFromCrashReport("Graphics backend: GLES 3.0.0\n"), BACKEND_TYPE_OPENGL_ES);
 	EXPECT_EQ(graphics_backend::BackendFromCrashReport("Graphics backend: Metal 3.0.0\n"), BACKEND_TYPE_METAL);
 	EXPECT_EQ(graphics_backend::BackendFromCrashReport("Report type: graphics_fatal_error\nConfigured graphics backend: Vulkan API 1.4\n"), BACKEND_TYPE_VULKAN);
+	EXPECT_EQ(graphics_backend::BackendFromCrashReport("Report type: graphics_fatal_error\nGraphics backend: Vulkan\nConfigured graphics backend: OpenGL\nGraphics error:\nVK_ERROR_DEVICE_LOST\n"), BACKEND_TYPE_VULKAN);
 	EXPECT_EQ(graphics_backend::BackendFromCrashReport("Graphics backend: headless\n"), BACKEND_TYPE_AUTO);
 	EXPECT_EQ(graphics_backend::BackendFromCrashReport("Graphics error: Vulkan\n"), BACKEND_TYPE_AUTO);
 }
