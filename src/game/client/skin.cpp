@@ -40,6 +40,7 @@ void CSkin::CSkinTextures::Unload(IGraphics *pGraphics)
 		m_QmBodyOutline->Unload(pGraphics);
 	if(m_QmFeetOutline)
 		m_QmFeetOutline->Unload(pGraphics);
+	m_QmChatAvatar.reset();
 }
 
 CSkin::CSkinMetricVariableInt::operator int() const

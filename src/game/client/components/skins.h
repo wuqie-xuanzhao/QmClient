@@ -404,6 +404,20 @@ public:
 		size_t m_NumError = 0;
 		size_t m_NumNotFound = 0;
 
+		void AddState(CSkinContainer::EState State)
+		{
+			switch(State)
+			{
+			case CSkinContainer::EState::UNLOADED: ++m_NumUnloaded; break;
+			case CSkinContainer::EState::BACKGROUND_REQUESTED: ++m_NumBackgroundRequested; break;
+			case CSkinContainer::EState::PENDING: ++m_NumPending; break;
+			case CSkinContainer::EState::LOADING: ++m_NumLoading; break;
+			case CSkinContainer::EState::LOADED: ++m_NumLoaded; break;
+			case CSkinContainer::EState::ERROR: ++m_NumError; break;
+			case CSkinContainer::EState::NOT_FOUND: ++m_NumNotFound; break;
+			}
+		}
+
 		size_t RealInflight() const { return m_NumPending + m_NumLoading; }
 		bool AdmissionInvariantViolated(int CountFuseLimit) const
 		{

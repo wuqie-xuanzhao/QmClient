@@ -1471,11 +1471,12 @@ void CSkins::PrepareSettingsThroughputForFrame()
 		return;
 	}
 
-	CSkinLoadingStats Stats = LoadingStats();
+	CSkinLoadingStats Stats;
 	int LoadingJobsAwaitingResult = 0;
 	int LoadingJobsReadyForMainThread = 0;
 	for(const auto &[_, pSkinContainer] : m_Skins)
 	{
+		Stats.AddState(pSkinContainer->m_State);
 		if(pSkinContainer->m_State != CSkinContainer::EState::LOADING || pSkinContainer->m_pLoadJob == nullptr)
 			continue;
 		if(!pSkinContainer->m_pLoadJob->Done())
@@ -1927,7 +1928,7 @@ void CSkins::UpdateUnloadSkins(CSkinLoadingStats &Stats)
 
 bool CSkins::ReclaimBackgroundSkinForPriorityRequest(const char *pRequesterName, int CountFuseLimit)
 {
-	if(CountFuseLimit <= 0)
+	if(CountFuseLimit <= 0 || m_SkinsBackgroundList.empty())
 		return false;
 
 	size_t NumPendingLoading = 0;
@@ -1936,7 +1937,8 @@ bool CSkins::ReclaimBackgroundSkinForPriorityRequest(const char *pRequesterName,
 		if(pSkinContainer->m_State == CSkinContainer::EState::PENDING ||
 			pSkinContainer->m_State == CSkinContainer::EState::LOADING)
 		{
-			++NumPendingLoading;
+			if(++NumPendingLoading >= (size_t)CountFuseLimit)
+				break;
 		}
 	}
 	if(NumPendingLoading < (size_t)CountFuseLimit)
@@ -2558,32 +2560,7 @@ CSkins::CSkinLoadingStats CSkins::LoadingStats() const
 {
 	CSkinLoadingStats Stats;
 	for(const auto &[_, pSkinContainer] : m_Skins)
-	{
-		switch(pSkinContainer->m_State)
-		{
-		case CSkinContainer::EState::UNLOADED:
-			Stats.m_NumUnloaded++;
-			break;
-		case CSkinContainer::EState::BACKGROUND_REQUESTED:
-			Stats.m_NumBackgroundRequested++;
-			break;
-		case CSkinContainer::EState::PENDING:
-			Stats.m_NumPending++;
-			break;
-		case CSkinContainer::EState::LOADING:
-			Stats.m_NumLoading++;
-			break;
-		case CSkinContainer::EState::LOADED:
-			Stats.m_NumLoaded++;
-			break;
-		case CSkinContainer::EState::ERROR:
-			Stats.m_NumError++;
-			break;
-		case CSkinContainer::EState::NOT_FOUND:
-			Stats.m_NumNotFound++;
-			break;
-		}
-	}
+		Stats.AddState(pSkinContainer->m_State);
 	return Stats;
 }
 
