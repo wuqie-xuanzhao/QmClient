@@ -44,8 +44,7 @@ namespace qm_card_catalog
 			case EQmModuleId::Coords: return ResolveQmHudCoordsHeight(Metrics);
 			case EQmModuleId::PlayerStats: return ResolveQmHudPlayerStatsHeight(Metrics, g_Config.m_QmPlayerStatsMapProgress != 0, g_Config.m_QmPlayerStatsMapProgressStyle != 0);
 			case EQmModuleId::DebugGraph: return Rows(2.0f);
-			// 内容只有一个调试模式开关（一行 + 尾间距），此前按 5 行预留，卡片底部会留下约 4 行空白。
-			case EQmModuleId::DebugMode: return Rows(1.0f);
+			case EQmModuleId::DebugMode: return Rows(5.0f);
 			case EQmModuleId::InputOverlay: return ResolveQmHudInputOverlayHeight(Metrics, g_Config.m_QmInputOverlay != 0);
 			case EQmModuleId::HudNotifications: return ResolveQmHudNotificationsHeight(Metrics, g_Config.m_QmHudNotificationsShowAdvanced != 0, g_Config.m_QmHudNotificationsUseCategoryFilters != 0);
 			case EQmModuleId::Voice: return ResolveQmHudVoiceHeight(Metrics, g_Config.m_QmVoiceEnable != 0, g_Config.m_QmVoiceShowAdvanced != 0, g_Config.m_QmVoiceShowConnectionStatus != 0, g_Config.m_QmVoiceNoiseSuppressEnable, g_Config.m_QmVoiceVadEnable != 0, g_Config.m_QmVoiceStereo != 0);
@@ -60,7 +59,7 @@ namespace qm_card_catalog
 			}
 			case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 			case EQmModuleId::BindStatusHud:
-				return Rows(4.0f); // 4 个状态开关
+				return Rows(6.0f); // 4 个状态开关 + 自定义列表编辑行 + 格式提示行
 			// 本地专属卡：公式取自本地页面级 EstimateContentHeight（menus_qmclient.cpp:4793），保持高度不变。
 			case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? Rows(6.0f) : Rows(1.0f);
 			default: return Rows(1.0f);

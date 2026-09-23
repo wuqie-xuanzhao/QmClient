@@ -147,6 +147,11 @@ inline float QmHudRecordingDotAlpha(double Seconds)
 	return static_cast<float>(0.80 + 0.15 * std::cos(Phase * 2.0 * pi));
 }
 
+inline bool QmHudMusicLyricsSourceEnabled(bool Soda, bool Kugou, bool QQMusic)
+{
+	return Soda || Kugou || QQMusic;
+}
+
 inline float QmHudMediaIslandMarqueeOffset(float TextWidth, float ViewportWidth, float ElapsedSeconds, float Speed = 32.0f)
 {
 	const float Distance = std::max(0.0f, TextWidth - ViewportWidth);

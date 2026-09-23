@@ -77,6 +77,18 @@ class CQmClient : public CComponent
 	CQmMarkdownBroadcast m_QmMarkdownBroadcast;
 	// 每个缓存文件一个写作业实例：界面立即更新，磁盘只保留最新完整快照。
 	CQmMarkdownCacheWriter m_QmMarkdownBroadcastCacheWriter;
+	std::string m_QmNewsDraft;
+	std::shared_ptr<IHttpRequest> m_pQmNewsPublishTask;
+	enum class EQmNewsStatus
+	{
+		IDLE,
+		PUBLISHING,
+		PUBLISHED,
+		PUBLISH_DENIED,
+		PUBLISH_TOO_LARGE,
+		PUBLISH_FAILED,
+	};
+	EQmNewsStatus m_QmNewsStatus = EQmNewsStatus::IDLE;
 	CQmMarkdownCacheWriter m_QmSponsorsCacheWriter;
 	qm_sponsors::CSnapshot m_QmSponsors;
 	std::string m_QmSponsorsDraft;
@@ -214,12 +226,19 @@ class CQmClient : public CComponent
 	// 广播 markdown 的磁盘缓存：Apply 成功后落盘（交给作业），启动时读回上次内容。
 	void SaveQmMarkdownBroadcastCache();
 	void LoadQmMarkdownBroadcastCache();
+	void FinishQmNewsPublish();
 	void LoadQmSponsorsCache();
 	void SaveQmSponsorsCache();
 	bool ApplyQmSponsorsPayload(const json_value *pPayload, bool SaveCache);
 	void FinishQmSponsorsPublish();
 
 public:
+	using ENewsStatus = EQmNewsStatus;
+	const char *QmNewsDraft() const { return m_QmNewsDraft.c_str(); }
+	ENewsStatus QmNewsStatus() const { return m_QmNewsStatus; }
+	bool QmNewsPublishing() const { return m_pQmNewsPublishTask != nullptr; }
+	void QmNewsReloadDraft();
+	void QmNewsPublishDraft();
 	using ESponsorsStatus = EQmSponsorsStatus;
 	const std::vector<std::string> &QmSponsorNames() const { return m_QmSponsors.Names(); }
 	const char *QmSponsorsDraft() const { return m_QmSponsorsDraft.c_str(); }

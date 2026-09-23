@@ -5,17 +5,22 @@
 #include <engine/console.h>
 #include <engine/kernel.h>
 #include <engine/shared/config.h>
+#include <engine/shared/json.h>
 #include <engine/storage.h>
 
 #include <generated/protocol.h>
 
 #include <game/client/components/emoticon.h>
+#include <game/client/components/qmclient/emoticon_commands.h>
+#include <game/client/components/qmclient/markdown_cache_writer.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/route_start_index.h>
 #include <game/client/components/qmclient/translate/translate_ui_settings.h>
 
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <cstdlib>
 #include <limits>
 #include <string>
 #include <vector>
@@ -953,6 +958,104 @@ TEST(QmTranslateUiSettings, MigrationMarkerPreservesIntentionalTransparentColor)
 	EXPECT_EQ(Normal, 0x00D4E5F6u);
 }
 
+namespace
+{
+	class CQmEmoteCommandsTest : public ::testing::Test
+	{
+	protected:
+		struct SRequest
+		{
+			int m_Emoticon;
+			bool m_ForceLaunch;
+		};
+		struct SReceiver
+		{
+			std::vector<SRequest> m_vRequests;
+
+			void Emote(int Emoticon, bool ForceLaunch = false)
+			{
+				m_vRequests.push_back({Emoticon, ForceLaunch});
+			}
+		} m_Receiver;
+		std::unique_ptr<IConsole> m_pConsole = CreateConsole(CFGFLAG_CLIENT);
+
+		void SetUp() override
+		{
+			QmEmoticon::RegisterCommands(m_pConsole.get(), &m_Receiver);
+		}
+	};
+}
+
+TEST_F(CQmEmoteCommandsTest, ShotEmoteRegistersWithEmoteIntegerSyntaxForClientOnly)
+{
+	const auto *pEmote = m_pConsole->GetCommandInfo("emote", CFGFLAG_CLIENT, false);
+	const auto *pShotEmote = m_pConsole->GetCommandInfo("shot_emote", CFGFLAG_CLIENT, false);
+	ASSERT_NE(pEmote, nullptr);
+	ASSERT_NE(pShotEmote, nullptr);
+	EXPECT_STREQ(pShotEmote->Params(), pEmote->Params());
+	EXPECT_STREQ(pShotEmote->Params(), "i[emote-id]");
+	EXPECT_EQ(pShotEmote->Flags(), CFGFLAG_CLIENT);
+	EXPECT_EQ(m_pConsole->GetCommandInfo("shot_emote", CFGFLAG_CHAT, false), nullptr);
+}
+
+TEST_F(CQmEmoteCommandsTest, ShotEmoteDispatchesValidIdsWithForceLaunch)
+{
+	for(int Emoticon = 0; Emoticon < NUM_EMOTICONS; ++Emoticon)
+	{
+		SCOPED_TRACE(Emoticon);
+		m_Receiver.m_vRequests.clear();
+		const std::string Command = "shot_emote " + std::to_string(Emoticon);
+		m_pConsole->ExecuteLine(Command.c_str());
+		ASSERT_EQ(m_Receiver.m_vRequests.size(), 1u);
+		EXPECT_EQ(m_Receiver.m_vRequests[0].m_Emoticon, Emoticon);
+		EXPECT_TRUE(m_Receiver.m_vRequests[0].m_ForceLaunch);
+	}
+}
+
+TEST_F(CQmEmoteCommandsTest, BothCommandsShareParsingAndShotForceDoesNotPersist)
+{
+	struct SCase
+	{
+		const char *m_pArguments;
+		bool m_Dispatched;
+		int m_Emoticon;
+	};
+	const SCase aCases[] = {
+		{"", false, 0},
+		{"invalid", false, 0},
+		{"2147483647", false, 0},
+		{"-1", true, -1},
+		{"+7", true, 7},
+		{"\"7\"", true, 7},
+		{"7 extra", true, 7},
+	};
+	for(const SCase &Case : aCases)
+	{
+		SCOPED_TRACE(Case.m_pArguments);
+		for(const char *pName : {"emote", "shot_emote"})
+		{
+			SCOPED_TRACE(pName);
+			m_Receiver.m_vRequests.clear();
+			const std::string Command = std::string(pName) + " " + Case.m_pArguments;
+			EXPECT_EQ(m_pConsole->LineIsValid(Command.c_str()), Case.m_Dispatched);
+			m_pConsole->ExecuteLine(Command.c_str());
+			ASSERT_EQ(m_Receiver.m_vRequests.size(), Case.m_Dispatched ? 1u : 0u);
+			if(Case.m_Dispatched)
+			{
+				EXPECT_EQ(m_Receiver.m_vRequests[0].m_Emoticon, Case.m_Emoticon);
+				EXPECT_EQ(m_Receiver.m_vRequests[0].m_ForceLaunch, std::string(pName) == "shot_emote");
+			}
+		}
+	}
+	m_Receiver.m_vRequests.clear();
+	m_pConsole->ExecuteLine("shot_emote 2; emote 3");
+	ASSERT_EQ(m_Receiver.m_vRequests.size(), 2u);
+	EXPECT_EQ(m_Receiver.m_vRequests[0].m_Emoticon, 2);
+	EXPECT_TRUE(m_Receiver.m_vRequests[0].m_ForceLaunch);
+	EXPECT_EQ(m_Receiver.m_vRequests[1].m_Emoticon, 3);
+	EXPECT_FALSE(m_Receiver.m_vRequests[1].m_ForceLaunch);
+}
+
 TEST(QmEmoticonEffect, EffectKindResolvesFromLaunchAndSuperFlags)
 {
 	struct SCase
@@ -1064,4 +1167,105 @@ TEST(QmEmoticonEffect, DefaultsShowBothOtherPlayerEffects)
 {
 	EXPECT_EQ(DefaultConfig::QmShowOtherSuperEmotes, 1);
 	EXPECT_EQ(DefaultConfig::QmShowOtherLaunchEmotes, 1);
+}
+
+TEST(QmRouteStartIndex, FindsClosestCurrentReachableGameOrFrontStart)
+{
+	CQmRouteStartIndex Starts;
+	int aGame[] = {TILE_AIR, TILE_START, TILE_AIR, TILE_START};
+	int aFront[] = {TILE_AIR, TILE_AIR, TILE_START, TILE_START};
+	EXPECT_FALSE(Starts.AddTile(0, TILE_AIR, TILE_AIR));
+	for(int Index = 1; Index < 4; ++Index)
+		EXPECT_TRUE(Starts.AddTile(Index, aGame[Index], aFront[Index]));
+	const auto PositionOf = [](int Index) { return vec2(Index * 32.0f, 0.0f); };
+	const auto Eligible = [&](int Index) { return Index != 2 && (aGame[Index] == TILE_START || aFront[Index] == TILE_START); };
+	EXPECT_EQ(Starts.FindClosest(vec2(66.0f, 0.0f), -1, Eligible, PositionOf), 3);
+	EXPECT_EQ(Starts.FindClosest(vec2(32.0f, 0.0f), -1, Eligible, PositionOf), 1);
+	aGame[1] = TILE_AIR;
+	EXPECT_EQ(Starts.FindClosest(vec2(32.0f, 0.0f), -1, Eligible, PositionOf), 3);
+	EXPECT_EQ(Starts.FindClosest(vec2(0.0f, 0.0f), 99, [](int) { return false; }, PositionOf), 99);
+	Starts.Reset();
+	EXPECT_EQ(Starts.FindClosest(vec2(32.0f, 0.0f), -1, Eligible, PositionOf), -1);
+}
+
+TEST(QmRouteStartIndex, ChecksOnlyStartsAndKeepsFirstOnEqualDistance)
+{
+	CQmRouteStartIndex Starts;
+	for(int Index = 0; Index < 1024; ++Index)
+		Starts.AddTile(Index, Index == 7 ? TILE_START : TILE_AIR, Index == 7 || Index == 19 ? TILE_START : TILE_AIR);
+	int Checks = 0;
+	const auto Eligible = [&](int) { ++Checks; return true; };
+	const auto PositionOf = [](int Index) { return vec2(Index == 7 ? -10.0f : 10.0f, 0.0f); };
+	EXPECT_EQ(Starts.FindClosest(vec2(0.0f, 0.0f), -1, Eligible, PositionOf), 7);
+	EXPECT_EQ(Checks, 2);
+}
+
+TEST(QmMarkdownCache, DeferredWriteKeepsNewestSnapshotAfterOwnerDestruction)
+{
+	CTestInfo Info;
+	auto pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	char aPath[IO_MAX_PATH_LENGTH];
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, "qmclient/news_cache.json", aPath, sizeof(aPath));
+	const std::string Expected = "公告\n\"引号\" 与 \\ 路径";
+	std::shared_ptr<IJob> pJob;
+	{
+		CQmMarkdownCacheWriter Writer;
+		pJob = Writer.Enqueue(aPath, 1, 10, "old");
+		ASSERT_NE(pJob, nullptr);
+		std::string Markdown = Expected;
+		EXPECT_EQ(Writer.Enqueue(aPath, 1, 11, Markdown), nullptr);
+		Markdown = "changed after enqueue";
+		EXPECT_FALSE(pStorage->FileExists("qmclient/news_cache.json", IStorage::TYPE_SAVE));
+	}
+	CJobPool Pool;
+	Pool.Init(1);
+	Pool.Add(pJob);
+	Pool.Shutdown();
+	void *pData = nullptr;
+	unsigned Size = 0;
+	ASSERT_TRUE(pStorage->ReadFile("qmclient/news_cache.json", IStorage::TYPE_SAVE, &pData, &Size));
+	json_value *pRoot = json_parse(static_cast<const char *>(pData), Size);
+	free(pData);
+	ASSERT_NE(pRoot, nullptr);
+	EXPECT_EQ(pRoot->type, json_object);
+	EXPECT_EQ(json_int_get(json_object_get(pRoot, "cache_version")), 1);
+	EXPECT_EQ(json_int_get(json_object_get(pRoot, "version")), 11);
+	EXPECT_STREQ(json_string_get(json_object_get(pRoot, "markdown")), Expected.c_str());
+	json_value_free(pRoot);
+}
+
+TEST(QmMarkdownCache, FailedWriteAndCompletedWriteAcceptNewRequests)
+{
+	CTestInfo Info;
+	auto pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	char aDirectory[IO_MAX_PATH_LENGTH];
+	char aPath[IO_MAX_PATH_LENGTH];
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, "", aDirectory, sizeof(aDirectory));
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, "qmclient/sponsors_cache.json", aPath, sizeof(aPath));
+	CQmMarkdownCacheWriter Writer;
+	CJobPool Pool;
+	auto pJob = Writer.Enqueue(aDirectory, 1, 2, "unwritable");
+	ASSERT_NE(pJob, nullptr);
+	Pool.Init(1);
+	Pool.Add(pJob);
+	Pool.Shutdown();
+	for(int Version : {3, 4})
+	{
+		pJob = Writer.Enqueue(aPath, 1, Version, "");
+		ASSERT_NE(pJob, nullptr);
+		Pool.Init(1);
+		Pool.Add(pJob);
+		Pool.Shutdown();
+		void *pData = nullptr;
+		unsigned Size = 0;
+		ASSERT_TRUE(pStorage->ReadFile("qmclient/sponsors_cache.json", IStorage::TYPE_SAVE, &pData, &Size));
+		json_value *pRoot = json_parse(static_cast<const char *>(pData), Size);
+		free(pData);
+		ASSERT_NE(pRoot, nullptr);
+		EXPECT_EQ(json_int_get(json_object_get(pRoot, "version")), Version);
+		EXPECT_STREQ(json_string_get(json_object_get(pRoot, "markdown")), "");
+		json_value_free(pRoot);
+	}
 }

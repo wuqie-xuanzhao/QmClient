@@ -308,6 +308,7 @@ static bool s_KeywordRulesLayoutHalfFilled = false;
 static char s_aKeywordRulesConfigCache[sizeof(g_Config.m_QmKeywordReplyRules)] = {};
 static uint64_t s_FavoriteMapsLayoutRevision = 1;
 static size_t s_FavoriteMapsLayoutCount = std::numeric_limits<size_t>::max();
+static size_t s_FavoriteMapSearchRows = 1;
 
 struct SQmTitleStylePreviewContext
 {
@@ -3527,6 +3528,12 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 
 	const auto vMapUploadMatches = s_MapUploadSearchIndex.Find(s_MapUploadSearch.GetString());
 	const size_t NumMapUploadMatches = std::min(vMapUploadMatches.size(), std::size(s_aMapUploadSearchResultButtons));
+	const size_t SearchRows = NumMapUploadMatches + (vMapUploadMatches.empty() || vMapUploadMatches.size() > NumMapUploadMatches ? 1 : 0);
+	if(s_FavoriteMapSearchRows != SearchRows)
+	{
+		s_FavoriteMapSearchRows = SearchRows;
+		++s_FavoriteMapsLayoutRevision;
+	}
 	for(size_t i = 0; i < NumMapUploadMatches; ++i)
 	{
 		Content.HSplitTop(LineHeight, &UploadRow, &Content);
@@ -4127,6 +4134,18 @@ void CMenus::RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float 
 		char aStatus[512] = {};
 		GameClient()->m_MusicLyricsIntegration.GetStatus(aStatus, sizeof(aStatus));
 		RenderQmHudLabel("qmclient-music-hook-status", &Row, aStatus, ui_token::font::BODY);
+		Content.HSplitTop(LineSpacing, nullptr, &Content);
+	}
+	if(g_Config.m_QmSpotifyEnable != 0)
+	{
+		static CLineInput s_SpotifySpDc(g_Config.m_QmSpotifySpDc, sizeof(g_Config.m_QmSpotifySpDc));
+		CUIRect Row, LabelColumn, InputColumn;
+		Content.HSplitTop(LineHeight, &Row, &Content);
+		Row.VSplitLeft(100.0f, &LabelColumn, &InputColumn);
+		RenderQmHudLabel("qmclient-lyrics-spotify-sp-dc", &LabelColumn, "spotify_ck", ui_token::font::BODY);
+		s_SpotifySpDc.SetHidden(true);
+		IUiContext TextInputCtx = SettingsUiContext("settings_qmclient_lyrics_spotify_text_inputs");
+		ui_widget::InputField(TextInputCtx, &s_SpotifySpDc, InputColumn, Localize("Paste sp_dc from Spotify web cookies"), ui_token::font::BODY);
 		Content.HSplitTop(LineSpacing, nullptr, &Content);
 	}
 }
@@ -5438,7 +5457,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 // 与远程同名函数等价，字段顺序须与 qm_card_catalog::SQmFunctionCardLayoutState 一致。
 static qm_card_catalog::SQmFunctionCardLayoutState ResolveFunctionCardLayoutState()
 {
-	return {s_BlockWordsLayoutRevision, s_KeywordRulesLayoutRevision, s_KeywordRulesLayoutCount, s_KeywordRulesLayoutHalfFilled, s_FavoriteMapsLayoutRevision};
+	return {s_BlockWordsLayoutRevision, s_KeywordRulesLayoutRevision, s_KeywordRulesLayoutCount, s_KeywordRulesLayoutHalfFilled, s_FavoriteMapsLayoutRevision, s_FavoriteMapSearchRows};
 }
 
 void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOnly)
@@ -6609,10 +6628,58 @@ void CMenus::RenderQmNewFeaturesPopup(CUIRect Screen)
 	TextRender()->TextColor(TextRender()->DefaultTextColor());
 	Inner.HSplitTop(Gap, nullptr, &Inner);
 
-	// 底部：关闭按钮
+	CQmClient &QmClient = GameClient()->m_QmClient;
+	if(m_QmNewFeaturesScrollReset && QmClient.HasDeveloperCredential())
+		QmClient.QmNewsReloadDraft();
+	// 底部：关闭按钮及仅限开发者凭据的公告草稿操作。
 	CUIRect ButtonRow, CloseButtonRect;
 	Inner.HSplitBottom(ButtonH, &Inner, &ButtonRow);
 	Inner.HSplitBottom(Gap, &Inner, nullptr);
+	if(QmClient.HasDeveloperCredential())
+	{
+		CUIRect DevRow, ReloadDraftRect, PublishRect, OpenFolderRect, DevStatus;
+		Inner.HSplitBottom(ButtonH, &Inner, &DevRow);
+		Inner.HSplitBottom(Gap, &Inner, nullptr);
+		const float DevButtonW = std::min(DevRow.w * 0.28f, 150.0f * UiScale);
+		DevRow.VSplitLeft(DevButtonW, &ReloadDraftRect, &DevRow);
+		DevRow.VSplitLeft(Gap, nullptr, &DevRow);
+		DevRow.VSplitLeft(DevButtonW, &PublishRect, &DevRow);
+		DevRow.VSplitLeft(Gap, nullptr, &DevRow);
+		DevRow.VSplitLeft(DevButtonW, &OpenFolderRect, &DevStatus);
+		DevStatus.VSplitLeft(Gap, nullptr, &DevStatus);
+
+		static CButtonContainer s_ReloadDraftButton, s_PublishButton, s_OpenFolderButton;
+		if(ui_widget::SecondaryButton(Ctx, &s_ReloadDraftButton, Localize("Reload"), ReloadDraftRect, QmClient.QmNewsPublishing()))
+			QmClient.QmNewsReloadDraft();
+		if(ui_widget::PrimaryButton(Ctx, &s_PublishButton, Localize("Publish"), PublishRect, QmClient.QmNewsPublishing() || QmClient.QmNewsDraft()[0] == '\0'))
+			QmClient.QmNewsPublishDraft();
+		if(ui_widget::SecondaryButton(Ctx, &s_OpenFolderButton, Localize("Open folder"), OpenFolderRect))
+		{
+			char aFolder[IO_MAX_PATH_LENGTH];
+			Storage()->GetCompletePath(IStorage::TYPE_SAVE, "qmclient", aFolder, sizeof(aFolder));
+			Client()->ViewFile(aFolder);
+		}
+
+		const char *pDevStatus = nullptr;
+		switch(QmClient.QmNewsStatus())
+		{
+		case CQmClient::ENewsStatus::PUBLISHING: pDevStatus = Localize("Publishing…"); break;
+		case CQmClient::ENewsStatus::PUBLISH_DENIED:
+		case CQmClient::ENewsStatus::PUBLISH_TOO_LARGE:
+		case CQmClient::ENewsStatus::PUBLISH_FAILED: pDevStatus = Localize("Publish failed"); break;
+		case CQmClient::ENewsStatus::PUBLISHED: pDevStatus = Localize("Published"); break;
+		default:
+			if(QmClient.QmNewsDraft()[0] == '\0')
+				pDevStatus = Localize("Draft file is empty");
+			break;
+		}
+		if(pDevStatus != nullptr)
+		{
+			TextRender()->TextColor(ui_token::color::TEXT_TIP);
+			Ui()->DoLabel(&DevStatus, pDevStatus, TipSize, TEXTALIGN_ML);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+		}
+	}
 	CloseButtonRect = ButtonRow;
 	CloseButtonRect.w = std::min(ButtonRow.w, 200.0f * UiScale);
 	CloseButtonRect.x = ButtonRow.x + (ButtonRow.w - CloseButtonRect.w) * 0.5f;
@@ -6641,8 +6708,6 @@ void CMenus::RenderQmNewFeaturesPopup(CUIRect Screen)
 	Content.y += ScrollOffset.y;
 
 	// 中心服广播有内容时优先显示受限 Markdown；没有广播时保留本地静态新功能列表。
-	CGameClient *pGameClient = GameClient();
-	CQmClient &QmClient = pGameClient->m_QmClient;
 	if(QmClient.HasQmMarkdownBroadcast())
 	{
 		static std::vector<qm_md::SBlock> s_vBroadcastBlocks;

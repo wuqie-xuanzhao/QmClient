@@ -39,6 +39,7 @@ namespace qm_card_catalog
 		size_t m_KeywordRulesCount = 0;
 		bool m_KeywordRulesHalfFilled = false;
 		uint64_t m_FavoriteMapsRevision = 1;
+		size_t m_FavoriteMapSearchRows = 1;
 	};
 
 	// 卡片构造上下文：页面把自己的 UI 尺度、布局帧、折叠状态与持久化回调注入进来。

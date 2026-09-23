@@ -850,6 +850,32 @@ TEST(UiV2Anim, TweenInterruptTakeoverInheritsVelocity)
 	EXPECT_FALSE(Runtime.HasActiveAnimation(701, EUiAnimProperty::POS_X));
 }
 
+TEST(UiV2Anim, SameValueReplaceStopsRunningTrackImmediately)
+{
+	CUiV2AnimationRuntime Runtime;
+	Runtime.SetValue(703, EUiAnimProperty::POS_X, 0.0f);
+	ASSERT_TRUE(Runtime.RequestAnimation(MakeRequest(703, EUiAnimProperty::POS_X, 10.0f, 1.0f, 1, EUiAnimInterruptPolicy::REPLACE, 173)));
+	AdvanceFor(Runtime, 0.2f);
+	const float Current = Runtime.GetValue(703, EUiAnimProperty::POS_X);
+	ASSERT_GT(Current, 0.0f);
+	ASSERT_LT(Current, 10.0f);
+	ASSERT_TRUE(Runtime.HasActiveAnimation(703, EUiAnimProperty::POS_X));
+
+	EXPECT_FALSE(Runtime.RequestAnimation(MakeRequest(703, EUiAnimProperty::POS_X, Current, 0.4f, 2, EUiAnimInterruptPolicy::REPLACE, 174)));
+	EXPECT_FALSE(Runtime.HasActiveAnimation(703, EUiAnimProperty::POS_X));
+	EXPECT_EQ(Runtime.ActiveTrackCount(), 0);
+	EXPECT_FLOAT_EQ(Runtime.GetValue(703, EUiAnimProperty::POS_X), Current);
+
+	SUiAnimCompleteEvent Event;
+	ASSERT_TRUE(Runtime.PollCompletedEvent(Event));
+	EXPECT_EQ(Event.m_TrackId, 174u);
+	EXPECT_FALSE(Runtime.PollCompletedEvent(Event));
+	AdvanceFor(Runtime, 1.0f);
+	EXPECT_FALSE(Runtime.HasActiveAnimation(703, EUiAnimProperty::POS_X));
+	EXPECT_FLOAT_EQ(Runtime.GetValue(703, EUiAnimProperty::POS_X), Current);
+	EXPECT_FALSE(Runtime.PollCompletedEvent(Event));
+}
+
 TEST(UiV2Anim, MergeTargetInstantRequestStillSnaps)
 {
 	g_Config.m_QmUiMotionLevel = 2;

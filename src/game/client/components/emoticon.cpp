@@ -156,7 +156,7 @@ void CEmoticon::OnConsoleInit()
 	Console()->Register("+emote", "", CFGFLAG_CLIENT, ConKeyEmoticon, this, "Open emote selector");
 	// emote 与 shot_emote 共用同一套参数解析与 Emote 入口（远程 qm_emoticon_commands 的结构）。
 	QmEmoticon::RegisterCommands(Console(), this);
-	Console()->Register("super_emote", "i[emote-id]", CFGFLAG_CLIENT, ConSuperEmote, this, "Launch a large emote");
+	Console()->Register("super_emote", "i[emote-id]", CFGFLAG_CLIENT, ConSuperEmote, this, "Use large emote");
 	Console()->Register("qm_blink", "", CFGFLAG_CLIENT, ConLocalBlink, this, "Blink the active local tee");
 	Console()->Register("toggle_emote_launcher", "", CFGFLAG_CLIENT, ConToggleLaunchMode, this, "Toggle emote launcher");
 }
@@ -677,7 +677,7 @@ void CEmoticon::Emote(int Emoticon, bool ForceLaunch)
 void CEmoticon::SuperEmote(int Emoticon)
 {
 	m_SuperLaunchPending = true;
-	Emote(Emoticon, true);
+	Emote(Emoticon);
 }
 
 bool CEmoticon::IsLocalSuperHeadEmoticon(int ClientId, int Emoticon) const

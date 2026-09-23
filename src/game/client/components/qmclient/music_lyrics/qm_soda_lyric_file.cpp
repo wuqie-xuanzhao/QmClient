@@ -110,15 +110,14 @@ namespace QmSodaLyricFile
 			Parsed = QmMusicLyrics::ParseKrcText(LyricContent, &pOut->m_Timeline, &Error);
 		else if(LyricType == "qrc")
 		{
-			// QRC 可能是完整 QrcInfos XML，也可能已是抽出后的 rlrc 文本。
-			std::string Content = LyricContent;
-			if(Content.find("LyricContent=") != std::string::npos || Content.find("<QrcInfos") != std::string::npos)
+			std::string Content;
+			if(LyricContent.find("LyricContent=") != std::string::npos || LyricContent.find("<QrcInfos") != std::string::npos)
 			{
-				std::string Extracted;
-				if(QmMusicLyrics::ExtractQrcLyricContent(Content, &Extracted, &Error))
-					Content = std::move(Extracted);
+				if(QmMusicLyrics::ExtractQrcLyricContent(LyricContent, &Content, &Error))
+					Parsed = QmMusicLyrics::ParseQrcRlrc(Content, &pOut->m_Timeline, &Error);
 			}
-			Parsed = QmMusicLyrics::ParseQrcRlrc(Content, &pOut->m_Timeline, &Error);
+			else
+				Parsed = QmMusicLyrics::ParseQrcRlrc(LyricContent, &pOut->m_Timeline, &Error);
 		}
 		else
 			Parsed = NeteaseLyrics::ParseLrc(LyricContent, &pOut->m_Timeline, &Error);

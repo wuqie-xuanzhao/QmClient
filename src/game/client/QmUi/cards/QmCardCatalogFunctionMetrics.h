@@ -13,13 +13,10 @@
 #include <array>
 #include <cstddef>
 
-// 函数分类卡片的行数/高度口径：定义在卡片目录下，菜单渲染层（menus_qmclient.cpp）
-// 与卡片模块（QmCardCatalogFunction.cpp）共用同一份计算，避免两处行数漂移。
+// 函数分类卡片的文本高度及旧版特性行定义。
 namespace qm_card_catalog
 {
-	// 「梦境特性」卡片的普通开关行：普通行来自这张表，另加「新版 IME」与「赞助提醒」两个特殊行。
-	// 渲染（menus_qmclient.cpp）与卡片高度测量都取自同一张表，
-	// 避免增删开关后高度测量与实际行数再次错位而留下空白。
+	// 保留旧版特性文案的翻译提取标注；本地渲染逐项绘制，行数以其实际控件为准。
 	struct SQmMiniFeatureRow
 	{
 		const void *m_pId;
@@ -53,17 +50,17 @@ namespace qm_card_catalog
 		return s_aRows;
 	}
 
-	// 「新版 IME」需要独立文案、「赞助提醒」需要关闭时的灵动岛提示，两者单独渲染，
-	// 因而卡片总行数为普通行加这两行。
+	// 旧版特性行定义的附加行数。
 	inline constexpr size_t QmMiniFeatureSpecialRowCount = 2;
 
 	// 多行输入框（词条过滤 / 关键词回复）按文本换行数估算高度。
 	inline float CalcQiaFenInputHeight(ITextRender *pTextRender, const char *pText, const float Width, const float TextFontSize, const float LineSpacing, const float MinHeight)
 	{
-		if(pText == nullptr || pText[0] == '\0')
-			return MinHeight;
-		const float Height = pTextRender->TextBoundingBox(TextFontSize, pText, -1, std::max(1.0f, Width)).m_H;
-		return std::max(MinHeight, Height + LineSpacing);
+		const float VPadding = 2.0f;
+		const float LineWidth = std::max(1.0f, Width - VPadding * 2.0f);
+		const char *pMeasureText = pText != nullptr && pText[0] != '\0' ? pText : " ";
+		const float Height = pTextRender->TextBoundingBox(TextFontSize, pMeasureText, -1, LineWidth, LineSpacing).m_H;
+		return std::max(MinHeight, Height + VPadding * 2.0f);
 	}
 
 	// 地图上传卡片的三行说明文案与其换行高度。

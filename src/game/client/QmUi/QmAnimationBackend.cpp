@@ -258,6 +258,21 @@ bool CQmAnimationBackend::StartTrackInterrupt(const STrackKey &Key, const SUiAni
 	const float StartVelocity = Active.m_Velocity;
 	const uint32_t ActiveTrackId = Active.m_TrackId;
 
+	// 同值替换应结束旧轨道；继承旧速度会让已经到位的目标再次偏移。
+	if(Request.m_Transition.m_Interrupt == EUiAnimInterruptPolicy::REPLACE &&
+		Request.m_Transition.m_DelaySec <= 0.0f && std::abs(StartValue - Request.m_Target) <= 0.0001f)
+	{
+		const uint32_t TrackId = Request.m_TrackId != 0 ? Request.m_TrackId : ActiveTrackId;
+		m_Values[Key] = Request.m_Target;
+		m_CompletedEvents.push_back({Key.m_NodeKey, Key.m_Property, TrackId});
+		CompleteAwaitedTrack(TrackId);
+		if(TrackId != ActiveTrackId)
+			CancelAwaitedTrack(ActiveTrackId);
+		m_ActiveTracks.erase(Key);
+		StartQueuedTracks(Key, Request.m_Target);
+		return false;
+	}
+
 	// 0 时长 tween = 显式瞬移（如 motion level 0 下 ApplyMotionLevel 产生的请求）：
 	// 所有中断策略都直接到位，不转弹簧接管。
 	const bool RequestIsTween = Request.m_Transition.m_Driver == EUiAnimDriver::TWEEN;

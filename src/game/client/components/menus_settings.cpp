@@ -39,6 +39,7 @@
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/qm_bind_status_hud.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/tee_skin_apply.h>
 #include <game/client/components/qmclient/tee_color_code.h>
 #include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/sounds.h>
@@ -2059,6 +2060,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		// Skin selector
 		static CListBox s_ListBox;
 		static std::vector<char> s_vQueueButtonIds;
+		static std::vector<char> s_vRightDoubleClickIds;
 		static CLineInput s_SkinFilterInput(g_Config.m_ClSkinFilterString, sizeof(g_Config.m_ClSkinFilterString));
 		bool &s_SkinListScrollActiveLastFrame = gs_TeeSettingsPageState.m_SkinListScrollActiveLastFrame;
 		int &s_SkinListScrollCooldownFrames = gs_TeeSettingsPageState.m_SkinListScrollCooldownFrames;
@@ -2156,6 +2158,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			}
 		}
 		s_vQueueButtonIds.resize(vSkinList.size());
+		s_vRightDoubleClickIds.resize(vSkinList.size());
 		const auto ListFrameStartTime = time_get_nanoseconds();
 		constexpr float TeeSkinListRowHeight = 50.0f;
 		constexpr int TeeSkinListItemsPerRow = 4;
@@ -2176,6 +2179,8 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			1);
 		int RowsIterated = 0;
 		int RowsRendered = 0;
+		int DoubleClickIndex = -1;
+		ETeeSkinApplyTarget DoubleClickTarget = ETeeSkinApplyTarget::MAIN;
 		const bool ShowSkinMetadata = g_Config.m_QmSkinShowMetadata != 0;
 		auto DoButtonSkinQueue = [&](const void *pButtonId, const void *pParentId, bool InQueue, bool Disabled, const CUIRect *pRect) {
 			if(InQueue || (pParentId != nullptr && Ui()->HotItem() == pParentId) || Ui()->HotItem() == pButtonId)
@@ -2232,10 +2237,24 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 			TeeResourcePreviewState.m_Failed = TerminalFailure;
 			const ESettingsResourcePreviewDrawResult TeePreviewDrawResult = SettingsResourcePreviewDrawResult(TeeResourcePreviewState);
 
+			const bool ItemActivatedBefore = s_ListBox.WasItemActivated();
 			const CListboxItem Item = s_ListBox.DoNextItem(SkinListEntry.ListItemId(), OldSelected >= 0 && (size_t)OldSelected == i);
 			if(!Item.m_Visible)
 			{
 				continue;
+			}
+			if(!ItemActivatedBefore && s_ListBox.WasItemActivated() && Ui()->LastMouseButton(0) && !Ui()->MouseButton(0))
+			{
+				DoubleClickIndex = (int)i;
+				DoubleClickTarget = ETeeSkinApplyTarget::MAIN;
+			}
+			// 列表框已处理左键；右键使用独立标识，避免再次消费条目的按钮状态。
+			if(Ui()->MouseButtonClicked(1) && !Ui()->IsPopupOpen() &&
+				Ui()->HotItem() == SkinListEntry.ListItemId() && Ui()->MouseHovered(&Item.m_Rect) &&
+				Ui()->DoDoubleClickLogic(&s_vRightDoubleClickIds[i]))
+			{
+				DoubleClickIndex = (int)i;
+				DoubleClickTarget = ETeeSkinApplyTarget::DUMMY;
 			}
 			if(RowStart)
 				++RowsRendered;
@@ -2814,6 +2833,22 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				}
 				SkinList.ForceRefresh();
 				SetNeedSendInfo();
+			}
+		}
+		if(DoubleClickIndex >= 0 && DoubleClickIndex < (int)vSkinList.size())
+		{
+			const CSkins::CSkinListEntry &Entry = vSkinList[DoubleClickIndex];
+			if(Entry.SkinContainer() != nullptr)
+			{
+				const auto &ColorKey = Entry.ColorKey();
+				const bool TargetDummy = QmTeeSkinApplyTargetDummy(DoubleClickTarget) != 0;
+				QmApplyTeeSkinToTarget(g_Config, DoubleClickTarget, Entry.SkinContainer()->Name(),
+					ColorKey.has_value(),
+					ColorKey.has_value() && ColorKey->m_UseCustomColor,
+					ColorKey.has_value() ? ColorKey->m_ColorBody : 0,
+					ColorKey.has_value() ? ColorKey->m_ColorFeet : 0);
+				SkinList.ForceRefresh();
+				SetNeedSendInfo(TargetDummy);
 			}
 		}
 

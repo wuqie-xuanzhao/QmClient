@@ -14,12 +14,14 @@
 #include <engine/shared/json.h>
 #include <engine/sqlite.h>
 #include <engine/storage.h>
+#include <game/client/components/qmclient/browser_friend_list.h>
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 class CServerBrowserTestAccess
@@ -96,7 +98,136 @@ namespace
 			Info.m_vClients.push_back(Client);
 			CServerBrowserTestAccess::Add(m_Browser, Address, Info);
 		}
+
+		void AddServer(const char *pAddress, const char *pName, int NumPlayers, int NumClients, std::vector<CServerInfo::CClient> vClients)
+		{
+			NETADDR Address;
+			ASSERT_FALSE(net_addr_from_str(&Address, pAddress));
+			CServerInfo Info{};
+			str_copy(Info.m_aName, pName);
+			Info.m_NumPlayers = NumPlayers;
+			Info.m_NumClients = NumClients;
+			Info.m_MaxPlayers = Info.m_MaxClients = 16;
+			Info.m_vClients = std::move(vClients);
+			CServerBrowserTestAccess::Add(m_Browser, Address, Info);
+		}
+
+		static CServerInfo::CClient Client(const char *pName, const char *pClan)
+		{
+			CServerInfo::CClient Client{};
+			str_copy(Client.m_aName, pName);
+			str_copy(Client.m_aClan, pClan);
+			Client.m_Player = true;
+			return Client;
+		}
 	};
+}
+
+TEST_F(CServerBrowserStateTest, PlayerCountSortUsesFilteredPopulationAndReversesOrder)
+{
+	AddServer("127.0.0.1:8303", "Two", 2, 2, {});
+	AddServer("127.0.0.1:8304", "Three clients", 1, 3, {});
+	AddServer("127.0.0.1:8305", "One", 1, 1, {});
+	g_Config.m_BrSort = IServerBrowser::SORT_NUMPLAYERS;
+	g_Config.m_BrFilterSpectators = 1;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Browser.NumSortedServers(), 3);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Two");
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Three clients");
+
+	g_Config.m_BrFilterSpectators = 0;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Three clients");
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Two");
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "One");
+	g_Config.m_BrSortOrder = 1;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "One");
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "Three clients");
+}
+
+TEST_F(CServerBrowserStateTest, FriendCountSortBreaksTiesByPopulationAndRefreshesOnFriendChange)
+{
+	m_Friends.AddFriend("Alice", "Clan");
+	m_Friends.AddFriend("Bob", "Clan");
+	AddServer("127.0.0.1:8303", "Few friends", 2, 2, {Client("Alice", "Clan"), Client("Other", "")});
+	AddServer("127.0.0.1:8304", "More friends", 2, 2, {Client("Alice", "Clan"), Client("Bob", "Clan")});
+	AddServer("127.0.0.1:8305", "Tie with more players", 3, 3, {Client("Alice", "Clan"), Client("Other", ""), Client("Third", "")});
+	g_Config.m_BrSort = IServerBrowser::SORT_NUMFRIENDS;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Browser.NumSortedServers(), 3);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "More friends");
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Tie with more players");
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "Few friends");
+
+	m_Friends.RemoveFriend("Bob", "Clan");
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Tie with more players");
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "More friends");
+}
+
+TEST_F(CServerBrowserStateTest, FriendListMovesOnlineEntriesAndKeepsServerSnapshots)
+{
+	ASSERT_TRUE(m_Friends.AddCategory("Team"));
+	m_Friends.AddFriend("Alice", "Clan", "Team");
+	m_Friends.AddFriend("Bob", "Clan");
+	m_Friends.AddFriend("", "Guild");
+	CQmBrowserFriendList List;
+	List.Update(m_Friends, m_Browser, false);
+	const int Offline = m_Friends.FindCategory(IFriends::OFFLINE_CATEGORY);
+	ASSERT_EQ(List.Groups()[Offline].size(), 2u);
+	EXPECT_EQ(List.Groups()[Offline][0].ServerInfo(), nullptr);
+
+	AddServer("127.0.0.1:8303", "Old server", 2, 2, {Client("Alice", "Clan"), Client("Member", "Guild")});
+	CServerBrowserTestAccess::Sort(m_Browser);
+	List.Update(m_Friends, m_Browser, false);
+	const int Team = m_Friends.FindCategory("Team");
+	const int Clan = m_Friends.FindCategory(IFriends::CLAN_MEMBERS_CATEGORY);
+	ASSERT_EQ(List.Groups()[Team].size(), 1u);
+	EXPECT_STREQ(List.Groups()[Team][0].Name(), "Alice");
+	ASSERT_NE(List.Groups()[Team][0].ServerInfo(), nullptr);
+	EXPECT_STREQ(List.Groups()[Team][0].ServerInfo()->m_aName, "Old server");
+	ASSERT_EQ(List.Groups()[Clan].size(), 1u);
+	EXPECT_EQ(List.Groups()[Clan][0].FriendState(), IFriends::FRIEND_CLAN);
+	ASSERT_EQ(List.Groups()[Offline].size(), 1u);
+	EXPECT_STREQ(List.Groups()[Offline][0].Name(), "Bob");
+
+	const CServerInfo *pPreviousSnapshot = List.Groups()[Team][0].ServerInfo();
+	CServerInfo Updated = *m_Browser.Get(0);
+	str_copy(Updated.m_aName, "New server");
+	CServerBrowserTestAccess::SetFirstInfo(m_Browser, Updated);
+	EXPECT_STREQ(pPreviousSnapshot->m_aName, "Old server");
+	CServerBrowserTestAccess::Sort(m_Browser);
+	List.Update(m_Friends, m_Browser, false);
+	EXPECT_STREQ(List.Groups()[Team][0].ServerInfo()->m_aName, "New server");
+
+	ASSERT_TRUE(m_Friends.SetFriendCategory("Alice", "Clan", IFriends::DEFAULT_CATEGORY));
+	List.Update(m_Friends, m_Browser, false);
+	EXPECT_TRUE(List.Groups()[Team].empty());
+	const int Default = m_Friends.FindCategory(IFriends::DEFAULT_CATEGORY);
+	ASSERT_EQ(List.Groups()[Default].size(), 1u);
+	EXPECT_STREQ(List.Groups()[Default][0].Name(), "Alice");
+}
+
+TEST_F(CServerBrowserStateTest, FriendListIgnoreClanMovesMatchedNameOutOfOffline)
+{
+	m_Friends.AddFriend("Alice", "OldClan");
+	AddServer("127.0.0.1:8303", "Server", 1, 1, {Client("Alice", "NewClan")});
+	CQmBrowserFriendList List;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	List.Update(m_Friends, m_Browser, false);
+	const int Offline = m_Friends.FindCategory(IFriends::OFFLINE_CATEGORY);
+	ASSERT_EQ(List.Groups()[Offline].size(), 1u);
+	EXPECT_EQ(List.Groups()[Offline][0].ServerInfo(), nullptr);
+
+	g_Config.m_ClFriendsIgnoreClan = 1;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	List.Update(m_Friends, m_Browser, true);
+	EXPECT_TRUE(List.Groups()[Offline].empty());
+	const int Default = m_Friends.FindCategory(IFriends::DEFAULT_CATEGORY);
+	ASSERT_EQ(List.Groups()[Default].size(), 1u);
+	EXPECT_STREQ(List.Groups()[Default][0].Clan(), "NewClan");
+	EXPECT_NE(List.Groups()[Default][0].ServerInfo(), nullptr);
 }
 
 TEST_F(CServerBrowserStateTest, FriendStateIsReusedUntilFriendRevisionOrClanModeChanges)

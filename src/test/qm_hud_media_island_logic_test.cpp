@@ -1041,6 +1041,14 @@ TEST(QmHudMediaIslandRecording, AlphaBreathRepeatsEveryTwoPointFourSeconds)
 	EXPECT_NEAR(QmHudRecordingDotAlpha(2.4), 0.95f, 0.00001f);
 }
 
+TEST(QmHudMediaIslandLyrics, EachSupportedHookEnablesUnifiedLyrics)
+{
+	EXPECT_FALSE(QmHudMusicLyricsSourceEnabled(false, false, false));
+	EXPECT_TRUE(QmHudMusicLyricsSourceEnabled(true, false, false));
+	EXPECT_TRUE(QmHudMusicLyricsSourceEnabled(false, true, false));
+	EXPECT_TRUE(QmHudMusicLyricsSourceEnabled(false, false, true));
+}
+
 TEST(QmHudMediaIslandRecording, SdfDotIsAPlainCircleWithPixelFeather)
 {
 	const SHudMediaIslandSdfRenderState State = QmHudRecordingDotSdfState(vec2(20.0f, 30.0f), 6.0f, 0.7f, 0.5f);

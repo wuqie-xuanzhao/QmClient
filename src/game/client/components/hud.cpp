@@ -3959,21 +3959,22 @@ void CHud::EnsureMediaIslandFrameCache() const
 	Cache.Reset();
 	Cache.m_Frame = CurrentFrame;
 	Cache.m_Valid = true;
-	const bool MediaHudEnabled = g_Config.m_QmSmtcShowHud && SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0 || g_Config.m_QmSodaHookEnable != 0 || g_Config.m_QmSpotifyEnable != 0);
+	const bool MusicLyricsEnabled = QmHudMusicLyricsSourceEnabled(g_Config.m_QmSodaHookEnable != 0, g_Config.m_QmKugouHookEnable != 0, g_Config.m_QmQQMusicHookEnable != 0);
+	const bool MediaHudEnabled = g_Config.m_QmSmtcShowHud && SystemMediaControls::AnyMediaSourceEnabled(g_Config.m_QmSmtcEnable != 0, g_Config.m_QmNeteaseHookEnable != 0 || MusicLyricsEnabled || g_Config.m_QmSpotifyEnable != 0);
 	Cache.m_HasMediaState = MediaHudEnabled && GameClient()->m_SystemMediaControls.GetStateSnapshot(Cache.m_MediaState);
 	if(g_Config.m_QmHudIslandUseOriginalStyle)
 		return;
 
 	// 歌词来源选择:各来源可同时开启(菜单已保证同一时间只启用一个 Hook)。
-	// 若用户手动同时开启,网易云优先,汽水兜底,Spotify 再后备。
+	// 若用户手动同时开启，网易云优先，统一歌词组件次之，Spotify 再后备。
 	if(g_Config.m_QmNeteaseHookEnable != 0)
 	{
 		Cache.m_LyricsActive = GameClient()->m_NeteaseIntegration.HasActiveLyrics();
 		Cache.m_ShowLyrics = GameClient()->m_NeteaseIntegration.GetCurrentLyric(Cache.m_aLyrics, sizeof(Cache.m_aLyrics), &Cache.m_LyricsColor);
 	}
-	if(!Cache.m_ShowLyrics && g_Config.m_QmSodaHookEnable != 0)
+	if(!Cache.m_ShowLyrics && MusicLyricsEnabled)
 	{
-		// 汽水音乐歌词作为网易云无歌词时的备选来源。
+		// 统一歌词组件按开关选择汽水、酷狗或 QQ 音乐。
 		Cache.m_LyricsActive = GameClient()->m_MusicLyricsIntegration.HasActiveLyrics();
 		Cache.m_ShowLyrics = GameClient()->m_MusicLyricsIntegration.GetCurrentLyric(Cache.m_aLyrics, sizeof(Cache.m_aLyrics));
 	}

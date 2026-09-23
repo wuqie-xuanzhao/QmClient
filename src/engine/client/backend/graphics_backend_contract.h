@@ -5,6 +5,9 @@
 
 #include <engine/graphics.h>
 
+#include <limits>
+#include <string_view>
+
 namespace graphics_backend
 {
 	enum EGraphicsMode
@@ -34,6 +37,51 @@ namespace graphics_backend
 	constexpr int RecoveryFullscreenMode(int CurrentFullscreenMode)
 	{
 		return CurrentFullscreenMode == 0 ? 0 : 2;
+	}
+
+	struct SRecoveryFailures
+	{
+		int m_aCount[BACKEND_TYPE_AUTO] = {};
+
+		void Record(EBackendType Backend)
+		{
+			if(Backend >= BACKEND_TYPE_OPENGL && Backend < BACKEND_TYPE_AUTO && m_aCount[Backend] < std::numeric_limits<int>::max())
+				++m_aCount[Backend];
+		}
+
+		bool IsBlocked(EBackendType Backend) const
+		{
+			return Backend >= BACKEND_TYPE_OPENGL && Backend < BACKEND_TYPE_AUTO && m_aCount[Backend] >= 2;
+		}
+	};
+
+	inline EBackendType BackendFromCrashReport(std::string_view Report)
+	{
+		constexpr std::string_view Prefix = "Graphics backend: ";
+		constexpr std::string_view ConfiguredPrefix = "Configured graphics backend: ";
+		std::size_t Start = 0;
+		while(Start < Report.size())
+		{
+			const std::size_t End = Report.find('\n', Start);
+			const std::string_view Line = Report.substr(Start, End == std::string_view::npos ? End : End - Start);
+			if(Line.substr(0, Prefix.size()) == Prefix || Line.substr(0, ConfiguredPrefix.size()) == ConfiguredPrefix)
+			{
+				const std::string_view Value = Line.substr(Line.substr(0, Prefix.size()) == Prefix ? Prefix.size() : ConfiguredPrefix.size());
+				if(Value == "GLES" || Value == "GLES\r" || Value.substr(0, 5) == "GLES " || Value == "OpenGL ES" || Value == "OpenGL ES\r" || Value.substr(0, 10) == "OpenGL ES ")
+					return BACKEND_TYPE_OPENGL_ES;
+				if(Value == "OpenGL" || Value == "OpenGL\r" || Value.substr(0, 7) == "OpenGL ")
+					return BACKEND_TYPE_OPENGL;
+				if(Value == "Vulkan" || Value == "Vulkan\r" || Value.substr(0, 7) == "Vulkan ")
+					return BACKEND_TYPE_VULKAN;
+				if(Value == "Metal" || Value == "Metal\r" || Value.substr(0, 6) == "Metal ")
+					return BACKEND_TYPE_METAL;
+				return BACKEND_TYPE_AUTO;
+			}
+			if(End == std::string_view::npos)
+				break;
+			Start = End + 1;
+		}
+		return BACKEND_TYPE_AUTO;
 	}
 
 	constexpr bool IsMetalCompiled()
@@ -119,6 +167,25 @@ namespace graphics_backend
 	EBackendType ParseBackendName(const char *pName, EBackendType Fallback);
 	EBackendType ResolveBackend(EBackendType Requested, EBackendType Fallback);
 	bool MatchesConfiguredBackend(EBackendType CandidateBackend, const char *pCandidateName, int CandidateMajor, int CandidateMinor, int CandidatePatch, const char *pConfiguredName, int ConfiguredMajor, int ConfiguredMinor, int ConfiguredPatch);
+
+	inline int ModeForRecoveryBackend(EBackendType Backend)
+	{
+		return Backend == ParseBackendName(BackendNameForGraphicsMode(GRAPHICS_MODE_COMPATIBILITY), BACKEND_TYPE_AUTO) ?
+			       GRAPHICS_MODE_COMPATIBILITY : GRAPHICS_MODE_PERFORMANCE;
+	}
+
+	inline EBackendType RecoveryBackend(const SRecoveryFailures &Failures, EBackendType CrashedBackend)
+	{
+		if(CrashedBackend == BACKEND_TYPE_AUTO)
+			return BACKEND_TYPE_AUTO;
+		for(int Mode = GRAPHICS_MODE_COMPATIBILITY; Mode <= GRAPHICS_MODE_PERFORMANCE; ++Mode)
+		{
+			const EBackendType Candidate = ParseBackendName(BackendNameForGraphicsMode(Mode), BACKEND_TYPE_AUTO);
+			if(Candidate != BACKEND_TYPE_AUTO && Candidate != CrashedBackend && !Failures.IsBlocked(Candidate))
+				return Candidate;
+		}
+		return BACKEND_TYPE_AUTO;
+	}
 } // namespace graphics_backend
 
 #endif

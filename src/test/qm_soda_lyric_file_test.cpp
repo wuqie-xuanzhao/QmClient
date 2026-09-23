@@ -69,6 +69,16 @@ TEST(QmSodaLyricFile, ParsesQrcXmlLyricJson)
 	EXPECT_EQ(Data.m_Timeline.m_vLines[0].m_Text, "天空");
 }
 
+TEST(QmSodaLyricFile, RejectsQrcXmlWithoutLyricContentEvenWithTimedLine)
+{
+	const char *Json = R"({"title":"Q","lyricType":"qrc","lyricContent":"<QrcInfos><LyricInfo/>\n[1000,2000]天空\n</QrcInfos>","translationLrc":""})";
+	QmMusicLyrics::SLyricsData Data;
+	std::string Error;
+	EXPECT_FALSE(ParseLyricFileJson(Json, &Data, &Error));
+	EXPECT_EQ(Error, "LyricContent not found");
+	EXPECT_TRUE(Data.m_Timeline.m_vLines.empty());
+}
+
 TEST(QmSodaLyricFile, RejectsMalformedJson)
 {
 	QmMusicLyrics::SLyricsData Data;

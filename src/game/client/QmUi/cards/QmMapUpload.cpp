@@ -207,7 +207,7 @@ void CMenus::RenderQmFunctionMapUploadContent(CUIRect &Content, float LineHeight
 	SingleLine.m_EnableWidthCheck = false;
 	char aText[IO_MAX_PATH_LENGTH + 128];
 	CUIRect Row = NextRow(LineHeight);
-	str_format(aText, sizeof(aText), Localize("Target server: %s"), "shengyan北京服");
+	str_format(aText, sizeof(aText), Localize("Target server: %s"), g_Config.m_QmMapUploadEndpoint[0] ? g_Config.m_QmMapUploadEndpoint : Localize("None"));
 	DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, "qmclient-map-upload-server", &Row, aText, BodySize, TEXTALIGN_ML, SingleLine);
 	Row = NextRow(LineHeight);
 	str_format(aText, sizeof(aText), Localize("File: %s"), m_aQmMapUploadPath[0] ? m_aQmMapUploadPath : Localize("No map selected"));

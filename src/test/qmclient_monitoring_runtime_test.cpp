@@ -719,6 +719,28 @@ TEST(QmMonitoringPerfContract, PerfPayloadJsonFieldsPreserveSpaceContainingValue
 	EXPECT_NE(str_find(aJson, "\"first_visible_skin\":\"Another Skin\""), nullptr);
 }
 
+TEST(QmMonitoringPerfContract, PerfPayloadJsonFieldsAppendAfterExistingFields)
+{
+	char aJson[256];
+	bool First = true;
+	str_copy(aJson, "{", sizeof(aJson));
+	QmPerfAppendJsonField(aJson, sizeof(aJson), First, "system", "perf/test");
+	QmPerfAppendPayloadJsonFields(aJson, sizeof(aJson), First, "event=source_request count=12 skin=\"My Skin\"");
+	str_append(aJson, "}", sizeof(aJson));
+
+	EXPECT_STREQ(aJson, "{\"system\":\"perf/test\",\"event\":\"source_request\",\"count\":12,\"skin\":\"My Skin\"}");
+}
+
+TEST(QmMonitoringPerfContract, PerfPayloadJsonFieldsDoNotWritePastFullBuffer)
+{
+	char aJson[sizeof("{\"a\":\"123456\"}")];
+	bool First = true;
+	str_copy(aJson, "{\"a\":\"123456\"}", sizeof(aJson));
+	QmPerfAppendPayloadJsonFields(aJson, sizeof(aJson), First, "event=long_value next=1");
+
+	EXPECT_STREQ(aJson, "{\"a\":\"123456\"}");
+}
+
 TEST(QmMonitoringRuntimeContract, SettingsResourcePreviewSchedulerZeroBudgetDoesNotAdmitWork)
 {
 	CSettingsResourcePreviewScheduler Scheduler;

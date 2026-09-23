@@ -158,24 +158,34 @@ inline void QmPerfAppendCommonKeyValue(char *pBuf, int BufSize, const IClient *p
 
 inline void QmPerfAppendJsonField(char *pBuf, int BufSize, bool &First, const char *pKey, const char *pValue)
 {
-	if(pKey == nullptr || pKey[0] == '\0' || pValue == nullptr)
+	if(BufSize <= 0 || pKey == nullptr || pKey[0] == '\0' || pValue == nullptr)
 		return;
+	// 从尾部追加，避免每段文本重复扫描已有 JSON 前缀。
+	const int PrefixLength = str_length(pBuf);
+	char *pTail = pBuf + PrefixLength;
+	int Remaining = BufSize - PrefixLength;
+	const auto Append = [&](const char *pText) {
+		str_append(pTail, pText, Remaining);
+		const int Added = str_length(pTail);
+		pTail += Added;
+		Remaining -= Added;
+	};
 	if(!First)
-		str_append(pBuf, ",", BufSize);
+		Append(",");
 	First = false;
 
-	char aEscaped[512];
-	EscapeJson(aEscaped, sizeof(aEscaped), pValue);
-	str_append(pBuf, "\"", BufSize);
-	str_append(pBuf, pKey, BufSize);
-	str_append(pBuf, "\":", BufSize);
+	Append("\"");
+	Append(pKey);
+	Append("\":");
 	if(QmPerfTokenLooksNumeric(pValue))
-		str_append(pBuf, pValue, BufSize);
+		Append(pValue);
 	else
 	{
-		str_append(pBuf, "\"", BufSize);
-		str_append(pBuf, aEscaped, BufSize);
-		str_append(pBuf, "\"", BufSize);
+		char aEscaped[512];
+		EscapeJson(aEscaped, sizeof(aEscaped), pValue);
+		Append("\"");
+		Append(aEscaped);
+		Append("\"");
 	}
 }
 
@@ -204,9 +214,12 @@ inline bool QmPerfPayloadLooksLikeKeyValueStart(const char *pTokenStart)
 
 inline void QmPerfAppendPayloadJsonFields(char *pBuf, int BufSize, bool &First, const char *pPayload)
 {
-	if(pPayload == nullptr || pPayload[0] == '\0')
+	if(BufSize <= 0 || pPayload == nullptr || pPayload[0] == '\0')
 		return;
 
+	const int PrefixLength = str_length(pBuf);
+	char *pTail = pBuf + PrefixLength;
+	int Remaining = BufSize - PrefixLength;
 	for(const char *pCursor = pPayload; pCursor != nullptr && pCursor[0] != '\0';)
 	{
 		while(*pCursor == ' ')
@@ -260,7 +273,10 @@ inline void QmPerfAppendPayloadJsonFields(char *pBuf, int BufSize, bool &First, 
 		const int ValueCopyLength = maximum(0, minimum((int)ValueLength, (int)sizeof(aValue) - 1));
 		mem_copy(aValue, pValueStart, ValueCopyLength);
 		aValue[ValueCopyLength] = '\0';
-		QmPerfAppendJsonField(pBuf, BufSize, First, aKey, aValue);
+		QmPerfAppendJsonField(pTail, Remaining, First, aKey, aValue);
+		const int Added = str_length(pTail);
+		pTail += Added;
+		Remaining -= Added;
 
 		pCursor = pValueEnd;
 		if(*pCursor == '"')

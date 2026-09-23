@@ -34,10 +34,11 @@ namespace qm_card_catalog
 			case EQmModuleId::GoresActor:
 				return !g_Config.m_TcFreezeChatEnabled ? Row() : Row() * (g_Config.m_TcFreezeChatEmoticon ? 5.0f : 4.0f);
 			case EQmModuleId::Gores:
-				return Row() * (3.0f + (g_Config.m_QmAxiomAutoLogin ? 2.0f : 0.0f) + ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? 6.0f : 0.0f)) + LineHeight;
-			case EQmModuleId::KeyBinds: return Rows(6.0f);
+				return Row() * (3.0f + (g_Config.m_QmAxiomAutoLogin ? 2.0f : 0.0f) + ((g_Config.m_QmGores || g_Config.m_QmGoresAutoEnable) ? 7.0f : 0.0f)) + LineHeight;
+			case EQmModuleId::KeyBinds: return Rows(8.0f);
 			case EQmModuleId::Emoticons: return Rows(3.0f);
-			case EQmModuleId::MiniFeatures: return Rows(static_cast<float>(QmMiniFeatureRows().size() + QmMiniFeatureSpecialRowCount));
+			// 本地渲染有 21 个常规开关及滑条、过滤输入、新版 IME、赞助提醒各一行。
+			case EQmModuleId::MiniFeatures: return Rows(25.0f);
 			case EQmModuleId::JumpHint: return Row() * 5.0f;
 			case EQmModuleId::WeaponTrajectory: return g_Config.m_QmWeaponTrajectory == 0 ? Row() : Row() * 6.0f;
 			case EQmModuleId::FriendNotify:
@@ -74,7 +75,7 @@ namespace qm_card_catalog
 			case EQmModuleId::FavoriteMaps:
 			{
 				const size_t FavoriteCount = QmCardRenderHook::FavoriteMapCount(Ctx.m_pMenus);
-				return Rows((float)std::max<size_t>(1, std::min<size_t>(FavoriteCount, 64)));
+				return Rows(5.0f + (float)Layout.m_FavoriteMapSearchRows + (float)std::max<size_t>(1, std::min<size_t>(FavoriteCount, 64)));
 			}
 			case EQmModuleId::MapUpload:
 			{
