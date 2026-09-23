@@ -552,6 +552,20 @@ TEST(QmMonitoringPerfContract, SettingsPerfWindowEnsureDoesNotRestartMatchingScr
 	EXPECT_EQ(Summary.m_WindowEndFrame, 100u);
 }
 
+TEST(QmMonitoringPerfContract, ReenabledDeviceSamplerReportsFirstVersionAgain)
+{
+	CQmDevicePerfVersionTracker Tracker;
+	EXPECT_FALSE(Tracker.Observe(0));
+	EXPECT_TRUE(Tracker.Observe(1));
+	EXPECT_FALSE(Tracker.Observe(1));
+	EXPECT_TRUE(Tracker.Observe(2));
+
+	Tracker.Reset();
+	EXPECT_FALSE(Tracker.Observe(0));
+	EXPECT_TRUE(Tracker.Observe(1));
+	EXPECT_FALSE(Tracker.Observe(1));
+}
+
 TEST(QmMonitoringPerfContract, DevicePerfSnapshotCacheReturnsConsistentVersionedSnapshot)
 {
 	CQmDevicePerfSnapshotCache Cache;

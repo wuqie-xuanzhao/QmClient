@@ -227,7 +227,12 @@ public:
 		// Find small section more efficiently by using maps
 		if(Width <= MAX_SECTION_DIMENSION_MAPPED && Height <= MAX_SECTION_DIMENSION_MAPPED)
 		{
-			const auto UseSectionFromVector = [&](std::vector<SSection> &vSections) {
+			const auto UseSectionFromMap = [&](size_t CheckWidth, size_t CheckHeight) {
+				// 查询不存在的尺寸不应创建空桶，只有实际切出空区时才插入。
+				const auto It = m_SectionsMap.find(std::make_tuple(CheckWidth, CheckHeight));
+				if(It == m_SectionsMap.end())
+					return false;
+				std::vector<SSection> &vSections = It->second;
 				if(!vSections.empty())
 				{
 					const SSection Section = vSections.back();
@@ -238,18 +243,18 @@ public:
 				return false;
 			};
 
-			if(UseSectionFromVector(m_SectionsMap[std::make_tuple(Width, Height)]))
+			if(UseSectionFromMap(Width, Height))
 				return true;
 
 			for(size_t CheckWidth = Width + 1; CheckWidth <= MAX_SECTION_DIMENSION_MAPPED; ++CheckWidth)
 			{
-				if(UseSectionFromVector(m_SectionsMap[std::make_tuple(CheckWidth, Height)]))
+				if(UseSectionFromMap(CheckWidth, Height))
 					return true;
 			}
 
 			for(size_t CheckHeight = Height + 1; CheckHeight <= MAX_SECTION_DIMENSION_MAPPED; ++CheckHeight)
 			{
-				if(UseSectionFromVector(m_SectionsMap[std::make_tuple(Width, CheckHeight)]))
+				if(UseSectionFromMap(Width, CheckHeight))
 					return true;
 			}
 
@@ -453,11 +458,12 @@ private:
 		for(auto &pTextureData : m_apTextureData)
 		{
 			uint8_t *pTmpTexBuffer = new uint8_t[NewTextureDimension * NewTextureDimension];
-			mem_zero(pTmpTexBuffer, NewTextureDimension * NewTextureDimension * sizeof(uint8_t));
 			for(size_t y = 0; y < m_TextureDimension; ++y)
 			{
 				mem_copy(&pTmpTexBuffer[y * NewTextureDimension], &pTextureData[y * m_TextureDimension], m_TextureDimension);
+				mem_zero(&pTmpTexBuffer[y * NewTextureDimension + m_TextureDimension], NewTextureDimension - m_TextureDimension);
 			}
+			mem_zero(&pTmpTexBuffer[m_TextureDimension * NewTextureDimension], (NewTextureDimension - m_TextureDimension) * NewTextureDimension);
 			delete[] pTextureData;
 			pTextureData = pTmpTexBuffer;
 		}
@@ -557,9 +563,9 @@ private:
 			{
 				int c = 0;
 
-				for(int sy = -OutlineCount; sy <= OutlineCount; sy++)
+				for(int sy = -OutlineCount; sy <= OutlineCount && c < 255; sy++)
 				{
-					for(int sx = -OutlineCount; sx <= OutlineCount; sx++)
+					for(int sx = -OutlineCount; sx <= OutlineCount && c < 255; sx++)
 					{
 						int GetX = x + sx;
 						int GetY = y + sy;

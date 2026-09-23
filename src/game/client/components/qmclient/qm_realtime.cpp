@@ -20,7 +20,7 @@ namespace
 		const json_value *pValue = ObjectField(pObject, pName);
 		if(!pValue || pValue->type != json_integer)
 			return false;
-		Out = std::clamp((int)pValue->u.integer, 0, 1000000);
+		Out = static_cast<int>(std::clamp<int64_t>(pValue->u.integer, 0, 1000000));
 		return true;
 	}
 	bool Int64Field(const json_value *pObject, const char *pName, int64_t &Out)
@@ -85,6 +85,20 @@ bool ParseQmRealtimeMessage(const char *pData, size_t Size, SQmRealtimeMessage &
 			IntegerField(pDataObject, "version", OutMessage.m_BroadcastVersion);
 		}
 	}
+	else if(str_comp(pType->u.string.ptr, "titles") == 0)
+	{
+		OutMessage.m_Event = EQmRealtimeEvent::TITLES;
+		const json_value *pDataObject = ObjectField(pRoot, "data");
+		const json_value *pPayload = pDataObject && pDataObject->type == json_object ? pDataObject : pRoot;
+		const json_value *pPresences = ObjectField(pPayload, "presences");
+		int64_t ServerTime = 0;
+		OutMessage.m_HasTitles = pPresences && pPresences->type == json_array &&
+			Int64Field(pPayload, "server_time", ServerTime) && ServerTime > 0;
+		OutMessage.m_HasRealtimeData = pPayload != pRoot;
+		OutMessage.m_pTitlePayload = std::shared_ptr<const json_value>(pPayload, [pRoot](const json_value *) { json_value_free(pRoot); });
+		OutMessage.m_pPayload = OutMessage.m_pTitlePayload;
+		return true;
+	}
 	else if(str_comp(pType->u.string.ptr, "emoticon") != 0)
 	{
 		static const struct
@@ -120,21 +134,46 @@ bool ParseQmRealtimeMessage(const char *pData, size_t Size, SQmRealtimeMessage &
 						const char *pStyle = StringField(pDataObject, "style");
 						OutMessage.m_HasTitleProfile = pTitle || pBoundName || pStyle;
 						if(pTitle)
+						{
+							OutMessage.m_HasTitleText = true;
 							OutMessage.m_TitleText = pTitle;
+						}
 						if(pBoundName)
+						{
+							OutMessage.m_HasTitleBoundName = true;
 							OutMessage.m_TitleBoundName = pBoundName;
+						}
 						if(pStyle)
+						{
+							OutMessage.m_HasTitleStyle = true;
 							OutMessage.m_TitleStyle = pStyle;
+						}
 					}
-					if(Event.m_Event == EQmRealtimeEvent::TITLE_STATUS)
+					if(Event.m_Event == EQmRealtimeEvent::TITLE_PROFILE || Event.m_Event == EQmRealtimeEvent::TITLE_STATUS)
 					{
+						const json_value *pStatus = ObjectField(pDataObject, "status");
+						if(pStatus && pStatus->type == json_integer && pStatus->u.integer >= 0 && pStatus->u.integer <= 999)
+						{
+							OutMessage.m_HasTitleStatusCode = true;
+							OutMessage.m_TitleStatusCode = (int)pStatus->u.integer;
+							if(Event.m_Event == EQmRealtimeEvent::TITLE_PROFILE)
+							{
+								OutMessage.m_HasTitleAuthenticated = true;
+								OutMessage.m_TitleAuthenticated = OutMessage.m_TitleStatusCode == 200;
+							}
+						}
 						const json_value *pAuthenticated = ObjectField(pDataObject, "authenticated");
-						if(pAuthenticated && pAuthenticated->type == json_boolean)
+						if(!OutMessage.m_HasTitleStatusCode && pAuthenticated && pAuthenticated->type == json_boolean)
 						{
 							OutMessage.m_HasTitleAuthenticated = true;
 							OutMessage.m_TitleAuthenticated = pAuthenticated->u.boolean;
 						}
 					}
+				}
+				if(OutMessage.m_HasRealtimeData)
+				{
+					OutMessage.m_pPayload = std::shared_ptr<const json_value>(pDataObject, [pRoot](const json_value *) { json_value_free(pRoot); });
+					return true;
 				}
 				break;
 			}
@@ -144,34 +183,53 @@ bool ParseQmRealtimeMessage(const char *pData, size_t Size, SQmRealtimeMessage &
 	{
 		OutMessage.m_Event = EQmRealtimeEvent::EMOTICON;
 		const json_value *pDataObject = ObjectField(pRoot, "data");
-		int PlayerId = -1;
-		int EmoticonId = -1;
-		const json_value *pPlayerName = ObjectField(pDataObject, "player_name");
-		const json_value *pServerAddress = ObjectField(pDataObject, "server_address");
-		const json_value *pLaunch = ObjectField(pDataObject, "launch");
-		const json_value *pSuperLaunch = ObjectField(pDataObject, "super_launch");
+		const char *pClientId = StringField(pDataObject, "client_id");
+		const char *pPlayerName = StringField(pDataObject, "player_name");
+		const char *pServerAddress = StringField(pDataObject, "server_address");
 		const json_value *pLaunchMode = ObjectField(pDataObject, "launch_mode");
-		const bool HasPlayerId = IntegerField(pDataObject, "player_id", PlayerId);
-		const bool HasEmoticonId = IntegerField(pDataObject, "emoticon", EmoticonId);
-		OutMessage.m_EmoticonPayloadValid = HasPlayerId && HasEmoticonId && PlayerId >= 0 && PlayerId < MAX_CLIENTS && EmoticonId >= 0 && EmoticonId < NUM_EMOTICONS;
-		OutMessage.m_EmoticonPlayerId = PlayerId;
-		OutMessage.m_EmoticonId = EmoticonId;
-		OutMessage.m_EmoticonLaunch = (pLaunch && pLaunch->type == json_boolean && pLaunch->u.boolean) || (pLaunchMode && pLaunchMode->type == json_boolean && pLaunchMode->u.boolean);
-		OutMessage.m_EmoticonSuperLaunch = pSuperLaunch && pSuperLaunch->type == json_boolean && pSuperLaunch->u.boolean;
-		if(pPlayerName && pPlayerName->type == json_string)
-			OutMessage.m_EmoticonPlayerName = pPlayerName->u.string.ptr;
-		if(pServerAddress && pServerAddress->type == json_string)
-			OutMessage.m_EmoticonServerAddress = pServerAddress->u.string.ptr;
-		const json_value *pClientId = ObjectField(pDataObject, "client_id");
-		if(pClientId && pClientId->type == json_string)
-			OutMessage.m_EmoticonClientId = pClientId->u.string.ptr;
-		int Sequence = 0;
-		if(IntegerField(pDataObject, "sequence", Sequence) && Sequence >= 0)
-			OutMessage.m_EmoticonSequence = static_cast<uint64_t>(Sequence);
-		OutMessage.m_HasRealtimeData = pDataObject && pDataObject->type == json_object;
+		const json_value *pSuperLaunch = ObjectField(pDataObject, "super_launch");
+		const json_value *pEmoticon = ObjectField(pDataObject, "emoticon");
+		const json_value *pPlayerId = ObjectField(pDataObject, "player_id");
+		if(pClientId && pPlayerName && pServerAddress &&
+			pEmoticon && pEmoticon->type == json_integer && pEmoticon->u.integer >= 0 && pEmoticon->u.integer < NUM_EMOTICONS &&
+			pPlayerId && pPlayerId->type == json_integer && pPlayerId->u.integer >= 0 && pPlayerId->u.integer < MAX_CLIENTS)
+		{
+			OutMessage.m_LaunchMode = pLaunchMode && pLaunchMode->type == json_boolean && pLaunchMode->u.boolean;
+			OutMessage.m_SuperLaunch = pSuperLaunch && pSuperLaunch->type == json_boolean && pSuperLaunch->u.boolean;
+			if(OutMessage.m_LaunchMode || OutMessage.m_SuperLaunch)
+			{
+				OutMessage.m_Emoticon = static_cast<int>(pEmoticon->u.integer);
+				OutMessage.m_PlayerId = static_cast<int>(pPlayerId->u.integer);
+				OutMessage.m_EmoticonId = OutMessage.m_Emoticon;
+				OutMessage.m_EmoticonPlayerId = OutMessage.m_PlayerId;
+				OutMessage.m_EmoticonLaunch = OutMessage.m_LaunchMode;
+				OutMessage.m_EmoticonSuperLaunch = OutMessage.m_SuperLaunch;
+				OutMessage.m_EmoticonClientId = pClientId;
+				OutMessage.m_EmoticonPlayerName = pPlayerName;
+				OutMessage.m_EmoticonServerAddress = pServerAddress;
+				const json_value *pSequence = ObjectField(pDataObject, "sequence");
+				if(pSequence && pSequence->type == json_integer && pSequence->u.integer >= 0)
+					OutMessage.m_EmoticonSequence = static_cast<uint64_t>(pSequence->u.integer);
+				OutMessage.m_HasEmoticon = true;
+				OutMessage.m_EmoticonPayloadValid = true;
+				OutMessage.m_HasRealtimeData = true;
+				OutMessage.m_pPayload = std::shared_ptr<const json_value>(pDataObject, [pRoot](const json_value *) { json_value_free(pRoot); });
+				return true;
+			}
+		}
 	}
 	if(OutMessage.m_Event == EQmRealtimeEvent::INVALID)
 		OutMessage.m_Event = EQmRealtimeEvent::UNKNOWN;
 	json_value_free(pRoot);
 	return true;
+}
+
+const char *QmRealtimeEffectiveUrl(const char *pConfiguredUrl)
+{
+	return pConfiguredUrl && pConfiguredUrl[0] ? pConfiguredUrl : "wss://qmclient.icu/ws";
+}
+
+bool QmRealtimeAllowsCredentials(const char *pUrl)
+{
+	return pUrl && str_comp(pUrl, "wss://qmclient.icu/ws") == 0;
 }

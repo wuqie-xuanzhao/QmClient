@@ -2378,12 +2378,6 @@ file(GLOB_RECURSE QMCLIENT_BUNDLED_FONT_FILES
   "${PROJECT_SOURCE_DIR}/data/qmclient/fonts/*"
 )
 list(APPEND EXPECTED_DATA ${QMCLIENT_BUNDLED_FONT_FILES})
-file(GLOB_RECURSE QMCLIENT_NAMEPLATE_MSDF_FILES
-  LIST_DIRECTORIES false
-  RELATIVE "${PROJECT_SOURCE_DIR}/data"
-  "${PROJECT_SOURCE_DIR}/data/qmclient/nameplate_msdf/*"
-)
-list(APPEND EXPECTED_DATA ${QMCLIENT_NAMEPLATE_MSDF_FILES})
 set_glob(DATA GLOB_RECURSE "cfg;chai;frag;html;json;map;md;mp3;otf;OTF;png;rules;ttc;TTC;ttf;TTF;txt;vert;wv" data ${EXPECTED_DATA})
 
 ########################################################################
@@ -3242,6 +3236,7 @@ if(CLIENT)
     components/qmclient/collision_hitbox.h
     components/qmclient/colored_parts.h
     components/qmclient/data_version.h
+    components/qmclient/demo_ui.h
     components/qmclient/emoticon_commands.h
     components/qmclient/hammer_hit_detection.cpp
     components/qmclient/hammer_hit_detection.h
@@ -3262,8 +3257,6 @@ if(CLIENT)
     components/qmclient/modes.cpp
     components/qmclient/modes.h
     components/qmclient/nameplate_layout.h
-    components/qmclient/nameplate_msdf/qm_nameplate_msdf_renderer.cpp
-    components/qmclient/nameplate_msdf/qm_nameplate_msdf_renderer.h
     components/qmclient/monitoring/monitoring.cpp
     components/qmclient/monitoring/monitoring_device_perf.cpp
     components/qmclient/monitoring/monitoring.h
@@ -3323,7 +3316,6 @@ if(CLIENT)
     components/qmclient/qm_map_upload.cpp
     components/qmclient/qm_title_style.cpp
     components/qmclient/qm_title_render.cpp
-    components/qmclient/qm_realtime_channel.cpp
     components/qmclient/qmclient_utils.h
     components/qmclient/rank_ghost.cpp
     components/qmclient/rank_ghost.h
@@ -3651,14 +3643,13 @@ if(CLIENT)
 
   add_library(game-client-common INTERFACE)
   target_link_libraries(game-client-common INTERFACE ${LIBS_CLIENT})
-  target_compile_definitions(game-client-common INTERFACE MSDFGEN_USE_CPP11 MSDFGEN_PUBLIC= _USE_MATH_DEFINES)
+  target_compile_definitions(game-client-common INTERFACE _USE_MATH_DEFINES)
 
   # Silence warnings from ChaiScript
   target_include_directories(game-client-common SYSTEM INTERFACE
     ${PROJECT_SOURCE_DIR}/src/engine/external/chaiscript)
 
   target_include_directories(game-client-common SYSTEM INTERFACE
-    ${PROJECT_SOURCE_DIR}/vendor/msdfgen
     ${FREETYPE_INCLUDE_DIRS}
     ${GLEW_INCLUDE_DIRS}
     ${OGG_INCLUDE_DIRS}
@@ -3787,6 +3778,12 @@ add_dependencies(game-client qm-icon-morph)
     add_custom_command(TARGET game-client POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-soda-helper>" "$<TARGET_FILE_DIR:game-client>/qm-soda-helper.exe"
       COMMENT "Copying SodaMusic hook helper")
+  endif()
+  if(TARGET qm-music-helper)
+    add_dependencies(game-client qm-music-helper)
+    add_custom_command(TARGET game-client POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:qm-music-helper>" "$<TARGET_FILE_DIR:game-client>/qm-music-helper.exe"
+      COMMENT "Copying Kugou and QQ Music helper")
   endif()
   if(VULKAN)
     add_dependencies(game-client build_vulkan_shaders)
@@ -4252,6 +4249,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_blank_asset_fallback_test.cpp
     qm_spectator_tele_search_test.cpp
     qm_spectator_friend_priority_test.cpp
+    qm_friend_enter_tracker_test.cpp
+    qm_friends_category_drag_test.cpp
     qm_perf_diagnostics_test.cpp
     qm_music_hook_protocol_test.cpp
     QmUiTokensTest.cpp
@@ -4332,6 +4331,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_gores_mode_test.cpp
     qm_hammer_hit_detection_test.cpp
     qm_demo_display_test.cpp
+    qm_demo_ui_test.cpp
     qm_jump_hint_utils_test.cpp
     qm_hud_hook_countdown_test.cpp
     qm_hud_media_island_logic_test.cpp
@@ -4363,6 +4363,8 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_graphics_recovery_test.cpp
     qm_graphics_opengl_probe_contract_test.cpp
     qm_demo_cut_contract_test.cpp
+    qm_demo_cut_test.cpp
+    qm_local_saves_test.cpp
     qm_ui_scale_popup_contract_test.cpp
     qm_localization_contract_test.cpp
     qm_storage_path_contract_test.cpp
@@ -4410,13 +4412,13 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_spotify_token_test.cpp
     qm_spotify_parser_test.cpp
     qm_modes_test.cpp
+    qm_map_progress_test.cpp
     qm_config_save_value_override_test.cpp
     qm_prediction_contract_test.cpp
-    qm_nameplate_msdf_atlas_test.cpp
-    qm_nameplate_msdf_gate_test.cpp
     qm_tee_hue_cycle_test.cpp
     qm_tee_trail_test.cpp
     qm_sponsor_authors_test.cpp
+    qm_sponsors_test.cpp
     qm_markdown_test.cpp
     qm_markdown_broadcast_test.cpp
     qm_emoticon_projectile_test.cpp
@@ -4425,7 +4427,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_map_upload_test.cpp
     qm_tee_skin_apply_test.cpp
     qm_title_style_test.cpp
-    qm_realtime_channel_test.cpp
     qm_skin_outline_test.cpp
     qm_scoreboard_skin_test.cpp
     qm_weapon_trajectory_test.cpp
@@ -4628,7 +4629,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/qm_map_upload.cpp
     src/game/client/components/qmclient/qm_title_style.cpp
     src/game/client/components/qmclient/qm_title_render.cpp
-    src/game/client/components/qmclient/qm_realtime_channel.cpp
     src/game/client/components/qmclient/translate/translate_parse.cpp
     src/game/client/components/qmclient/voice/voice_capture_pipeline.cpp
     src/game/client/components/qmclient/voice/voice_utils.cpp
@@ -5016,6 +5016,9 @@ if(TARGET game-client)
   # 汽水音乐 Hook Helper 与客户端同级发布。
   if(TARGET qm-soda-helper)
     list(APPEND CPACK_TARGETS qm-soda-helper)
+  endif()
+  if(TARGET qm-music-helper)
+    list(APPEND CPACK_TARGETS qm-music-helper)
   endif()
 endif()
 if(TARGET qm-client-updater)

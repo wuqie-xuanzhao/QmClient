@@ -247,14 +247,14 @@ void CPlayers::RenderHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir,
 {
 	const vec2 HandPos = CalculateHandPosition(CenterPos, Dir, PostRotOffset);
 	const float HandAngle = CalculateHandAngle(Dir, AngleOffset);
-	if(CTeeRenderInfo::IsDrawableTexture(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_HANDS)))
+	if(CTeeRenderInfo::IsLiveDrawableTexture(Graphics(), pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_HANDS)))
 	{
 		RenderHand7(pInfo, HandPos, HandAngle, Alpha);
 	}
 	else
 	{
 		const CSkin::CSkinTextures &SkinTextures = pInfo->m_CustomColoredSkin ? pInfo->m_ColorableRenderSkin : pInfo->m_OriginalRenderSkin;
-		if(CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_HandsOutline) && CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_Hands))
+		if(CTeeRenderInfo::IsLiveDrawableTexture(Graphics(), SkinTextures.m_HandsOutline) && CTeeRenderInfo::IsLiveDrawableTexture(Graphics(), SkinTextures.m_Hands))
 			RenderHand6(pInfo, HandPos, HandAngle, Alpha);
 	}
 }

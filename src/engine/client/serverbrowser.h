@@ -300,6 +300,7 @@ public:
 	int NumSortedServers() const override { return m_vSortedServerlist.size(); }
 	int NumSortedPlayers() const override { return m_NumSortedPlayers; }
 	const CServerInfo *SortedGet(int Index) const override;
+	void SetQmClientServerCounts(const std::unordered_map<std::string, int> &Counts) override;
 
 	const json_value *LoadDDNetInfo();
 	void LoadDDNetInfoJson();
@@ -375,6 +376,14 @@ private:
 	std::vector<CServerEntry *> m_vpServerlist;
 	std::vector<int> m_vSortedServerlist;
 	std::unordered_map<NETADDR, int> m_ByAddr;
+	std::unordered_map<std::string, int> m_QmClientServerCounts;
+	struct SFriendStateCache
+	{
+		uint64_t m_Revision = 0;
+		bool m_IgnoreClan = false;
+		bool m_Valid = false;
+	};
+	std::unordered_map<const CServerEntry *, SFriendStateCache> m_FriendStateCache;
 
 	std::vector<CCommunity> m_vCommunities;
 	std::unordered_map<NETADDR, CCommunityServer> m_CommunityServersByAddr;
@@ -410,6 +419,8 @@ private:
 	int GenerateToken(const NETADDR &Addr) const;
 	static int GetBasicToken(int Token);
 	static int GetExtraToken(int Token);
+	int QmClientCountForServer(const CServerInfo &Info) const;
+	void UpdateQmClientServerCounts();
 
 	// sorting criteria
 	bool SortCompareName(int Index1, int Index2) const;
@@ -421,6 +432,7 @@ private:
 	bool SortCompareNumFriends(int Index1, int Index2) const;
 	bool SortCompareNumPlayersAndPing(int Index1, int Index2) const;
 	bool SortCompareFavoritesNumPlayersAndPing(int Index1, int Index2) const;
+	bool SortCompareQmClients(int Index1, int Index2) const;
 
 	//
 	void Filter();

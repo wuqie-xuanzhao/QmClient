@@ -432,19 +432,19 @@ namespace
 
 	static SQmDevicePerfSample CachedDevicePerfSample(bool Enabled, bool &NewSample)
 	{
-		static uint64_t s_LastSeenVersion = 0;
+		static CQmDevicePerfVersionTracker s_VersionTracker;
 
 		CQmAsyncDevicePerfSampler &Sampler = DevicePerfSamplerState();
 		QmUpdateDevicePerfSamplerState(Sampler, Enabled);
 		if(!Enabled)
 		{
+			s_VersionTracker.Reset();
 			NewSample = false;
 			return {};
 		}
 
 		const SQmDevicePerfSnapshot Snapshot = Sampler.Snapshot();
-		NewSample = Snapshot.m_Version != 0 && Snapshot.m_Version != s_LastSeenVersion;
-		s_LastSeenVersion = Snapshot.m_Version;
+		NewSample = s_VersionTracker.Observe(Snapshot.m_Version);
 		return Snapshot.m_Sample;
 	}
 }

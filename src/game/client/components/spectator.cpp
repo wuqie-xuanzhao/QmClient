@@ -14,6 +14,7 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
+#include <game/client/components/qmclient/spectator_friend_priority.h>
 #include <game/client/components/qmclient/spectator_tele_search.h>
 #include <game/client/gameclient.h>
 #include <game/client/qm_icon_manager.h>
@@ -736,63 +737,68 @@ void CSpectator::OnRender()
 
 	float x = -(ObjWidth - 35.0f), y = StartY;
 
+	const CNetObj_PlayerInfo *apDisplayPlayers[MAX_CLIENTS];
+	bool aIsFriend[MAX_CLIENTS];
+	int aDisplayOrder[MAX_CLIENTS];
+	int DisplayCount = 0;
+	for(const CNetObj_PlayerInfo *pInfo : GameClient()->m_Snap.m_apInfoByDDTeamName)
+	{
+		if(!pInfo || pInfo->m_Team == TEAM_SPECTATORS)
+			continue;
+		apDisplayPlayers[DisplayCount] = pInfo;
+		aIsFriend[DisplayCount] = GameClient()->m_aClients[pInfo->m_ClientId].m_Friend;
+		++DisplayCount;
+	}
+	const int FriendCount = qm_spectator_friends::BuildFriendFirstOrder(aIsFriend, DisplayCount, aDisplayOrder);
+	const float TitleHeight = std::clamp(LineHeight * 0.5f, 12.0f, 15.0f);
+	const float TitleFontSize = TitleHeight * 0.8f;
+	const auto DrawGroupTitle = [&](const char *pTitle, const ColorRGBA &TitleColor) {
+		const float TitleLeft = CenterX + x - 10.0f + BoxOffset;
+		const float TitleTop = CenterY + y + BoxMove;
+		TextRender()->TextColor(TitleColor.WithMultipliedAlpha(ContentAlpha));
+		TextRender()->Text(TitleLeft, TitleTop + (TitleHeight - TitleFontSize) / 2.0f, TitleFontSize, pTitle, -1.0f);
+		Graphics()->DrawRect(TitleLeft, TitleTop + TitleHeight - 1.0f, 270.0f - BoxOffset, 1.0f,
+			ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f * ContentAlpha), IGraphics::CORNER_NONE, 0.0f);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		y += TitleHeight;
+	};
+
 	int OldDDTeam = -1;
 
-	for(int i = 0, Count = 0; i < MAX_CLIENTS; ++i)
+	for(int i = 0; i < DisplayCount; ++i)
 	{
-		if(!GameClient()->m_Snap.m_apInfoByDDTeamName[i] || GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_Team == TEAM_SPECTATORS)
-			continue;
-
-		++Count;
-
+		const int Count = i + 1;
 		if(Count == PerLine + 1 || (Count > PerLine + 1 && (Count - 1) % PerLine == 0))
 		{
 			x += 290.0f;
 			y = StartY;
 		}
 
-		const CNetObj_PlayerInfo *pInfo = GameClient()->m_Snap.m_apInfoByDDTeamName[i];
-		int DDTeam = GameClient()->m_Teams.Team(pInfo->m_ClientId);
-		int NextDDTeam = 0;
+		if(FriendCount > 0 && i == 0)
+			DrawGroupTitle(Localize("Friends"), color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageFriendColor)));
+		else if(FriendCount > 0 && i == FriendCount)
+			DrawGroupTitle(Localize("Others"), ColorRGBA(1.0f, 1.0f, 1.0f, 0.85f));
 
-		for(int j = i + 1; j < MAX_CLIENTS; j++)
-		{
-			const CNetObj_PlayerInfo *pInfo2 = GameClient()->m_Snap.m_apInfoByDDTeamName[j];
-
-			if(!pInfo2 || pInfo2->m_Team == TEAM_SPECTATORS)
-				continue;
-
-			NextDDTeam = GameClient()->m_Teams.Team(pInfo2->m_ClientId);
-			break;
-		}
-
-		if(OldDDTeam == -1)
-		{
-			for(int j = i - 1; j >= 0; j--)
-			{
-				const CNetObj_PlayerInfo *pInfo2 = GameClient()->m_Snap.m_apInfoByDDTeamName[j];
-
-				if(!pInfo2 || pInfo2->m_Team == TEAM_SPECTATORS)
-					continue;
-
-				OldDDTeam = GameClient()->m_Teams.Team(pInfo2->m_ClientId);
-				break;
-			}
-		}
+		const CNetObj_PlayerInfo *pInfo = apDisplayPlayers[aDisplayOrder[i]];
+		const int DDTeam = GameClient()->m_Teams.Team(pInfo->m_ClientId);
+		const bool StartsGroup = i % PerLine == 0 || (FriendCount > 0 && i == FriendCount);
+		const bool EndsGroup = i + 1 == DisplayCount || (i + 1) % PerLine == 0 || (FriendCount > 0 && i + 1 == FriendCount);
+		const int NextDDTeam = EndsGroup ? 0 : GameClient()->m_Teams.Team(apDisplayPlayers[aDisplayOrder[i + 1]]->m_ClientId);
 
 		if(DDTeam != TEAM_FLOCK)
 		{
 			const ColorRGBA Color = GameClient()->GetDDTeamColor(DDTeam).WithAlpha(0.5f * ContentAlpha);
 			int Corners = 0;
-			if(OldDDTeam != DDTeam)
+			if(StartsGroup || OldDDTeam != DDTeam)
 				Corners |= IGraphics::CORNER_TL | IGraphics::CORNER_TR;
-			if(NextDDTeam != DDTeam)
+			if(EndsGroup || NextDDTeam != DDTeam)
 				Corners |= IGraphics::CORNER_BL | IGraphics::CORNER_BR;
 			Graphics()->DrawRect(CenterX + x - 10.0f + BoxOffset, CenterY + y + BoxMove, 270.0f - BoxOffset, LineHeight, Color, Corners, RoundRadius);
 		}
 		OldDDTeam = DDTeam;
 
-		if((Client()->State() == IClient::STATE_DEMOPLAYBACK && GameClient()->m_DemoSpecId == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId) || (Client()->State() != IClient::STATE_DEMOPLAYBACK && GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId))
+		if((Client()->State() == IClient::STATE_DEMOPLAYBACK && GameClient()->m_DemoSpecId == pInfo->m_ClientId) ||
+			(Client()->State() != IClient::STATE_DEMOPLAYBACK && GameClient()->m_Snap.m_SpecInfo.m_SpectatorId == pInfo->m_ClientId))
 		{
 			Graphics()->DrawRect(CenterX + x - 10.0f + BoxOffset, CenterY + y + BoxMove, 270.0f - BoxOffset, LineHeight, ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f * ContentAlpha), IGraphics::CORNER_ALL, RoundRadius);
 		}
@@ -801,7 +807,7 @@ void CSpectator::OnRender()
 		if(WantActive && !OverRankPanel && m_SelectorMouse.x >= x - 10.0f && m_SelectorMouse.x < x + 260.0f &&
 			m_SelectorMouse.y >= y - (LineHeight / 6.0f) && m_SelectorMouse.y < y + (LineHeight * 5.0f / 6.0f))
 		{
-			m_SelectedSpectatorId = GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId;
+			m_SelectedSpectatorId = pInfo->m_ClientId;
 			PlayerSelected = true;
 			if(MousePressed)
 			{
@@ -837,7 +843,7 @@ void CSpectator::OnRender()
 		float TeeAlpha;
 		float NameAlpha;
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK &&
-			!GameClient()->m_Snap.m_aCharacters[GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId].m_Active)
+			!GameClient()->m_Snap.m_aCharacters[pInfo->m_ClientId].m_Active)
 		{
 			NameAlpha = 0.25f;
 			TeeAlpha = 0.5f;
@@ -854,7 +860,7 @@ void CSpectator::OnRender()
 		NameCursor.m_FontSize = FontSize;
 		NameCursor.m_Flags |= TEXTFLAG_ELLIPSIS_AT_END;
 		NameCursor.m_LineWidth = 180.0f;
-		const int ClientId = GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId;
+		const int ClientId = pInfo->m_ClientId;
 		const bool HideIdentity = GameClient()->ShouldHideStreamerIdentity(ClientId);
 		const bool IsFriend = GameClient()->m_aClients[ClientId].m_Friend;
 		char aNameBuf[MAX_NAME_LENGTH];
@@ -903,7 +909,7 @@ void CSpectator::OnRender()
 		TextRender()->TextEx(&NameCursor, aNameBuf);
 		if(GameClient()->m_MultiViewActivated)
 		{
-			if(GameClient()->m_aMultiViewId[GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId])
+			if(GameClient()->m_aMultiViewId[pInfo->m_ClientId])
 			{
 				TextRender()->TextColor(0.1f, 1.0f, 0.1f, (PlayerSelected ? 1.0f : 0.5f) * ContentAlpha);
 				TextRender()->Text(CenterX + x + 50.0f + 180.0f, CenterY + y + BoxMove + (LineHeight - FontSize) / 2.f, FontSize - 3, "⬤", 220.0f);
@@ -917,10 +923,10 @@ void CSpectator::OnRender()
 
 		// flag
 		if(GameClient()->m_Snap.m_pGameInfoObj && (GameClient()->m_Snap.m_pGameInfoObj->m_GameFlags & GAMEFLAG_FLAGS) &&
-			GameClient()->m_Snap.m_pGameDataObj && (GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierRed == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId || GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId))
+			GameClient()->m_Snap.m_pGameDataObj && (GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierRed == pInfo->m_ClientId || GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == pInfo->m_ClientId))
 		{
 			Graphics()->BlendNormal();
-			if(GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId)
+			if(GameClient()->m_Snap.m_pGameDataObj->m_FlagCarrierBlue == pInfo->m_ClientId)
 				Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteFlagBlue);
 			else
 				Graphics()->TextureSet(GameClient()->m_GameSkin.m_SpriteFlagRed);
@@ -936,7 +942,7 @@ void CSpectator::OnRender()
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
 
-		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[GameClient()->m_Snap.m_apInfoByDDTeamName[i]->m_ClientId].m_RenderInfo;
+		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[pInfo->m_ClientId].m_RenderInfo;
 		TeeInfo.m_Size *= TeeSizeMod;
 
 		const CAnimState *pIdleState = CAnimState::GetIdle();

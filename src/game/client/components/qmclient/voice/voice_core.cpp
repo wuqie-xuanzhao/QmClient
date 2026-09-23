@@ -39,6 +39,7 @@
 #include <vector>
 
 static constexpr int VOICE_CLIENT_SNAPSHOT_INTERVAL_MS = 10;
+static constexpr int VOICE_MAX_CAPTURE_FRAMES_PER_UPDATE = 3;
 static constexpr int VOICE_CONFIG_SNAPSHOT_INTERVAL_MS = 50;
 static constexpr int VOICE_OVERLAY_VISIBLE_MS = 180;
 static constexpr int VOICE_OVERLAY_MAX_SPEAKERS = 5;
@@ -1295,6 +1296,7 @@ void CRClientVoice::ResetRuntimeState(uint32_t Flags, uint32_t RoomTokenHash) NO
 		m_LastMediaRxPacketTime.store(0);
 		m_LastPingSentTime = 0;
 		m_LastPingSeq = 0;
+		m_LastKeepalive = 0;
 		m_LastTokenHashSent = 0;
 	}
 
@@ -1347,7 +1349,7 @@ void CRClientVoice::ProcessCapture() NO_THREAD_SAFETY_ANALYSIS
 					 (VoiceUtils::VOICE_TX_BLOCK_SERVER_ADDR | VoiceUtils::VOICE_TX_BLOCK_SOCKET | VoiceUtils::VOICE_TX_BLOCK_ONLINE);
 	if(NetworkBlockers != 0)
 	{
-		ResetTransmitState(false);
+		ResetTransmitState(true);
 		return;
 	}
 
@@ -1448,15 +1450,19 @@ void CRClientVoice::ProcessCapture() NO_THREAD_SAFETY_ANALYSIS
 		if(ShowMicLevel)
 		{
 			bool UpdatedMicLevel = false;
-			while(SDL_GetQueuedAudioSize(m_CaptureDevice) >= VOICE_FRAME_BYTES)
+			int FramesProcessed = 0;
+			while(SDL_GetQueuedAudioSize(m_CaptureDevice) >= VOICE_FRAME_BYTES && FramesProcessed < VOICE_MAX_CAPTURE_FRAMES_PER_UPDATE)
 			{
 				int16_t aPcm[VOICE_FRAME_SAMPLES];
 				SDL_DequeueAudio(m_CaptureDevice, aPcm, VOICE_FRAME_BYTES);
+				FramesProcessed++;
 				VoiceUtils::ProcessVoiceCaptureFrame(Config, aPcm, VOICE_FRAME_SAMPLES, m_AgcGain, m_NsNoiseFloor, m_NsGain, m_pNoiseSuppress, m_NoiseSuppressFallbackLogged, m_HpfPrevIn, m_HpfPrevOut, m_CompEnv);
 				const float Peak = VoiceUtils::VoiceFramePeak(aPcm, VOICE_FRAME_SAMPLES);
 				UpdateMicLevel(Peak);
 				UpdatedMicLevel = true;
 			}
+			if(SDL_GetQueuedAudioSize(m_CaptureDevice) >= VOICE_FRAME_BYTES)
+				SDL_ClearQueuedAudio(m_CaptureDevice);
 			if(!UpdatedMicLevel)
 				UpdateMicLevel(-1.0f);
 		}
@@ -1488,10 +1494,12 @@ void CRClientVoice::ProcessCapture() NO_THREAD_SAFETY_ANALYSIS
 	uint8_t aPayload[VOICE_MAX_PAYLOAD];
 
 	bool UpdatedMicLevel = false;
-	while(SDL_GetQueuedAudioSize(m_CaptureDevice) >= VOICE_FRAME_BYTES)
+	int FramesProcessed = 0;
+	while(SDL_GetQueuedAudioSize(m_CaptureDevice) >= VOICE_FRAME_BYTES && FramesProcessed < VOICE_MAX_CAPTURE_FRAMES_PER_UPDATE)
 	{
 		int16_t aPcm[VOICE_FRAME_SAMPLES];
 		SDL_DequeueAudio(m_CaptureDevice, aPcm, VOICE_FRAME_BYTES);
+		FramesProcessed++;
 		VoiceUtils::ProcessVoiceCaptureFrame(Config, aPcm, VOICE_FRAME_SAMPLES, m_AgcGain, m_NsNoiseFloor, m_NsGain, m_pNoiseSuppress, m_NoiseSuppressFallbackLogged, m_HpfPrevIn, m_HpfPrevOut, m_CompEnv);
 
 		const float Peak = VoiceUtils::VoiceFramePeak(aPcm, VOICE_FRAME_SAMPLES);
@@ -1609,7 +1617,7 @@ void CRClientVoice::ProcessCapture() NO_THREAD_SAFETY_ANALYSIS
 
 void CRClientVoice::ProcessIncoming() NO_THREAD_SAFETY_ANALYSIS
 {
-	if(!m_OutputDevice || !m_pVoiceTransport)
+	if(!m_pVoiceTransport || !m_pVoiceTransport->Connected())
 		return;
 
 	SRClientVoiceConfigSnapshot Config;
@@ -1651,12 +1659,6 @@ void CRClientVoice::ProcessIncoming() NO_THREAD_SAFETY_ANALYSIS
 			m_RxDropType++;
 			continue;
 		}
-		if(Bytes < VOICE_PACKET_HEADER_SIZE)
-		{
-			m_RxDropHeader++;
-			continue;
-		}
-
 		const uint16_t PayloadSize = Header.m_PayloadSize;
 		const uint32_t TokenHash = Header.m_TokenHash;
 		const uint8_t Flags = Header.m_Flags;
@@ -1724,6 +1726,9 @@ void CRClientVoice::ProcessIncoming() NO_THREAD_SAFETY_ANALYSIS
 			}
 			continue;
 		}
+
+		if(!m_OutputDevice)
+			continue;
 
 		int LocalId = -1;
 		vec2 LocalPos = vec2(0.0f, 0.0f);

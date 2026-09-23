@@ -3835,8 +3835,11 @@ void CClient::PumpNetwork()
 	const std::chrono::nanoseconds NetworkPumpStart = time_get_nanoseconds();
 	const std::chrono::nanoseconds NetworkPumpBudget = State() == IClient::STATE_ONLINE ? gs_NetworkPumpOnlineBudget : gs_NetworkPumpLoadingBudget;
 	int NetworkChunksProcessed = 0;
-	for(int Conn = 0; Conn < NUM_CONNS; Conn++)
+	const int FirstConn = m_NetworkPumpFirstConn;
+	m_NetworkPumpFirstConn = (FirstConn + 1) % NUM_CONNS;
+	for(int ConnIndex = 0; ConnIndex < NUM_CONNS; ConnIndex++)
 	{
+		const int Conn = (FirstConn + ConnIndex) % NUM_CONNS;
 		while(NetworkChunksProcessed < gs_NetworkPumpMaxChunksPerFrame &&
 			(NetworkChunksProcessed == 0 || time_get_nanoseconds() - NetworkPumpStart < NetworkPumpBudget) &&
 			m_aNetClient[Conn].Recv(&Packet, &ResponseToken, IsSixup()))

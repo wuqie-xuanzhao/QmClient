@@ -6,7 +6,7 @@
 #include "markdown_cache_writer.h"
 #include "qm_markdown_broadcast.h"
 #include "qm_realtime.h"
-#include "qm_realtime_channel.h"
+#include "qm_sponsors.h"
 #include "qmclient_utils.h"
 
 #include <base/hash.h>
@@ -49,21 +49,15 @@ struct SQmClientDdnetPlayerStats
 
 class CQmClient : public CComponent
 {
-	std::shared_ptr<IHttpRequest> m_pQmClientAuthTokenTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientUsersTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientUsersSendTask = nullptr;
 	std::shared_ptr<IHttpRequest> m_pTitleOperation;
-	std::shared_ptr<IHttpRequest> m_pTitleReport;
-	std::shared_ptr<IHttpRequest> m_pTitleList;
 	char m_aTitleToken[65] = "";
 	char m_aTitleText[64] = "";
 	char m_aTitleBoundName[64] = "";
-	char m_aTitlePendingServer[NETADDR_MAXSTRSIZE] = "";
+	char m_aTitleProfileStyle[64] = "";
 	char m_aaPlayerTitles[MAX_CLIENTS][64] = {};
 	char m_aaPlayerTitleStyles[MAX_CLIENTS][48] = {};
 	char m_aaTitleNames[MAX_CLIENTS][MAX_NAME_LENGTH] = {};
 	int64_t m_aTitleExpires[MAX_CLIENTS] = {};
-	int64_t m_TitleLastSync = 0;
 	double m_TitleServerTimeOffset = 0.0;
 	bool m_TitleServerTimeOffsetValid = false;
 	bool m_TitleAuthenticated = false;
@@ -75,13 +69,6 @@ class CQmClient : public CComponent
 	void StartTitleRequest(const char *pPath, const char *pBody, std::shared_ptr<IHttpRequest> &pTask);
 
 	std::shared_ptr<IJob> m_pQmClientUsersParseJob = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmDeveloperPresenceTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmDeveloperPresencesTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientLifecycleStartTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientLifecycleCrashTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientLifecycleStopTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientServerTimeTask = nullptr;
-	std::shared_ptr<IHttpRequest> m_pQmClientPlaytimeQueryTask = nullptr;
 	std::shared_ptr<IJob> m_pQmClientLifecycleMarkerWriteJob = nullptr;
 	std::shared_ptr<std::mutex> m_pQmClientLifecycleMarkerMutex = std::make_shared<std::mutex>();
 	std::shared_ptr<IHttpRequest> m_pQmDdnetPlayerTask = nullptr;
@@ -90,28 +77,52 @@ class CQmClient : public CComponent
 	CQmMarkdownBroadcast m_QmMarkdownBroadcast;
 	// 每个缓存文件一个写作业实例：界面立即更新，磁盘只保留最新完整快照。
 	CQmMarkdownCacheWriter m_QmMarkdownBroadcastCacheWriter;
-	CQmRealtimeChannel m_QmRealtimeChannel;
+	CQmMarkdownCacheWriter m_QmSponsorsCacheWriter;
+	qm_sponsors::CSnapshot m_QmSponsors;
+	std::string m_QmSponsorsDraft;
+	std::shared_ptr<IHttpRequest> m_pQmSponsorsPublishTask;
+	enum class EQmSponsorsStatus
+	{
+		IDLE,
+		EMPTY,
+		READY,
+		PUBLISHING,
+		PUBLISHED,
+		PUBLISH_DENIED,
+		PUBLISH_TOO_LARGE,
+		PUBLISH_FAILED,
+	};
+	EQmSponsorsStatus m_QmSponsorsStatus = EQmSponsorsStatus::IDLE;
+	int m_QmSponsorsStatusRevision = 0;
 	std::unique_ptr<IQmWebSocketClient> m_pQmRealtimeTransport;
-	std::mutex m_QmRealtimeTransportMutex;
-	std::deque<std::string> m_QmRealtimeTransportMessages;
+	char m_aQmRealtimeUrl[512] = "";
+	bool m_QmRealtimeFailureLogged = false;
+	std::unique_ptr<IQmWebSocketClient> m_pQmAnonymousEmote;
+	char m_aQmAnonymousClientId[65] = "";
+	char m_aQmAnonymousSessionId[65] = "";
+	int64_t m_QmAnonymousConnectedTick = 0;
+	int64_t m_QmAnonymousNextHelloCheck = 0;
+	std::string m_QmAnonymousHelloBody;
 	std::deque<SQmRealtimeMessage> m_QmRealtimeEvents;
 	std::deque<SQmRealtimeMessage> m_QmRealtimeEmoticonEvents;
-	std::string m_QmRealtimeServerAddress;
+	std::shared_ptr<const json_value> m_pQmRealtimeUsersPayload;
+	char m_aQmRealtimeUsersServer[NETADDR_MAXSTRSIZE] = "";
+	int64_t m_QmRealtimeUsersExpireTick = 0;
 	bool m_QmRealtimeHelloSent = false;
+	int m_QmRealtimeTitleRevision = -1;
+	int64_t m_QmRealtimeConnectedTick = 0;
+	int64_t m_QmRealtimeLastPresence = 0;
+	int64_t m_QmRealtimeNextPresenceCheck = 0;
+	std::string m_QmRealtimePresenceBody;
+	int64_t m_QmClientPlaytimeManualRefreshTick = 0;
 
-	char m_aQmClientAuthToken[256] = "";
 	char m_aQmClientMachineHash[SHA256_MAXSTRSIZE] = "";
 	char m_aQmClientLifecycleSessionId[64] = "";
 	char m_aQmClientPlaytimeClientId[65] = "";
 	char m_aQmDdnetPlayerName[MAX_NAME_LENGTH] = "";
 	char m_aQmDdnetFavoritePartner[MAX_NAME_LENGTH] = "";
-	char m_aQmClientPendingVoicePresenceServerAddress[NETADDR_MAXSTRSIZE] = "";
 	char m_aQmDeveloperToken[65] = "";
 	char m_aQmDeveloperSessionId[33] = "";
-	char m_aQmDeveloperPendingServerAddress[NETADDR_MAXSTRSIZE] = "";
-
-	int64_t m_QmClientLastSync = 0;
-	int64_t m_QmDeveloperLastSync = 0;
 	int64_t m_QmClientServerNow = 0;
 	int64_t m_QmClientServerSessionStart = 0;
 	int64_t m_QmClientServerTimeLastSync = 0;
@@ -119,8 +130,6 @@ class CQmClient : public CComponent
 	int64_t m_QmClientPlaytimeLastSync = 0;
 	int64_t m_QmClientPlaytimeLastSuccessfulSyncTimestamp = 0;
 	int64_t m_QmClientRecoveryStopAt = 0;
-	int64_t m_QmClientRecoveryNextRetry = 0;
-	int64_t m_QmClientStartupNextRetry = 0;
 	int64_t m_QmClientMarkerStartedAt = 0;
 	int64_t m_QmClientMarkerLastSeenAt = 0;
 	int64_t m_QmClientMarkerLastFlushTick = 0;
@@ -143,7 +152,6 @@ class CQmClient : public CComponent
 	int64_t m_QmLastLocalFinishRecordTime = -1;
 	// 本次会话内是否成功拉取过 DDNet 档案；用于区分「查询中」与「查无此人」。
 	bool m_QmDdnetStatsSucceededOnce = false;
-	int m_QmClientPendingVoicePresencePlayers = 0;
 	bool m_QmClientDistributionSuccessLatched = false;
 	bool m_QmClientShutdownReported = false;
 	bool m_QmClientAwaitingRecoveryStop = false;
@@ -162,11 +170,6 @@ class CQmClient : public CComponent
 
 	void InitQmClientLifecycle();
 	void UpdateQmClientLifecycleAndServerTime();
-	void SendQmClientLifecyclePing(const char *pEvent, std::shared_ptr<IHttpRequest> &pTaskSlot);
-	bool FinishQmClientPlaytimeTask(std::shared_ptr<IHttpRequest> &pTaskSlot, bool UpdateSessionStart);
-	void FinishQmClientPlaytimeQuery();
-	void FinishQmClientServerTimeTask();
-	void SendQmClientPlaytimeRequest(const char *pUrl, std::shared_ptr<IHttpRequest> &pTaskSlot, int64_t StopAt = 0);
 	void EnsureQmClientPlaytimeClientId();
 	bool ReadQmClientLifecycleMarker(int64_t &OutStartedAt, int64_t &OutLastSeenAt);
 	void TouchQmClientLifecycleMarker(bool ForceWrite);
@@ -174,23 +177,11 @@ class CQmClient : public CComponent
 	void ClearQmClientLifecycleMarker();
 
 	void UpdateQmClientRecognition();
-	void SyncQmClientUsers();
-	void FetchQmClientAuthToken();
-	void SendQmClientPlayerData();
-	void FetchQmClientUsers();
-	void FinishQmClientAuthToken();
 	void FinishQmClientUsers();
-	void ResetQmClientRecognitionTasks();
-	bool NeedsQmClientRecognition() const;
-	bool NeedsFastQmClientSync() const;
 	bool EnsureQmClientMachineHash();
-	bool BuildQmClientRecognitionUrl(const char *pPath, char *pBuf, size_t BufSize, const char *pQuery = nullptr) const;
 	void ClearQmClientServerDistribution();
+	void PushQmClientServerCounts();
 	void InitQmDeveloperAuthentication();
-	void UpdateQmDeveloperPresence();
-	void SendQmDeveloperPresence(const char *pServerAddress);
-	void FetchQmDeveloperPresences(const char *pServerAddress);
-	void FinishQmDeveloperPresences(const char *pServerAddress);
 	void ResetQmDeveloperPresenceTasks();
 
 	void UpdateQmDdnetPlayerStats();
@@ -206,28 +197,52 @@ class CQmClient : public CComponent
 	void RecordQmClientLocalRaceFinish(int TimeMs);
 	void RefreshQmDdnetPlayerStats();
 	void RefreshQmClientPlaytime();
-	void UpdateQmRealtimeChannel();
-	void DrainQmRealtimeTransportMessages();
+	void UpdateQmRealtime();
+	void UpdateQmAnonymousEmotes();
+	void StopQmAnonymousEmotes();
+	std::string BuildQmAnonymousEmoteHello() const;
+	void SendQmAnonymousEmoteHello();
+	void QueueQmAnonymousEmoticonEvent(SQmRealtimeMessage Message);
 	void ApplyQmRealtimeServiceData(const SQmRealtimeMessage &Message);
 	void ApplyQmRealtimeBroadcast(const SQmRealtimeMessage &Message);
+	void ApplyQmRealtimeTitles(const SQmRealtimeMessage &Message);
+	void ApplyQmRealtimeUsers(const SQmRealtimeMessage &Message);
+	void ApplyQmRealtimeDevelopers(const SQmRealtimeMessage &Message);
+	std::string BuildQmRealtimePresence(bool Hello) const;
+	bool RequestQmRealtimeTitleRefresh();
+	void SendQmRealtimeStop();
 	// 广播 markdown 的磁盘缓存：Apply 成功后落盘（交给作业），启动时读回上次内容。
 	void SaveQmMarkdownBroadcastCache();
 	void LoadQmMarkdownBroadcastCache();
+	void LoadQmSponsorsCache();
+	void SaveQmSponsorsCache();
+	bool ApplyQmSponsorsPayload(const json_value *pPayload, bool SaveCache);
+	void FinishQmSponsorsPublish();
 
 public:
+	using ESponsorsStatus = EQmSponsorsStatus;
+	const std::vector<std::string> &QmSponsorNames() const { return m_QmSponsors.Names(); }
+	const char *QmSponsorsDraft() const { return m_QmSponsorsDraft.c_str(); }
+	ESponsorsStatus QmSponsorsStatus() const { return m_QmSponsorsStatus; }
+	int QmSponsorsRevision() const { return m_QmSponsors.Revision() + m_QmSponsorsStatusRevision; }
+	bool QmSponsorsPublishing() const { return m_pQmSponsorsPublishTask != nullptr; }
+	bool HasDeveloperCredential() const { return m_aQmDeveloperToken[0] != '\0'; }
+	void QmSponsorsRefresh();
+	void QmSponsorsReloadDraft();
+	void QmSponsorsPublishDraft();
 	void RedeemTitleCode(const char *pCode);
-	void SaveTitleProfile(const char *pTitle, const char *pBoundName);
+	void SaveTitleProfile(const char *pTitle, const char *pBoundName, const char *pStyle);
 	void RefreshTitleProfile();
 	bool TitleBusy() const { return m_pTitleOperation != nullptr; }
 	bool TitleAuthenticated() const { return m_TitleAuthenticated; }
 	const char *TitleStatus() const { return m_pTitleStatus; }
 	const char *TitleText() const { return m_aTitleText; }
 	const char *TitleBoundName() const { return m_aTitleBoundName; }
+	const char *TitleProfileStyle() const { return m_aTitleProfileStyle; }
 	int TitleRevision() const { return m_TitleRevision; }
 	const char *PlayerTitle(int ClientId) const;
 	const char *PlayerTitleStyle(int ClientId) const;
 	double TitleAnimationTime() const;
-	const CQmRealtimeChannel &QmRealtimeChannel() const { return m_QmRealtimeChannel; }
 	bool HasQmMarkdownBroadcast() const { return m_QmMarkdownBroadcast.HasMarkdown(); }
 	const char *QmMarkdownBroadcast() const { return m_QmMarkdownBroadcast.Markdown(); }
 	int QmMarkdownBroadcastVersion() const { return m_QmMarkdownBroadcast.Version(); }

@@ -191,6 +191,112 @@ namespace
 	}
 }
 
+TEST(QmAxiomScoresComponent, SuccessfulLocalQueryPublishesBothModes)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	CompleteSuccessfulQuery(Scores, Http, "wolf_test");
+	const SQmAxiomPlayerResult *pResult = Scores.GetResult("wolf_test");
+	ASSERT_NE(pResult, nullptr);
+	EXPECT_EQ(pResult->m_SearchStatus, EQmAxiomScoreStatus::READY);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::GORES).m_Status, EQmAxiomScoreStatus::READY);
+	EXPECT_EQ(pResult->Mode(EQmAxiomMode::AXRACE).m_Status, EQmAxiomScoreStatus::READY);
+	Scores.SetMode(EQmAxiomMode::GORES);
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Points, 10);
+	Scores.SetMode(EQmAxiomMode::AXRACE);
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Points, 20);
+}
+
+TEST(QmAxiomScoresComponent, ScoreboardPrefetchDoesNotWaitForAnotherPlayer)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	Scores.SetMode(EQmAxiomMode::GORES);
+	for(int Index = 0; Index < 8; ++Index)
+		Scores.EnsureQueried(("player_" + std::to_string(Index)).c_str());
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+	Scores.OnUpdate();
+	for(int Index = 0; Index < 8; ++Index)
+		Scores.EnsureQueried(("player_" + std::to_string(Index)).c_str());
+	ASSERT_EQ(Http.m_vRequests.size(), 4u);
+	Http.Request(1).m_pRequest->Complete(SearchResponse("player_1", 1001));
+	Scores.OnUpdate();
+	Scores.EnsureQueried("player_1");
+	ASSERT_EQ(Http.m_vRequests.size(), 5u);
+	EXPECT_NE(Http.Request(4).m_Url.find("mode=Gores"), std::string::npos);
+	Http.Request(4).m_pRequest->Complete(InfoResponse("player_1", 37));
+	Scores.OnUpdate();
+	EXPECT_EQ(Scores.GetLookup("player_1").m_Status, EQmAxiomScoreStatus::READY);
+	EXPECT_EQ(Scores.GetLookup("player_1").m_Points, 37);
+	EXPECT_FALSE(Http.Request(0).m_pRequest->Aborted());
+}
+
+TEST(QmAxiomScoresComponent, ModeSwitchCancelsPrefetchAndKeepsOtherModeCache)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	Scores.SetMode(EQmAxiomMode::GORES);
+	Scores.EnsureQueried("wolf_test");
+	Http.Request(0).m_pRequest->Complete(SearchResponse("wolf_test"));
+	Scores.OnUpdate();
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+	Scores.SetMode(EQmAxiomMode::AXRACE);
+	EXPECT_TRUE(Http.Request(1).m_pRequest->Aborted());
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 3u);
+	EXPECT_NE(Http.Request(2).m_Url.find("mode=AXRace"), std::string::npos);
+	Http.Request(2).m_pRequest->Complete(InfoResponse("wolf_test", 22));
+	Scores.OnUpdate();
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Points, 22);
+	Scores.SetMode(EQmAxiomMode::GORES);
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 4u);
+	Http.Request(3).m_pRequest->Complete(InfoResponse("wolf_test", 11));
+	Scores.OnUpdate();
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Points, 11);
+	Scores.SetMode(EQmAxiomMode::AXRACE);
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Points, 22);
+}
+
+TEST(QmAxiomScoresComponent, ResetCancelsPrefetchWithoutFailureBackoff)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	Scores.SetMode(EQmAxiomMode::GORES);
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 1u);
+	Scores.OnReset();
+	EXPECT_TRUE(Http.Request(0).m_pRequest->Aborted());
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Status, EQmAxiomScoreStatus::NOT_REQUESTED);
+	Scores.OnUpdate();
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+	Http.Request(0).m_pRequest->Complete(SearchResponse("wolf_test", 999));
+	Scores.OnUpdate();
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Status, EQmAxiomScoreStatus::FETCHING);
+}
+
+TEST(QmAxiomScoresComponent, FailedPrefetchBacksOffAndRecovers)
+{
+	CFakeAxiomHttp Http;
+	CTestAxiomScores Scores(&Http);
+	Scores.SetMode(EQmAxiomMode::GORES);
+	Scores.EnsureQueried("wolf_test");
+	Http.Request(0).m_pRequest->Fail();
+	Scores.OnUpdate();
+	EXPECT_EQ(Scores.GetLookup("wolf_test").m_Status, EQmAxiomScoreStatus::HTTP_ERROR);
+	Scores.EnsureQueried("wolf_test");
+	EXPECT_EQ(Http.m_vRequests.size(), 1u);
+	Scores.AdvanceMs(31 * 1000);
+	Scores.OnUpdate();
+	Scores.EnsureQueried("wolf_test");
+	ASSERT_EQ(Http.m_vRequests.size(), 2u);
+	Http.Request(1).m_pRequest->Complete(SearchResponse("wolf_test"));
+	Scores.OnUpdate();
+	EXPECT_EQ(Scores.GetResult("wolf_test")->m_SearchStatus, EQmAxiomScoreStatus::READY);
+}
+
 TEST(QmStatisticsFile, DistinguishesMissingInvalidAndValidDocuments)
 {
 	CTestInfo Info;
@@ -705,6 +811,7 @@ TEST(QmAxiomScoresComponent, PersistentCacheRoundTripsDifficultyDataInSharedDocu
 				"mode": "Gores",
 				"points": 38,
 				"total_play_time": 7200,
+				"axiom_play_time": 695,
 				"total_maps_completed": 11,
 				"performance_points": 17,
 				"mileage": 42,
@@ -764,6 +871,9 @@ TEST(QmAxiomScoresComponent, PersistentCacheRoundTripsDifficultyDataInSharedDocu
 	const json_value *pPersistedAxiom = json_object_get(json_object_get(json_object_get(pRoot, "remote"), "axiom"), "players");
 	ASSERT_EQ(pPersistedAxiom->type, json_array);
 	ASSERT_EQ(json_array_length(pPersistedAxiom), 1u);
+	const json_value *pPersistedModes = json_object_get(json_array_get(pPersistedAxiom, 0), "modes");
+	ASSERT_EQ(pPersistedModes->type, json_array);
+	EXPECT_STREQ(json_string_get(json_object_get(json_array_get(pPersistedModes, 0), "axiom_play_time")), "695");
 
 	CTestAxiomScores Restored(&Http);
 	Restored.LoadPersistentCache(pRoot);

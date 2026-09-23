@@ -56,6 +56,15 @@ TEST(QmHudNotifications, ScalesSmallTextChrome)
 	EXPECT_FLOAT_EQ(QmHudNotifications::MinBoxWidth(8.0f), 82.0f);
 }
 
+TEST(QmHudNotifications, RepeatCounterScaleOvershootsAndSettles)
+{
+	EXPECT_FLOAT_EQ(QmHudNotifications::RepeatCountElasticScale(-1.0f), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudNotifications::RepeatCountElasticScale(0.0f), 1.0f);
+	EXPECT_GT(QmHudNotifications::RepeatCountElasticScale(0.5f), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudNotifications::RepeatCountElasticScale(1.0f), 1.0f);
+	EXPECT_FLOAT_EQ(QmHudNotifications::RepeatCountElasticScale(2.0f), 1.0f);
+}
+
 TEST(QmHudNotifications, SelectsTextColorByNotificationKind)
 {
 	constexpr unsigned SystemColor = 0x111111;

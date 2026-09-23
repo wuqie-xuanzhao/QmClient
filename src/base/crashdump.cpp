@@ -14,9 +14,26 @@
 #include <iterator>
 #endif
 
+static std::atomic<const char *> gs_pGraphicsBackend{nullptr};
+
 void crashdump_set_graphics_backend(const char *pBackendName)
 {
-	(void)pBackendName;
+	const char *pKnownBackend = nullptr;
+	if(pBackendName != nullptr)
+	{
+		if(str_comp_nocase(pBackendName, "OpenGL") == 0)
+			pKnownBackend = "OpenGL";
+		else if(str_comp_nocase(pBackendName, "OpenGL ES") == 0)
+			pKnownBackend = "OpenGL ES";
+		else if(str_comp_nocase(pBackendName, "Vulkan") == 0)
+			pKnownBackend = "Vulkan";
+	}
+	gs_pGraphicsBackend.store(pKnownBackend, std::memory_order_release);
+}
+
+const char *crashdump_graphics_backend_for_report()
+{
+	return gs_pGraphicsBackend.load(std::memory_order_acquire);
 }
 
 static std::atomic<bool> gs_SuppressNextFatalReporter{false};
@@ -729,6 +746,11 @@ static bool WriteMinimalCrashReport(const char *pReason, EXCEPTION_POINTERS *pEx
 	WriteRaw(FileHandle, aLine);
 	str_format(aLine, sizeof(aLine), "Written minidump flags: 0x%08lX\r\n", (unsigned long)gs_LastMiniDumpWrittenFlags);
 	WriteRaw(FileHandle, aLine);
+	if(const char *pGraphicsBackend = crashdump_graphics_backend_for_report())
+	{
+		str_format(aLine, sizeof(aLine), "Graphics backend: %s\r\n", pGraphicsBackend);
+		WriteRaw(FileHandle, aLine);
+	}
 	if(gs_LastMiniDumpRetriedWithMinimalFlags)
 	{
 		str_format(aLine, sizeof(aLine), "Extended minidump attempt error: 0x%08lX\r\n", (unsigned long)gs_LastMiniDumpExtendedAttemptError);

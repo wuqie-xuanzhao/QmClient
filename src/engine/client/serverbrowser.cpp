@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <string>
 #include <vector>
 
 namespace
@@ -50,7 +51,35 @@ namespace
 
 	bool MatchesExactly(const char *a, const char *b)
 	{
-		return str_comp(a, &b[1]) == 0;
+		return str_comp(a, b) == 0;
+	}
+
+	struct SServerFilterToken
+	{
+		std::string m_Text;
+		bool (*m_pfnMatches)(const char *, const char *);
+	};
+
+	template<size_t N>
+	std::vector<SServerFilterToken> ParseServerFilterTokens(const char (&aInput)[N])
+	{
+		std::vector<SServerFilterToken> vTokens;
+		const char *pStr = aInput;
+		char aToken[N];
+		char aTrimmed[N];
+		while((pStr = str_next_token(pStr, IServerBrowser::SEARCH_EXCLUDE_TOKEN, aToken, sizeof(aToken))))
+		{
+			str_copy(aTrimmed, str_utf8_skip_whitespaces(aToken));
+			str_utf8_trim_right(aTrimmed);
+			const int Length = str_length(aTrimmed);
+			if(Length == 0)
+				continue;
+			if(aTrimmed[0] == '"' && aTrimmed[Length - 1] == '"')
+				vTokens.push_back({Length > 1 ? std::string(aTrimmed + 1, Length - 2) : std::string(), MatchesExactly});
+			else
+				vTokens.push_back({aTrimmed, MatchesPart});
+		}
+		return vTokens;
 	}
 
 	NETADDR CommunityAddressKey(const NETADDR &Addr)
@@ -475,9 +504,44 @@ bool CServerBrowser::SortCompareFavoritesNumPlayersAndPing(int Index1, int Index
 	return IsFavorite1 && !IsFavorite2;
 }
 
+bool CServerBrowser::SortCompareQmClients(int Index1, int Index2) const
+{
+	return m_vpServerlist[Index1]->m_Info.m_QmClientCount > m_vpServerlist[Index2]->m_Info.m_QmClientCount;
+}
+
+void CServerBrowser::SetQmClientServerCounts(const std::unordered_map<std::string, int> &Counts)
+{
+	if(m_QmClientServerCounts == Counts)
+		return;
+	m_QmClientServerCounts = Counts;
+	UpdateQmClientServerCounts();
+	if(g_Config.m_BrSort == IServerBrowser::SORT_QM_CLIENTS)
+		RequestResort();
+}
+
+int CServerBrowser::QmClientCountForServer(const CServerInfo &Info) const
+{
+	if(m_QmClientServerCounts.empty() || Info.m_NumAddresses <= 0)
+		return 0;
+	char aAddress[NETADDR_MAXSTRSIZE];
+	net_addr_str(&Info.m_aAddresses[0], aAddress, sizeof(aAddress), true);
+	const auto It = m_QmClientServerCounts.find(aAddress);
+	return It == m_QmClientServerCounts.end() ? 0 : It->second;
+}
+
+void CServerBrowser::UpdateQmClientServerCounts()
+{
+	for(CServerEntry *pEntry : m_vpServerlist)
+		pEntry->m_Info.m_QmClientCount = QmClientCountForServer(pEntry->m_Info);
+}
+
 void CServerBrowser::Filter()
 {
 	m_NumSortedPlayers = 0;
+	const uint64_t FriendsRevision = m_pFriends->Revision();
+	const bool IgnoreClan = g_Config.m_ClFriendsIgnoreClan != 0;
+	const auto vFilterTokens = ParseServerFilterTokens(g_Config.m_BrFilterString);
+	const auto vExcludeTokens = ParseServerFilterTokens(g_Config.m_BrExcludeString);
 
 	m_vSortedServerlist.clear();
 	m_vSortedServerlist.reserve(m_vpServerlist.size());
@@ -490,7 +554,8 @@ void CServerBrowser::Filter()
 	// filter the servers
 	for(int ServerIndex = 0; ServerIndex < (int)m_vpServerlist.size(); ServerIndex++)
 	{
-		CServerInfo &Info = m_vpServerlist[ServerIndex]->m_Info;
+		CServerEntry *pEntry = m_vpServerlist[ServerIndex];
+		CServerInfo &Info = pEntry->m_Info;
 		bool Filtered = false;
 
 		if(g_Config.m_BrFilterEmpty && Info.m_NumFilteredPlayers == 0)
@@ -559,28 +624,13 @@ void CServerBrowser::Filter()
 			{
 				Info.m_QuickSearchHit = 0;
 
-				const char *pStr = g_Config.m_BrFilterString;
-				char aFilterStr[sizeof(g_Config.m_BrFilterString)];
-				char aFilterStrTrimmed[sizeof(g_Config.m_BrFilterString)];
-				while((pStr = str_next_token(pStr, IServerBrowser::SEARCH_EXCLUDE_TOKEN, aFilterStr, sizeof(aFilterStr))))
+				for(const SServerFilterToken &Token : vFilterTokens)
 				{
-					str_copy(aFilterStrTrimmed, str_utf8_skip_whitespaces(aFilterStr));
-					str_utf8_trim_right(aFilterStrTrimmed);
-
-					if(aFilterStrTrimmed[0] == '\0')
-					{
-						continue;
-					}
-					auto MatchesFn = MatchesPart;
-					const int FilterLen = str_length(aFilterStrTrimmed);
-					if(aFilterStrTrimmed[0] == '"' && aFilterStrTrimmed[FilterLen - 1] == '"')
-					{
-						aFilterStrTrimmed[FilterLen - 1] = '\0';
-						MatchesFn = MatchesExactly;
-					}
+					const auto MatchesFn = Token.m_pfnMatches;
+					const char *pFilterStr = Token.m_Text.c_str();
 
 					// match against server name
-					if(MatchesFn(Info.m_aName, aFilterStrTrimmed))
+					if(MatchesFn(Info.m_aName, pFilterStr))
 					{
 						Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
 					}
@@ -588,8 +638,8 @@ void CServerBrowser::Filter()
 					// match against players
 					for(const auto &Client : Info.m_vClients)
 					{
-						if(MatchesFn(Client.m_aName, aFilterStrTrimmed) ||
-							MatchesFn(Client.m_aClan, aFilterStrTrimmed))
+						if(MatchesFn(Client.m_aName, pFilterStr) ||
+							MatchesFn(Client.m_aClan, pFilterStr))
 						{
 							if(g_Config.m_BrFilterConnectingPlayers &&
 								str_comp(Client.m_aName, "(connecting)") == 0 &&
@@ -603,7 +653,7 @@ void CServerBrowser::Filter()
 					}
 
 					// match against map
-					if(MatchesFn(Info.m_aMap, aFilterStrTrimmed))
+					if(MatchesFn(Info.m_aMap, pFilterStr))
 					{
 						Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
 					}
@@ -615,42 +665,27 @@ void CServerBrowser::Filter()
 
 			if(!Filtered && g_Config.m_BrExcludeString[0] != '\0')
 			{
-				const char *pStr = g_Config.m_BrExcludeString;
-				char aExcludeStr[sizeof(g_Config.m_BrExcludeString)];
-				char aExcludeStrTrimmed[sizeof(g_Config.m_BrExcludeString)];
-				while((pStr = str_next_token(pStr, IServerBrowser::SEARCH_EXCLUDE_TOKEN, aExcludeStr, sizeof(aExcludeStr))))
+				for(const SServerFilterToken &Token : vExcludeTokens)
 				{
-					str_copy(aExcludeStrTrimmed, str_utf8_skip_whitespaces(aExcludeStr));
-					str_utf8_trim_right(aExcludeStrTrimmed);
-
-					if(aExcludeStrTrimmed[0] == '\0')
-					{
-						continue;
-					}
-					auto MatchesFn = MatchesPart;
-					const int FilterLen = str_length(aExcludeStrTrimmed);
-					if(aExcludeStrTrimmed[0] == '"' && aExcludeStrTrimmed[FilterLen - 1] == '"')
-					{
-						aExcludeStrTrimmed[FilterLen - 1] = '\0';
-						MatchesFn = MatchesExactly;
-					}
+					const auto MatchesFn = Token.m_pfnMatches;
+					const char *pExcludeStr = Token.m_Text.c_str();
 
 					// match against server name
-					if(MatchesFn(Info.m_aName, aExcludeStrTrimmed))
+					if(MatchesFn(Info.m_aName, pExcludeStr))
 					{
 						Filtered = true;
 						break;
 					}
 
 					// match against map
-					if(MatchesFn(Info.m_aMap, aExcludeStrTrimmed))
+					if(MatchesFn(Info.m_aMap, pExcludeStr))
 					{
 						Filtered = true;
 						break;
 					}
 
 					// match against gametype
-					if(MatchesFn(Info.m_aGameType, aExcludeStrTrimmed))
+					if(MatchesFn(Info.m_aGameType, pExcludeStr))
 					{
 						Filtered = true;
 						break;
@@ -659,7 +694,14 @@ void CServerBrowser::Filter()
 			}
 		}
 
-		UpdateServerFriends(&Info);
+		SFriendStateCache &FriendState = m_FriendStateCache[pEntry];
+		if(!FriendState.m_Valid || FriendState.m_Revision != FriendsRevision || FriendState.m_IgnoreClan != IgnoreClan)
+		{
+			UpdateServerFriends(&Info);
+			FriendState.m_Revision = FriendsRevision;
+			FriendState.m_IgnoreClan = IgnoreClan;
+			FriendState.m_Valid = true;
+		}
 
 		if(!Filtered)
 		{
@@ -672,7 +714,7 @@ void CServerBrowser::Filter()
 
 		if(Info.m_NumClients > 0)
 		{
-			auto Community = std::find_if(m_vCommunities.begin(), m_vCommunities.end(), [Info](const auto &Elem) {
+			auto Community = std::find_if(m_vCommunities.begin(), m_vCommunities.end(), [&Info](const auto &Elem) {
 				return str_comp(Elem.Id(), Info.m_aCommunityId) == 0;
 			});
 			if(Community != m_vCommunities.end())
@@ -706,6 +748,8 @@ int CServerBrowser::SortHash() const
 
 void CServerBrowser::Sort()
 {
+	++m_FriendListRevision;
+	m_NeedResort = false;
 	// update number of filtered players
 	for(CServerEntry *pEntry : m_vpServerlist)
 	{
@@ -732,6 +776,8 @@ void CServerBrowser::Sort()
 		std::stable_sort(m_vSortedServerlist.begin(), m_vSortedServerlist.end(), CSortWrap(this, &CServerBrowser::SortCompareGametype));
 	else if(g_Config.m_BrSort == IServerBrowser::SORT_FAVORITES)
 		std::stable_sort(m_vSortedServerlist.begin(), m_vSortedServerlist.end(), CSortWrap(this, &CServerBrowser::SortCompareFavoritesNumPlayersAndPing));
+	else if(g_Config.m_BrSort == IServerBrowser::SORT_QM_CLIENTS)
+		std::stable_sort(m_vSortedServerlist.begin(), m_vSortedServerlist.end(), CSortWrap(this, &CServerBrowser::SortCompareQmClients));
 
 	m_Sorthash = SortHash();
 }
@@ -800,17 +846,31 @@ static void ServerBrowserFormatAddresses(char *pBuffer, int BufferSize, NETADDR 
 
 void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 {
-	const CServerInfo TmpInfo = pEntry->m_Info;
+	const TRISTATE Favorite = pEntry->m_Info.m_Favorite;
+	const TRISTATE FavoriteAllowPing = pEntry->m_Info.m_FavoriteAllowPing;
+	const int ServerIndex = pEntry->m_Info.m_ServerIndex;
+	const int QmClientCount = pEntry->m_Info.m_QmClientCount;
+	const int NumAddresses = pEntry->m_Info.m_NumAddresses;
+	NETADDR aAddresses[MAX_SERVER_ADDRESSES];
+	mem_copy(aAddresses, pEntry->m_Info.m_aAddresses, sizeof(aAddresses));
+	char aCommunityId[CServerInfo::MAX_COMMUNITY_ID_LENGTH];
+	char aCommunityCountry[CServerInfo::MAX_COMMUNITY_COUNTRY_LENGTH];
+	char aCommunityType[CServerInfo::MAX_COMMUNITY_TYPE_LENGTH];
+	str_copy(aCommunityId, pEntry->m_Info.m_aCommunityId);
+	str_copy(aCommunityCountry, pEntry->m_Info.m_aCommunityCountry);
+	str_copy(aCommunityType, pEntry->m_Info.m_aCommunityType);
 	pEntry->m_Info = Info;
-	pEntry->m_Info.m_Favorite = TmpInfo.m_Favorite;
-	pEntry->m_Info.m_FavoriteAllowPing = TmpInfo.m_FavoriteAllowPing;
-	pEntry->m_Info.m_ServerIndex = TmpInfo.m_ServerIndex;
-	mem_copy(pEntry->m_Info.m_aAddresses, TmpInfo.m_aAddresses, sizeof(pEntry->m_Info.m_aAddresses));
-	pEntry->m_Info.m_NumAddresses = TmpInfo.m_NumAddresses;
+	pEntry->m_Info.m_Favorite = Favorite;
+	pEntry->m_Info.m_FavoriteAllowPing = FavoriteAllowPing;
+	pEntry->m_Info.m_ServerIndex = ServerIndex;
+	pEntry->m_Info.m_QmClientCount = QmClientCount;
+	mem_copy(pEntry->m_Info.m_aAddresses, aAddresses, sizeof(aAddresses));
+	pEntry->m_Info.m_NumAddresses = NumAddresses;
 	ServerBrowserFormatAddresses(pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress), pEntry->m_Info.m_aAddresses, pEntry->m_Info.m_NumAddresses);
-	str_copy(pEntry->m_Info.m_aCommunityId, TmpInfo.m_aCommunityId);
-	str_copy(pEntry->m_Info.m_aCommunityCountry, TmpInfo.m_aCommunityCountry);
-	str_copy(pEntry->m_Info.m_aCommunityType, TmpInfo.m_aCommunityType);
+	str_copy(pEntry->m_Info.m_aCommunityId, aCommunityId);
+	str_copy(pEntry->m_Info.m_aCommunityCountry, aCommunityCountry);
+	str_copy(pEntry->m_Info.m_aCommunityType, aCommunityType);
+	m_FriendStateCache[pEntry].m_Valid = false;
 	UpdateServerRank(&pEntry->m_Info);
 	pEntry->m_Info.m_GametypeColor = CServerInfo::GametypeColor(pEntry->m_Info.m_aGameType);
 
@@ -930,6 +990,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR *pAddrs, int Num
 	// set the info
 	mem_copy(pEntry->m_Info.m_aAddresses, pAddrs, NumAddrs * sizeof(pAddrs[0]));
 	pEntry->m_Info.m_NumAddresses = NumAddrs;
+	pEntry->m_Info.m_QmClientCount = QmClientCountForServer(pEntry->m_Info);
 
 	pEntry->m_Info.m_Latency = 999;
 	pEntry->m_Info.m_HasRank = CServerInfo::RANK_UNAVAILABLE;
@@ -960,6 +1021,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR *pAddrs, int Num
 
 CServerBrowser::CServerEntry *CServerBrowser::ReplaceEntry(CServerEntry *pEntry, const NETADDR *pAddrs, int NumAddrs)
 {
+	m_FriendStateCache.erase(pEntry);
 	for(int i = 0; i < pEntry->m_Info.m_NumAddresses; i++)
 	{
 		m_ByAddr.erase(pEntry->m_Info.m_aAddresses[i]);
@@ -968,6 +1030,7 @@ CServerBrowser::CServerEntry *CServerBrowser::ReplaceEntry(CServerEntry *pEntry,
 	// set the info
 	mem_copy(pEntry->m_Info.m_aAddresses, pAddrs, NumAddrs * sizeof(pAddrs[0]));
 	pEntry->m_Info.m_NumAddresses = NumAddrs;
+	pEntry->m_Info.m_QmClientCount = QmClientCountForServer(pEntry->m_Info);
 
 	pEntry->m_Info.m_Latency = 999;
 	pEntry->m_Info.m_HasRank = CServerInfo::RANK_UNAVAILABLE;
@@ -1294,14 +1357,14 @@ void CServerBrowser::UpdateFromHttp()
 
 	for(int i = 0; i < NumServers; i++)
 	{
-		CServerInfo Info = m_pHttp->Server(i);
+		const CServerInfo &Info = m_pHttp->Server(i);
 		if(!Want(Info.m_aAddresses, Info.m_NumAddresses))
 		{
 			continue;
 		}
-		UpdateServerLatency(&Info, OwnLocation);
 		CServerEntry *pEntry = Add(Info.m_aAddresses, Info.m_NumAddresses);
 		SetInfo(pEntry, Info);
+		UpdateServerLatency(&pEntry->m_Info, OwnLocation);
 		pEntry->m_RequestIgnoreInfo = true;
 	}
 
@@ -1343,6 +1406,7 @@ void CServerBrowser::CleanUp()
 	m_vSortedServerlist.clear();
 	m_vpServerlist.clear();
 	m_ServerlistStorage.clear();
+	m_FriendStateCache.clear();
 	m_NumSortedPlayers = 0;
 	m_ByAddr.clear();
 	m_pFirstReqServer = nullptr;
@@ -1442,7 +1506,6 @@ void CServerBrowser::Update()
 			pInfo->m_FavoriteAllowPing = m_pFavorites->IsPingAllowed(pInfo->m_aAddresses, pInfo->m_NumAddresses);
 		}
 		Sort();
-		m_NeedResort = false;
 	}
 }
 

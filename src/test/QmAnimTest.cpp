@@ -8,6 +8,7 @@
 #include <game/client/QmUi/QmAnimCurves.h>
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/QmDropdown.h>
+#include <game/client/QmUi/QmIslandNotice.h>
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/QmTree.h>
 #include <game/client/QmUi/SettingsCardGeometry.h>
@@ -78,6 +79,98 @@ TEST(UiRect, NestedZeroClipCannotExpand)
 	EXPECT_FLOAT_EQ(Intersection.y, 100.0f);
 	EXPECT_FLOAT_EQ(Intersection.w, 0.0f);
 	EXPECT_FLOAT_EQ(Intersection.h, 0.0f);
+}
+
+TEST(QmIslandNotice, FirstVisibleFrameStartsAtHiddenBallAndGatesExpansion)
+{
+	g_Config.m_QmUiMotionLevel = 2;
+	CUiV2AnimationRuntime Runtime;
+	qm_island::SNoticeState State;
+	const auto First = qm_island::ResolveSprings(Runtime, 801, 802, State, true);
+	EXPECT_FLOAT_EQ(First.m_DropProgress, 0.0f);
+	EXPECT_FLOAT_EQ(First.m_ExpandProgress, 0.0f);
+	EXPECT_TRUE(Runtime.HasActiveAnimation(801, EUiAnimProperty::ALPHA));
+	EXPECT_FALSE(qm_island::AdvanceCountdown(State, true, 0.1f));
+	EXPECT_FLOAT_EQ(State.m_ElapsedSeconds, 0.0f);
+
+	Runtime.Advance(1.0f / 60.0f);
+	const auto Dropping = qm_island::ResolveSprings(Runtime, 801, 802, State, true);
+	EXPECT_GT(Dropping.m_DropProgress, 0.0f);
+	EXPECT_LT(Dropping.m_DropProgress, 1.0f);
+	EXPECT_FLOAT_EQ(Dropping.m_ExpandProgress, 0.0f);
+}
+
+TEST(QmIslandNotice, CountdownResumesAfterInterruptionAndResetClearsElapsedTime)
+{
+	qm_island::SNoticeState State;
+	State.m_DurationSeconds = 2.0f;
+	State.m_ExpandProgress = 1.0f;
+	EXPECT_FALSE(qm_island::AdvanceCountdown(State, true, 0.5f));
+	EXPECT_FLOAT_EQ(qm_island::RemainingFraction(State), 0.75f);
+	EXPECT_FALSE(qm_island::AdvanceCountdown(State, false, 1.0f));
+	EXPECT_FLOAT_EQ(State.m_ElapsedSeconds, 0.5f);
+	EXPECT_TRUE(qm_island::AdvanceCountdown(State, true, 1.5f));
+	qm_island::Reset(State);
+	EXPECT_FLOAT_EQ(qm_island::RemainingFraction(State), 1.0f);
+	EXPECT_FALSE(qm_island::NeedsRender(State, false));
+}
+
+TEST(QmIslandSurface, RoundedRectanglePerimeterVisitsStraightSidesAndCornersClockwise)
+{
+	const CUIRect Rect{10.0f, 20.0f, 100.0f, 60.0f};
+	constexpr float Pi = 3.14159265359f;
+	const float QuarterArc = 5.0f * Pi;
+	const float Perimeter = qm_island::RoundedRectPerimeterLength(Rect, 10.0f);
+	EXPECT_NEAR(Perimeter, 240.0f + 20.0f * Pi, 0.0001f);
+
+	struct SPointAtDistance
+	{
+		float m_Distance;
+		vec2 m_Position;
+	};
+	const std::array<SPointAtDistance, 11> aPoints{{
+		{0.0f, {60.0f, 20.0f}},
+		{40.0f, {100.0f, 20.0f}},
+		{40.0f + QuarterArc, {110.0f, 30.0f}},
+		{40.0f + QuarterArc + 20.0f, {110.0f, 50.0f}},
+		{80.0f + QuarterArc, {110.0f, 70.0f}},
+		{80.0f + 2.0f * QuarterArc, {100.0f, 80.0f}},
+		{Perimeter * 0.5f, {60.0f, 80.0f}},
+		{160.0f + 2.0f * QuarterArc, {20.0f, 80.0f}},
+		{160.0f + 3.0f * QuarterArc, {10.0f, 70.0f}},
+		{180.0f + 3.0f * QuarterArc, {10.0f, 50.0f}},
+		{200.0f + 3.0f * QuarterArc, {10.0f, 30.0f}},
+	}};
+	for(const auto &Point : aPoints)
+	{
+		SCOPED_TRACE(Point.m_Distance);
+		const vec2 Actual = qm_island::RoundedRectPerimeterPoint(Rect, 10.0f, Point.m_Distance / Perimeter);
+		EXPECT_NEAR(Actual.x, Point.m_Position.x, 0.0001f);
+		EXPECT_NEAR(Actual.y, Point.m_Position.y, 0.0001f);
+	}
+	const vec2 LastCorner = qm_island::RoundedRectPerimeterPoint(Rect, 10.0f, (200.0f + 4.0f * QuarterArc) / Perimeter);
+	EXPECT_NEAR(LastCorner.x, 20.0f, 0.0001f);
+	EXPECT_NEAR(LastCorner.y, 20.0f, 0.0001f);
+	EXPECT_EQ(qm_island::RoundedRectPerimeterPoint(Rect, 10.0f, 1.0f), qm_island::RoundedRectPerimeterPoint(Rect, 10.0f, 0.0f));
+}
+
+TEST(QmIslandSurface, CapsuleAndSquareCornersKeepTheSameStartAndDirection)
+{
+	const CUIRect Capsule{10.0f, 20.0f, 100.0f, 20.0f};
+	const float CapsulePerimeter = qm_island::RoundedRectPerimeterLength(Capsule, 10.0f);
+	EXPECT_NEAR(CapsulePerimeter, 160.0f + 20.0f * 3.14159265359f, 0.0001f);
+	EXPECT_EQ(qm_island::RoundedRectPerimeterPoint(Capsule, 10.0f, 0.0f), vec2(60.0f, 20.0f));
+	const vec2 CapsuleBottom = qm_island::RoundedRectPerimeterPoint(Capsule, 10.0f, 0.5f);
+	EXPECT_NEAR(CapsuleBottom.x, 60.0f, 0.0001f);
+	EXPECT_NEAR(CapsuleBottom.y, 40.0f, 0.0001f);
+
+	const CUIRect SquareCorners{10.0f, 20.0f, 100.0f, 60.0f};
+	const float Perimeter = qm_island::RoundedRectPerimeterLength(SquareCorners, 0.0f);
+	EXPECT_FLOAT_EQ(Perimeter, 320.0f);
+	EXPECT_EQ(qm_island::RoundedRectPerimeterPoint(SquareCorners, 0.0f, 0.0f), vec2(60.0f, 20.0f));
+	EXPECT_EQ(qm_island::RoundedRectPerimeterPoint(SquareCorners, 0.0f, 80.0f / Perimeter), vec2(110.0f, 50.0f));
+	EXPECT_EQ(qm_island::RoundedRectPerimeterPoint(SquareCorners, 0.0f, 0.5f), vec2(60.0f, 80.0f));
+	EXPECT_EQ(qm_island::RoundedRectPerimeterPoint(SquareCorners, 0.0f, 240.0f / Perimeter), vec2(10.0f, 50.0f));
 }
 
 TEST(SettingsCard, CanonicalRectOwnsDisplayHitDragAndProxyGeometry)

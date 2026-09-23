@@ -15,6 +15,7 @@
 
 #include <game/client/component.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/skin_load_budget.h>
 #include <game/client/components/qmclient/skin_prepared_textures.h>
 #include <game/client/components/qmclient/skin_prepared_visuals.h>
 #include <game/client/components/settings_resource_jobs.h>
@@ -53,6 +54,8 @@ private:
 		// 纹理预备按精灵粒度记录可用性，越界精灵留待主线程走空白素材回退。
 		SQmPreparedSkinVisuals m_PreparedVisuals;
 		std::unique_ptr<CQmPreparedSkinTextures> m_pPreparedTextures;
+		size_t m_SourceWidth = 0;
+		size_t m_SourceHeight = 0;
 	};
 
 	/**
@@ -220,6 +223,14 @@ public:
 		{
 			return (OldState == EState::NOT_FOUND) != (NewState == EState::NOT_FOUND);
 		}
+		static bool ShouldDiscardPendingUpload(EState OldState, EState NewState)
+		{
+			return OldState == EState::LOADING && NewState != EState::LOADING && NewState != EState::LOADED;
+		}
+		static bool IsUnresolved(EState State)
+		{
+			return State == EState::ERROR || State == EState::NOT_FOUND;
+		}
 		static EStatusIndicator StatusIndicator(EState State)
 		{
 			switch(State)
@@ -258,8 +269,10 @@ public:
 		bool m_AlwaysLoaded;
 
 		EState m_State = EState::UNLOADED;
+		bool m_UnresolvedNotified = false;
 		ESettingsResourcePriority m_LoadPriority = ESettingsResourcePriority::BACKGROUND;
 		std::unique_ptr<CSkin> m_pSkin = nullptr;
+		std::unique_ptr<CSkin> m_pPendingSkin;
 		std::shared_ptr<CAbstractSkinLoadJob> m_pLoadJob = nullptr;
 		CSkinLoadData m_SettingsPendingUploadData;
 		size_t m_SettingsPendingUploadSprite = 0;
@@ -287,6 +300,20 @@ public:
 		void TouchBackgroundUsage();
 		void ClearBackgroundUsage();
 		void SetState(EState State, ESettingsResourcePriority Priority = ESettingsResourcePriority::VISIBLE);
+	};
+
+	class CUnresolvedSkinScanState
+	{
+	public:
+		void OnStateChange(CSkinContainer::EState OldState, CSkinContainer::EState NewState)
+		{
+			if(OldState != NewState && CSkinContainer::IsUnresolved(NewState))
+				m_Pending = true;
+		}
+		bool Consume() { return std::exchange(m_Pending, false); }
+
+	private:
+		bool m_Pending = false;
 	};
 
 	/**
@@ -474,6 +501,7 @@ public:
 	void OnInit() override;
 	void OnShutdown() override;
 	void OnUpdate() override;
+	void OnRender() override;
 
 	void RefreshEventSkins();
 	void Refresh(TSkinLoadedCallback &&SkinLoadedCallback);
@@ -841,14 +869,18 @@ private:
 	bool BeginSkinPreviewUpload(CSkinContainer *pSkinContainer, CSkinLoadData &&Data);
 	bool UploadNextSkinPreviewSprite(CSkinContainer *pSkinContainer, SResourcePreviewUploadBudget &Budget);
 	void FinishSkinPreviewUpload(CSkinContainer *pSkinContainer);
+	void DiscardSkinPreviewUpload(CSkinContainer *pSkinContainer);
 	void LoadSkinDirect(const char *pName);
 	const CSkinContainer *FindContainerImpl(const char *pName);
 	static int SkinScan(const char *pName, int IsDir, int StorageType, void *pUser);
 
 	void UpdateUnloadSkins(CSkinLoadingStats &Stats);
+	void UnloadLoadedSkinTextures(CSkinContainer *pSkinContainer);
+	void QueueSkinTexturesUnloaded(const char *pSkinName);
 	bool ReclaimBackgroundSkinForPriorityRequest(const char *pRequesterName, int CountFuseLimit);
 	void UpdateStartLoading(CSkinLoadingStats &Stats);
 	void UpdateFinishLoading(CSkinLoadingStats &Stats, std::chrono::nanoseconds StartTime, std::chrono::nanoseconds MaxTime);
+	void CollectUnresolvedSkins();
 	size_t LoadedSkinLimit() const;
 	void QueueSkinDirectoryScanJob();
 	void ProcessSkinDirectoryScanJob();
@@ -893,6 +925,12 @@ private:
 
 	std::unordered_map<std::string, std::unique_ptr<CSkinContainer>> m_Skins;
 	std::optional<std::chrono::nanoseconds> m_ContainerUpdateTime;
+	CSkinContainer *m_pSkinPreviewUpload = nullptr;
+	size_t m_NumLoadingSkins = 0;
+	CQmSkinUploadFrameBudget m_SkinUploadFrameBudget;
+	CUnresolvedSkinScanState m_UnresolvedSkinScanState;
+	std::vector<std::string> m_vSkinsUnresolvedThisFrame;
+	std::vector<std::string> m_vSkinsTexturesUnloadedThisFrame;
 	/**
 	 * Sorted from most recently to least recently used. Must be kept synchronized with the skin containers.
 	 * Contains prioritized skins in pending/loading/loaded states so visible items can be started and finished first.
@@ -947,6 +985,7 @@ private:
 		CONTINUE,
 		BREAK_GPU_LIMIT,
 		BREAK_TIME_EXCEEDED,
+		BREAK_UPLOAD,
 	};
 
 	ESkinProcessResult ProcessSkinContainer(CSkinContainer *pSkinContainer, CSkinLoadingStats &Stats,

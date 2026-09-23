@@ -12,6 +12,7 @@ inline bool QmNameplateUsesPhysicalPixelAlignment(const float HiDpiScale, const 
 }
 
 struct CNetObj_PlayerInfo;
+class CUIRect;
 
 class CNamePlates : public CComponent
 {
@@ -23,14 +24,13 @@ private:
 
 public:
 	void RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *pPlayerInfo, float Alpha, bool TrackCoordXAlign = true);
-	void RenderNamePlatePreview(vec2 Position, int Dummy);
+	float MeasurePreviewAreaHeight() const;
+	void RenderNamePlatePreview(const CUIRect &PreviewArea, int Dummy);
 	void RenderChatBubble(vec2 Position, int ClientId, float Alpha);
 	void ResetNamePlates();
 	int Sizeof() const override { return sizeof(*this); }
 	void OnShutdown() override;
 	void OnWindowResize() override;
-	// 设备重建（graphics resources reset）：丢弃 MSDF 图集纹理并在新设备上重建
-	void OnGraphicsResourcesReset();
 	void OnRender() override;
 	CNamePlates();
 	~CNamePlates() override;

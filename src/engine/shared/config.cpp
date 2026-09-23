@@ -195,7 +195,12 @@ bool QmFinalizeConfigMigration(IStorage *pStorage)
 	char aCurrentDirPath[IO_MAX_PATH_LENGTH];
 	pStorage->GetCompletePath(IStorage::TYPE_SAVE, QM_CONFIG_V1_DIR, aV1DirPath, sizeof(aV1DirPath));
 	pStorage->GetCompletePath(IStorage::TYPE_SAVE, "qmclient", aCurrentDirPath, sizeof(aCurrentDirPath));
-	if(str_comp_nocase(aV1DirPath, aCurrentDirPath) != 0)
+#if defined(CONF_FAMILY_WINDOWS) || defined(CONF_PLATFORM_MACOS)
+	const bool SeparateV1Directory = str_comp_nocase(aV1DirPath, aCurrentDirPath) != 0;
+#else
+	const bool SeparateV1Directory = str_comp(aV1DirPath, aCurrentDirPath) != 0;
+#endif
+	if(SeparateV1Directory)
 	{
 		pStorage->RemoveFile("QmClient/settings_ddnet.cfg", IStorage::TYPE_SAVE);
 		pStorage->RemoveFile("QmClient/settings_qmclient.cfg", IStorage::TYPE_SAVE);

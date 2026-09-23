@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "profile": "nunito",
-  "generator": "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd",
-  "pages": [
-    "qmclient/nameplate_msdf/nameplate_nunito_00.json"
-  ]
-}

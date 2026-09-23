@@ -16,6 +16,10 @@
 #include <generated/protocol.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/friend_enter_tracker.h>
+#include <game/client/components/qmclient/friend_online_tracker.h>
+#include <game/client/components/qmclient/local_saves.h>
+#include <game/client/components/qmclient/map_progress.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
 #include <game/client/components/qmclient/route_start_index.h>
@@ -222,7 +226,22 @@ class CTClient : public CComponent
 	void UpdatePlayerStats();
 	void TrackHookDirection(int Dummy);
 
-	// Gores 地图进度（全图距离场估算）
+	// 地图进度：保留 Gores 距离场，DDRace 使用计时 CP 分段路径场。
+	QmMapProgress::CMap m_QmDDraceProgressMap;
+	QmMapProgress::CPlayer m_aQmDDraceProgress[NUM_DUMMIES];
+	const void *m_pQmDDraceProgressGame = nullptr;
+	const void *m_pQmDDraceProgressFront = nullptr;
+	const void *m_pQmDDraceProgressTele = nullptr;
+	int m_QmDDraceProgressWidth = 0;
+	int m_QmDDraceProgressScanCursor = 0;
+	int m_aQmDDraceProgressClientId[NUM_DUMMIES] = {-1, -1};
+	int m_aQmDDraceTeleCheckpoint[NUM_DUMMIES] = {0, 0};
+	vec2 m_aQmDDraceProgressPreviousPos[NUM_DUMMIES] = {};
+	bool m_aQmDDraceProgressHasPreviousPos[NUM_DUMMIES] = {false, false};
+	bool IsDDraceMapProgressMap() const;
+	void ResetDDraceMapProgress();
+	void UpdateDDraceMapProgress();
+
 	enum class EGoresDistanceFieldBuildStage
 	{
 		IDLE,
@@ -343,17 +362,18 @@ class CTClient : public CComponent
 	void HandleMapHistoryFinish(int ClientId, int FinishTimeMs);
 
 	// 本地存档列表
-	struct SLocalSaveEntry
-	{
-		std::string m_Time;
-		std::string m_Players;
-		std::string m_Map;
-		std::string m_Code;
-	};
+	using SLocalSaveEntry = QmLocalSaves::SEntry;
 	char m_aLastLocalSaveHintMap[128] = "";
+	std::vector<SLocalSaveEntry> m_vLocalSaveCandidates;
+	bool m_LocalSavePromptActive = false;
+	QmLocalSaves::CConfirmation m_LocalSaveConfirmation;
+	QmLocalSaves::CRestore m_LocalSaveRestore;
 	bool LoadLocalSaveEntries(std::vector<SLocalSaveEntry> &vEntries, bool *pFileExists = nullptr) const;
-	bool RemoveLocalSaveByCode(const char *pCode);
+	bool RemoveLocalSaveByCode(const char *pMap, const char *pCode);
 	void MaybeShowLocalSaveJoinHint();
+	QmLocalSaves::CRestore::SWorld LocalSaveWorld() const;
+	void UpdateLocalSaveRestore();
+	void CompleteLocalSaveLoad(bool Success);
 	static void ConSaveList(IConsole::IResult *pResult, void *pUserData);
 
 	// 复读功能
@@ -374,30 +394,32 @@ class CTClient : public CComponent
 	struct SFriendOnlineState
 	{
 		float m_LastSeen = 0.0f;
-		std::string m_Name;
-		std::string m_Map;
-		int m_LastSeenScanId = 0;
 	};
 	std::unordered_map<std::string, SFriendOnlineState> m_FriendOnline;
+	qm_friend_notify::COnlineTracker m_FriendOnlineTracker;
+	std::vector<qm_friend_notify::CFriend> m_vFriendOnlineScan;
+	std::unordered_set<std::string> m_FriendOnlineAvailableServers;
+	std::unordered_set<std::string> m_FriendOnlineNames;
 	float m_FriendNotifyNextCheck = 0.0f;
 	int m_FriendNotifyPrevEnabled = -1;
 	int m_FriendNotifyPrevIgnoreClan = -1;
+	uint64_t m_FriendNotifyPrevRevision = 0;
 	bool m_FriendNotifyScanRunning = false;
 	int m_FriendNotifyScanIndex = 0;
-	int m_FriendNotifyScanId = 0;
 	float m_FriendAutoRefreshNext = 0.0f;
 	int m_FriendAutoRefreshPrevEnabled = -1;
 	int m_FriendAutoRefreshPrevSeconds = -1;
 	void CheckFriendOnline();
-	// 好友进图自动打招呼
-	std::unordered_set<std::string> m_FriendEnterOnline;
-	bool m_aFriendEnterClientActive[MAX_CLIENTS] = {};
+	// 本服进服通知和自动问候共享同一份出入状态。
+	qm_friend_notify::CEnterTracker m_FriendEnterTracker;
 	int m_FriendEnterPrevEnabled = -1;
 	int m_FriendEnterPrevIgnoreClan = -1;
-	bool m_FriendEnterInitialized = false;
+	int m_FriendEnterPrevDummy = -1;
+	uint64_t m_FriendEnterPrevRevision = 0;
 	float m_FriendEnterNextCheck = 0.0f;
 	std::string m_FriendEnterPendingNames;
 	float m_FriendEnterPendingSendAt = 0.0f;
+	void ResetFriendEnter();
 	void CheckFriendEnterGreet();
 
 	bool m_QmAspectApplyPending = false;
@@ -500,7 +522,9 @@ public:
 	void RemoveMapHistoryRecord(const char *pMapId);
 	void ClearFinishedMapHistory();
 	void ClearAllMapHistory();
-	bool TryRemoveLocalSaveForLoadCommand(const char *pLine);
+	void TrackLocalSaveLoadCommand(int Conn, const char *pLine);
+	bool TryHandleLocalSaveReply(const char *pLine);
+	void HandleLocalSaveMessage(const CNetMsg_Sv_Chat *pMsg, int Conn);
 	bool IsGoresMapProgressEnabled() const;
 	bool ShouldHideGoresGuides(bool ManualGuideVisible = false) const;
 	bool HasGoresMapProgress(int Dummy = 0) const

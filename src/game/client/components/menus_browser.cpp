@@ -24,6 +24,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
+#include <game/client/components/qmclient/friends_category_drag.h>
 #include <game/client/components/qmclient/map_history_ui.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/gameclient.h>
@@ -451,7 +452,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		{COL_FRIENDS, IServerBrowser::SORT_NUMFRIENDS, "", 1, ClickableIconSpace, {0}},
 		{COL_PLAYERS, IServerBrowser::SORT_NUMPLAYERS, Localizable("Players"), 1, 60.0f, {0}},
 		{-1, -1, "", 1, 4.0f, {0}},
-		{COL_QM_CLIENTS, -1, "梦", 1, 24.0f, {0}},
+		{COL_QM_CLIENTS, IServerBrowser::SORT_QM_CLIENTS, "梦", 1, 24.0f, {0}},
 		{COL_PING, IServerBrowser::SORT_PING, Localizable("Ping"), 1, 30.0f, {0}},
 	};
 
@@ -704,21 +705,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	}
 
 	const int NumServers = ServerBrowser()->NumSortedServers();
-	std::unordered_map<std::string, int> QmClientsByServer;
-	for(const SQmClientServerDistribution &Distribution : GameClient()->m_QmClient.QmClientServerDistribution())
-	{
-		const int Count = Distribution.m_UserCount + Distribution.m_DummyCount;
-		if(Count > 0 && !Distribution.m_ServerAddress.empty())
-			QmClientsByServer[Distribution.m_ServerAddress] = Count;
-	}
-	const auto FindQmClientCount = [&QmClientsByServer](const CServerInfo *pInfo) {
-		if(pInfo->m_NumAddresses <= 0)
-			return 0;
-		char aAddress[NETADDR_MAXSTRSIZE];
-		net_addr_str(&pInfo->m_aAddresses[0], aAddress, sizeof(aAddress), true);
-		const auto It = QmClientsByServer.find(aAddress);
-		return It == QmClientsByServer.end() ? 0 : It->second;
-	};
 
 	// display important messages in the middle of the screen so no
 	// users misses it
@@ -1035,7 +1021,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			}
 			else if(Id == COL_QM_CLIENTS)
 			{
-				const int QmClients = FindQmClientCount(pItem);
+				const int QmClients = pItem->m_QmClientCount;
 				if(QmClients > 0)
 				{
 					Button.VMargin(2.0f, &Button);
@@ -2182,16 +2168,8 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	const ColorRGBA CategoryDragOutlineColor(1.0f, 0.85f, 0.2f, 0.9f);
 	const ColorRGBA CategoryDragGhostColor(0.08f, 0.09f, 0.12f, 0.55f);
 
-	struct SFriendsCategoryDragState
-	{
-		int m_PressedIndex = -1;
-		int m_DraggingIndex = -1;
-		vec2 m_GrabOffset = vec2(0.0f, 0.0f);
-		float m_DraggedWidth = 0.0f;
-		float m_DraggedHeight = 0.0f;
-		bool m_HasDragRect = false;
-	};
 	static SFriendsCategoryDragState s_CategoryDragState;
+	static SFriendsPlayerDragState s_FriendDragState;
 
 	struct SFriendsCategoryDropPreview
 	{
@@ -2212,6 +2190,11 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	auto ResetCategoryDragState = [&]() {
 		s_CategoryDragState = SFriendsCategoryDragState();
 		s_CategoryDropPreview = SFriendsCategoryDropPreview();
+	};
+	auto ResetFriendDragState = [&]() {
+		if(Ui()->IsActiveItem(&s_FriendDragState) || (s_FriendDragState.m_pPressedItem != nullptr && Ui()->IsActiveItem(s_FriendDragState.m_pPressedItem)))
+			Ui()->SetActiveItem(nullptr);
+		s_FriendDragState = SFriendsPlayerDragState();
 	};
 
 	auto DrawCategoryDragOutline = [&](const CUIRect &Rect) {
@@ -2252,6 +2235,32 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 	if(s_CategoryDragState.m_DraggingIndex >= NumCategories || s_CategoryDragState.m_PressedIndex >= NumCategories)
 		ResetCategoryDragState();
+	if(s_CategoryDragState.m_PressedIndex >= 0 &&
+		(!Ui()->IsActiveItem(&m_vFriendsCategoryExpanded[s_CategoryDragState.m_PressedIndex]) || Ui()->IsPopupOpen()))
+		ResetCategoryDragState();
+	if(s_CategoryDragState.Update(vec2(Ui()->MouseX(), Ui()->MouseY()), Ui()->MouseButton(0)))
+	{
+		List.y -= ScrollOffset.y;
+		s_ScrollRegion.SetScrollOffsetY(0.0f);
+	}
+	const bool DraggingAnyHeader = s_CategoryDragState.m_DraggingIndex >= 0;
+	if(s_FriendDragState.m_pPressedItem != nullptr)
+	{
+		const void *pDragActiveId = s_FriendDragState.m_Dragging || Ui()->IsActiveItem(&s_FriendDragState) ? &s_FriendDragState : s_FriendDragState.m_pPressedItem;
+		if(Ui()->IsPopupOpen() || !Ui()->CheckActiveItem(pDragActiveId))
+			ResetFriendDragState();
+		else if(s_FriendDragState.Update(vec2(Ui()->MouseX(), Ui()->MouseY()), Ui()->MouseButton(0)))
+		{
+			// 列表行临时隐藏后使用独立 ID 持续拖动，避免松手被识别为加入服务器。
+			Ui()->SetActiveItem(&s_FriendDragState);
+			List.y -= ScrollOffset.y;
+			s_ScrollRegion.SetScrollOffsetY(0.0f);
+		}
+	}
+	const bool DraggingFriend = s_FriendDragState.m_Dragging;
+	int FriendDropCategoryIndex = -1;
+	if(DraggingFriend)
+		Ui()->SetHotItem(&s_FriendDragState);
 
 	std::vector<SFriendsCategoryHeaderInfo> vCategoryHeaders;
 	vCategoryHeaders.reserve(NumCategories);
@@ -2270,42 +2279,11 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		CUIRect HeaderAction;
 		SplitFriendsCategoryHeaderRects(Header, &HeaderAction, nullptr);
 		const bool HeaderInside = Ui()->MouseHovered(&HeaderAction);
-		if(Input()->ModifierIsPressed() && Ui()->MouseButtonClicked(0) && HeaderInside && Ui()->ActiveItem() == nullptr)
-		{
-			s_CategoryDragState.m_PressedIndex = CategoryIndex;
-			s_CategoryDragState.m_DraggingIndex = -1;
-		}
-
-		if(s_CategoryDragState.m_PressedIndex == CategoryIndex && Ui()->MouseButton(0) && Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0)
-		{
-			if(HeaderInside)
-			{
-				s_CategoryDragState.m_DraggingIndex = CategoryIndex;
-				s_CategoryDragState.m_GrabOffset = vec2(Ui()->MouseX() - Header.x, Ui()->MouseY() - Header.y);
-				s_CategoryDragState.m_DraggedWidth = Header.w;
-				s_CategoryDragState.m_DraggedHeight = Header.h;
-				s_CategoryDragState.m_HasDragRect = true;
-
-				bool ExpandedChanged = false;
-				for(int CollapseIndex = 0; CollapseIndex < NumCategories && CollapseIndex < (int)m_vFriendsCategoryExpanded.size(); ++CollapseIndex)
-				{
-					if(m_vFriendsCategoryExpanded[CollapseIndex])
-					{
-						m_vFriendsCategoryExpanded[CollapseIndex] = false;
-						ExpandedChanged = true;
-					}
-				}
-				if(ExpandedChanged)
-					SaveFriendsCategoryExpandedState();
-			}
-		}
-		else if(s_CategoryDragState.m_PressedIndex == CategoryIndex && !Input()->ModifierIsPressed() && s_CategoryDragState.m_DraggingIndex < 0)
-		{
-			ResetCategoryDragState();
-		}
-
+		const bool FriendDropHovered = DraggingFriend && HeaderInside && Ui()->MouseHovered(&ListViewport);
+		const bool FriendDropAllowed = s_FriendDragState.CanDropTo(pCategoryName);
+		if(FriendDropHovered && FriendDropAllowed)
+			FriendDropCategoryIndex = CategoryIndex;
 		const bool DraggingThisHeader = s_CategoryDragState.m_DraggingIndex == CategoryIndex;
-		const bool DraggingAnyHeader = s_CategoryDragState.m_DraggingIndex >= 0;
 		const bool HeaderHovered = HeaderInside || DraggingThisHeader;
 		const bool PopupOpen = Ui()->IsPopupOpen(&m_FriendsCategoryPopupContext) && m_FriendsCategoryPopupContext.m_CategoryIndex == CategoryIndex;
 		ColorRGBA HeaderColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
@@ -2314,12 +2292,14 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 		else if(IsClanMembersCategory(pCategoryName))
 			HeaderColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClFriendsListClanColor));
 		HeaderColor.a = HeaderHovered || PopupOpen ? 0.4f : 0.25f;
+		if(FriendDropHovered)
+			HeaderColor = FriendDropAllowed ? ColorRGBA(0.2f, 0.9f, 0.4f, 0.5f) : ColorRGBA(0.9f, 0.25f, 0.2f, 0.4f);
 		DrawRoundedSurface(Ui(), Header, HeaderColor, ColorRGBA(), 5.0f);
 		Header.VSplitLeft(Header.h, &GroupIcon, &GroupLabel);
 		GroupIcon.Margin(2.0f, &GroupIcon);
 		TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 		TextRender()->TextColor(HeaderHovered ? TextRender()->DefaultTextColor() : ColorRGBA(0.6f, 0.6f, 0.6f, 1.0f));
-		Ui()->DoLabel_QmIcon(&GroupIcon, m_vFriendsCategoryExpanded[CategoryIndex] ? EQmIcon::SQUARE_MINUS : EQmIcon::SQUARE_PLUS, m_vFriendsCategoryExpanded[CategoryIndex] ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, GroupIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
+		Ui()->DoLabel_QmIcon(&GroupIcon, m_vFriendsCategoryExpanded[CategoryIndex] && !DraggingAnyHeader && !DraggingFriend ? EQmIcon::SQUARE_MINUS : EQmIcon::SQUARE_PLUS, m_vFriendsCategoryExpanded[CategoryIndex] && !DraggingAnyHeader && !DraggingFriend ? FONT_ICON_SQUARE_MINUS : FONT_ICON_SQUARE_PLUS, GroupIcon.h * CUi::ms_FontmodHeight, TEXTALIGN_MC);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 		TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		SplitFriendsCategoryHeaderRects(Header, nullptr, &ManageButton);
@@ -2337,26 +2317,28 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 			const CUIRect Panel = CMenus::SecondaryPanelRect(Ui()->MouseX(), Ui()->MouseY(), 300.0f, CMenus::FriendsCategoryActionsPopupHeight(), *Ui()->Screen());
 			Ui()->DoPopupMenu(&m_FriendsCategoryPopupContext, Panel.x, Panel.y, Panel.w, Panel.h, &m_FriendsCategoryPopupContext, PopupFriendsCategory);
 		};
-		if(Ui()->DoButton_QmIcon(&m_vFriendsCategoryManageButtons[CategoryIndex], EQmIcon::GEAR, FONT_ICON_GEAR, 0, &ManageButton, BUTTONFLAG_LEFT))
+		if(Ui()->DoButton_QmIcon(&m_vFriendsCategoryManageButtons[CategoryIndex], EQmIcon::GEAR, FONT_ICON_GEAR, 0, &ManageButton, BUTTONFLAG_LEFT) && !DraggingAnyHeader && !DraggingFriend)
 		{
 			OpenCategoryManagePopup();
 		}
 		GameClient()->m_Tooltips.DoToolTip(&m_vFriendsCategoryManageButtons[CategoryIndex], &ManageButton, Localize("Manage categories"));
-		GameClient()->m_Tooltips.DoToolTip(&m_vFriendsCategoryExpanded[CategoryIndex], &HeaderAction, Localize("Right-click or use the gear to manage categories"));
+		GameClient()->m_Tooltips.DoToolTip(&m_vFriendsCategoryExpanded[CategoryIndex], &HeaderAction, Localize("Drag to reorder; click to expand or collapse. Right-click or use the gear to manage categories"));
 
 		const int HeaderResult = Ui()->DoButtonLogic(&m_vFriendsCategoryExpanded[CategoryIndex], 0, &HeaderAction, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
-		if(!DraggingAnyHeader && HeaderResult == 2)
+		if(!DraggingAnyHeader && !DraggingFriend && Ui()->MouseButtonClicked(0) && HeaderInside && !Ui()->IsPopupOpen() && Ui()->IsActiveItem(&m_vFriendsCategoryExpanded[CategoryIndex]))
+			s_CategoryDragState.Begin(CategoryIndex, Header, vec2(Ui()->MouseX(), Ui()->MouseY()));
+		if(!DraggingAnyHeader && HeaderResult == 2 && !DraggingFriend)
 		{
 			OpenCategoryManagePopup();
 		}
-		else if(!DraggingAnyHeader && HeaderResult == 1)
+		else if(!DraggingAnyHeader && HeaderResult == 1 && !DraggingFriend)
 		{
 			m_vFriendsCategoryExpanded[CategoryIndex] = !m_vFriendsCategoryExpanded[CategoryIndex];
 			SaveFriendsCategoryExpandedState();
 		}
 
 		// entries
-		if(m_vFriendsCategoryExpanded[CategoryIndex])
+		if(m_vFriendsCategoryExpanded[CategoryIndex] && !DraggingAnyHeader && !DraggingFriend)
 		{
 			for(size_t FriendIndex = 0; FriendIndex < vvFriends[CategoryIndex].size(); ++FriendIndex)
 			{
@@ -2391,10 +2373,11 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					continue;
 				++VisibleFriendItems;
 
+				const CUIRect FriendRow = Rect;
 				const bool Inside = Ui()->MouseHovered(&Rect);
 				int ButtonResult = Ui()->DoButtonLogic(pListItemId, 0, &Rect, BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT);
 
-				if(Friend.ServerInfo() || HasNote)
+				if(Friend.ServerInfo() || HasNote || IsPlayerFriend)
 				{
 					std::string &TooltipText = m_vFriendTooltipText[FriendTooltipIndex];
 					TooltipText.clear();
@@ -2410,11 +2393,17 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 					{
 						TooltipText = Localize("Click to select server. Double click to join your friend.");
 					}
-					else
+					else if(HasNote)
 					{
 						TooltipText = Localize("Note:");
 						TooltipText.append(" ");
 						TooltipText.append(pNote);
+					}
+					if(IsPlayerFriend)
+					{
+						if(!TooltipText.empty())
+							TooltipText.append("\n");
+						TooltipText.append(Localize("Drag to another category to move this friend."));
 					}
 					GameClient()->m_Tooltips.DoToolTip(pListItemId, &Rect, TooltipText.c_str(), 320.0f);
 				}
@@ -2547,6 +2536,14 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 						ButtonResult = 0;
 					}
 					GameClient()->m_Tooltips.DoToolTip(pRemoveButtonId, &RemoveButton, Friend.FriendState() == IFriends::FRIEND_PLAYER ? Localize("Click to remove this player from your friends list.") : Localize("Click to remove this clan from your friends list."));
+				}
+
+				const bool InsideFriendAction = Ui()->MouseHovered(&CopyButton) || Ui()->MouseHovered(&RemoveButton) || (Friend.ServerInfo() && Ui()->MouseHovered(&FollowButton));
+				if(IsPlayerFriend && Ui()->MouseButtonClicked(0) && Inside && !InsideFriendAction && !Ui()->IsPopupOpen() && (Ui()->IsActiveItem(pListItemId) || Ui()->ActiveItem() == nullptr))
+				{
+					s_FriendDragState.Begin(pListItemId, Friend.FriendState(), Friend.Name(), Friend.Clan(), GameClient()->Friends()->GetFriendCategory(Friend.Name(), Friend.Clan()), FriendRow, vec2(Ui()->MouseX(), Ui()->MouseY()));
+					if(Ui()->ActiveItem() == nullptr)
+						Ui()->SetActiveItem(&s_FriendDragState);
 				}
 
 				if(ButtonResult == 2)
@@ -2749,6 +2746,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 
 	if(s_CategoryDragState.m_DraggingIndex >= 0)
 	{
+		s_ScrollRegion.DoEdgeScrolling();
 		UpdateCategoryDropPreview();
 		if(s_CategoryDropPreview.m_Active && s_CategoryDropPreview.m_Valid)
 			s_CategoryDropPreview.m_LineRect.Draw(CategoryDropPreviewColor, IGraphics::CORNER_ALL, CategoryDropPreviewThickness);
@@ -2756,11 +2754,37 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	}
 
 	const bool MouseReleased = !Ui()->MouseButton(0) && Ui()->LastMouseButton(0);
-	if(MouseReleased)
+	if(DraggingFriend)
 	{
-		if(s_CategoryDragState.m_DraggingIndex >= 0)
+		s_ScrollRegion.DoEdgeScrolling();
+		CUIRect Ghost{Ui()->MouseX() - s_FriendDragState.m_GrabOffset.x, Ui()->MouseY() - s_FriendDragState.m_GrabOffset.y, s_FriendDragState.m_DraggedWidth, s_FriendDragState.m_DraggedHeight};
+		Ghost.Draw(CategoryDragGhostColor, IGraphics::CORNER_ALL, 5.0f);
+		DrawCategoryDragOutline(Ghost);
+		CUIRect NameLabel, TargetLabel;
+		Ghost.Margin(3.0f, &Ghost);
+		Ghost.HSplitTop(FontSize + 1.0f, &NameLabel, &TargetLabel);
+		SLabelProperties GhostLabelProps;
+		GhostLabelProps.m_MaxWidth = Ghost.w;
+		Ui()->DoLabel(&NameLabel, s_FriendDragState.m_aName, FontSize, TEXTALIGN_ML, GhostLabelProps);
+		Ui()->DoLabel(&TargetLabel, FriendDropCategoryIndex >= 0 ? LocalizeFriendsCategory(GameClient()->Friends()->GetCategory(FriendDropCategoryIndex)) : Localize("Move to category"), FontSize - 1.0f, TEXTALIGN_ML, GhostLabelProps);
+
+		if(MouseReleased && FriendDropCategoryIndex >= 0)
+		{
+			const char *pCategory = GameClient()->Friends()->GetCategory(FriendDropCategoryIndex);
+			if(GameClient()->Friends()->SetFriendCategory(s_FriendDragState.m_aName, s_FriendDragState.m_aClan, pCategory))
+			{
+				m_FriendAddCategoryIndex = FriendDropCategoryIndex;
+				FriendlistOnUpdate();
+				Client()->ServerBrowserUpdate();
+			}
+		}
+	}
+	if(!Ui()->MouseButton(0))
+	{
+		if(MouseReleased && s_CategoryDragState.m_DraggingIndex >= 0)
 			CommitCategoryDropPreview();
 		ResetCategoryDragState();
+		ResetFriendDragState();
 	}
 
 	s_ScrollRegion.End();

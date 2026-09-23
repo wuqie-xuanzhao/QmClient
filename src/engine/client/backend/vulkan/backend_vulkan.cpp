@@ -1171,10 +1171,9 @@ class CCommandProcessorFragment_Vulkan : public CCommandProcessorFragment_GLBase
 	size_t m_ThreadCount = 1;
 	static constexpr size_t MAIN_THREAD_INDEX = 0;
 	size_t m_CurCommandInPipe = 0;
-	size_t m_CurRenderCallCountInPipe = 0;
 	size_t m_CommandsInPipe = 0;
 	size_t m_RenderCallsInPipe = 0;
-	size_t m_LastCommandsInPipeThreadIndex = 0;
+	CQmVulkanRenderScheduler m_RenderScheduler;
 
 	struct SRenderThread
 	{
@@ -2858,7 +2857,7 @@ protected:
 	[[nodiscard]] bool WaitFrame()
 	{
 		FinishRenderThreads();
-		m_LastCommandsInPipeThreadIndex = 0;
+		m_RenderScheduler.NewFrame();
 
 		UploadNonFlushedBuffers<true>();
 
@@ -7529,7 +7528,9 @@ public:
 	[[nodiscard]] bool SupportsBackbufferCapture() const
 	{
 		// 截图路径只验证过单采样交换链；多采样附件虽可恢复，但读取流程仍保持保守限制。
-		const bool CompatibleFormat = m_VKSurfFormat.format == VK_FORMAT_B8G8R8A8_UNORM || m_VKSurfFormat.format == VK_FORMAT_R8G8B8A8_UNORM;
+		// 背板仅作为 blit 源，sRGB 格式也可由下方的格式能力检查准入。
+		const bool CompatibleFormat = m_VKSurfFormat.format == VK_FORMAT_B8G8R8A8_UNORM || m_VKSurfFormat.format == VK_FORMAT_R8G8B8A8_UNORM ||
+					      m_VKSurfFormat.format == VK_FORMAT_B8G8R8A8_SRGB || m_VKSurfFormat.format == VK_FORMAT_R8G8B8A8_SRGB;
 		return SupportsRenderTargetReadback() && CompatibleFormat && m_OptimalSwapChainImageBlitting && m_OptimalRGBAImageBlitting;
 	}
 
@@ -8459,29 +8460,17 @@ public:
 
 			if(m_CurCommandInPipe + 1 == m_CommandsInPipe)
 			{
-				m_LastCommandsInPipeThreadIndex = std::numeric_limits<decltype(m_LastCommandsInPipeThreadIndex)>::max();
+				m_RenderScheduler.UseMainThread();
 			}
 
-			bool CanStartThread = false;
+			size_t ThreadToStart = 0;
 			if(CallbackObj.m_IsRenderCommand)
 			{
 				m_FrameProfileStats.m_RenderCommands++;
-				bool ForceSingleThread = m_ForceSingleThreadedRender || m_LastCommandsInPipeThreadIndex == std::numeric_limits<decltype(m_LastCommandsInPipeThreadIndex)>::max();
-
-				if(!ForceSingleThread)
-				{
-					size_t PotentiallyNextThread = (((m_CurCommandInPipe * (m_ThreadCount - 1)) / m_CommandsInPipe) + 1);
-					if(PotentiallyNextThread - 1 > m_LastCommandsInPipeThreadIndex)
-					{
-						CanStartThread = true;
-						m_LastCommandsInPipeThreadIndex = PotentiallyNextThread - 1;
-					}
-					Buffer.m_ThreadIndex = m_ThreadCount > 1 ? (m_LastCommandsInPipeThreadIndex + 1) : 0;
-				}
-				else
-				{
-					Buffer.m_ThreadIndex = 0;
-				}
+				const size_t PreviousThreadIndex = m_RenderScheduler.CurrentThreadIndex();
+				Buffer.m_ThreadIndex = m_RenderScheduler.ThreadIndex(m_ForceSingleThreadedRender);
+				if(Buffer.m_ThreadIndex > PreviousThreadIndex && PreviousThreadIndex > 0)
+					ThreadToStart = PreviousThreadIndex;
 				if(m_FrameProfilingActive)
 				{
 					const auto PrepareStartTime = time_get_nanoseconds();
@@ -8491,7 +8480,7 @@ public:
 				else
 					CallbackObj.m_FillExecuteBuffer(Buffer, pBaseCommand);
 				m_FrameProfileStats.m_CommandPrepares++;
-				m_CurRenderCallCountInPipe += Buffer.m_EstimatedRenderCallCount;
+				m_RenderScheduler.RecordDrawCalls(Buffer.m_EstimatedRenderCallCount);
 			}
 			bool Ret = true;
 			if(!CallbackObj.m_IsRenderCommand || (Buffer.m_ThreadIndex == 0 && !m_RenderingPaused))
@@ -8512,9 +8501,9 @@ public:
 			}
 			else if(!m_RenderingPaused)
 			{
-				if(CanStartThread)
+				if(ThreadToStart > 0)
 				{
-					StartRenderThread(m_LastCommandsInPipeThreadIndex - 1);
+					StartRenderThread(ThreadToStart - 1);
 				}
 				m_vvThreadCommandLists[Buffer.m_ThreadIndex - 1].push_back(Buffer);
 			}
@@ -8525,7 +8514,7 @@ public:
 
 		if(m_CurCommandInPipe + 1 == m_CommandsInPipe)
 		{
-			m_LastCommandsInPipeThreadIndex = std::numeric_limits<decltype(m_LastCommandsInPipeThreadIndex)>::max();
+			m_RenderScheduler.UseMainThread();
 		}
 		++m_CurCommandInPipe;
 
@@ -9796,7 +9785,7 @@ public:
 
 		ExecBuffer.m_IndexBuffer = m_RenderIndexBuffer;
 
-		ExecBuffer.m_EstimatedRenderCallCount = ((pCommand->m_QuadNum - 1) / gs_GraphicsMaxQuadsRenderCount) + 1;
+		ExecBuffer.m_EstimatedRenderCallCount = ExecBuffer.m_Command == CCommandBuffer::CMD_RENDER_QUAD_LAYER_GROUPED ? 1 : ((pCommand->m_QuadNum - 1) / gs_GraphicsMaxQuadsRenderCount) + 1;
 
 		ExecBufferFillDynamicStates(pCommand->m_State, ExecBuffer);
 	}
@@ -10349,7 +10338,7 @@ public:
 		m_CommandsInPipe = CommandCount;
 		m_RenderCallsInPipe = EstimatedRenderCallCount;
 		m_CurCommandInPipe = 0;
-		m_CurRenderCallCountInPipe = 0;
+		m_RenderScheduler.StartCommands(m_ThreadCount, EstimatedRenderCallCount);
 		m_FrameProfileStats.m_CommandCount += CommandCount;
 		m_FrameProfileStats.m_EstimatedRenderCallCount += EstimatedRenderCallCount;
 	}

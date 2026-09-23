@@ -2,6 +2,34 @@
 
 #include <gtest/gtest.h>
 
+// 报告写入端与初始化完成端共用的进程内后端状态。
+extern const char *crashdump_graphics_backend_for_report();
+
+TEST(QmCrashdumpBackendAttribution, SuccessfulBackendAndRetryReplacePreviousBackend)
+{
+	crashdump_set_graphics_backend(nullptr);
+	EXPECT_EQ(crashdump_graphics_backend_for_report(), nullptr);
+	crashdump_set_graphics_backend("Vulkan");
+	ASSERT_NE(crashdump_graphics_backend_for_report(), nullptr);
+	EXPECT_STREQ(crashdump_graphics_backend_for_report(), "Vulkan");
+
+	crashdump_set_graphics_backend(nullptr);
+	EXPECT_EQ(crashdump_graphics_backend_for_report(), nullptr);
+	crashdump_set_graphics_backend("OpenGL");
+	ASSERT_NE(crashdump_graphics_backend_for_report(), nullptr);
+	EXPECT_STREQ(crashdump_graphics_backend_for_report(), "OpenGL");
+	crashdump_set_graphics_backend(nullptr);
+}
+
+TEST(QmCrashdumpBackendAttribution, KnownNamesAreCanonicalAndUnknownIsNotReported)
+{
+	crashdump_set_graphics_backend("opengl es");
+	ASSERT_NE(crashdump_graphics_backend_for_report(), nullptr);
+	EXPECT_STREQ(crashdump_graphics_backend_for_report(), "OpenGL ES");
+	crashdump_set_graphics_backend("unrecognized");
+	EXPECT_EQ(crashdump_graphics_backend_for_report(), nullptr);
+}
+
 // QmClient: 退出阶段图形驱动故障抑制的行为合同。
 //
 // 背景：退出清理销毁图形后端时，NVIDIA 的 nvoglv64.dll 会在 vkDestroyDevice

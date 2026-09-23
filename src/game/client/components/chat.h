@@ -16,6 +16,7 @@
 #include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
 #include <game/client/components/qmclient/qm_chat_export_metadata.h>
 #include <game/client/components/qmclient/qm_chat_log_jobs.h>
+#include <game/client/components/qmclient/qm_title_render.h>
 #include <game/client/lineinput.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
@@ -150,6 +151,9 @@ private:
 
 		STextContainerIndex m_TextContainerIndex;
 		int m_QuadContainerIndex;
+		CUIRect m_BackgroundRect = {};
+		float m_BackgroundRounding = 0.0f;
+		std::vector<CQmTitleTextMetrics> m_vTitleTextMetrics;
 
 		std::shared_ptr<CManagedTeeRenderInfo> m_pManagedTeeRenderInfo;
 
@@ -157,6 +161,7 @@ private:
 		std::shared_ptr<const QmChatExport::SMetadata> m_pExportMetadata;
 
 		float m_TextYOffset;
+		float m_QmTitleBobPadding = 0.0f;
 		// 当前消息实际占用的水平宽度，用于鼠标命中和选中高亮。
 		float m_ContentWidth;
 		float m_CutOffProgress;

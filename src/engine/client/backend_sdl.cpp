@@ -1,4 +1,5 @@
 #include <base/detect.h>
+#include <base/crashdump.h>
 
 #ifndef CONF_BACKEND_OPENGL_ES
 #include <GL/glew.h>
@@ -1022,6 +1023,7 @@ CGraphicsBackend_SDL_GL::CGraphicsBackend_SDL_GL(TTranslateFunc &&TranslateFunc)
 
 int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, int *pHeight, int *pRefreshRate, int *pFsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight, int *pCurrentWidth, int *pCurrentHeight, IStorage *pStorage)
 {
+	crashdump_set_graphics_backend(nullptr);
 #if defined(CONF_HEADLESS_CLIENT)
 	m_BackendType = BACKEND_TYPE_OPENGL;
 	g_Config.m_GfxGLMajor = 0;
@@ -1450,6 +1452,9 @@ int CGraphicsBackend_SDL_GL::Init(const char *pName, int *pScreen, int *pWidth, 
 		CmdBuffer.Reset();
 	}
 
+#if !defined(CONF_HEADLESS_CLIENT)
+	crashdump_set_graphics_backend(pBackendName);
+#endif
 	return EGraphicsBackendErrorCodes::GRAPHICS_BACKEND_ERROR_CODE_NONE;
 }
 

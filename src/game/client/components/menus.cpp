@@ -51,6 +51,7 @@
 #include <game/client/components/console.h>
 #include <game/client/components/key_binder.h>
 #include <game/client/components/menu_background.h>
+#include <game/client/components/qmclient/demo_ui.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/sounds.h>
@@ -4552,6 +4553,11 @@ void CMenus::Render()
 
 void CMenus::RenderPopupFullscreen(CUIRect Screen)
 {
+	const bool DemoRenderPopup = m_Popup == POPUP_RENDER_DEMO;
+#if defined(CONF_VIDEORECORDER)
+	const bool DemoDisplayExpanded = m_DemoExportDisplayExpanded;
+	const float DemoRenderContentHeight = qm_demo_ui::RenderContentHeight(DemoDisplayExpanded, Client()->State() == IClient::STATE_ONLINE);
+#endif
 	// QmClient 新功能弹窗自带完整布局(标题/滚动条目/按钮)，不复用通用弹窗骨架。
 	if(m_Popup == POPUP_QM_NEW_FEATURES)
 	{
@@ -4665,27 +4671,33 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 	{
 		Box.Margin(QmUiCenteredMargin(Box, 150.0f, 300.0f, 300.0f), &Box);
 	}
+#if defined(CONF_VIDEORECORDER)
+	if(DemoRenderPopup)
+		Box = qm_demo_ui::PopupRect(Screen, DemoRenderContentHeight + 86.0f);
+#endif
 
 	// Background
 	Box.Draw(BgColor, IGraphics::CORNER_ALL, ui_token::radius::CARD);
+	if(DemoRenderPopup)
+		Box.Margin(12.0f, &Box);
 
 	// Title
 	{
 		CUIRect Title;
-		Box.HSplitTop(20.0f, nullptr, &Box);
-		Box.HSplitTop(24.0f, &Title, &Box);
-		Box.HSplitTop(20.0f, nullptr, &Box);
-		Title.VMargin(20.0f, &Title);
+		Box.HSplitTop(DemoRenderPopup ? 0.0f : 20.0f, nullptr, &Box);
+		Box.HSplitTop(DemoRenderPopup ? 22.0f : 24.0f, &Title, &Box);
+		Box.HSplitTop(DemoRenderPopup ? 6.0f : 20.0f, nullptr, &Box);
+		Title.VMargin(DemoRenderPopup ? 0.0f : 20.0f, &Title);
 
-		const float TitleFontSize = 24.0f;
+		const float TitleFontSize = DemoRenderPopup ? 16.0f : 24.0f;
 		if(TextRender()->TextWidth(TitleFontSize, pTitle) > Title.w)
 			Ui()->DoLabel(&Title, pTitle, TitleFontSize, TEXTALIGN_ML, {.m_MaxWidth = Title.w});
 		else
-			Ui()->DoLabel(&Title, pTitle, TitleFontSize, TEXTALIGN_MC);
+			Ui()->DoLabel(&Title, pTitle, TitleFontSize, DemoRenderPopup ? TEXTALIGN_ML : TEXTALIGN_MC);
 	}
 
 	// Extra text (optional)
-	if(m_Popup != POPUP_JOIN_TUTORIAL)
+	if(m_Popup != POPUP_JOIN_TUTORIAL && !DemoRenderPopup)
 	{
 		CUIRect ExtraText;
 		Box.HSplitTop(24.0f, &ExtraText, &Box);
@@ -4976,10 +4988,8 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 		DemoRenderTextInputCtx.m_ScopeHash = MakeUiScopeHash("demo_render_text_input");
 		DemoRenderTextInputCtx.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 
-		Box.VMargin(60.0f, &Box);
-		Box.HMargin(20.0f, &Box);
-		Box.HSplitBottom(24.0f, &Box, &Row);
-		Box.HSplitBottom(40.0f, &Box, nullptr);
+		Box.HSplitBottom(26.0f, &Box, &Row);
+		Box.HSplitBottom(8.0f, &Box, nullptr);
 		Row.VMargin(40.0f, &Row);
 		Row.VSplitMid(&Abort, &Ok, 40.0f);
 
@@ -5020,6 +5030,23 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 				PopupConfirmDemoReplaceVideo();
 			}
 		}
+
+		static CScrollRegion s_DemoRenderScroll;
+		vec2 ScrollOffset;
+		s_DemoRenderScroll.Begin(&Box, &ScrollOffset);
+		Box.y += ScrollOffset.y;
+		Box.h = DemoRenderContentHeight;
+		s_DemoRenderScroll.AddRect(Box);
+		CUIRect DisplayOptions;
+		Box.HSplitTop(22.0f, &DisplayOptions, &Box);
+		RenderDemoExportDisplayToggle(DisplayOptions);
+		if(DemoDisplayExpanded)
+		{
+			Box.HSplitTop(4.0f, nullptr, &Box);
+			Box.HSplitTop(qm_demo_ui::DISPLAY_HEIGHT, &DisplayOptions, &Box);
+			RenderDemoDisplaySettings(DisplayOptions, !Ui()->IsPopupOpen());
+		}
+		Box.HSplitTop(8.0f, nullptr, &Box);
 
 		CUIRect ShowChatCheckbox, UseSoundsCheckbox;
 		Box.HSplitBottom(20.0f, &Box, &Row);
@@ -5089,6 +5116,7 @@ void CMenus::RenderPopupFullscreen(CUIRect Screen)
 			LabelProperties.SetColor(ColorRGBA(1.0f, 0.0f, 0.0f));
 			Ui()->DoLabel(&Row, Localize("You will be disconnected from the server."), 12.8f, TEXTALIGN_MC, LabelProperties);
 		}
+		s_DemoRenderScroll.End();
 	}
 	else if(m_Popup == POPUP_RENDER_DONE)
 	{
@@ -5701,6 +5729,7 @@ void CMenus::PopupConfirmDemoReplaceVideo()
 	const char *pError = Client()->DemoPlayer_Render(aBuf, DemoStorageType, aVideoName, m_Speed, m_StartPaused);
 	m_HasPendingDemoRenderSource = false;
 	m_vDemoCutSegments.clear();
+	m_DemoCutPreview.Reset();
 	g_Config.m_ClDemoSliceBegin = -1;
 	g_Config.m_ClDemoSliceEnd = -1;
 	m_Speed = DEMO_SPEED_INDEX_DEFAULT;
@@ -6282,6 +6311,7 @@ void CMenus::OnShutdown()
 		LogSettingsPerfWindowSummary(Summary);
 	}
 	SaveSettingsRuntimeCacheMetadata();
+	ClearQmTitlePreviewContainers();
 	InvalidateSettingsTextPool();
 	ClearSettingsAssetsCardMetadataCache();
 	ClearSettingsTeePreviewCache();
@@ -7921,6 +7951,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 
 void CMenus::OnWindowResize()
 {
+	ClearQmTitlePreviewContainers();
 	TextRender()->DeleteTextContainer(m_MotdTextContainerIndex);
 	TextRender()->DeleteTextContainer(m_IngameMotdParagraphCache.m_BuildTextContainerIndex);
 	m_IngameMotdParagraphCache.m_Valid = false;

@@ -18,14 +18,13 @@
 #include <game/client/components/qmclient/friend_heart_icon.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/nameplate_layout.h>
-#include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_gate.h>
-#include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_renderer.h>
 #include <game/client/components/qmclient/nameplate_text_cache.h>
 #include <game/client/components/qmclient/qm_title_render.h>
 #include <game/client/components/qmclient/qm_title_style.h>
 #include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
+#include <game/client/ui_rect.h>
 
 #include <algorithm>
 #include <array>
@@ -137,19 +136,10 @@ static float ResolveChatBubbleAnimValue(
 
 static constexpr int NAMEPLATE_FREE_MOVE_OFFSET_MIN = -300;
 static constexpr int NAMEPLATE_FREE_MOVE_OFFSET_MAX = 300;
-// Multiplier applied to the baseline frame to give users more room to move
-// nameplate elements around. Width and height are both scaled by this factor
-// around the baseline frame's center.
-static constexpr float NAMEPLATE_FREE_MOVE_FRAME_SCALE = 3.0f;
 static constexpr float NAMEPLATE_FREE_MOVE_SNAP_DISTANCE = 8.0f;
-
-static void ScaleFrameAroundCenter(vec2 &Min, vec2 &Max, float Scale)
-{
-	const vec2 Center = (Min + Max) * 0.5f;
-	const vec2 HalfExtent = (Max - Min) * 0.5f * Scale;
-	Min = Center - HalfExtent;
-	Max = Center + HalfExtent;
-}
+static constexpr float NAMEPLATE_PREVIEW_AREA_MARGIN = 10.0f;
+static constexpr float NAMEPLATE_PREVIEW_FRAME_INSET = 3.0f;
+static constexpr float NAMEPLATE_PREVIEW_TEE_SIZE = 64.0f;
 
 static bool NameplateFreeMoveEnabled()
 {
@@ -420,51 +410,6 @@ public:
 	float m_FontSizeHookStrongWeak;
 };
 
-// 回退状态必须在会改变“当前可见文字集合”的输入变化后重新尝试 MSDF。
-// 不能只看姓名/战队，否则例如关闭渐变、显示客户端 ID 或切换坐标后，
-// 一个曾经失败的铭牌会永久停留在 FreeType，或者在重新可用时仍不切回 MSDF。
-static uint64_t NameplateMsdfInputHash(const CNamePlateData &Data)
-{
-	uint64_t Hash = 1469598103934665603ULL;
-	const auto Mix = [&Hash](uint64_t Value) {
-		Hash ^= Value;
-		Hash *= 1099511628211ULL;
-	};
-	const auto MixBool = [&Mix](bool Value) { Mix(Value ? 1ULL : 0ULL); };
-	const auto MixInt = [&Mix](int Value) { Mix(static_cast<uint64_t>(static_cast<int64_t>(Value))); };
-	const auto MixText = [&Mix](const char *pText) { Mix(str_quickhash(pText != nullptr ? pText : "")); };
-
-	MixText(Data.m_aName);
-	MixText(Data.m_aClan);
-	MixText(Data.m_aQmTitle);
-	MixBool(Data.m_ShowName);
-	MixBool(Data.m_ShowClan);
-	MixBool(Data.m_ShowClientId);
-	MixBool(Data.m_ClientIdSeparateLine);
-	MixInt(Data.m_ClientId);
-	MixBool(Data.m_ShowFriendMark);
-	MixBool(Data.m_ShowCoords);
-	MixBool(Data.m_ShowCoordX);
-	MixBool(Data.m_ShowCoordY);
-	MixBool(Data.m_ShowDirection);
-	MixBool(Data.m_DirLeft);
-	MixBool(Data.m_DirJump);
-	MixBool(Data.m_DirRight);
-	MixBool(Data.m_ShowHookStrongWeak);
-	MixBool(Data.m_ShowHookStrongWeakId);
-	MixBool(Data.m_ReserveHookStrongWeakRow);
-	MixInt(Data.m_HookStrongWeakId);
-	MixInt(static_cast<int>(Data.m_HookStrongWeakState));
-	MixBool(Data.m_UseTextEffects);
-	MixBool(Data.m_DeveloperRainbow);
-	MixInt(g_Config.m_QmNameplateTextEffects);
-	MixInt(g_Config.m_QmNameplateTextBorderRange);
-	MixInt(g_Config.m_QmNameplateTextGradientColor);
-	MixInt(g_Config.m_QmNameplateTextGlowRange);
-	MixText(g_Config.m_TcCustomFont);
-	return Hash;
-}
-
 // Part Types
 
 static constexpr float DEFAULT_PADDING = 5.0f;
@@ -476,73 +421,6 @@ static int s_NameplateTextRebuildBudget = NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAM
 // 铭牌文字烘焙密度按相机离散缩放档位量化。文字位图按烘焙时所在映射的密度栅格化并被 1:1 使用，
 // 缩放动画期间保持旧容器，动画结束后再按预算切换到新档位，避免细小 zoom 漂移触发连续重建。
 static const float QM_NAMEPLATE_BAKE_DENSITY_LOG_GRID = std::log(1.0f / CCamera::ZOOM_STEP);
-
-// MSDF 路径调试统计：本帧走 MSDF / 回退 FreeType 的文本部件数（仅 qm_nameplate_msdf_debug 开启时累计）
-static int s_MsdfDebugMsdfParts = 0;
-static int s_MsdfDebugFallbackParts = 0;
-// 整名回退日志去重：同一缺失码点在整个会话内只报告一次
-static CQmNameplateMsdfFallbackReporter s_MsdfFallbackReporter;
-
-// 字体门控：只有已验收、随客户端发布的预生成 profile 才允许名牌 MTSDF；
-// 其他字体始终保持 FreeType，避免同一字体在不同机器上出现不同结果。
-static bool NameplateMsdfFontMatchesAtlas()
-{
-	return QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont) != nullptr;
-}
-
-static const char *NameplateMsdfFontProfile()
-{
-	return QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont);
-}
-
-// 字体门控状态日志：字体名或匹配结果变化时输出一行；配置关闭时调用方保证不进入此函数。
-static void LogNameplateMsdfFontGateIfChanged()
-{
-	static bool s_Logged = false;
-	static bool s_LastMatches = false;
-	static char s_aLastFont[256] = "";
-	const bool Matches = NameplateMsdfFontMatchesAtlas();
-	const bool FontChanged = str_comp(s_aLastFont, g_Config.m_TcCustomFont) != 0;
-	if(s_Logged && Matches == s_LastMatches && !FontChanged)
-		return;
-	s_Logged = true;
-	s_LastMatches = Matches;
-	str_copy(s_aLastFont, g_Config.m_TcCustomFont, sizeof(s_aLastFont));
-	if(Matches)
-		log_info("nameplate_msdf", "custom font '%s' uses MSDF profile '%s'", g_Config.m_TcCustomFont, NameplateMsdfFontProfile());
-	else
-		log_info("nameplate_msdf", "custom font '%s' not in atlas families, nameplates use FreeType path", g_Config.m_TcCustomFont);
-}
-
-// 整名回退日志：按缺失码点去重（量级受字符集约束，几十条封顶），debug 模式下附带名字便于定位。
-static void LogNameplateMsdfFallbackOnce(uint32_t Codepoint, const char *pText)
-{
-	if(!s_MsdfFallbackReporter.ShouldReport(Codepoint))
-		return;
-	if(g_Config.m_QmNameplateMsdfDebug)
-		log_info("nameplate_msdf", "fallback to FreeType: U+%04X not in atlas (name '%s')", Codepoint, pText);
-	else
-		log_info("nameplate_msdf", "fallback to FreeType: U+%04X not in atlas", Codepoint);
-}
-
-// 每 10 秒输出一次本帧路径汇总（MSDF 部件数 / 回退部件数），仅在 debug 开关开启时调用。
-// 一并带上图集状态与失败原因：否则「全部走 FreeType」时看不出是门控、缺字符还是图集没加载。
-static void MaybeLogNameplateMsdfDebugSummary()
-{
-	static int64_t s_NextSummary = 0;
-	const int64_t Now = time_get();
-	if(s_NextSummary != 0 && Now < s_NextSummary)
-		return;
-	s_NextSummary = Now + time_freq() * 10;
-	const bool AtlasReady = QmNameplateMsdf().IsReady();
-	const char *pAtlasError = QmNameplateMsdf().Error();
-	const bool HasAtlasError = !AtlasReady && pAtlasError != nullptr && pAtlasError[0] != '\0';
-	log_info("nameplate_msdf", "debug summary: %d text parts via MSDF / %d via FreeType (atlas %s%s%s)",
-		s_MsdfDebugMsdfParts, s_MsdfDebugFallbackParts,
-		AtlasReady ? "ready" : "not ready",
-		HasAtlasError ? ": " : "",
-		HasAtlasError ? pAtlasError : "");
-}
 
 class CNamePlatePart
 {
@@ -559,10 +437,6 @@ public:
 	virtual void Update(CGameClient &This, const CNamePlateData &Data) {}
 	virtual void Reset(CGameClient &This) {}
 	virtual void Render(CGameClient &This, vec2 Pos) const {}
-	virtual bool RequiresFreeTypeNameplate() const { return false; }
-	virtual void SetNameplateForceFreeType(CGameClient &This, const CNamePlateData &Data, bool Force) {}
-	// MSDF 路径调试采样：非文字部件返回 -1；文字部件返回当前路径（0=FreeType，1=MSDF）
-	virtual int SampleMsdfDebugPath() { return -1; }
 	vec2 Size() const { return m_Size; }
 	vec2 Padding() const { return m_Padding; }
 	bool NewLine() const { return m_NewLine; }
@@ -587,179 +461,13 @@ protected:
 	// 文字位图按烘焙时的映射密度栅格化并被 1:1 使用，密度错配就会重采样发虚，
 	// 因此用「当前密度相对烘焙密度的偏差」而不是缩放档位来决定何时重建。
 	float m_BakedDensityRatio = 0.0f;
-	// MSDF 路径：缓存纯文本，不随缩放档位重建
-	char m_aMsdfText[512] = "";
-	float m_MsdfFontSize = 0.0f;
-	bool m_MsdfTextValid = false;
-	// 门控状态：翻转时两条路径的缓存都必须失效（FreeType 态期间文本/字号可能已更新）
-	bool m_MsdfGateActive = false;
-	// 本轮 UpdateText 是否允许走 MSDF 缓存；整名回退时置 false 改走 FreeType 容器
-	bool m_MsdfBuildAllowed = false;
-	bool m_NameplateForceFreeType = false;
-	// 调试：上次采样的 MSDF 路径（-1 = 尚未采样；0 = FreeType；1 = MSDF）
-	int m_MsdfDebugLastState = -1;
 	virtual bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) = 0;
 	virtual void UpdateText(CGameClient &This, const CNamePlateData &Data) = 0;
 	ColorRGBA m_Color = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 	bool m_UseTextEffects = false;
+	bool m_ReuseTextContainer = false;
 	virtual ColorRGBA GetRenderTextColor() const { return m_Color; }
-
-	static bool NameplateMsdfActive()
-	{
-		// 字体门控：图集字形与用户所选字体不一致时整条铭牌交给 FreeType。
-		if(g_Config.m_QmNameplateMsdf == 0)
-			return false;
-		const char *pProfile = NameplateMsdfFontProfile();
-		// 只有随客户端发布、且有离线 profile 的字体允许走 MSDF。
-		// qmclient/fonts 下的字体属于用户可替换资源，即使运行时能烘焙，
-		// 也必须保持 FreeType，避免同一套设置在不同机器上出现两种渲染结果。
-		return pProfile != nullptr && QmNameplateMsdf().IsReady() && str_comp(QmNameplateMsdf().Profile(), pProfile) == 0;
-	}
-
-	static bool NameplateMsdfEffectsSupported()
-	{
-		// MTSDF 在渲染器中统一实现边框、渐变、彩虹和辉光，避免同一铭牌切换到两种字体路径。
-		return true;
-	}
-
-	// 整名回退：图集覆盖不到任何一个字符就整条交给原 FreeType 路径，
-	// 避免同一个名字混用两种清晰度（混排在缩放时会明显不一致）。
-	bool MsdfCoversText() const
-	{
-		if(!m_MsdfBuildAllowed || !NameplateMsdfActive() || !m_MsdfTextValid)
-			return false;
-		const uint32_t MissingCodepoint = QmNameplateMsdf().FindUnsupportedCodepoint(m_aMsdfText);
-		if(MissingCodepoint == 0)
-			return true;
-		// 图集只做英文（拉丁）与图标（符号/emoji）；汉字/假名/谚文等脚本一律不在
-		// 图集内，覆盖不到就整条交回 FreeType。MTSDF 侧已把随包字体能覆盖的符号
-		// 尽量补齐；旧实现按区段白名单判断，装饰符号会被留在 MSDF 路径
-		// 画成 '?'，既丢信息又让用户误以为「渲染坏了」。
-		LogNameplateMsdfFallbackOnce(MissingCodepoint, m_aMsdfText);
-		return false;
-	}
-
-	void SetMsdfPlainText(const char *pText, float FontSize)
-	{
-		str_copy(m_aMsdfText, pText != nullptr ? pText : "");
-		m_MsdfFontSize = FontSize;
-		m_MsdfTextValid = m_aMsdfText[0] != '\0';
-	}
-
-	// 回退原因描述：仅用于 debug 路径事件日志。
-	const char *DescribeMsdfFallback() const
-	{
-		if(g_Config.m_QmNameplateMsdf == 0)
-			return "config disabled";
-		if(m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & (QM_TEXT_EFFECT_GRADIENT | QM_TEXT_EFFECT_GLOW)) != 0)
-			return "gradient or glow effect uses FreeType path";
-		if(NameplateMsdfFontProfile() == nullptr)
-			return "custom font uses FreeType path";
-		if(!QmNameplateMsdf().IsReady())
-			return "atlas not ready";
-		if(m_MsdfTextValid)
-		{
-			const uint32_t MissingCodepoint = QmNameplateMsdf().FindUnsupportedCodepoint(m_aMsdfText);
-			if(MissingCodepoint != 0)
-			{
-				static char s_aReason[48];
-				str_format(s_aReason, sizeof(s_aReason), "U+%04X not in atlas", MissingCodepoint);
-				return s_aReason;
-			}
-		}
-		return "text not cached";
-	}
-
-	int SampleMsdfDebugPath() override
-	{
-		const int State = MsdfCoversText() ? 1 : 0;
-		if(g_Config.m_QmNameplateMsdf == 0)
-		{
-			// 配置关闭是用户主动选择：不输出整屏路径变化日志。
-			m_MsdfDebugLastState = State;
-			return State;
-		}
-		if(m_MsdfDebugLastState >= 0 && State != m_MsdfDebugLastState)
-		{
-			log_info("nameplate_msdf", "path '%s': %s -> %s (%s)",
-				m_aMsdfText[0] != '\0' ? m_aMsdfText : "?",
-				m_MsdfDebugLastState == 1 ? "MSDF" : "FreeType",
-				State == 1 ? "MSDF" : "FreeType",
-				State == 1 ? "atlas covers text" : DescribeMsdfFallback());
-		}
-		m_MsdfDebugLastState = State;
-		return State;
-	}
-
-	bool RequiresFreeTypeNameplate() const override
-	{
-		if(!m_Visible || !m_MsdfGateActive || m_NameplateForceFreeType)
-			return false;
-		if(!m_MsdfTextValid || (m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & (QM_TEXT_EFFECT_GRADIENT | QM_TEXT_EFFECT_GLOW)) != 0))
-			return true;
-		// 单个缺失码点不再触发整名 FreeType 回退；pending 期间本轮
-		// 仍显示 FreeType，完成或失败后都保持统一的 MSDF 决策。
-		return false;
-	}
-
-	void SetNameplateForceFreeType(CGameClient &This, const CNamePlateData &Data, bool Force) override
-	{
-		if(m_NameplateForceFreeType == Force)
-			return;
-		m_NameplateForceFreeType = Force;
-		m_MsdfBuildAllowed = false;
-		m_MsdfTextValid = false;
-		m_MsdfFontSize = 0.0f;
-		m_aMsdfText[0] = '\0';
-		m_BakedDensityRatio = 0.0f;
-		This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
-	}
-
-	SQmNameplateMsdfTextStyle BuildMsdfStyle() const
-	{
-		SQmNameplateMsdfTextStyle Style;
-		Style.m_TextColor = GetRenderTextColor();
-		Style.m_OutlineColor = s_OutlineColor;
-		// FreeType 的默认轮廓是一层细线；MSDF 用单 pass 环带实现，
-		// 半个画布单位可避免高 DPI/高缩放下变成厚重的背景块。
-		Style.m_OutlineWidth = 0.5f;
-		if(m_UseTextEffects)
-		{
-			const int Effects = g_Config.m_QmNameplateTextEffects;
-			if((Effects & QM_TEXT_EFFECT_BORDER) != 0)
-			{
-				Style.m_OutlineWidth = 0.5f * (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4);
-				Style.m_OutlineColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextBorderColor, true));
-			}
-			if((Effects & QM_TEXT_EFFECT_GRADIENT) != 0)
-			{
-				Style.m_GradientEnabled = true;
-				Style.m_GradientColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGradientColor, true));
-			}
-			if((Effects & QM_TEXT_EFFECT_GLOW) != 0)
-			{
-				Style.m_GlowEnabled = true;
-				Style.m_GlowColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGlowColor, true));
-				Style.m_GlowWidth = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12);
-			}
-			Style.m_RainbowEnabled = (Effects & QM_TEXT_EFFECT_RAINBOW) != 0;
-			Style.m_RainbowTime = (float)(time_get() / (double)time_freq());
-		}
-		return Style;
-	}
-
-	// MSDF 路径的尺寸外扩只考虑描边：描边用 8 向偏移实现，不需要像位图光晕那样留大边距。
-	float MsdfEffectPadding() const
-	{
-		if(!m_UseTextEffects)
-			return 0.0f;
-		float Padding = 0.0f;
-		if((g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_BORDER) != 0)
-			Padding = maximum(Padding, (float)std::clamp(g_Config.m_QmNameplateTextBorderRange, 1, 4));
-		if((g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GLOW) != 0)
-			Padding = maximum(Padding, (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12));
-		return Padding;
-	}
+	virtual float ExtraVerticalPadding() const { return 0.0f; }
 
 	CNamePlatePartText(CGameClient &This) :
 		CNamePlatePart(This)
@@ -770,52 +478,6 @@ protected:
 public:
 	void Update(CGameClient &This, const CNamePlateData &Data) override
 	{
-		// 门控翻转（配置、字体或图集就绪变化）：两条路径的缓存都可能过期——
-		// FreeType 态期间文本/字号可能已更新，而 MSDF 本地缓存不会自动跟进。
-		// 丢弃缓存并让文字容器重建，本帧按新路径重新生成。
-		const bool MsdfGateActive = NameplateMsdfActive();
-		if(MsdfGateActive != m_MsdfGateActive)
-		{
-			m_MsdfGateActive = MsdfGateActive;
-			m_MsdfTextValid = false;
-			m_MsdfFontSize = 0.0f;
-			m_aMsdfText[0] = '\0';
-			m_BakedDensityRatio = 0.0f;
-			This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
-		}
-
-		// 默认按 FreeType 构建；MSDF 分支仅在覆盖判定通过时才改回 MSDF
-		m_MsdfBuildAllowed = false;
-
-		// MSDF：分辨率无关，不按缩放档位重建
-		if(!m_NameplateForceFreeType && MsdfGateActive && NameplateMsdfEffectsSupported())
-		{
-			m_MsdfBuildAllowed = true;
-			bool NeedsMsdfUpdate = UpdateNeeded(This, Data);
-			if(NeedsMsdfUpdate || !m_MsdfTextValid)
-			{
-				This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
-				m_MsdfTextValid = false;
-				m_aMsdfText[0] = '\0';
-				UpdateText(This, Data);
-			}
-			if(!m_Visible || !m_MsdfTextValid)
-			{
-				m_Size = vec2(0.0f, 0.0f);
-				return;
-			}
-			// 整名回退：图集覆盖不到任何字符时落到 FreeType 构建（容器由下方重建块创建）
-			m_MsdfBuildAllowed = MsdfCoversText();
-			if(m_MsdfBuildAllowed)
-			{
-				const vec2 Measured = QmNameplateMsdf().Measure(m_aMsdfText, m_MsdfFontSize);
-				m_RenderSize = Measured;
-				const float EffectPadding = MsdfEffectPadding();
-				m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
-				return;
-			}
-		}
-
 		// 名牌文字在世界映射下渲染。文字位图按「烘焙时所在映射的密度」栅格化并被 1:1 使用，
 		// 因此清晰度取决于烘焙密度与绘制密度是否一致。相机缩放（含平滑缩放动画，以及
 		// qm_zoom_instant_reverse 以动画中间值为基准的情况）会让实际 zoom 离开 0.866^k 的
@@ -860,7 +522,7 @@ public:
 			if(!m_Visible)
 				return;
 			const float EffectPadding = m_UseTextEffects ? QmNameplateTextEffectPadding(g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange, g_Config.m_QmNameplateTextGlowRange) : 0.0f;
-			m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
+			m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f + ExtraVerticalPadding() * 2.0f);
 			return;
 		}
 
@@ -882,7 +544,8 @@ public:
 			This.Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 			This.Graphics()->MapScreenToGameInterface(This.m_Camera.m_Center.x, This.m_Camera.m_Center.y, 1.0f / BakeDensity);
 		}
-		This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
+		if(!m_ReuseTextContainer)
+			This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
 		UpdateText(This, Data);
 		if(Data.m_InGame && BakeDensity > 0.0f)
 			This.Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
@@ -905,7 +568,7 @@ public:
 		const STextBoundingBox Container = This.TextRender()->GetBoundingBoxTextContainer(m_TextContainerIndex);
 		m_RenderSize = vec2(Container.m_W, Container.m_H);
 		const float EffectPadding = m_UseTextEffects ? QmNameplateTextEffectPadding(g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange, g_Config.m_QmNameplateTextGlowRange) : 0.0f;
-		m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
+		m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f + ExtraVerticalPadding() * 2.0f);
 		m_TextCache.OnUpdate();
 	}
 	void Reset(CGameClient &This) override
@@ -913,19 +576,9 @@ public:
 		This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
 		m_TextCache.Reset();
 		m_BakedDensityRatio = 0.0f;
-		m_MsdfTextValid = false;
-		m_NameplateForceFreeType = false;
-		m_aMsdfText[0] = '\0';
 	}
 	void Render(CGameClient &This, vec2 Pos) const override
 	{
-		if(MsdfCoversText())
-		{
-			SQmNameplateMsdfTextStyle Style = BuildMsdfStyle();
-			// 与 FreeType 路径一致：中心对齐
-			QmNameplateMsdf().DrawCentered(m_aMsdfText, Pos.x, Pos.y, m_MsdfFontSize, Style);
-			return;
-		}
 		if(!m_TextContainerIndex.Valid())
 			return;
 
@@ -1078,11 +731,6 @@ protected:
 			str_format(m_aText, sizeof(m_aText), "%d", m_ClientId);
 		else
 			str_format(m_aText, sizeof(m_aText), "%d:", m_ClientId);
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
-		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
@@ -1137,7 +785,9 @@ private:
 	static constexpr float ms_FontSizeScale = 0.8f;
 	float m_FontSize = -INFINITY;
 	float m_Alpha = 1.0f;
-	bool m_Rainbow = false;
+	SQmTitleColorStyle m_TitleColorStyle;
+	SQmTitleRenderStyle m_TitleRenderStyle;
+	int m_ShimmerSpeed = -1;
 	char m_aStyle[48] = "";
 	// 上一帧的内容是否随时间变化。由称号渲染器自己的判定回填，而不是在这里镜像它的条件：
 	// 逐字符浮动、掠光与本地配色档都会让顶点逐帧变化，漏判会让浮动/掠光停在第一帧。
@@ -1149,34 +799,51 @@ protected:
 		m_Visible = Data.m_aQmTitle[0] != '\0';
 		m_Alpha = Data.m_Color.a;
 		if(!m_Visible)
+		{
+			m_ReuseTextContainer = false;
 			return false;
+		}
 		const float FontSize = Data.m_FontSize * ms_FontSizeScale;
 		const char *pStyle = This.m_QmClient.PlayerTitleStyle(Data.m_ClientId);
-		return m_FontSize != FontSize || m_Rainbow != Data.m_DeveloperRainbow || str_comp(m_aText, Data.m_aQmTitle) != 0 || str_comp(m_aStyle, pStyle) != 0 || m_TitleAnimated;
+		const SQmTitleColorStyle ColorStyle = ResolveQmTitleColorStyle(g_Config.m_QmTitleColorMode, g_Config.m_QmTitleColor, g_Config.m_QmTitleOpacity, Data.m_DeveloperRainbow);
+		const SQmTitleRenderStyle RenderStyle = QmTitleResolveRenderStyle(pStyle);
+		const bool Changed = m_FontSize != FontSize || m_TitleColorStyle != ColorStyle || str_comp(m_aText, Data.m_aQmTitle) != 0 ||
+			str_comp(m_aStyle, pStyle) != 0 || m_TitleRenderStyle.m_pStyle != RenderStyle.m_pStyle ||
+			m_TitleRenderStyle.m_Bob.m_Amplitude != RenderStyle.m_Bob.m_Amplitude ||
+			m_TitleRenderStyle.m_Bob.m_WaveLength != RenderStyle.m_Bob.m_WaveLength ||
+			m_TitleRenderStyle.m_Bob.m_Speed != RenderStyle.m_Bob.m_Speed ||
+			m_TitleRenderStyle.m_Bob.m_QuantizeStep != RenderStyle.m_Bob.m_QuantizeStep ||
+			m_TitleRenderStyle.m_PhasePerPxOverride != RenderStyle.m_PhasePerPxOverride ||
+			m_ShimmerSpeed != g_Config.m_QmTitleShimmerSpeed;
+		m_ReuseTextContainer = m_TextContainerIndex.Valid() && m_TitleAnimated && !Changed;
+		return Changed || m_TitleAnimated;
+	}
+
+	float ExtraVerticalPadding() const override
+	{
+		float Padding = m_TitleRenderStyle.m_Bob.m_Amplitude;
+		if(g_Config.m_QmTitleEffect == QM_TITLE_EFFECT_POLISHED)
+			Padding += 3.5f;
+		else if(g_Config.m_QmTitleEffect == QM_TITLE_EFFECT_CLASSIC && m_TitleRenderStyle.m_pStyle != nullptr && g_Config.m_QmTitleBloom > 0)
+			Padding += 4.0f + 16.0f * 0.28f;
+		return Padding;
 	}
 
 	void UpdateText(CGameClient &This, const CNamePlateData &Data) override
 	{
 		m_FontSize = Data.m_FontSize * ms_FontSizeScale;
-		m_Rainbow = Data.m_DeveloperRainbow;
 		str_copy(m_aStyle, This.m_QmClient.PlayerTitleStyle(Data.m_ClientId));
 		str_copy(m_aText, Data.m_aQmTitle);
 		// 称号渲染统一走 qm_title_render：解析出的风格同时决定逐字符色段、字符内渐变与浮动偏移。
 		// 配色被本地档位接管时（单色/彩虹）风格只保留浮动与掠光，颜色由下面两个分支给出。
-		const SQmTitleRenderStyle TitleStyle = QmTitleResolveRenderStyle(m_aStyle);
+		m_TitleRenderStyle = QmTitleResolveRenderStyle(m_aStyle);
+		const SQmTitleRenderStyle &TitleStyle = m_TitleRenderStyle;
 		const SQmTitleShimmer TitleShimmer = QmTitleShimmerFromConfig();
-		const SQmTitleColorStyle ColorStyle = ResolveQmTitleColorStyle(g_Config.m_QmTitleColorMode, g_Config.m_QmTitleColor, g_Config.m_QmTitleOpacity, Data.m_DeveloperRainbow);
+		m_ShimmerSpeed = g_Config.m_QmTitleShimmerSpeed;
+		m_TitleColorStyle = ResolveQmTitleColorStyle(g_Config.m_QmTitleColorMode, g_Config.m_QmTitleColor, g_Config.m_QmTitleOpacity, Data.m_DeveloperRainbow);
+		const SQmTitleColorStyle &ColorStyle = m_TitleColorStyle;
 		// 逐字符浮动需要逐字符位移顶点。
 		const bool TitleHasBob = TitleStyle.m_Bob.m_Amplitude != 0.0f && TitleStyle.m_Bob.m_WaveLength > 0.0f;
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			// MSDF 只能整段单色、且不能逐字符位移顶点：静态单色称号继续走 MSDF，
-			// 动态配色（含本地配色档）、逐字符浮动与掠光都回退到本地 FreeType 容器。
-			if(TitleStyle.m_pStyle == nullptr || (TitleStyle.m_pStyle->m_Mode == EQmTitleStyleMode::Static && !TitleHasBob && !TitleShimmer.m_Enabled && !TitleStyle.m_ColorOverride))
-				return;
-			m_MsdfTextValid = false;
-		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		const float TitleTimeSec = (float)This.m_QmClient.TitleAnimationTime();
@@ -1191,7 +858,7 @@ protected:
 				const char *pNext = pCurrent;
 				if(str_utf8_decode(&pNext) <= 0)
 					break;
-				const ColorRGBA Color = QmTitleRainbowColor(CharIndex, NumChars, ColorStyle.m_Alpha);
+				const ColorRGBA Color = QmTitleRainbowColor(CharIndex, NumChars, 1.0f);
 				Cursor.m_vColorSplits.emplace_back((int)(pCurrent - m_aText), (int)(pNext - pCurrent), Color);
 				pCurrent = pNext;
 			}
@@ -1204,32 +871,65 @@ protected:
 			// 单色档把本地颜色与透明度交给渲染器；跟随服务器档不覆盖颜色（渲染器自己采样风格），
 			// 此时 Alpha 固定 1.0，名牌淡入淡出仍由 Render 的 m_Alpha 负责。
 			const bool ColorOverride = ColorStyle.m_Mode == EQmTitleColorMode::SINGLE;
-			m_TitleAnimated = QmTitleRenderFillCursor(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, ColorOverride ? ColorStyle.m_Alpha : 1.0f, TitleShimmer, nullptr, ColorStyle.m_Color);
+			m_TitleAnimated = QmTitleRenderFillCursor(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, 1.0f, TitleShimmer, nullptr, ColorStyle.m_Color);
 		}
 		else
 		{
 			Cursor.m_vColorSplits.emplace_back(0, -1, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 			m_TitleAnimated = false;
 		}
-		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
+		if(m_ReuseTextContainer)
+			This.TextRender()->RecreateTextContainerSoft(m_TextContainerIndex, &Cursor, m_aText);
+		else
+			This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
 	}
 
 	void Render(CGameClient &This, vec2 Pos) const override
 	{
-		if(MsdfCoversText())
-		{
-			SQmNameplateMsdfTextStyle Style = BuildMsdfStyle();
-			Style.m_TextColor = m_Rainbow ? ColorRGBA(1.0f, 1.0f, 1.0f, m_Alpha) : ColorRGBA(0.0f, 0.0f, 0.0f, m_Alpha);
-			Style.m_OutlineColor = m_Rainbow ? s_OutlineColor.WithMultipliedAlpha(m_Alpha) : ColorRGBA(0.85f, 0.85f, 0.85f, m_Alpha);
-			Style.m_RainbowEnabled = m_Rainbow;
-			QmNameplateMsdf().DrawCentered(m_aMsdfText, Pos.x, Pos.y, m_MsdfFontSize, Style);
-			return;
-		}
 		if(!m_TextContainerIndex.Valid())
 			return;
-		const ColorRGBA Color = m_Rainbow ? ColorRGBA(1.0f, 1.0f, 1.0f, m_Alpha) : ColorRGBA(0.0f, 0.0f, 0.0f, m_Alpha);
-		const ColorRGBA OutlineColor = m_Rainbow ? s_OutlineColor.WithMultipliedAlpha(m_Alpha) : ColorRGBA(0.85f, 0.85f, 0.85f, m_Alpha);
-		This.TextRender()->RenderTextContainer(m_TextContainerIndex, Color, OutlineColor, Pos.x - Size().x / 2.0f, Pos.y - Size().y / 2.0f);
+		const bool DynamicStyle = m_TitleRenderStyle.m_pStyle != nullptr;
+		const bool VertexColored = DynamicStyle || m_TitleColorStyle.m_Rainbow;
+		const float Alpha = m_Alpha * (m_TitleColorStyle.m_Mode == EQmTitleColorMode::FOLLOW_SERVER ? 1.0f : m_TitleColorStyle.m_Alpha);
+		const ColorRGBA Color = VertexColored ? ColorRGBA(1.0f, 1.0f, 1.0f, Alpha) :
+			m_TitleColorStyle.m_Mode == EQmTitleColorMode::SINGLE ?
+				m_TitleColorStyle.m_Color.WithMultipliedAlpha(m_Alpha) : ColorRGBA(0.0f, 0.0f, 0.0f, m_Alpha);
+		const ColorRGBA OutlineColor = VertexColored || m_TitleColorStyle.m_Mode == EQmTitleColorMode::SINGLE ?
+			s_OutlineColor.WithMultipliedAlpha(m_Alpha) : ColorRGBA(0.85f, 0.85f, 0.85f, m_Alpha);
+		const float X = Pos.x - m_RenderSize.x / 2.0f;
+		const float Y = Pos.y - m_RenderSize.y / 2.0f;
+		const int Effect = std::clamp(g_Config.m_QmTitleEffect, 0, 3);
+		if(Effect == QM_TITLE_EFFECT_POLISHED || Effect == QM_TITLE_EFFECT_SOLID)
+		{
+			SQmTitlePolishStyle Style;
+			Style.m_TextColor = Color;
+			Style.m_TextAlpha = Color.a;
+			if(VertexColored || Effect == QM_TITLE_EFFECT_SOLID)
+			{
+				Style.m_GlowAlpha = 0.0f;
+				Style.m_HighlightAlpha = 0.0f;
+			}
+			This.RenderTools()->RenderTitleContainerWithPolishedEffects(m_TextContainerIndex, Style, X, Y);
+		}
+		else if(DynamicStyle && Effect == QM_TITLE_EFFECT_CLASSIC)
+		{
+			SQmTitleEffectStyle Style;
+			Style.m_TextColor = Color;
+			Style.m_OutlineColor = OutlineColor;
+			Style.m_OutlineRadius = 2.0f;
+			if(g_Config.m_QmTitleBloom > 0)
+			{
+				const float Time = (float)This.m_QmClient.TitleAnimationTime();
+				Style.m_BloomRadius = 4.0f;
+				Style.m_BloomPulse = 16.0f * std::pow(std::sin(Time * 2.0f / pi) * 0.65f, 5.0f);
+				Style.m_BloomRotation = Time * 1.7f;
+				Style.m_BloomAlpha = g_Config.m_QmTitleBloom >= 2 ? 0.28f : 0.18f;
+				Style.m_BloomDraws = g_Config.m_QmTitleBloom >= 2 ? 16 : 6;
+			}
+			This.RenderTools()->RenderTitleContainerWithCalamityEffects(m_TextContainerIndex, Style, X, Y);
+		}
+		else
+			This.TextRender()->RenderTextContainer(m_TextContainerIndex, Color, OutlineColor, X, Y);
 	}
 
 public:
@@ -1300,11 +1000,6 @@ protected:
 	{
 		m_FontSize = Data.m_FontSize;
 		str_copy(m_aText, Data.m_aName, sizeof(m_aText));
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
-		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		m_GradientEnabled = m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GRADIENT) != 0;
@@ -1358,11 +1053,6 @@ protected:
 	{
 		m_FontSize = Data.m_FontSizeClan;
 		str_copy(m_aText, Data.m_aClan[0] != '\0' ? Data.m_aClan : " ", sizeof(m_aText));
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
-		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		m_GradientEnabled = m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & QM_TEXT_EFFECT_GRADIENT) != 0;
@@ -1591,11 +1281,6 @@ protected:
 		m_FontSize = Data.m_FontSizeClan;
 		const char *pSkin = Data.m_InGame ? This.m_aClients[Data.m_ClientId].m_aSkinName : (Data.m_ClientId == 0 ? g_Config.m_ClPlayerSkin : g_Config.m_ClDummySkin);
 		str_copy(m_aText, pSkin, sizeof(m_aText));
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
-		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
@@ -1640,11 +1325,6 @@ protected:
 		m_Aligned = m_IsX && Data.m_CoordXAligned;
 		m_Coord = RoundCoordToCentitiles(m_IsX ? Data.m_Coords.x : Data.m_Coords.y) / 100.0f;
 		str_format(m_aText, sizeof(m_aText), "%c:%.2f", m_IsX ? 'X' : 'Y', m_Coord);
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
-		}
 
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
@@ -1682,11 +1362,6 @@ protected:
 		m_FontSize = Data.m_FontSizeClan;
 		const char *pReason = This.m_WarList.GetWarData(Data.m_ClientId).m_aReason;
 		str_copy(m_aText, pReason, sizeof(m_aText));
-		if(m_MsdfBuildAllowed)
-		{
-			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
-		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
@@ -1742,22 +1417,6 @@ private:
 	bool m_InGame = false;
 	PartsVector m_vpParts;
 	std::vector<SCoreRowParts> m_vCoreRows;
-	bool m_MsdfForceFreeType = false;
-	uint64_t m_MsdfFallbackInputHash = 0;
-	// MSDF 调试：统计本帧渲染路径并驱动路径变化事件（仅 debug 开关开启时由 Render 调用）
-	void SampleMsdfDebugPaths()
-	{
-		for(auto &Part : m_vpParts)
-		{
-			const int State = Part->SampleMsdfDebugPath();
-			if(State < 0)
-				continue;
-			if(State == 1)
-				++s_MsdfDebugMsdfParts;
-			else
-				++s_MsdfDebugFallbackParts;
-		}
-	}
 	void RenderLine(CGameClient &This,
 		vec2 Pos, vec2 Size,
 		const PartsVector::iterator &Start, const PartsVector::iterator &End)
@@ -1813,6 +1472,13 @@ private:
 	vec2 CoreRowSize(const SCoreRowParts &CoreRow) const
 	{
 		return RangeSize(CoreRow.m_Start, CoreRow.m_End);
+	}
+	std::array<float, kNameplateCoreRowCount> LayoutCoreRowHeights(const CNamePlate *pLayoutReference) const
+	{
+		std::array<float, kNameplateCoreRowCount> aHeights{};
+		for(const SCoreRowParts &CoreRow : m_vCoreRows)
+			aHeights[static_cast<size_t>(CoreRow.m_Row)] = LayoutCoreRowSize(CoreRow, pLayoutReference).y;
+		return aHeights;
 	}
 	vec2 LayoutCoreRowSize(const SCoreRowParts &CoreRow, const CNamePlate *pLayoutReference) const
 	{
@@ -1944,6 +1610,10 @@ public:
 		ComputeBaselineLayout(PositionBottomMiddle, ENameplateCoreRow::NUM_ROWS,
 			HasFrame, FrameMin, FrameMax, DummyHasRow, DummyCenter, DummySize);
 	}
+	float ContentSpan(const CNamePlate *pLayoutReference = nullptr) const
+	{
+		return QmNameplatePreviewContentSpan(LayoutCoreRowHeights(pLayoutReference));
+	}
 
 private:
 	template<typename PartType, typename... ArgsType>
@@ -2060,48 +1730,17 @@ public:
 	{
 		for(auto &Part : m_vpParts)
 			Part->Reset(This);
-		m_MsdfForceFreeType = false;
-		m_MsdfFallbackInputHash = 0;
 	}
 	void Update(CGameClient &This, const CNamePlateData &Data)
 	{
 		Init(This);
 		m_InGame = Data.m_InGame;
-		const uint64_t MsdfInputHash = NameplateMsdfInputHash(Data);
-		if(MsdfInputHash != m_MsdfFallbackInputHash)
-		{
-			m_MsdfFallbackInputHash = MsdfInputHash;
-			m_MsdfForceFreeType = false;
-		}
-		// 先按当前手动开关尝试 MSDF。只要本铭牌任一可见文字部件
-		// 无法完整使用 MSDF，就把整条铭牌统一重建为 FreeType，避免混排。
-		for(auto &Part : m_vpParts)
-			Part->SetNameplateForceFreeType(This, Data, m_MsdfForceFreeType);
 		for(auto &Part : m_vpParts)
 			Part->Update(This, Data);
-		bool ForceFreeType = false;
-		for(const auto &Part : m_vpParts)
-		{
-			if(Part->RequiresFreeTypeNameplate())
-			{
-				ForceFreeType = true;
-				break;
-			}
-		}
-		if(ForceFreeType)
-		{
-			m_MsdfForceFreeType = true;
-			for(auto &Part : m_vpParts)
-				Part->SetNameplateForceFreeType(This, Data, true);
-			for(auto &Part : m_vpParts)
-				Part->Update(This, Data);
-		}
 	}
 	void Render(CGameClient &This, const vec2 &PositionBottomMiddle, const CNamePlate *pLayoutReference = nullptr)
 	{
 		dbg_assert(m_Inited, "Tried to render uninited nameplate");
-		if(g_Config.m_QmNameplateMsdfDebug)
-			SampleMsdfDebugPaths();
 		if(NameplateFreeMoveEnabled())
 		{
 			// Each row is positioned independently from PositionBottomMiddle:
@@ -2132,9 +1771,7 @@ public:
 		if(NameplateFreeMoveEnabled())
 		{
 			// Use the baseline frame top so chat bubbles etc. anchor to a
-			// stable, drag-independent position. The drag area is visually
-			// larger (see NAMEPLATE_FREE_MOVE_FRAME_SCALE), but TopY is for
-			// layout neighbors that should hug the actual content.
+			// stable, drag-independent position for layout neighbors.
 			bool HasFrame = false;
 			vec2 FrameMin = vec2(0.0f, 0.0f);
 			vec2 FrameMax = vec2(0.0f, 0.0f);
@@ -2150,8 +1787,7 @@ public:
 		if(NameplateFreeMoveEnabled())
 		{
 			// Reported size stays at the baseline stack bbox so layout code
-			// (chat bubbles, preview-page tee placement) hugs the actual
-			// content. The drag area is scaled separately at draw time.
+			// (chat bubbles, preview-page tee placement) hugs the actual content.
 			bool HasFrame = false;
 			vec2 FrameMin = vec2(0.0f, 0.0f);
 			vec2 FrameMax = vec2(0.0f, 0.0f);
@@ -2190,6 +1826,7 @@ public:
 	CNamePlate m_aNamePlates[MAX_CLIENTS];
 	CNamePlate m_aNamePlateFrameReferences[MAX_CLIENTS];
 	CNamePlate m_aPreviewNamePlates[2];
+	CNamePlate m_aPreviewFrameReferences[2];
 	SChatBubbleAnimState m_aChatBubbleAnim[MAX_CLIENTS];
 	SCoordXAlignState m_aCoordXAlign[MAX_CLIENTS];
 	SCoordXAlignFrameState m_CoordXAlignFrame;
@@ -2573,7 +2210,7 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 		NamePlate.Render(*GameClient(), Position - vec2(0.0f, (float)g_Config.m_ClNamePlatesOffset), pLayoutReference);
 }
 
-void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
+static void BuildNamePlatePreviewData(CGameClient &This, int DummyIdx, CNamePlateData &Data, bool ForceNameplateScopeAll = false)
 {
 	const float FontSize = 18.0f + 20.0f * g_Config.m_ClNamePlatesSize / 100.0f;
 	const float FontSizeClan = 18.0f + 20.0f * g_Config.m_ClNamePlatesClanSize / 100.0f;
@@ -2582,9 +2219,8 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	const float FontSizeDirection = 18.0f + 20.0f * g_Config.m_ClDirectionSize / 100.0f;
 	const float FontSizeHookStrongWeak = 18.0f + 20.0f * g_Config.m_ClNamePlatesStrongSize / 100.0f;
 
-	auto BuildPreviewData = [&](int DummyIdx, CNamePlateData &Data, bool ForceNameplateScopeAll = false) {
 		Data.m_InGame = false;
-		Data.m_Color = g_Config.m_ClNamePlatesTeamcolors ? GameClient()->GetDDTeamColor(13, 0.75f) : TextRender()->DefaultTextColor();
+		Data.m_Color = g_Config.m_ClNamePlatesTeamcolors ? This.GetDDTeamColor(13, 0.75f) : This.TextRender()->DefaultTextColor();
 		Data.m_Color.a = 1.0f;
 		const bool IsOwnPreview = DummyIdx == 0;
 		// 设置页预览：DummyIdx==0 视作当前操控角色，其余视作本机分身，两者都算本机。
@@ -2596,7 +2232,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		Data.m_DeveloperRainbow = false;
 		// 设置页预览必须展示当前选择的效果，不能受游戏中 Playing/Spectate/Demo scope 限制。
 		Data.m_UseTextEffects = g_Config.m_QmNameplateTextEffects != 0;
-		const char *pName = DummyIdx == 0 ? Client()->PlayerName() : Client()->DummyName();
+		const char *pName = DummyIdx == 0 ? This.Client()->PlayerName() : This.Client()->DummyName();
 		str_copy(Data.m_aName, str_utf8_skip_whitespaces(pName));
 		str_utf8_trim_right(Data.m_aName);
 		Data.m_FontSize = FontSize;
@@ -2669,10 +2305,37 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 
 		// TClient
 		Data.m_Local = false;
-	};
+}
 
+float CNamePlates::MeasurePreviewAreaHeight() const
+{
+	float MaxContentSpan = 0.0f;
+	for(int Dummy = 0; Dummy < NUM_DUMMIES; ++Dummy)
+	{
+		CNamePlateData Data;
+		BuildNamePlatePreviewData(*GameClient(), Dummy, Data);
+		CNamePlate PreviewPlate(*GameClient(), Data);
+		CNamePlate FramePlate;
+		CNamePlate *pFramePlate = nullptr;
+		if(NameplateFreeMoveEnabled())
+		{
+			CNamePlateData FrameData;
+			BuildNamePlatePreviewData(*GameClient(), Dummy, FrameData, true);
+			FramePlate.Update(*GameClient(), FrameData);
+			pFramePlate = &FramePlate;
+		}
+		MaxContentSpan = std::max(MaxContentSpan, PreviewPlate.ContentSpan(pFramePlate));
+		PreviewPlate.Reset(*GameClient());
+		if(pFramePlate != nullptr)
+			pFramePlate->Reset(*GameClient());
+	}
+	return NAMEPLATE_PREVIEW_AREA_MARGIN * 2.0f + MaxContentSpan + (float)g_Config.m_ClNamePlatesOffset + NAMEPLATE_PREVIEW_TEE_SIZE / 2.0f;
+}
+
+void CNamePlates::RenderNamePlatePreview(const CUIRect &PreviewArea, int Dummy)
+{
 	CNamePlateData Data;
-	BuildPreviewData(Dummy, Data);
+	BuildNamePlatePreviewData(*GameClient(), Dummy, Data);
 	CNamePlate &NamePlate = m_pData->m_aPreviewNamePlates[Dummy];
 	NamePlate.Update(*GameClient(), Data);
 
@@ -2687,62 +2350,24 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		TeeRenderInfo.Apply(GameClient()->m_Skins.Find(g_Config.m_ClDummySkin));
 		TeeRenderInfo.ApplyColors(g_Config.m_ClDummyUseCustomColor, g_Config.m_ClDummyColorBody, g_Config.m_ClDummyColorFeet);
 	}
-	TeeRenderInfo.m_Size = 64.0f;
+	TeeRenderInfo.m_Size = NAMEPLATE_PREVIEW_TEE_SIZE;
 
-	// To keep the drag area visually identical when toggling between
-	// player/dummy preview, take the union of both sides' baseline frame
-	// sizes and use that as the unified size for sizing/anchoring/clamping.
-	vec2 UnifiedFrameSize = NamePlate.Size();
-	CNamePlate FrameNamePlate;
 	CNamePlate *pFrameNamePlate = nullptr;
 	if(NameplateFreeMoveEnabled())
 	{
 		CNamePlateData FrameData;
-		BuildPreviewData(Dummy, FrameData, true);
+		BuildNamePlatePreviewData(*GameClient(), Dummy, FrameData, true);
+		CNamePlate &FrameNamePlate = m_pData->m_aPreviewFrameReferences[Dummy];
 		FrameNamePlate.Update(*GameClient(), FrameData);
 		pFrameNamePlate = &FrameNamePlate;
-
-		CNamePlateData OtherFrameData;
-		BuildPreviewData(Dummy == 0 ? 1 : 0, OtherFrameData, true);
-		CNamePlate OtherFrameNamePlate(*GameClient(), OtherFrameData);
-		UnifiedFrameSize = FrameNamePlate.Size();
-		const vec2 OtherSize = OtherFrameNamePlate.Size();
-		UnifiedFrameSize.x = std::max(UnifiedFrameSize.x, OtherSize.x);
-		UnifiedFrameSize.y = std::max(UnifiedFrameSize.y, OtherSize.y);
-		OtherFrameNamePlate.Reset(*GameClient());
 	}
 
-	Position.y += UnifiedFrameSize.y / 2.0f;
-	Position.y += (float)g_Config.m_ClNamePlatesOffset / 2.0f;
-
-	// Free-move preview: the tee stays at the original preview position (the
-	// same relative offset to the nameplate content as in-game), so what the
-	// user sees in the preview matches the actual in-game layout. The frame
-	// (used for clamping the drag area) is still computed below, but it does
-	// not move the tee.
-	const vec2 TeeRenderPosition = Position;
-	const vec2 NameplateBottomMiddle = Position - vec2(0.0f, (float)g_Config.m_ClNamePlatesOffset);
-	bool HasFrame = false;
-	vec2 FrameMin = vec2(0.0f, 0.0f);
-	vec2 FrameMax = vec2(0.0f, 0.0f);
-	if(NameplateFreeMoveEnabled())
-	{
-		// Anchor the unified frame at this preview's baseline-frame center,
-		// then expand to the unified size and apply the visual scale.
-		bool BaseHasFrame = false;
-		vec2 BaseFrameMin = vec2(0.0f, 0.0f);
-		vec2 BaseFrameMax = vec2(0.0f, 0.0f);
-		pFrameNamePlate->ComputeBaselineFrame(NameplateBottomMiddle, BaseHasFrame, BaseFrameMin, BaseFrameMax);
-		if(BaseHasFrame)
-		{
-			const vec2 Center = (BaseFrameMin + BaseFrameMax) * 0.5f;
-			const vec2 HalfUnified = UnifiedFrameSize * 0.5f;
-			FrameMin = Center - HalfUnified;
-			FrameMax = Center + HalfUnified;
-			ScaleFrameAroundCenter(FrameMin, FrameMax, NAMEPLATE_FREE_MOVE_FRAME_SCALE);
-			HasFrame = true;
-		}
-	}
+	// 预览矩形既确定脚本体位置，也是自由移动时画出的可达边界。
+	const vec2 TeeRenderPosition = vec2(PreviewArea.Center().x, PreviewArea.y + PreviewArea.h - NAMEPLATE_PREVIEW_AREA_MARGIN - NAMEPLATE_PREVIEW_TEE_SIZE / 2.0f);
+	const vec2 NameplateBottomMiddle = TeeRenderPosition - vec2(0.0f, (float)g_Config.m_ClNamePlatesOffset);
+	const bool HasFrame = NameplateFreeMoveEnabled();
+	const vec2 FrameMin = vec2(PreviewArea.x + NAMEPLATE_PREVIEW_FRAME_INSET, PreviewArea.y + NAMEPLATE_PREVIEW_FRAME_INSET);
+	const vec2 FrameMax = vec2(PreviewArea.x + PreviewArea.w - NAMEPLATE_PREVIEW_FRAME_INSET, PreviewArea.y + PreviewArea.h - NAMEPLATE_PREVIEW_FRAME_INSET);
 
 	// tee looking towards cursor, and it is happy when you touch it
 	const vec2 DeltaPosition = Ui()->MousePos() - TeeRenderPosition;
@@ -2751,11 +2376,10 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	const vec2 TeeDirection = Distance < InteractionDistance ? normalize(vec2(DeltaPosition.x, maximum(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
 	const int TeeEmote = Distance < InteractionDistance ? EMOTE_HAPPY : (Dummy ? g_Config.m_ClDummyDefaultEyes : g_Config.m_ClPlayerDefaultEyes);
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeRenderInfo, TeeEmote, TeeDirection, TeeRenderPosition);
-	Position.y -= (float)g_Config.m_ClNamePlatesOffset;
 	if(NameplateFreeMoveEnabled())
 	{
 		std::array<SNameplateCoreRowRect, kNameplateCoreRowCount> aEditorRects;
-		NamePlate.CollectCoreRowRects(Position, aEditorRects, pFrameNamePlate);
+		NamePlate.CollectCoreRowRects(NameplateBottomMiddle, aEditorRects, pFrameNamePlate);
 
 		const vec2 MousePosition = Ui()->MousePos();
 		ENameplateCoreRow HoveredRow = ENameplateCoreRow::NUM_ROWS;
@@ -2786,17 +2410,15 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 			int *pOffsetX = NameplateCoreRowOffsetX(m_pData->m_FreeMoveDragRow);
 			int *pOffsetY = NameplateCoreRowOffsetY(m_pData->m_FreeMoveDragRow);
 
-			// Offset range = (FrameMin - BaselineRowMin, FrameMax - BaselineRowMax),
-			// where BaselineRowMin/Max derive from row center & size at offset=0.
-			// The frame here is the SAME unified+scaled frame the outline is
-			// drawn from, so clamp matches the visible drag area exactly.
+			// 行的偏移限制由预览框边界与未偏移的行矩形共同确定；
+			// 限制使用的边界与屏幕上画出的边界相同。
 			bool DragHasRow = false;
 			bool DragIgnoreFrame = false;
 			vec2 DragIgnoreFrameMin = vec2(0.0f, 0.0f);
 			vec2 DragIgnoreFrameMax = vec2(0.0f, 0.0f);
 			vec2 DragRowCenter = vec2(0.0f, 0.0f);
 			vec2 DragRowSize = vec2(0.0f, 0.0f);
-			NamePlate.ComputeBaselineLayout(Position, m_pData->m_FreeMoveDragRow,
+			NamePlate.ComputeBaselineLayout(NameplateBottomMiddle, m_pData->m_FreeMoveDragRow,
 				DragIgnoreFrame, DragIgnoreFrameMin, DragIgnoreFrameMax,
 				DragHasRow, DragRowCenter, DragRowSize, pFrameNamePlate);
 			const vec2 DragFrameMin = FrameMin;
@@ -2849,7 +2471,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 				const int NewOffsetY = std::clamp(round_to_int(m_pData->m_FreeMoveDragStartOffset.y + MousePosition.y - m_pData->m_FreeMoveDragStartMouse.y), LimitMinY, LimitMaxY);
 				*pOffsetY = NewOffsetY;
 			}
-			NamePlate.CollectCoreRowRects(Position, aEditorRects, pFrameNamePlate);
+			NamePlate.CollectCoreRowRects(NameplateBottomMiddle, aEditorRects, pFrameNamePlate);
 		}
 
 		const bool DraggingAnyRow = m_pData->m_FreeMoveDragRow != ENameplateCoreRow::NUM_ROWS;
@@ -2895,9 +2517,7 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 	{
 		m_pData->m_FreeMoveDragRow = ENameplateCoreRow::NUM_ROWS;
 	}
-	NamePlate.Render(*GameClient(), Position, pFrameNamePlate);
-	if(pFrameNamePlate != nullptr)
-		pFrameNamePlate->Reset(*GameClient());
+	NamePlate.Render(*GameClient(), NameplateBottomMiddle, pFrameNamePlate);
 }
 
 void CNamePlates::ResetNamePlates()
@@ -2907,6 +2527,8 @@ void CNamePlates::ResetNamePlates()
 	for(CNamePlate &NamePlate : m_pData->m_aNamePlateFrameReferences)
 		NamePlate.Reset(*GameClient());
 	for(CNamePlate &NamePlate : m_pData->m_aPreviewNamePlates)
+		NamePlate.Reset(*GameClient());
+	for(CNamePlate &NamePlate : m_pData->m_aPreviewFrameReferences)
 		NamePlate.Reset(*GameClient());
 	for(SCoordXAlignState &CoordXAlignState : m_pData->m_aCoordXAlign)
 		CoordXAlignState = SCoordXAlignState();
@@ -3282,34 +2904,6 @@ void CNamePlates::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	// MSDF 开关支持运行时热切换：翻转时先清空旧铭牌缓存，避免同一帧混用两条路径。
-	static int s_LastMsdfEnabled = -1;
-	const int MsdfEnabled = g_Config.m_QmNameplateMsdf != 0 ? 1 : 0;
-	if(s_LastMsdfEnabled >= 0 && s_LastMsdfEnabled != MsdfEnabled)
-	{
-		ResetNamePlates();
-		if(MsdfEnabled == 0)
-			QmNameplateMsdf().Shutdown();
-	}
-	s_LastMsdfEnabled = MsdfEnabled;
-
-	if(MsdfEnabled != 0)
-	{
-		const char *pProfile = NameplateMsdfFontProfile();
-		if(pProfile != nullptr)
-			QmNameplateMsdf().EnsureInitialized(Storage(), Graphics(), pProfile);
-		// 未匹配随包 profile 的字体不启动运行时烘焙，统一由 FreeType 渲染。
-		// 字体门控状态只在变化时输出，用于解释「为什么这条铭牌没走 MSDF」
-		LogNameplateMsdfFontGateIfChanged();
-	}
-
-	// 每帧重置 MSDF 调试统计（debug 开关关闭时零开销）
-	if(g_Config.m_QmNameplateMsdfDebug)
-	{
-		s_MsdfDebugMsdfParts = 0;
-		s_MsdfDebugFallbackParts = 0;
-	}
-
 	// 每帧重置名牌文字重建预算，把缩放档位变化带来的重建开销摊平到多帧
 	s_NameplateTextRebuildBudget = NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAME;
 
@@ -3398,9 +2992,6 @@ void CNamePlates::OnRender()
 
 	QmNameplateEffectLodEndFrame();
 
-	// MSDF 调试汇总：每 10 秒一行（当前帧口径）
-	if(g_Config.m_QmNameplateMsdfDebug)
-		MaybeLogNameplateMsdfDebugSummary();
 }
 
 void CNamePlates::OnWindowResize()
@@ -3415,14 +3006,6 @@ void CNamePlates::OnShutdown()
 	ResetNamePlates();
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 		ResetChatBubbleAnimState(i, true);
-	QmNameplateMsdf().Shutdown();
-}
-
-void CNamePlates::OnGraphicsResourcesReset()
-{
-	// 设备重建后 MSDF 图集纹理全部失效：丢弃并等待在新设备上重建。
-	// 铭牌文字缓存会在门控翻转检测里自动作废（Ready=false → 各部件清缓存并重排）。
-	QmNameplateMsdf().OnGraphicsResourcesReset();
 }
 
 CNamePlates::CNamePlates() :

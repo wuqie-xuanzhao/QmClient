@@ -15,6 +15,8 @@
 #include <generated/protocol7.h>
 
 #include <optional>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -127,6 +129,8 @@ public:
 	std::vector<CClient> m_vClients;
 	int m_NumFilteredPlayers;
 	bool m_RequiresLogin;
+	// 游戏层推送的该服在线梦客户端人数（含 Arg）。
+	int m_QmClientCount = 0;
 
 	static int EstimateLatency(int Loc1, int Loc2);
 	static bool ParseLocation(int *pResult, const char *pString);
@@ -286,6 +290,7 @@ public:
 		SORT_NUMPLAYERS - Sort after how many players there are on the server.
 		SORT_NUMFRIENDS - Sort after how many friends there are on the server.
 		SORT_FAVORITES - Sort by favorite status, number of players and then ping.
+		SORT_QM_CLIENTS - Sort by the number of Qm clients online on the server.
 	*/
 	enum
 	{
@@ -296,6 +301,7 @@ public:
 		SORT_NUMPLAYERS,
 		SORT_NUMFRIENDS,
 		SORT_FAVORITES,
+		SORT_QM_CLIENTS,
 	};
 
 	enum
@@ -368,6 +374,8 @@ public:
 	virtual int NumSortedServers() const = 0;
 	virtual int NumSortedPlayers() const = 0;
 	virtual const CServerInfo *SortedGet(int Index) const = 0;
+	// 中心服下发的在线分布（"ip:port" → 人数），游戏层在分布更新时推送。
+	virtual void SetQmClientServerCounts(const std::unordered_map<std::string, int> &Counts) = 0;
 
 	virtual const std::vector<CCommunity> &Communities() const = 0;
 	virtual const CCommunity *Community(const char *pCommunityId) const = 0;

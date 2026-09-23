@@ -509,3 +509,66 @@ TEST(Skins, FinalizeBudgetAlwaysLetsFirstSkinProgress)
 	EXPECT_FALSE(QmSkinCanFinalize(1, 1ms, 1ms));
 	EXPECT_FALSE(QmSkinCanFinalize(2, 5ms, 1ms));
 }
+
+TEST(Skins, PartialUploadIsDiscardedOnCancellationOrFailure)
+{
+	using EState = CSkins::CSkinContainer::EState;
+	EXPECT_TRUE(CSkins::CSkinContainer::ShouldDiscardPendingUpload(EState::LOADING, EState::UNLOADED));
+	EXPECT_TRUE(CSkins::CSkinContainer::ShouldDiscardPendingUpload(EState::LOADING, EState::ERROR));
+	EXPECT_FALSE(CSkins::CSkinContainer::ShouldDiscardPendingUpload(EState::LOADING, EState::LOADED));
+	EXPECT_FALSE(CSkins::CSkinContainer::ShouldDiscardPendingUpload(EState::PENDING, EState::UNLOADED));
+}
+
+TEST(Skins, UploadFrameBudgetRequiresResetBeforeAnotherUpload)
+{
+	CQmSkinUploadFrameBudget Budget;
+	EXPECT_TRUE(Budget.TryConsume());
+	EXPECT_FALSE(Budget.TryConsume());
+	Budget.Reset();
+	EXPECT_TRUE(Budget.TryConsume());
+}
+
+TEST(Skins, UnresolvedNotificationIsTriggeredOnlyByNewFailures)
+{
+	using EState = CSkins::CSkinContainer::EState;
+	CSkins::CUnresolvedSkinScanState Scan;
+	Scan.OnStateChange(EState::PENDING, EState::LOADING);
+	EXPECT_FALSE(Scan.Consume());
+	Scan.OnStateChange(EState::LOADING, EState::ERROR);
+	EXPECT_TRUE(Scan.Consume());
+	EXPECT_FALSE(Scan.Consume());
+	Scan.OnStateChange(EState::ERROR, EState::ERROR);
+	EXPECT_FALSE(Scan.Consume());
+	Scan.OnStateChange(EState::ERROR, EState::PENDING);
+	Scan.OnStateChange(EState::PENDING, EState::NOT_FOUND);
+	EXPECT_TRUE(Scan.Consume());
+}
+
+TEST(Skins, PreparedTexturesKeepValidSpritesWhenOneSpriteIsOutOfBounds)
+{
+	CImageInfo Source = MakeTestSkinImage(4, 4);
+	SetTestPixel(Source, 0, 0, 23, 45, 67, 255);
+	CDataSpriteset Set{};
+	Set.m_Gridx = 2;
+	Set.m_Gridy = 2;
+	std::array<CDataSprite, SPRITE_TEE_EYE_SURPRISE + 1> aSprites{};
+	for(CDataSprite &Sprite : aSprites)
+	{
+		Sprite.m_pSet = &Set;
+		Sprite.m_pName = "prepared_test";
+		Sprite.m_W = 1;
+		Sprite.m_H = 1;
+	}
+	aSprites[SPRITE_TEE_EYE_SURPRISE].m_X = 2;
+
+	auto pPrepared = QmPrepareSkinTextures(Source, Source, aSprites.data());
+	ASSERT_NE(pPrepared, nullptr);
+	EXPECT_TRUE(pPrepared->Available(0, 0));
+	EXPECT_TRUE(pPrepared->Available(1, 0));
+	EXPECT_EQ(pPrepared->Image(0, 0).m_Width, 2u);
+	EXPECT_EQ(pPrepared->Image(0, 0).m_pData[0], 23);
+	EXPECT_FALSE(pPrepared->Available(0, 11));
+	EXPECT_FALSE(pPrepared->Available(1, 11));
+	EXPECT_EQ(pPrepared->Image(0, 11).m_pData, nullptr);
+	Source.Free();
+}

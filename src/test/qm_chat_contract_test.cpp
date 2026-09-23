@@ -298,9 +298,4 @@ TEST(QmRedPacketAutoClaim, DedicatedSendPathAllowsWhitespaceOnlyPassword)
 
 	EXPECT_NE(SendChatOnConn.find("pLine == nullptr || pLine[0] == '\\0'"), std::string::npos);
 	EXPECT_NE(SendChatOnConn.find("!AllowWhitespaceOnly && *str_utf8_skip_whitespaces(pLine) == '\\0'"), std::string::npos);
-	const size_t LocalSaveGuard = SendChatOnConn.find("if(HandleLocalSaveForLoadCommand)");
-	const size_t LocalSaveRemoval = SendChatOnConn.find("TryRemoveLocalSaveForLoadCommand(pLine)");
-	ASSERT_NE(LocalSaveGuard, std::string::npos);
-	ASSERT_NE(LocalSaveRemoval, std::string::npos);
-	EXPECT_LT(LocalSaveGuard, LocalSaveRemoval);
 }

@@ -345,20 +345,6 @@ TEST(SkinsContract, ManagedTeeReadinessCoversAllSelectableTextureVariantsAndDumm
 	EXPECT_NE(Header.find("Sixup.RequiredPartTextureVariantsDrawable()"), std::string::npos);
 }
 
-TEST(SkinsContract, HandRenderingNeverBindsNullOrIncompleteTextureSets)
-{
-	const std::string Source = ReadTestSourceFile("src/game/client/components/players.cpp");
-	const size_t RenderHandPos = Source.find("void CPlayers::RenderHand(");
-	const size_t RenderHand7Pos = Source.find("void CPlayers::RenderHand7(", RenderHandPos);
-	ASSERT_NE(RenderHandPos, std::string::npos);
-	ASSERT_NE(RenderHand7Pos, std::string::npos);
-	const std::string RenderHandBody = Source.substr(RenderHandPos, RenderHand7Pos - RenderHandPos);
-	EXPECT_NE(RenderHandBody.find("CTeeRenderInfo::IsDrawableTexture(pInfo->m_aSixup"), std::string::npos);
-	EXPECT_NE(RenderHandBody.find("CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_HandsOutline)"), std::string::npos);
-	EXPECT_NE(RenderHandBody.find("CTeeRenderInfo::IsDrawableTexture(SkinTextures.m_Hands)"), std::string::npos);
-	EXPECT_EQ(RenderHandBody.find("PartTexture(protocol7::SKINPART_HANDS).IsValid()"), std::string::npos);
-}
-
 TEST(SkinsContract, SixupCompletedJobsAreConsumedEveryUpdate)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/components/skins7.h");

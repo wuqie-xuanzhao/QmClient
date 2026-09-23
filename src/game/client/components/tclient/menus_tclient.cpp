@@ -31,7 +31,6 @@
 #include <game/client/components/countryflags.h>
 #include <game/client/components/menu_background.h>
 #include <game/client/components/menus.h>
-#include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_gate.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/section_loader.h>
 #include <game/client/components/skins.h>
@@ -618,27 +617,6 @@ static void ApplyTClientContentMetrics(const float ContentWidth)
 int CMenus::DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(const void *pId, const char *pTextId, const char *pText, int *pValue, CUIRect *pRect, float VMargin)
 {
 	return DoSettingsButton_CheckBoxAutoVMarginAndSet(SETTINGS_TCLIENT, m_TClientSettingsTab, pId, pTextId, pText, pValue, pRect, VMargin, 0.0f, FontSize);
-}
-
-static void NotifyNameplateMsdfEnabled(IClient *pClient, int PreviousValue)
-{
-	if(PreviousValue != 0 || g_Config.m_QmNameplateMsdf == 0)
-		return;
-	log_info("nameplate_msdf", "manual MSDF mode enabled for nameplates; atlas/runtime glyph loading starts on the next render frame");
-	// 只有不在随包 profile 列表中的字体才提示；支持的字体开启时不弹红色警告。
-	if(pClient != nullptr && QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont) == nullptr)
-	{
-		pClient->AddWarning(SWarning(Localize("Vector nameplate text"), Localize("This font has no bundled vector profile. Nameplates will use FreeType.")));
-	}
-}
-
-static void DisableNameplateMsdfForFontChange(IClient *pClient)
-{
-	if(g_Config.m_QmNameplateMsdf == 0)
-		return;
-	g_Config.m_QmNameplateMsdf = 0;
-	log_info("nameplate_msdf", "custom font changed; manual MSDF mode disabled until explicitly enabled again");
-	(void)pClient;
 }
 
 static constexpr const char *SETTINGS_RUNTIME_CACHE_METADATA_FILE = "qmclient/settings_section_cache_metadata.cfg";
@@ -1379,7 +1357,6 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 		const int FontSelectedNew = DoSettingsDropDown(&Button, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 		if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 		{
-			DisableNameplateMsdfForFontChange(Client());
 			str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
 			s_VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 			s_RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
@@ -1429,32 +1406,12 @@ float CMenus::LayoutTClientThemeCacheSection(CUIRect &CurrentColumn, bool Render
 			const int NewStyle = DoSettingsDropDown(&Button, SelectedStyle, s_StyleNames.data(), s_StyleNames.size(), s_StyleDropDownState);
 			if(NewStyle >= 0 && NewStyle != SelectedStyle && (size_t)NewStyle < Styles.size())
 			{
-				DisableNameplateMsdfForFontChange(Client());
 				str_copy(g_Config.m_TcCustomFont, Styles[NewStyle].c_str());
 				TextRender()->SetCustomFace(g_Config.m_TcCustomFont);
 				InvalidateSettingsRuntimeCaches(ESettingsInvalidationReason::FONT_CHANGED);
 				GameClient()->OnWindowResize();
 			}
 		}
-	}
-	Button = Rows.Next();
-	if(Render)
-	{
-		const int PreviousValue = g_Config.m_QmNameplateMsdf;
-		DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_QmNameplateMsdf, "tclient-nameplate-msdf", Localize("Use vector font rendering for nameplates"), &g_Config.m_QmNameplateMsdf, &Button, LineSize);
-		static int s_NameplateMsdfTooltipId;
-		GameClient()->m_Tooltips.DoToolTip(&s_NameplateMsdfTooltipId, &Button, Localize("Only selected bundled fonts have vector nameplate atlases. Other fonts use FreeType."));
-		NotifyNameplateMsdfEnabled(Client(), PreviousValue);
-	}
-	Button = Rows.Next();
-	if(Render)
-	{
-		Button.VSplitLeft(100.0f, &Label, &Button);
-		CUIElement &SupportElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-nameplate-vector-support");
-		const bool SupportsVector = QmNameplateMsdfFontProfile(g_Config.m_TcCustomFont) != nullptr;
-		DoSettingsLabelStreamed(SupportElement, &Label, Localize("Bundled vector profile:"), FontSize, TEXTALIGN_ML, TClientFixedLabelProperties(FontSize, Label.w));
-		CUIElement &ValueElement = SettingsTextElement(SETTINGS_TCLIENT, m_TClientSettingsTab, "tclient-nameplate-vector-support-value");
-		DoSettingsLabelStreamed(ValueElement, &Button, Localize(SupportsVector ? "Available for this bundled font" : "Not available; FreeType is used"), FontSize, TEXTALIGN_ML, TClientFixedLabelProperties(FontSize, Button.w));
 	}
 	if(TextRender()->CustomFontHasVariableWeight(g_Config.m_TcCustomFont))
 	{
@@ -1631,7 +1588,7 @@ SSettingsSection CMenus::BuildTClientThemeCacheSection()
 	SSettingsSection S;
 	S.m_pName = "Font";
 	ConfigureSettingsCardSection(S, Localizable("Font"), "tclient:font", [this](CUIRect &Col, bool Render) -> float { return LayoutTClientThemeCacheSection(Col, Render); }, Margin);
-	S.m_DependencyConfigInts = {&g_Config.m_TcCustomFontWeight, &g_Config.m_QmNameplateMsdf};
+	S.m_DependencyConfigInts = {&g_Config.m_TcCustomFontWeight};
 	return S;
 }
 
@@ -1956,7 +1913,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 					const int FontSelectedNew = DoSettingsDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 					if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 					{
-						DisableNameplateMsdfForFontChange(Client());
 						str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
 						VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 						RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
@@ -2072,7 +2028,6 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				const int FontSelectedNew = DoSettingsDropDown(&FontDropDownRect, FontSelectedOld, s_FontDropDownNames.data(), s_FontDropDownNames.size(), s_FontDropDownState);
 				if(FontSelectedOld != FontSelectedNew && FontSelectedNew >= 0 && (size_t)FontSelectedNew < s_FontDropDownNames.size())
 				{
-					DisableNameplateMsdfForFontChange(Client());
 					str_copy(g_Config.m_TcCustomFont, s_FontDropDownNames[FontSelectedNew]);
 					VisualFontLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);
 					RightSectionLoader.InvalidateCache(ESettingsCacheDirtyReason::FONT);

@@ -2841,6 +2841,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		if(pMsg->m_ClientId < 0 && pMsg->m_pMessage != nullptr)
 		{
+			m_TClient.HandleLocalSaveMessage(pMsg, Conn);
 			m_TClient.HandleSwapCountdownMessage(pMsg->m_pMessage, Conn);
 			m_Hud.HandleSpamProtectionMessage(pMsg->m_pMessage);
 		}
@@ -7642,8 +7643,6 @@ void CGameClient::OnGraphicsResourcesReset()
 	// 文本渲染器缓存了字体纹理，必须同样重建。
 	TextRender()->OnGraphicsResourcesReset();
 
-	// MSDF 铭牌图集持有设备纹理，重置后丢弃以便在新设备上重建。
-	m_NamePlates.OnGraphicsResourcesReset();
 
 	log_info("gfx", "game assets reloaded after graphics resources reset");
 }

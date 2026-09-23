@@ -79,10 +79,6 @@ class CQmAxiomScores : public CComponent
 	struct SCacheEntry
 	{
 		SQmAxiomPlayerResult m_Result;
-		SQmAxiomSearchMatch m_Match;
-		EQmAxiomScoreStatus m_SearchStatus = EQmAxiomScoreStatus::NOT_REQUESTED;
-		EQmAxiomScoreStatus m_PointsStatus = EQmAxiomScoreStatus::NOT_REQUESTED;
-		int64_t m_Points = 0;
 		int64_t m_LastSearchSuccessTick = 0;
 		int64_t m_LastSearchFailureTick = 0;
 		std::array<int64_t, 2> m_aLastModeSuccessTick{};
@@ -94,7 +90,6 @@ class CQmAxiomScores : public CComponent
 		std::vector<SQmDdStatsGameType> m_vDdStatsGameTypes;
 		int64_t m_LastDdStatsSuccessTick = 0;
 		int64_t m_LastDdStatsFailureTick = 0;
-		// 上游调度器使用的最近访问时间(缓存淘汰)。
 		int64_t m_LastAccessTick = 0;
 	};
 
@@ -111,7 +106,6 @@ class CQmAxiomScores : public CComponent
 	std::array<SRequestSlot, 2> m_aModeRequests;
 	SRequestSlot m_DdStatsRequest;
 	std::string m_ActivePlayerName;
-	// 上游 v2 调度器的多玩家请求槽与模式状态(与 dyl 固定槽位流程并存)。
 	std::map<std::string, SRequestSlot> m_SearchRequests;
 	std::map<std::string, SRequestSlot> m_ModeRequests;
 	EQmAxiomMode m_Mode = EQmAxiomMode::NONE;
@@ -136,6 +130,10 @@ class CQmAxiomScores : public CComponent
 	void ProcessModeRequests();
 	void ProcessDdStatsRequest();
 	void FinishActiveQueryIfIdle();
+	void EvictCacheEntryIfNeeded();
+	void EnsureScoreboardQueried(const char *pPlayerName);
+	void ProcessScoreboardRequests();
+	void AbortScoreboardRequests();
 	std::shared_ptr<IQmAxiomHttpRequest> StartRequest(const char *pUrl, int TimeoutMs);
 
 protected:
@@ -153,7 +151,7 @@ public:
 	void OnShutdown() override;
 	void OnStateChange(int NewState, int OldState) override;
 
-	// 切换到某个 Axiom 模式（Gores / AXRace）。模式变化时会中止请求并清空缓存。
+	// 切换记分板模式只中止该模式的在途预取，保留另一模式和统计页缓存。
 	void SetMode(EQmAxiomMode Mode);
 	EQmAxiomMode Mode() const { return m_Mode; }
 

@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "profile": "cabin",
-  "generator": "msdf-atlas-gen@6148900d59423059bafde2f51a0cb303184404bd",
-  "pages": [
-    "qmclient/nameplate_msdf/nameplate_cabin_00.json"
-  ]
-}

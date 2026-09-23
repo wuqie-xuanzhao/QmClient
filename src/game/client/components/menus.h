@@ -35,6 +35,7 @@
 #include <game/client/components/menus_settings_controls.h>
 #include <game/client/components/menus_start.h>
 #include <game/client/components/qmclient/browser_friend_list.h>
+#include <game/client/components/qmclient/demo_cut.h>
 #include <game/client/components/qmclient/map_vote_difficulty.h>
 #include <game/client/components/qmclient/qm_map_upload.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
@@ -1741,11 +1742,7 @@ protected:
 		bool m_IsDir;
 	};
 
-	struct SDemoCutSegment
-	{
-		int m_StartTick;
-		int m_EndTick;
-	};
+	using SDemoCutSegment = SDemoSliceSegment;
 
 	char m_aCurrentDemoFolder[IO_MAX_PATH_LENGTH];
 	char m_aCurrentDemoSelectionName[IO_MAX_PATH_LENGTH];
@@ -1769,6 +1766,7 @@ protected:
 	std::vector<SDemoSelectionEntry> m_vDemoSelection;
 	std::vector<SDemoDeleteTarget> m_vDemoDeleteTargets;
 	std::vector<SDemoCutSegment> m_vDemoCutSegments;
+	qm_demo_cut::CPreview m_DemoCutPreview;
 	int m_DemoSelectionAnchorIndex = -1;
 	bool m_DemoScreenshotPreviewOpen = false;
 	bool m_DemoScreenshotPreviewLoadFailed = false;
@@ -2022,7 +2020,7 @@ protected:
 	static bool DemoFilterChat(const void *pData, int Size, void *pUser);
 	bool FetchHeader(CDemoItem &Item);
 	void FetchAllHeaders();
-	void HandleDemoSeeking(float PositionToSeek, float TimeToSeek);
+	void HandleDemoSeeking(float PositionToSeek, float TimeToSeek, int TickToSeek = -1);
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoPlayerSliceSavePopup(CUIRect MainView);
 	// 回放/导出共用的显示选项面板与其折叠开关。
@@ -3120,6 +3118,7 @@ private:
 	void RenderQmHudVoiceContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderQmHudBackground3DContent(CUIRect &Content, const SSettingsContentMetrics &Metrics, float LabelWidth, bool PrewarmOnly);
 	void RenderSettingsQmClientContributors(CUIRect MainView, bool PrewarmOnly = false);
+	void ClearQmTitlePreviewContainers();
 	void RenderTeeCute(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool CuteEyes, float Alpha = 1.0f);
 
 	const CWarType *m_pRemoveWarType = nullptr;

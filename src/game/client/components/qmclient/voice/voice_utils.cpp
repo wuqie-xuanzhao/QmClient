@@ -272,7 +272,9 @@ namespace VoiceUtils
 		OutHeader.m_PosX = ReadFloat(pBuf + Offset);
 		Offset += sizeof(float);
 		OutHeader.m_PosY = ReadFloat(pBuf + Offset);
-		if(OutHeader.m_PayloadSize > VOICE_MAX_PAYLOAD || !std::isfinite(OutHeader.m_PosX) || !std::isfinite(OutHeader.m_PosY))
+		if(OutHeader.m_PayloadSize > VOICE_MAX_PAYLOAD ||
+			(size_t)VOICE_PACKET_HEADER_SIZE + OutHeader.m_PayloadSize != BufSize ||
+			!std::isfinite(OutHeader.m_PosX) || !std::isfinite(OutHeader.m_PosY))
 			return false;
 		return true;
 	}
@@ -463,6 +465,8 @@ namespace VoiceUtils
 
 		if(Header.m_Type == VOICE_TYPE_PING || Header.m_Type == VOICE_TYPE_PONG)
 		{
+			if(Header.m_PayloadSize != 0)
+				return EVoiceIncomingPacketDecision::DROP_PAYLOAD;
 			const uint32_t HeaderGroup = VoiceTokenGroupHash(Header.m_TokenHash);
 			const uint32_t LocalGroup = VoiceTokenGroupHash(Context.m_LocalTokenHash);
 			if(HeaderGroup != 0 && HeaderGroup != LocalGroup)
@@ -746,6 +750,8 @@ namespace VoiceUtils
 			return "offline";
 		if(!Status.m_ServerAddrValid)
 			return "resolving";
+		if(Status.m_Connecting)
+			return "connecting";
 		if(!Status.m_HaveSocket)
 			return "socket_error";
 		if(Status.m_PingMs >= 0)
@@ -796,6 +802,8 @@ namespace VoiceUtils
 			return "join_server";
 		if(Status.m_NeedNetwork && !Status.m_ServerAddrValid)
 			return "check_server";
+		if(Status.m_NeedNetwork && Status.m_Connecting)
+			return "wait_connection";
 		if(Status.m_NeedNetwork && !Status.m_HaveSocket)
 			return "retry_socket";
 		if(Status.m_NeedNetwork && !Status.m_HaveRecentPeers)

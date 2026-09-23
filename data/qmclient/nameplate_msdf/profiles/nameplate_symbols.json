@@ -1,8 +1,0 @@
-{
-  "version": 1,
-  "kind": "msdf-profile",
-  "profile": "symbols",
-  "pages": [
-    "qmclient/nameplate_msdf/nameplate_noto_glow_emoji_00.json"
-  ]
-}

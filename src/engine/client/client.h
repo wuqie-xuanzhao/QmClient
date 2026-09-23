@@ -134,6 +134,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	SHangInfo m_aHangInfo[2];
 	std::thread m_HangWatchdogThread;
 	char m_aHangDumpDir[IO_MAX_PATH_LENGTH] = "";
+	int m_NetworkPumpFirstConn = 0;
 
 	// 本进程内是否已经尝试过图形致命错误恢复：只尝试一次，避免
 	// 「图形故障 -> 重启 -> 又故障」形成无限重启循环。

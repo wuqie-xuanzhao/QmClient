@@ -52,45 +52,6 @@ def _quit_client(env: ProcessEnvironment) -> None:
 		raise RuntimeError(f"client exited with {code}")
 
 
-def _expected_nameplate_msdf_totals(env: ProcessEnvironment) -> tuple[int, int]:
-	"""按渲染器的加载顺序算出运行时应当报告的 (页数, 去重字形数)。
-
-	`CQmNameplateMsdfRenderer::Init` 先加载选中的 profile，再依次加载 `dejavu` 与
-	`symbols`（与选中项同名则跳过）；`ParseManifest` 用 emplace 先到先得，
-	所以字形数是各页码点的**并集**而不是简单相加。
-
-	页数比对专门用来抓「整页被静默跳过」：`LoadProfile` 在 `LoadPage` 失败时只打一行
-	info 就继续，历史上日文页的 manifest `image` 指向 `tmp/glow_jp.png`，运行时按
-	basename 去同目录找 `glow_jp.png` 找不到，425 个假名字形从未生效而测试全绿。
-	"""
-	atlas_dir = env.build_dir / "data" / "qmclient" / "nameplate_msdf"
-	# 选中 DejaVu Sans 时 dejavu 既是主 profile 又是回退链第一项（同名跳过）
-	profiles = ("dejavu", "symbols")
-	pages: list[str] = []
-	for profile in profiles:
-		manifest = json.loads((atlas_dir / "profiles" / f"nameplate_{profile}.json").read_text(encoding="utf-8"))
-		pages.extend(Path(ref).name for ref in manifest["pages"])
-	glyphs: set[str] = set()
-	for page in pages:
-		glyphs.update(json.loads((atlas_dir / page).read_text(encoding="utf-8"))["glyphs"])
-	return len(pages), len(glyphs)
-
-
-def _assert_nameplate_msdf_page_totals(env: ProcessEnvironment) -> None:
-	"""断言运行时加载的页数/字形数与 profile 声明一致（少一页即视为失败）。"""
-	ready = next((line for line in env.client._lines if "Nameplate MSDF ready:" in line), "")
-	match = re.search(r"(\d+) page\(s\), (\d+) glyphs", ready)
-	if match is None:
-		raise AssertionError(f"unexpected 'Nameplate MSDF ready' line: {ready!r}")
-	loaded_pages, loaded_glyphs = int(match.group(1)), int(match.group(2))
-	expected_pages, expected_glyphs = _expected_nameplate_msdf_totals(env)
-	if (loaded_pages, loaded_glyphs) != (expected_pages, expected_glyphs):
-		raise AssertionError(
-			f"nameplate MSDF loaded {loaded_pages} page(s) / {loaded_glyphs} glyphs, "
-			f"but the profiles declare {expected_pages} / {expected_glyphs}: a page was skipped"
-		)
-
-
 def scenario_demo_recording(env: ProcessEnvironment) -> None:
 	"""连接、切图、录制、加 marker、停止并校验 demo 文件。"""
 	env.start_server()
@@ -174,13 +135,9 @@ def scenario_perf_log_persistence(env: ProcessEnvironment) -> None:
 
 
 def scenario_vector_font_and_icon_resources(env: ProcessEnvironment) -> None:
-	"""验证随包铭牌与 Phosphor 图标的 MTSDF 资源在真实进程中加载。"""
+	"""验证自定义字体和 Phosphor 图标资源在真实进程中加载。"""
 	env.start_server()
-	env.connect_client(["qm_nameplate_msdf 1", "qm_nameplate_msdf_debug 1", "qm_ui_icon_weight 1"])
-	env.client.wait_for(lambda line: "Nameplate MSDF ready:" in line, "bundled nameplate MTSDF atlas", 20)
-	# 页数/字形数必须与 profile 声明完全一致：任何一页被静默跳过都在这里失败。
-	_assert_nameplate_msdf_page_totals(env)
-	env.client.wait_for(lambda line: "custom font 'DejaVu Sans' uses MSDF profile 'dejavu'" in line, "DejaVu Latin profile selection", 10)
+	env.connect_client(["qm_ui_icon_weight 1"])
 	# 打开真实设置页，确保 UI 图标绘制路径实际运行，而不是只验证资源文件存在。
 	env.client.command("ui_page 16")
 	time.sleep(2.0)

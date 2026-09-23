@@ -67,6 +67,9 @@ static ColorRGBA DetermineBloodColorFromInfo(const CImageInfo &Info)
 	return ColorRGBA(NormalizedColor.x, NormalizedColor.y, NormalizedColor.z);
 }
 
+static std::shared_ptr<CQmSkinOutline> CreateSkinPartOutline(const CImageInfo &Image, int Part);
+static std::shared_ptr<const QmChatAvatar::SSource> CreateChatAvatarPartSource(const CImageInfo &Image, int Part);
+
 CSkins7::CSkinPartLoadJob::CSkinPartLoadJob(const char *pPath, const char *pPartName, IStorage *pStorage, int StorageType, int PartType, int Flags) :
 	m_Path(pPath),
 	m_PartName(pPartName),
@@ -130,12 +133,18 @@ void CSkins7::CSkinPartLoadJob::Run()
 	ConvertToGrayscale(GrayscaleImage);
 
 	ColorRGBA BloodColor = DetermineBloodColorFromInfo(OriginalImage);
+	auto pOutline = CreateSkinPartOutline(OriginalImage, m_PartType);
+	auto pAvatarOriginal = CreateChatAvatarPartSource(OriginalImage, m_PartType);
+	auto pAvatarColorable = CreateChatAvatarPartSource(GrayscaleImage, m_PartType);
 
 	{
 		CLockScope Lock(m_Mutex);
 		m_Result.m_OriginalImage = std::move(OriginalImage);
 		m_Result.m_GrayscaleImage = std::move(GrayscaleImage);
 		m_Result.m_BloodColor = BloodColor;
+		m_Result.m_QmSkinOutline = std::move(pOutline);
+		m_Result.m_pChatAvatarOriginal = std::move(pAvatarOriginal);
+		m_Result.m_pChatAvatarColorable = std::move(pAvatarColorable);
 		m_Result.m_Success = true;
 		m_Completed = true;
 	}
@@ -357,12 +366,13 @@ void CSkins7::ProcessCompletedJobs()
 			Part.m_OriginalTexture = Graphics()->LoadTextureRaw(Result.m_OriginalImage, 0, Result.m_aName);
 			GameClient()->GpuUploadLimiter()->OnUploaded();
 			Part.m_BloodColor = Result.m_BloodColor;
-			// 必须在 LoadTextureRawMove 消耗灰度图之前取素材。
-			Part.m_QmSkinOutline = CreateSkinPartOutline(Result.m_OriginalImage, Result.m_PartType);
-			Part.m_pChatAvatarOriginal = CreateChatAvatarPartSource(Result.m_OriginalImage, Result.m_PartType);
-			Part.m_pChatAvatarColorable = CreateChatAvatarPartSource(Result.m_GrayscaleImage, Result.m_PartType);
+			// CPU 素材已随任务结果发布；主线程只接管并上传纹理。
+			Part.m_QmSkinOutline = std::move(Result.m_QmSkinOutline);
+			Part.m_pChatAvatarOriginal = std::move(Result.m_pChatAvatarOriginal);
+			Part.m_pChatAvatarColorable = std::move(Result.m_pChatAvatarColorable);
 			Part.m_ColorableTexture = Graphics()->LoadTextureRawMove(Result.m_GrayscaleImage, 0, Result.m_aName);
 			GameClient()->GpuUploadLimiter()->OnUploaded();
+			Result.m_OriginalImage.Free();
 
 			if(Config()->m_Debug)
 			{

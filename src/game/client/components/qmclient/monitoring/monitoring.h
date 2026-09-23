@@ -124,6 +124,21 @@ struct SQmDevicePerfSnapshot
 	uint64_t m_Version = 0;
 };
 
+class CQmDevicePerfVersionTracker
+{
+	uint64_t m_LastSeenVersion = 0;
+
+public:
+	void Reset() { m_LastSeenVersion = 0; }
+	bool Observe(uint64_t Version)
+	{
+		if(Version == 0 || Version == m_LastSeenVersion)
+			return false;
+		m_LastSeenVersion = Version;
+		return true;
+	}
+};
+
 class CQmDevicePerfSnapshotCache
 {
 public:

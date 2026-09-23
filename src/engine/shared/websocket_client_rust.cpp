@@ -51,7 +51,8 @@ namespace
 		bool Queue(EQmWebSocketMessageType Type, const char *pData, size_t Size)
 		{
 			std::lock_guard<std::mutex> Lock(m_Mutex);
-			if(!m_Desired || m_State != EQmWebSocketState::CONNECTED || (!pData && Size) || Size > m_Config.m_MaxMessageSize || m_Outgoing.size() >= 32 || m_OutgoingBytes + Size > m_Config.m_MaxMessageSize * 2)
+			const size_t QueueCapacity = std::clamp(m_Tuning.m_OutgoingQueueCapacity, (size_t)1, (size_t)32);
+			if(!m_Desired || m_State != EQmWebSocketState::CONNECTED || (!pData && Size) || Size > m_Config.m_MaxMessageSize || m_Outgoing.size() >= QueueCapacity || m_OutgoingBytes + Size > m_Config.m_MaxMessageSize * 2)
 			{
 				++m_DroppedOutgoing;
 				return false;
@@ -234,6 +235,8 @@ namespace
 				m_Tuning.m_BackoffBaseMs = Tuning.m_BackoffBaseMs;
 			if(Tuning.m_BackoffMaxMs > 0)
 				m_Tuning.m_BackoffMaxMs = Tuning.m_BackoffMaxMs;
+			if(Tuning.m_OutgoingQueueCapacity > 0)
+				m_Tuning.m_OutgoingQueueCapacity = std::clamp(Tuning.m_OutgoingQueueCapacity, (size_t)1, (size_t)32);
 		}
 		bool Desired() const override { return m_Desired; }
 		EQmWebSocketState State() const override { return m_State; }

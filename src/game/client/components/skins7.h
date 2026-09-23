@@ -79,6 +79,9 @@ public:
 			CImageInfo m_OriginalImage;
 			CImageInfo m_GrayscaleImage;
 			ColorRGBA m_BloodColor;
+			std::shared_ptr<CQmSkinOutline> m_QmSkinOutline;
+			std::shared_ptr<const QmChatAvatar::SSource> m_pChatAvatarOriginal;
+			std::shared_ptr<const QmChatAvatar::SSource> m_pChatAvatarColorable;
 			int m_PartType;
 			int m_Flags;
 			char m_aName[24];

@@ -346,38 +346,38 @@ void CEmoticon::RenderProjectiles()
 		SQmRealtimeMessage Message;
 		while(GameClient()->m_QmClient.PopQmRealtimeEmoticon(Message))
 		{
-			if(Message.m_Event != EQmRealtimeEvent::EMOTICON || !Message.m_EmoticonPayloadValid ||
-				Message.m_EmoticonPlayerId < 0 || Message.m_EmoticonPlayerId >= MAX_CLIENTS ||
-				Message.m_EmoticonId < 0 || Message.m_EmoticonId >= NUM_EMOTICONS ||
-				!GameClient()->m_aClients[Message.m_EmoticonPlayerId].m_Active)
+			if(Message.m_Event != EQmRealtimeEvent::EMOTICON || !Message.m_HasEmoticon ||
+				Message.m_PlayerId < 0 || Message.m_PlayerId >= MAX_CLIENTS ||
+				Message.m_Emoticon < 0 || Message.m_Emoticon >= NUM_EMOTICONS ||
+				!GameClient()->m_aClients[Message.m_PlayerId].m_Active)
 				continue;
-			const int PlayerId = Message.m_EmoticonPlayerId;
+			const int PlayerId = Message.m_PlayerId;
 			// 与远程同一套判定：先按事件算出「该有什么效果」，特殊效果再过总开关、忽略名单
 			// 与两个「显示他人表情」开关。每条事件都重置该玩家的头顶大表情，只有本次判定为
 			// SUPER_HEAD 才重新点亮。
-			const QmEmoticon::EEffect Effect = QmEmoticon::ResolveEffect(Message.m_EmoticonId, Message.m_EmoticonLaunch, Message.m_EmoticonSuperLaunch);
+			const QmEmoticon::EEffect Effect = QmEmoticon::ResolveEffect(Message.m_Emoticon, Message.m_LaunchMode, Message.m_SuperLaunch);
 			m_aRemoteSuperHeadEmoticons[PlayerId] = -1;
 			m_aRemoteSuperHeadExpireTicks[PlayerId] = -1;
 			if(Effect == QmEmoticon::EEffect::SUPER_HEAD || Effect == QmEmoticon::EEffect::PROJECTILE || Effect == QmEmoticon::EEffect::SUPER_PROJECTILE)
 			{
-				if(QmEmoticon::ResolveRemoteEffect(Message.m_EmoticonId, Message.m_EmoticonLaunch, Message.m_EmoticonSuperLaunch,
+				if(QmEmoticon::ResolveRemoteEffect(Message.m_Emoticon, Message.m_LaunchMode, Message.m_SuperLaunch,
 					   g_Config.m_ClShowEmotes, GameClient()->m_aClients[PlayerId].m_EmoticonIgnore,
 					   g_Config.m_QmShowOtherSuperEmotes, g_Config.m_QmShowOtherLaunchEmotes) == QmEmoticon::EEffect::NONE)
 					continue;
 				if(Effect == QmEmoticon::EEffect::SUPER_HEAD)
 				{
-					m_aRemoteSuperHeadEmoticons[PlayerId] = Message.m_EmoticonId;
+					m_aRemoteSuperHeadEmoticons[PlayerId] = Message.m_Emoticon;
 					m_aRemoteSuperHeadExpireTicks[PlayerId] = Client()->GameTick(g_Config.m_ClDummy) + 2 * Client()->GameTickSpeed();
 					continue;
 				}
 				const vec2 Position = GameClient()->m_aClients[PlayerId].m_RenderPos - vec2(0.0f, 20.0f);
 				const vec2 Direction = direction(GameClient()->m_aClients[PlayerId].m_RenderCur.m_Angle / 256.0f);
-				SpawnProjectile(Position, Direction, Message.m_EmoticonId, Effect == QmEmoticon::EEffect::SUPER_PROJECTILE, PlayerId);
+				SpawnProjectile(Position, Direction, Message.m_Emoticon, Effect == QmEmoticon::EEffect::SUPER_PROJECTILE, PlayerId);
 				continue;
 			}
 			// 普通表情（没有特殊效果）：沿用本地既有行为，写到该玩家的头顶表情状态；
 			// 是否显示仍由 players.cpp 的 cl_showemotes 判定，这里不改状态语义。
-			GameClient()->m_aClients[PlayerId].m_Emoticon = Message.m_EmoticonId;
+			GameClient()->m_aClients[PlayerId].m_Emoticon = Message.m_Emoticon;
 			GameClient()->m_aClients[PlayerId].m_EmoticonStartTick = Client()->GameTick(g_Config.m_ClDummy);
 			GameClient()->m_aClients[PlayerId].m_EmoticonStartFraction = Client()->IntraGameTickSincePrev(g_Config.m_ClDummy);
 		}

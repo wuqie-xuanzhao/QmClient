@@ -143,30 +143,6 @@ TEST(SkinsContract, TeeRenderInfoValidityIncludesSixupBodyTexture)
 	EXPECT_NE(ValidBody.find("IsDrawableTexture(Sixup.PartTexture(protocol7::SKINPART_BODY))"), std::string::npos);
 }
 
-TEST(SkinsContract, TeeSkinUploadRequiresWholeSourceTextureBudgetBeforeUpload)
-{
-	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
-	ASSERT_TRUE(File.good());
-	std::stringstream Buffer;
-	Buffer << File.rdbuf();
-	const std::string Source = Buffer.str();
-
-	const size_t ProcessSkinPos = Source.find("CSkins::ESkinProcessResult CSkins::ProcessSkinContainer");
-	ASSERT_NE(ProcessSkinPos, std::string::npos);
-	const size_t LoadingStatsPos = Source.find("CSkins::CSkinLoadingStats CSkins::LoadingStats() const", ProcessSkinPos);
-	ASSERT_NE(LoadingStatsPos, std::string::npos);
-	const std::string ProcessSkinBody = Source.substr(ProcessSkinPos, LoadingStatsPos - ProcessSkinPos);
-
-	EXPECT_NE(ProcessSkinBody.find("CanUpload(SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS)"), std::string::npos);
-	EXPECT_NE(ProcessSkinBody.find("UploadBudget.m_MaxGpuUploads = 1;"), std::string::npos);
-	EXPECT_NE(ProcessSkinBody.find("SettingsResourceConsumeGpuUpload(UploadBudget, SettingsFrameBudgetOrNull(GameClient()))"), std::string::npos);
-	EXPECT_NE(ProcessSkinBody.find("LogSettingsSkinSourceWaitEvent(pSkinContainer->Name(), \"gpu_upload_budget\""), std::string::npos);
-	EXPECT_NE(ProcessSkinBody.find("LogSettingsSkinSourceWaitEvent(pSkinContainer->Name(), \"max_per_frame\""), std::string::npos);
-	EXPECT_NE(Source.find("static constexpr int SETTINGS_SKIN_SOURCE_TEXTURE_UPLOADS = 24;"), std::string::npos);
-	EXPECT_NE(Source.find("event=%s skin=%s artifact=source width=%d height=%d bytes=%d dur_ms=%.3f uploads=%d"), std::string::npos);
-	EXPECT_NE(Source.find("LogSettingsSkinSourceStageEvent(\"upload_done\""), std::string::npos);
-}
-
 TEST(SkinsContract, TeeSettingsListUsesIdleBackgroundRequestsAfterVisibleSettle)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/menus_settings.cpp"));

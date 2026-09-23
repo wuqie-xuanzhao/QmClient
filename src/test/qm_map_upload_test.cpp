@@ -37,7 +37,7 @@ TEST(QmMapUpload, SearchIndexMatchesNestedMapsWithoutMatchingFolders)
 	ASSERT_NE(pStorage, nullptr);
 	for(const char *pFolder : {"maps", "maps/nested", "downloadedmaps", "downloadedmaps/other"})
 		ASSERT_TRUE(pStorage->CreateFolder(pFolder, IStorage::TYPE_SAVE));
-	for(const char *pPath : {"maps/nested/Test.map", "downloadedmaps/other/TEST.MAP", "maps/nested/Test.txt"})
+	for(const char *pPath : {"maps/nested/Test.map", "downloadedmaps/other/TEST.MAP", "maps/nested/Test.txt", "Outside.map"})
 	{
 		IOHANDLE File = pStorage->OpenFile(pPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		ASSERT_NE(File, nullptr);
@@ -53,4 +53,22 @@ TEST(QmMapUpload, SearchIndexMatchesNestedMapsWithoutMatchingFolders)
 	EXPECT_STREQ(Matches[0].m_aPath, "downloadedmaps/other/TEST.MAP");
 	EXPECT_STREQ(Matches[1].m_aPath, "maps/nested/Test.map");
 	EXPECT_TRUE(Index.Find("nested").empty());
+	EXPECT_TRUE(Index.Find("missing").empty());
+	EXPECT_EQ(Index.Find("").size(), 2u);
+	Index.Reset(0);
+	EXPECT_FALSE(Index.Busy());
+	EXPECT_TRUE(Index.Find("test").empty());
+}
+
+TEST(QmMapUpload, SearchIndexMatchesChinesePartialNames)
+{
+	QmMapUpload::SMapFile File;
+	str_copy(File.m_aFilename, "测试地图ABC.map");
+	str_copy(File.m_aPath, "maps/other/测试地图ABC.map");
+	EXPECT_TRUE(QmMapUpload::MatchesMapName(File, "地图ab"));
+	EXPECT_TRUE(QmMapUpload::MatchesMapName(File, "测试"));
+	EXPECT_TRUE(QmMapUpload::MatchesMapName(File, ""));
+	EXPECT_FALSE(QmMapUpload::MatchesMapName(File, "other"));
+	File.m_IsDirectory = true;
+	EXPECT_FALSE(QmMapUpload::MatchesMapName(File, "测试"));
 }

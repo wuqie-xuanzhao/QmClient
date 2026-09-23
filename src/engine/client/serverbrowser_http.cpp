@@ -323,6 +323,34 @@ namespace
 		m_pData->m_BestIndex.store(BestIndex);
 	}
 
+	// 解析任务只持有 HTTP 响应，不引用浏览器的生命周期。
+	class CServerListParseJob : public IJob
+	{
+		std::shared_ptr<IHttpRequest> m_pResponse;
+
+		void Run() override
+		{
+			if(m_pResponse->State() == EHttpState::DONE)
+			{
+				json_value *pJson = m_pResponse->ResultJson();
+				m_Success = !ServerBrowserParseHttpList(pJson, &m_vServers);
+				json_value_free(pJson);
+				m_Age = SanitizeAge(m_pResponse->ResultAgeSeconds());
+			}
+			m_pResponse.reset();
+		}
+
+	public:
+		explicit CServerListParseJob(std::shared_ptr<IHttpRequest> pResponse) :
+			m_pResponse(std::move(pResponse))
+		{
+		}
+
+		bool m_Success = false;
+		int m_Age = 0;
+		std::vector<CServerInfo> m_vServers;
+	};
+
 	class CServerBrowserHttp : public IServerBrowserHttp
 	{
 	public:
@@ -350,22 +378,25 @@ namespace
 			STATE_DONE,
 			STATE_WANTREFRESH,
 			STATE_REFRESHING,
+			STATE_PARSING,
 			STATE_NO_MASTER,
 		};
 
 		static bool Validate(json_value *pJson);
-		static bool Parse(json_value *pJson, std::vector<CServerInfo> *pvServers);
 
+		IEngine *m_pEngine;
 		IHttp *m_pHttp;
 
 		int m_State = STATE_WANTREFRESH;
 		std::shared_ptr<IHttpRequest> m_pGetServers;
+		std::shared_ptr<CServerListParseJob> m_pParseJob;
 		std::unique_ptr<CChooseMaster> m_pChooseMaster;
 
 		std::vector<CServerInfo> m_vServers;
 	};
 
 	CServerBrowserHttp::CServerBrowserHttp(IEngine *pEngine, IHttp *pHttp, const char **ppUrls, int NumUrls, int PreviousBestIndex) :
+		m_pEngine(pEngine),
 		m_pHttp(pHttp),
 		m_pChooseMaster(new CChooseMaster(pEngine, pHttp, Validate, ppUrls, NumUrls, PreviousBestIndex))
 	{
@@ -375,6 +406,7 @@ namespace
 	CServerBrowserHttp::~CServerBrowserHttp()
 	{
 		dbg_assert(m_pGetServers == nullptr, "Server browser load job was not cleared");
+		dbg_assert(m_pParseJob == nullptr, "Server browser parse job was not cleared");
 	}
 
 	void CServerBrowserHttp::Shutdown()
@@ -384,6 +416,7 @@ namespace
 			m_pGetServers->Abort();
 			m_pGetServers = nullptr;
 		}
+		m_pParseJob.reset();
 		m_pChooseMaster->Shutdown();
 	}
 
@@ -414,15 +447,20 @@ namespace
 			{
 				return;
 			}
+			m_pParseJob = std::make_shared<CServerListParseJob>(std::move(m_pGetServers));
+			m_State = STATE_PARSING;
+			m_pEngine->AddJob(m_pParseJob);
+		}
+		else if(m_State == STATE_PARSING)
+		{
+			if(m_pParseJob->State() != IJob::STATE_DONE)
+				return;
+			const bool Success = m_pParseJob->m_Success;
+			const int Age = m_pParseJob->m_Age;
+			if(Success)
+				m_vServers = std::move(m_pParseJob->m_vServers);
+			m_pParseJob.reset();
 			m_State = STATE_DONE;
-			std::shared_ptr<IHttpRequest> pGetServers = nullptr;
-			std::swap(m_pGetServers, pGetServers);
-
-			bool Success = true;
-			json_value *pJson = pGetServers->State() == EHttpState::DONE ? pGetServers->ResultJson() : nullptr;
-			Success = Success && pJson;
-			Success = Success && !ServerBrowserParseHttpList(pJson, &m_vServers);
-			json_value_free(pJson);
 			if(!Success)
 			{
 				log_error("serverbrowser_http", "failed getting serverlist, trying to find best URL");
@@ -434,7 +472,6 @@ namespace
 			{
 				// Try to find new master if the current one returns
 				// results that are 5 minutes old.
-				int Age = SanitizeAge(pGetServers->ResultAgeSeconds());
 				if(Age > 300)
 				{
 					log_info("serverbrowser_http", "got stale serverlist, age=%ds, trying to find best URL", Age);
@@ -445,7 +482,7 @@ namespace
 	}
 	void CServerBrowserHttp::Refresh()
 	{
-		if(m_State == STATE_WANTREFRESH || m_State == STATE_REFRESHING || m_State == STATE_NO_MASTER)
+		if(m_State == STATE_WANTREFRESH || m_State == STATE_REFRESHING || m_State == STATE_PARSING || m_State == STATE_NO_MASTER)
 		{
 			if(m_State == STATE_NO_MASTER)
 			{
@@ -470,11 +507,6 @@ namespace
 		std::vector<CServerInfo> vServers;
 		return ServerBrowserParseHttpList(pJson, &vServers);
 	}
-	bool CServerBrowserHttp::Parse(json_value *pJson, std::vector<CServerInfo> *pvServers)
-	{
-		return ServerBrowserParseHttpList(pJson, pvServers);
-	}
-
 	const char *DEFAULT_SERVERLIST_URLS[] = {
 		"https://master1.ddnet.org/ddnet/15/servers.json",
 		"https://master2.ddnet.org/ddnet/15/servers.json",

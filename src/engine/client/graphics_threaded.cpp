@@ -4123,7 +4123,10 @@ int CGraphics_Threaded::Init()
 
 	m_pBackend = CreateGraphicsBackend(Localize);
 	if(InitWindow() != 0)
+	{
+		Shutdown();
 		return -1;
+	}
 
 	for(auto &FakeMode : g_aFakeModes)
 	{

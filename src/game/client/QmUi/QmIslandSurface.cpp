@@ -40,11 +40,11 @@ namespace qm_island
 			vLines.reserve((size_t)DrawnSegments);
 			for(int i = 0; i < DrawnSegments; ++i)
 			{
-				const float T0 = (float)i / (float)Segments;
-				const float T1 = (float)(i + 1) / (float)Segments;
+				const float T0 = SafeProgress * (float)i / (float)DrawnSegments;
+				const float T1 = SafeProgress * (float)(i + 1) / (float)DrawnSegments;
 				// 从正上方开始顺时针：内部角度以 -90° 为起点。
-				const float A0 = -Pi * 0.5f + T0 * 2.0f * Pi * SafeProgress;
-				const float A1 = -Pi * 0.5f + T1 * 2.0f * Pi * SafeProgress;
+				const float A0 = -Pi * 0.5f + T0 * 2.0f * Pi;
+				const float A1 = -Pi * 0.5f + T1 * 2.0f * Pi;
 				vLines.emplace_back(
 					Center.x + std::cos(A0) * Radius,
 					Center.y + std::sin(A0) * Radius,
