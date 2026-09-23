@@ -24,6 +24,7 @@
 #include <game/client/animstate.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
+#include <game/client/components/qmclient/browser_column_layout.h>
 #include <game/client/components/qmclient/friends_category_drag.h>
 #include <game/client/components/qmclient/local_save_display.h>
 #include <game/client/components/qmclient/map_history_ui.h>
@@ -353,7 +354,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		{COL_COMMUNITY, -1, "", -1, 28.0f, {0}},
 		{COL_NAME, IServerBrowser::SORT_NAME, Localizable("Name"), 0, 50.0f, {0}},
 		{COL_GAMETYPE, IServerBrowser::SORT_GAMETYPE, Localizable("Type"), 1, 50.0f, {0}},
-		{COL_MAP, IServerBrowser::SORT_MAP, Localizable("Map"), 1, 120.0f + (Headers.w - 480) / 8, {0}},
+		{COL_MAP, IServerBrowser::SORT_MAP, Localizable("Map"), 0, 90.0f, {0}},
 		{COL_FRIENDS, IServerBrowser::SORT_NUMFRIENDS, "", 1, ClickableIconSpace, {0}},
 		{COL_PLAYERS, IServerBrowser::SORT_NUMPLAYERS, Localizable("Players"), 1, 60.0f, {0}},
 		{-1, -1, "", 1, 4.0f, {0}},
@@ -370,11 +371,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	s_aCols[8].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthPlayers, 34, 240);
 	s_aCols[10].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthQmClients, 20, 120);
 	s_aCols[11].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthPing, 26, 180);
-	const float MinNameMapBaseWidth = (float)ClampConfigWidth(g_Config.m_BrColWidthName, 60, 1000);
-	const float MinMapWidth = 90.0f;
-	const float NameShare = std::clamp((float)g_Config.m_BrColNameSplit / 1000.0f, 0.35f, 0.75f);
-	const float FreeNameMapWidth = maximum(Headers.w - MinNameMapBaseWidth - MinMapWidth, 0.0f);
-	s_aCols[6].m_Width = MinMapWidth + FreeNameMapWidth * (1.0f - NameShare);
+	const float MinNameWidth = (float)ClampConfigWidth(g_Config.m_BrColWidthName, 60, 1000);
+	constexpr float MinMapWidth = 90.0f;
 
 	const int NumCols = std::size(s_aCols);
 
@@ -433,17 +431,21 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	static std::vector<SResizeHandle> s_vResizeHandles;
 	s_vResizeHandles.clear();
 
+	// 先给名称/地图预留空间；窄窗口按比例收缩固定列，避免右侧列把名称挤成负宽。
+	const float LeftWidth = s_aCols[0].m_Width + s_aCols[1].m_Width + s_aCols[2].m_Width + s_aCols[3].m_Width + 4.0f * 2.0f;
+	const float LeftScale = LeftWidth > 0.0f ? std::clamp(Headers.w / LeftWidth, 0.0f, 1.0f) : 1.0f;
+	const float LeftGap = 2.0f * LeftScale;
 	// do layout - left columns
 	for(int i = 0; i < NumCols; i++)
 	{
 		if(s_aCols[i].m_Direction == -1)
 		{
-			Headers.VSplitLeft(s_aCols[i].m_Width, &s_aCols[i].m_Rect, &Headers);
+			Headers.VSplitLeft(s_aCols[i].m_Width * LeftScale, &s_aCols[i].m_Rect, &Headers);
 
 			if(i + 1 < NumCols)
 			{
 				CUIRect Gap;
-				Headers.VSplitLeft(2.0f, &Gap, &Headers);
+				Headers.VSplitLeft(LeftGap, &Gap, &Headers);
 				int *pConfig = GetColWidthConfig(s_aCols[i].m_Id);
 				if(pConfig)
 				{
@@ -455,13 +457,20 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		}
 	}
 
+	float RightWidth = 0.0f;
+	for(const auto &Col : s_aCols)
+		if(Col.m_Direction == 1)
+			RightWidth += Col.m_Width + 2.0f;
+	const SQmBrowserNameMapLayout NameMapLayout = QmBrowserNameMapLayout(Headers.w, RightWidth, MinNameWidth, MinMapWidth, (float)g_Config.m_BrColNameSplit / 1000.0f);
+	const float RightScale = NameMapLayout.m_RightScale;
+	const float RightGap = 2.0f * RightScale;
 	for(int i = NumCols - 1; i >= 0; i--)
 	{
 		if(s_aCols[i].m_Direction == 1)
 		{
-			Headers.VSplitRight(s_aCols[i].m_Width, &Headers, &s_aCols[i].m_Rect);
+			Headers.VSplitRight(s_aCols[i].m_Width * RightScale, &Headers, &s_aCols[i].m_Rect);
 			CUIRect Gap;
-			Headers.VSplitRight(2.0f, &Headers, &Gap);
+			Headers.VSplitRight(RightGap, &Headers, &Gap);
 			int *pConfig = GetColWidthConfig(s_aCols[i].m_Id);
 			if(pConfig)
 			{
@@ -472,11 +481,26 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		}
 	}
 
+	// 固定列落位后，再把实际剩余宽度按配置比例分给名称与地图。
+	const float NameMapWidth = NameMapLayout.m_NameWidth + NameMapLayout.m_MapWidth;
+	const float FreeNameMapWidth = std::max(0.0f, NameMapWidth - MinNameWidth - MinMapWidth);
+	const float SplitNameWidth = NameMapLayout.m_NameWidth;
+	const float SplitMapWidth = NameMapWidth - SplitNameWidth;
 	for(auto &Col : s_aCols)
 	{
-		if(Col.m_Direction == 0)
-			Col.m_Rect = Headers;
+		if(Col.m_Id == COL_NAME)
+		{
+			Col.m_Width = SplitNameWidth;
+			Headers.VSplitLeft(SplitNameWidth, &Col.m_Rect, nullptr);
+		}
+		else if(Col.m_Id == COL_MAP)
+		{
+			Col.m_Width = SplitMapWidth;
+			Headers.VSplitRight(SplitMapWidth, nullptr, &Col.m_Rect);
+		}
 	}
+	CUIRect NameSplitHandle{s_aCols[4].m_Rect.x + SplitNameWidth - 3.0f, Headers.y, 6.0f, Headers.h};
+	s_vResizeHandles.push_back({NameSplitHandle, 4, &g_Config.m_BrColNameSplit, MinNameWidth, NameMapWidth - MinMapWidth});
 
 	const bool PlayersOrPing = (g_Config.m_BrSort == IServerBrowser::SORT_NUMPLAYERS || g_Config.m_BrSort == IServerBrowser::SORT_PING);
 
@@ -524,26 +548,19 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	static float s_ResizeDragStartFlexWidth = 0.0f;
 	static float s_ResizeDragCurrentWidth = 0.0f;
 
-	const float MinNameWidth = (float)ClampConfigWidth(g_Config.m_BrColWidthName, 60, 1000);
-
-	const int FlexColIndex = [&]() {
-		for(int i = 0; i < NumCols; i++)
-			if(s_aCols[i].m_Direction == 0)
-				return i;
-		return -1;
-	}();
-
 	for(const auto &Handle : s_vResizeHandles)
 	{
 		const void *pHandleId = &s_aCols[Handle.m_ColIndex].m_Width;
 		const int ColIdx = Handle.m_ColIndex;
 		const bool IsRightCol = s_aCols[ColIdx].m_Direction == 1;
+		const bool IsNameSplit = s_aCols[ColIdx].m_Id == COL_NAME;
 
 		if(s_ResizeDragColIndex == ColIdx)
 		{
 			if(!Ui()->MouseButton(0))
 			{
-				SetColWidthConfig(Handle.m_pWidthConfig, s_ResizeDragCurrentWidth, Handle.m_MinWidth, Handle.m_MaxWidth);
+				if(!IsNameSplit)
+					SetColWidthConfig(Handle.m_pWidthConfig, s_ResizeDragCurrentWidth, Handle.m_MinWidth, Handle.m_MaxWidth);
 				s_ResizeDragColIndex = -1;
 				Ui()->SetActiveItem(nullptr);
 				ConfigManager()->Save();
@@ -552,16 +569,22 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			{
 				float DeltaX = Ui()->MouseX() - s_ResizeDragStartMouseX;
 				float NewWidth = s_ResizeDragStartWidth + (IsRightCol ? -DeltaX : DeltaX);
-				NewWidth = std::clamp(NewWidth, Handle.m_MinWidth, Handle.m_MaxWidth);
-
-				if(IsRightCol && FlexColIndex >= 0)
+				if(IsNameSplit)
 				{
-					float MaxWidth = s_ResizeDragStartWidth + s_ResizeDragStartFlexWidth - MinNameWidth;
-					NewWidth = minimum(NewWidth, MaxWidth);
+					if(FreeNameMapWidth > 0.0f)
+					{
+						NewWidth = std::clamp(NewWidth, MinNameWidth + FreeNameMapWidth * 0.35f, MinNameWidth + FreeNameMapWidth * 0.75f);
+						g_Config.m_BrColNameSplit = std::clamp((int)((NewWidth - MinNameWidth) / FreeNameMapWidth * 1000.0f + 0.5f), 350, 750);
+					}
 				}
-				NewWidth = maximum(NewWidth, Handle.m_MinWidth);
-				s_ResizeDragCurrentWidth = NewWidth;
-				SetColWidthConfig(Handle.m_pWidthConfig, NewWidth, Handle.m_MinWidth, Handle.m_MaxWidth);
+				else
+				{
+					NewWidth = std::clamp(NewWidth, Handle.m_MinWidth, Handle.m_MaxWidth);
+					if(IsRightCol)
+						NewWidth = std::clamp(NewWidth, Handle.m_MinWidth, std::max(Handle.m_MinWidth, s_ResizeDragStartWidth + s_ResizeDragStartFlexWidth - MinNameWidth - MinMapWidth));
+					s_ResizeDragCurrentWidth = NewWidth;
+					SetColWidthConfig(Handle.m_pWidthConfig, NewWidth, Handle.m_MinWidth, Handle.m_MaxWidth);
+				}
 			}
 		}
 		else if(Ui()->MouseHovered(&Handle.m_Rect))
@@ -572,7 +595,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				s_ResizeDragColIndex = ColIdx;
 				s_ResizeDragStartMouseX = Ui()->MouseX();
 				s_ResizeDragStartWidth = s_aCols[ColIdx].m_Width;
-				s_ResizeDragStartFlexWidth = FlexColIndex >= 0 ? s_aCols[FlexColIndex].m_Rect.w : 0.0f;
+				s_ResizeDragStartFlexWidth = NameMapWidth;
 				s_ResizeDragCurrentWidth = s_ResizeDragStartWidth;
 				Ui()->SetActiveItem(pHandleId);
 			}

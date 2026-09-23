@@ -16,6 +16,7 @@
 #include <engine/storage.h>
 
 #include <game/client/components/qmclient/browser_friend_list.h>
+#include <game/client/components/qmclient/browser_column_layout.h>
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>
@@ -24,6 +25,25 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+TEST(ServerBrowserColumnLayout, ReservesNameAndMapBeforeAllocatingFixedColumns)
+{
+	const SQmBrowserNameMapLayout Wide = QmBrowserNameMapLayout(680.0f, 210.0f, 120.0f, 90.0f, 0.6f);
+	EXPECT_FLOAT_EQ(Wide.m_RightScale, 1.0f);
+	EXPECT_FLOAT_EQ(Wide.m_NameWidth, 276.0f);
+	EXPECT_FLOAT_EQ(Wide.m_MapWidth, 194.0f);
+
+	const SQmBrowserNameMapLayout Narrow = QmBrowserNameMapLayout(300.0f, 210.0f, 120.0f, 90.0f, 0.6f);
+	EXPECT_NEAR(Narrow.m_RightScale, 90.0f / 210.0f, 0.0001f);
+	EXPECT_FLOAT_EQ(Narrow.m_NameWidth, 120.0f);
+	EXPECT_FLOAT_EQ(Narrow.m_MapWidth, 90.0f);
+
+	const SQmBrowserNameMapLayout Tiny = QmBrowserNameMapLayout(100.0f, 210.0f, 120.0f, 90.0f, 0.6f);
+	EXPECT_FLOAT_EQ(Tiny.m_RightScale, 0.0f);
+	EXPECT_GE(Tiny.m_NameWidth, 0.0f);
+	EXPECT_GE(Tiny.m_MapWidth, 0.0f);
+	EXPECT_FLOAT_EQ(Tiny.m_NameWidth + Tiny.m_MapWidth, 100.0f);
+}
 
 class CServerBrowserTestAccess
 {
