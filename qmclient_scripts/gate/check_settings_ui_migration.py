@@ -194,7 +194,6 @@ COMMON_REQUIRED = (
 	"SettingsPageLayout(",
 	"SSettingsPageLayoutFrame",
 	"SSettingsCardDefinition",
-	"SSettingsCardDeckResult",
 	"QmResolveScrollPolicy(",
 	"EQmScrollProfile::SETTINGS_OUTER",
 )
@@ -644,6 +643,9 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
 			page_source += "\n" + helper
 
 	required = PAGE_REQUIRED[page] if page == "assets" else COMMON_REQUIRED + PAGE_REQUIRED[page]
+	# 全局搜索只用 Deck 的绘制副作用，结果由搜索缓存持有；其他卡片页仍消费返回值。
+	if page not in ("assets", "global_search"):
+		required += ("SSettingsCardDeckResult",)
 	metrics_required = PAGE_METRICS_REQUIRED.get(page, "ResolveSettingsContentMetrics(")
 	required += (metrics_required,)
 	for token in required:

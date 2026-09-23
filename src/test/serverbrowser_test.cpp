@@ -278,6 +278,19 @@ TEST_F(CServerBrowserStateTest, AddressReplacementInvalidatesFriendStateAndFrien
 	EXPECT_EQ(m_Browser.Get(0)->m_aAddresses[0], Address);
 }
 
+TEST_F(CServerBrowserStateTest, UpdatingExistingServerInfoInvalidatesFriendListSnapshot)
+{
+	NETADDR Address;
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8303"));
+	AddServer(Address);
+	const uint64_t Revision = m_Browser.FriendListRevision();
+	CServerInfo Updated = *m_Browser.Find(Address);
+	str_copy(Updated.m_aName, "Updated server");
+	CServerBrowserTestAccess::SetFirstInfo(m_Browser, Updated);
+	EXPECT_NE(m_Browser.FriendListRevision(), Revision);
+	EXPECT_STREQ(m_Browser.Find(Address)->m_aName, "Updated server");
+}
+
 TEST(ServerBrowser, PingCache)
 {
 	CTestInfo Info;

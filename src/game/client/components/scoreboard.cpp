@@ -2518,7 +2518,11 @@ CUi::EPopupMenuFunctionResult CScoreboard::PopupScoreboard(void *pContext, CUIRe
 		if(Sixup)
 			str_copy(aSkinTooltip, Localize("Skin copying is only available for 0.6 skins"));
 		else
-			str_format(aSkinTooltip, sizeof(aSkinTooltip), "%s\n%s", Localize("Copy skin"), Client.m_aSkinName);
+		{
+			char aSkinName[128];
+			str_format(aSkinName, sizeof(aSkinName), Localize("Skin: %s"), Client.m_aSkinName);
+			str_format(aSkinTooltip, sizeof(aSkinTooltip), "%s\n%s", Localize("Copy skin"), aSkinName);
+		}
 		pScoreboard->GameClient()->m_Tooltips.DoToolTip(&pPopupContext->m_CopySkinAction, &Action, aSkinTooltip, 240.0f);
 	}
 

@@ -413,6 +413,7 @@ void CChat::CLine::Reset(CChat &This)
 	m_TimesRepeated = 0;
 	m_vMergedAuthors.clear();
 	m_pManagedTeeRenderInfo = nullptr;
+	m_pExportMetadata.reset();
 	m_pTranslateResponse = nullptr;
 
 	// 递增翻译 ID，标记内容已变更
@@ -1596,7 +1597,9 @@ void CChat::SaveChatLogLine(int ClientId, int Team, const char *pLine)
 		Engine()->AddJob(pJob);
 }
 
-void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine)
+static std::shared_ptr<const QmChatExport::SMetadata> CaptureChatExportMetadata(CGameClient *pGameClient, int ClientId, int Team, const char *pName, const char *pMessage, int SourceConnection);
+
+void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine, int SourceConnection)
 {
 	char aName[64] = "";
 	bool Highlighted = false;
@@ -1659,7 +1662,10 @@ void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLi
 			ChatLogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClMessageTeamColor));
 	}
 
-	log_info_color(color_cast<LOG_COLOR>(ChatLogColor), pFrom, "%s%s%s", aName, ClientId >= 0 ? ": " : "", pLine);
+	char aBuf[1024];
+	str_format(aBuf, sizeof(aBuf), "%s%s%s", aName, ClientId >= 0 ? ": " : "", pLine);
+	GameClient()->m_GameConsole.PrintLineWithColorSpans(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor, nullptr, 0,
+		CaptureChatExportMetadata(GameClient(), ClientId, Team, aName, pLine, SourceConnection));
 }
 
 ColorRGBA CChat::PlayerNameColor(int ClientId, int NameColor, bool TeamMessage) const
@@ -1893,7 +1899,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 				const ColorRGBA LogColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmBlockWordsConsoleColor));
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/blocklist", aBuf, LogColor);
 			}
-			PrintBlockedMessageToConsole(ClientId, Team, pLine);
+			PrintBlockedMessageToConsole(ClientId, Team, pLine, SourceConnection);
 			BlockWordsConsolePrinted = true;
 			if(CanHideBlockWordsMessage)
 			{
@@ -1984,6 +1990,15 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 		{
 			PreviousLine.m_Friend = false;
 			PreviousLine.m_pManagedTeeRenderInfo = nullptr;
+			if(PreviousLine.m_pExportMetadata)
+			{
+				auto pMetadata = std::make_shared<QmChatExport::SMetadata>(*PreviousLine.m_pExportMetadata);
+				pMetadata->m_pAvatar.reset();
+				pMetadata->m_Local = std::all_of(PreviousLine.m_vMergedAuthors.begin(), PreviousLine.m_vMergedAuthors.end(), [this](const SMergedAuthor &Author) {
+					return GameClient()->IsLocalClientId(Author.m_ClientId);
+				});
+				PreviousLine.m_pExportMetadata = std::move(pMetadata);
+			}
 		}
 		PreviousLine.m_ConsoleSuppressed |= BlockWordsConsolePrinted;
 		TextRender()->DeleteTextContainer(PreviousLine.m_TextContainerIndex);

@@ -845,6 +845,7 @@ static void ServerBrowserFormatAddresses(char *pBuffer, int BufferSize, NETADDR 
 
 void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 {
+	++m_FriendListRevision;
 	const TRISTATE Favorite = pEntry->m_Info.m_Favorite;
 	const TRISTATE FavoriteAllowPing = pEntry->m_Info.m_FavoriteAllowPing;
 	const int ServerIndex = pEntry->m_Info.m_ServerIndex;

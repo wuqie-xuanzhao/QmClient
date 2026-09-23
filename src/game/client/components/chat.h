@@ -301,7 +301,7 @@ private:
 	bool LineShouldHighlight(const char *pLine, const char *pName);
 	void StoreSave(const char *pText);
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
-	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
+	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine, int SourceConnection);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
 	int CountInitializedLines() const;
 	int CountVisibleLinesFrom(int BacklogLine) const;

@@ -6311,6 +6311,7 @@ void CMenus::OnReset()
 void CMenus::OnShutdown()
 {
 	m_LocalSaveDisplay.Reset();
+	m_QmMapUpload.Cancel();
 	if(m_pRankDemoManifestRequest)
 		m_pRankDemoManifestRequest->Abort();
 	if(m_pRankDemoRequest)
@@ -7911,6 +7912,9 @@ bool CMenus::OnInput(const IInput::CEvent &Event)
 
 void CMenus::OnStateChange(int NewState, int OldState)
 {
+	if(NewState == IClient::STATE_DEMOPLAYBACK)
+		m_DemoExportDisplayExpanded = false;
+
 	// reset active item
 	Ui()->SetActiveItem(nullptr);
 
@@ -7998,6 +8002,7 @@ void CMenus::OnUpdate()
 void CMenus::OnRender()
 {
 	CPerfTimer FrameTimer;
+	m_QmMapUpload.Poll();
 
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		SetActive(true);

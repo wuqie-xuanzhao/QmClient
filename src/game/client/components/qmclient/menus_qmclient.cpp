@@ -3569,8 +3569,6 @@ void CMenus::RenderQmFunctionFavoriteMapsContent(CUIRect &Content, float UiScale
 		m_QmMapUpload.Start(Storage(), GameClient()->Http(), Engine(), g_Config.m_QmMapUploadEndpoint, s_MapUploadPath.GetString(), s_MapUploadStorageType, g_Config.m_PlayerName);
 	if(!PrewarmOnly && UploadBusy && DoSettingsButton_Menu(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_FUNCTION, QMCLIENT_SETTINGS_TAB_FUNCTION, &s_MapUploadCancelButton, "qmclient-map-upload-cancel", Localize("Cancel upload"), 0, &CancelButton))
 		m_QmMapUpload.Cancel();
-	if(!PrewarmOnly)
-		m_QmMapUpload.Poll();
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 	Content.HSplitTop(LineHeight, &UploadRow, &Content);
 	const char *pUploadStatus = "Map upload is disabled until an endpoint is configured";
