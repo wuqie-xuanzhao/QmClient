@@ -49,6 +49,11 @@ namespace ui_widget
 		{
 			if(Ctx.m_pUi == nullptr || pBtn == nullptr)
 				return false;
+			if(Ctx.m_pUi->RenderOnly())
+			{
+				Ctx.m_pUi->DoLabel(&Rect, pText, ui_token::font::BODY, TEXTALIGN_MC);
+				return false;
+			}
 			CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
 			if(Disabled)
@@ -59,18 +64,18 @@ namespace ui_widget
 				return false;
 			}
 
-			// Compute current frame color via the v2 animation runtime so hover/leave
-			// transitions ease through Steam-ish hover blue.
+			// 强度并入动画目标，按下时使用较短的过渡。
 			const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
 			const bool Pressed = Ctx.m_pUi->CheckActiveItem(pBtn);
-			const ColorRGBA Target = HoverPrev || Pressed ? Hover : Idle;
+			ColorRGBA Target = HoverPrev || Pressed ? Hover : Idle;
+			Target.a *= Ctx.m_pUi->ButtonColorMul(pBtn);
 			ColorRGBA Resolved = Target;
 			if(Ctx.m_pAnim != nullptr)
 			{
 				const uint64_t NodeKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash, reinterpret_cast<uint64_t>(pBtn));
-				Resolved = ResolveUiAnimValueColor(*Ctx.m_pAnim, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
+				const SUiAnimTransition &Transition = Pressed ? ui_token::motion::BTN_PRESS : ui_token::motion::BTN_HOVER;
+				Resolved = ResolveUiAnimValueColor(*Ctx.m_pAnim, NodeKey, Target, Transition.m_DurationSec, Transition.m_Easing);
 			}
-			Resolved.a *= Ctx.m_pUi->ButtonColorMul(pBtn);
 
 			DrawRoundedSurface(Ctx, Rect, Resolved, ui_token::color::BORDER_SUBTLE, ui_token::radius::BASE, DrawBorder ? Ctx.m_pUi->PixelSize() : 0.0f);
 			Ctx.m_pUi->DoLabel(&Rect, pText, ui_token::font::BODY, TEXTALIGN_MC);
@@ -96,21 +101,23 @@ namespace ui_widget
 
 	bool IconButton(const IUiContext &Ctx, CButtonContainer *pBtn, const char *pIcon, const CUIRect &Rect, bool Disabled)
 	{
-		if(Ctx.m_pUi == nullptr || pBtn == nullptr)
+		if(Ctx.m_pUi == nullptr || pBtn == nullptr || Ctx.m_pUi->RenderOnly())
 			return false;
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
-		const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
-		const bool Pressed = Ctx.m_pUi->CheckActiveItem(pBtn);
+		const bool HoverPrev = !Disabled && Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
+		const bool Pressed = !Disabled && Ctx.m_pUi->CheckActiveItem(pBtn);
 		const ColorRGBA Accent = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
-		const ColorRGBA Target = HoverPrev || Pressed ? Accent.WithAlpha(0.18f) : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
+		ColorRGBA Target = HoverPrev || Pressed ? Accent.WithAlpha(0.18f) : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
+		if(!Disabled)
+			Target.a *= Ctx.m_pUi->ButtonColorMul(pBtn);
 		ColorRGBA BgColor = Target;
-		if(Ctx.m_pAnim != nullptr)
+		if(Ctx.m_pAnim != nullptr && !Disabled)
 		{
 			const uint64_t NodeKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash, reinterpret_cast<uint64_t>(pBtn));
-			BgColor = ResolveUiAnimValueColor(*Ctx.m_pAnim, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
+			const SUiAnimTransition &Transition = Pressed ? ui_token::motion::BTN_PRESS : ui_token::motion::BTN_HOVER;
+			BgColor = ResolveUiAnimValueColor(*Ctx.m_pAnim, NodeKey, Target, Transition.m_DurationSec, Transition.m_Easing);
 		}
-		BgColor.a *= Ctx.m_pUi->ButtonColorMul(pBtn);
 
 		DrawRoundedSurface(Ctx, Rect, BgColor, BgColor, ui_token::radius::BASE);
 		const SQmIconStyle IconStyle = ConfiguredIconStyle();
@@ -123,21 +130,23 @@ namespace ui_widget
 
 	bool IconButton(const IUiContext &Ctx, CButtonContainer *pBtn, EQmIcon Icon, const char *pFallbackIcon, const CUIRect &Rect, bool Disabled)
 	{
-		if(Ctx.m_pUi == nullptr || pBtn == nullptr)
+		if(Ctx.m_pUi == nullptr || pBtn == nullptr || Ctx.m_pUi->RenderOnly())
 			return false;
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
-		const bool HoverPrev = Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
-		const bool Pressed = Ctx.m_pUi->CheckActiveItem(pBtn);
+		const bool HoverPrev = !Disabled && Ctx.m_pUi->HotItem() == static_cast<const void *>(pBtn);
+		const bool Pressed = !Disabled && Ctx.m_pUi->CheckActiveItem(pBtn);
 		const ColorRGBA Accent = Ctx.m_pTheme != nullptr ? Ctx.m_pTheme->m_Accent : ui_token::color::ACCENT_PRIMARY;
-		const ColorRGBA Target = HoverPrev || Pressed ? Accent.WithAlpha(0.18f) : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
+		ColorRGBA Target = HoverPrev || Pressed ? Accent.WithAlpha(0.18f) : ColorRGBA{0.0f, 0.0f, 0.0f, 0.0f};
+		if(!Disabled)
+			Target.a *= Ctx.m_pUi->ButtonColorMul(pBtn);
 		ColorRGBA BgColor = Target;
-		if(Ctx.m_pAnim != nullptr)
+		if(Ctx.m_pAnim != nullptr && !Disabled)
 		{
 			const uint64_t NodeKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash, reinterpret_cast<uint64_t>(pBtn));
-			BgColor = ResolveUiAnimValueColor(*Ctx.m_pAnim, NodeKey, Target, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
+			const SUiAnimTransition &Transition = Pressed ? ui_token::motion::BTN_PRESS : ui_token::motion::BTN_HOVER;
+			BgColor = ResolveUiAnimValueColor(*Ctx.m_pAnim, NodeKey, Target, Transition.m_DurationSec, Transition.m_Easing);
 		}
-		BgColor.a *= Ctx.m_pUi->ButtonColorMul(pBtn);
 
 		DrawRoundedSurface(Ctx, Rect, BgColor, BgColor, ui_token::radius::BASE);
 		const int Result = Disabled ? 0 : Ctx.m_pUi->DoButtonLogic(pBtn, 0, &Rect, BUTTONFLAG_LEFT);

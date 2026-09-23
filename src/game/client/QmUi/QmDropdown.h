@@ -5,6 +5,7 @@
 
 #include "QmScroll.h"
 #include "UiTheme.h"
+#include "UiTokens.h"
 
 #include <game/client/ui_rect.h>
 
@@ -23,11 +24,11 @@ struct SQmDropdownVisualStyle
 inline SQmDropdownVisualStyle QmSettingsDropdownVisualStyle(const SUiTheme &Theme)
 {
 	SQmDropdownVisualStyle Style;
-	// 设置卡片中的触发器与弹出层使用同一层级的 surface，悬浮反馈只由条目自身叠加。
 	Style.m_TriggerColor = Theme.m_InputSurface;
-	Style.m_PopupBackgroundColor = Theme.m_Surface;
-	Style.m_PopupBorderColor = Theme.m_Border;
-	Style.m_ActiveEntryColor = Theme.m_SurfaceHovered;
+	// 弹层遮住底层内容，边框保持强调色。
+	Style.m_PopupBackgroundColor = ui_token::color::SURFACE_ELEVATED.WithAlpha(1.0f);
+	Style.m_PopupBorderColor = Theme.m_Accent.WithAlpha(1.0f);
+	Style.m_ActiveEntryColor = Theme.m_Selected;
 	return Style;
 }
 

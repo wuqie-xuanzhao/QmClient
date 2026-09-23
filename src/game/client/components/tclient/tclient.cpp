@@ -3951,6 +3951,7 @@ void CTClient::InvalidateGoresDistanceField()
 	m_vGoresCMap.clear();
 	m_vvGoresDirectTeleOuts.clear();
 	m_vGoresDistanceToFinish.clear();
+	m_GoresRouteStartIndex.Reset();
 	ResetGoresDistanceFieldBuild();
 	for(int i = 0; i < NUM_DUMMIES; ++i)
 	{
@@ -4004,8 +4005,7 @@ void CTClient::ResetGoresDistanceFieldBuild()
 	m_GoresDistanceFieldBuildLayer = 0;
 	m_GoresDistanceFieldBuildLoadedVisualLayerData = -1;
 	m_GoresDistanceFieldBuildHadStart = false;
-	// 起点缓存随本轮地图构建重建；访问位图随之释放，避免跨地图残留。
-	m_GoresRouteStartIndex.Reset();
+	// 访问位图在本轮构建收尾释放，成功构建的起点索引留给路线消费者。
 	m_GoresDebugRouteVisited.Reset();
 	m_pGoresDistanceFieldBuildMap = nullptr;
 	m_pGoresDistanceFieldBuildGameLayer = nullptr;
@@ -4045,6 +4045,7 @@ void CTClient::StartGoresDistanceFieldBuild()
 	m_vGoresCMap.clear();
 	m_vvGoresDirectTeleOuts.clear();
 	m_vGoresDistanceToFinish.clear();
+	m_GoresRouteStartIndex.Reset();
 
 	const CCollision *pCollision = Collision();
 	if(!pCollision)
@@ -4136,6 +4137,7 @@ void CTClient::FailGoresDistanceFieldBuild()
 	m_vGoresCMap.clear();
 	m_vvGoresDirectTeleOuts.clear();
 	m_vGoresDistanceToFinish.clear();
+	m_GoresRouteStartIndex.Reset();
 	ResetGoresDistanceFieldBuild();
 }
 

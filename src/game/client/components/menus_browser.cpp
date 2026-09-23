@@ -3364,11 +3364,10 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 
 	char aSavesPath[IO_MAX_PATH_LENGTH];
 	Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aSavesPath, sizeof(aSavesPath));
-	static CQmLocalSaveDisplayCache s_LocalSaveDisplay;
-	if(auto pJob = s_LocalSaveDisplay.Refresh(aSavesPath, time_get(), time_freq() * 2))
+	if(auto pJob = m_LocalSaveDisplay.Refresh(aSavesPath, time_get(), time_freq() * 2))
 		Engine()->AddJob(std::move(pJob));
-	const auto &vSaveEntries = s_LocalSaveDisplay.Entries();
-	const bool SaveFileExists = s_LocalSaveDisplay.FileExists();
+	const auto &vSaveEntries = m_LocalSaveDisplay.Entries();
+	const bool SaveFileExists = m_LocalSaveDisplay.FileExists();
 	const std::set<std::string> &FavoriteMaps = GameClient()->m_TClient.GetFavoriteMaps();
 	const std::vector<QmMapHistory::SMapHistoryRecord> &HistoryEntries = GameClient()->m_TClient.GetMapHistory().Entries();
 
@@ -3566,7 +3565,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 					char aDifficulty[32];
 					GetFavoriteMapDifficulty(MapName.c_str(), aDifficulty, sizeof(aDifficulty));
 					const char *pNote = GameClient()->m_TClient.GetMapNote(MapName.c_str());
-					const char *pSaved = !s_LocalSaveDisplay.Ready() ? Localize("Loading") : (HasLocalSaveForMap(MapName.c_str()) ? Localize("Yes") : Localize("No"));
+					const char *pSaved = !m_LocalSaveDisplay.Ready() ? Localize("Loading") : (HasLocalSaveForMap(MapName.c_str()) ? Localize("Yes") : Localize("No"));
 
 					TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f);
 					DoFavoriteMapColumnLabel(MapColumn, MapName.c_str(), 12.0f);
@@ -3781,7 +3780,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		return;
 	}
 
-	if(!s_LocalSaveDisplay.Ready())
+	if(!m_LocalSaveDisplay.Ready())
 	{
 		Ui()->DoLabel(&SavesPanel, Localize("Loading"), 13.0f, TEXTALIGN_MC);
 		return;

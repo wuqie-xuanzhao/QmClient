@@ -36,6 +36,7 @@
 #include <game/client/components/menus_start.h>
 #include <game/client/components/qmclient/browser_friend_list.h>
 #include <game/client/components/qmclient/demo_cut.h>
+#include <game/client/components/qmclient/local_save_display.h>
 #include <game/client/components/qmclient/map_vote_difficulty.h>
 #include <game/client/components/qmclient/qm_map_upload.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
@@ -2258,6 +2259,7 @@ protected:
 	void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserQm(CUIRect View);
 	CQmMapVoteDifficulty m_MapVoteDifficulty;
+	CQmLocalSaveDisplayCache m_LocalSaveDisplay;
 	void RenderServerbrowserFavoriteMaps(CUIRect View);
 	static CUi::EPopupMenuFunctionResult PopupFriendsCategory(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupFriendNote(void *pContext, CUIRect View, bool Active);

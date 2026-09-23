@@ -209,6 +209,31 @@ void COutlines::OnRender()
 		return m_vMapData[y * m_MapDataSize.x + x] & 7;
 	};
 
+	// 配置与颜色只随帧变化，不随 tile 变化。
+	struct COutlineConfig
+	{
+		int m_Enable;
+		int m_Width;
+		unsigned int m_Color;
+	};
+	const COutlineConfig aConfigs[] = {
+		{0, 0, 0},
+		{g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorUnfreeze},
+		{g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorDeepUnfreeze},
+		{g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorFreeze},
+		{g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorDeepFreeze},
+		{g_Config.m_TcOutlineTele, g_Config.m_TcOutlineWidthTele, g_Config.m_TcOutlineColorTele},
+		{g_Config.m_TcOutlineKill, g_Config.m_TcOutlineWidthKill, g_Config.m_TcOutlineColorKill},
+		{g_Config.m_TcOutlineSolid, g_Config.m_TcOutlineWidthSolid, g_Config.m_TcOutlineColorSolid},
+	};
+	ColorRGBA aColors[OUTLINE_SOLID + 1];
+	for(int Type = OUTLINE_NONE; Type <= OUTLINE_SOLID; ++Type)
+	{
+		aColors[Type] = color_cast<ColorRGBA>(ColorHSLA(aConfigs[Type].m_Color, true));
+		aColors[Type].a *= g_Config.m_TcOutlineAlpha / 100.0f;
+	}
+	aColors[OUTLINE_SOLID].a *= g_Config.m_TcOutlineSolidAlpha / 100.0f;
+
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
@@ -219,37 +244,19 @@ void COutlines::OnRender()
 			const int Type = GetTile(x, y);
 			if(Type == OUTLINE_NONE)
 				continue;
-			class COutlineConfig
+			if(Type < OUTLINE_NONE || Type > OUTLINE_SOLID)
 			{
-			public:
-				int m_Enable;
-				int m_Width;
-				unsigned int m_Color;
-			};
-			const COutlineConfig Config = [&]() -> COutlineConfig {
-				if(Type == OUTLINE_SOLID)
-					return {g_Config.m_TcOutlineSolid, g_Config.m_TcOutlineWidthSolid, g_Config.m_TcOutlineColorSolid};
-				if(Type == OUTLINE_FREEZE)
-					return {g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorFreeze};
-				if(Type == OUTLINE_DEEPFREEZE)
-					return {g_Config.m_TcOutlineFreeze, g_Config.m_TcOutlineWidthFreeze, g_Config.m_TcOutlineColorDeepFreeze};
-				if(Type == OUTLINE_UNFREEZE)
-					return {g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorUnfreeze};
-				if(Type == OUTLINE_DEEPUNFREEZE)
-					return {g_Config.m_TcOutlineUnfreeze, g_Config.m_TcOutlineWidthUnfreeze, g_Config.m_TcOutlineColorDeepUnfreeze};
-				if(Type == OUTLINE_KILL)
-					return {g_Config.m_TcOutlineKill, g_Config.m_TcOutlineWidthKill, g_Config.m_TcOutlineColorKill};
-				if(Type == OUTLINE_TELE)
-					return {g_Config.m_TcOutlineTele, g_Config.m_TcOutlineWidthTele, g_Config.m_TcOutlineColorTele};
 				static bool s_InvalidOutlineTypeWarned = false;
 				if(!s_InvalidOutlineTypeWarned)
 				{
 					s_InvalidOutlineTypeWarned = true;
 					log_warn("outlines", "Invalid outline type %d at %d,%d on %dx%d map", Type, x, y, m_MapDataSize.x, m_MapDataSize.y);
 				}
-				return {0, 0, 0};
-			}();
-			if(!Config.m_Enable || Config.m_Width <= 0)
+				continue;
+			}
+			const COutlineConfig &Config = aConfigs[Type];
+			const ColorRGBA &OutlineColor = aColors[Type];
+			if(!Config.m_Enable || Config.m_Width <= 0 || OutlineColor.a <= 0.0f)
 				continue;
 			// Find neighbours：8 邻域位缓存在 tile 高位（低三位仍是地图类型），避免逐帧重算。
 			int &Tile = m_vMapData[std::clamp(y, 0, m_MapDataSize.y - 1) * m_MapDataSize.x + std::clamp(x, 0, m_MapDataSize.x - 1)];
@@ -300,13 +307,6 @@ void COutlines::OnRender()
 					aQuads[NumQuads++] = IGraphics::CQuadItem(x * Scale + Scale - Config.m_Width, y * Scale + Config.m_Width, Config.m_Width, Scale - Config.m_Width * 2.0f);
 			}
 			if(NumQuads <= 0)
-				continue;
-
-			ColorRGBA OutlineColor = color_cast<ColorRGBA>(ColorHSLA(Config.m_Color, true));
-			OutlineColor.a *= g_Config.m_TcOutlineAlpha / 100.0f;
-			if(Type == OUTLINE_SOLID)
-				OutlineColor.a *= g_Config.m_TcOutlineSolidAlpha / 100.0f;
-			if(OutlineColor.a <= 0.0f)
 				continue;
 
 			Graphics()->SetColor(OutlineColor);

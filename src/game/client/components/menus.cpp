@@ -6310,6 +6310,7 @@ void CMenus::OnReset()
 
 void CMenus::OnShutdown()
 {
+	m_LocalSaveDisplay.Reset();
 	if(m_pRankDemoManifestRequest)
 		m_pRankDemoManifestRequest->Abort();
 	if(m_pRankDemoRequest)

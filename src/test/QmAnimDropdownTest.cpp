@@ -74,20 +74,26 @@ TEST(UiV2DropdownGeometry, RejectsPartiallyVisibleAnchorBeforeOpening)
 
 	EXPECT_FALSE(Result.m_AnchorVisible);
 }
-TEST(UiV2DropdownVisuals, SettingsStyleSharesTriggerAndPopupSurface)
+TEST(UiV2DropdownVisuals, SettingsStyleUsesOpaqueElevatedPopupAndAccentBorder)
 {
 	const SUiTheme Theme = ResolveUiTheme(ColorHSLA(0.20f, 0.50f, 0.40f, 1.0f), 0.75f);
 	const SQmDropdownVisualStyle Style = QmSettingsDropdownVisualStyle(Theme);
 	EXPECT_FLOAT_EQ(Style.m_TriggerColor.r, Theme.m_InputSurface.r);
 	EXPECT_FLOAT_EQ(Style.m_TriggerColor.g, Theme.m_InputSurface.g);
 	EXPECT_FLOAT_EQ(Style.m_TriggerColor.b, Theme.m_InputSurface.b);
-	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.a, Theme.m_Surface.a);
+	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.r, ui_token::color::SURFACE_ELEVATED.r);
+	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.g, ui_token::color::SURFACE_ELEVATED.g);
+	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.b, ui_token::color::SURFACE_ELEVATED.b);
+	EXPECT_FLOAT_EQ(Style.m_PopupBackgroundColor.a, 1.0f);
 	EXPECT_TRUE(Style.m_TransparentEntries);
-	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.a, Theme.m_Border.a);
-	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.r, Theme.m_SurfaceHovered.r);
-	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.g, Theme.m_SurfaceHovered.g);
-	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.b, Theme.m_SurfaceHovered.b);
-	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.a, Theme.m_SurfaceHovered.a);
+	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.r, Theme.m_Accent.r);
+	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.g, Theme.m_Accent.g);
+	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.b, Theme.m_Accent.b);
+	EXPECT_FLOAT_EQ(Style.m_PopupBorderColor.a, 1.0f);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.r, Theme.m_Selected.r);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.g, Theme.m_Selected.g);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.b, Theme.m_Selected.b);
+	EXPECT_FLOAT_EQ(Style.m_ActiveEntryColor.a, Theme.m_Selected.a);
 }
 TEST(UiV2DropdownGeometry, FlipsAboveWhenBelowWouldOverflow)
 {
