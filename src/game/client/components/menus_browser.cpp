@@ -41,6 +41,7 @@
 #include <chrono>
 #include <cmath>
 #include <ctime>
+#include <limits>
 #include <unordered_map>
 
 using namespace FontIcons;
@@ -548,8 +549,26 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	static float s_ResizeDragStartFlexWidth = 0.0f;
 	static float s_ResizeDragCurrentWidth = 0.0f;
 
-	for(const auto &Handle : s_vResizeHandles)
+	int HoveredHandle = -1;
+	float HoverDistance = std::numeric_limits<float>::max();
+	for(int Index = 0; Index < (int)s_vResizeHandles.size(); ++Index)
 	{
+		const SResizeHandle &Handle = s_vResizeHandles[Index];
+		const SColumn &Col = s_aCols[Handle.m_ColIndex];
+		if((Col.m_Id == COL_NAME && FreeNameMapWidth <= 0.0f) ||
+			(Col.m_Direction == 1 && Col.m_Rect.w < 6.0f) || !Ui()->MouseHovered(&Handle.m_Rect))
+			continue;
+		const float Distance = std::abs(Ui()->MouseX() - (Handle.m_Rect.x + Handle.m_Rect.w * 0.5f));
+		if(Distance < HoverDistance)
+		{
+			HoverDistance = Distance;
+			HoveredHandle = Index;
+		}
+	}
+
+	for(int HandleIndex = 0; HandleIndex < (int)s_vResizeHandles.size(); ++HandleIndex)
+	{
+		const SResizeHandle &Handle = s_vResizeHandles[HandleIndex];
 		const void *pHandleId = &s_aCols[Handle.m_ColIndex].m_Width;
 		const int ColIdx = Handle.m_ColIndex;
 		const bool IsRightCol = s_aCols[ColIdx].m_Direction == 1;
@@ -587,7 +606,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				}
 			}
 		}
-		else if(Ui()->MouseHovered(&Handle.m_Rect))
+		else if(HandleIndex == HoveredHandle)
 		{
 			Ui()->SetHotItem(pHandleId);
 			if(Ui()->MouseButtonClicked(0))
@@ -880,47 +899,50 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			{
 				{
 					CUIRect Icon;
-					Button.VMargin(4.0f, &Button);
-					Button.VSplitLeft(Button.h, &Icon, &Button);
-					if(g_Config.m_BrIndicateFinished && pItem->m_HasRank == CServerInfo::RANK_RANKED)
+					Button.VMargin(std::min(4.0f, std::max(0.0f, Button.w) * 0.5f), &Button);
+					Button.VSplitLeft(std::min(std::max(0.0f, Button.w), std::max(0.0f, Button.h)), &Icon, &Button);
+					if(Icon.w > 4.0f && g_Config.m_BrIndicateFinished && pItem->m_HasRank == CServerInfo::RANK_RANKED)
 					{
 						Icon.Margin(2.0f, &Icon);
 						RenderBrowserIcons(*pUiElement->Rect(UI_ELEM_FINISH_ICON), &Icon, TextRender()->DefaultTextColor(), TextRender()->DefaultTextOutlineColor(), EQmIcon::FLAG_CHECKERED, FONT_ICON_FLAG_CHECKERED, TEXTALIGN_MC);
 					}
 				}
 
-				// 检查是否是收藏地图
-				const bool IsFavoriteMap = GameClient()->m_TClient.IsFavoriteMap(pItem->m_aMap);
-				if(IsFavoriteMap)
-					TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f); // 金色
-
-				SLabelProperties Props;
-				Props.m_MaxWidth = Button.w;
-				Props.m_StopAtEnd = true;
-				Props.m_EnableWidthCheck = false;
-				bool Printed = false;
-				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit & IServerBrowser::QUICK_MAPNAME))
-					Printed = PrintHighlighted(pItem->m_aMap, [&](const char *pFilteredStr, const int FilterLen) {
-						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_1), &Button, pItem->m_aMap, FontSize, TEXTALIGN_ML, Props, (int)(pFilteredStr - pItem->m_aMap));
-						TextRender()->TextColor(gs_HighlightedTextColor);
-						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_2), &Button, pFilteredStr, FontSize, TEXTALIGN_ML, Props, FilterLen, &pUiElement->Rect(UI_ELEM_MAP_1)->m_Cursor);
-						TextRender()->TextColor(TextRender()->DefaultTextColor());
-						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_3), &Button, pFilteredStr + FilterLen, FontSize, TEXTALIGN_ML, Props, -1, &pUiElement->Rect(UI_ELEM_MAP_2)->m_Cursor);
-					});
-				if(!Printed)
-					Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_1), &Button, pItem->m_aMap, FontSize, TEXTALIGN_ML, Props);
-
-				const char *pMapNote = GameClient()->m_TClient.GetMapNote(pItem->m_aMap);
-				if(pMapNote && pMapNote[0] != '\0' && Ui()->MouseHovered(&Button))
+				if(Button.w > 0.0f)
 				{
-					static char s_aMapNoteTooltip[512];
-					str_format(s_aMapNoteTooltip, sizeof(s_aMapNoteTooltip), "%s: %s", Localize("Note"), pMapNote);
-					Ui()->DoButtonLogic(&pItem->m_aMap, 0, &Button, BUTTONFLAG_NONE);
-					GameClient()->m_Tooltips.DoToolTip(&pItem->m_aMap, &Button, s_aMapNoteTooltip, 320.0f);
-				}
+					// 检查是否是收藏地图
+					const bool IsFavoriteMap = GameClient()->m_TClient.IsFavoriteMap(pItem->m_aMap);
+					if(IsFavoriteMap)
+						TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f); // 金色
 
-				if(IsFavoriteMap)
-					TextRender()->TextColor(TextRender()->DefaultTextColor());
+					SLabelProperties Props;
+					Props.m_MaxWidth = Button.w;
+					Props.m_StopAtEnd = true;
+					Props.m_EnableWidthCheck = false;
+					bool Printed = false;
+					if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit & IServerBrowser::QUICK_MAPNAME))
+						Printed = PrintHighlighted(pItem->m_aMap, [&](const char *pFilteredStr, const int FilterLen) {
+							Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_1), &Button, pItem->m_aMap, FontSize, TEXTALIGN_ML, Props, (int)(pFilteredStr - pItem->m_aMap));
+							TextRender()->TextColor(gs_HighlightedTextColor);
+							Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_2), &Button, pFilteredStr, FontSize, TEXTALIGN_ML, Props, FilterLen, &pUiElement->Rect(UI_ELEM_MAP_1)->m_Cursor);
+							TextRender()->TextColor(TextRender()->DefaultTextColor());
+							Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_3), &Button, pFilteredStr + FilterLen, FontSize, TEXTALIGN_ML, Props, -1, &pUiElement->Rect(UI_ELEM_MAP_2)->m_Cursor);
+						});
+					if(!Printed)
+						Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_MAP_1), &Button, pItem->m_aMap, FontSize, TEXTALIGN_ML, Props);
+
+					const char *pMapNote = GameClient()->m_TClient.GetMapNote(pItem->m_aMap);
+					if(pMapNote && pMapNote[0] != '\0' && Ui()->MouseHovered(&Button))
+					{
+						static char s_aMapNoteTooltip[512];
+						str_format(s_aMapNoteTooltip, sizeof(s_aMapNoteTooltip), "%s: %s", Localize("Note"), pMapNote);
+						Ui()->DoButtonLogic(&pItem->m_aMap, 0, &Button, BUTTONFLAG_NONE);
+						GameClient()->m_Tooltips.DoToolTip(&pItem->m_aMap, &Button, s_aMapNoteTooltip, 320.0f);
+					}
+
+					if(IsFavoriteMap)
+						TextRender()->TextColor(TextRender()->DefaultTextColor());
+				}
 			}
 			else if(Id == COL_FRIENDS)
 			{
