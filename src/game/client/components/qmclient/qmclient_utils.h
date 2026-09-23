@@ -54,6 +54,18 @@ struct SQmClientUsersParseResult
 
 bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress, SQmClientUsersParseResult &OutResult);
 
+// 展示沿用最近一次有效分布；租约到期只标记需要同步，不清空列表与计数。
+struct SQmClientDistributionSnapshot
+{
+	std::vector<SQmClientServerDistribution> m_vServers;
+	int m_OnlineUserCount = 0;
+	int m_OnlineDummyCount = 0;
+	int64_t m_ExpireTick = 0;
+
+	bool Apply(SQmClientUsersParseResult &Result, int64_t ExpireTick);
+	bool IsStale(int64_t NowTick) const { return m_ExpireTick > 0 && NowTick >= m_ExpireTick; }
+};
+
 enum class EQmDeveloperBadgeStyle
 {
 	BLACK,

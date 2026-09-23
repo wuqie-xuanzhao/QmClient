@@ -266,3 +266,84 @@ TEST(QmRealtime, RejectsIncompleteAndLegacyAnonymousEmoticons)
 		EXPECT_FALSE(Message.m_EmoticonPayloadValid);
 	}
 }
+
+TEST(QmRealtime, DistributionLeaseExpiryKeepsSnapshotWithoutConsumingRecognitionMarks)
+{
+	SQmClientDistributionSnapshot Snapshot;
+	EXPECT_FALSE(Snapshot.IsStale(100));
+
+	SQmClientUsersParseResult Result;
+	Result.m_Parsed = true;
+	Result.m_vServerDistribution = {{"one:8303", 2, 1}};
+	Result.m_OnlineUserCount = 2;
+	Result.m_OnlineDummyCount = 1;
+	Result.m_vLocalServerMarks.emplace_back().m_Name = "player";
+	ASSERT_TRUE(Snapshot.Apply(Result, 120));
+
+	EXPECT_FALSE(Snapshot.IsStale(119));
+	EXPECT_TRUE(Snapshot.IsStale(120));
+	ASSERT_EQ(Snapshot.m_vServers.size(), 1u);
+	EXPECT_EQ(Snapshot.m_vServers[0].m_ServerAddress, "one:8303");
+	EXPECT_EQ(Snapshot.m_OnlineUserCount, 2);
+	EXPECT_EQ(Snapshot.m_OnlineDummyCount, 1);
+	// 识别标记仍由客户端按在线状态和自身租约处理，不被展示快照消耗。
+	ASSERT_EQ(Result.m_vLocalServerMarks.size(), 1u);
+	EXPECT_EQ(Result.m_vLocalServerMarks[0].m_Name, "player");
+}
+
+TEST(QmRealtime, InvalidDistributionDoesNotEraseOrRenewDisplayedSnapshot)
+{
+	SQmClientDistributionSnapshot Snapshot;
+	SQmClientUsersParseResult Valid;
+	Valid.m_Parsed = true;
+	Valid.m_vServerDistribution = {{"one:8303", 2, 1}};
+	Valid.m_OnlineUserCount = 2;
+	Valid.m_OnlineDummyCount = 1;
+	ASSERT_TRUE(Snapshot.Apply(Valid, 120));
+
+	SQmRealtimeMessage Message;
+	const char *pInvalid = R"({"type":"users","data":{"users":null}})";
+	ASSERT_TRUE(ParseQmRealtimeMessage(pInvalid, std::strlen(pInvalid), Message));
+	SQmClientUsersParseResult Invalid;
+	ASSERT_FALSE(ParseQmClientUsersJson(Message.m_pPayload.get(), "one:8303", Invalid));
+	ASSERT_FALSE(Snapshot.Apply(Invalid, 500));
+	ASSERT_EQ(Snapshot.m_vServers.size(), 1u);
+	EXPECT_EQ(Snapshot.m_vServers[0].m_ServerAddress, "one:8303");
+	EXPECT_EQ(Snapshot.m_OnlineUserCount, 2);
+	EXPECT_EQ(Snapshot.m_OnlineDummyCount, 1);
+	EXPECT_TRUE(Snapshot.IsStale(120));
+}
+
+TEST(QmRealtime, NewDistributionReplacesOldSnapshotAndValidEmptyListClearsIt)
+{
+	SQmClientDistributionSnapshot Snapshot;
+	SQmClientUsersParseResult First;
+	First.m_Parsed = true;
+	First.m_vServerDistribution = {{"one:8303", 2, 1}};
+	First.m_OnlineUserCount = 2;
+	First.m_OnlineDummyCount = 1;
+	ASSERT_TRUE(Snapshot.Apply(First, 120));
+	EXPECT_TRUE(Snapshot.IsStale(150));
+
+	SQmClientUsersParseResult Next;
+	Next.m_Parsed = true;
+	Next.m_vServerDistribution = {{"two:8303", 1, 0}};
+	Next.m_OnlineUserCount = 1;
+	ASSERT_TRUE(Snapshot.Apply(Next, 170));
+	ASSERT_EQ(Snapshot.m_vServers.size(), 1u);
+	EXPECT_EQ(Snapshot.m_vServers[0].m_ServerAddress, "two:8303");
+	EXPECT_EQ(Snapshot.m_OnlineUserCount, 1);
+	EXPECT_EQ(Snapshot.m_OnlineDummyCount, 0);
+	EXPECT_FALSE(Snapshot.IsStale(150));
+
+	SQmRealtimeMessage Message;
+	const char *pEmpty = R"({"type":"users","data":{"users":[]}})";
+	ASSERT_TRUE(ParseQmRealtimeMessage(pEmpty, std::strlen(pEmpty), Message));
+	SQmClientUsersParseResult Empty;
+	ASSERT_TRUE(ParseQmClientUsersJson(Message.m_pPayload.get(), "two:8303", Empty));
+	ASSERT_TRUE(Snapshot.Apply(Empty, 200));
+	EXPECT_TRUE(Snapshot.m_vServers.empty());
+	EXPECT_EQ(Snapshot.m_OnlineUserCount, 0);
+	EXPECT_EQ(Snapshot.m_OnlineDummyCount, 0);
+	EXPECT_FALSE(Snapshot.IsStale(180));
+}

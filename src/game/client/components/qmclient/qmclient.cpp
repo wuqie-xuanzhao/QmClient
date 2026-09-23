@@ -2013,9 +2013,9 @@ void CQmClient::UpdateQmRealtime()
 		else if(RealtimeMessage.m_Event == EQmRealtimeEvent::STATE && RealtimeMessage.m_StatePayloadValid)
 		{
 			if(RealtimeMessage.m_HasOnlineUsers)
-				m_QmClientOnlineUserCount = RealtimeMessage.m_OnlineUsers;
+				m_QmClientDistribution.m_OnlineUserCount = RealtimeMessage.m_OnlineUsers;
 			if(RealtimeMessage.m_HasOnlineDummies)
-				m_QmClientOnlineDummyCount = RealtimeMessage.m_OnlineDummies;
+				m_QmClientDistribution.m_OnlineDummyCount = RealtimeMessage.m_OnlineDummies;
 		}
 		else if(RealtimeMessage.m_Event == EQmRealtimeEvent::PING)
 		{
@@ -2377,7 +2377,6 @@ void CQmClient::OnStateChange(int NewState, int OldState)
 		m_QmRealtimeEmoticonEvents.clear();
 		GameClient()->ClearQ1menGSyncMarks();
 		GameClient()->ClearQmVoiceSyncMarks();
-		ClearQmClientServerDistribution();
 		m_aQmDeveloperSessionId[0] = '\0';
 	}
 	m_QmRealtimePresenceBody.clear();
@@ -2784,12 +2783,9 @@ bool CQmClient::HasQmClientRecognitionService() const
 	return m_pQmRealtimeTransport && m_pQmRealtimeTransport->Available();
 }
 
-void CQmClient::ClearQmClientServerDistribution()
+bool CQmClient::QmClientDistributionSyncing() const
 {
-	m_vQmClientServerDistribution.clear();
-	m_QmClientOnlineUserCount = 0;
-	m_QmClientOnlineDummyCount = 0;
-	PushQmClientServerCounts();
+	return m_QmClientDistribution.IsStale(time_get_impl());
 }
 
 void CQmClient::PushQmClientServerCounts()
@@ -2798,8 +2794,8 @@ void CQmClient::PushQmClientServerCounts()
 	if(pServerBrowser == nullptr)
 		return;
 	std::unordered_map<std::string, int> Counts;
-	Counts.reserve(m_vQmClientServerDistribution.size());
-	for(const SQmClientServerDistribution &Distribution : m_vQmClientServerDistribution)
+	Counts.reserve(m_QmClientDistribution.m_vServers.size());
+	for(const SQmClientServerDistribution &Distribution : m_QmClientDistribution.m_vServers)
 	{
 		const int Count = Distribution.m_UserCount + Distribution.m_DummyCount;
 		if(Count > 0 && !Distribution.m_ServerAddress.empty())
@@ -2886,7 +2882,7 @@ void CQmClient::FinishQmClientUsers()
 		if(StaleServer)
 			return;
 
-		if(!Result.m_Parsed)
+		if(!m_QmClientDistribution.Apply(Result, ExpireTick))
 		{
 			m_QmClientDistributionSuccessLatched = false;
 			LogQmClientDistributionFailureEvent("parse_failed", "users payload could not be parsed");
@@ -2895,9 +2891,6 @@ void CQmClient::FinishQmClientUsers()
 
 		GameClient()->ClearQ1menGSyncMarks();
 		GameClient()->ClearQmVoiceSyncMarks();
-		m_vQmClientServerDistribution = std::move(Result.m_vServerDistribution);
-		m_QmClientOnlineUserCount = Result.m_OnlineUserCount;
-		m_QmClientOnlineDummyCount = Result.m_OnlineDummyCount;
 		PushQmClientServerCounts();
 		if(!m_QmClientDistributionSuccessLatched)
 			LogQmClientDistributionEvent("parse_ok", Result.m_OnlineUserCount, Result.m_OnlineDummyCount, (int)Result.m_vLocalServerMarks.size());

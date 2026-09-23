@@ -145,8 +145,6 @@ class CQmClient : public CComponent
 	int64_t m_QmClientMarkerStartedAt = 0;
 	int64_t m_QmClientMarkerLastSeenAt = 0;
 	int64_t m_QmClientMarkerLastFlushTick = 0;
-	int m_QmClientOnlineUserCount = 0;
-	int m_QmClientOnlineDummyCount = 0;
 	int m_QmDdnetTotalFinishes = -1;
 	int64_t m_QmDdnetPoints = -1;
 	int64_t m_QmDdnetPointsTotal = -1;
@@ -170,7 +168,7 @@ class CQmClient : public CComponent
 	bool m_QmClientStartupSent = false;
 	bool m_QmClientPlaytimeManualRefreshActive = false;
 	bool m_QmClientPlaytimeManualRefreshFailed = false;
-	std::vector<SQmClientServerDistribution> m_vQmClientServerDistribution;
+	SQmClientDistributionSnapshot m_QmClientDistribution;
 	std::vector<SQmClientLocalModeStats> m_vQmClientLocalModeStats;
 	std::vector<SQmClientDdnetPlayerStats> m_vQmClientDdnetPlayerStats;
 	std::string m_QmDdnetPrimaryPlayerName;
@@ -191,7 +189,6 @@ class CQmClient : public CComponent
 	void UpdateQmClientRecognition();
 	void FinishQmClientUsers();
 	bool EnsureQmClientMachineHash();
-	void ClearQmClientServerDistribution();
 	void PushQmClientServerCounts();
 	void InitQmDeveloperAuthentication();
 	void ResetQmDeveloperPresenceTasks();
@@ -282,9 +279,10 @@ public:
 	int64_t QmServerSessionStartTime() const { return m_QmClientServerSessionStart; }
 	bool HasQmServerPlaytime() const { return m_QmClientServerPlaytimeSeconds >= 0; }
 	int64_t QmServerPlaytimeSeconds() const { return m_QmClientServerPlaytimeSeconds; }
-	const std::vector<SQmClientServerDistribution> &QmClientServerDistribution() const { return m_vQmClientServerDistribution; }
-	int QmClientOnlineUserCount() const { return m_QmClientOnlineUserCount; }
-	int QmClientOnlineDummyCount() const { return m_QmClientOnlineDummyCount; }
+	const std::vector<SQmClientServerDistribution> &QmClientServerDistribution() const { return m_QmClientDistribution.m_vServers; }
+	int QmClientOnlineUserCount() const { return m_QmClientDistribution.m_OnlineUserCount; }
+	int QmClientOnlineDummyCount() const { return m_QmClientDistribution.m_OnlineDummyCount; }
+	bool QmClientDistributionSyncing() const;
 	int QmDdnetTotalFinishes() const { return m_QmDdnetTotalFinishes; }
 	int64_t QmDdnetPoints() const { return m_QmDdnetPoints; }
 	int64_t QmDdnetPointsTotal() const { return m_QmDdnetPointsTotal; }

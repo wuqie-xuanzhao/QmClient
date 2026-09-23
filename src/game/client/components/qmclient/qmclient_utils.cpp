@@ -10,6 +10,7 @@
 #include <cctype>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace
 {
@@ -129,6 +130,17 @@ std::string NormalizeQmServerAddress(const char *pServerAddress)
 		}
 	}
 	return Host.find(':') != std::string::npos ? "[" + Host + "]" + (Port.empty() ? "" : ":" + Port) : Host + (Port.empty() ? "" : ":" + Port);
+}
+
+bool SQmClientDistributionSnapshot::Apply(SQmClientUsersParseResult &Result, int64_t ExpireTick)
+{
+	if(!Result.m_Parsed)
+		return false;
+	m_vServers = std::move(Result.m_vServerDistribution);
+	m_OnlineUserCount = Result.m_OnlineUserCount;
+	m_OnlineDummyCount = Result.m_OnlineDummyCount;
+	m_ExpireTick = ExpireTick;
+	return true;
 }
 
 bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress, SQmClientUsersParseResult &OutResult)
