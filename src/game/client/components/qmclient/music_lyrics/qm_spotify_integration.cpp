@@ -164,6 +164,7 @@ struct CSpotifyIntegration::SImpl
 	// 配置。
 	bool m_ConfigInitialized = false;
 	bool m_LastEnabled = false;
+	std::string m_LastRawSpDc;
 	std::string m_LastSpDc;
 	std::string m_SpDc;
 
@@ -273,6 +274,7 @@ void CSpotifyIntegration::OnInit()
 {
 	m_pImpl->m_ConfigInitialized = false;
 	m_pImpl->m_LastEnabled = false;
+	m_pImpl->m_LastRawSpDc.clear();
 	m_pImpl->m_LastSpDc.clear();
 	m_pImpl->m_SpDc.clear();
 	m_pImpl->ResetTokenState();
@@ -298,12 +300,19 @@ void CSpotifyIntegration::OnUpdate()
 
 	// 配置同步:开关 / sp_dc 变化。
 	const bool Enabled = g_Config.m_QmSpotifyEnable != 0;
-	const std::string SpDc = QmSpotifyToken::NormalizeSpDc(g_Config.m_QmSpotifySpDc);
-	if(!m_pImpl->m_ConfigInitialized || Enabled != m_pImpl->m_LastEnabled || SpDc != m_pImpl->m_LastSpDc)
+	bool SpDcChanged = false;
+	if(!m_pImpl->m_ConfigInitialized || m_pImpl->m_LastRawSpDc != g_Config.m_QmSpotifySpDc)
+	{
+		m_pImpl->m_LastRawSpDc = g_Config.m_QmSpotifySpDc;
+		const std::string NormalizedSpDc = QmSpotifyToken::NormalizeSpDc(g_Config.m_QmSpotifySpDc);
+		SpDcChanged = NormalizedSpDc != m_pImpl->m_LastSpDc;
+		m_pImpl->m_LastSpDc = NormalizedSpDc;
+	}
+	if(!m_pImpl->m_ConfigInitialized || Enabled != m_pImpl->m_LastEnabled || SpDcChanged)
 	{
 		m_pImpl->m_ConfigInitialized = true;
 		m_pImpl->m_LastEnabled = Enabled;
-		m_pImpl->m_LastSpDc = SpDc;
+		const std::string &SpDc = m_pImpl->m_LastSpDc;
 		if(Enabled && !SpDc.empty() && SpDc != m_pImpl->m_SpDc)
 		{
 			m_pImpl->m_SpDc = SpDc;

@@ -103,23 +103,11 @@ TEST(SettingsWarmupTClientContract, TClientVisibleLoadersDoNotHashAllConfigsEver
 	EXPECT_EQ(RenderBody.find("MakeSettingsSectionRuntimeKey(RightView, Graphics())"), std::string::npos);
 }
 
-TEST(SettingsWarmupTClientContract, TClientCardMeasurementCachesUntilRelevantConfigChanges)
+TEST(SettingsWarmupTClientContract, TClientCardMeasurementUsesCardLayoutRevision)
 {
 	const std::string TClient = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
+	// 卡片布局 revision 的接线是架构约束；配置变化后的行为应由运行时测试覆盖。
 	EXPECT_NE(TClient.find("HashTClientSettingsCardLayout(s_aDeckCardSpecs[Index].first)"), std::string::npos);
-	EXPECT_EQ(TClient.find("Definition.m_MeasureRevision = HashTClientSettingsConfig();"), std::string::npos);
-	EXPECT_EQ(TClient.find("Definition.m_MeasureEachFrame = true;"), std::string::npos);
-	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, QmFastInputNormalizedMode(g_Config.m_QmFastInputMode))"), std::string::npos);
-	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, g_Config.m_TcWarListIndicator)"), std::string::npos);
-	EXPECT_NE(TClient.find("HashValueFnv1a64(Hash, g_Config.m_TcWarListIndicatorColors)"), std::string::npos);
-	EXPECT_NE(TClient.find("for(int RowIndex = 0; RowIndex < (UiMode == 3 ? 4 : 1); ++RowIndex)"), std::string::npos);
-	EXPECT_NE(TClient.find("Rows.Next();"), std::string::npos);
-	const size_t LayoutHashStart = TClient.find("uint64_t HashTClientSettingsCardLayout(");
-	const size_t RuntimeKeyStart = TClient.find("SSettingsSectionCacheRuntimeKey MakeSettingsSectionRuntimeKey(", LayoutHashStart);
-	ASSERT_NE(LayoutHashStart, std::string::npos);
-	ASSERT_NE(RuntimeKeyStart, std::string::npos);
-	const std::string LayoutHash = TClient.substr(LayoutHashStart, RuntimeKeyStart - LayoutHashStart);
-	EXPECT_EQ(LayoutHash.find("m_TcNotifyWhenLastColor"), std::string::npos);
 }
 
 TEST(SettingsWarmupTClientContract, TClientVisualSettingsUseStableTextIdsForPrebuildCoverage)

@@ -1208,6 +1208,7 @@ private:
 
 	uint64_t m_CurFrame = 0;
 	std::vector<uint64_t> m_vImageLastFrameCheck;
+	bool m_CaptureBackbufferProbeDone = false;
 
 	uint32_t m_LastPresentedSwapChainImageIndex;
 
@@ -9057,6 +9058,22 @@ public:
 
 	[[nodiscard]] bool Cmd_RenderTarget_CaptureBackbuffer(const CCommandBuffer::SCommand_RenderTarget_CaptureBackbuffer *pCommand)
 	{
+		if(!m_CaptureBackbufferProbeDone)
+		{
+			m_CaptureBackbufferProbeDone = true;
+			const bool FormatOk = m_VKSurfFormat.format == VK_FORMAT_B8G8R8A8_UNORM || m_VKSurfFormat.format == VK_FORMAT_R8G8B8A8_UNORM ||
+					      m_VKSurfFormat.format == VK_FORMAT_B8G8R8A8_SRGB || m_VKSurfFormat.format == VK_FORMAT_R8G8B8A8_SRGB;
+			const bool Supported = SupportsBackbufferCapture();
+			const bool Multisampled = HasMultiSampling();
+			const bool CanCapture = !m_RenderingPaused && Supported && !Multisampled && !m_RenderTargetActive && m_SwapRenderPassActive &&
+						pCommand->m_TargetId >= 0 && (size_t)pCommand->m_TargetId < m_vRenderTargets.size() && m_CurImageIndex < m_vSwapChainImages.size();
+			if(!CanCapture || g_Config.m_QmGraphicsTrace >= 1)
+				log_info("gfx/vulkan", "backbuffer capture probe: %s (paused=%d supported=%d format=%d format_ok=%d swap_blit=%d rgba_blit=%d multisample=%d target_active=%d swap_pass=%d)",
+					CanCapture ? "active" : "skipped",
+					(int)m_RenderingPaused, (int)Supported, (int)m_VKSurfFormat.format, (int)FormatOk,
+					(int)m_OptimalSwapChainImageBlitting, (int)m_OptimalRGBAImageBlitting,
+					(int)Multisampled, (int)m_RenderTargetActive, (int)m_SwapRenderPassActive);
+		}
 		if(m_RenderingPaused || !SupportsBackbufferCapture() || HasMultiSampling() || m_RenderTargetActive || !m_SwapRenderPassActive || pCommand->m_TargetId < 0 ||
 			(size_t)pCommand->m_TargetId >= m_vRenderTargets.size() || m_CurImageIndex >= m_vSwapChainImages.size())
 		{

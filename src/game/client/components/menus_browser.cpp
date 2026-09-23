@@ -25,6 +25,7 @@
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/qmclient/friends_category_drag.h>
+#include <game/client/components/qmclient/local_save_display.h>
 #include <game/client/components/qmclient/map_history_ui.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/gameclient.h>
@@ -153,102 +154,6 @@ static const char *FavoriteMapCategoryDisplayName(const char *pType)
 	if(str_comp_nocase(pType, "Event") == 0)
 		return Localize("Event");
 	return Localize("Unknown");
-}
-
-// NOLINTNEXTLINE(misc-use-internal-linkage)
-struct SLocalSaveDisplayEntry
-{
-	std::string m_Time;
-	std::string m_Players;
-	std::string m_Map;
-	std::string m_Code;
-	std::string m_RawLine;
-};
-
-static void TrimDisplayField(std::string &Field)
-{
-	while(!Field.empty() && str_isspace(Field.front()))
-		Field.erase(Field.begin());
-	while(!Field.empty() && str_isspace(Field.back()))
-		Field.pop_back();
-}
-
-static std::array<std::string, 4> ParseSaveCsvFields(const char *pLine)
-{
-	std::array<std::string, 4> aFields;
-	int FieldIndex = 0;
-	bool InQuotes = false;
-
-	for(int CharIndex = 0; pLine[CharIndex] != '\0' && FieldIndex < (int)aFields.size(); ++CharIndex)
-	{
-		if(pLine[CharIndex] == '"')
-		{
-			if(InQuotes && pLine[CharIndex + 1] == '"')
-			{
-				aFields[FieldIndex].push_back('"');
-				++CharIndex;
-			}
-			else
-			{
-				InQuotes = !InQuotes;
-			}
-		}
-		else if(pLine[CharIndex] == ',' && !InQuotes)
-		{
-			++FieldIndex;
-		}
-		else
-		{
-			aFields[FieldIndex].push_back(pLine[CharIndex]);
-		}
-	}
-
-	for(std::string &Field : aFields)
-		TrimDisplayField(Field);
-	return aFields;
-}
-
-static std::vector<SLocalSaveDisplayEntry> LoadLocalSaveDisplayEntries(IStorage *pStorage, bool &FileExists)
-{
-	FileExists = false;
-	std::vector<SLocalSaveDisplayEntry> vEntries;
-	IOHANDLE File = pStorage->OpenFile(SAVES_FILE, IOFLAG_READ, IStorage::TYPE_SAVE);
-	if(!File)
-		return vEntries;
-	FileExists = true;
-
-	char *pFileContent = io_read_all_str(File);
-	io_close(File);
-	if(!pFileContent)
-		return vEntries;
-
-	const char *pCursor = pFileContent;
-	char aLine[2048];
-	bool FirstLine = true;
-	while((pCursor = str_next_token(pCursor, "\n", aLine, sizeof(aLine))))
-	{
-		str_utf8_trim_right(aLine);
-		if(aLine[0] == '\0')
-			continue;
-		if(FirstLine)
-		{
-			FirstLine = false;
-			if(str_startswith(aLine, "Time"))
-				continue;
-		}
-
-		std::array<std::string, 4> aFields = ParseSaveCsvFields(aLine);
-		SLocalSaveDisplayEntry Entry;
-		Entry.m_Time = aFields[0];
-		Entry.m_Players = aFields[1];
-		Entry.m_Map = aFields[2];
-		Entry.m_Code = aFields[3];
-		Entry.m_RawLine = aLine;
-		vEntries.push_back(std::move(Entry));
-	}
-
-	free(pFileContent);
-	return vEntries;
 }
 
 static const CServerInfo *FindSortedServerByAddress(IServerBrowser *pServerBrowser, const char *pAddress, int *pIndex = nullptr)
@@ -452,7 +357,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		{COL_FRIENDS, IServerBrowser::SORT_NUMFRIENDS, "", 1, ClickableIconSpace, {0}},
 		{COL_PLAYERS, IServerBrowser::SORT_NUMPLAYERS, Localizable("Players"), 1, 60.0f, {0}},
 		{-1, -1, "", 1, 4.0f, {0}},
-		{COL_QM_CLIENTS, IServerBrowser::SORT_QM_CLIENTS, "梦", 1, 24.0f, {0}},
+		{COL_QM_CLIENTS, -1, "梦", 1, 24.0f, {0}},
 		{COL_PING, IServerBrowser::SORT_PING, Localizable("Ping"), 1, 30.0f, {0}},
 	};
 
@@ -3457,18 +3362,13 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	const QmMapHistoryUi::SWorkspaceMetrics Layout = QmMapHistoryUi::WorkspaceMetrics(View.h);
 	View.Margin(Layout.m_OuterMargin, &View);
 
-	static std::vector<SLocalSaveDisplayEntry> s_vSaveEntries;
-	static int64_t s_LastSaveReloadTick = 0;
-	static bool s_SaveFileExists = false;
-	const int64_t Now = time_get();
-	if(s_LastSaveReloadTick == 0 || Now - s_LastSaveReloadTick > time_freq() * 2)
-	{
-		s_vSaveEntries = LoadLocalSaveDisplayEntries(Storage(), s_SaveFileExists);
-		s_LastSaveReloadTick = Now;
-	}
-
 	char aSavesPath[IO_MAX_PATH_LENGTH];
 	Storage()->GetCompletePath(IStorage::TYPE_SAVE, SAVES_FILE, aSavesPath, sizeof(aSavesPath));
+	static CQmLocalSaveDisplayCache s_LocalSaveDisplay;
+	if(auto pJob = s_LocalSaveDisplay.Refresh(aSavesPath, time_get(), time_freq() * 2))
+		Engine()->AddJob(std::move(pJob));
+	const auto &vSaveEntries = s_LocalSaveDisplay.Entries();
+	const bool SaveFileExists = s_LocalSaveDisplay.FileExists();
 	const std::set<std::string> &FavoriteMaps = GameClient()->m_TClient.GetFavoriteMaps();
 	const std::vector<QmMapHistory::SMapHistoryRecord> &HistoryEntries = GameClient()->m_TClient.GetMapHistory().Entries();
 
@@ -3477,7 +3377,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	char aaWorkspaceTabLabels[3][128];
 	str_format(aaWorkspaceTabLabels[0], sizeof(aaWorkspaceTabLabels[0]), "%s (%d)", Localize("Favorite map"), (int)FavoriteMaps.size());
 	str_format(aaWorkspaceTabLabels[1], sizeof(aaWorkspaceTabLabels[1]), "%s (%d)", Localize("Map play history"), (int)HistoryEntries.size());
-	str_format(aaWorkspaceTabLabels[2], sizeof(aaWorkspaceTabLabels[2]), "%s (%d)", Localize("Local saves"), (int)s_vSaveEntries.size());
+	str_format(aaWorkspaceTabLabels[2], sizeof(aaWorkspaceTabLabels[2]), "%s (%d)", Localize("Local saves"), (int)vSaveEntries.size());
 
 	CUIRect WorkspaceTabs;
 	View.HSplitTop(Layout.m_TabHeight, &WorkspaceTabs, &View);
@@ -3594,9 +3494,9 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	};
 
 	auto HasLocalSaveForMap = [&](const char *pMapName) {
-		if(!s_SaveFileExists || !pMapName || pMapName[0] == '\0')
+		if(!SaveFileExists || !pMapName || pMapName[0] == '\0')
 			return false;
-		for(const SLocalSaveDisplayEntry &Entry : s_vSaveEntries)
+		for(const qm_local_saves::SLocalSaveDisplayEntry &Entry : vSaveEntries)
 		{
 			if(!Entry.m_Map.empty() && str_comp(Entry.m_Map.c_str(), pMapName) == 0)
 				return true;
@@ -3666,7 +3566,7 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 					char aDifficulty[32];
 					GetFavoriteMapDifficulty(MapName.c_str(), aDifficulty, sizeof(aDifficulty));
 					const char *pNote = GameClient()->m_TClient.GetMapNote(MapName.c_str());
-					const char *pSaved = HasLocalSaveForMap(MapName.c_str()) ? Localize("Yes") : Localize("No");
+					const char *pSaved = !s_LocalSaveDisplay.Ready() ? Localize("Loading") : (HasLocalSaveForMap(MapName.c_str()) ? Localize("Yes") : Localize("No"));
 
 					TextRender()->TextColor(1.0f, 0.85f, 0.0f, 1.0f);
 					DoFavoriteMapColumnLabel(MapColumn, MapName.c_str(), 12.0f);
@@ -3776,8 +3676,9 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			Filter = QmMapHistory::EMapHistoryFilter::FINISHED;
 		else if(s_MapHistoryFilter == 2)
 			Filter = QmMapHistory::EMapHistoryFilter::RECENT;
-		const std::vector<QmMapHistory::SMapHistoryRecord> vRecords = GameClient()->m_TClient.GetMapHistoryRecords(Filter);
-		if(vRecords.empty())
+		static std::vector<size_t> s_vHistoryRecordIndices;
+		GameClient()->m_TClient.GetMapHistory().SortedIndices(Filter, s_vHistoryRecordIndices);
+		if(s_vHistoryRecordIndices.empty())
 		{
 			Ui()->DoLabel(&HistoryPanel, HistoryEntries.empty() ? Localize("No map play history yet") : Localize("No results"), 13.0f, TEXTALIGN_MC);
 		}
@@ -3786,12 +3687,12 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			static CListBox s_MapHistoryListBox;
 			static std::vector<int> s_vMapHistoryItemIds;
 			static std::vector<CButtonContainer> s_vMapHistoryRemoveButtons;
-			s_vMapHistoryItemIds.resize(vRecords.size());
-			s_vMapHistoryRemoveButtons.resize(vRecords.size());
+			s_vMapHistoryItemIds.resize(s_vHistoryRecordIndices.size());
+			s_vMapHistoryRemoveButtons.resize(s_vHistoryRecordIndices.size());
 			const float CardRowHeight = QmMapHistoryUi::CardRowHeight(HistoryPanel.h);
 			const int HistoryGridColumns = QmMapHistoryUi::GridColumns(HistoryPanel.w - QmMapHistoryUi::LIST_SCROLLBAR_WIDTH, CardRowHeight);
 			s_MapHistoryListBox.SetScrollbarAlwaysReserved(true);
-			s_MapHistoryListBox.DoStart(CardRowHeight, (int)vRecords.size(), HistoryGridColumns, 1, -1, &HistoryPanel, false, IGraphics::CORNER_NONE);
+			s_MapHistoryListBox.DoStart(CardRowHeight, (int)s_vHistoryRecordIndices.size(), HistoryGridColumns, 1, -1, &HistoryPanel, false, IGraphics::CORNER_NONE);
 
 			auto DoHistoryCardLabel = [this](CUIRect Rect, const char *pText, float FontSize, int Align) {
 				SLabelProperties Props;
@@ -3802,9 +3703,9 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 			};
 
 			std::string RemoveMapId;
-			for(size_t HistoryIndex = 0; HistoryIndex < vRecords.size(); ++HistoryIndex)
+			for(size_t HistoryIndex = 0; HistoryIndex < s_vHistoryRecordIndices.size(); ++HistoryIndex)
 			{
-				const QmMapHistory::SMapHistoryRecord &Record = vRecords[HistoryIndex];
+				const QmMapHistory::SMapHistoryRecord &Record = HistoryEntries[s_vHistoryRecordIndices[HistoryIndex]];
 				const CListboxItem Item = s_MapHistoryListBox.DoNextItem(&s_vMapHistoryItemIds[HistoryIndex], false);
 				if(!Item.m_Visible)
 					continue;
@@ -3880,26 +3781,31 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 		return;
 	}
 
-	if(!s_SaveFileExists)
+	if(!s_LocalSaveDisplay.Ready())
+	{
+		Ui()->DoLabel(&SavesPanel, Localize("Loading"), 13.0f, TEXTALIGN_MC);
+		return;
+	}
+	if(!SaveFileExists)
 	{
 		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt not found"), 13.0f, TEXTALIGN_MC);
 		return;
 	}
-	if(s_vSaveEntries.empty())
+	if(vSaveEntries.empty())
 	{
 		Ui()->DoLabel(&SavesPanel, Localize("ddnet-saves.txt is empty"), 13.0f, TEXTALIGN_MC);
 		return;
 	}
 
-	const int NumSaveEntries = (int)s_vSaveEntries.size();
+	const int NumSaveEntries = (int)vSaveEntries.size();
 	static CListBox s_SavesListBox;
 	static std::vector<int> s_vSaveItemIds;
 	s_vSaveItemIds.resize(NumSaveEntries);
 	s_SavesListBox.DoStart(42.0f, NumSaveEntries, 1, 3, -1, &SavesPanel, false, IGraphics::CORNER_NONE);
 
-	for(size_t SaveIndex = 0; SaveIndex < s_vSaveEntries.size(); ++SaveIndex)
+	for(size_t SaveIndex = 0; SaveIndex < vSaveEntries.size(); ++SaveIndex)
 	{
-		const SLocalSaveDisplayEntry &Entry = s_vSaveEntries[SaveIndex];
+		const qm_local_saves::SLocalSaveDisplayEntry &Entry = vSaveEntries[SaveIndex];
 		const CListboxItem Item = s_SavesListBox.DoNextItem(&s_vSaveItemIds[SaveIndex], false);
 		if(!Item.m_Visible)
 			continue;

@@ -7485,12 +7485,7 @@ void CClient::UpdatePredictionMargin()
 
 	SQmFastInputSettings Settings;
 	Settings.m_Enabled = g_Config.m_TcFastInput != 0;
-	Settings.m_Mode = g_Config.m_QmFastInputMode;
 	Settings.m_FastAmountMs = g_Config.m_TcFastInputAmount;
-	Settings.m_BestOffset = g_Config.m_QmBestInputOffset;
-	Settings.m_BestSmoothing = g_Config.m_QmBestInputSmoothing;
-	Settings.m_BestLatencyComp = g_Config.m_QmBestInputLatencyComp;
-	Settings.m_SaikoPlusAmount = g_Config.m_QmSaikoPlusAmount;
 	Settings.m_BasePredictionMarginMs = g_Config.m_ClPredictionMargin;
 	const int BaseMargin = QmFastInputBasePredictionMarginMs(Settings);
 	if(!g_Config.m_QmAutoMargin)

@@ -68,6 +68,11 @@ void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 {
 	CEmoticon *pSelf = (CEmoticon *)pUserData;
 
+	if(pResult->GetInteger(0) == 0)
+	{
+		pSelf->m_Active = false;
+		return;
+	}
 	if(pSelf->GameClient()->m_Scoreboard.IsActive())
 		return;
 
@@ -117,8 +122,9 @@ void CEmoticon::OnReset()
 void CEmoticon::OnRelease()
 {
 	m_Active = false;
-	for(auto &Projectile : m_aProjectiles)
-		Projectile.m_Active = false;
+	m_WasActive = false;
+	m_SelectedEmote = -1;
+	m_SelectedEyeEmote = -1;
 }
 
 bool CEmoticon::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
@@ -167,9 +173,9 @@ void CEmoticon::OnRender()
 			m_TouchPressedOutside = false;
 		}
 
-		if(m_WasActive && m_SelectedEmote != -1)
+		if(m_WasActive && Client()->State() == IClient::STATE_ONLINE && !GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_pLocalCharacter && m_SelectedEmote != -1)
 			Emote(m_SelectedEmote);
-		if(m_WasActive && m_SelectedEyeEmote != -1)
+		if(m_WasActive && Client()->State() == IClient::STATE_ONLINE && !GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_pLocalCharacter && m_SelectedEyeEmote != -1)
 			EyeEmote(m_SelectedEyeEmote);
 		m_WasActive = false;
 	}

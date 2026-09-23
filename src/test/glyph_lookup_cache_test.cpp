@@ -1,4 +1,5 @@
 #include <engine/client/glyph_lookup_cache.h>
+#include <engine/client/glyph_outline.h>
 
 #include <gtest/gtest.h>
 
@@ -40,4 +41,41 @@ TEST(GlyphLookupCache, OverwritesSameSlotWithoutGrowing)
 	for(int i = 0; i < 1000; ++i)
 		Cache.Store(nullptr, 'a', 5, i % 2 == 0 ? &A : &B);
 	EXPECT_EQ(Cache.Find(nullptr, 'a', 5), &B);
+}
+
+TEST(GlyphOutline, ZeroRadiusCopiesPixels)
+{
+	const unsigned char aInput[] = {0, 64, 255, 17};
+	unsigned char aOutput[4] = {};
+	QmGrowGlyphOutline(aInput, aOutput, 2, 2, 0);
+	for(int i = 0; i < 4; ++i)
+		EXPECT_EQ(aOutput[i], aInput[i]);
+}
+
+TEST(GlyphOutline, ClipsNeighborsAtEdgesAndPreservesSaturatedCenter)
+{
+	const unsigned char aInput[] = {
+		255, 0, 0,
+		0, 0, 0,
+		0, 0, 0,
+	};
+	unsigned char aOutput[9] = {};
+	QmGrowGlyphOutline(aInput, aOutput, 3, 3, 1);
+	EXPECT_EQ(aOutput[0], 255);
+	EXPECT_EQ(aOutput[1], 255);
+	EXPECT_EQ(aOutput[3], 255);
+	EXPECT_EQ(aOutput[4], 149);
+	EXPECT_EQ(aOutput[8], 0);
+}
+
+TEST(GlyphOutline, MaximumRadiusSpreadsInsideSmallBitmap)
+{
+	const unsigned char aInput[] = {
+		0, 0,
+		0, 200,
+	};
+	unsigned char aOutput[4] = {};
+	QmGrowGlyphOutline(aInput, aOutput, 2, 2, 4);
+	for(unsigned char Value : aOutput)
+		EXPECT_EQ(Value, 200);
 }

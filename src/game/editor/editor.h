@@ -22,6 +22,7 @@
 #include <engine/shared/datafile.h>
 #include <engine/shared/jobs.h>
 #include <engine/shared/localization.h>
+#include <engine/shared/websocket_client.h>
 
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
@@ -310,20 +311,56 @@ public:
 		CONNECTED,
 		LEAVING,
 	};
+	struct SCollabRequest
+	{
+		CEditorMap *m_pMap = nullptr;
+		int m_Id = 0;
+		int m_Status = 0;
+		int64_t m_Deadline = 0;
+		bool m_Sent = false;
+		bool m_Done = false;
+		bool m_JoinTransport = false;
+		std::string m_Body;
+		std::string m_Response;
+		bool Done() const { return m_Done; }
+		bool Succeeded() const { return m_Done && m_Status != 0; }
+		int StatusCode() const { return m_Status; }
+		json_value *ResultJson() const;
+		void Abort()
+		{
+			m_Done = true;
+			m_Status = 0;
+			m_Body.clear();
+		}
+	};
+	std::unique_ptr<IQmWebSocketClient> m_pCollabRealtime;
+	std::map<int, std::shared_ptr<SCollabRequest>> m_CollabRequests;
+	int m_CollabNextRequestId = 1;
+	int64_t m_CollabConnectedTick = 0;
+	bool m_CollabJoinedTransport = false;
+	CEditorMap *m_pCollabMap = nullptr;
+	std::shared_ptr<CDataFileWriterFinishJob> m_pCollabSnapshotJob;
+	bool m_CollabSnapshotReady = false;
+	int m_CollabSnapshotRevision = 0;
+	bool IsCollabMapValid() const;
+	bool IsCollabMapActive() const;
+	void ResetCollabSession();
+	bool EnsureCollabRealtime();
+	void UpdateCollabRealtime();
 	ECollabState m_CollabState = ECollabState::DISCONNECTED;
 	CLineInputBuffered<16> m_CollabRoomInput;
-	std::shared_ptr<IHttpRequest> m_pCollabCreateTask;
-	std::shared_ptr<IHttpRequest> m_pCollabJoinTask;
-	std::shared_ptr<IHttpRequest> m_pCollabLeaveTask;
-	std::shared_ptr<IHttpRequest> m_pCollabPushTask;
-	std::shared_ptr<IHttpRequest> m_pCollabPullTask;
+	std::shared_ptr<SCollabRequest> m_pCollabCreateTask;
+	std::shared_ptr<SCollabRequest> m_pCollabJoinTask;
+	std::shared_ptr<SCollabRequest> m_pCollabLeaveTask;
+	std::shared_ptr<SCollabRequest> m_pCollabPushTask;
+	std::shared_ptr<SCollabRequest> m_pCollabPullTask;
+	std::shared_ptr<SCollabRequest> m_pCollabBroadcastTask;
 	char m_aCollabClientId[64] = "";
 	char m_aCollabRoomCode[16] = "";
 	char m_aCollabStatus[160] = "Not in a collaboration room";
 	int m_CollabRevision = 0;
 	int m_CollabMemberCount = 0;
 	int m_CollabMaxMembers = 4;
-	int64_t m_CollabNextPullTime = 0;
 	int64_t m_CollabNextPushTime = 0;
 	float m_CollabLastUploadedModifiedTime = -1.0f;
 	float m_CollabPendingUploadedModifiedTime = -1.0f;
@@ -332,15 +369,13 @@ public:
 	void EnsureCollabClientId();
 	[[gnu::format(printf, 2, 3)]] void SetCollabStatus(const char *pFormat, ...);
 	void UpdateCollab();
-	bool BuildCollabUrl(const char *pPath, char *pBuffer, int BufferSize, const char *pQuery = nullptr) const;
-	std::shared_ptr<IHttpRequest> MakeCollabJsonRequest(const char *pPath, const std::string &Body);
+	std::shared_ptr<SCollabRequest> MakeCollabJsonRequest(const char *pPath, const std::string &Body);
 	void CreateCollabRoom();
 	void JoinCollabRoom();
 	void LeaveCollabRoom();
-	void StartCollabPull();
 	void StartCollabSnapshotSave(bool Force = false);
 	void UploadCollabSnapshot();
-	void FinishCollabCreateJoin(std::shared_ptr<IHttpRequest> &pTask, bool Joining);
+	void FinishCollabCreateJoin(std::shared_ptr<SCollabRequest> &pTask, bool Joining);
 	void FinishCollabLeave();
 	void FinishCollabPush();
 	void FinishCollabPull();

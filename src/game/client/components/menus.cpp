@@ -581,7 +581,7 @@ ColorRGBA CMenus::ms_ColorTabbarActiveIngame;
 ColorRGBA CMenus::ms_ColorTabbarHoverIngame;
 
 float CMenus::ms_ButtonHeight = 25.0f;
-float CMenus::ms_ListheaderHeight = 17.0f;
+float CMenus::ms_ListheaderHeight = 15.0f;
 
 CMenus::CMenus()
 {
@@ -984,6 +984,21 @@ void CMenus::LoadSettingsCardOrderModel()
 			m_SettingsCardOrderLoaded = true;
 			return;
 		}
+	}
+	if(g_Config.m_QmCardLayoutVersion < 9)
+	{
+		// 修正已存为 v8 的 Tee 卡片列位，只调整这三张卡。
+		qm_card_order::CModel Candidate;
+		MakeCandidate(Candidate);
+		Candidate.MoveToTab("deck:tee-identity", "tee", 1, 0);
+		Candidate.MoveToTab("deck:tee-skin-options", "tee", 2, 0);
+		Candidate.MoveToTab("deck:tee-skin-list", "tee", 0, 0);
+		if(!PersistCandidate(Candidate, true))
+		{
+			m_SettingsCardOrderLoaded = true;
+			return;
+		}
+		g_Config.m_QmCardLayoutVersion = 9;
 	}
 	m_SettingsCardOrderLoaded = true;
 }

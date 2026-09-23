@@ -126,7 +126,14 @@ void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 	CSpectator *pSelf = (CSpectator *)pUserData;
 
 	if(pSelf->GameClient()->m_Scoreboard.IsActive())
+	{
+		if(pResult->GetInteger(0) == 0)
+		{
+			pSelf->m_Active = false;
+			pSelf->m_TeleNumberInput.Deactivate();
+		}
 		return;
+	}
 
 	// QmClient：影子查看模式下同样允许打开选择器（成员面板统一入口）
 	if(pSelf->GameClient()->m_Snap.m_SpecInfo.m_Active || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK ||
@@ -134,6 +141,8 @@ void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 		pSelf->m_Active = pResult->GetInteger(0) != 0;
 	else
 		pSelf->m_Active = false;
+	if(!pSelf->m_Active)
+		pSelf->m_TeleNumberInput.Deactivate();
 }
 
 void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
@@ -414,6 +423,7 @@ void CSpectator::OnRender()
 
 	if(!m_Active)
 	{
+		m_TeleNumberInput.Deactivate();
 		// closing the spectator menu
 		if(m_WasActive)
 		{
@@ -449,6 +459,7 @@ void CSpectator::OnRender()
 	{
 		m_Active = false;
 		m_WasActive = false;
+		m_TeleNumberInput.Deactivate();
 		if(!ExtraAnimations)
 		{
 			RenderGhostControlBar();
@@ -1435,10 +1446,20 @@ void CSpectator::OnReset()
 	m_GhostEscapeArmed = false;
 	m_GhostEscapeLastTime = -1.0f;
 	m_GhostPanelOpenBeforeEscape = false;
+	m_TeleNumberInput.Deactivate();
+	m_TeleNumberInput.Set("1");
+	m_IgnoreTeleNumberTextEvent = false;
+	m_TeleSearchStatus = ETeleSearchStatus::IDLE;
+	m_LastTeleNumber = 0;
+	m_LastTeleIndex = -1;
+	m_TeleSearchPending = false;
+	m_TeleSearchPosition = vec2(0.0f, 0.0f);
 }
 
 void CSpectator::Spectate(int SpectatorId)
 {
+	if(SpectatorId != SPEC_FREEVIEW)
+		m_TeleSearchPending = false;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		GameClient()->m_DemoSpecId = std::clamp(SpectatorId, (int)SPEC_FOLLOW, MAX_CLIENTS - 1);

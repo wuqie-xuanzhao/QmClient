@@ -537,23 +537,8 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadSpriteTexture(const CImageInfo
 	}
 
 	CImageInfo SpriteInfo;
-	SpriteInfo.m_Width = w;
-	SpriteInfo.m_Height = h;
-	SpriteInfo.m_Format = FromImageInfo.m_Format;
-	size_t SpriteDataSize = 0;
-	if(!SpriteInfo.DataSize(SpriteDataSize))
-	{
-		log_error("graphics/texture", "Ignoring sprite texture '%s' with invalid data size.", pSpriteName);
+	if(!ExtractSpriteImage(FromImageInfo, pSprite, SpriteInfo))
 		return m_NullTexture;
-	}
-	SpriteInfo.m_pData = static_cast<uint8_t *>(malloc(SpriteDataSize));
-	if(SpriteInfo.m_pData == nullptr)
-	{
-		log_error("graphics/texture", "Failed to allocate sprite texture '%s'.", pSpriteName);
-		SpriteInfo.Free();
-		return m_NullTexture;
-	}
-	SpriteInfo.CopyRectFrom(FromImageInfo, x, y, w, h, 0, 0);
 	return LoadTextureRawMove(SpriteInfo, 0, pSpriteName);
 }
 
@@ -992,11 +977,16 @@ void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, const SRen
 	Cmd.m_State = m_State;
 	Cmd.m_State.m_WrapMode = EWrapMode::CLAMP;
 
-	std::vector<CCommandBuffer::SVertex> vVertices;
+	// 四角每角至多 NumSegments / 2 个四边形，另有中心和四条边。
+	static_assert(RECT_CORNER_SEGMENTS >= 2 && RECT_CORNER_SEGMENTS % 2 == 0);
+	constexpr size_t MaxVertices = (RECT_CORNER_SEGMENTS / 2 * 4 + 9) * 4;
+	CCommandBuffer::SVertex aVertices[MaxVertices];
+	size_t NumVertices = 0;
+	const float InvW = 1.0f / Params.m_W;
+	const float InvH = 1.0f / Params.m_H;
+	const uint8_t Alpha = (uint8_t)(Cmd.m_Alpha * 255.0f + 0.5f);
 	auto AddQuad = [&](vec2 Point0, vec2 Point1, vec2 Point2, vec2 Point3) {
-		const float InvW = 1.0f / Params.m_W;
-		const float InvH = 1.0f / Params.m_H;
-		const uint8_t Alpha = (uint8_t)(Cmd.m_Alpha * 255.0f + 0.5f);
+		dbg_assert(NumVertices + 4 <= MaxVertices, "render target vertex capacity exceeded");
 		const vec2 aPositions[] = {Point0, Point1, Point2, Point3};
 		for(const vec2 Position : aPositions)
 		{
@@ -1006,7 +996,7 @@ void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, const SRen
 			const float LocalV = (Position.y - Params.m_Y) * InvH;
 			Vertex.m_Tex = vec2(mix(Params.m_U0, Params.m_U1, LocalU), mix(Params.m_V0, Params.m_V1, LocalV));
 			Vertex.m_Color = CCommandBuffer::SColor{255, 255, 255, Alpha};
-			vVertices.push_back(Vertex);
+			aVertices[NumVertices++] = Vertex;
 		}
 	};
 
@@ -1092,17 +1082,17 @@ void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, const SRen
 			AddQuad(vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H - Rounding), vec2(Params.m_X + Params.m_W, Params.m_Y + Params.m_H - Rounding), vec2(Params.m_X + Params.m_W, Params.m_Y + Params.m_H), vec2(Params.m_X + Params.m_W - Rounding, Params.m_Y + Params.m_H));
 	}
 
-	Cmd.m_PrimCount = vVertices.size() / 4;
+	Cmd.m_PrimCount = NumVertices / 4;
 	if(Cmd.m_PrimCount == 0)
 		return;
-	const size_t VerticesSize = vVertices.size() * sizeof(CCommandBuffer::SVertex);
+	const size_t VerticesSize = NumVertices * sizeof(CCommandBuffer::SVertex);
 	Cmd.m_pVertices = (CCommandBuffer::SVertex *)AllocCommandBufferData(VerticesSize);
-	mem_copy(Cmd.m_pVertices, vVertices.data(), VerticesSize);
+	mem_copy(Cmd.m_pVertices, aVertices, VerticesSize);
 	AddCmd(Cmd, [&] {
 		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(VerticesSize);
 		if(Cmd.m_pVertices == nullptr)
 			return false;
-		mem_copy(Cmd.m_pVertices, vVertices.data(), VerticesSize);
+		mem_copy(Cmd.m_pVertices, aVertices, VerticesSize);
 		return true;
 	});
 }
@@ -1228,14 +1218,22 @@ bool CGraphics_Threaded::DualBlurRenderTarget(CRenderTargetHandle Source, CRende
 		m_vRenderTargetSizes[Destination.Id()] != SourceSize || DownsampleSize.x > SourceSize.x || DownsampleSize.y > SourceSize.y)
 		return false;
 
+	const CCommandBuffer::SPoint SavedScreenTL = m_State.m_ScreenTL;
+	const CCommandBuffer::SPoint SavedScreenBR = m_State.m_ScreenBR;
+	const auto RestoreScreen = [&]() {
+		MapScreen(SavedScreenTL.x, SavedScreenTL.y, SavedScreenBR.x, SavedScreenBR.y);
+	};
+
 	// 普通渲染目标绘制使用线性过滤，因此无需新增 shader 即可完成低成本降采样和柔和升采样。
 	if(!BeginRenderTarget(Downsample, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
 		return false;
+	MapScreen(0.0f, 0.0f, (float)DownsampleSize.x, (float)DownsampleSize.y);
 	SRenderTargetDrawParams DownsampleParams;
 	DownsampleParams.m_W = (float)DownsampleSize.x;
 	DownsampleParams.m_H = (float)DownsampleSize.y;
 	DrawRenderTarget(Source, DownsampleParams);
 	EndRenderTarget();
+	RestoreScreen();
 
 	std::array<CRenderTargetHandle, DUAL_KAWASE_PYRAMID_LEVELS> aDualBlurTemporary{};
 	aDualBlurTemporary[0] = DownsampleTemporary;
@@ -1244,11 +1242,13 @@ bool CGraphics_Threaded::DualBlurRenderTarget(CRenderTargetHandle Source, CRende
 
 	if(!BeginRenderTarget(Destination, ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)))
 		return false;
+	MapScreen(0.0f, 0.0f, (float)SourceSize.x, (float)SourceSize.y);
 	SRenderTargetDrawParams UpsampleParams;
 	UpsampleParams.m_W = (float)SourceSize.x;
 	UpsampleParams.m_H = (float)SourceSize.y;
 	DrawRenderTarget(DownsampleBlurred, UpsampleParams);
 	EndRenderTarget();
+	RestoreScreen();
 	return true;
 }
 

@@ -16,7 +16,6 @@
 #include <engine/gfx/image_loader.h>
 #include <engine/gfx/image_manipulation.h>
 #include <engine/graphics.h>
-#include <engine/http.h>
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/shared/config.h>
@@ -52,11 +51,10 @@
 
 using namespace FontIcons;
 
-static constexpr const char *QM_EDITOR_COLLAB_BASE_URL = "http://42.194.185.210:8080/editor/collab";
+static constexpr const char *QM_EDITOR_COLLAB_WS_URL = "wss://qmclient.icu/ws/editor";
 static constexpr const char *QM_EDITOR_COLLAB_SNAPSHOT_PATH = "qmclient/editor_collab_snapshot.map";
 static constexpr const char *QM_EDITOR_COLLAB_INCOMING_PATH = "qmclient/editor_collab_incoming.map";
 static constexpr int QM_EDITOR_COLLAB_MAX_MEMBERS = 4;
-static constexpr int QM_EDITOR_COLLAB_PULL_INTERVAL_MS = 1500;
 static constexpr int QM_EDITOR_COLLAB_PUSH_DELAY_MS = 1000;
 static constexpr int QM_EDITOR_COLLAB_MAX_MAP_BYTES = 18 * 1024 * 1024;
 static constexpr int QM_EDITOR_COLLAB_MAX_RESPONSE_BYTES = 32 * 1024 * 1024;
@@ -3554,39 +3552,220 @@ void CEditor::SetCollabStatus(const char *pFormat, ...)
 	va_end(VarArgs);
 }
 
-bool CEditor::BuildCollabUrl(const char *pPath, char *pBuffer, int BufferSize, const char *pQuery) const
+bool CEditor::IsCollabMapValid() const
 {
-	if(pQuery && pQuery[0] != '\0')
-		str_format(pBuffer, BufferSize, "%s%s?%s", QM_EDITOR_COLLAB_BASE_URL, pPath, pQuery);
-	else
-		str_format(pBuffer, BufferSize, "%s%s", QM_EDITOR_COLLAB_BASE_URL, pPath);
-	return BufferSize > 0 && str_length(pBuffer) < BufferSize - 1;
+	return m_pCollabMap && std::any_of(m_vpMaps.begin(), m_vpMaps.end(), [this](const auto &pMap) { return pMap.get() == m_pCollabMap; });
 }
 
-std::shared_ptr<IHttpRequest> CEditor::MakeCollabJsonRequest(const char *pPath, const std::string &Body)
+bool CEditor::IsCollabMapActive() const
 {
-	char aUrl[256];
-	if(!BuildCollabUrl(pPath, aUrl, sizeof(aUrl)))
-	{
-		SetCollabStatus(Localizable("Connection failed: the collaboration service address is too long", "Editor"));
-		return nullptr;
-	}
+	return IsCollabMapValid() && Map() == m_pCollabMap;
+}
 
-	std::shared_ptr<IHttpRequest> pTask = HttpPostJson(aUrl, Body.c_str());
-	pTask->AllowInsecureProtocol();
-	pTask->Timeout(CTimeout{3000, 12000, 500, 5});
-	pTask->IpResolve(IPRESOLVE::V4);
-	pTask->LogProgress(HTTPLOG::FAILURE);
-	pTask->MaxResponseSize(QM_EDITOR_COLLAB_MAX_RESPONSE_BYTES);
+void CEditor::ResetCollabSession()
+{
+	m_pCollabRealtime.reset();
+	m_CollabRequests.clear();
+	m_pCollabCreateTask.reset();
+	m_pCollabJoinTask.reset();
+	m_pCollabLeaveTask.reset();
+	m_pCollabPushTask.reset();
+	m_pCollabPullTask.reset();
+	m_pCollabBroadcastTask.reset();
+	m_pCollabSnapshotJob.reset();
+	m_CollabSnapshotSavePending = false;
+	m_CollabSnapshotReady = false;
+	m_CollabSnapshotRevision = 0;
+	m_CollabPendingUploadedModifiedTime = -1.0f;
+	m_CollabApplyingRemoteSnapshot = false;
+	m_CollabConnectedTick = 0;
+	m_CollabJoinedTransport = false;
+	m_pCollabMap = nullptr;
+	m_CollabState = ECollabState::DISCONNECTED;
+	m_aCollabRoomCode[0] = '\0';
+	m_CollabRevision = 0;
+	m_CollabMemberCount = 0;
+	m_CollabNextPushTime = 0;
+	m_CollabLastUploadedModifiedTime = -1.0f;
+}
 
-	CGameClient *pGameClient = static_cast<CGameClient *>(Kernel()->RequestInterface<IGameClient>());
-	if(!pGameClient || !pGameClient->Http())
+json_value *CEditor::SCollabRequest::ResultJson() const
+{
+	return m_Response.empty() ? nullptr : json_parse(m_Response.data(), m_Response.size());
+}
+
+bool CEditor::EnsureCollabRealtime()
+{
+	if(m_pCollabRealtime)
+		return true;
+	SQmWebSocketConnectConfig Config;
+	std::string Error = ParseQmWebSocketUrl(QM_EDITOR_COLLAB_WS_URL, Config);
+	Config.m_Protocol = "qmclient-json";
+	Config.m_MaxMessageSize = QM_EDITOR_COLLAB_MAX_RESPONSE_BYTES;
+	auto pClient = CreateQmWebSocketClient({});
+	if(!Error.empty() || !pClient->Connect(Config, Error))
 	{
-		SetCollabStatus(Localizable("Connection failed: the HTTP service is unavailable", "Editor"));
-		return nullptr;
+		SetCollabStatus("%s", Error.c_str());
+		return false;
 	}
-	pGameClient->Http()->Run(pTask);
+	m_pCollabRealtime = std::move(pClient);
+	m_CollabConnectedTick = 0;
+	m_CollabJoinedTransport = false;
+	return true;
+}
+
+std::shared_ptr<CEditor::SCollabRequest> CEditor::MakeCollabJsonRequest(const char *pPath, const std::string &Body)
+{
+	if(!IsCollabMapActive() || !EnsureCollabRealtime())
+		return nullptr;
+	auto pTask = std::make_shared<SCollabRequest>();
+	pTask->m_pMap = m_pCollabMap;
+	pTask->m_Id = m_CollabNextRequestId++;
+	pTask->m_Deadline = time_get_impl() + 15 * time_freq();
+	pTask->m_JoinTransport = str_comp(pPath, "/join") == 0 || str_comp(pPath, "join") == 0;
+	CJsonStringWriter Writer;
+	Writer.BeginObject();
+	Writer.WriteAttribute("type");
+	Writer.WriteStrValue("collab");
+	Writer.WriteAttribute("request_id");
+	Writer.WriteIntValue(pTask->m_Id);
+	Writer.WriteAttribute("action");
+	Writer.WriteStrValue(pPath[0] == '/' ? pPath + 1 : pPath);
+	Writer.EndObject();
+	pTask->m_Body = Writer.GetOutputString();
+	pTask->m_Body.resize(pTask->m_Body.rfind('}'));
+	pTask->m_Body += ",\"data\":" + Body + "}";
+	m_CollabRequests.emplace(pTask->m_Id, pTask);
 	return pTask;
+}
+
+void CEditor::UpdateCollabRealtime()
+{
+	if(m_CollabState == ECollabState::DISCONNECTED)
+	{
+		m_pCollabRealtime.reset();
+		m_CollabRequests.clear();
+		m_CollabConnectedTick = 0;
+		m_CollabJoinedTransport = false;
+		return;
+	}
+	if(!IsCollabMapActive() || !EnsureCollabRealtime())
+		return;
+	const bool Connected = m_pCollabRealtime->State() == EQmWebSocketState::CONNECTED;
+	const int64_t ConnectedTick = Connected ? m_pCollabRealtime->LastConnectedTick() : 0;
+	if(m_CollabConnectedTick != ConnectedTick)
+	{
+		const bool HadConnectedTransport = m_CollabConnectedTick != 0;
+		if(HadConnectedTransport)
+		{
+			for(auto &[Id, pRequest] : m_CollabRequests)
+				pRequest->Abort();
+			m_CollabRequests.clear();
+			m_pCollabCreateTask.reset();
+			m_pCollabJoinTask.reset();
+			m_pCollabLeaveTask.reset();
+			m_pCollabPushTask.reset();
+			m_pCollabPullTask.reset();
+			m_pCollabBroadcastTask.reset();
+			if(m_CollabState == ECollabState::LEAVING)
+			{
+				ResetCollabSession();
+				SetCollabStatus(Localizable("Left the collaboration room", "Editor"));
+				return;
+			}
+		}
+		m_CollabConnectedTick = ConnectedTick;
+		m_CollabJoinedTransport = false;
+		if(HadConnectedTransport && (m_CollabState == ECollabState::CREATING || m_CollabState == ECollabState::JOINING))
+		{
+			m_CollabState = ECollabState::DISCONNECTED;
+			m_pCollabMap = nullptr;
+			SetCollabStatus(Localizable("Collaboration connection lost; please try again", "Editor"));
+		}
+	}
+	const int64_t Now = time_get_impl();
+	for(auto It = m_CollabRequests.begin(); It != m_CollabRequests.end();)
+	{
+		auto &pRequest = It->second;
+		if(pRequest->m_pMap != m_pCollabMap || Now >= pRequest->m_Deadline)
+			pRequest->Abort();
+		if(pRequest->Done())
+		{
+			It = m_CollabRequests.erase(It);
+			continue;
+		}
+		if(Connected && (m_CollabJoinedTransport || pRequest->m_JoinTransport || pRequest == m_pCollabCreateTask || pRequest == m_pCollabJoinTask || pRequest == m_pCollabLeaveTask) && !pRequest->m_Sent)
+		{
+			pRequest->m_Sent = m_pCollabRealtime->SendText(pRequest->m_Body.data(), pRequest->m_Body.size());
+			if(pRequest->m_Sent)
+				pRequest->m_Body.clear();
+		}
+		++It;
+	}
+	SQmWebSocketMessage Message;
+	while(Connected && m_pCollabRealtime && m_pCollabRealtime->PollMessage(Message))
+	{
+		if(Message.m_Type != EQmWebSocketMessageType::TEXT)
+			continue;
+		json_value *pRoot = json_parse(Message.m_Data.data(), Message.m_Data.size());
+		if(!pRoot)
+			continue;
+		const int Id = EditorCollabJsonInt(pRoot, "request_id", -1);
+		const int Status = EditorCollabJsonInt(pRoot, "status", 0);
+		const bool Valid = str_comp(EditorCollabJsonString(pRoot, "type"), "collab") == 0;
+		const bool JoinedResponse = Status == 200 && EditorCollabJsonOk(pRoot);
+		json_value_free(pRoot);
+		if(!Valid)
+			continue;
+		std::shared_ptr<SCollabRequest> pRequest;
+		if(Id == 0 && m_CollabState == ECollabState::CONNECTED && m_CollabJoinedTransport)
+		{
+			pRequest = std::make_shared<SCollabRequest>();
+			pRequest->m_pMap = m_pCollabMap;
+			if(m_pCollabPullTask)
+				m_pCollabBroadcastTask = pRequest;
+			else
+				m_pCollabPullTask = pRequest;
+		}
+		else
+		{
+			auto It = m_CollabRequests.find(Id);
+			if(It == m_CollabRequests.end() || It->second->Done() || It->second->m_pMap != m_pCollabMap)
+				continue;
+			pRequest = It->second;
+			m_CollabRequests.erase(It);
+		}
+		pRequest->m_Response = std::move(Message.m_Data);
+		pRequest->m_Status = Status;
+		pRequest->m_Done = true;
+		if(JoinedResponse && (pRequest->m_JoinTransport || pRequest == m_pCollabCreateTask))
+			m_CollabJoinedTransport = true;
+		// 按收到的帧顺序更新 revision，避免推送与上传确认互相覆盖。
+		FinishCollabCreateJoin(m_pCollabCreateTask, false);
+		FinishCollabCreateJoin(m_pCollabJoinTask, true);
+		FinishCollabLeave();
+		FinishCollabPush();
+		FinishCollabPull();
+		if(m_CollabState == ECollabState::DISCONNECTED)
+			break;
+	}
+	if(!m_pCollabPullTask && m_pCollabBroadcastTask)
+	{
+		m_pCollabPullTask = std::move(m_pCollabBroadcastTask);
+	}
+	if(Connected && !m_CollabJoinedTransport && m_CollabState == ECollabState::CONNECTED && !m_pCollabPullTask)
+	{
+		CJsonStringWriter Writer;
+		Writer.BeginObject();
+		Writer.WriteAttribute("room_code");
+		Writer.WriteStrValue(m_aCollabRoomCode);
+		Writer.WriteAttribute("client_id");
+		Writer.WriteStrValue(m_aCollabClientId);
+		Writer.WriteAttribute("player_name");
+		Writer.WriteStrValue(g_Config.m_PlayerName);
+		Writer.EndObject();
+		m_pCollabPullTask = MakeCollabJsonRequest("/join", Writer.GetOutputString());
+	}
 }
 
 void CEditor::CreateCollabRoom()
@@ -3594,6 +3773,7 @@ void CEditor::CreateCollabRoom()
 	if(m_CollabState != ECollabState::DISCONNECTED)
 		return;
 
+	m_pCollabMap = Map();
 	EnsureCollabClientId();
 	CJsonStringWriter JsonWriter;
 	JsonWriter.BeginObject();
@@ -3609,6 +3789,8 @@ void CEditor::CreateCollabRoom()
 		m_CollabState = ECollabState::CREATING;
 		SetCollabStatus(Localizable("Creating collaboration room...", "Editor"));
 	}
+	else
+		m_pCollabMap = nullptr;
 }
 
 void CEditor::JoinCollabRoom()
@@ -3623,6 +3805,7 @@ void CEditor::JoinCollabRoom()
 		return;
 	}
 
+	m_pCollabMap = Map();
 	EnsureCollabClientId();
 	CJsonStringWriter JsonWriter;
 	JsonWriter.BeginObject();
@@ -3640,6 +3823,8 @@ void CEditor::JoinCollabRoom()
 		m_CollabState = ECollabState::JOINING;
 		SetCollabStatus(Localizable("Joining collaboration room...", "Editor"));
 	}
+	else
+		m_pCollabMap = nullptr;
 }
 
 void CEditor::LeaveCollabRoom()
@@ -3655,11 +3840,17 @@ void CEditor::LeaveCollabRoom()
 			m_pCollabJoinTask->Abort();
 		m_pCollabCreateTask = nullptr;
 		m_pCollabJoinTask = nullptr;
-		m_CollabState = ECollabState::DISCONNECTED;
+		ResetCollabSession();
 		SetCollabStatus(Localizable("Collaboration connection cancelled", "Editor"));
 		return;
 	}
 
+	if(!IsCollabMapActive())
+	{
+		ResetCollabSession();
+		SetCollabStatus(Localizable("Left the collaboration room", "Editor"));
+		return;
+	}
 	if(m_pCollabPullTask)
 		m_pCollabPullTask->Abort();
 	if(m_pCollabPushTask)
@@ -3667,6 +3858,8 @@ void CEditor::LeaveCollabRoom()
 	m_pCollabPullTask = nullptr;
 	m_pCollabPushTask = nullptr;
 	m_CollabSnapshotSavePending = false;
+	m_CollabSnapshotReady = false;
+	m_pCollabSnapshotJob.reset();
 
 	CJsonStringWriter JsonWriter;
 	JsonWriter.BeginObject();
@@ -3679,10 +3872,7 @@ void CEditor::LeaveCollabRoom()
 	m_pCollabLeaveTask = MakeCollabJsonRequest("/leave", JsonWriter.GetOutputString());
 	if(!m_pCollabLeaveTask)
 	{
-		m_CollabState = ECollabState::DISCONNECTED;
-		m_aCollabRoomCode[0] = '\0';
-		m_CollabRevision = 0;
-		m_CollabMemberCount = 0;
+		ResetCollabSession();
 		SetCollabStatus(Localizable("Left the collaboration room, but could not notify the collaboration service", "Editor"));
 		return;
 	}
@@ -3690,46 +3880,9 @@ void CEditor::LeaveCollabRoom()
 	SetCollabStatus(Localizable("Leaving collaboration room...", "Editor"));
 }
 
-void CEditor::StartCollabPull()
-{
-	if(m_CollabState != ECollabState::CONNECTED || m_pCollabPullTask)
-		return;
-
-	char aEscapedRoomCode[64];
-	char aEscapedClientId[128];
-	EscapeUrl(aEscapedRoomCode, sizeof(aEscapedRoomCode), m_aCollabRoomCode);
-	EscapeUrl(aEscapedClientId, sizeof(aEscapedClientId), m_aCollabClientId);
-
-	char aQuery[256];
-	str_format(aQuery, sizeof(aQuery), "room_code=%s&client_id=%s&since=%d", aEscapedRoomCode, aEscapedClientId, m_CollabRevision);
-
-	char aUrl[256];
-	if(!BuildCollabUrl("/pull", aUrl, sizeof(aUrl), aQuery))
-	{
-		SetCollabStatus(Localizable("Sync interrupted: the collaboration service address is too long", "Editor"));
-		return;
-	}
-
-	m_pCollabPullTask = HttpGet(aUrl);
-	m_pCollabPullTask->AllowInsecureProtocol();
-	m_pCollabPullTask->Timeout(CTimeout{3000, 0, 500, 5});
-	m_pCollabPullTask->IpResolve(IPRESOLVE::V4);
-	m_pCollabPullTask->LogProgress(HTTPLOG::FAILURE);
-	m_pCollabPullTask->MaxResponseSize(QM_EDITOR_COLLAB_MAX_RESPONSE_BYTES);
-
-	CGameClient *pGameClient = static_cast<CGameClient *>(Kernel()->RequestInterface<IGameClient>());
-	if(!pGameClient || !pGameClient->Http())
-	{
-		m_pCollabPullTask = nullptr;
-		SetCollabStatus(Localizable("Sync interrupted: the HTTP service is unavailable", "Editor"));
-		return;
-	}
-	pGameClient->Http()->Run(m_pCollabPullTask);
-}
-
 void CEditor::StartCollabSnapshotSave(bool Force)
 {
-	if(m_CollabState != ECollabState::CONNECTED || m_pCollabPushTask || m_CollabSnapshotSavePending || m_CollabApplyingRemoteSnapshot)
+	if(m_CollabState != ECollabState::CONNECTED || !IsCollabMapActive() || m_pCollabPushTask || m_CollabSnapshotSavePending || m_CollabSnapshotReady || m_CollabApplyingRemoteSnapshot)
 		return;
 	if(!Force && (Map()->m_LastModifiedTime < 0.0f || Map()->m_LastModifiedTime <= m_CollabLastUploadedModifiedTime))
 		return;
@@ -3738,6 +3891,8 @@ void CEditor::StartCollabSnapshotSave(bool Force)
 	m_CollabSnapshotSavePending = Save(QM_EDITOR_COLLAB_SNAPSHOT_PATH);
 	if(m_CollabSnapshotSavePending)
 	{
+		m_pCollabSnapshotJob = m_WriterFinishJobs.back();
+		m_CollabSnapshotRevision = m_CollabRevision;
 		m_CollabPendingUploadedModifiedTime = Map()->m_LastModifiedTime;
 		SetCollabStatus(Localizable("Syncing map snapshot...", "Editor"));
 	}
@@ -3749,7 +3904,7 @@ void CEditor::StartCollabSnapshotSave(bool Force)
 
 void CEditor::UploadCollabSnapshot()
 {
-	if(m_CollabState != ECollabState::CONNECTED || m_pCollabPushTask)
+	if(m_CollabState != ECollabState::CONNECTED || !IsCollabMapActive() || m_pCollabPushTask)
 		return;
 
 	void *pData = nullptr;
@@ -3792,15 +3947,20 @@ void CEditor::UploadCollabSnapshot()
 		SetCollabStatus(Localizable("Sync failed: could not connect to the collaboration service", "Editor"));
 }
 
-void CEditor::FinishCollabCreateJoin(std::shared_ptr<IHttpRequest> &pTask, bool Joining)
+void CEditor::FinishCollabCreateJoin(std::shared_ptr<SCollabRequest> &pTask, bool Joining)
 {
 	if(!pTask || !pTask->Done())
 		return;
+	if(!IsCollabMapActive() || pTask->m_pMap != m_pCollabMap)
+	{
+		pTask.reset();
+		return;
+	}
 
 	const int StatusCode = pTask->StatusCode();
 	json_value *pRoot = pTask->ResultJson();
 	const char *pMessage = pRoot ? EditorCollabJsonString(pRoot, "message") : "";
-	if(pTask->State() != EHttpState::DONE)
+	if(!pTask->Succeeded())
 	{
 		SetCollabStatus(Joining ? Localizable("Failed to join: connection failed", "Editor") : Localizable("Failed to create room: connection failed", "Editor"));
 	}
@@ -3828,7 +3988,6 @@ void CEditor::FinishCollabCreateJoin(std::shared_ptr<IHttpRequest> &pTask, bool 
 		m_CollabMemberCount = EditorCollabJsonInt(pRoot, "member_count", 1);
 		m_CollabMaxMembers = EditorCollabJsonInt(pRoot, "max_members", QM_EDITOR_COLLAB_MAX_MEMBERS);
 		m_CollabState = ECollabState::CONNECTED;
-		m_CollabNextPullTime = time_get() + time_freq() * QM_EDITOR_COLLAB_PULL_INTERVAL_MS / 1000;
 		m_CollabNextPushTime = 0;
 		m_CollabLastUploadedModifiedTime = -1.0f;
 
@@ -3845,7 +4004,10 @@ void CEditor::FinishCollabCreateJoin(std::shared_ptr<IHttpRequest> &pTask, bool 
 		json_value_free(pRoot);
 	pTask = nullptr;
 	if(m_CollabState != ECollabState::CONNECTED)
+	{
 		m_CollabState = ECollabState::DISCONNECTED;
+		m_pCollabMap = nullptr;
+	}
 }
 
 void CEditor::FinishCollabLeave()
@@ -3853,14 +4015,7 @@ void CEditor::FinishCollabLeave()
 	if(!m_pCollabLeaveTask || !m_pCollabLeaveTask->Done())
 		return;
 
-	m_pCollabLeaveTask = nullptr;
-	m_CollabState = ECollabState::DISCONNECTED;
-	m_aCollabRoomCode[0] = '\0';
-	m_CollabRevision = 0;
-	m_CollabMemberCount = 0;
-	m_CollabNextPullTime = 0;
-	m_CollabNextPushTime = 0;
-	m_CollabLastUploadedModifiedTime = -1.0f;
+	ResetCollabSession();
 	SetCollabStatus(Localizable("Left the collaboration room", "Editor"));
 }
 
@@ -3868,11 +4023,21 @@ void CEditor::FinishCollabPush()
 {
 	if(!m_pCollabPushTask || !m_pCollabPushTask->Done())
 		return;
+	if(m_CollabState != ECollabState::CONNECTED)
+	{
+		m_pCollabPushTask.reset();
+		return;
+	}
+	if(!IsCollabMapActive() || m_pCollabPushTask->m_pMap != m_pCollabMap)
+	{
+		m_pCollabPushTask.reset();
+		return;
+	}
 
 	const int StatusCode = m_pCollabPushTask->StatusCode();
 	json_value *pRoot = m_pCollabPushTask->ResultJson();
 	const char *pMessage = pRoot ? EditorCollabJsonString(pRoot, "message") : "";
-	if(m_pCollabPushTask->State() != EHttpState::DONE)
+	if(!m_pCollabPushTask->Succeeded())
 	{
 		SetCollabStatus(Localizable("Sync interrupted: connection failed", "Editor"));
 	}
@@ -3898,7 +4063,7 @@ void CEditor::FinishCollabPush()
 	}
 	else
 	{
-		m_CollabRevision = EditorCollabJsonInt(pRoot, "revision", m_CollabRevision);
+		m_CollabRevision = maximum(m_CollabRevision, EditorCollabJsonInt(pRoot, "revision", m_CollabRevision));
 		m_CollabMemberCount = EditorCollabJsonInt(pRoot, "member_count", m_CollabMemberCount);
 		m_CollabMaxMembers = EditorCollabJsonInt(pRoot, "max_members", m_CollabMaxMembers);
 		m_CollabLastUploadedModifiedTime = maximum(m_CollabLastUploadedModifiedTime, m_CollabPendingUploadedModifiedTime);
@@ -3914,11 +4079,21 @@ void CEditor::FinishCollabPull()
 {
 	if(!m_pCollabPullTask || !m_pCollabPullTask->Done())
 		return;
+	if(m_CollabState != ECollabState::CONNECTED)
+	{
+		m_pCollabPullTask.reset();
+		return;
+	}
+	if(!IsCollabMapActive() || m_pCollabPullTask->m_pMap != m_pCollabMap)
+	{
+		m_pCollabPullTask.reset();
+		return;
+	}
 
 	const int StatusCode = m_pCollabPullTask->StatusCode();
 	json_value *pRoot = m_pCollabPullTask->ResultJson();
 	const char *pMessage = pRoot ? EditorCollabJsonString(pRoot, "message") : "";
-	if(m_pCollabPullTask->State() != EHttpState::DONE)
+	if(!m_pCollabPullTask->Succeeded())
 	{
 		SetCollabStatus(Localizable("Sync interrupted: connection failed", "Editor"));
 	}
@@ -3956,7 +4131,7 @@ void CEditor::FinishCollabPull()
 		}
 		else
 		{
-			m_CollabRevision = Revision;
+			m_CollabRevision = maximum(m_CollabRevision, Revision);
 			SetCollabStatus(Localizable("Room %s is in sync (%d/%d people)", "Editor"), m_aCollabRoomCode, m_CollabMemberCount, m_CollabMaxMembers);
 		}
 	}
@@ -3964,12 +4139,12 @@ void CEditor::FinishCollabPull()
 	if(pRoot)
 		json_value_free(pRoot);
 	m_pCollabPullTask = nullptr;
-	if(m_CollabState == ECollabState::CONNECTED)
-		m_CollabNextPullTime = time_get() + time_freq() * QM_EDITOR_COLLAB_PULL_INTERVAL_MS / 1000;
 }
 
 bool CEditor::ApplyCollabSnapshotBase64(const char *pMapBase64, int Revision)
 {
+	if(!IsCollabMapActive())
+		return false;
 	const int Base64Length = str_length(pMapBase64);
 	const int MaxDecodedSize = Base64Length / 4 * 3 + 4;
 	if(MaxDecodedSize <= 0 || MaxDecodedSize > QM_EDITOR_COLLAB_MAX_MAP_BYTES)
@@ -4011,6 +4186,7 @@ bool CEditor::ApplyCollabSnapshotBase64(const char *pMapBase64, int Revision)
 		return false;
 	}
 
+	m_CollabSnapshotReady = false;
 	m_CollabRevision = Revision;
 	m_CollabLastUploadedModifiedTime = Map()->m_LastModifiedTime;
 	return true;
@@ -4018,6 +4194,8 @@ bool CEditor::ApplyCollabSnapshotBase64(const char *pMapBase64, int Revision)
 
 bool CEditor::LoadCollabSnapshot(const char *pFilename, int StorageType)
 {
+	if(!IsCollabMapActive())
+		return false;
 	char aPreviousFilename[IO_MAX_PATH_LENGTH];
 	str_copy(aPreviousFilename, Map()->m_aFilename);
 	const bool ValidSaveFilename = Map()->m_ValidSaveFilename;
@@ -4047,18 +4225,52 @@ bool CEditor::LoadCollabSnapshot(const char *pFilename, int StorageType)
 
 void CEditor::UpdateCollab()
 {
+	if(m_CollabState != ECollabState::DISCONNECTED && !IsCollabMapValid())
+	{
+		ResetCollabSession();
+		return;
+	}
+	if(m_CollabState != ECollabState::DISCONNECTED && !IsCollabMapActive())
+	{
+		// 其他标签不消费协作帧；回来时重新加入并获取当前 revision。
+		for(auto &[Id, pRequest] : m_CollabRequests)
+			pRequest->Abort();
+		m_CollabRequests.clear();
+		m_pCollabCreateTask.reset();
+		m_pCollabJoinTask.reset();
+		m_pCollabLeaveTask.reset();
+		m_pCollabPushTask.reset();
+		m_pCollabPullTask.reset();
+		m_pCollabBroadcastTask.reset();
+		if(m_CollabState == ECollabState::CREATING || m_CollabState == ECollabState::JOINING || m_CollabState == ECollabState::LEAVING)
+		{
+			ResetCollabSession();
+			return;
+		}
+		m_pCollabRealtime.reset();
+		m_CollabConnectedTick = 0;
+		m_CollabJoinedTransport = false;
+		return;
+	}
+	UpdateCollabRealtime();
 	FinishCollabCreateJoin(m_pCollabCreateTask, false);
 	FinishCollabCreateJoin(m_pCollabJoinTask, true);
 	FinishCollabLeave();
 	FinishCollabPush();
 	FinishCollabPull();
 
-	if(m_CollabState != ECollabState::CONNECTED)
+	if(m_CollabState != ECollabState::CONNECTED || !IsCollabMapActive())
 		return;
 
+	if(m_CollabSnapshotReady && m_CollabJoinedTransport)
+	{
+		m_CollabSnapshotReady = false;
+		if(m_CollabSnapshotRevision == m_CollabRevision && m_pCollabMap->m_LastModifiedTime == m_CollabPendingUploadedModifiedTime)
+			UploadCollabSnapshot();
+	}
 	const int64_t Now = time_get();
-	if(!m_pCollabPullTask && Now >= m_CollabNextPullTime)
-		StartCollabPull();
+	if(!m_CollabJoinedTransport)
+		return;
 
 	if(Map()->m_LastModifiedTime >= 0.0f && Map()->m_LastModifiedTime > m_CollabLastUploadedModifiedTime && !m_CollabSnapshotSavePending && !m_pCollabPushTask && m_CollabNextPushTime == 0)
 		m_CollabNextPushTime = Now + time_freq() * QM_EDITOR_COLLAB_PUSH_DELAY_MS / 1000;
@@ -5417,7 +5629,7 @@ void CEditor::HandleWriterFinishJobs()
 	if(!pJob->Done())
 		return;
 	m_WriterFinishJobs.pop_front();
-	const bool CollabSnapshotJob = m_CollabSnapshotSavePending && str_comp(pJob->RealFilename(), QM_EDITOR_COLLAB_SNAPSHOT_PATH) == 0;
+	const bool CollabSnapshotJob = m_CollabSnapshotSavePending && m_pCollabSnapshotJob == pJob && pJob->Map() == m_pCollabMap && IsCollabMapValid();
 
 	const char *pErrorMessage = pJob->ErrorMessage();
 	if(pErrorMessage[0] != '\0')
@@ -5425,6 +5637,7 @@ void CEditor::HandleWriterFinishJobs()
 		if(CollabSnapshotJob)
 		{
 			m_CollabSnapshotSavePending = false;
+			m_pCollabSnapshotJob.reset();
 			SetCollabStatus(Localizable("Sync failed: map snapshot save failed", "Editor"));
 		}
 		ShowFileDialogError("%s", pErrorMessage);
@@ -5445,7 +5658,10 @@ void CEditor::HandleWriterFinishJobs()
 	if(CollabSnapshotJob)
 	{
 		m_CollabSnapshotSavePending = false;
-		UploadCollabSnapshot();
+		m_pCollabSnapshotJob.reset();
+		const bool MapUnchangedSinceSnapshot = m_pCollabMap->m_LastModifiedTime == m_CollabPendingUploadedModifiedTime;
+		if(m_CollabState == ECollabState::CONNECTED && IsCollabMapValid() && MapUnchangedSinceSnapshot && m_CollabSnapshotRevision == m_CollabRevision)
+			m_CollabSnapshotReady = true;
 		return;
 	}
 
@@ -5589,6 +5805,9 @@ void CEditor::OnWindowResize()
 
 void CEditor::OnClose()
 {
+	m_pCollabRealtime.reset();
+	m_CollabConnectedTick = 0;
+	m_CollabJoinedTransport = false;
 	m_ColorPipetteActive = false;
 	m_DrawingTools.CancelDrawing();
 
@@ -5715,6 +5934,12 @@ void CEditor::CloseMap(size_t Index, bool Confirm)
 	if(Index == m_SelectedMap)
 		Reset(false);
 
+	if(m_vpMaps[Index].get() == m_pCollabMap)
+	{
+		// 成员由服务端过期；旧请求和快照 job 不能指向随后新建的标签。
+		ResetCollabSession();
+		SetCollabStatus(Localizable("Not in a collaboration room", "Editor"));
+	}
 	Ui()->ClosePopupMenu(&m_PopupMapTab);
 	m_vpMaps.erase(m_vpMaps.begin() + Index);
 	if(m_vpMaps.empty())

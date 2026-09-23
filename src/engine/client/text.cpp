@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "font_size_cache.h"
 #include "glyph_lookup_cache.h"
+#include "glyph_outline.h"
 #include "text_layout_string.h"
 #include "text_word_cursor.h"
 
@@ -544,46 +545,6 @@ private:
 		return GlyphIndex;
 	}
 
-	void Grow(const unsigned char *pIn, unsigned char *pOut, int w, int h, int OutlineCount) const
-	{
-		// 描边半径很小但会被每个新字形重复执行；提前计算采样权重，
-		// 避免在像素热循环中反复构造向量和计算平方根。
-		float aMask[9][9] = {};
-		for(int sy = -OutlineCount; sy <= OutlineCount; ++sy)
-		{
-			for(int sx = -OutlineCount; sx <= OutlineCount; ++sx)
-			{
-				aMask[sy + OutlineCount][sx + OutlineCount] = 1.f - std::clamp(std::sqrt((float)(sx * sx + sy * sy)) - OutlineCount, 0.f, 1.f);
-			}
-		}
-
-		for(int y = 0; y < h; y++)
-		{
-			for(int x = 0; x < w; x++)
-			{
-				int c = 0;
-
-				for(int sy = -OutlineCount; sy <= OutlineCount && c < 255; sy++)
-				{
-					for(int sx = -OutlineCount; sx <= OutlineCount && c < 255; sx++)
-					{
-						int GetX = x + sx;
-						int GetY = y + sy;
-						if(GetX >= 0 && GetY >= 0 && GetX < w && GetY < h)
-						{
-							int Index = GetY * w + GetX;
-							const int Sample = pIn[Index];
-							if(Sample != 0)
-								c = maximum(c, int(Sample * aMask[sy + OutlineCount][sx + OutlineCount]));
-						}
-					}
-				}
-
-				pOut[y * w + x] = (unsigned char)c;
-			}
-		}
-	}
-
 	void EnsureFacePixelSize(FT_Face Face, int FontSize) const
 	{
 		// 同一 face 连续用同一字号时跳过重复的 FT_Set_Pixel_Sizes；
@@ -683,7 +644,7 @@ private:
 			{
 				mem_copy(&pGlyphDataFill[(py + y) * Width + x], &pBitmap->buffer[py * pBitmap->width], pBitmap->width);
 			}
-			Grow(pGlyphDataFill, pGlyphDataOutline, Width, Height, OutlineThickness);
+			QmGrowGlyphOutline(pGlyphDataFill, pGlyphDataOutline, Width, Height, OutlineThickness);
 
 			// upload the glyph
 			UploadGlyph(FONT_TEXTURE_FILL, X, Y, Width, Height, pGlyphDataFill);
@@ -791,6 +752,8 @@ public:
 		FT_Face Face = GetFaceByName(pFamilyName);
 		if(!Face)
 			return false;
+		if(m_DefaultFace != Face)
+			m_GlyphLookupCache.Reset();
 		m_DefaultFace = Face;
 		return true;
 	}

@@ -218,10 +218,7 @@ static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, Col
 	Style.m_GlowRange = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12);
 	Style.m_Time = This.Client()->GlobalTime();
 	if(Style.m_Effects != 0)
-	{
 		Style.m_MaxEffectDraws = s_QmNameplateEffectLodDraws;
-		++s_QmNameplateEffectLodVisibleThisFrame;
-	}
 	return Style;
 }
 
@@ -2207,7 +2204,12 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	CNamePlate &NamePlate = m_pData->m_aNamePlates[ClientId];
 	NamePlate.Update(*GameClient(), Data);
 	if(Alpha > 0.0f)
+	{
+		// 昵称和战队行共用一块名牌的档位人数，只在真正绘制时计一次。
+		if(Data.m_ShowName && Data.m_UseTextEffects && (g_Config.m_QmNameplateTextEffects & ~QM_TEXT_EFFECT_GRADIENT) != 0)
+			++s_QmNameplateEffectLodVisibleThisFrame;
 		NamePlate.Render(*GameClient(), Position - vec2(0.0f, (float)g_Config.m_ClNamePlatesOffset), pLayoutReference);
+	}
 }
 
 static void BuildNamePlatePreviewData(CGameClient &This, int DummyIdx, CNamePlateData &Data, bool ForceNameplateScopeAll = false)

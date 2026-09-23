@@ -1965,6 +1965,8 @@ void CPlayers::OnRender()
 	const bool IsTeamPlay = GameClient()->IsTeamPlay();
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
+		if(!IsPlayerInfoAvailable(i))
+			continue;
 		const auto &ClientData = GameClient()->m_aClients[i];
 		aRenderInfo[i] = ClientData.m_RenderInfo;
 		aRenderInfo[i].m_TeeRenderFlags = 0;
@@ -2071,38 +2073,39 @@ void CPlayers::OnRender()
 	const bool FollowingPlayer = GameClient()->m_Snap.m_SpecInfo.m_SpectatorId != SPEC_FREEVIEW && GameClient()->m_Snap.m_SpecInfo.m_Active;
 	const int RenderLastId = FollowingPlayer ? GameClient()->m_Snap.m_SpecInfo.m_SpectatorId : LocalClientId;
 
-	// render spectating players
-	for(const auto &Client : GameClient()->m_aClients)
+	// 观战幽灵的皮肤和渲染信息在本帧内不变。
+	const bool SpectatorTeeRenderable =
+		GameClient()->m_Skins.FindOrNullptr("x_spec") != nullptr &&
+		SpectatorTeeRenderInfo() != nullptr &&
+		SpectatorTeeRenderInfo()->TeeRenderInfo().Valid();
+	if(SpectatorTeeRenderable)
 	{
-		if(!Client.m_SpecCharPresent)
+		// render spectating players
+		for(const auto &Client : GameClient()->m_aClients)
 		{
-			continue;
+			if(!Client.m_SpecCharPresent)
+				continue;
+
+			const int ClientId = Client.ClientId();
+			if(FollowingPlayer && ClientId == RenderLastId && IsPlayerInfoAvailable(ClientId))
+				continue;
+
+			// 屏幕外的观战幽灵无需提交绘制命令。
+			if(!in_range(Client.m_SpecChar.x, ScreenX0, ScreenX1) || !in_range(Client.m_SpecChar.y, ScreenY0, ScreenY1))
+				continue;
+			// qm_show_spectator_ghosts 关闭时仍保留自己的位置反馈。
+			if(g_Config.m_QmShowSpectatorGhosts == 0 && ClientId >= 0 && !GameClient()->IsLocalClientId(ClientId))
+				continue;
+
+			float Alpha = g_Config.m_QmSpectatorGhostAlpha / 100.0f;
+			const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
+			const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
+			if(OtherSpecChar)
+				Alpha = minimum(Alpha, g_Config.m_ClShowOthersAlpha / 100.f);
+			if(ClientId == -2) // ghost
+				Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo(), EMOTE_BLINK, vec2(1, 0), Client.m_SpecChar, Alpha);
 		}
-
-		const int ClientId = Client.ClientId();
-		if(FollowingPlayer && ClientId == RenderLastId && IsPlayerInfoAvailable(ClientId))
-			continue;
-
-		// qm_show_spectator_ghosts 关闭时不渲染其他旁观者的半透明虚拟 Tee；
-		// 自己的保留作为位置反馈，录像幽灵（ClientId < 0）不受影响。
-		if(g_Config.m_QmShowSpectatorGhosts == 0 && ClientId >= 0 && !GameClient()->IsLocalClientId(ClientId))
-			continue;
-
-		float Alpha = 1.0f;
-		const bool LocalSpecChar = GameClient()->IsLocalClientId(ClientId);
-		const bool OtherSpecChar = !LocalSpecChar && (GameClient()->IsOtherTeam(ClientId) || ClientId < 0);
-		// 旁观者虚拟 Tee 统一虚化：用专用不透明度渲染（qm_spectator_ghost_alpha）；
-		// 异队的再与「显示其他人」透明度取较小值，尊重既有淡化设置。
-		Alpha = g_Config.m_QmSpectatorGhostAlpha / 100.0f;
-		if(OtherSpecChar)
-			Alpha = minimum(Alpha, g_Config.m_ClShowOthersAlpha / 100.f);
-		if(ClientId == -2) // ghost
-		{
-			Alpha = g_Config.m_ClRaceGhostAlpha / 100.f;
-		}
-		if(GameClient()->m_Skins.FindOrNullptr("x_spec") == nullptr || !SpectatorTeeRenderInfo() || !SpectatorTeeRenderInfo()->TeeRenderInfo().Valid())
-			continue;
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &SpectatorTeeRenderInfo()->TeeRenderInfo(), EMOTE_BLINK, vec2(1, 0), Client.m_SpecChar, Alpha);
 	}
 
 	for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)

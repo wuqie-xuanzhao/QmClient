@@ -69,18 +69,26 @@ static SQmChatEmojiCursorLayout LayoutQmChatEmoji(CTextCursor &Cursor, float Siz
 					     Cursor.m_AlignedFontSize + Cursor.m_AlignedLineSpacing :
 					     Cursor.m_FontSize;
 	const float LineRight = Cursor.m_StartX + Cursor.m_LineWidth;
-	if(Cursor.m_LineWidth > 0.0f && Cursor.m_X > Cursor.m_StartX && Cursor.m_X + Size > LineRight)
+	float EmojiSize = QmChatEmojiFitSize(Size, LineRight - Cursor.m_X);
+	if(EmojiSize <= 0.0f)
 	{
-		Cursor.m_X = Cursor.m_StartX;
-		Cursor.m_Y += TextLineHeight;
-		++Cursor.m_LineCount;
+		if(Cursor.m_LineWidth > 0.0f && Cursor.m_X > Cursor.m_StartX)
+		{
+			Cursor.m_X = Cursor.m_StartX;
+			Cursor.m_Y += TextLineHeight;
+			++Cursor.m_LineCount;
+			EmojiSize = QmChatEmojiFitSize(Size, Cursor.m_LineWidth);
+		}
+		if(EmojiSize <= 0.0f)
+			EmojiSize = Size;
 	}
 
-	const CUIRect Rect = {Cursor.m_X, Cursor.m_Y, Size, Size};
-	Cursor.m_X += Size;
+	const float AlignedFontSize = Cursor.m_AlignedFontSize > 0.0f ? Cursor.m_AlignedFontSize : Cursor.m_FontSize;
+	const CUIRect Rect = {Cursor.m_X, Cursor.m_Y + QmChatEmojiBaselineOffset(AlignedFontSize, EmojiSize), EmojiSize, EmojiSize};
+	Cursor.m_X += EmojiSize;
 	Cursor.m_LongestLineWidth = maximum(Cursor.m_LongestLineWidth, Cursor.m_X - Cursor.m_StartX);
-	Cursor.m_MaxCharacterHeight = maximum(Cursor.m_MaxCharacterHeight, Size);
-	return {Rect, Rect.y - Cursor.m_StartY + Size};
+	Cursor.m_MaxCharacterHeight = maximum(Cursor.m_MaxCharacterHeight, EmojiSize);
+	return {Rect, maximum(Cursor.Height(), Rect.y - Cursor.m_StartY + EmojiSize)};
 }
 
 static int BlockWordsSeparatorLength(const char *pStr)

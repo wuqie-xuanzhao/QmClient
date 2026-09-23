@@ -206,44 +206,24 @@ TEST(LocalSkinSource, OnlinePlayUsesMatchingLocalConfiguration)
 	EXPECT_EQ(ResolveLocalSkinConfigIndex(false, -1, -1, -1), -1);
 }
 
-TEST(QmFastInputMode, NormalizesLegacyModesToBestInput)
+TEST(QmFastInput, DisabledInputHasNoOffset)
 {
-	EXPECT_EQ(QmFastInputNormalizedMode(0), 0);
-	EXPECT_EQ(QmFastInputNormalizedMode(1), 3);
-	EXPECT_EQ(QmFastInputNormalizedMode(2), 3);
-	EXPECT_EQ(QmFastInputNormalizedMode(3), 3);
-	EXPECT_EQ(QmFastInputNormalizedMode(4), 4);
+	SQmFastInputSettings Settings;
+	Settings.m_FastAmountMs = 40;
+	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 0.0f);
 }
 
-TEST(QmFastInputMode, ComputesFastBestAndSaikoOffsets)
+TEST(QmFastInput, FastAmountSetsOffsetAndPredictionTicks)
 {
 	SQmFastInputSettings Settings;
 	Settings.m_Enabled = true;
-
-	Settings.m_Mode = 0;
-	Settings.m_FastAmountMs = 40;
-	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 2.0f);
-
-	Settings.m_Mode = 3;
-	Settings.m_BestOffset = 250;
-	Settings.m_BestSmoothing = 50;
-	Settings.m_BestLatencyComp = 20;
-	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 2.25f);
-
-	Settings.m_Mode = 4;
-	Settings.m_SaikoPlusAmount = 175;
-	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 1.75f);
+	Settings.m_FastAmountMs = 25;
+	EXPECT_FLOAT_EQ(QmEffectiveFastInputOffsetTicks(Settings), 1.25f);
+	EXPECT_EQ(QmFastInputPredictionTicks(QmEffectiveFastInputOffsetTicks(Settings)), 2);
+	EXPECT_EQ(QmFastInputPredictionTicks(0.0f), 0);
 }
 
-TEST(QmFastInputMode, PredictionTicksUseSaikoPlusExtraLocalTickOnly)
-{
-	EXPECT_EQ(QmFastInputPredictionTicks(0.01f, 0), 1);
-	EXPECT_EQ(QmFastInputPredictionTicks(1.25f, 3), 2);
-	EXPECT_EQ(QmFastInputPredictionTicks(1.25f, 4), 3);
-	EXPECT_EQ(QmFastInputPredictionTicksOthers(1.25f, 4), 2);
-}
-
-TEST(QmFastInputMode, AppliesOffsetWithoutNegativeIntra)
+TEST(QmFastInput, AppliesOffsetWithoutNegativeIntra)
 {
 	int Tick = 100;
 	float Intra = 0.20f;
@@ -252,48 +232,37 @@ TEST(QmFastInputMode, AppliesOffsetWithoutNegativeIntra)
 	EXPECT_FLOAT_EQ(Intra, 0.45f);
 }
 
-TEST(QmFastInputMode, ChoosesOthersToggleByMode)
+TEST(QmFastInput, OthersRequiresEnabledInputAndToggle)
 {
-	EXPECT_FALSE(QmEffectiveFastInputOthers(false, 0, true, true, true));
-	EXPECT_TRUE(QmEffectiveFastInputOthers(true, 0, true, false, false));
-	EXPECT_TRUE(QmEffectiveFastInputOthers(true, 3, false, true, false));
-	EXPECT_TRUE(QmEffectiveFastInputOthers(true, 4, false, false, true));
-	EXPECT_FALSE(QmEffectiveFastInputOthers(true, 3, true, false, true));
-	EXPECT_FALSE(QmEffectiveFastInputOthers(true, 4, true, true, false));
+	EXPECT_FALSE(QmEffectiveFastInputOthers(false, true));
+	EXPECT_TRUE(QmEffectiveFastInputOthers(true, true));
+	EXPECT_FALSE(QmEffectiveFastInputOthers(true, false));
 }
 
-TEST(QmFastInputMode, MarginUsesLargestFastInputContribution)
+TEST(QmFastInput, MarginUsesLargestFastInputContribution)
 {
 	SQmFastInputSettings Settings;
 	Settings.m_Enabled = true;
 	Settings.m_BasePredictionMarginMs = 10;
-
-	Settings.m_Mode = 0;
 	Settings.m_FastAmountMs = 40;
 	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 40);
-
-	Settings.m_Mode = 3;
-	Settings.m_BestOffset = 250;
-	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 50);
-
-	Settings.m_Mode = 4;
-	Settings.m_SaikoPlusAmount = 175;
-	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 35);
+	Settings.m_Enabled = false;
+	EXPECT_EQ(QmFastInputBasePredictionMarginMs(Settings), 10);
 }
 
-TEST(QmFastInputMode, AutoPredictionMarginKeepsStableBase)
+TEST(QmFastInput, AutoPredictionMarginKeepsStableBase)
 {
 	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 0.0f, 10.0f, 10.0f, 0.0f, false), 10);
 }
 
-TEST(QmFastInputMode, AutoPredictionMarginAddsLatencyJitterAndConnectionProtection)
+TEST(QmFastInput, AutoPredictionMarginAddsLatencyJitterAndConnectionProtection)
 {
 	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 70.0f, 10.0f, 10.0f, 0.0f, false), 20);
 	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 0.0f, 10.0f, 10.0f, 14.0f, false), 19);
 	EXPECT_EQ(QmComputeAutoPredictionMargin(10, 0.0f, 10.0f, 10.0f, 0.0f, true), 20);
 }
 
-TEST(QmFastInputMode, AutoPredictionMarginClampsToSupportedRange)
+TEST(QmFastInput, AutoPredictionMarginClampsToSupportedRange)
 {
 	EXPECT_EQ(QmComputeAutoPredictionMargin(0, 0.0f, 0.0f, 0.0f, 0.0f, false), 1);
 	EXPECT_EQ(QmComputeAutoPredictionMargin(500, 0.0f, 0.0f, 0.0f, 0.0f, false), 300);
