@@ -3462,7 +3462,7 @@ void CHud::RenderFollowSwitchCountdowns()
 	// Preserve the previous ring's outer footprint while adopting the satellite proportions.
 	constexpr float SatelliteRadius = 9.0f + 2.5f * 0.5f;
 	constexpr float RingRadius = SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_RADIUS_SCALE;
-	const float RingThickness = std::max(QmHudMediaIslandScaled(1.25f), SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_THICKNESS_SCALE);
+	const float RingThickness = std::max(1.0f, SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_THICKNESS_SCALE);
 	const float ScreenPixelSize = std::max(
 		(ScreenX1 - ScreenX0) / std::max(1, Graphics()->ScreenWidth()),
 		(ScreenY1 - ScreenY0) / std::max(1, Graphics()->ScreenHeight()));
