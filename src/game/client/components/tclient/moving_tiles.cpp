@@ -252,7 +252,7 @@ void CMovingTiles::OnRender()
 		return true;
 	};
 
-	auto RenderPass = [&](int RenderFlags) {
+	auto RenderPass = [&]() {
 		constexpr float ColorConv = 1.0f / 255.0f;
 
 		size_t QuadStart = 0;
@@ -301,12 +301,6 @@ void CMovingTiles::OnRender()
 				if(Color.a <= 0.0f)
 					continue;
 
-				const bool Opaque = false;
-				if(Opaque && !(RenderFlags & LAYERRENDERFLAG_OPAQUE))
-					continue;
-				if(!Opaque && !(RenderFlags & LAYERRENDERFLAG_TRANSPARENT))
-					continue;
-
 				Graphics()->QuadsSetSubsetFree(
 					fx2f(pQuad->m_aTexcoords[0].x), fx2f(pQuad->m_aTexcoords[0].y),
 					fx2f(pQuad->m_aTexcoords[1].x), fx2f(pQuad->m_aTexcoords[1].y),
@@ -351,8 +345,8 @@ void CMovingTiles::OnRender()
 		}
 	};
 
-	RenderPass(LAYERRENDERFLAG_OPAQUE);
-	RenderPass(LAYERRENDERFLAG_TRANSPARENT);
+	// 移动方块统一走透明通道，避免空的不透明遍历。
+	RenderPass();
 	Graphics()->ClipDisable();
 	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
 }

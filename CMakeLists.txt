@@ -4425,6 +4425,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_markdown_broadcast_test.cpp
     qm_emoticon_projectile_test.cpp
     qm_realtime_test.cpp
+    qm_prepared_media_art_test.cpp
     websocket_client_test.cpp
     qm_map_upload_test.cpp
     qm_tee_skin_apply_test.cpp
