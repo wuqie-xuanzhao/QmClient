@@ -3,10 +3,13 @@
 
 #include <base/system.h>
 
+#include <engine/client/friends.h>
+#include <engine/client/serverbrowser.h>
 #include <engine/client/serverbrowser_http_parse.h>
 #include <engine/client/serverbrowser_ping_cache.h>
 #include <engine/console.h>
 #include <engine/engine.h>
+#include <engine/favorites.h>
 #include <engine/shared/config.h>
 #include <engine/shared/json.h>
 #include <engine/sqlite.h>
@@ -18,6 +21,131 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+class CServerBrowserTestAccess
+{
+public:
+	static void Initialize(CServerBrowser &Browser, IFriends *pFriends, IFavorites *pFavorites)
+	{
+		Browser.m_pFriends = pFriends;
+		Browser.m_pFavorites = pFavorites;
+	}
+	static void Add(CServerBrowser &Browser, const NETADDR &Address, const CServerInfo &Info)
+	{
+		Browser.SetInfo(Browser.Add(&Address, 1), Info);
+	}
+	static void ReplaceFirstAddress(CServerBrowser &Browser, const NETADDR &Address)
+	{
+		Browser.ReplaceEntry(Browser.m_vpServerlist[0], &Address, 1);
+	}
+	static void SetFirstInfo(CServerBrowser &Browser, const CServerInfo &Info)
+	{
+		Browser.SetInfo(Browser.m_vpServerlist[0], Info);
+	}
+	static void Sort(CServerBrowser &Browser) { Browser.Sort(); }
+};
+
+namespace
+{
+	class CCountingFriends : public CFriends
+	{
+	public:
+		mutable int m_Queries = 0;
+
+		int GetFriendState(const char *pName, const char *pClan) const override
+		{
+			++m_Queries;
+			return CFriends::GetFriendState(pName, pClan);
+		}
+	};
+
+	class CServerBrowserStateTest : public ::testing::Test
+	{
+	protected:
+		std::unique_ptr<CConfig> m_pSavedConfig;
+		CCountingFriends m_Friends;
+		std::unique_ptr<IFavorites> m_pFavorites = CreateFavorites();
+		CServerBrowser m_Browser;
+
+		void SetUp() override
+		{
+			m_pSavedConfig = std::make_unique<CConfig>(g_Config);
+			g_Config.m_BrFilterEmpty = g_Config.m_BrFilterFull = g_Config.m_BrFilterPw = 0;
+			g_Config.m_BrFilterCountry = g_Config.m_BrFilterFriends = g_Config.m_BrFilterSpectators = 0;
+			g_Config.m_BrFilterUnfinishedMap = g_Config.m_BrFilterLogin = g_Config.m_BrFilterConnectingPlayers = 0;
+			g_Config.m_BrFilterServerAddress[0] = g_Config.m_BrFilterGametype[0] = '\0';
+			g_Config.m_BrFilterString[0] = g_Config.m_BrExcludeString[0] = '\0';
+			g_Config.m_BrSort = IServerBrowser::SORT_NAME;
+			g_Config.m_BrSortOrder = 0;
+			g_Config.m_ClFriendsIgnoreClan = 0;
+			CServerBrowserTestAccess::Initialize(m_Browser, &m_Friends, m_pFavorites.get());
+		}
+
+		void TearDown() override { g_Config = *m_pSavedConfig; }
+
+		void AddServer(const NETADDR &Address)
+		{
+			CServerInfo Info{};
+			str_copy(Info.m_aName, "Example");
+			Info.m_NumClients = Info.m_NumPlayers = 1;
+			Info.m_MaxClients = Info.m_MaxPlayers = 16;
+			CServerInfo::CClient Client{};
+			str_copy(Client.m_aName, "Alice");
+			str_copy(Client.m_aClan, "Clan");
+			Client.m_Player = true;
+			Info.m_vClients.push_back(Client);
+			CServerBrowserTestAccess::Add(m_Browser, Address, Info);
+		}
+	};
+}
+
+TEST_F(CServerBrowserStateTest, FriendStateIsReusedUntilFriendRevisionOrClanModeChanges)
+{
+	NETADDR Address;
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8303"));
+	AddServer(Address);
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Friends.m_Queries, 1);
+	EXPECT_EQ(m_Browser.Get(0)->m_FriendState, IFriends::FRIEND_NO);
+
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_EQ(m_Friends.m_Queries, 1);
+	m_Friends.AddFriend("Alice", "Clan");
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_EQ(m_Friends.m_Queries, 2);
+	EXPECT_EQ(m_Browser.Get(0)->m_FriendState, IFriends::FRIEND_PLAYER);
+
+	g_Config.m_ClFriendsIgnoreClan = 1;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_EQ(m_Friends.m_Queries, 3);
+
+	CServerInfo Updated = *m_Browser.Get(0);
+	str_copy(Updated.m_vClients[0].m_aName, "Bob");
+	CServerBrowserTestAccess::SetFirstInfo(m_Browser, Updated);
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_EQ(m_Friends.m_Queries, 4);
+	EXPECT_EQ(m_Browser.Get(0)->m_FriendState, IFriends::FRIEND_NO);
+}
+
+TEST_F(CServerBrowserStateTest, AddressReplacementInvalidatesFriendStateAndFriendListRevision)
+{
+	NETADDR Address;
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8303"));
+	const uint64_t EmptyRevision = m_Browser.FriendListRevision();
+	AddServer(Address);
+	EXPECT_NE(m_Browser.FriendListRevision(), EmptyRevision);
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Friends.m_Queries, 1);
+
+	const uint64_t LoadedRevision = m_Browser.FriendListRevision();
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8304"));
+	CServerBrowserTestAccess::ReplaceFirstAddress(m_Browser, Address);
+	EXPECT_NE(m_Browser.FriendListRevision(), LoadedRevision);
+	ASSERT_NE(m_Browser.Find(Address), nullptr);
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_EQ(m_Friends.m_Queries, 2);
+	EXPECT_EQ(m_Browser.Get(0)->m_aAddresses[0], Address);
+}
 
 TEST(ServerBrowser, PingCache)
 {

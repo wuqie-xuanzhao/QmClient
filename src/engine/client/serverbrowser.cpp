@@ -694,13 +694,12 @@ void CServerBrowser::Filter()
 			}
 		}
 
-		SFriendStateCache &FriendState = m_FriendStateCache[pEntry];
-		if(!FriendState.m_Valid || FriendState.m_Revision != FriendsRevision || FriendState.m_IgnoreClan != IgnoreClan)
+		if(!pEntry->m_FriendStateValid || pEntry->m_FriendStateRevision != FriendsRevision || pEntry->m_FriendStateIgnoreClan != IgnoreClan)
 		{
 			UpdateServerFriends(&Info);
-			FriendState.m_Revision = FriendsRevision;
-			FriendState.m_IgnoreClan = IgnoreClan;
-			FriendState.m_Valid = true;
+			pEntry->m_FriendStateRevision = FriendsRevision;
+			pEntry->m_FriendStateIgnoreClan = IgnoreClan;
+			pEntry->m_FriendStateValid = true;
 		}
 
 		if(!Filtered)
@@ -870,7 +869,7 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 	str_copy(pEntry->m_Info.m_aCommunityId, aCommunityId);
 	str_copy(pEntry->m_Info.m_aCommunityCountry, aCommunityCountry);
 	str_copy(pEntry->m_Info.m_aCommunityType, aCommunityType);
-	m_FriendStateCache[pEntry].m_Valid = false;
+	pEntry->m_FriendStateValid = false;
 	UpdateServerRank(&pEntry->m_Info);
 	pEntry->m_Info.m_GametypeColor = CServerInfo::GametypeColor(pEntry->m_Info.m_aGameType);
 
@@ -984,6 +983,7 @@ void CServerBrowser::SetLatency(NETADDR Addr, int Latency)
 
 CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR *pAddrs, int NumAddrs)
 {
+	++m_FriendListRevision;
 	// create new pEntry
 	CServerEntry *pEntry = &m_ServerlistStorage.emplace_back();
 
@@ -1021,7 +1021,8 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR *pAddrs, int Num
 
 CServerBrowser::CServerEntry *CServerBrowser::ReplaceEntry(CServerEntry *pEntry, const NETADDR *pAddrs, int NumAddrs)
 {
-	m_FriendStateCache.erase(pEntry);
+	++m_FriendListRevision;
+	pEntry->m_FriendStateValid = false;
 	for(int i = 0; i < pEntry->m_Info.m_NumAddresses; i++)
 	{
 		m_ByAddr.erase(pEntry->m_Info.m_aAddresses[i]);
@@ -1406,7 +1407,6 @@ void CServerBrowser::CleanUp()
 	m_vSortedServerlist.clear();
 	m_vpServerlist.clear();
 	m_ServerlistStorage.clear();
-	m_FriendStateCache.clear();
 	m_NumSortedPlayers = 0;
 	m_ByAddr.clear();
 	m_pFirstReqServer = nullptr;

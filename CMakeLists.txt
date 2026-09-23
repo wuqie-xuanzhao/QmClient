@@ -4251,6 +4251,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_spectator_friend_priority_test.cpp
     qm_friend_enter_tracker_test.cpp
     qm_friends_category_drag_test.cpp
+    friends_revision_test.cpp
     qm_perf_diagnostics_test.cpp
     qm_music_hook_protocol_test.cpp
     QmUiTokensTest.cpp

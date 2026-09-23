@@ -304,6 +304,7 @@ bool CFriends::AddCategory(const char *pCategory)
 
 	str_copy(m_aaCategories[InsertIndex], aCategory, sizeof(m_aaCategories[0]));
 	++m_NumCategories;
+	++m_Revision;
 	return true;
 }
 
@@ -359,6 +360,7 @@ bool CFriends::RenameCategory(const char *pOldCategory, const char *pNewCategory
 			str_copy(m_aFriends[i].m_aCategory, m_aaCategories[OldCategoryIndex], sizeof(m_aFriends[i].m_aCategory));
 	}
 
+	++m_Revision;
 	return true;
 }
 
@@ -383,6 +385,7 @@ bool CFriends::RemoveCategory(const char *pCategory)
 	if(CategoryIndex < m_NumCategories - 1)
 		mem_move(&m_aaCategories[CategoryIndex], &m_aaCategories[CategoryIndex + 1], sizeof(m_aaCategories[0]) * (m_NumCategories - CategoryIndex - 1));
 	--m_NumCategories;
+	++m_Revision;
 	return true;
 }
 
@@ -404,6 +407,7 @@ bool CFriends::SetFriendCategory(const char *pName, const char *pClan, const cha
 		return false;
 
 	str_copy(m_aFriends[FriendIndex].m_aCategory, m_aaCategories[CategoryIndex], sizeof(m_aFriends[FriendIndex].m_aCategory));
+	++m_Revision;
 	return true;
 }
 
@@ -433,7 +437,12 @@ void CFriends::AddFriend(const char *pName, const char *pClan, const char *pCate
 	if(ExistingFriend >= 0)
 	{
 		const bool ExistingClanFriend = m_aFriends[ExistingFriend].m_aName[0] == '\0';
-		str_copy(m_aFriends[ExistingFriend].m_aCategory, ExistingClanFriend ? IFriends::CLAN_MEMBERS_CATEGORY : aCategory, sizeof(m_aFriends[ExistingFriend].m_aCategory));
+		const char *pNewCategory = ExistingClanFriend ? IFriends::CLAN_MEMBERS_CATEGORY : aCategory;
+		if(str_comp(m_aFriends[ExistingFriend].m_aCategory, pNewCategory) != 0)
+		{
+			str_copy(m_aFriends[ExistingFriend].m_aCategory, pNewCategory, sizeof(m_aFriends[ExistingFriend].m_aCategory));
+			++m_Revision;
+		}
 		return;
 	}
 

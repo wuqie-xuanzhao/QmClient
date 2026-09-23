@@ -354,6 +354,8 @@ public:
 	bool IsRegistered(const NETADDR &Addr);
 
 private:
+	friend class CServerBrowserTestAccess;
+
 	CNetClient *m_pNetClient = nullptr;
 	IConfigManager *m_pConfigManager = nullptr;
 	IConsole *m_pConsole = nullptr;
@@ -377,13 +379,6 @@ private:
 	std::vector<int> m_vSortedServerlist;
 	std::unordered_map<NETADDR, int> m_ByAddr;
 	std::unordered_map<std::string, int> m_QmClientServerCounts;
-	struct SFriendStateCache
-	{
-		uint64_t m_Revision = 0;
-		bool m_IgnoreClan = false;
-		bool m_Valid = false;
-	};
-	std::unordered_map<const CServerEntry *, SFriendStateCache> m_FriendStateCache;
 
 	std::vector<CCommunity> m_vCommunities;
 	std::unordered_map<NETADDR, CCommunityServer> m_CommunityServersByAddr;

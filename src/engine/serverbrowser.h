@@ -336,6 +336,9 @@ public:
 		int64_t m_RequestTime;
 		bool m_RequestIgnoreInfo;
 		int m_GotInfo;
+		bool m_FriendStateValid = false;
+		uint64_t m_FriendStateRevision = 0;
+		bool m_FriendStateIgnoreClan = false;
 		CServerInfo m_Info;
 
 		CServerEntry *m_pPrevReq; // request list
