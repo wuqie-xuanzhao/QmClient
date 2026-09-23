@@ -53,8 +53,8 @@ void RenderSettingsCardCollapseButton(const IUiContext &Ctx, const CUIRect &Rect
 	const bool Hovered = Ctx.m_pUi->MouseHovered(&Rect);
 	const float Alpha = std::clamp(DrawAlpha, 0.0f, 1.0f);
 	const float PixelSize = Ctx.m_pUi->PixelSize();
-	const CUIRect ChromeRect = ResolveSettingsCardChromeRect(Rect, PixelSize);
-	const float Radius = AlignSettingsCardValueToPixels(std::min(ui_token::radius::TIGHT * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.25f), PixelSize);
+	const CUIRect &ChromeRect = Rect;
+	const float Radius = std::min(ui_token::radius::TIGHT * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.25f);
 	const ColorRGBA ChromeColor(1.0f, 1.0f, 1.0f, (Hovered ? 0.28f : 0.18f) * Alpha);
 	DrawRoundedSurface(Ctx, ChromeRect, ChromeColor, ChromeColor, Radius);
 	const float IconSize = std::clamp(ui_token::font::BODY * UiScale, 10.0f, ui_token::font::BODY);
@@ -110,8 +110,9 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 	Border.a *= DrawState.m_DrawAlpha;
 	ColorRGBA Surface = ResolveSettingsCardSurfaceColor(VisualOptions.m_UseSurfaceColor ? VisualOptions.m_SurfaceColor : Theme.m_Surface, DrawState);
 	const float PixelSize = Ctx.m_pUi != nullptr ? Ctx.m_pUi->PixelSize() : 0.0f;
-	const CUIRect ChromeRect = ResolveSettingsCardChromeRect(DrawFrame.m_Rect, PixelSize);
-	const float CardRadius = AlignSettingsCardValueToPixels(std::min(ui_token::settings::CARD_RADIUS * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.5f), PixelSize);
+	// 绘制和命中、内容使用同一份连续几何，避免滑动时边缘逐像素跳动。
+	const CUIRect &ChromeRect = DrawFrame.m_Rect;
+	const float CardRadius = std::min(ui_token::settings::CARD_RADIUS * UiScale, std::min(ChromeRect.w, ChromeRect.h) * 0.5f);
 	// 焦点与拖放只能改变边框颜色，普通 hover 不参与 chrome；任何状态都不能改变
 	// Surface 的几何，否则边框获得焦点时会产生一次内缩跳变并重新触发卡片闪动。
 	const float BorderWidth = ResolveSettingsCardBorderWidth(UiScale, PixelSize);
