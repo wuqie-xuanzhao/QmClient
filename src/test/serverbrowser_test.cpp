@@ -46,10 +46,29 @@ public:
 		Browser.SetInfo(Browser.m_vpServerlist[0], Info);
 	}
 	static void Sort(CServerBrowser &Browser) { Browser.Sort(); }
+	static void SetPingCache(CServerBrowser &Browser, IServerBrowserPingCache *pCache)
+	{
+		Browser.m_pPingCache = pCache;
+	}
+	static void SetLatency(CServerBrowser &Browser, NETADDR Address, int Latency)
+	{
+		Browser.SetLatency(Address, Latency);
+	}
 };
 
 namespace
 {
+	class CTestPingCache : public IServerBrowserPingCache
+	{
+		int m_Ping = -1;
+
+	public:
+		void Load() override {}
+		int NumEntries() const override { return m_Ping < 0 ? 0 : 1; }
+		void CachePing(const NETADDR &, int Ping) override { m_Ping = Ping; }
+		int GetPing(const NETADDR *, int) const override { return m_Ping; }
+	};
+
 	class CCountingFriends : public CFriends
 	{
 	public:
@@ -208,6 +227,27 @@ TEST_F(CServerBrowserStateTest, FriendListMovesOnlineEntriesAndKeepsServerSnapsh
 	const int Default = m_Friends.FindCategory(IFriends::DEFAULT_CATEGORY);
 	ASSERT_EQ(List.Groups()[Default].size(), 1u);
 	EXPECT_STREQ(List.Groups()[Default][0].Name(), "Alice");
+}
+
+TEST_F(CServerBrowserStateTest, FriendListRefreshesLatencyAfterPingUpdate)
+{
+	m_Friends.AddFriend("Alice", "Clan");
+	AddServer("127.0.0.1:8303", "Server", 1, 1, {Client("Alice", "Clan")});
+	CServerBrowserTestAccess::Sort(m_Browser);
+	CQmBrowserFriendList List;
+	List.Update(m_Friends, m_Browser, false);
+	const int Default = m_Friends.FindCategory(IFriends::DEFAULT_CATEGORY);
+	ASSERT_EQ(List.Groups()[Default].size(), 1u);
+	const int OldLatency = List.Groups()[Default][0].ServerInfo()->m_Latency;
+
+	CServerBrowserTestAccess::SetPingCache(m_Browser, new CTestPingCache());
+	NETADDR Address;
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8303"));
+	CServerBrowserTestAccess::SetLatency(m_Browser, Address, 42);
+	List.Update(m_Friends, m_Browser, false);
+	ASSERT_EQ(List.Groups()[Default].size(), 1u);
+	EXPECT_NE(OldLatency, 42);
+	EXPECT_EQ(List.Groups()[Default][0].ServerInfo()->m_Latency, 42);
 }
 
 TEST_F(CServerBrowserStateTest, FriendListIgnoreClanMovesMatchedNameOutOfOffline)

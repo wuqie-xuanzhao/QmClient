@@ -564,12 +564,14 @@ private:
 
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, size_t Width, size_t Height, uint8_t *pData)
 	{
-		const auto UploadStart = time_get_nanoseconds();
+		const auto UploadStart = QmPerfEnabled() ? time_get_nanoseconds() : std::chrono::nanoseconds(0);
 		for(size_t y = 0; y < Height; ++y)
 		{
 			mem_copy(&m_apTextureData[TextureIndex][PosX + ((y + PosY) * m_TextureDimension)], &pData[y * Width], Width);
 		}
 		Graphics()->UpdateTextTexture(m_aTextures[TextureIndex], PosX, PosY, Width, Height, pData, true);
+		if(!QmPerfEnabled())
+			return;
 		++m_QmPerfGlyphUploads;
 		m_QmPerfGlyphUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
 	}
@@ -581,7 +583,7 @@ private:
 
 	bool RenderGlyph(SGlyph &Glyph)
 	{
-		const auto RasterizeStart = time_get_nanoseconds();
+		const auto RasterizeStart = QmPerfEnabled() ? time_get_nanoseconds() : std::chrono::nanoseconds(0);
 		EnsureFacePixelSize(Glyph.m_Face, Glyph.m_FontSize);
 
 		if(FT_Load_Glyph(Glyph.m_Face, Glyph.m_GlyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_BITMAP))
@@ -651,8 +653,11 @@ private:
 			UploadGlyph(FONT_TEXTURE_FILL, X, Y, Width, Height, pGlyphDataFill);
 			UploadGlyph(FONT_TEXTURE_OUTLINE, X, Y, Width, Height, pGlyphDataOutline);
 		}
-		++m_QmPerfGlyphNew;
-		m_QmPerfGlyphRasterizeMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - RasterizeStart).count();
+		if(QmPerfEnabled())
+		{
+			++m_QmPerfGlyphNew;
+			m_QmPerfGlyphRasterizeMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - RasterizeStart).count();
+		}
 
 		// set glyph info
 		{
@@ -2279,8 +2284,10 @@ public:
 	{
 		dbg_assert(!TextContainerIndex.Valid(), "Text container index was not cleared.");
 
-		const auto CreateStart = time_get_nanoseconds();
-		++m_QmPerfTextContainerNew;
+		const bool PerfEnabled = QmPerfEnabled();
+		const auto CreateStart = PerfEnabled ? time_get_nanoseconds() : std::chrono::nanoseconds(0);
+		if(PerfEnabled)
+			++m_QmPerfTextContainerNew;
 		++m_QmFrameContainerCreates;
 
 		TextContainerIndex.Reset();
@@ -2295,13 +2302,15 @@ public:
 
 		if(TextContainer.m_StringInfo.m_vCharacterQuads.empty() && TextContainer.m_StringInfo.m_SelectionQuadContainerIndex == -1 && IsRendered)
 		{
-			m_QmPerfTextContainerCreateMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - CreateStart).count();
+			if(PerfEnabled)
+				m_QmPerfTextContainerCreateMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - CreateStart).count();
 			FreeTextContainer(TextContainerIndex);
 			return false;
 		}
 		else
 		{
-			m_QmPerfTextContainerCreateMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - CreateStart).count();
+			if(PerfEnabled)
+				m_QmPerfTextContainerCreateMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - CreateStart).count();
 			if(Graphics()->IsTextBufferingEnabled() && IsRendered && !TextContainer.m_StringInfo.m_vCharacterQuads.empty())
 			{
 				if((TextContainer.m_RenderFlags & TEXT_RENDER_FLAG_NO_AUTOMATIC_QUAD_UPLOAD) == 0)
@@ -3010,7 +3019,7 @@ public:
 	{
 		if(Graphics()->IsTextBufferingEnabled())
 		{
-			const auto UploadStart = time_get_nanoseconds();
+			const auto UploadStart = QmPerfEnabled() ? time_get_nanoseconds() : std::chrono::nanoseconds(0);
 			STextContainer &TextContainer = GetTextContainer(TextContainerIndex);
 			if(TextContainer.m_StringInfo.m_vCharacterQuads.empty())
 				return;
@@ -3029,8 +3038,11 @@ public:
 				TextContainer.m_StringInfo.m_QuadBufferContainerIndex = Graphics()->CreateBufferContainer(&m_DefaultTextContainerInfo);
 			}
 			Graphics()->IndicesNumRequiredNotify(TextContainer.m_StringInfo.m_vCharacterQuads.size() * 6);
-			++m_QmPerfTextContainerUploads;
-			m_QmPerfTextContainerUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
+			if(QmPerfEnabled())
+			{
+				++m_QmPerfTextContainerUploads;
+				m_QmPerfTextContainerUploadMs += std::chrono::duration<double, std::milli>(time_get_nanoseconds() - UploadStart).count();
+			}
 		}
 	}
 

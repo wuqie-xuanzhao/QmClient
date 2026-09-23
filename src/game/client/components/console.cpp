@@ -690,6 +690,7 @@ CGameConsole::CInstance::CInstance(int Type)
 
 	m_Backlog.SetPopCallback([this](CBacklogEntry *pEntry) {
 		m_ColorSpansByExportId.erase(pEntry->m_ExportId);
+		m_ChatMetadataByExportId.erase(pEntry->m_ExportId);
 		if(pEntry->m_LineCount != -1 && MatchesLogFilter(pEntry))
 		{
 			m_NewLineCounter -= pEntry->m_LineCount;
@@ -703,6 +704,11 @@ CGameConsole::CInstance::CInstance(int Type)
 		}
 		if(pEntry->m_ExportId == m_ChatExportAnchorId)
 			m_ChatExportAnchorId = -1;
+	});
+
+	m_BacklogPending.SetPopCallback([this](CBacklogEntry *pEntry) REQUIRES(m_BacklogPendingLock) {
+		m_PendingColorSpansByExportId.erase(pEntry->m_ExportId);
+		m_PendingChatMetadataByExportId.erase(pEntry->m_ExportId);
 	});
 
 	m_Input.SetClipboardLineCallback([this](const char *pStr) { ExecuteLine(pStr); });
@@ -724,11 +730,13 @@ void CGameConsole::CInstance::ClearBacklog()
 		const CLockScope LockScope(m_BacklogPendingLock);
 		m_BacklogPending.Init();
 		m_PendingColorSpansByExportId.clear();
+		m_PendingChatMetadataByExportId.clear();
 		m_NextExportId = 1;
 	}
 
 	m_Backlog.Init();
 	m_ColorSpansByExportId.clear();
+	m_ChatMetadataByExportId.clear();
 	m_BacklogCurLine = 0;
 	m_BacklogLastActiveLine = -1;
 	m_ScrollbarDragging = false;

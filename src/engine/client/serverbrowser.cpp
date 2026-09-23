@@ -977,6 +977,8 @@ void CServerBrowser::SetLatency(NETADDR Addr, int Latency)
 		{
 			continue;
 		}
+		if(pEntry->m_Info.m_Latency != Ping || pEntry->m_Info.m_LatencyIsEstimated)
+			++m_FriendListRevision;
 		pEntry->m_Info.m_Latency = Ping;
 		pEntry->m_Info.m_LatencyIsEstimated = false;
 	}

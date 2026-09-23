@@ -286,7 +286,7 @@ MACRO_CONFIG_INT(QmWebSocketBackoffBaseMs, qm_websocket_backoff_base_ms, 1000, 1
 MACRO_CONFIG_INT(QmWebSocketBackoffMaxMs, qm_websocket_backoff_max_ms, 60000, 1000, 600000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Realtime channel reconnect backoff cap (ms)")
 MACRO_CONFIG_INT(QmWebSocketLog, qm_websocket_log, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Log realtime WebSocket channel events")
 MACRO_CONFIG_INT(QmWebSocketAllowInsecureTls, qm_websocket_allow_insecure_tls, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Legacy option: connections that skip TLS verification are rejected")
-MACRO_CONFIG_STR(QmMapUploadEndpoint, qm_map_upload_endpoint, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Map upload endpoint (empty disables map upload)")
+MACRO_CONFIG_STR(QmMapUploadEndpoint, qm_map_upload_endpoint, 512, "https://shengyan.art/api/upload", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Map upload endpoint (empty disables map upload)")
 MACRO_CONFIG_STR(QmVoiceAudioBackend, qm_voice_audio_backend, 64, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Voice audio backend (SDL driver name, empty=auto)")
 MACRO_CONFIG_STR(QmVoiceInputDevice, qm_voice_input_device, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Voice input device (empty=default)")
 MACRO_CONFIG_STR(QmVoiceOutputDevice, qm_voice_output_device, 128, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Voice output device (empty=default)")
