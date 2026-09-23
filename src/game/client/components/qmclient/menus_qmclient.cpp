@@ -163,47 +163,6 @@ namespace
 
 using SQmGlobalSearchCard = qm_card_registry::SCardSearchResult;
 
-struct SQmGlobalSearchNavigation
-{
-	int m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-	int m_QmClientTab = -1;
-	int m_TClientTab = -1;
-	int m_AppearanceTab = -1;
-};
-
-struct SQmGlobalSearchTabRoute
-{
-	const char *m_pTab;
-	int m_SettingsPage;
-	int m_TClientTab = -1;
-	int m_AppearanceTab = -1;
-	int m_QmClientTab = -1;
-};
-
-static constexpr SQmGlobalSearchTabRoute s_aGlobalSearchTabRoutes[] = {
-	{"general", CMenus::SETTINGS_GENERAL},
-	{"player", CMenus::SETTINGS_PLAYER},
-	{"tee", CMenus::SETTINGS_TEE},
-	{"tee7", CMenus::SETTINGS_TEE},
-	{"graphics", CMenus::SETTINGS_GRAPHICS},
-	{"sound", CMenus::SETTINGS_SOUND},
-	{"ddnet", CMenus::SETTINGS_DDNET},
-	{"controls", CMenus::SETTINGS_CONTROLS},
-	{"tclient-bind-wheel", CMenus::SETTINGS_TCLIENT, 1},
-	{"tclient-warlist", CMenus::SETTINGS_TCLIENT, 2},
-	{"tclient-chat-binds", CMenus::SETTINGS_TCLIENT, 3},
-	{"tclient-status-bar", CMenus::SETTINGS_TCLIENT, 4},
-	{"tclient-info", CMenus::SETTINGS_TCLIENT, 5},
-	{"tclient-profiles", CMenus::SETTINGS_PROFILES},
-	{"tclient-configs", CMenus::SETTINGS_QMCLIENT, -1, -1, CMenus::QMCLIENT_SETTINGS_TAB_CONFIG},
-	{"appearance-hud", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HUD},
-	{"appearance-chat", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_CHAT},
-	{"appearance-name-plate", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_NAME_PLATE},
-	{"appearance-hook-collision", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_HOOK_COLLISION},
-	{"appearance-info-messages", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_INFO_MESSAGES},
-	{"appearance-laser", CMenus::SETTINGS_APPEARANCE, -1, CMenus::APPEARANCE_TAB_LASER},
-};
-
 struct SQmGlobalSearchResults
 {
 	std::vector<SQmGlobalSearchCard> m_vAllVisibleCards;
@@ -239,117 +198,6 @@ namespace
 			if(pTab != nullptr && ((Sixup && str_comp(pTab, "tee") == 0) || (!Sixup && str_comp(pTab, "tee7") == 0)))
 				continue;
 			Out.m_vAllVisibleCards.push_back(std::move(Card));
-		}
-	}
-
-	SQmGlobalSearchNavigation ResolveGlobalSearchNavigation(const SQmGlobalSearchCard &Card)
-	{
-		SQmGlobalSearchNavigation Navigation;
-		const char *pStableId = Card.m_pStableId != nullptr ? Card.m_pStableId : "";
-		const char *pTab = Card.m_Target.m_pTab != nullptr ? Card.m_Target.m_pTab : "";
-		if(str_startswith(pStableId, "qm:") != nullptr)
-		{
-			// QmClient 三页 deck 卡直接落到对应页。
-			if(str_comp(pTab, "function") == 0)
-			{
-				Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_FUNCTION;
-				return Navigation;
-			}
-			if(str_comp(pTab, "hud") == 0)
-			{
-				Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_HUD;
-				return Navigation;
-			}
-			if(str_comp(pTab, "visual") == 0)
-			{
-				Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_VISUAL;
-				return Navigation;
-			}
-			// 少数注册表条目（激光、名牌文字、项目链接）把功能放在旧设置页，
-			// 按路由表跳转，而不是一律落到 QmClient / Visual。
-			if(str_comp(pTab, "qmclient-contributors") == 0)
-			{
-				Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-				Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_CONTRIBUTORS;
-				return Navigation;
-			}
-			for(const SQmGlobalSearchTabRoute &Route : s_aGlobalSearchTabRoutes)
-			{
-				if(str_comp(pTab, Route.m_pTab) != 0)
-					continue;
-				Navigation.m_SettingsPage = Route.m_SettingsPage;
-				Navigation.m_TClientTab = Route.m_TClientTab;
-				Navigation.m_AppearanceTab = Route.m_AppearanceTab;
-				Navigation.m_QmClientTab = Route.m_QmClientTab;
-				return Navigation;
-			}
-			Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-			Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_VISUAL;
-			return Navigation;
-		}
-		if(str_comp(pTab, "qmclient-contributors") == 0)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_QMCLIENT;
-			Navigation.m_QmClientTab = CMenus::QMCLIENT_SETTINGS_TAB_CONTRIBUTORS;
-			return Navigation;
-		}
-		if(str_startswith(pStableId, "tclient:") != nullptr)
-		{
-			Navigation.m_SettingsPage = CMenus::SETTINGS_TCLIENT;
-			Navigation.m_TClientTab = 0;
-			return Navigation;
-		}
-		for(const SQmGlobalSearchTabRoute &Route : s_aGlobalSearchTabRoutes)
-		{
-			if(str_comp(pTab, Route.m_pTab) != 0)
-				continue;
-			Navigation.m_SettingsPage = Route.m_SettingsPage;
-			Navigation.m_TClientTab = Route.m_TClientTab;
-			Navigation.m_AppearanceTab = Route.m_AppearanceTab;
-			Navigation.m_QmClientTab = Route.m_QmClientTab;
-			break;
-		}
-		return Navigation;
-	}
-
-	const char *GlobalSearchNavigationLabel(const SQmGlobalSearchNavigation &Navigation)
-	{
-		switch(Navigation.m_SettingsPage)
-		{
-		case CMenus::SETTINGS_QMCLIENT:
-			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_FUNCTION)
-				return Localize("QmClient / Function");
-			if(Navigation.m_QmClientTab == CMenus::QMCLIENT_SETTINGS_TAB_HUD)
-				return Localize("QmClient / HUD");
-			return Localize("QmClient / Visual");
-		case CMenus::SETTINGS_TCLIENT:
-			if(Navigation.m_TClientTab == 1)
-				return Localize("TClient / Bind Wheel");
-			if(Navigation.m_TClientTab == 4)
-				return Localize("TClient / Status Bar");
-			return Localize("TClient");
-		case CMenus::SETTINGS_GRAPHICS:
-			return Localize("Graphics");
-		case CMenus::SETTINGS_SOUND:
-			return Localize("Sound");
-		case CMenus::SETTINGS_DDNET:
-			return Localize("DDNet");
-		case CMenus::SETTINGS_APPEARANCE:
-			switch(Navigation.m_AppearanceTab)
-			{
-			case CMenus::APPEARANCE_TAB_CHAT: return Localize("Appearance / Chat");
-			case CMenus::APPEARANCE_TAB_NAME_PLATE: return Localize("Appearance / Name Plate");
-			case CMenus::APPEARANCE_TAB_HOOK_COLLISION: return Localize("Appearance / Hook Collision");
-			case CMenus::APPEARANCE_TAB_INFO_MESSAGES: return Localize("Appearance / Info Messages");
-			case CMenus::APPEARANCE_TAB_LASER: return Localize("Appearance / Laser");
-			case CMenus::APPEARANCE_TAB_HUD:
-			default: return Localize("Appearance / HUD");
-			}
-		default:
-			return Localize("QmClient / Visual");
 		}
 	}
 
@@ -6050,8 +5898,6 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	const float SmallSize = Metrics.m_SmallSize;
 	const float LineHeight = Metrics.m_LineHeight;
 	const float LineSpacing = Metrics.m_LineSpacing;
-	const float CardGap = Metrics.m_CardGap;
-	const float ResultHeight = std::clamp(84.0f * UiScale, 70.0f, 84.0f);
 	const SSettingsPageLayoutFrame Page = SettingsPageLayout(MainView, UiScale);
 	const bool ReadOnly = PrewarmOnly || Ui()->RenderOnly();
 	IUiContext SearchCtx = SettingsUiContext("settings_global_search", UiScale);
@@ -6072,19 +5918,17 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		bool m_Sixup = false;
 		uint64_t m_LayoutRevision = 0;
 		SQmGlobalSearchResults m_Results;
+		qm_card_order::CModel m_Model;
 	};
 	static SGlobalSearchCache s_GlobalSearchCache;
 	static qm_card_order::CModel s_GlobalSearchPrewarmOrderModel;
-	static std::string s_GlobalSearchPrewarmOrderSource;
-	static bool s_GlobalSearchPrewarmOrderModelInitialized = false;
 	static CSettingsCardDeck s_GlobalSearchPrewarmDeck;
-	if(ReadOnly && (!s_GlobalSearchPrewarmOrderModelInitialized || s_GlobalSearchPrewarmOrderSource != g_Config.m_QmGlobalCardOrder))
-	{
-		s_GlobalSearchPrewarmOrderModel.LoadMerged(g_Config.m_QmGlobalCardOrder, qm_card_registry::BuildDefaultEntries());
-		s_GlobalSearchPrewarmOrderSource = g_Config.m_QmGlobalCardOrder;
-		s_GlobalSearchPrewarmOrderModelInitialized = true;
-	}
-	qm_card_order::CModel &CardOrderModel = ReadOnly ? s_GlobalSearchPrewarmOrderModel : SettingsCardOrderModel();
+	static qm_card_catalog::SQmCardBuildContext s_GlobalSearchCardBuild;
+	static qm_card_catalog::SQmFunctionCardLayoutState s_GlobalSearchFunctionCardLayout;
+	static std::unordered_map<std::string, CButtonContainer> s_GlobalSearchActionButtons;
+	// 分类布局只用于解析搜索和导航；以下两个模型仅属于搜索页，不持久化。
+	const qm_card_order::CModel &CardOrderModel = SettingsCardOrderModel();
+	qm_card_order::CModel &DeckOrderModel = ReadOnly ? s_GlobalSearchPrewarmOrderModel : s_GlobalSearchCache.m_Model;
 	CSettingsCardDeck &CardDeck = ReadOnly ? s_GlobalSearchPrewarmDeck : m_SettingsCardDeck;
 	const char *pLanguage = g_Config.m_ClLanguagefile;
 	const uint64_t LayoutRevision = CardOrderModel.LayoutRevision();
@@ -6095,19 +5939,47 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		s_GlobalSearchCache.m_Sixup = Client()->IsSixup();
 		s_GlobalSearchCache.m_LayoutRevision = LayoutRevision;
 		CollectGlobalSearchResults(pModuleSearch, s_GlobalSearchCache.m_Sixup, CardOrderModel, s_GlobalSearchCache.m_Results);
+		auto &vResults = s_GlobalSearchCache.m_Results.m_vAllVisibleCards;
+		std::vector<qm_card_order::SEntry> vEntries;
+		vEntries.reserve(vResults.size() + 2);
+		vEntries.push_back({"deck:global-search-input", "global-search", 0, -2});
+		vEntries.push_back({"deck:global-search-empty", "global-search", 0, -1});
+		for(size_t Index = 0; Index < vResults.size(); ++Index)
+			vEntries.push_back({vResults[Index].m_pStableId, "global-search", 0, (int)Index});
+		s_GlobalSearchCache.m_Model.SetEntries(vEntries);
+		s_GlobalSearchPrewarmOrderModel.SetEntries(std::move(vEntries));
 		s_GlobalSearchCache.m_Valid = true;
 	}
 	const std::vector<SQmGlobalSearchCard> &SearchVisibleGlobalCards = s_GlobalSearchCache.m_Results.m_vAllVisibleCards;
 	const int SearchMatchedGlobalCardCount = (int)SearchVisibleGlobalCards.size();
+	s_GlobalSearchFunctionCardLayout = ResolveFunctionCardLayoutState();
 	uint64_t CardLayoutRevision = str_quickhash("global-search");
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ str_quickhash(pModuleSearch != nullptr ? pModuleSearch : "");
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ LayoutRevision;
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (Client()->IsSixup() ? 1u : 0u);
 	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (ReadOnly ? 1u : 0u);
-	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ (uint64_t)SearchMatchedGlobalCardCount;
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ qm_card_catalog::MeasureContentRevision();
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ s_GlobalSearchFunctionCardLayout.m_BlockWordsRevision;
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ s_GlobalSearchFunctionCardLayout.m_KeywordRulesRevision;
+	CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ s_GlobalSearchFunctionCardLayout.m_FavoriteMapsRevision;
+	for(const SQmGlobalSearchCard &Card : SearchVisibleGlobalCards)
+		CardLayoutRevision = CardLayoutRevision * 1099511628211ULL ^ str_quickhash(Card.m_pStableId);
 	const uint64_t DefinitionsRevision = ResolveSettingsCardDefinitionsRevision(m_SettingsCardDeckDisplayCycle, m_MenuTextPoolGeneration, MainView.w, CardLayoutRevision);
-	const auto BuildDefinitions = [this, UiScale, BodySize, SmallSize, LineHeight, LineSpacing, ResultHeight, CardGap, SearchMatchedGlobalCardCount, ReadOnly](std::vector<SSettingsCardDefinition> &vCards) {
-		vCards.reserve(2);
+
+	const SQmSettingsCardStyle CardStyle = QmSettingsCardStyle(UiScale);
+	s_GlobalSearchCardBuild = {};
+	s_GlobalSearchCardBuild.m_pMenus = this;
+	s_GlobalSearchCardBuild.m_ReadOnly = ReadOnly;
+	s_GlobalSearchCardBuild.m_Page = Page;
+	s_GlobalSearchCardBuild.m_Metrics = Metrics;
+	s_GlobalSearchCardBuild.m_LabelWidth = ResolveSettingsCardLabelWidth(Page.m_TwoColumns ? Page.m_aColumns[0].w : Page.m_ContentViewport.w, Metrics);
+	s_GlobalSearchCardBuild.m_UiContext = SearchCtx;
+	s_GlobalSearchCardBuild.m_Padding = CardStyle.m_Padding;
+	s_GlobalSearchCardBuild.m_CornerRadius = CardStyle.m_CornerRadius;
+	s_GlobalSearchCardBuild.m_pFunctionLayout = &s_GlobalSearchFunctionCardLayout;
+
+	const auto BuildDefinitions = [this, UiScale, BodySize, SmallSize, LineHeight, LineSpacing, SearchMatchedGlobalCardCount, ReadOnly, &SearchVisibleGlobalCards](std::vector<SSettingsCardDefinition> &vCards) {
+		vCards.reserve(SearchMatchedGlobalCardCount + 2);
 		SSettingsCardDefinition InputCard;
 		InputCard.m_Spec = {"deck:global-search-input", Localize("Feature Search"), qm_card_registry::ResolveLocalizedDescription("deck:global-search-input")};
 		InputCard.m_Measure = [LineHeight, LineSpacing](float) { return 2.0f * LineHeight + LineSpacing; };
@@ -6131,45 +6003,66 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		};
 		vCards.push_back(std::move(InputCard));
 
-		SSettingsCardDefinition ResultsCard;
-		ResultsCard.m_Spec = {"deck:global-search-results", Localize("Search"), qm_card_registry::ResolveLocalizedDescription("deck:global-search-results")};
-		ResultsCard.m_Measure = [SearchMatchedGlobalCardCount, ResultHeight, CardGap, LineHeight](float) {
-			return SearchMatchedGlobalCardCount == 0 ? LineHeight : SearchMatchedGlobalCardCount * ResultHeight + std::max(0, SearchMatchedGlobalCardCount - 1) * CardGap;
+		SSettingsCardDefinition EmptyCard;
+		EmptyCard.m_Spec = {"deck:global-search-empty", Localize("Search"), qm_card_registry::ResolveLocalizedDescription("deck:global-search-results")};
+		EmptyCard.m_Measure = [LineHeight](float) { return LineHeight; };
+		EmptyCard.m_Render = [this, SmallSize, LineHeight](CUIRect Content) {
+			CUIRect Row;
+			Content.HSplitTop(LineHeight, &Row, &Content);
+			DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Row, Localize("No matching features found. Try other keywords"), SmallSize, TEXTALIGN_ML, {}, (int)Row.w);
 		};
-		ResultsCard.m_Render = [this, BodySize, SmallSize, LineHeight, LineSpacing, ResultHeight, CardGap, ReadOnly](CUIRect Content) {
-			const std::vector<SQmGlobalSearchCard> &VisibleCards = s_GlobalSearchCache.m_Results.m_vAllVisibleCards;
-			if(VisibleCards.empty())
+		EmptyCard.m_IsVisible = [SearchMatchedGlobalCardCount] { return SearchMatchedGlobalCardCount == 0; };
+		vCards.push_back(std::move(EmptyCard));
+
+		for(const SQmGlobalSearchCard &Card : SearchVisibleGlobalCards)
+		{
+			SSettingsCardDefinition Definition;
+			if(!qm_card_catalog::BuildCard(s_GlobalSearchCardBuild, Card.m_pStableId, Definition))
 			{
-				DoSettingsMenuLabel(SETTINGS_SEARCH, -1, -1, "qmclient-search-no-matching-features", &Content, Localize("No matching features found. Try other keywords"), SmallSize, TEXTALIGN_ML, {}, (int)Content.w);
-				return;
+				const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(Card.m_pStableId);
+				Definition.m_Spec = {Card.m_pStableId, pDefault != nullptr && pDefault->m_pTitle != nullptr ? Localize(pDefault->m_pTitle) : Localize("Global card"), qm_card_registry::ResolveLocalizedDescription(Card.m_pStableId)};
+				Definition.m_Measure = [LineHeight](float) { return LineHeight; };
+				CButtonContainer *pOpenButton = &s_GlobalSearchActionButtons[std::string("open:") + Card.m_pStableId];
+				Definition.m_Render = [this, Target = Card.m_Target, pOpenButton, ReadOnly, LineHeight, SmallSize](CUIRect Content) {
+					CUIRect Row;
+					Content.HSplitTop(LineHeight, &Row, &Content);
+					if(!ReadOnly && Ui()->DoButtonLogic(pOpenButton, 0, &Row, BUTTONFLAG_LEFT))
+					{
+						NavigateToSettingsCard(Target);
+						Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
+						m_GlobalCardSearchInput.Deactivate();
+						return;
+					}
+					Ui()->DoLabel(&Row, Localize("Locate"), SmallSize, TEXTALIGN_ML);
+				};
+				vCards.push_back(std::move(Definition));
+				continue;
 			}
-			for(size_t Index = 0; Index < VisibleCards.size(); ++Index)
-			{
-				const SQmGlobalSearchCard &Card = VisibleCards[Index];
-				CUIRect ResultRect;
-				Content.HSplitTop(ResultHeight, &ResultRect, &Content);
-				const SQmGlobalSearchNavigation Navigation = ResolveGlobalSearchNavigation(Card);
-				const bool Clicked = !ReadOnly && Ui()->DoButtonLogic(Card.m_pStableId, 0, &ResultRect, BUTTONFLAG_LEFT);
-				if(Clicked)
+			CButtonContainer *pLocateButton = &s_GlobalSearchActionButtons[std::string("locate:") + Card.m_pStableId];
+			Definition.m_HeaderAction = [this, Target = Card.m_Target, pLocateButton, ReadOnly, SmallSize](const SSettingsCardFrame &Frame, bool) {
+				if(ReadOnly)
+					return;
+				CUIRect LocateButton = Frame.m_SubtitleRect;
+				if(LocateButton.w <= 0.0f || LocateButton.h <= 0.0f)
+					return;
+				const char *pLabel = Localize("Locate");
+				const float TextWidth = TextRender()->TextWidth(SmallSize, pLabel);
+				const float LocateWidth = std::min(LocateButton.w, TextWidth + 12.0f);
+				LocateButton.x += LocateButton.w - LocateWidth;
+				LocateButton.w = LocateWidth;
+				if(Ui()->DoButtonLogic(pLocateButton, 0, &LocateButton, BUTTONFLAG_LEFT))
 				{
-					NavigateToSettingsCard(Card.m_Target);
+					NavigateToSettingsCard(Target);
 					Ui()->ReleaseActiveTextInput(&m_GlobalCardSearchInput);
 					m_GlobalCardSearchInput.Deactivate();
+					return;
 				}
-				CUIRect ResultContent;
-				ResultRect.Margin(std::max(4.0f, LineSpacing), &ResultContent);
-				CUIRect Row;
-				ResultContent.HSplitTop(LineHeight, &Row, &ResultContent);
-				DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-title"), &Row, Card.m_Title.empty() ? Localize("Global card") : Card.m_Title.c_str(), BodySize, TEXTALIGN_ML);
-				ResultContent.HSplitTop(LineSpacing * 0.3f, nullptr, &ResultContent);
-				ResultContent.HSplitTop(LineHeight, &Row, &ResultContent);
-				DoSettingsLabelStreamed(SettingsTextElement(SETTINGS_SEARCH, -1, "qmclient-search-global-card-destination"), &Row, GlobalSearchNavigationLabel(Navigation), BodySize * 0.9f, TEXTALIGN_ML);
-				if(Index + 1 < VisibleCards.size())
-					Content.HSplitTop(CardGap, nullptr, &Content);
-			}
-		};
-		ResultsCard.m_MeasureRevision = SearchMatchedGlobalCardCount;
-		vCards.push_back(std::move(ResultsCard));
+				const float AvailableWidth = std::max(1.0f, LocateButton.w - 4.0f);
+				const float LabelSize = TextWidth > AvailableWidth ? SmallSize * AvailableWidth / TextWidth : SmallSize;
+				Ui()->DoLabel(&LocateButton, pLabel, LabelSize, TEXTALIGN_MR);
+			};
+			vCards.push_back(std::move(Definition));
+		}
 	};
 
 	const SQmResolvedScrollPolicy ScrollPolicy = QmResolveScrollPolicy({EQmScrollProfile::SETTINGS_OUTER}, UiScale, 0.0f);
@@ -6180,12 +6073,12 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	InputState.m_MousePressed = !ReadOnly && Ui()->MouseButtonClicked(0);
 	InputState.m_MouseDown = !ReadOnly && Ui()->MouseButton(0);
 	InputState.m_MouseReleased = !ReadOnly && !InputState.m_MouseDown && Ui()->LastMouseButton(0);
-	InputState.m_CtrlPressed = !ReadOnly && Input()->ModifierIsPressed();
+	InputState.m_CtrlPressed = false;
+	// 搜索结果按匹配顺序排列，不修改分类页的持久布局。
+	InputState.m_AllowHeaderDrag = false;
 	InputState.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
 	InputState.m_pScrollParams = ReadOnly ? nullptr : &ScrollParams;
-	const SSettingsCardDeckResult DeckResult = CardDeck.RenderCached(SearchCtx, Page, "global-search", DefinitionsRevision, BuildDefinitions, CardOrderModel, ReadOnly ? nullptr : &s_GlobalSearchScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
-	if(!ReadOnly && DeckResult.m_OrderChanged)
-		SaveSettingsCardOrderModel();
+	CardDeck.RenderCached(SearchCtx, Page, "global-search", DefinitionsRevision, BuildDefinitions, DeckOrderModel, ReadOnly ? nullptr : &s_GlobalSearchScrollRegion, InputState, SettingsCardMotionSpec(), SettingsCardDeckVisualOptions());
 }
 
 void CMenus::RenderSettingsQmClientContent(CUIRect MainView, bool ContributorsPage, bool PrewarmOnly)

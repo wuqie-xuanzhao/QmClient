@@ -1105,6 +1105,19 @@ inline vec4 QmHudMediaIslandSdfRectVec4(const CUIRect &Rect)
 	return vec4(Rect.x, Rect.y, Rect.w, Rect.h);
 }
 
+inline SHudMediaIslandSdfRenderState QmHudRecordingDotSdfState(vec2 Center, float DotSize, float Alpha, float ScreenPixelSize)
+{
+	const float Radius = DotSize * 0.5f;
+	SHudMediaIslandSdfRenderState State;
+	State.m_MainRect = {Center.x - Radius, Center.y - Radius, DotSize, DotSize};
+	State.m_MainRadius = Radius;
+	State.m_MainCorners = IGraphics::CORNER_ALL;
+	State.m_BackgroundColor = ColorRGBA(1.0f, 0.15f, 0.15f, Alpha);
+	State.m_ScreenPixelSize = std::max(ScreenPixelSize, 0.0001f);
+	State.m_Rect = QmHudMediaIslandSdfOuterRect(State);
+	return State;
+}
+
 inline bool QmHudMediaIslandBuildGpuSdfParams(const SHudMediaIslandSdfRenderState &State, IGraphics::SMediaIslandSdfParams &Params)
 {
 	if(State.m_Rect.w <= 0.0f || State.m_Rect.h <= 0.0f || State.m_MainRect.w <= 0.0f || State.m_MainRect.h <= 0.0f || State.m_ItemCount < 0 || State.m_ItemCount > QmHudMediaIslandSdfMaxItems)

@@ -811,6 +811,28 @@ namespace
 		}
 	}
 
+	// 两处录制状态共用同一个 SDF 圆点；不支持 SDF 时保留几何圆。
+	void DrawHudRecordingStatusDot(IGraphics *pGraphics, vec2 Center, float DotSize, float Alpha, float ScreenPixelSize)
+	{
+		if(pGraphics == nullptr || DotSize <= 0.0f || Alpha <= 0.0f)
+			return;
+
+		if(!pGraphics->HasMediaIslandSdf())
+		{
+			DrawSmoothCircle(pGraphics, Center, DotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, Alpha));
+			return;
+		}
+
+		const SHudMediaIslandSdfRenderState State = QmHudRecordingDotSdfState(Center, DotSize, Alpha, ScreenPixelSize);
+		IGraphics::SMediaIslandSdfParams GpuSdfParams;
+		if(QmHudMediaIslandBuildGpuSdfParams(State, GpuSdfParams))
+		{
+			pGraphics->RenderMediaIslandSdf(GpuSdfParams);
+			return;
+		}
+		DrawSmoothCircle(pGraphics, Center, DotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, Alpha));
+	}
+
 	void DrawMediaIslandCountdownSatellite(
 		IGraphics *pGraphics,
 		vec2 Center,
@@ -1416,6 +1438,11 @@ void CHud::RenderGameTimer()
 	if(!TimerCapsule.m_Visible)
 		return;
 
+	float RecordingScreenX0, RecordingScreenY0, RecordingScreenX1, RecordingScreenY1;
+	Graphics()->GetScreen(&RecordingScreenX0, &RecordingScreenY0, &RecordingScreenX1, &RecordingScreenY1);
+	const float RecordingDotScreenPixelSize = QmHudMediaIslandScreenPixelSize(
+		RecordingScreenX0, RecordingScreenY0, RecordingScreenX1, RecordingScreenY1, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
+
 	constexpr float TimerRadius = QmHudMediaIslandScaled(8.0f);
 	constexpr float StatusSectionGap = QmHudMediaIslandScaled(3.0f);
 	constexpr float StatusPaddingLeft = QmHudMediaIslandScaled(4.0f);
@@ -1480,7 +1507,7 @@ void CHud::RenderGameTimer()
 		Graphics()->DrawRect(DividerX, TimerCapsule.m_BoxY + QmHudMediaIslandScaled(4.0f), QmHudMediaIslandScaled(0.75f), TimerCapsule.m_BoxH - QmHudMediaIslandScaled(8.0f), ColorRGBA(1.0f, 1.0f, 1.0f, 0.10f * StatusAlpha), IGraphics::CORNER_ALL, QmHudMediaIslandScaled(0.375f));
 
 		const vec2 DotCenter(StatusSectionX + StatusPaddingLeft + StatusDotSize * 0.5f, TimerCapsule.m_BoxY + TimerCapsule.m_BoxH * 0.5f);
-		DrawSmoothCircle(Graphics(), DotCenter, StatusDotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, 0.95f * StatusAlpha));
+		DrawHudRecordingStatusDot(Graphics(), DotCenter, StatusDotSize, QmHudRecordingDotAlpha(time_get() / (double)time_freq()) * StatusAlpha, RecordingDotScreenPixelSize);
 
 		if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedWidth + QmHudMediaIslandScaled(2.0f))
 		{
@@ -5414,7 +5441,7 @@ void CHud::RenderMediaIsland()
 		else
 		{
 			const vec2 DotCenter(StatusSectionX + StatusPaddingLeft + StatusDotSize * 0.5f, IslandY + BaseIslandHeight * 0.5f);
-			DrawSmoothCircle(Graphics(), DotCenter, StatusDotSize * 0.5f, ColorRGBA(1.0f, 0.15f, 0.15f, 0.95f * StatusAlpha * EntranceContentAlpha));
+			DrawHudRecordingStatusDot(Graphics(), DotCenter, StatusDotSize, QmHudRecordingDotAlpha(time_get() / (double)time_freq()) * StatusAlpha * EntranceContentAlpha, ScreenPixelSize);
 
 			if(StatusTextAlpha > 0.001f && StatusWidth > RawCollapsedStatusWidth + QmHudMediaIslandScaled(2.0f))
 			{

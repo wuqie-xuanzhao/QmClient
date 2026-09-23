@@ -30,6 +30,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
@@ -1206,7 +1207,7 @@ struct STextContainer
 	// prefix of the container's text stored for debugging purposes
 	char m_aDebugText[32];
 
-	STextContainerIndex m_ContainerIndex;
+	std::shared_ptr<STextContainerUsages> m_pContainerUseCount;
 
 	void Reset()
 	{
@@ -1230,7 +1231,7 @@ struct STextContainer
 
 		m_aDebugText[0] = '\0';
 
-		m_ContainerIndex = STextContainerIndex{};
+		m_pContainerUseCount.reset();
 	}
 };
 
@@ -1559,9 +1560,9 @@ class CTextRender : public IEngineTextRender
 				m_vpTextContainers.push_back(new STextContainer());
 		}
 
-		if(m_vpTextContainers[Index.m_Index]->m_ContainerIndex.m_UseCount.get() != Index.m_UseCount.get())
+		if(m_vpTextContainers[Index.m_Index]->m_pContainerUseCount.get() != Index.m_UseCount.get())
 		{
-			m_vpTextContainers[Index.m_Index]->m_ContainerIndex = Index;
+			m_vpTextContainers[Index.m_Index]->m_pContainerUseCount = Index.m_UseCount;
 		}
 		return *m_vpTextContainers[Index.m_Index];
 	}
@@ -3239,7 +3240,7 @@ public:
 	{
 		for(auto *pTextContainer : m_vpTextContainers)
 		{
-			if(pTextContainer->m_ContainerIndex.Valid() && pTextContainer->m_ContainerIndex.m_UseCount.use_count() <= 1)
+			if(pTextContainer->m_pContainerUseCount != nullptr && pTextContainer->m_pContainerUseCount.use_count() <= 1)
 			{
 				log_error("textrender", "Found non empty text container with index %d with %" PRIzu " quads '%s'", pTextContainer->m_StringInfo.m_QuadBufferContainerIndex, pTextContainer->m_StringInfo.m_vCharacterQuads.size(), pTextContainer->m_aDebugText);
 				dbg_assert_failed("Text container was forgotten by the implementation (the index was overwritten).");
@@ -3262,7 +3263,7 @@ public:
 			if(pTextContainer->m_StringInfo.m_QuadBufferContainerIndex != -1)
 			{
 				log_error("textrender", "Found non empty text container with index %d with %" PRIzu " quads '%s'", pTextContainer->m_StringInfo.m_QuadBufferContainerIndex, pTextContainer->m_StringInfo.m_vCharacterQuads.size(), pTextContainer->m_aDebugText);
-				log_error("textrender", "The text container index was in use by %d ", (int)pTextContainer->m_ContainerIndex.m_UseCount.use_count());
+				log_error("textrender", "The text container index was in use by %d ", (int)pTextContainer->m_pContainerUseCount.use_count());
 				HasNonEmptyTextContainer = true;
 			}
 		}

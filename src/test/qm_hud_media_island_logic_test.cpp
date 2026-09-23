@@ -1032,6 +1032,42 @@ TEST(QmHudMediaIslandSatellite, SdfCircleUsesNegativeInsideAndPositiveOutside)
 	EXPECT_GT(QmHudMediaIslandSdfCircle(vec2(3.0f, 0.0f), vec2(0.0f, 0.0f), 2.0f), 0.0f);
 }
 
+TEST(QmHudMediaIslandRecording, AlphaBreathRepeatsEveryTwoPointFourSeconds)
+{
+	EXPECT_NEAR(QmHudRecordingDotAlpha(0.0), 0.95f, 0.00001f);
+	EXPECT_NEAR(QmHudRecordingDotAlpha(0.6), 0.80f, 0.00001f);
+	EXPECT_NEAR(QmHudRecordingDotAlpha(1.2), 0.65f, 0.00001f);
+	EXPECT_NEAR(QmHudRecordingDotAlpha(1.8), 0.80f, 0.00001f);
+	EXPECT_NEAR(QmHudRecordingDotAlpha(2.4), 0.95f, 0.00001f);
+}
+
+TEST(QmHudMediaIslandRecording, SdfDotIsAPlainCircleWithPixelFeather)
+{
+	const SHudMediaIslandSdfRenderState State = QmHudRecordingDotSdfState(vec2(20.0f, 30.0f), 6.0f, 0.7f, 0.5f);
+	EXPECT_FLOAT_EQ(State.m_MainRect.x, 17.0f);
+	EXPECT_FLOAT_EQ(State.m_MainRect.y, 27.0f);
+	EXPECT_FLOAT_EQ(State.m_MainRect.w, 6.0f);
+	EXPECT_FLOAT_EQ(State.m_MainRect.h, 6.0f);
+	EXPECT_FLOAT_EQ(State.m_MainRadius, 3.0f);
+	EXPECT_EQ(State.m_MainCorners, IGraphics::CORNER_ALL);
+	EXPECT_FLOAT_EQ(State.m_BackgroundColor.r, 1.0f);
+	EXPECT_FLOAT_EQ(State.m_BackgroundColor.g, 0.15f);
+	EXPECT_FLOAT_EQ(State.m_BackgroundColor.b, 0.15f);
+	EXPECT_FLOAT_EQ(State.m_BackgroundColor.a, 0.7f);
+	EXPECT_EQ(State.m_ItemCount, 0);
+	EXPECT_FALSE(State.m_HasRightCapsule);
+	EXPECT_FLOAT_EQ(State.m_OuterShadowSize, 0.0f);
+	EXPECT_FLOAT_EQ(State.m_OuterShadowOpacity, 0.0f);
+	EXPECT_FLOAT_EQ(State.m_BackdropUv.z, 0.0f);
+	EXPECT_LT(State.m_Rect.x, State.m_MainRect.x);
+
+	IGraphics::SMediaIslandSdfParams Params;
+	ASSERT_TRUE(QmHudMediaIslandBuildGpuSdfParams(State, Params));
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_MAIN_PARAMS].x, 3.0f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_METADATA].w, 0.5f);
+	EXPECT_FLOAT_EQ(Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKGROUND].w, 0.7f);
+}
+
 TEST(QmHudMediaIslandSatellite, SdfSmoothUnionFallsBackToMinimumWhenBlendIsDisabled)
 {
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSdfSmoothUnion(0.4f, -0.2f, 0.0f), -0.2f);

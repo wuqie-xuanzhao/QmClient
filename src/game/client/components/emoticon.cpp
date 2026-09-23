@@ -20,6 +20,60 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
+
+namespace
+{
+	constexpr float s_SuperChargeRingThickness = 4.0f;
+	constexpr int s_SuperChargeRingSegments = 72;
+	constexpr float s_SuperChargeRingAnimationSeconds = 0.18f;
+
+	void RenderChargeRing(IGraphics *pGraphics, vec2 Center, float OuterRadius, float Thickness, float Progress, ColorRGBA FilledColor, ColorRGBA EmptyColor, int Segments)
+	{
+		if(OuterRadius <= 0.0f || Thickness <= 0.0f || Segments <= 0)
+			return;
+		const float ClampedProgress = std::clamp(Progress, 0.0f, 1.0f);
+		const float InnerRadius = std::max(0.0f, OuterRadius - Thickness);
+		const float SegmentAngle = 2.0f * pi / (float)Segments;
+		const float AngleOffset = -0.5f * pi;
+
+		pGraphics->TextureClear();
+		pGraphics->QuadsBegin();
+		pGraphics->SetColor(EmptyColor);
+		for(int i = 0; i < Segments; ++i)
+		{
+			const vec2 Dir1 = direction(AngleOffset + i * SegmentAngle);
+			const vec2 Dir2 = direction(AngleOffset + (i + 1) * SegmentAngle);
+			const IGraphics::CFreeformItem Item(
+				Center + Dir1 * InnerRadius, Center + Dir2 * InnerRadius,
+				Center + Dir1 * OuterRadius, Center + Dir2 * OuterRadius);
+			pGraphics->QuadsDrawFreeform(&Item, 1);
+		}
+		pGraphics->SetColor(FilledColor);
+		const float FilledSegments = ClampedProgress * Segments;
+		const int WholeSegments = std::clamp((int)std::floor(FilledSegments), 0, Segments);
+		for(int i = 0; i < WholeSegments; ++i)
+		{
+			const vec2 Dir1 = direction(AngleOffset + i * SegmentAngle);
+			const vec2 Dir2 = direction(AngleOffset + (i + 1) * SegmentAngle);
+			const IGraphics::CFreeformItem Item(
+				Center + Dir1 * InnerRadius, Center + Dir2 * InnerRadius,
+				Center + Dir1 * OuterRadius, Center + Dir2 * OuterRadius);
+			pGraphics->QuadsDrawFreeform(&Item, 1);
+		}
+		const float PartialSegment = FilledSegments - WholeSegments;
+		if(PartialSegment > 0.0f && WholeSegments < Segments)
+		{
+			const float Angle1 = AngleOffset + WholeSegments * SegmentAngle;
+			const float Angle2 = Angle1 + SegmentAngle * PartialSegment;
+			const IGraphics::CFreeformItem Item(
+				Center + direction(Angle1) * InnerRadius, Center + direction(Angle2) * InnerRadius,
+				Center + direction(Angle1) * OuterRadius, Center + direction(Angle2) * OuterRadius);
+			pGraphics->QuadsDrawFreeform(&Item, 1);
+		}
+		pGraphics->QuadsEnd();
+	}
+}
 
 static uint64_t EmoticonPresentationNodeKey(const char *pScope)
 {
@@ -68,26 +122,28 @@ void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 {
 	CEmoticon *pSelf = (CEmoticon *)pUserData;
 
-	if(pResult->GetInteger(0) == 0)
+	const bool Active = pResult->GetInteger(0) != 0;
+	// 释放必须先处理，避免计分板等状态变化吞掉松开事件。
+	if(!Active)
 	{
-		pSelf->m_Active = false;
+		pSelf->SetActive(false);
 		return;
 	}
-	if(pSelf->GameClient()->m_Scoreboard.IsActive())
-		return;
-
-	if(!pSelf->GameClient()->m_Snap.m_SpecInfo.m_Active && pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		if(pSelf->GameClient()->m_BindWheel.IsActive())
-			pSelf->m_Active = false;
-		else
-			pSelf->m_Active = pResult->GetInteger(0) != 0;
-	}
+	if(!pSelf->GameClient()->m_Scoreboard.IsActive() &&
+		!pSelf->GameClient()->m_Snap.m_SpecInfo.m_Active &&
+		pSelf->Client()->State() == IClient::STATE_ONLINE &&
+		!pSelf->GameClient()->m_BindWheel.IsActive())
+		pSelf->SetActive(true);
 }
 
 void CEmoticon::ConSuperEmote(IConsole::IResult *pResult, void *pUserData)
 {
 	((CEmoticon *)pUserData)->SuperEmote(pResult->GetInteger(0));
+}
+
+void CEmoticon::ConToggleLaunchMode(IConsole::IResult *, void *pUserData)
+{
+	((CEmoticon *)pUserData)->ToggleLaunchMode();
 }
 
 void CEmoticon::ConLocalBlink(IConsole::IResult *, void *pUserData)
@@ -102,6 +158,7 @@ void CEmoticon::OnConsoleInit()
 	QmEmoticon::RegisterCommands(Console(), this);
 	Console()->Register("super_emote", "i[emote-id]", CFGFLAG_CLIENT, ConSuperEmote, this, "Launch a large emote");
 	Console()->Register("qm_blink", "", CFGFLAG_CLIENT, ConLocalBlink, this, "Blink the active local tee");
+	Console()->Register("toggle_emote_launcher", "", CFGFLAG_CLIENT, ConToggleLaunchMode, this, "Toggle emote launcher");
 }
 
 void CEmoticon::OnReset()
@@ -109,8 +166,22 @@ void CEmoticon::OnReset()
 	m_WasActive = false;
 	m_Active = false;
 	m_PresentationInitialized = false;
+	m_SelectorMouse = vec2(0.0f, 0.0f);
 	m_SelectedEmote = -1;
 	m_SelectedEyeEmote = -1;
+	m_LaunchModeActive = false;
+	m_SuperCharge.Reset();
+	m_SuperChargeProgress = 0.0f;
+	m_SuperChargeRingEmote = -1;
+	m_SuperChargeRingPhase = 0.0f;
+	m_SuperChargeRingCharge = 0.0f;
+	m_SuperChargeRingExitEmote = -1;
+	m_SuperChargeRingExitPhase = 0.0f;
+	m_SuperChargeRingExitCharge = 0.0f;
+	m_LocalSuperHeadEmoticon = -1;
+	m_LocalSuperHeadExpireTick = -1;
+	std::fill(std::begin(m_aRemoteSuperHeadEmoticons), std::end(m_aRemoteSuperHeadEmoticons), -1);
+	std::fill(std::begin(m_aRemoteSuperHeadExpireTicks), std::end(m_aRemoteSuperHeadExpireTicks), -1);
 	for(auto &LocalBlinkState : m_aLocalBlinkStates)
 		LocalBlinkState.Reset();
 	m_TouchPressedOutside = false;
@@ -121,10 +192,57 @@ void CEmoticon::OnReset()
 
 void CEmoticon::OnRelease()
 {
+	SetActive(false);
+}
+
+void CEmoticon::UpdateSelection()
+{
+	if(length(m_SelectorMouse) > 170.0f)
+		m_SelectorMouse = normalize(m_SelectorMouse) * 170.0f;
+	const float SelectorAngle = angle(m_SelectorMouse);
+	const auto PositiveMod = [](float x, float y) -> int { return static_cast<int>(std::fmod(x + y, y)); };
+	m_SelectedEmote = length(m_SelectorMouse) > 110.0f ? PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTICONS), NUM_EMOTICONS) : -1;
+	m_SelectedEyeEmote = m_SelectedEmote == -1 && length(m_SelectorMouse) > 40.0f ?
+				     PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTES), NUM_EMOTES) : -1;
+	if(!GameClient()->m_GameInfo.m_AllowEyeWheel || !g_Config.m_ClEyeWheel || GameClient()->m_aLocalIds[g_Config.m_ClDummy] < 0)
+		m_SelectedEyeEmote = -1;
+	m_SuperChargeProgress = m_SuperCharge.Update(m_SelectedEmote, time_get(), time_freq());
+}
+
+void CEmoticon::SetActive(bool Active)
+{
+	if(Active == m_Active)
+		return;
+	if(Active)
+	{
+		m_Active = true;
+		m_TouchPressedOutside = false;
+		m_SuperCharge.Reset();
+		UpdateSelection();
+		return;
+	}
+	UpdateSelection();
 	m_Active = false;
-	m_WasActive = false;
-	m_SelectedEmote = -1;
-	m_SelectedEyeEmote = -1;
+	m_WasActive = true;
+	if(!m_TouchPressedOutside && Client()->State() == IClient::STATE_ONLINE &&
+		!GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_pLocalCharacter)
+	{
+		if(m_SelectedEmote != -1)
+		{
+			m_SuperLaunchPending = m_SuperChargeProgress >= 1.0f;
+			Emote(m_SelectedEmote);
+		}
+		if(m_SelectedEyeEmote != -1)
+			EyeEmote(m_SelectedEyeEmote);
+	}
+}
+
+void CEmoticon::ToggleLaunchMode()
+{
+	if(!m_Active)
+		return;
+	m_LaunchModeActive = !m_LaunchModeActive;
+	GameClient()->Echo(m_LaunchModeActive ? "表情发射：开启" : "表情发射：关闭");
 }
 
 bool CEmoticon::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
@@ -134,15 +252,24 @@ bool CEmoticon::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
 
 	Ui()->ConvertMouseMove(&x, &y, CursorType);
 	m_SelectorMouse += vec2(x, y);
+	UpdateSelection();
 	return true;
 }
 
 bool CEmoticon::OnInput(const IInput::CEvent &Event)
 {
-	if(IsActive() && Event.m_Flags & IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
+	if(IsActive() && Event.m_Flags & IInput::FLAG_PRESS)
 	{
-		OnRelease();
-		return true;
+		if(Event.m_Key == KEY_ESCAPE)
+		{
+			OnRelease();
+			return true;
+		}
+		if(Event.m_Key == KEY_TAB)
+		{
+			ToggleLaunchMode();
+			return true;
+		}
 	}
 	return false;
 }
@@ -152,11 +279,6 @@ void CEmoticon::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	static const auto PositiveMod = [](float x, float y) -> float {
-		return std::fmod(x + y, y);
-	};
-
-	static const float s_InnerMouseLimitRadius = 40.0f;
 	static const float s_InnerOuterMouseBoundaryRadius = 110.0f;
 	static const float s_OuterMouseLimitRadius = 170.0f;
 	static const float s_InnerItemRadius = 70.0f;
@@ -173,11 +295,18 @@ void CEmoticon::OnRender()
 			m_TouchPressedOutside = false;
 		}
 
-		if(m_WasActive && Client()->State() == IClient::STATE_ONLINE && !GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_pLocalCharacter && m_SelectedEmote != -1)
-			Emote(m_SelectedEmote);
-		if(m_WasActive && Client()->State() == IClient::STATE_ONLINE && !GameClient()->m_Snap.m_SpecInfo.m_Active && GameClient()->m_Snap.m_pLocalCharacter && m_SelectedEyeEmote != -1)
-			EyeEmote(m_SelectedEyeEmote);
+		if(m_WasActive && m_SuperChargeRingEmote != -1)
+		{
+			m_SuperChargeRingExitEmote = m_SuperChargeRingEmote;
+			m_SuperChargeRingExitPhase = m_SuperChargeRingPhase;
+			m_SuperChargeRingExitCharge = m_SuperChargeRingCharge;
+			m_SuperChargeRingEmote = -1;
+			m_SuperChargeRingPhase = 0.0f;
+			m_SuperChargeRingCharge = 0.0f;
+		}
 		m_WasActive = false;
+		m_SuperCharge.Reset();
+		m_SuperChargeProgress = 0.0f;
 	}
 	else
 	{
@@ -204,6 +333,7 @@ void CEmoticon::OnRender()
 			if(TouchCenterDistance <= s_OuterMouseLimitRadius)
 			{
 				m_SelectorMouse = TouchPos;
+				UpdateSelection();
 			}
 			else if(TouchCenterDistance > s_OuterCircleRadius)
 			{
@@ -212,7 +342,7 @@ void CEmoticon::OnRender()
 		}
 		else if(WasTouchPressed)
 		{
-			m_Active = false;
+			SetActive(false);
 		}
 	}
 
@@ -238,18 +368,45 @@ void CEmoticon::OnRender()
 		return;
 
 	if(m_Active)
+		UpdateSelection();
+
+	if(m_Active && m_SelectedEmote != -1)
 	{
-		if(length(m_SelectorMouse) > s_OuterMouseLimitRadius)
-			m_SelectorMouse = normalize(m_SelectorMouse) * s_OuterMouseLimitRadius;
+		if(m_SuperChargeRingEmote != m_SelectedEmote)
+		{
+			if(m_SuperChargeRingEmote != -1)
+			{
+				m_SuperChargeRingExitEmote = m_SuperChargeRingEmote;
+				m_SuperChargeRingExitPhase = m_SuperChargeRingPhase;
+				m_SuperChargeRingExitCharge = m_SuperChargeRingCharge;
+			}
+			m_SuperChargeRingEmote = m_SelectedEmote;
+			m_SuperChargeRingPhase = 0.0f;
+			m_SuperChargeRingCharge = 0.0f;
+		}
+		m_SuperChargeRingCharge = m_SuperChargeProgress;
+	}
+	else if(m_Active && m_SuperChargeRingEmote != -1)
+	{
+		m_SuperChargeRingExitEmote = m_SuperChargeRingEmote;
+		m_SuperChargeRingExitPhase = m_SuperChargeRingPhase;
+		m_SuperChargeRingExitCharge = m_SuperChargeRingCharge;
+		m_SuperChargeRingEmote = -1;
+		m_SuperChargeRingPhase = 0.0f;
+		m_SuperChargeRingCharge = 0.0f;
+	}
 
-		const float SelectorAngle = angle(m_SelectorMouse);
-
-		m_SelectedEmote = -1;
-		m_SelectedEyeEmote = -1;
-		if(length(m_SelectorMouse) > s_InnerOuterMouseBoundaryRadius)
-			m_SelectedEmote = PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTICONS), NUM_EMOTICONS);
-		else if(length(m_SelectorMouse) > s_InnerMouseLimitRadius)
-			m_SelectedEyeEmote = PositiveMod(std::round(SelectorAngle / (2.0f * pi) * NUM_EMOTES), NUM_EMOTES);
+	const float RingAnimationStep = Client()->RenderFrameTime() / s_SuperChargeRingAnimationSeconds;
+	if(m_SuperChargeRingEmote != -1)
+		m_SuperChargeRingPhase = std::min(1.0f, m_SuperChargeRingPhase + RingAnimationStep);
+	if(m_SuperChargeRingExitEmote != -1)
+	{
+		m_SuperChargeRingExitPhase = std::max(0.0f, m_SuperChargeRingExitPhase - RingAnimationStep);
+		if(m_SuperChargeRingExitPhase <= 0.0f)
+		{
+			m_SuperChargeRingExitEmote = -1;
+			m_SuperChargeRingExitCharge = 0.0f;
+		}
 	}
 
 	const vec2 ScreenCenter = Screen.Center();
@@ -302,6 +459,21 @@ void CEmoticon::OnRender()
 		Graphics()->QuadsEnd();
 	}
 	Graphics()->WrapNormal();
+
+	auto RenderSuperChargeRing = [&](int Emote, float Phase, float Charge) {
+		if(Emote < 0 || Phase <= 0.0f || Charge <= 0.0f)
+			return;
+		const float Angle = 2.0f * pi * Emote / (float)NUM_EMOTICONS;
+		const vec2 Nudge = direction(Angle) * s_OuterItemRadius * PresentationScale;
+		const float RingOuterRadius = 47.0f * PresentationScale * Phase;
+		const float RingThickness = s_SuperChargeRingThickness * PresentationScale * Phase;
+		const ColorRGBA FilledColor = Charge >= 1.0f ?
+						      ColorRGBA(1.0f, 0.82f, 0.35f, 0.95f * PresentationAlpha) :
+						      ColorRGBA(1.0f, 1.0f, 1.0f, 0.90f * PresentationAlpha);
+		RenderChargeRing(Graphics(), ScreenCenter + Nudge, RingOuterRadius, RingThickness, Charge, FilledColor, FilledColor.WithMultipliedAlpha(0.28f), s_SuperChargeRingSegments);
+	};
+	RenderSuperChargeRing(m_SuperChargeRingExitEmote, m_SuperChargeRingExitPhase, m_SuperChargeRingExitCharge);
+	RenderSuperChargeRing(m_SuperChargeRingEmote, m_SuperChargeRingPhase, m_SuperChargeRingCharge);
 
 	if(GameClient()->m_GameInfo.m_AllowEyeWheel && g_Config.m_ClEyeWheel && GameClient()->m_aLocalIds[g_Config.m_ClDummy] >= 0)
 	{
@@ -417,8 +589,14 @@ void CEmoticon::RenderProjectiles()
 		if(!Projectile.m_Active)
 			continue;
 		const float Fraction = std::clamp((float)(Projectile.m_Accumulator / CEmoticonProjectile::STEP), 0.0f, 1.0f);
-		const vec2 Position = mix(Projectile.m_PreviousPos, Projectile.m_Pos, Fraction);
-		const float Angle = mix(Projectile.m_PreviousAngle, Projectile.m_Angle, Fraction);
+		vec2 Position = mix(Projectile.m_PreviousPos, Projectile.m_Pos, Fraction);
+		float Angle = mix(Projectile.m_PreviousAngle, Projectile.m_Angle, Fraction);
+		// 插值可能切入墙角，重叠时使用已求解的位置和角度。
+		if(Mask.Overlaps(Position, Projectile.Size(), Angle, Solid))
+		{
+			Position = Projectile.m_Pos;
+			Angle = Projectile.m_Angle;
+		}
 		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[Projectile.m_Emoticon]);
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetSubset(0, 0, 1, 1);
@@ -461,7 +639,7 @@ void CEmoticon::SpawnProjectile(vec2 Position, vec2 Direction, int Emoticon, boo
 
 void CEmoticon::Emote(int Emoticon, bool ForceLaunch)
 {
-	const QmEmoticon::EEffect Effect = QmEmoticon::ConsumeEffect(Emoticon, false, m_SuperLaunchPending, ForceLaunch);
+	const QmEmoticon::EEffect Effect = QmEmoticon::ConsumeEffect(Emoticon, m_LaunchModeActive, m_SuperLaunchPending, ForceLaunch);
 	if(Effect == QmEmoticon::EEffect::INVALID)
 		return;
 	const bool Launch = Effect == QmEmoticon::EEffect::PROJECTILE || Effect == QmEmoticon::EEffect::SUPER_PROJECTILE;

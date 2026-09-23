@@ -14,10 +14,39 @@
 #include <game/client/components/tclient/bindwheel.h>
 #include <game/client/ui.h>
 
+#include <algorithm>
 #include <array>
+#include <cstdint>
 
 namespace QmEmoticon
 {
+	struct SSelectorCharge
+	{
+		static constexpr float REQUIRED_SECONDS = 1.5f;
+
+		void Reset()
+		{
+			m_TrackedEmote = -1;
+			m_Started = 0;
+		}
+
+		float Update(int SelectedEmote, int64_t Now, int64_t Frequency)
+		{
+			if(m_TrackedEmote != SelectedEmote)
+			{
+				m_TrackedEmote = SelectedEmote;
+				m_Started = Now;
+			}
+			if(SelectedEmote < 0 || Frequency <= 0)
+				return 0.0f;
+			return std::clamp(static_cast<float>((Now - m_Started) / static_cast<double>(Frequency) / REQUIRED_SECONDS), 0.0f, 1.0f);
+		}
+
+	private:
+		int m_TrackedEmote = -1;
+		int64_t m_Started = 0;
+	};
+
 	enum class EEffect
 	{
 		INVALID,
@@ -95,11 +124,24 @@ class CEmoticon : public CComponent
 	bool m_TouchPressedOutside;
 	std::array<CEmoticonProjectile, 64> m_aProjectiles;
 	std::array<QmEmoticon::CAlphaMask, NUM_EMOTICONS> m_aCollisionMasks;
+	bool m_LaunchModeActive = false;
+	QmEmoticon::SSelectorCharge m_SuperCharge;
+	float m_SuperChargeProgress = 0.0f;
+	int m_SuperChargeRingEmote = -1;
+	float m_SuperChargeRingPhase = 0.0f;
+	float m_SuperChargeRingCharge = 0.0f;
+	int m_SuperChargeRingExitEmote = -1;
+	float m_SuperChargeRingExitPhase = 0.0f;
+	float m_SuperChargeRingExitCharge = 0.0f;
 	bool m_SuperLaunchPending = false;
 
 	static void ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData);
 	static void ConSuperEmote(IConsole::IResult *pResult, void *pUserData);
 	static void ConLocalBlink(IConsole::IResult *pResult, void *pUserData);
+	static void ConToggleLaunchMode(IConsole::IResult *pResult, void *pUserData);
+	void ToggleLaunchMode();
+	void UpdateSelection();
+	void SetActive(bool Active);
 	void RenderProjectiles();
 	void SpawnProjectile(vec2 Position, vec2 Direction, int Emoticon, bool Super, int OwnerClientId);
 	// 本机自己的头顶大表情；远端玩家的按 ClientId 各存一份（-1 表示没有）。
@@ -138,6 +180,7 @@ public:
 	bool ShouldRenderLocalBlink(int ClientId) const;
 	// 头顶大表情（super emote）：本机自己与远端玩家的超大表情各记一份，带过期 tick。
 	bool IsLocalSuperHeadEmoticon(int ClientId, int Emoticon) const;
+	bool IsLaunchModeActive() const { return m_LaunchModeActive; }
 
 	bool IsActive() const { return m_Active; }
 

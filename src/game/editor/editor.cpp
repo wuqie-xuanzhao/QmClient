@@ -4250,6 +4250,8 @@ void CEditor::UpdateCollab()
 		m_pCollabRealtime.reset();
 		m_CollabConnectedTick = 0;
 		m_CollabJoinedTransport = false;
+		m_CollabSnapshotReady = false;
+		m_CollabNextPushTime = 0;
 		return;
 	}
 	UpdateCollabRealtime();
@@ -5660,7 +5662,7 @@ void CEditor::HandleWriterFinishJobs()
 		m_CollabSnapshotSavePending = false;
 		m_pCollabSnapshotJob.reset();
 		const bool MapUnchangedSinceSnapshot = m_pCollabMap->m_LastModifiedTime == m_CollabPendingUploadedModifiedTime;
-		if(m_CollabState == ECollabState::CONNECTED && IsCollabMapValid() && MapUnchangedSinceSnapshot && m_CollabSnapshotRevision == m_CollabRevision)
+		if(m_CollabState == ECollabState::CONNECTED && IsCollabMapActive() && m_CollabJoinedTransport && MapUnchangedSinceSnapshot && m_CollabSnapshotRevision == m_CollabRevision)
 			m_CollabSnapshotReady = true;
 		return;
 	}

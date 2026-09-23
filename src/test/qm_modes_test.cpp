@@ -979,6 +979,41 @@ TEST(QmEmoticonEffect, EffectKindResolvesFromLaunchAndSuperFlags)
 	}
 }
 
+TEST(QmEmoticonSelector, HoldingSameEmoteChargesAndReleaseResolvesEffect)
+{
+	QmEmoticon::SSelectorCharge Charge;
+	constexpr int64_t Frequency = 1000;
+	EXPECT_FLOAT_EQ(Charge.Update(4, 100, Frequency), 0.0f);
+	const float Partial = Charge.Update(4, 850, Frequency);
+	EXPECT_GT(Partial, 0.0f);
+	EXPECT_LT(Partial, 1.0f);
+	bool SuperPending = Partial >= 1.0f;
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(4, false, SuperPending), QmEmoticon::EEffect::NONE);
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(4, true, SuperPending), QmEmoticon::EEffect::PROJECTILE);
+	EXPECT_FLOAT_EQ(Charge.Update(4, 1600, Frequency), 1.0f);
+
+	for(const bool LaunchMode : {false, true})
+	{
+		SuperPending = Charge.Update(4, 1600, Frequency) >= 1.0f;
+		EXPECT_EQ(QmEmoticon::ConsumeEffect(4, LaunchMode, SuperPending),
+			LaunchMode ? QmEmoticon::EEffect::SUPER_PROJECTILE : QmEmoticon::EEffect::SUPER_HEAD);
+		EXPECT_FALSE(SuperPending);
+	}
+}
+
+TEST(QmEmoticonSelector, SwitchingOrLeavingEmoteRestartsCharge)
+{
+	QmEmoticon::SSelectorCharge Charge;
+	constexpr int64_t Frequency = 1000;
+	Charge.Update(4, 100, Frequency);
+	EXPECT_FLOAT_EQ(Charge.Update(4, 1600, Frequency), 1.0f);
+	EXPECT_FLOAT_EQ(Charge.Update(5, 1600, Frequency), 0.0f);
+	EXPECT_FLOAT_EQ(Charge.Update(-1, 3100, Frequency), 0.0f);
+	EXPECT_FLOAT_EQ(Charge.Update(5, 3100, Frequency), 0.0f);
+	Charge.Reset();
+	EXPECT_FLOAT_EQ(Charge.Update(5, 4600, Frequency), 0.0f);
+}
+
 TEST(QmEmoticonEffect, ForceLaunchOverridesLaunchMode)
 {
 	// 出界表情一律 INVALID（不发送、不消耗任何效果）。

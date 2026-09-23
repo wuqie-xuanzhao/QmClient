@@ -47,6 +47,7 @@ using namespace FontIcons;
 static constexpr ColorRGBA gs_HighlightedTextColor = ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f);
 static constexpr ColorRGBA gs_QmClientCountColor = ColorRGBA(0.75f, 0.55f, 1.0f, 1.0f);
 static constexpr float SERVER_LIST_TEXT_SIZE = 11.0f;
+static constexpr float SERVER_LIST_SCROLLBAR_RAIL_ALPHA_SCALE = 0.28f;
 
 static ColorRGBA BrowserOpacityColor(ColorRGBA Color, float AlphaScale = 1.0f)
 {
@@ -277,7 +278,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	const CUIRect ListView = View;
 	Headers.VSplitRight(s_ListBox.ScrollbarWidthMax(), &Headers, nullptr);
-	Headers.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_T, 2.0f);
 
 	{
 		CUIRect ResetBtn;
@@ -776,7 +776,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			RowsRendered++;
 		}
 
-		const float FontSize = 12.0f;
+		const float FontSize = SERVER_LIST_TEXT_SIZE;
 		char aTemp[64];
 		for(const auto &Col : s_aCols)
 		{
@@ -992,8 +992,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		Fade.Draw4(
 			BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)),
 			BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f)),
-			BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f)),
-			BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f)),
+			BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)),
+			BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f)),
 			IGraphics::CORNER_NONE, 0.0f);
 	}
 	if(NewSelected != m_SelectedIndex)
@@ -4090,7 +4090,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 		ServerListBase.Draw(BrowserPanelColor(), IGraphics::CORNER_ALL, ui_token::radius::CARD);
 		StatusBox.Draw(BrowserPanelElevatedColor(), IGraphics::CORNER_ALL, ui_token::radius::CARD);
 		ToolBoxBase.Draw(BrowserPanelColor(), IGraphics::CORNER_ALL, ui_token::radius::CARD);
-		ServerListBase.Margin(10.0f, &ServerListBase);
+		ServerListBase.Margin(2.0f, &ServerListBase);
 		StatusBox.Margin(10.0f, &StatusBox);
 		ToolBoxBase.Margin(10.0f, &ToolBoxBase);
 	}
@@ -4118,7 +4118,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 			Ui()->ClipEnable(&ServerListBase);
 			ServerList.x += TransitionOffset;
 		}
-		RenderServerbrowserServerList(ServerList, WasListboxItemActivated);
+		{
+			CUiBackgroundAlphaScaleScope ListOpacityScope(Ui(), SERVER_LIST_SCROLLBAR_RAIL_ALPHA_SCALE);
+			RenderServerbrowserServerList(ServerList, WasListboxItemActivated);
+		}
 		if(DoClip)
 		{
 			if(TransitionAlpha > 0.0f)

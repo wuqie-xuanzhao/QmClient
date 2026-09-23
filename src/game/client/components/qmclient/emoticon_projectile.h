@@ -198,11 +198,23 @@ struct CEmoticonProjectile
 		while(m_Accumulator + 1e-9 >= STEP && m_Active)
 		{
 			m_Accumulator -= STEP;
+			const float PreviousSize = Size();
 			m_LifeTime -= STEP;
 			if(m_LifeTime <= 0.0f)
 			{
 				m_Active = false;
 				break;
+			}
+			// 空间不足时冻结消失阶段的膨胀；旧轮廓也在墙内则停止飞行。
+			if(Mask.Overlaps(m_Pos, Size(), m_Angle, Solid))
+			{
+				if(PreviousSize < Size() && !Mask.Overlaps(m_Pos, PreviousSize, m_Angle, Solid))
+					m_SizeLimit = PreviousSize;
+				else
+				{
+					m_Active = false;
+					break;
+				}
 			}
 			m_PreviousPos = m_Pos;
 			m_PreviousAngle = m_Angle;

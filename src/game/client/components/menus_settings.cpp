@@ -4366,15 +4366,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Segments.VSplitLeft(8.0f, nullptr, &Segments);
 				if(g_Config.m_QmNewUi != 0)
 				{
-					// 胶囊 Tabbar：槽位先算完，再画容器与滑块，最后接手点击。
-					// 行标识带上按钮数组地址，避免同一函数里的多行选择器共用一条滑块轨道。
+					// 预布局只接手点击，轨道与滑块由正式渲染阶段绘制。
 					CUIRect aSegmentSlots[8];
 					CUIRect SegmentsRemainder = Segments;
 					const int SegmentCount = std::clamp(Count, 0, (int)std::size(aSegmentSlots));
 					for(int i = 0; i < SegmentCount; ++i)
 						SegmentsRemainder.VSplitLeft(SegmentsRemainder.w / (SegmentCount - i), &aSegmentSlots[i], &SegmentsRemainder);
-					const uint64_t SegmentGroup = BuildUiAnimNodeKey(MakeUiScopeHash("settings_choice_row_capsule"), reinterpret_cast<uint64_t>(pButtons));
-					ui_widget::CapsuleTabBarChrome(TabBarUiContext(), SegmentGroup, aSegmentSlots, SegmentCount, Current, SettingsCapsuleTabBarStyle());
 					for(int i = 0; i < SegmentCount; ++i)
 					{
 						if(Ui()->DoButtonLogic(&pButtons[i], Current == i, &aSegmentSlots[i], BUTTONFLAG_LEFT))

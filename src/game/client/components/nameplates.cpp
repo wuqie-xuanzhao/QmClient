@@ -1325,13 +1325,16 @@ protected:
 
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
-		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
+		QmUpdateNameplateTextContainer(This.TextRender(), m_TextContainerIndex, &Cursor, m_aText);
 	}
 
 public:
 	CNamePlatePartCoordinates(CGameClient &This, bool IsX) :
 		CNamePlatePartText(This),
-		m_IsX(IsX) {}
+		m_IsX(IsX)
+	{
+		m_ReuseTextContainer = true;
+	}
 };
 
 class CNamePlatePartReason : public CNamePlatePartText
