@@ -5175,6 +5175,7 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
@@ -5189,9 +5190,9 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 
 	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
-	auto ToggleCollapsed = [](EQmModuleId Id, bool Collapsed) {
+	auto ToggleCollapsed = [](void *, EQmModuleId Id) {
 		const int Index = std::clamp((int)Id, 0, (int)QmModuleCount - 1);
-		s_aCollapsed[Index] = Collapsed;
+		s_aCollapsed[Index] = !s_aCollapsed[Index];
 		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 	};
@@ -5418,8 +5419,8 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		CardBuild.m_Padding = CardStyle.m_Padding;
 		CardBuild.m_CornerRadius = CardStyle.m_CornerRadius;
 		CardBuild.m_pCollapsed = s_aCollapsed.data();
-		// 有意不传 m_pCollapseButtons / m_pToggleCollapsed：本地折叠由 deck 的默认控件负责，
-		// 目录只在真正接管折叠按钮时才渲染头动作，两套机制不混用（见台账 10.40/10.41）。
+		CardBuild.m_pCollapseButtons = s_aCollapseButtons.data();
+		CardBuild.m_pToggleCollapsed = ToggleCollapsed;
 		qm_card_catalog::BuildCards(CardBuild, qm_card_catalog::HudCardStableIds(), vCards);
 	};
 	uint64_t CardLayoutRevision = 0;
@@ -5485,6 +5486,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	if(!s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
@@ -5518,9 +5520,10 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		s_FavoriteMapsLayoutCount = FavoriteMapCount;
 		++s_FavoriteMapsLayoutRevision;
 	}
-	auto ToggleCollapsed = [this](EQmModuleId Id, bool Collapsed) {
+	auto ToggleCollapsed = [](void *pUser, EQmModuleId Id) {
 		const int Index = std::clamp((int)Id, 0, (int)QmModuleCount - 1);
 		const bool WasCollapsed = s_aCollapsed[Index];
+		const bool Collapsed = !WasCollapsed;
 		s_aCollapsed[Index] = Collapsed;
 		if(Id == EQmModuleId::BlockWords && WasCollapsed != Collapsed && !Collapsed)
 			++s_BlockWordsLayoutRevision;
@@ -5531,7 +5534,7 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		}
 		else if(Id == EQmModuleId::FavoriteMaps && WasCollapsed != Collapsed && !Collapsed)
 		{
-			const size_t FavoriteMapCount = GameClient()->TClientComponent().GetFavoriteMaps().size();
+			const size_t FavoriteMapCount = static_cast<CMenus *>(pUser)->GameClient()->TClientComponent().GetFavoriteMaps().size();
 			if(s_FavoriteMapsLayoutCount != FavoriteMapCount)
 			{
 				s_FavoriteMapsLayoutCount = FavoriteMapCount;
@@ -5645,8 +5648,9 @@ void CMenus::RenderSettingsQmClientFunctionDeck(CUIRect MainView, bool PrewarmOn
 		CardBuild.m_CornerRadius = CardStyle.m_CornerRadius;
 		CardBuild.m_pCollapsed = s_aCollapsed.data();
 		CardBuild.m_pFunctionLayout = &FunctionCardLayout;
-		// 有意不传 m_pCollapseButtons / m_pToggleCollapsed：本地折叠由 deck 的默认控件负责，
-		// 目录只在真正接管折叠按钮时才渲染头动作，两套机制不混用（见台账 10.40/10.41）。
+		CardBuild.m_pCollapseButtons = s_aCollapseButtons.data();
+		CardBuild.m_pToggleCollapsed = ToggleCollapsed;
+		CardBuild.m_pToggleCollapsedUser = this;
 		qm_card_catalog::BuildCards(CardBuild, qm_card_catalog::FunctionCardStableIds(), vCards);
 	};
 	uint64_t CardLayoutRevision = 0;
@@ -5703,6 +5707,7 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	}
 	static CScrollRegion s_ScrollRegion;
 	static std::array<bool, QmModuleCount> s_aCollapsed = {};
+	static std::array<CButtonContainer, QmModuleCount> s_aCollapseButtons;
 	static char s_aCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
 	static bool s_CollapsedInitialized = false;
 	const bool CollapsedConfigChanged = !s_CollapsedInitialized || str_comp(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0;
@@ -5718,9 +5723,9 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 	str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 
 	auto ModuleStateIndex = [](EQmModuleId Id) { return std::clamp((int)Id, 0, (int)QmModuleCount - 1); };
-	auto ToggleCollapsed = [](EQmModuleId Id, bool Collapsed) {
+	auto ToggleCollapsed = [](void *, EQmModuleId Id) {
 		const int Index = std::clamp((int)Id, 0, (int)QmModuleCount - 1);
-		s_aCollapsed[Index] = Collapsed;
+		s_aCollapsed[Index] = !s_aCollapsed[Index];
 		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
 		str_copy(s_aCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aCollapsedConfigCache));
 	};
@@ -5862,8 +5867,8 @@ void CMenus::RenderSettingsQmClientVisualDeck(CUIRect MainView, bool PrewarmOnly
 		CardBuild.m_Padding = CardStyle.m_Padding;
 		CardBuild.m_CornerRadius = CardStyle.m_CornerRadius;
 		CardBuild.m_pCollapsed = s_aCollapsed.data();
-		// 有意不传 m_pCollapseButtons / m_pToggleCollapsed：本地折叠由 deck 的默认控件负责，
-		// 目录只在真正接管折叠按钮时才渲染头动作，两套机制不混用（见台账 10.40/10.41）。
+		CardBuild.m_pCollapseButtons = s_aCollapseButtons.data();
+		CardBuild.m_pToggleCollapsed = ToggleCollapsed;
 		qm_card_catalog::BuildCards(CardBuild, qm_card_catalog::VisualCardStableIds(), vCards);
 	};
 	uint64_t CardLayoutRevision = 0;
@@ -5931,6 +5936,25 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 		SearchCtx.m_pTree = nullptr;
 	}
 	static CScrollRegion s_GlobalSearchScrollRegion;
+	static std::array<bool, qm_module::QmModuleCount> s_aGlobalSearchCollapsed = {};
+	static std::array<CButtonContainer, qm_module::QmModuleCount> s_aGlobalSearchCollapseButtons;
+	static char s_aGlobalSearchCollapsedConfigCache[sizeof(g_Config.m_QmSidebarCardCollapsed)] = {};
+	static bool s_GlobalSearchCollapsedInitialized = false;
+	if(!s_GlobalSearchCollapsedInitialized || str_comp(s_aGlobalSearchCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed) != 0)
+	{
+		ParseLegacyQmCollapsed(g_Config.m_QmSidebarCardCollapsed, s_aQmModuleDefaults, s_aGlobalSearchCollapsed);
+		str_copy(s_aGlobalSearchCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aGlobalSearchCollapsedConfigCache));
+		s_GlobalSearchCollapsedInitialized = true;
+	}
+	auto ToggleSearchCollapsed = [](void *pUser, qm_module::EQmModuleId Id) {
+		bool *pCollapsed = static_cast<bool *>(pUser);
+		if(pCollapsed == nullptr)
+			return;
+		const int Index = std::clamp((int)Id, 0, (int)qm_module::QmModuleCount - 1);
+		pCollapsed[Index] = !pCollapsed[Index];
+		SerializeLegacyQmCollapsed(s_aQmModuleDefaults, s_aGlobalSearchCollapsed, g_Config.m_QmSidebarCardCollapsed, sizeof(g_Config.m_QmSidebarCardCollapsed));
+		str_copy(s_aGlobalSearchCollapsedConfigCache, g_Config.m_QmSidebarCardCollapsed, sizeof(s_aGlobalSearchCollapsedConfigCache));
+	};
 
 	CLineInputBuffered<128> &ModuleSearchInput = m_GlobalCardSearchInput;
 	const char *pModuleSearch = ModuleSearchInput.GetString();
@@ -6000,6 +6024,10 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 	s_GlobalSearchCardBuild.m_UiContext = SearchCtx;
 	s_GlobalSearchCardBuild.m_Padding = CardStyle.m_Padding;
 	s_GlobalSearchCardBuild.m_CornerRadius = CardStyle.m_CornerRadius;
+	s_GlobalSearchCardBuild.m_pCollapsed = s_aGlobalSearchCollapsed.data();
+	s_GlobalSearchCardBuild.m_pCollapseButtons = s_aGlobalSearchCollapseButtons.data();
+	s_GlobalSearchCardBuild.m_pToggleCollapsed = ToggleSearchCollapsed;
+	s_GlobalSearchCardBuild.m_pToggleCollapsedUser = s_aGlobalSearchCollapsed.data();
 	s_GlobalSearchCardBuild.m_pFunctionLayout = &s_GlobalSearchFunctionCardLayout;
 
 	const auto BuildDefinitions = [this, UiScale, BodySize, SmallSize, LineHeight, LineSpacing, SearchMatchedGlobalCardCount, ReadOnly, &SearchVisibleGlobalCards](std::vector<SSettingsCardDefinition> &vCards) {
@@ -6063,7 +6091,10 @@ void CMenus::RenderSettingsGlobalSearchContent(CUIRect MainView, bool PrewarmOnl
 				continue;
 			}
 			CButtonContainer *pLocateButton = &s_GlobalSearchActionButtons[std::string("locate:") + Card.m_pStableId];
-			Definition.m_HeaderAction = [this, Target = Card.m_Target, pLocateButton, ReadOnly, SmallSize](const SSettingsCardFrame &Frame, bool) {
+			const FSettingsCardHeaderAction DrawCollapse = Definition.m_HeaderAction;
+			Definition.m_HeaderAction = [this, Target = Card.m_Target, pLocateButton, ReadOnly, SmallSize, DrawCollapse](const SSettingsCardFrame &Frame, bool Collapsed) {
+				if(DrawCollapse)
+					DrawCollapse(Frame, Collapsed);
 				if(ReadOnly)
 					return;
 				CUIRect LocateButton = Frame.m_SubtitleRect;

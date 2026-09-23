@@ -215,7 +215,11 @@ namespace QmChatExport
 		for(const SLine &Line : vLines)
 		{
 			Txt += Line.m_Raw;
+#if defined(CONF_FAMILY_WINDOWS)
+			Txt += "\r\n";
+#else
 			Txt += '\n';
+#endif
 		}
 		return Txt;
 	}

@@ -141,8 +141,8 @@ namespace qm_card_catalog
 			void *pExpandedUser = Ctx.m_pOnCardExpandedUser;
 			const bool ReadOnly = Ctx.m_ReadOnly;
 			CMenus *pMenus = Ctx.m_pMenus;
-			Out.m_PreLayoutHeaderInput = [Ctx, pMenus, pCollapseButtons, Index, pToggleCollapsed, pToggleUser, pOnCardExpanded, pExpandedUser, ReadOnly, Id](const SSettingsCardFrame &Frame, const bool IsCollapsed) {
-				if(ReadOnly || !QmCardRenderHook::DoButtonLogic(Ctx.m_pMenus, &pCollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
+			Out.m_PreLayoutHeaderInput = [pMenus, pCollapseButtons, Index, pToggleCollapsed, pToggleUser, pOnCardExpanded, pExpandedUser, ReadOnly, Id](const SSettingsCardFrame &Frame, const bool IsCollapsed) {
+				if(ReadOnly || !QmCardRenderHook::DoButtonLogic(pMenus, &pCollapseButtons[Index], IsCollapsed, &Frame.m_HandleRect, BUTTONFLAG_LEFT))
 					return false;
 				pToggleCollapsed(pToggleUser, Id);
 				// 展开时让页面按需让测量缓存失效（折叠态与展开态的行数口径不同）。
@@ -150,9 +150,7 @@ namespace qm_card_catalog
 					pOnCardExpanded(pExpandedUser, Id);
 				return true;
 			};
-			// 头动作（折叠按钮）与上面的输入处理必须同条件：本地页面沿用 deck 自带的默认折叠控件
-			// （SettingsCardDeck 的 m_ShowDefaultCollapseButton / m_DefaultCollapseButtonId），
-			// 若在此无条件提供 HeaderAction，卡头会同时出现默认按钮与目录按钮——两个折叠按钮。
+			// 自定义折叠状态由此处的回调切换，卡头只绘制与该输入处理对应的按钮。
 			const IUiContext CardCtx = Ctx.m_UiContext;
 			Out.m_HeaderAction = [CardCtx](const SSettingsCardFrame &Frame, const bool Collapsed) { RenderSettingsCardCollapseButton(CardCtx, Frame.m_HandleRect, Collapsed); };
 		}

@@ -1,6 +1,7 @@
 #include <engine/shared/json.h>
 
 #include <game/client/components/qmclient/qm_realtime.h>
+#include <game/client/components/qmclient/qmclient_utils.h>
 
 #include <gtest/gtest.h>
 
@@ -26,6 +27,15 @@ TEST(QmRealtime, EmptyConfigurationUsesDedicatedWebSocket)
 	EXPECT_STREQ(QmRealtimeEffectiveUrl(nullptr), "wss://qmclient.icu/ws");
 	EXPECT_STREQ(QmRealtimeEffectiveUrl(""), "wss://qmclient.icu/ws");
 	EXPECT_STREQ(QmRealtimeEffectiveUrl("wss://example.test/ws"), "wss://example.test/ws");
+}
+
+TEST(QmRealtime, NormalizesAnonymousServerAddresses)
+{
+	EXPECT_EQ(NormalizeQmServerAddress(" Example.COM:08303/ "), "example.com:8303");
+	EXPECT_EQ(NormalizeQmServerAddress("ws://EXAMPLE.com:8303"), "example.com:8303");
+	EXPECT_EQ(NormalizeQmServerAddress("[2001:DB8::1]:08303"), "[2001:db8::1]:8303");
+	EXPECT_EQ(NormalizeQmServerAddress("2001:DB8::1"), "[2001:db8::1]");
+	EXPECT_TRUE(NormalizeQmServerAddress("example.com:not-a-port").empty());
 }
 
 TEST(QmRealtime, CredentialsAreOnlyAllowedOnDedicatedEncryptedEndpoint)

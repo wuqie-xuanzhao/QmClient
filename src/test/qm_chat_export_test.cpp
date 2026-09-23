@@ -198,7 +198,11 @@ TEST(QmChatExportHtml, BuildHtmlEmbedsMessagesAndMarksLocalLines)
 TEST(QmChatExportHtml, BuildTxtKeepsTheRawLogLines)
 {
 	const std::vector<QmChatExport::SLine> vLines = {MakeLine("Alice", "one"), MakeLine("Bob", "two")};
+#if defined(CONF_FAMILY_WINDOWS)
+	EXPECT_EQ(QmChatExport::BuildTxt(vLines), "Alice: one\r\nBob: two\r\n");
+#else
 	EXPECT_EQ(QmChatExport::BuildTxt(vLines), "Alice: one\nBob: two\n");
+#endif
 }
 
 TEST(QmChatExportRender, BlendWritesOnlyInsideTheImage)

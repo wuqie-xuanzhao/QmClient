@@ -14,6 +14,7 @@
 #include <engine/shared/config.h>
 #include <engine/textrender.h>
 
+#include <game/client/components/menus.h>
 #include <game/client/qm_icon_manager.h>
 #include <game/client/ui.h>
 
@@ -26,6 +27,20 @@ namespace
 	{
 		Fallback = ResolveUiTheme(ColorHSLA(0.0f, 0.0f, 0.29f, 1.0f), 1.0f);
 		return Ctx.m_pTheme != nullptr ? *Ctx.m_pTheme : Fallback;
+	}
+
+	void RenderSettingsCardLabel(const IUiContext &Ctx, const SSettingsCardSpec &Spec, bool Subtitle, const CUIRect &Rect, const char *pText, float Size, const SLabelProperties &Props)
+	{
+		if(g_Config.m_QmNewUi == 0 || Ctx.m_pMenus == nullptr || Spec.m_pStableId == nullptr || Spec.m_pStableId[0] == '\0')
+		{
+			Ctx.m_pUi->DoLabel(&Rect, pText, Size, TEXTALIGN_ML, Props);
+			return;
+		}
+
+		// 卡片 stable ID 跨设置页唯一；公开的设置文字池入口同时处理预布局收集与渲染。
+		char aTextId[256];
+		str_format(aTextId, sizeof(aTextId), "settings-card-%s:%s", Subtitle ? "subtitle" : "title", Spec.m_pStableId);
+		Ctx.m_pMenus->DoSettingsMenuLabel(-1, -1, -1, aTextId, &Rect, pText, Size, TEXTALIGN_ML, Props);
 	}
 
 }
@@ -122,7 +137,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 		SLabelProperties TitleProps;
 		TitleProps.m_MaxWidth = DrawFrame.m_TitleRect.w;
 		TitleProps.m_EllipsisAtEnd = true;
-		Ctx.m_pUi->DoLabel(&DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TEXTALIGN_ML, TitleProps);
+		RenderSettingsCardLabel(Ctx, Spec, false, DrawFrame.m_TitleRect, Spec.m_pTitle != nullptr ? Spec.m_pTitle : "", ui_token::font::TITLE * UiScale, TitleProps);
 		const char *pSubtitle = Spec.m_pSubtitle;
 		if(pSubtitle != nullptr && SettingsCardSubtitleVisible(DrawState.m_Hovered, DrawState.m_SubtitleVisibleDuringMotion, DrawState.m_Focused))
 		{
@@ -133,7 +148,7 @@ SSettingsCardFrame SettingsCard(const IUiContext &Ctx, const SSettingsCardFrame 
 			SubtitleProps.m_MaxWidth = DrawFrame.m_SubtitleRect.w;
 			SubtitleProps.m_EllipsisAtEnd = true;
 			const float SubtitleSize = ResolveSettingsSmallFontSize(UiScale);
-			Ctx.m_pUi->DoLabel(&DrawFrame.m_SubtitleRect, pSubtitle, SubtitleSize, TEXTALIGN_ML, SubtitleProps);
+			RenderSettingsCardLabel(Ctx, Spec, true, DrawFrame.m_SubtitleRect, pSubtitle, SubtitleSize, SubtitleProps);
 		}
 		// 标题和副标题只影响本卡片，不能把调用方的文本状态写死为默认白色。
 		Ctx.m_pTextRender->SetRenderFlags(PreviousRenderFlags);
