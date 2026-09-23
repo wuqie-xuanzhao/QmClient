@@ -90,14 +90,12 @@ namespace ui_widget
 		CUIRect Indicator = Target;
 		if(Ctx.m_pAnim != nullptr)
 		{
-			// 滑块弹簧：欠阻尼一点点（ζ≈0.93），切换 Tab 时带速度续接地滑过去，
-			// 落到目标附近再收住，不会来回弹。
-			static constexpr SUiSpringConfig s_IndicatorSpring{1.0f, 420.0f, 38.0f, 0.05f, 0.4f};
+			// 胶囊与嵌套分段共用导航弹簧，切换时保留当前速度。
 			const uint64_t NodeKey = BuildUiAnimNodeKey(GroupId, 0);
-			Indicator.x = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::POS_X, Target.x, s_IndicatorSpring, 2);
-			Indicator.y = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::POS_Y, Target.y, s_IndicatorSpring, 2);
-			Indicator.w = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::WIDTH, Target.w, s_IndicatorSpring, 2);
-			Indicator.h = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::HEIGHT, Target.h, s_IndicatorSpring, 2);
+			Indicator.x = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::POS_X, Target.x, ui_token::motion::NAVIGATION_SPRING, 2);
+			Indicator.y = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::POS_Y, Target.y, ui_token::motion::NAVIGATION_SPRING, 2);
+			Indicator.w = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::WIDTH, Target.w, ui_token::motion::NAVIGATION_SPRING, 2);
+			Indicator.h = ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::HEIGHT, Target.h, ui_token::motion::NAVIGATION_SPRING, 2);
 		}
 		DrawRoundedSurface(Ctx, Indicator, Style.m_IndicatorColor, ColorRGBA(), ui_token::radius::PILL);
 	}

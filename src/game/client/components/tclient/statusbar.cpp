@@ -146,7 +146,7 @@ void CStatusBar::PredictionRender()
 
 float CStatusBar::LocalTimeWidth()
 {
-	return TextRender()->TextWidth(m_FontSize,
+	return CachedTextWidth(
 		g_Config.m_TcStatusBar12HourClock ? (g_Config.m_TcStatusBarLocalTimeSeconds ? "00:00:00 XX" : "00:00 XX") : (g_Config.m_TcStatusBarLocalTimeSeconds ? "00:00:00" : "00:00"));
 }
 void CStatusBar::LocalTimeRender()

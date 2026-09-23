@@ -3113,6 +3113,7 @@ if(CLIENT)
     QmUi/cards/QmCardCatalogHud.cpp
     QmUi/cards/QmCardCatalogInternal.h
     QmUi/cards/QmCardCatalogSkin.cpp
+    QmUi/cards/QmCardCatalogSkinMetrics.h
     QmUi/cards/QmCardCatalogVisual.cpp
     QmUi/cards/QmCardRenderBridge.cpp
     QmUi/cards/QmMapUpload.cpp
