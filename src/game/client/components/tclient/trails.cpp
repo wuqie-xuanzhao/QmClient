@@ -1,479 +1,188 @@
 #include "trails.h"
 
-#include <base/log.h>
 #include <base/math.h>
 
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
-#include <game/client/animstate.h>
+#include <generated/client_data.h>
+
 #include <game/client/components/effects.h>
 #include <game/client/gameclient.h>
-#include <game/client/render.h>
 
-namespace
-{
-	constexpr int TRAIL_HISTORY_SIZE = 200;
+#include <algorithm>
+#include <cmath>
 
-	int TrailHistoryIndex(int Tick)
-	{
-		return ((Tick % TRAIL_HISTORY_SIZE) + TRAIL_HISTORY_SIZE) % TRAIL_HISTORY_SIZE;
-	}
-} // namespace
-
-bool CTrails::ShouldPredictPlayer(int ClientId)
-{
-	if(!GameClient()->Predict())
-		return false;
-	CCharacter *pChar = GameClient()->m_PredictedWorld.GetCharacterById(ClientId);
-	if(GameClient()->Predict() && (ClientId == GameClient()->m_Snap.m_LocalClientId || (GameClient()->AntiPingPlayers() && !GameClient()->IsOtherTeam(ClientId))) && pChar)
-		return true;
-	return false;
-}
-
-void CTrails::ClearAllHistory()
-{
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-		ClearHistory(i);
-}
-void CTrails::ClearHistory(int ClientId)
-{
-	for(int i = 0; i < TRAIL_HISTORY_SIZE; ++i)
-		m_History[ClientId][i] = {{}, -1};
-	m_HistoryValid[ClientId] = false;
-}
 void CTrails::OnReset()
 {
-	ClearAllHistory();
+	for(auto &State : m_aTrailStates)
+		State.Reset();
+	std::fill(std::begin(m_aPositionSources), std::end(m_aPositionSources), -1);
+	m_LastDummy = m_LastStyle = m_LastLength = -1;
+}
+
+void CTrails::OnNewSnapshot()
+{
+	// 快速死亡再出生可能发生在两帧渲染之间，因此在快照入口清理，而非只检查 OnRender。
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+			m_aTrailStates[ClientId].Reset();
+	for(int i = 0; i < Client()->SnapNumItems(IClient::SNAP_CURRENT); ++i)
+	{
+		const IClient::CSnapItem Item = Client()->SnapGetItem(IClient::SNAP_CURRENT, i);
+		if(Item.m_Type == NETEVENTTYPE_DEATH)
+		{
+			const int ClientId = static_cast<const CNetEvent_Death *>(Item.m_pData)->m_ClientId;
+			if(ClientId >= 0 && ClientId < MAX_CLIENTS)
+				m_aTrailStates[ClientId].Reset();
+		}
+	}
+}
+
+void CTrails::RenderTeeTrails()
+{
+	if(GameClient()->IsRenderingDummyMiniMap())
+		return;
+	if(!g_Config.m_TcTeeTrail)
+	{
+		OnReset();
+		return;
+	}
+	const int Style = qm_tee_trail::ResolveStyle(g_Config.m_TcTeeTrailStyle);
+	if(m_LastDummy != g_Config.m_ClDummy || m_LastStyle != Style || m_LastLength != g_Config.m_TcTeeTrailLength)
+		OnReset();
+	m_LastDummy = g_Config.m_ClDummy;
+	m_LastStyle = Style;
+	m_LastLength = g_Config.m_TcTeeTrailLength;
+
+	float X0, Y0, X1, Y1;
+	Graphics()->GetScreen(&X0, &Y0, &X1, &Y1);
+	const float PixelSize = std::max(0.025f, (X1 - X0) / std::max(1, Graphics()->ScreenWidth()));
+	const bool ZoomAllowed = GameClient()->m_Camera.ZoomAllowed();
+	// 生命周期使用同一游戏时钟；暂停 Demo 不老化，回退由 State 清空。
+	const double Time = double(Client()->GameTick(g_Config.m_ClDummy)) + Client()->IntraGameTick(g_Config.m_ClDummy);
+	Graphics()->TextureClear();
+	Graphics()->BlendNormal();
+	Graphics()->QuadsBegin();
+	bool Additive = false;
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+	{
+		auto &State = m_aTrailStates[ClientId];
+		const bool Local = GameClient()->IsLocalClientId(ClientId);
+		if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active || (!Local && (!g_Config.m_TcTeeTrailOthers || !ZoomAllowed)))
+		{
+			State.Reset();
+			continue;
+		}
+		const auto &Data = GameClient()->m_aClients[ClientId];
+		const auto &Snapshot = GameClient()->m_Snap.m_aCharacters[ClientId];
+		const float Intra = std::clamp(Data.m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy), 0.0f, 1.0f);
+		const vec2 Velocity = mix(vec2(Data.m_RenderPrev.m_VelX, Data.m_RenderPrev.m_VelY), vec2(Data.m_RenderCur.m_VelX, Data.m_RenderCur.m_VelY), Intra) / 256.0f;
+		const float Speed = length(Velocity);
+		const float MovementBudget = Data.m_RenderCur.m_Weapon == WEAPON_NINJA ? std::max(Speed, float(g_pData->m_Weapons.m_Ninja.m_Velocity)) : Speed;
+		const int Source = int(Data.m_IsPredicted) | (g_Config.m_TcRemoveAnti << 1) | (int(g_Config.m_TcUnpredOthersInFreeze && Client()->m_IsLocalFrozen) << 2) | (g_Config.m_TcSwapGhosts << 3) | (int(GameClient()->m_TClient.IsFastInputActive()) << 4);
+		const bool SourceChanged = m_aPositionSources[ClientId] != Source;
+		m_aPositionSources[ClientId] = Source;
+		// 拦截传送端点的插值窗口，否则远端 Tee 会在几帧内沿传送直线留下假轨迹。
+		const float RenderJump = distance(vec2(Data.m_RenderPrev.m_X, Data.m_RenderPrev.m_Y), vec2(Data.m_RenderCur.m_X, Data.m_RenderCur.m_Y));
+		const float ServerJump = distance(vec2(Snapshot.m_Prev.m_X, Snapshot.m_Prev.m_Y), vec2(Snapshot.m_Cur.m_X, Snapshot.m_Cur.m_Y));
+		const float ServerSpeed = std::max(length(vec2(Snapshot.m_Prev.m_VelX, Snapshot.m_Prev.m_VelY)), length(vec2(Snapshot.m_Cur.m_VelX, Snapshot.m_Cur.m_VelY))) / 256.0f;
+		const int TickGap = std::max(1, Client()->GameTick(g_Config.m_ClDummy) - Client()->PrevGameTick(g_Config.m_ClDummy));
+		const float ServerMovementBudget = Snapshot.m_Cur.m_Weapon == WEAPON_NINJA ? std::max(ServerSpeed, float(g_pData->m_Weapons.m_Ninja.m_Velocity)) : ServerSpeed;
+		if(RenderJump > 48.0f + MovementBudget * (Data.m_IsPredicted ? 1 : TickGap) * 2.5f || ServerJump > 48.0f + ServerMovementBudget * TickGap * 2.5f)
+		{
+			State.Reset();
+			continue;
+		}
+		// 此组件位于 players 之前；只采样最终 m_RenderPos 一次，预测 ghost 不进入此入口。
+		// Ninja 冲刺等移动的核心速度可能为零；通过已检查的端点位移补足视觉速度。
+		const float VisualSpeed = std::max(Speed, RenderJump / (Data.m_IsPredicted ? 1.0f : float(TickGap)));
+		State.Update(Data.m_RenderPos, Time, VisualSpeed, qm_tee_trail::Lifetime(Style, m_LastLength, VisualSpeed), SourceChanged);
+		State.Export(m_vTrail);
+		if(m_vTrail.size() < 2)
+			continue;
+		float MinX = m_vTrail[0].m_Pos.x, MaxX = MinX, MinY = m_vTrail[0].m_Pos.y, MaxY = MinY;
+		float Alpha = g_Config.m_TcTeeTrailAlpha / 100.0f;
+		if(GameClient()->IsOtherTeam(ClientId))
+			Alpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
+		if(Alpha <= 0)
+			continue;
+		for(const auto &Part : m_vTrail)
+		{
+			MinX = std::min(MinX, Part.m_Pos.x);
+			MaxX = std::max(MaxX, Part.m_Pos.x);
+			MinY = std::min(MinY, Part.m_Pos.y);
+			MaxY = std::max(MaxY, Part.m_Pos.y);
+		}
+		// 连同存活的尾部一起裁剪，头部出屏时不截掉仍在屏幕内的拖尾。
+		// 采样与老化仍然每帧执行，只有不可见轨迹的配色和几何构建被跳过。
+		const float Margin = g_Config.m_TcTeeTrailWidth * 3.0f + 360.0f;
+		if(MaxX < X0 - Margin || MinX > X1 + Margin || MaxY < Y0 - Margin || MinY > Y1 + Margin)
+			continue;
+		for(auto &Part : m_vTrail)
+		{
+			switch(g_Config.m_TcTeeTrailColorMode)
+			{
+			case COLORMODE_TEE:
+				Part.m_Col = Data.m_RenderInfo.m_CustomColoredSkin ? Data.m_RenderInfo.m_ColorBody : Data.m_RenderInfo.m_BloodColor;
+				break;
+			case COLORMODE_RAINBOW:
+				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(float(std::fmod(Part.m_Time / (std::max(5, m_LastLength) * 2.0) + ClientId * 0.37, 1.0)), 1.0f, 0.5f));
+				break;
+			case COLORMODE_SPEED:
+				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(0.66f * (1 - std::clamp(Part.m_Speed / 30.0f, 0.0f, 1.0f)), 1.0f, 0.55f));
+				break;
+			case COLORMODE_RANDOM:
+			{
+				const unsigned Seed = unsigned(ClientId) * 0x45d9f3bu + unsigned(Part.m_Tick) * 0x119de1f3u;
+				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA((Seed & 0xffff) / 65535.0f, 1.0f, 0.55f));
+				break;
+			}
+			default:
+				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_TcTeeTrailColor));
+				break;
+			}
+			Part.m_Col.a = Alpha;
+		}
+		qm_tee_trail::BuildEffect(m_vTrail, Style, g_Config.m_TcTeeTrailStyleColors != 0, Time, g_Config.m_TcTeeTrailWidth, ClientId * 131 + 17, m_vQuads, PixelSize, g_Config.m_TcTeeTrailTaper != 0, g_Config.m_TcTeeTrailFade != 0);
+		for(const auto &Quad : m_vQuads)
+		{
+			if(Quad.m_Additive != Additive)
+			{
+				Graphics()->QuadsEnd();
+				Additive = Quad.m_Additive;
+				if(Additive)
+					Graphics()->BlendAdditive();
+				else
+					Graphics()->BlendNormal();
+				Graphics()->QuadsBegin();
+			}
+			// SetColor4 的后两个参数对应左下 / 右下，与自由四边形的底边顺序一致。
+			Graphics()->SetColor4(Quad.m_aColor[0], Quad.m_aColor[1], Quad.m_aColor[3], Quad.m_aColor[2]);
+			const IGraphics::CFreeformItem Item(Quad.m_aPos[0], Quad.m_aPos[1], Quad.m_aPos[3], Quad.m_aPos[2]);
+			Graphics()->QuadsDrawFreeform(&Item, 1);
+		}
+	}
+	Graphics()->SetColor(1, 1, 1, 1);
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsSetSubset(0, 0, 1, 1);
+	Graphics()->QuadsEnd();
+	Graphics()->BlendNormal();
 }
 
 void CTrails::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		OnReset();
 		return;
+	}
 
 	if(!GameClient()->m_Snap.m_pGameInfoObj)
+	{
+		OnReset();
 		return;
-
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-	const auto IsVisibleOnScreen = [&](vec2 Pos, float Margin) {
-		return Pos.x >= ScreenX0 - Margin && Pos.x <= ScreenX1 + Margin &&
-		       Pos.y >= ScreenY0 - Margin && Pos.y <= ScreenY1 + Margin;
-	};
-	// TClient: Foot particles - render falling particles behind tee
-	if(g_Config.m_QmFootParticles)
-	{
-		for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
-		{
-			const bool IsLocalClient = GameClient()->IsLocalClientId(ClientId);
-
-			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-				continue;
-			// Render for both local players (main + dummy when connected).
-			if(!IsLocalClient)
-				continue;
-
-			vec2 Position = GameClient()->m_aClients[ClientId].m_RenderPos;
-
-			// Get facing direction from character data
-			const CNetObj_Character &Cur = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
-			float Angle = Cur.m_Angle / 256.0f;
-			vec2 Direction = direction(Angle);
-
-			float Alpha = 1.0f;
-			if(GameClient()->IsOtherTeam(ClientId))
-				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
-		}
 	}
 
-	// Remote particles: only show remote players that are in the shared pool and enabled local particles.
-	if(g_Config.m_QmClientMarkTrail)
-	{
-		for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
-		{
-			const bool IsLocalClient = GameClient()->IsLocalClientId(ClientId);
-
-			if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-				continue;
-			if(IsLocalClient)
-				continue; // Remote rendering is only for other players.
-
-			// Show remote players only when their synced local+remote toggles are enabled.
-			if(!GameClient()->ShouldRenderQ1menGRemoteFootParticles(ClientId))
-				continue;
-
-			vec2 Position = GameClient()->m_aClients[ClientId].m_RenderPos;
-			if(!IsVisibleOnScreen(Position, 96.0f))
-				continue;
-
-			// Get facing direction from character data
-			const CNetObj_Character &Cur = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
-			float Angle = Cur.m_Angle / 256.0f;
-			vec2 Direction = direction(Angle);
-
-			float Alpha = 1.0f;
-			if(GameClient()->IsOtherTeam(ClientId))
-				Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-			// Render foot trail for recognized Q1menG client
-			GameClient()->m_Effects.FootTrail(Position, Direction, Alpha);
-		}
-	}
-
-	// Tee trail rendering
-	if(!g_Config.m_TcTeeTrail)
-		return;
-
-	Graphics()->TextureClear();
-
-	for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
-	{
-		const bool Local = GameClient()->m_Snap.m_LocalClientId == ClientId;
-
-		const bool ZoomAllowed = GameClient()->m_Camera.ZoomAllowed();
-		if(!g_Config.m_TcTeeTrailOthers && !Local)
-			continue;
-
-		if(!Local && !ZoomAllowed)
-			continue;
-
-		if(!GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
-		{
-			if(m_HistoryValid[ClientId])
-				ClearHistory(ClientId);
-			continue;
-		}
-		m_HistoryValid[ClientId] = true;
-
-		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[ClientId].m_RenderInfo;
-
-		const bool PredictPlayer = ShouldPredictPlayer(ClientId);
-		int StartTick;
-		const int GameTick = Client()->GameTick(g_Config.m_ClDummy);
-		const int PredTick = Client()->PredGameTick(g_Config.m_ClDummy);
-		float IntraTick;
-		if(PredictPlayer)
-		{
-			StartTick = PredTick;
-			IntraTick = Client()->PredIntraGameTick(g_Config.m_ClDummy);
-			if(g_Config.m_TcRemoveAnti)
-			{
-				StartTick = GameClient()->m_SmoothTick;
-				IntraTick = GameClient()->m_SmoothIntraTick;
-			}
-			if(g_Config.m_TcUnpredOthersInFreeze && !Local && Client()->m_IsLocalFrozen)
-			{
-				StartTick = GameTick;
-			}
-		}
-		else
-		{
-			StartTick = GameTick;
-			IntraTick = Client()->IntraGameTick(g_Config.m_ClDummy);
-		}
-
-		const vec2 CurServerPos = vec2(GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_X, GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur.m_Y);
-		const vec2 PrevServerPos = vec2(GameClient()->m_Snap.m_aCharacters[ClientId].m_Prev.m_X, GameClient()->m_Snap.m_aCharacters[ClientId].m_Prev.m_Y);
-		m_History[ClientId][TrailHistoryIndex(GameTick)] = {
-			mix(PrevServerPos, CurServerPos, IntraTick),
-			GameTick,
-		};
-
-		if(!Local && !IsVisibleOnScreen(GameClient()->m_aClients[ClientId].m_RenderPos, 256.0f))
-			continue;
-
-		// // NOTE: this is kind of a hack to fix 25tps. This fixes flickering when using the speed mode
-		// m_History[ClientId][(GameTick + 1) % 200] = m_History[ClientId][GameTick % 200];
-		// m_History[ClientId][(GameTick + 2) % 200] = m_History[ClientId][GameTick % 200];
-
-		IGraphics::CLineItem LineItem;
-		bool LineMode = g_Config.m_TcTeeTrailWidth == 0;
-
-		float Alpha = g_Config.m_TcTeeTrailAlpha / 100.0f;
-		// Taken from players.cpp
-		if(ClientId == -2)
-			Alpha *= g_Config.m_ClRaceGhostAlpha / 100.0f;
-		else if(ClientId >= 0)
-		{
-			if(GameClient()->IsOtherTeam(ClientId))
-				Alpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
-		}
-		else
-			Alpha *= g_Config.m_ClShowOthersAlpha / 100.0f;
-		int TrailLength = g_Config.m_TcTeeTrailLength;
-		float Width = g_Config.m_TcTeeTrailWidth;
-
-		static std::vector<CTrailPart> s_Trail;
-		if(s_Trail.capacity() < 202)
-			s_Trail.reserve(202);
-		s_Trail.clear();
-
-		// TODO: figure out why this is required
-		if(!PredictPlayer)
-			TrailLength += 2;
-		bool TrailFull = false;
-		// Fill trail list with initial positions
-		for(int i = 0; i < TrailLength; i++)
-		{
-			CTrailPart Part;
-			int PosTick = StartTick - i;
-			const int HistoryIndex = TrailHistoryIndex(PosTick);
-			if(PredictPlayer)
-			{
-				if(GameClient()->m_aClients[ClientId].m_aPredTick[HistoryIndex] != PosTick)
-					continue;
-				Part.m_Pos = GameClient()->m_aClients[ClientId].m_aPredPos[HistoryIndex];
-				if(i == TrailLength - 1)
-					TrailFull = true;
-			}
-			else
-			{
-				if(m_History[ClientId][HistoryIndex].m_Tick != PosTick)
-					continue;
-				Part.m_Pos = m_History[ClientId][HistoryIndex].m_Pos;
-				if(i == TrailLength - 2 || i == TrailLength - 3)
-					TrailFull = true;
-			}
-			Part.m_UnmovedPos = Part.m_Pos;
-			Part.m_Tick = PosTick;
-			s_Trail.push_back(Part);
-		}
-
-		// Trim the ends if intratick is too big
-		// this was not trivial to figure out
-		int TrimTicks = (int)IntraTick;
-		for(int i = 0; i < TrimTicks; i++)
-			if((int)s_Trail.size() > 0)
-				s_Trail.pop_back();
-
-		// Stuff breaks if we have less than 3 points because we cannot calculate an angle between segments to preserve constant width
-		// TODO: Pad the list with generated entries in the same direction as before
-		if((int)s_Trail.size() < 3)
-			continue;
-
-		if(PredictPlayer)
-			s_Trail[0].m_Pos = GameClient()->m_aClients[ClientId].m_RenderPos;
-		else
-			s_Trail[0].m_Pos = mix(PrevServerPos, CurServerPos, IntraTick);
-
-		if(TrailFull)
-			s_Trail[s_Trail.size() - 1].m_Pos = mix(s_Trail[s_Trail.size() - 1].m_Pos, s_Trail[s_Trail.size() - 2].m_Pos, std::fmod(IntraTick, 1.0f));
-
-		// Set progress
-		for(int i = 0; i < (int)s_Trail.size(); i++)
-		{
-			float Size = float(s_Trail.size() - 1 + TrimTicks);
-			CTrailPart &Part = s_Trail[i];
-			if(i == 0)
-				Part.m_Progress = 0.0f;
-			else if(i == (int)s_Trail.size() - 1)
-				Part.m_Progress = 1.0f;
-			else
-				Part.m_Progress = ((float)i + IntraTick - 1.0f) / (Size - 1.0f);
-
-			switch(g_Config.m_TcTeeTrailColorMode)
-			{
-			case COLORMODE_SOLID:
-				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_TcTeeTrailColor));
-				break;
-			case COLORMODE_TEE:
-				if(TeeInfo.m_CustomColoredSkin)
-					Part.m_Col = TeeInfo.m_ColorBody;
-				else
-					Part.m_Col = TeeInfo.m_BloodColor;
-				break;
-			case COLORMODE_RAINBOW:
-			{
-				float Cycle = (1.0f / TrailLength) * 0.5f;
-				float Hue = std::fmod(((Part.m_Tick + 6361 * ClientId) % 1000000) * Cycle, 1.0f);
-				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(Hue, 1.0f, 0.5f));
-				break;
-			}
-			case COLORMODE_SPEED:
-			{
-				float Speed = 0.0f;
-				if(s_Trail.size() > 3)
-				{
-					if(i < 2)
-						Speed = distance(s_Trail[i + 2].m_UnmovedPos, Part.m_UnmovedPos) / std::abs(s_Trail[i + 2].m_Tick - Part.m_Tick);
-					else
-						Speed = distance(Part.m_UnmovedPos, s_Trail[i - 2].m_UnmovedPos) / std::abs(Part.m_Tick - s_Trail[i - 2].m_Tick);
-				}
-				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(65280 * ((int)(Speed * Speed / 12.5f) + 1)).UnclampLighting(ColorHSLA::DARKEST_LGT));
-				break;
-			}
-			case COLORMODE_RANDOM:
-			{
-				const unsigned Seed = (unsigned)ClientId * 0x45d9f3bu + (unsigned)Part.m_Tick * 0x119de1f3u;
-				const float Hue = (Seed & 0xffff) / 65535.0f;
-				const float Lightness = 0.45f + ((Seed >> 16) & 0xff) / 255.0f * 0.25f;
-				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(Hue, 1.0f, Lightness));
-				break;
-			}
-			default:
-			{
-				static int s_LastInvalidColorMode = 0;
-				if(s_LastInvalidColorMode != g_Config.m_TcTeeTrailColorMode)
-				{
-					s_LastInvalidColorMode = g_Config.m_TcTeeTrailColorMode;
-					log_warn("trail", "Invalid tee trail color mode %d, falling back to solid color", g_Config.m_TcTeeTrailColorMode);
-				}
-				Part.m_Col = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_TcTeeTrailColor));
-				break;
-			}
-			}
-
-			Part.m_Col.a = Alpha;
-			if(g_Config.m_TcTeeTrailFade)
-				Part.m_Col.a *= 1.0 - Part.m_Progress;
-
-			Part.m_Width = Width;
-			if(g_Config.m_TcTeeTrailTaper)
-				Part.m_Width = Width * (1.0 - Part.m_Progress);
-		}
-
-		// Remove duplicate elements (those with same Pos)
-		auto NewEnd = std::unique(s_Trail.begin(), s_Trail.end());
-		s_Trail.erase(NewEnd, s_Trail.end());
-
-		if((int)s_Trail.size() < 3)
-			continue;
-
-		// Calculate the widths
-		for(int i = 0; i < (int)s_Trail.size(); i++)
-		{
-			CTrailPart &Part = s_Trail[i];
-			vec2 PrevPos;
-			vec2 Pos = Part.m_Pos;
-			vec2 NextPos;
-
-			if(i == 0)
-			{
-				vec2 Direction = normalize(s_Trail[i + 1].m_Pos - Pos);
-				PrevPos = Pos - Direction;
-			}
-			else
-			{
-				PrevPos = s_Trail[i - 1].m_Pos;
-			}
-
-			if(i == (int)s_Trail.size() - 1)
-			{
-				vec2 Direction = normalize(Pos - s_Trail[i - 1].m_Pos);
-				NextPos = Pos + Direction;
-			}
-			else
-			{
-				NextPos = s_Trail[i + 1].m_Pos;
-			}
-
-			vec2 NextDirection = normalize(NextPos - Pos);
-			vec2 PrevDirection = normalize(Pos - PrevPos);
-
-			vec2 Normal = vec2(-PrevDirection.y, PrevDirection.x);
-			Part.m_Normal = Normal;
-			vec2 Tangent = normalize(NextDirection + PrevDirection);
-			if(Tangent == vec2(0.0f, 0.0f))
-				Tangent = Normal;
-
-			vec2 PerpVec = vec2(-Tangent.y, Tangent.x);
-			Width = Part.m_Width;
-			float ScaledWidth = Width / dot(Normal, PerpVec);
-			float TopScaled = ScaledWidth;
-			float BotScaled = ScaledWidth;
-			if(dot(PrevDirection, Tangent) > 0.0f)
-				TopScaled = std::min(Width * 3.0f, TopScaled);
-			else
-				BotScaled = std::min(Width * 3.0f, BotScaled);
-
-			vec2 Top = Pos + PerpVec * TopScaled;
-			vec2 Bot = Pos - PerpVec * BotScaled;
-			Part.m_Top = Top;
-			Part.m_Bot = Bot;
-
-			// Bevel Cap
-			if(dot(PrevDirection, NextDirection) < -0.25f)
-			{
-				Top = Pos + Tangent * Width;
-				Bot = Pos - Tangent * Width;
-
-				float Det = PrevDirection.x * NextDirection.y - PrevDirection.y * NextDirection.x;
-				if(Det >= 0.0f)
-				{
-					Part.m_Top = Top;
-					Part.m_Bot = Bot;
-					if(i > 0)
-						Part.m_Flip = true;
-				}
-				else // <-Left Direction
-				{
-					Part.m_Top = Bot;
-					Part.m_Bot = Top;
-					if(i > 0)
-						Part.m_Flip = true;
-				}
-			}
-		}
-
-		if(LineMode)
-			Graphics()->LinesBegin();
-		else
-			Graphics()->QuadsBegin();
-
-		// Draw the trail
-		for(int i = 0; i < (int)s_Trail.size() - 1; i++)
-		{
-			const CTrailPart &Part = s_Trail[i];
-			const CTrailPart &NextPart = s_Trail[i + 1];
-			const float Dist = distance(Part.m_UnmovedPos, NextPart.m_UnmovedPos);
-
-			const float MaxDiff = 120.0f;
-			if(i > 0)
-			{
-				const CTrailPart &PrevPart = s_Trail[i - 1];
-				float PrevDist = distance(PrevPart.m_UnmovedPos, Part.m_UnmovedPos);
-				if(std::abs(Dist - PrevDist) > MaxDiff)
-					continue;
-			}
-			if(i < (int)s_Trail.size() - 2)
-			{
-				const CTrailPart &NextNextPart = s_Trail[i + 2];
-				float NextDist = distance(NextPart.m_UnmovedPos, NextNextPart.m_UnmovedPos);
-				if(std::abs(Dist - NextDist) > MaxDiff)
-					continue;
-			}
-
-			if(LineMode)
-			{
-				Graphics()->SetColor(Part.m_Col);
-				LineItem = IGraphics::CLineItem(Part.m_Pos.x, Part.m_Pos.y, NextPart.m_Pos.x, NextPart.m_Pos.y);
-				Graphics()->LinesDraw(&LineItem, 1);
-			}
-			else
-			{
-				vec2 Top, Bot;
-				if(Part.m_Flip)
-				{
-					Top = Part.m_Bot;
-					Bot = Part.m_Top;
-				}
-				else
-				{
-					Top = Part.m_Top;
-					Bot = Part.m_Bot;
-				}
-
-				Graphics()->SetColor4(NextPart.m_Col, NextPart.m_Col, Part.m_Col, Part.m_Col);
-				// IGraphics::CFreeformItem FreeformItem(Top, Bot, NextPart.m_Top, NextPart.m_Bot);
-				IGraphics::CFreeformItem FreeformItem(NextPart.m_Top, NextPart.m_Bot, Top, Bot);
-
-				Graphics()->QuadsDrawFreeform(&FreeformItem, 1);
-			}
-		}
-		if(LineMode)
-			Graphics()->LinesEnd();
-		else
-			Graphics()->QuadsEnd();
-	}
+	RenderTeeTrails();
 }

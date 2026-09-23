@@ -5,6 +5,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseLine, parseLog, parseLogWithDiagnostics } from './lib/parse.ts';
+import { PerfLogCollector, expandFrameBatch } from './lib/stream.ts';
+import { configurationSummary } from './lib/configuration.ts';
+import { selectFrameTimeEntries } from './lib/stats.ts';
 import {
   compareOperationSignatures,
   operationSignature,
@@ -1632,5 +1635,61 @@ testAnalyzeWritesBundleAndArchiveSummaryFiles();
 testNonCardMenuBudgetsCoverEightOperationsAndRejectIncompleteEvidence();
 testNonCardMenuReportShowsFixedBudgetAndCacheWorkTable();
 testAnalyzeSupportsExactOutputAndSiblingSummary();
+
+function testUnifiedFrameSamplesDoNotMixComponentDurations() {
+  const batch = parseLine('{"system":"perf/frame","event":"frame_batch","session":1,"frames":[10,12],"durations_ms":[0.5,20]}')!;
+  const frames = expandFrameBatch(batch);
+  assert.equal(frames.length, 2);
+  assert.equal(frames[0].durationMs, 0.5);
+  assert.equal(Number(frames[1].fields.frame), 12);
+  const component = parseLine('{"system":"perf/gameclient","stage":"components_total","duration_ms":999}')!;
+  assert.deepEqual(selectFrameTimeEntries([...frames, component]), frames);
+  assert.throws(() => expandFrameBatch(parseLine('{"system":"perf/frame","event":"frame_batch","frames":[1],"durations_ms":[]}')!));
+}
+
+function testUnifiedConfigurationKeepsInitialCurrentAndStringValues() {
+  const cfg = (name: string, value: string, revision: number, initial: number, part = 0, parts = 1) => parseLine(JSON.stringify({
+    system: 'perf/config', event: 'config_value', session: 1, name, owner: name.startsWith('qm_') ? 'qmclient' : 'ddnet',
+    type: 'string', value, revision, initial, part, parts, is_default: 0, redacted: 0,
+  }))!;
+  const records = [cfg('player_name', '001', 1, 1), cfg('qm_long_text', '中文 "', 1, 1, 0, 2), cfg('qm_long_text', 'tail', 1, 1, 1, 2),
+    cfg('player_name', '<script>alert(1)</script>', 2, 0), cfg('qm_voice_token', 'never-export-this', 1, 1)];
+  const summary = configurationSummary(records);
+  assert.equal(summary.available, true);
+  const player = summary.variables.find(v => v.name === 'player_name')!;
+  assert.equal(player.initialValue, '001');
+  assert.equal(player.value, '<script>alert(1)</script>');
+  assert.equal(player.changed, true);
+  assert.equal(summary.variables.find(v => v.name === 'qm_long_text')!.value, '中文 "tail');
+  assert.equal(summary.variables.find(v => v.name === 'qm_voice_token')!.value, '<redacted>');
+  const html = generateReport(records, 'config.log');
+  assert.ok(html.includes('当前客户端配置'));
+  assert.ok(html.includes('&lt;script&gt;'));
+  assert.ok(!html.includes('never-export-this'));
+  assert.ok(!html.includes('<script>alert(1)</script>'));
+  assert.equal(summarizeForBundle(records, 'config.log', { totalLines: records.length, invalidLines: 0 }).configuration.variables.length, 3);
+  assert.equal(configurationSummary([cfg('qm_long_text', 'partial', 2, 0, 0, 2)]).incomplete, true);
+  const manifest = parseLine('{"system":"perf/config","event":"config_snapshot","session":1,"expected_variables":4}')!;
+  assert.equal(configurationSummary([manifest, ...records]).incomplete, true);
+}
+
+function testUnifiedCollectorBoundsMemoryAndKeepsLatestConfig() {
+  const collector = new PerfLogCollector(16, 8, 8);
+  for(let i = 0; i < 1000; i++) {
+    collector.add(parseLine(JSON.stringify({system: 'perf/frame', event: 'frame_sample', duration_ms: i % 20 + 1, frame: i}))!);
+    collector.add(parseLine(JSON.stringify({system: 'perf/config', event: 'config_value', session: 1, name: 'tc_enabled', owner: 'tclient', type: 'int', value: String(i), initial: i === 0 ? 1 : 0, revision: i + 1, part: 0, parts: 1}))!);
+  }
+  const result = collector.finish({ totalLines: 2000, invalidLines: 0 });
+  assert.ok(result.entries.length <= 18);
+  assert.ok(result.diagnostics.sampledEntries! > 0);
+  const config = configurationSummary(result.entries).variables[0];
+  assert.equal(config.initialValue, 0);
+  assert.equal(config.value, 999);
+  assert.ok(reportQuality(result.entries, result.diagnostics).warnings.some(w => w.includes('analysis_sampled')));
+}
+
+testUnifiedFrameSamplesDoNotMixComponentDurations();
+testUnifiedConfigurationKeepsInitialCurrentAndStringValues();
+testUnifiedCollectorBoundsMemoryAndKeepsLatestConfig();
 
 console.log('qmclient perf tests passed');

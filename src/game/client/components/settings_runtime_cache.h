@@ -105,6 +105,7 @@ const char *SettingsCacheDirtyReasonName(ESettingsCacheDirtyReason Reason);
 bool SettingsRuntimeCacheAllowsVisibleCompactText(const char *pRenderName);
 void LogSettingsResourcePerf(int Page, const char *pJob, int Count, int Budget, int Remaining, ESettingsWarmupMissReason Reason, double DurationMs);
 bool SettingsInvalidationClearsTextPool(ESettingsInvalidationReason Reason);
+bool SettingsTextCacheNeedsBuild(const std::string &CachedText, const char *pText, int StrLen, bool ContainerValid, bool SizeChanged, bool CursorChanged);
 bool SettingsInvalidationClearsResourcePlan(ESettingsInvalidationReason Reason);
 std::string SettingsPageCacheKey(int Page, int Tab);
 std::string SettingsSectionCacheKey(int Page, int Tab, const char *pSection);

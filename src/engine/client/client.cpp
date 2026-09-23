@@ -5,6 +5,7 @@
 
 #include "demoedit.h"
 #include "friends.h"
+#include "perf_file_logger.h"
 #include "serverbrowser.h"
 
 #include <base/crashdump.h>
@@ -78,44 +79,6 @@
 
 #include "SDL.h"
 
-// 性能日志文件的运行时开关包装：CFutureLogger 只能 Set 一次，游戏内
-// 开/关文件通过替换内部 logger（文件 logger ↔ noop）实现。旧 logger 在
-// 锁内被析构（CLoggerAsync 析构时关闭文件并等待排空）。
-class CQmPerfFileSwitchLogger : public ILogger
-{
-public:
-	void Set(std::shared_ptr<ILogger> pLogger)
-	{
-		const CLockScope LockScope(m_SwitchLock);
-		m_pLogger = std::move(pLogger);
-	}
-
-	void Log(const CLogMessage *pMessage) override
-	{
-		const CLockScope LockScope(m_SwitchLock);
-		if(m_pLogger)
-			m_pLogger->Log(pMessage);
-	}
-
-	void GlobalFinish() override
-	{
-		const CLockScope LockScope(m_SwitchLock);
-		if(m_pLogger)
-			m_pLogger->GlobalFinish();
-	}
-
-	void OnFilterChange() override
-	{
-		const CLockScope LockScope(m_SwitchLock);
-		if(m_pLogger)
-			m_pLogger->SetFilter(m_Filter);
-	}
-
-private:
-	CLock m_SwitchLock;
-	std::shared_ptr<ILogger> m_pLogger;
-};
-
 namespace
 {
 }
@@ -147,6 +110,10 @@ using namespace std::chrono_literals;
 
 static constexpr ColorRGBA gs_ClientNetworkPrintColor{0.7f, 1, 0.7f, 1.0f};
 static constexpr ColorRGBA gs_ClientNetworkErrPrintColor{1.0f, 0.25f, 0.25f, 1.0f};
+// 网络积压分帧处理，避免异常 burst 把整个渲染帧占满。
+static constexpr int gs_NetworkPumpMaxChunksPerFrame = 256;
+static constexpr std::chrono::nanoseconds gs_NetworkPumpOnlineBudget = 2ms;
+static constexpr std::chrono::nanoseconds gs_NetworkPumpLoadingBudget = 6ms;
 static constexpr int64_t gs_HangTimeoutSeconds = 10;
 // QmClient: 退出兜底超时（秒）。正常退出通常 1-2 秒，超过该时间视为退出清理挂起。
 static constexpr int64_t gs_ForcedExitTimeoutSeconds = 10;
@@ -3865,10 +3832,16 @@ void CClient::PumpNetwork()
 	// process packets
 	CNetChunk Packet;
 	SECURITY_TOKEN ResponseToken;
+	const std::chrono::nanoseconds NetworkPumpStart = time_get_nanoseconds();
+	const std::chrono::nanoseconds NetworkPumpBudget = State() == IClient::STATE_ONLINE ? gs_NetworkPumpOnlineBudget : gs_NetworkPumpLoadingBudget;
+	int NetworkChunksProcessed = 0;
 	for(int Conn = 0; Conn < NUM_CONNS; Conn++)
 	{
-		while(m_aNetClient[Conn].Recv(&Packet, &ResponseToken, IsSixup()))
+		while(NetworkChunksProcessed < gs_NetworkPumpMaxChunksPerFrame &&
+			(NetworkChunksProcessed == 0 || time_get_nanoseconds() - NetworkPumpStart < NetworkPumpBudget) &&
+			m_aNetClient[Conn].Recv(&Packet, &ResponseToken, IsSixup()))
 		{
+			++NetworkChunksProcessed;
 			if(Packet.m_ClientId == -1)
 			{
 				if(ResponseToken != NET_SECURITY_TOKEN_UNKNOWN && !PreprocessConnlessPacket7(&Packet))
@@ -4608,6 +4581,12 @@ void CClient::Run()
 	{
 		const bool PerfEnabled = QmPerfEnabled();
 		UpdateQmPerfFileLogger(); // 游戏内开关立即开/关性能日志文件（状态无变化时仅几次内存读）
+		// QmClient：日志开启期间按秒把生效配置的增量变化写进性能日志（见 perf_diagnostics.h）。
+		if(m_QmPerfFileLoggerActive && time_get() - m_QmPerfLastConfigCheck >= time_freq())
+		{
+			m_QmPerfConfigSnapshot.Update(this);
+			m_QmPerfLastConfigCheck = time_get();
+		}
 		std::optional<CPerfTimer> LoopTimer;
 		if(PerfEnabled)
 			LoopTimer.emplace();
@@ -4865,6 +4844,16 @@ void CClient::Run()
 				}
 				else
 					m_pGraphics->Swap();
+				// 逐帧阶段日志按「容量或耗时」攒批落盘：帧统计不参与明细限流，
+				// 这里把帧号与帧耗时压成一条 frame_batch 事件，避免逐帧刷屏。
+				if(PerfEnabled && QmPerfEnabled() && m_QmPerfFileLoggerActive)
+				{
+					const int64_t FrameEnd = time_get();
+					const double FrameMs = m_QmPerfLastFrameEnd != 0 ? (FrameEnd - m_QmPerfLastFrameEnd) * 1000.0 / time_freq() : 0.0;
+					m_QmPerfLastFrameEnd = FrameEnd;
+					if(m_QmPerfFrameBatch.Record(PerfFrame(), FrameMs))
+						QmPerfLogFields("perf/frame", m_QmPerfFrameBatch.TakeFields(), this);
+				}
 				// 只在连接/加载阶段记录，避免菜单和游戏内每帧刷屏
 				if(g_Config.m_QmGraphicsTrace >= 1 &&
 					(State() == IClient::STATE_CONNECTING || State() == IClient::STATE_LOADING))
@@ -4959,6 +4948,10 @@ void CClient::Run()
 	dbg_msg("perf/client", "event=shutdown_step step=fifo");
 	m_pHttp->Shutdown();
 	dbg_msg("perf/client", "event=shutdown_step step=http");
+	// 性能日志的异步关闭任务只持有日志对象；退出时在这里同步接管，
+	// 不把未完成的文件关闭留给作业线程。
+	if(m_pQmPerfFileSwitch != nullptr)
+		m_pQmPerfFileSwitch->FinishPending();
 	Engine()->ShutdownJobs();
 	dbg_msg("perf/client", "event=shutdown_step step=jobs");
 
@@ -4970,6 +4963,8 @@ void CClient::Run()
 
 	GameClient()->RenderShutdownMessage();
 	dbg_msg("perf/client", "event=shutdown_step step=render_shutdown_message");
+	if(m_QmPerfFileLoggerActive)
+		FinishQmPerfSession(true);
 	GameClient()->OnShutdown();
 	dbg_msg("perf/client", "event=shutdown_step step=game_client");
 	delete m_pEditor;
@@ -7772,10 +7767,11 @@ void CClient::SetQmPerfFileSwitch(std::shared_ptr<CQmPerfFileSwitchLogger> pSwit
 // 全部关闭则关闭文件。启动时调用一次建立初始状态，主循环按帧调用处理游戏内切换。
 void CClient::UpdateQmPerfFileLogger()
 {
-	const bool Wanted = g_Config.m_QmPerfLogfile != 0 || g_Config.m_QmPerfDebug != 0 || g_Config.m_QmPerfStutterDiagnostics != 0;
-	if(Wanted == m_QmPerfFileLoggerActive || m_pQmPerfFileSwitch == nullptr)
+	const bool Wanted = QmPerfEnabled();
+	if(Wanted == m_QmPerfFileLoggerWanted || m_pQmPerfFileSwitch == nullptr)
 		return;
-	m_QmPerfFileLoggerActive = Wanted;
+	// 打开失败后等待下一次开关变化再尝试，不把失败标记为正在采集。
+	m_QmPerfFileLoggerWanted = Wanted;
 
 	if(Wanted)
 	{
@@ -7812,7 +7808,16 @@ void CClient::UpdateQmPerfFileLogger()
 		}
 		if(PerfLogfile)
 		{
+			m_QmPerfFileLoggerActive = true;
+			QmPerfBeginSession();
+			m_QmPerfLastFrameEnd = 0;
+			m_QmPerfFrameBatch = CQmPerfFrameBatch();
 			m_pQmPerfFileSwitch->Set(log_logger_prefix_file(PerfLogfile, "perf/"));
+			QmPerfLogFields("perf/session", "\"event\":\"session_start\",\"schema\":2,\"sampling\":\"automatic\",\"frame_samples\":\"all\",\"target_fps\":300,\"version\":" + QmPerfJsonString(CLIENT_RELEASE_VERSION), this);
+			// QmClient：日志文件就绪后先写一次完整配置快照（敏感项脱敏），
+			// 之后由主循环按秒写增量；见 perf_diagnostics.h。
+			m_QmPerfConfigSnapshot.Start(ConfigManager(), this);
+			m_QmPerfLastConfigCheck = time_get();
 			log_info("client", "writing performance log to '%s'", aPerfLogCompletePath);
 		}
 		else
@@ -7823,7 +7828,25 @@ void CClient::UpdateQmPerfFileLogger()
 	}
 	else
 	{
-		m_pQmPerfFileSwitch->Set(log_logger_noop());
+		if(m_QmPerfFileLoggerActive)
+			FinishQmPerfSession(false);
 		log_info("client", "stopped writing performance log");
 	}
+}
+
+// 关闭采集前的收尾：补齐帧批次、配置增量、被限流丢弃的明细与会话结束标记，
+// 再把文件 logger 换回 noop（退出用同步，运行中切走用作业线程）。
+void CClient::FinishQmPerfSession(bool Shutdown)
+{
+	if(m_QmPerfFrameBatch.Count() != 0)
+		QmPerfLogFields("perf/frame", m_QmPerfFrameBatch.TakeFields(), this);
+	m_QmPerfConfigSnapshot.Update(this);
+	QmPerfFlushDropped(this);
+	QmPerfLogFields("perf/session", std::string("\"event\":\"session_end\",\"reason\":") + QmPerfJsonString(Shutdown ? "shutdown" : "disabled"), this);
+	if(Shutdown)
+		m_pQmPerfFileSwitch->Set(log_logger_noop());
+	else
+		Engine()->AddJob(m_pQmPerfFileSwitch->SetAsync(log_logger_noop()));
+	m_QmPerfFileLoggerActive = false;
+	m_QmPerfLastFrameEnd = 0;
 }

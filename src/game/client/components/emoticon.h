@@ -7,9 +7,55 @@
 #include <engine/client/enums.h>
 #include <engine/console.h>
 
+#include <generated/protocol.h>
+
 #include <game/client/component.h>
+#include <game/client/components/qmclient/emoticon_projectile.h>
 #include <game/client/components/tclient/bindwheel.h>
 #include <game/client/ui.h>
+
+#include <array>
+
+namespace QmEmoticon
+{
+	enum class EEffect
+	{
+		INVALID,
+		NONE,
+		SUPER_HEAD,
+		PROJECTILE,
+		SUPER_PROJECTILE,
+	};
+
+	inline EEffect ResolveEffect(int Emoticon, bool LaunchMode, bool SuperLaunch)
+	{
+		if(Emoticon < 0 || Emoticon >= NUM_EMOTICONS)
+			return EEffect::INVALID;
+		if(LaunchMode)
+			return SuperLaunch ? EEffect::SUPER_PROJECTILE : EEffect::PROJECTILE;
+		return SuperLaunch ? EEffect::SUPER_HEAD : EEffect::NONE;
+	}
+
+	inline EEffect ConsumeEffect(int Emoticon, bool LaunchMode, bool &SuperPending, bool ForceLaunch = false)
+	{
+		const bool SuperLaunch = SuperPending;
+		SuperPending = false;
+		return ResolveEffect(Emoticon, LaunchMode || ForceLaunch, SuperLaunch);
+	}
+
+	// 远端表情事件（实时通道收到别人的表情）该产生什么效果：先看表情总开关与忽略名单，
+	// 再由两个开关分别拦下「他人的超大表情（头顶大表情）」与「他人的发射表情（投射物）」。
+	inline EEffect ResolveRemoteEffect(int Emoticon, bool LaunchMode, bool SuperLaunch, bool ShowEmotes, bool EmoticonIgnored, bool ShowSuper, bool ShowLaunch)
+	{
+		if(!ShowEmotes || EmoticonIgnored)
+			return EEffect::NONE;
+		const EEffect Effect = ResolveEffect(Emoticon, LaunchMode, SuperLaunch);
+		if((Effect == EEffect::SUPER_HEAD && !ShowSuper) ||
+			((Effect == EEffect::PROJECTILE || Effect == EEffect::SUPER_PROJECTILE) && !ShowLaunch))
+			return EEffect::NONE;
+		return Effect;
+	}
+}
 
 struct SQmLocalBlinkState
 {
@@ -47,13 +93,35 @@ class CEmoticon : public CComponent
 
 	CUi::CTouchState m_TouchState;
 	bool m_TouchPressedOutside;
+	std::array<CEmoticonProjectile, 64> m_aProjectiles;
+	std::array<QmEmoticon::CAlphaMask, NUM_EMOTICONS> m_aCollisionMasks;
+	bool m_SuperLaunchPending = false;
 
 	static void ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData);
-	static void ConEmote(IConsole::IResult *pResult, void *pUserData);
+	static void ConSuperEmote(IConsole::IResult *pResult, void *pUserData);
 	static void ConLocalBlink(IConsole::IResult *pResult, void *pUserData);
+	void RenderProjectiles();
+	void SpawnProjectile(vec2 Position, vec2 Direction, int Emoticon, bool Super, int OwnerClientId);
+	// 本机自己的头顶大表情；远端玩家的按 ClientId 各存一份（-1 表示没有）。
+	int m_LocalSuperHeadEmoticon = -1;
+	int m_LocalSuperHeadExpireTick = -1;
+	int m_aRemoteSuperHeadEmoticons[MAX_CLIENTS] = {};
+	int m_aRemoteSuperHeadExpireTicks[MAX_CLIENTS] = {};
 
 public:
 	CEmoticon();
+	class CRenderProjectiles : public CComponent
+	{
+	public:
+		CEmoticon *m_pEmoticon = nullptr;
+		int Sizeof() const override { return sizeof(*this); }
+		void OnRender() override { m_pEmoticon->RenderProjectiles(); }
+	} m_RenderProjectiles;
+	void SetCollisionMask(int Emoticon, const unsigned char *pPixels, int Width, int Height, int Stride)
+	{
+		if(Emoticon >= 0 && Emoticon < NUM_EMOTICONS)
+			m_aCollisionMasks[Emoticon].Build(pPixels, Width, Height, Stride);
+	}
 	int Sizeof() const override { return sizeof(*this); }
 
 	void OnReset() override;
@@ -63,10 +131,13 @@ public:
 	bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
 	bool OnInput(const IInput::CEvent &Event) override;
 
-	void Emote(int Emoticon);
+	void Emote(int Emoticon, bool ForceLaunch = false);
+	void SuperEmote(int Emoticon);
 	void EyeEmote(int EyeEmote);
 	void TriggerLocalBlink();
 	bool ShouldRenderLocalBlink(int ClientId) const;
+	// 头顶大表情（super emote）：本机自己与远端玩家的超大表情各记一份，带过期 tick。
+	bool IsLocalSuperHeadEmoticon(int ClientId, int Emoticon) const;
 
 	bool IsActive() const { return m_Active; }
 

@@ -11,6 +11,8 @@
 #include <game/client/ui_rect.h>
 #include <game/voting.h>
 
+#include <cstdint>
+
 class CVoting : public CComponent
 {
 	CHeap m_Heap;
@@ -26,6 +28,7 @@ class CVoting : public CComponent
 	int m_Yes, m_No, m_Pass, m_Total;
 	bool m_ReceivingOptions;
 
+	uint64_t m_OptionsRevision = 0;
 	int m_NumVoteOptions;
 	CVoteOptionClient *m_pFirst;
 	CVoteOptionClient *m_pLast;
@@ -95,6 +98,7 @@ public:
 	const char *VoteReason() const { return m_aReason; }
 	bool IsReceivingOptions() const { return m_ReceivingOptions; }
 	int NumOptions() const { return m_NumVoteOptions; }
+	uint64_t OptionsRevision() const { return m_OptionsRevision; }
 	const CVoteOptionClient *FirstOption() const { return m_pFirst; }
 };
 

@@ -121,7 +121,6 @@ TEST(QmNewUiMenuRenderSettingsPagesContract, PlayerStandardPageUsesUnifiedSettin
 	EXPECT_EQ(Player.find("Ui()->DoScrollbarH("), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuRenderSettingsPagesContract, Tee7NestedGridsOwnWheelAndCacheRefreshes)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/menus_settings7.cpp");

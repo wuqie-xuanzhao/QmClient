@@ -71,7 +71,6 @@ TEST(QmMonitoringTextPlanContract, SettingsStableTextPlanKeysMatchVisibleWrapper
 	EXPECT_NE(Settings.find("DoSettingsButton_CheckBox(SETTINGS_DDNET, -1, &g_Config.m_ClRaceGhost, \"Enable ghost\""), std::string::npos);
 }
 
-
 TEST(QmMonitoringTextPlanContract, SettingsTextPlanPrebuildSeparatesInvisibleWarmupFromVisibleRender)
 {
 	{

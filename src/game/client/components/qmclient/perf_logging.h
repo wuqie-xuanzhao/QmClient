@@ -9,8 +9,10 @@
 #include <engine/shared/config.h>
 #include <engine/shared/json.h>
 
+#include <atomic>
 #include <cinttypes>
 #include <cstring>
+#include <mutex>
 
 inline bool QmPerfEnabled()
 {
@@ -45,10 +47,68 @@ inline bool QmPerfShouldLogDuration(double DurationMs, bool Force = false)
 	return Force || DurationMs >= QmPerfThresholdMs();
 }
 
+// 明细限流：每会话每秒至多记录 LIMIT 条非关键事件，其余计入 dropped 并
+// 在秒边界或会话收尾时汇报；完整帧统计、交互窗口与卡顿汇总不参与限流。
+class CQmPerfDetailBudget
+{
+	uint64_t m_Second = 0;
+	int m_Count = 0;
+	uint64_t m_Dropped = 0;
+
+public:
+	static constexpr int LIMIT = 1000;
+	bool Allow(uint64_t Second)
+	{
+		if(Second != m_Second)
+		{
+			m_Second = Second;
+			m_Count = 0;
+		}
+		if(m_Count < LIMIT)
+		{
+			++m_Count;
+			return true;
+		}
+		++m_Dropped;
+		return false;
+	}
+	uint64_t TakeDropped()
+	{
+		const uint64_t Dropped = m_Dropped;
+		m_Dropped = 0;
+		return Dropped;
+	}
+};
+
+struct SQmPerfLogBudget
+{
+	std::mutex m_Mutex;
+	CQmPerfDetailBudget m_Budget;
+	uint64_t m_Session = 0;
+	uint64_t m_LastReportSecond = 0;
+};
+
+inline SQmPerfLogBudget &QmPerfLogBudget()
+{
+	static SQmPerfLogBudget s_Budget;
+	return s_Budget;
+}
+
+inline std::atomic<uint64_t> &QmPerfSessionStorage()
+{
+	static std::atomic<uint64_t> s_SessionId{(uint64_t)time_timestamp() * 1000000};
+	return s_SessionId;
+}
+
 inline uint64_t QmPerfSessionId()
 {
-	static const uint64_t s_SessionId = (uint64_t)time_timestamp();
-	return s_SessionId;
+	return QmPerfSessionStorage().load(std::memory_order_relaxed);
+}
+
+// 每打开一次性能日志文件就开一个诊断会话：同一进程内重开会话可被区分。
+inline void QmPerfBeginSession()
+{
+	QmPerfSessionStorage().fetch_add(1, std::memory_order_relaxed);
 }
 
 inline uint64_t QmPerfFrameId(const IClient *pClient)
@@ -233,7 +293,56 @@ inline void QmPerfLogPayload(const char *pSystem, const char *pPayload, const IC
 {
 	if(!QmPerfEnabled())
 		return;
+	if(pSystem == nullptr)
+		pSystem = "";
+	// 完整帧统计、交互窗口及卡顿汇总不参与明细限流。
+	const bool Essential = str_comp(pSystem, "perf/stutter") == 0 || str_comp(pSystem, "perf/fps") == 0 || str_comp(pSystem, "perf/session") == 0;
+	if(!Essential)
+	{
+		auto &State = QmPerfLogBudget();
+		bool Allowed;
+		uint64_t Dropped = 0;
+		{
+			const std::lock_guard<std::mutex> Lock(State.m_Mutex);
+			if(State.m_Session != QmPerfSessionId())
+			{
+				State.m_Budget = CQmPerfDetailBudget();
+				State.m_Session = QmPerfSessionId();
+			}
+			const uint64_t Second = (uint64_t)time_timestamp();
+			if(Second != State.m_LastReportSecond)
+			{
+				Dropped = State.m_Budget.TakeDropped();
+				State.m_LastReportSecond = Second;
+			}
+			Allowed = State.m_Budget.Allow(Second);
+		}
+		if(Dropped != 0)
+		{
+			char aDropped[128];
+			str_format(aDropped, sizeof(aDropped), "event=detail_sampling dropped=%" PRIu64, Dropped);
+			QmPerfLogPayloadUnchecked("perf/session", aDropped, pClient);
+		}
+		if(!Allowed)
+			return;
+	}
 	QmPerfLogPayloadUnchecked(pSystem, pPayload, pClient, pPage, pTab);
+}
+
+inline void QmPerfFlushDropped(const IClient *pClient)
+{
+	auto &State = QmPerfLogBudget();
+	uint64_t Dropped;
+	{
+		const std::lock_guard<std::mutex> Lock(State.m_Mutex);
+		Dropped = State.m_Budget.TakeDropped();
+	}
+	if(Dropped != 0)
+	{
+		char aPayload[128];
+		str_format(aPayload, sizeof(aPayload), "event=detail_sampling dropped=%" PRIu64, Dropped);
+		QmPerfLogPayloadUnchecked("perf/session", aPayload, pClient);
+	}
 }
 
 inline void QmPerfLogPayloadForce(const char *pSystem, const char *pPayload, const IClient *pClient = nullptr, const char *pPage = nullptr, const char *pTab = nullptr)

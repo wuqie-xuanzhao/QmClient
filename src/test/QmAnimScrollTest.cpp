@@ -75,12 +75,13 @@ TEST(UiV2ScrollPhysics, NativeWheelStepMatchesDdnetScrollUnit)
 	State.AddWheelImpulse(-120.0f, Metrics, Config);
 
 	EXPECT_NEAR(State.Offset(), 0.0f, 0.01f);
-	EXPECT_NEAR(State.Velocity(), 0.0f, 0.01f);
+	EXPECT_NEAR(State.Velocity(), 60.0f, 0.01f);
 
 	State.Advance(1.0f / 60.0f, Metrics, Config);
 	EXPECT_GT(State.Offset(), 0.0f);
 	EXPECT_LT(State.Offset(), 10.0f);
-	EXPECT_NEAR(State.Velocity(), 0.0f, 0.01f);
+	EXPECT_GT(State.Velocity(), 0.0f);
+	EXPECT_LT(State.Velocity(), 60.0f);
 
 	for(int i = 0; i < 40; ++i)
 		State.Advance(1.0f / 60.0f, Metrics, Config);
@@ -93,6 +94,97 @@ TEST(UiV2ScrollPhysics, NativeWheelStepMatchesDdnetScrollUnit)
 	EXPECT_NEAR(State.Offset(), 20.0f, 0.01f);
 	EXPECT_NEAR(State.Velocity(), 0.0f, 0.01f);
 }
+TEST(UiV2ScrollPhysics, RepeatedAndReversedWheelEventsPreservePositionAndVelocity)
+{
+	const SQmScrollMetrics Metrics{100.0f, 500.0f};
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+	CQmScrollState State;
+	State.SetOffset(100.0f, Metrics, Config);
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	State.Advance(0.125f, Metrics, Config);
+	for(const float WheelDelta : {-120.0f, 240.0f})
+	{
+		const float Before = State.Offset();
+		const float Velocity = State.Velocity();
+		ASSERT_GT(Velocity, 0.0f);
+		State.AddWheelImpulse(WheelDelta, Metrics, Config);
+		EXPECT_FLOAT_EQ(State.Offset(), Before);
+		EXPECT_FLOAT_EQ(State.Velocity(), Velocity);
+		State.Advance(0.0001f, Metrics, Config);
+		EXPECT_NEAR((State.Offset() - Before) / 0.0001f, Velocity, 0.5f);
+	}
+	State.Advance(0.5f, Metrics, Config);
+	EXPECT_FLOAT_EQ(State.Offset(), 100.0f);
+	EXPECT_FLOAT_EQ(State.Velocity(), 0.0f);
+	EXPECT_FALSE(State.Animating());
+}
+
+TEST(UiV2ScrollPhysics, RetargetedWheelTrajectoryDoesNotDependOnFramePartition)
+{
+	const SQmScrollMetrics Metrics{100.0f, 500.0f};
+	const SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+	const auto Sample = [&](int RefreshRate) {
+		CQmScrollState State;
+		State.SetOffset(100.0f, Metrics, Config);
+		const auto AdvanceSpan = [&](float Seconds) {
+			const int Frames = std::max(1, static_cast<int>(std::ceil(Seconds * RefreshRate)));
+			for(int Frame = 0; Frame < Frames; ++Frame)
+				State.Advance(Seconds / Frames, Metrics, Config);
+		};
+		State.AddWheelImpulse(-120.0f, Metrics, Config);
+		AdvanceSpan(0.125f);
+		State.AddWheelImpulse(-120.0f, Metrics, Config);
+		AdvanceSpan(0.125f);
+		State.AddWheelImpulse(240.0f, Metrics, Config);
+		AdvanceSpan(0.15f);
+		return std::array<float, 2>{State.Offset(), State.Velocity()};
+	};
+	const auto Expected = Sample(1);
+	for(const int RefreshRate : {60, 144, 240, 360})
+	{
+		SCOPED_TRACE(RefreshRate);
+		const auto Actual = Sample(RefreshRate);
+		EXPECT_NEAR(Actual[0], Expected[0], 0.001f);
+		EXPECT_NEAR(Actual[1], Expected[1], 0.01f);
+	}
+}
+
+TEST(UiV2ScrollPhysics, WheelBoundsInstantModeAndDirectDragStopMomentum)
+{
+	const SQmScrollMetrics Metrics{100.0f, 500.0f};
+	SQmScrollConfig Config = QmNativeWheelScrollConfig(1.0f, 0.5f);
+	CQmScrollState State;
+	State.SetOffset(395.0f, Metrics, Config);
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	State.Advance(0.1f, Metrics, Config);
+	State.AddWheelImpulse(-1200.0f, Metrics, Config);
+	for(int Frame = 0; Frame < 180; ++Frame)
+	{
+		State.Advance(1.0f / 360.0f, Metrics, Config);
+		EXPECT_GE(State.Offset(), 0.0f);
+		EXPECT_LE(State.Offset(), Metrics.MaxOffset());
+		if(State.Offset() == Metrics.MaxOffset())
+			EXPECT_FLOAT_EQ(State.Velocity(), 0.0f);
+	}
+	State.Advance(1.0f, Metrics, Config);
+	EXPECT_FLOAT_EQ(State.Offset(), 400.0f);
+	EXPECT_FLOAT_EQ(State.Velocity(), 0.0f);
+	State.AddWheelImpulse(120.0f, Metrics, Config);
+	State.Advance(0.1f, Metrics, Config);
+	State.SetOffset(150.0f, Metrics, Config);
+	State.Advance(0.1f, Metrics, Config);
+	EXPECT_FLOAT_EQ(State.Offset(), 150.0f);
+	EXPECT_FLOAT_EQ(State.Velocity(), 0.0f);
+	EXPECT_FALSE(State.Animating());
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	State.Advance(0.1f, Metrics, Config);
+	Config.m_NativeWheelAnimationTime = 0.0f;
+	State.AddWheelImpulse(-120.0f, Metrics, Config);
+	EXPECT_FLOAT_EQ(State.Offset(), 170.0f);
+	EXPECT_FLOAT_EQ(State.Velocity(), 0.0f);
+	EXPECT_FALSE(State.Animating());
+}
+
 TEST(UiV2ScrollPhysics, NativeWheelStepPreservesWheelMagnitude)
 {
 	SQmScrollMetrics Metrics;

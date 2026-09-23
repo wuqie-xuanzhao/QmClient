@@ -23,9 +23,11 @@
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
+#include <game/client/components/qmclient/demo_display.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/rank_ghost.h>
+#include <game/client/components/qmclient/score_hud_layout.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
@@ -1009,6 +1011,7 @@ CHud::CHud()
 	m_SwitchCountdownAnimState.Reset();
 	ResetSwitchCountdownRings();
 	m_SwitchCountdownTracker.Reset();
+	m_HookCountdownRing.Reset();
 	m_MediaIslandMuteState.Reset();
 	m_vTextInfoLayoutChildrenScratch.reserve(2);
 	m_vLocalTimeLayoutChildrenScratch.resize(1);
@@ -1100,6 +1103,7 @@ void CHud::ResetHudContainers()
 	m_SwitchCountdownAnimState.Reset();
 	ResetSwitchCountdownRings();
 	m_SwitchCountdownTracker.Reset();
+	m_HookCountdownRing.Reset();
 }
 
 void CHud::OnWindowResize()
@@ -1745,12 +1749,16 @@ void CHud::RenderScoreHud()
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
 				if(str_comp(aBuf, m_aScoreInfo[t].m_aRankText) != 0)
+				{
+					m_aScoreInfo[t].m_RankTextWidth = TextRender()->TextWidth(10.0f, aBuf, -1, -1.0f);
 					RecreateRect = true;
+				}
 			}
 
 			static float s_TextWidth10 = TextRender()->TextWidth(14.0f, "10", -1, -1.0f);
 			float ScoreWidthMax = maximum(maximum(m_aScoreInfo[0].m_ScoreTextWidth, m_aScoreInfo[1].m_ScoreTextWidth), s_TextWidth10);
-			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
+			float Split = 3.0f;
+			const auto ScoreLayout = QmScoreHudLayout(m_Width, ScoreWidthMax, maximum(m_aScoreInfo[0].m_RankTextWidth, m_aScoreInfo[1].m_RankTextWidth), ScoreSingleBoxHeight);
 
 			for(int t = 0; t < 2; t++)
 			{
@@ -1763,12 +1771,12 @@ void CHud::RenderScoreHud()
 						Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.25f);
 					else
 						Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.25f);
-					m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight, 5.0f, ScoreHudCorners);
+					m_aScoreInfo[t].m_RoundRectQuadContainerIndex = Graphics()->CreateRectQuadContainer(ScoreLayout.m_BoxLeft, StartY + t * 20, ScoreLayout.m_BoxWidth, ScoreSingleBoxHeight, 5.0f, ScoreHudCorners);
 					m_aScoreInfo[t].m_RoundRectCorners = ScoreHudCorners;
 				}
 				if(m_aScoreInfo[t].m_RoundRectQuadContainerIndex != -1)
 				{
-					Ui()->RenderGaussianBlur({m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize, StartY + t * 20, ScoreWidthMax + ImageSize + 2 * Split + PosSize, ScoreSingleBoxHeight}, 1.0f, ScoreHudCorners, 5.0f);
+					Ui()->RenderGaussianBlur({ScoreLayout.m_BoxLeft, StartY + t * 20, ScoreLayout.m_BoxWidth, ScoreSingleBoxHeight}, 1.0f, ScoreHudCorners, 5.0f);
 					Graphics()->TextureClear();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					Graphics()->RenderQuadContainer(m_aScoreInfo[t].m_RoundRectQuadContainerIndex, -1);
@@ -1803,7 +1811,7 @@ void CHud::RenderScoreHud()
 							str_copy(m_aScoreInfo[t].m_aPlayerNameText, pName);
 
 							CTextCursor Cursor;
-							Cursor.SetPosition(vec2(minimum(m_Width - TextRender()->TextWidth(8.0f, pName) - 1.0f, m_Width - ScoreWidthMax - ImageSize - 2 * Split - PosSize), StartY + (t + 1) * 20.0f - 2.0f));
+							Cursor.SetPosition(vec2(minimum(m_Width - TextRender()->TextWidth(8.0f, pName) - 1.0f, ScoreLayout.m_BoxLeft), StartY + (t + 1) * 20.0f - 2.0f));
 							Cursor.m_FontSize = 8.0f;
 							TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_OptionalNameTextContainerIndex, &Cursor, pName);
 						}
@@ -1822,7 +1830,7 @@ void CHud::RenderScoreHud()
 						const CAnimState *pIdleState = CAnimState::GetIdle();
 						vec2 OffsetToMid;
 						CRenderTools::GetRenderTeeOffsetToRenderedTee(pIdleState, &TeeInfo, OffsetToMid);
-						vec2 TeeRenderPos(m_Width - ScoreWidthMax - TeeInfo.m_Size / 2 - Split, StartY + (t * 20) + ScoreSingleBoxHeight / 2.0f + OffsetToMid.y);
+						vec2 TeeRenderPos(ScoreLayout.m_TeeX, StartY + (t * 20) + ScoreSingleBoxHeight / 2.0f + OffsetToMid.y);
 
 						RenderTools()->RenderTee(pIdleState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), TeeRenderPos);
 					}
@@ -1840,7 +1848,7 @@ void CHud::RenderScoreHud()
 					str_copy(m_aScoreInfo[t].m_aRankText, aBuf);
 
 					CTextCursor Cursor;
-					Cursor.SetPosition(vec2(m_Width - ScoreWidthMax - ImageSize - Split - PosSize, StartY + t * 20 + (18.f - 10.f) / 2.f));
+					Cursor.SetPosition(vec2(ScoreLayout.m_RankX, StartY + t * 20 + (18.f - 10.f) / 2.f));
 					Cursor.m_FontSize = 10.0f;
 					TextRender()->RecreateTextContainer(m_aScoreInfo[t].m_TextRankContainerIndex, &Cursor, aBuf);
 				}
@@ -3472,6 +3480,162 @@ void CHud::RenderFollowSwitchCountdowns()
 			BackgroundColor,
 			RingColor);
 	}
+	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
+}
+
+void CHud::ResetHookCountdownRing()
+{
+	m_HookCountdownRing.Reset();
+}
+
+void CHud::UpdateHookCountdownTracker()
+{
+	SHudHookCountdownRingState &Ring = m_HookCountdownRing;
+	if(!g_Config.m_QmHookCountdown)
+	{
+		ResetHookCountdownRing();
+		return;
+	}
+
+	const int TickSpeed = Client()->GameTickSpeed();
+	if(TickSpeed <= 0)
+	{
+		ResetHookCountdownRing();
+		return;
+	}
+
+	// 只跟当前正在操作的那个 Tee：m_ClDummy 指向的 local id 就是本地玩家当下控制的分身。
+	const int Connection = std::clamp(g_Config.m_ClDummy, 0, NUM_DUMMIES - 1);
+	const int ClientId = GameClient()->m_aLocalIds[Connection];
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
+	{
+		ResetHookCountdownRing();
+		return;
+	}
+
+	// 只在钩住**玩家**（含自己的分身）时起环：钩墙 / 钩地形不出。
+	// HOOK_GRABBED 表示钩链已咬住，m_HookedPlayer >= 0 才说明咬住的是人；
+	// 钩地形时 m_HookedPlayer 恒为 -1（gamecore.cpp:378 附近只改 m_HookState）。
+	// 收回阶段（HOOK_RETRACT_START..HOOK_RETRACTED）仍算同一轮，环继续走到淡出。
+	// 注意 m_pLocalCharacter 不一定是本地 Tee（观战时指向被观战者），所以这里按 local id 自己取。
+	const CNetObj_Character &Character = GameClient()->m_Snap.m_aCharacters[ClientId].m_Cur;
+	const bool HookActive = Character.m_HookState == HOOK_GRABBED && Character.m_HookedPlayer >= 0;
+	// 钩住的还是不是上一次那个人：变了就说明中途重咬了（rehook）。
+	// 松钩时不更新这个字段，才能把上一次的目标留到下一次咬住时做比较。
+	const bool FreshGrab = !Ring.m_Tracking || Character.m_HookedPlayer != Ring.m_HookedPlayer;
+
+	// 只要这一刻还跟着同一个 Tee，环就是「该画」的：不引入额外的可见性标志位，
+	// 免得漏设一次就整轮钩子都不显示。
+	if(Ring.m_ClientId != ClientId || Ring.m_Connection != Connection)
+	{
+		// 换了控制对象（切分身 / 换观战目标）就重来一圈，避免把上一个 Tee 的进度接着画。
+		Ring.Reset();
+		Ring.m_ClientId = ClientId;
+		Ring.m_Connection = Connection;
+	}
+	Ring.m_Seen = true;
+
+	const int CurTick = Client()->GameTick(Connection);
+	if(!HookActive)
+	{
+		Ring.m_Tracking = false;
+		return;
+	}
+
+	if(FreshGrab)
+	{
+		// 新的一钩：重新计时。
+		Ring.m_GrabTick = CurTick;
+		Ring.m_HookDurationSeconds = GameClient()->m_aTuning[Connection].m_HookDuration;
+		Ring.m_Progress = 1.0f;
+		// 环不重建、位置与弹簧速度都不动：上一钩留下的环（还在淡出）原地拉回满格续上，
+		// 靠弹簧追上新的跟随点。观感是「环留在原地重新开始，然后跟着人跑」。
+		Ring.m_Alpha = 1.0f;
+		Ring.m_HookedPlayer = Character.m_HookedPlayer;
+		Ring.m_Tracking = true;
+	}
+
+	const float HeldSeconds = (CurTick - Ring.m_GrabTick) / static_cast<float>(TickSpeed);
+	Ring.m_Progress = QmHudHookCountdownProgress(Ring.m_HookDurationSeconds, HeldSeconds, Ring.m_Progress);
+}
+
+void CHud::RenderFollowHookCountdown()
+{
+	SHudHookCountdownRingState &Ring = m_HookCountdownRing;
+	if(!g_Config.m_QmHookCountdown)
+	{
+		ResetHookCountdownRing();
+		return;
+	}
+	const int TickSpeed = Client()->GameTickSpeed();
+	if(TickSpeed <= 0 || !Ring.m_Seen)
+		return;
+
+	// 钩子环固定在开关环正上方：取侧沿用开关环那套（宠物对面），纵向再多抬一段。
+	const vec2 TeePosition = GameClient()->m_aClients[Ring.m_ClientId].m_RenderPos;
+	const bool PetVisible = g_Config.m_TcPetShow > 0 && GameClient()->m_Pet.IsVisibleForClient(Ring.m_ClientId);
+	const vec2 PetPosition = PetVisible ? GameClient()->m_Pet.Position() : vec2();
+	const int Side = QmHudSwitchCountdownFollowSide(TeePosition.x, PetVisible, PetPosition.x);
+	const float Now = Client()->GameTick(Ring.m_Connection) / static_cast<float>(TickSpeed);
+	const vec2 Target = QmHudHookCountdownFollowTarget(TeePosition, Side, Now);
+
+	float SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1;
+	Graphics()->GetScreen(&SavedScreenX0, &SavedScreenY0, &SavedScreenX1, &SavedScreenY1);
+	Graphics()->MapScreenToGameInterface(GameClient()->m_Camera.m_Center.x, GameClient()->m_Camera.m_Center.y, GameClient()->m_Camera.m_Zoom);
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	// 卫星半径/环宽与开关环保持一致，只有颜色不同（见 QmHudHookCountdownColor）。
+	constexpr float SatelliteRadius = 9.0f + 2.5f * 0.5f;
+	constexpr float RingRadius = SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_RADIUS_SCALE;
+	const float RingThickness = std::max(1.0f, SatelliteRadius * MEDIA_ISLAND_SATELLITE_RING_THICKNESS_SCALE);
+	const float ScreenPixelSize = QmHudMediaIslandScreenPixelSize(ScreenX0, ScreenY0, ScreenX1, ScreenY1, Graphics()->ScreenWidth(), Graphics()->ScreenHeight());
+
+	const float Delta = Client()->RenderFrameTime();
+	if(!Ring.m_Initialized)
+	{
+		Ring.m_Position = Target;
+		Ring.m_Velocity = vec2();
+		Ring.m_Initialized = true;
+	}
+	QmTClientPetAdvanceSpring(Ring.m_Position, Ring.m_Velocity, Target, Delta);
+	// 透明度只有两态：钩着就是满格，松钩后匀速淡出。
+	// 不做渐入 —— 钩子可能只挂一两帧，渐入会让整轮都是半透明的，看起来比开关环「消失得快」；
+	// 淡出速率与开关环一致，两个环的收尾观感才对得上。
+	if(!Ring.m_Tracking)
+	{
+		Ring.m_Alpha = std::max(0.0f, Ring.m_Alpha - Delta);
+		if(Ring.m_Alpha <= 0.0f)
+		{
+			ResetHookCountdownRing();
+			Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
+			return;
+		}
+	}
+	else
+	{
+		Ring.m_Alpha = 1.0f;
+	}
+	if(!in_range(Ring.m_Position.x, ScreenX0 - SatelliteRadius, ScreenX1 + SatelliteRadius) ||
+		!in_range(Ring.m_Position.y, ScreenY0 - SatelliteRadius, ScreenY1 + SatelliteRadius))
+	{
+		Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
+		return;
+	}
+
+	ColorRGBA BackgroundColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmHudIslandBgColor));
+	BackgroundColor.a = std::clamp(g_Config.m_QmHudIslandBgOpacity / 100.0f, 0.0f, 1.0f);
+	DrawMediaIslandCountdownSatellite(
+		Graphics(),
+		Ring.m_Position,
+		SatelliteRadius,
+		RingRadius,
+		RingThickness,
+		Ring.m_Progress,
+		Ring.m_Alpha,
+		ScreenPixelSize,
+		BackgroundColor,
+		QmHudHookCountdownColor());
 	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
 }
 
@@ -6742,6 +6906,42 @@ void CHud::RenderJumpHint()
 	GameClient()->m_HudEditor.EndTransform(HudEditorScope);
 }
 
+void CHud::RenderProgressBarWithTee(const CUIRect &BarRect, float Progress, const ColorRGBA &FillColor, bool AnimateTee, int Corners)
+{
+	Progress = std::clamp(Progress, 0.0f, 1.0f);
+	const float BarRadius = BarRect.h * 0.5f;
+	const ColorRGBA TrackColor = LerpColor(ColorRGBA(0.02f, 0.03f, 0.03f, 0.78f), FillColor.WithAlpha(0.26f), 0.32f);
+	DrawSmoothRoundedRect(Graphics(), BarRect.x, BarRect.y, BarRect.w, BarRect.h, BarRadius, TrackColor, Corners);
+	const float FillWidth = BarRect.w * Progress;
+	if(FillWidth > 0.0f)
+		DrawSmoothRoundedRect(Graphics(), BarRect.x, BarRect.y, FillWidth, BarRect.h, BarRadius, FillColor, Corners);
+
+	int TeeClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy ? 1 : 0];
+	if(TeeClientId < 0 || TeeClientId >= MAX_CLIENTS)
+		TeeClientId = GameClient()->m_Snap.m_LocalClientId;
+	if(TeeClientId < 0 || TeeClientId >= MAX_CLIENTS)
+		return;
+
+	CTeeRenderInfo TeeInfo = GameClient()->m_aClients[TeeClientId].m_RenderInfo;
+	TeeInfo.m_Size = std::clamp(BarRect.h * 1.7f, 14.0f, 30.0f);
+	const float TeePadding = TeeInfo.m_Size * 0.28f;
+	const float TeeX = std::clamp(BarRect.x + BarRect.w * Progress, BarRect.x + TeePadding, BarRect.x + BarRect.w - TeePadding);
+	const float TeeAnchorY = BarRect.y + BarRect.h * 0.5f - std::clamp(BarRect.h * 0.15f, 1.0f, 3.0f);
+	const CAnimState *pTeeState = CAnimState::GetIdle();
+	CAnimState RunState;
+	if(AnimateTee)
+	{
+		const float RunTime = std::fmod(time_get() / (float)time_freq() * 2.5f, 1.0f);
+		RunState.Set(&g_pData->m_aAnimations[ANIM_BASE], 0.0f);
+		RunState.Add(&g_pData->m_aAnimations[ANIM_RUN_RIGHT], RunTime, 1.0f);
+		pTeeState = &RunState;
+	}
+	vec2 OffsetToMid;
+	CRenderTools::GetRenderTeeOffsetToRenderedTee(pTeeState, &TeeInfo, OffsetToMid);
+	DrawSmoothCircle(Graphics(), vec2(TeeX, TeeAnchorY), std::clamp(BarRect.h * 0.48f, 4.0f, 10.0f), FillColor.WithAlpha(0.22f));
+	RenderTools()->RenderTee(pTeeState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeX, TeeAnchorY + OffsetToMid.y));
+}
+
 void CHud::RenderMapProgressBar()
 {
 	const bool Preview = GameClient()->m_HudEditor.IsActive();
@@ -6774,18 +6974,15 @@ void CHud::RenderMapProgressBar()
 	const bool ProgressIncreased = ProgressWasInitialized && DisplayedProgress > PreviousDisplayedProgress + 0.000001f;
 	const ColorRGBA ConfiguredColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmPlayerStatsMapProgressColor, true));
 	const ColorRGBA FillColor = ColorRGBA(ConfiguredColor.r, ConfiguredColor.g, ConfiguredColor.b, std::clamp(maximum(ConfiguredColor.a, 0.65f), 0.0f, 1.0f));
-	const ColorRGBA TrackColor = LerpColor(ColorRGBA(0.02f, 0.03f, 0.03f, 0.78f), FillColor.WithAlpha(0.26f), 0.32f);
 	const ColorRGBA TextColor = LerpColor(ColorRGBA(0.92f, 0.97f, 1.0f, 1.0f), FillColor.WithAlpha(1.0f), 0.72f);
 
 	const float WidthRatio = std::clamp(g_Config.m_QmPlayerStatsMapProgressWidth / 100.0f, 0.10f, 0.80f);
 	const float BarWidth = std::clamp(m_Width * WidthRatio, 80.0f, maximum(80.0f, m_Width - 12.0f));
 	const float BarHeight = (float)g_Config.m_QmPlayerStatsMapProgressHeight;
-	const float BarRadius = BarHeight * 0.5f;
 	const float RawBarX = m_Width * (g_Config.m_QmPlayerStatsMapProgressPosX / 100.0f) - BarWidth * 0.5f;
 	const float RawBarY = m_Height * (g_Config.m_QmPlayerStatsMapProgressPosY / 100.0f);
 	const float BarX = std::round(std::clamp(RawBarX, 6.0f, maximum(6.0f, m_Width - BarWidth - 6.0f)));
 	const float BarY = std::round(std::clamp(RawBarY, 6.0f, maximum(6.0f, m_Height - BarHeight - 6.0f)));
-	const float FillWidth = BarWidth * DisplayedProgress;
 
 	char aProgressText[32];
 	if(HasProgress)
@@ -6800,9 +6997,7 @@ void CHud::RenderMapProgressBar()
 	const float TextY = std::round(std::clamp(BarY - TextSize - TextGap, 2.0f, maximum(2.0f, m_Height - TextSize - 2.0f)));
 	const auto HudEditorScope = GameClient()->m_HudEditor.BeginTransform(EHudEditorElement::MapProgressBar, {BarX, TextY, BarWidth, BarY + BarHeight - TextY});
 
-	DrawSmoothRoundedRect(Graphics(), BarX, BarY, BarWidth, BarHeight, BarRadius, TrackColor, HudEditorScope.m_Corners);
-	if(FillWidth > 0.0f)
-		DrawSmoothRoundedRect(Graphics(), BarX, BarY, FillWidth, BarHeight, BarRadius, FillColor, HudEditorScope.m_Corners);
+	RenderProgressBarWithTee({BarX, BarY, BarWidth, BarHeight}, DisplayedProgress, FillColor, ProgressIncreased, HudEditorScope.m_Corners);
 
 	const unsigned int PrevTextFlags = TextRender()->GetRenderFlags();
 	const ColorRGBA PrevTextColor = TextRender()->GetTextColor();
@@ -6816,33 +7011,6 @@ void CHud::RenderMapProgressBar()
 	TextRender()->SetRenderFlags(PrevTextFlags);
 	GameClient()->m_HudEditor.UpdateVisibleRect(EHudEditorElement::MapProgressBar, {BarX, TextY, BarWidth, BarY + BarHeight - TextY});
 
-	int TeeClientId = GameClient()->m_aLocalIds[DummyIndex];
-	if(TeeClientId < 0 || TeeClientId >= MAX_CLIENTS)
-		TeeClientId = GameClient()->m_Snap.m_LocalClientId;
-
-	if(TeeClientId >= 0 && TeeClientId < MAX_CLIENTS)
-	{
-		CTeeRenderInfo TeeInfo = GameClient()->m_aClients[TeeClientId].m_RenderInfo;
-		TeeInfo.m_Size = std::clamp(BarHeight * 1.7f, 14.0f, 30.0f);
-
-		const float TeePadding = TeeInfo.m_Size * 0.28f;
-		const float TeeX = std::clamp(BarX + BarWidth * DisplayedProgress, BarX + TeePadding, BarX + BarWidth - TeePadding);
-		const float TeeAnchorY = BarY + BarHeight * 0.5f - std::clamp(BarHeight * 0.15f, 1.0f, 3.0f);
-		const CAnimState *pTeeState = CAnimState::GetIdle();
-		CAnimState RunState;
-		if(ProgressIncreased)
-		{
-			const float RunTime = std::fmod(time_get() / (float)time_freq() * 2.5f, 1.0f);
-			RunState.Set(&g_pData->m_aAnimations[ANIM_BASE], 0.0f);
-			RunState.Add(&g_pData->m_aAnimations[ANIM_RUN_RIGHT], RunTime, 1.0f);
-			pTeeState = &RunState;
-		}
-		vec2 OffsetToMid;
-		CRenderTools::GetRenderTeeOffsetToRenderedTee(pTeeState, &TeeInfo, OffsetToMid);
-
-		DrawSmoothCircle(Graphics(), vec2(TeeX, TeeAnchorY), std::clamp(BarHeight * 0.48f, 4.0f, 10.0f), FillColor.WithAlpha(0.22f));
-		RenderTools()->RenderTee(pTeeState, &TeeInfo, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(TeeX, TeeAnchorY + OffsetToMid.y));
-	}
 	GameClient()->m_HudEditor.EndTransform(HudEditorScope);
 }
 
@@ -7245,6 +7413,7 @@ void CHud::OnRender()
 	m_MovementInfoBoxValid = false;
 	m_LegacyMediaInfoRendered = false;
 	UpdateSwitchCountdownTracker();
+	UpdateHookCountdownTracker();
 	const bool ShowMediaIsland = HasVisibleMediaIsland();
 	if(!ShowMediaIsland)
 	{
@@ -7254,10 +7423,12 @@ void CHud::OnRender()
 	}
 
 #if defined(CONF_VIDEORECORDER)
-	const bool MainHudVisible = (IVideo::Current() && g_Config.m_ClVideoShowhud) || (!IVideo::Current() && g_Config.m_ClShowhud);
+	const bool VideoRendering = IVideo::Current() != nullptr;
 #else
-	const bool MainHudVisible = g_Config.m_ClShowhud != 0;
+	const bool VideoRendering = false;
 #endif
+	// 回放/导出走独立显示选项；其余情况沿用 cl_showhud / cl_video_showhud。
+	const bool MainHudVisible = qm_demo_display::Resolve(g_Config, Client()->State() == IClient::STATE_DEMOPLAYBACK, VideoRendering).m_Hud;
 	const bool FocusSpectatorHudVisible = ShouldRenderFocusSpectatorHud(
 		GameClient()->m_Snap.m_SpecInfo.m_Active,
 		g_Config.m_ClShowhudSpectator != 0,
@@ -7343,6 +7514,7 @@ void CHud::OnRender()
 		RenderTextInfo();
 		GameClient()->m_TClient.RenderCenterLines();
 		RenderFollowSwitchCountdowns();
+		RenderFollowHookCountdown();
 		if(ShowMediaIsland)
 			RenderMediaIsland();
 		else

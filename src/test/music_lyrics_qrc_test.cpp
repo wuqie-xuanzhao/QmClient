@@ -1,4 +1,7 @@
 #include <game/client/components/qmclient/music_lyrics/music_lyrics_qrc.h>
+// SelectCurrentLine / SelectLatestStartedLine / SSelectedLine 声明在独立的 timeline 头里，
+// qrc 头只给出 STimeline 与解析入口。
+#include <game/client/components/qmclient/netease/netease_lyric_timeline.h>
 
 #include <gtest/gtest.h>
 
@@ -106,6 +109,18 @@ TEST(MusicLyricsQrc, ParsesRlrcWordTiming)
 	ASSERT_EQ(Timeline.m_vLines[1].m_vWords.size(), 4u);
 	EXPECT_EQ(Timeline.m_vLines[1].m_vWords[3].m_StartMs, 6190);
 	EXPECT_EQ(Timeline.m_vLines[1].m_vWords[3].m_EndMs, 6490);
+}
+
+TEST(MusicLyricsQrc, SelectsPreviousLineDuringInterlude)
+{
+	const char *Rlrc = "[0,1000]第一(0,1000)\n[2000,1000]第二(2000,1000)\n";
+	NeteaseLyrics::STimeline Timeline;
+	std::string Error;
+	ASSERT_TRUE(ParseQrcRlrc(Rlrc, &Timeline, &Error)) << Error;
+	EXPECT_EQ(NeteaseLyrics::SelectCurrentLine(Timeline, 1500).m_Index, -1);
+	const NeteaseLyrics::SSelectedLine Selected = NeteaseLyrics::SelectLatestStartedLine(Timeline, 1500);
+	EXPECT_EQ(Selected.m_Index, 0);
+	EXPECT_FALSE(Selected.m_InTimedRange);
 }
 
 TEST(MusicLyricsQrc, RoundTripsFixedVectorThroughDataEntry)

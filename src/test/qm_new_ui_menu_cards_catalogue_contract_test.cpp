@@ -103,7 +103,6 @@ TEST(QmNewUiMenuCardsCatalogueContract, QmLaserSettingsMovedToAppearanceLaserTab
 	EXPECT_NE(LaserBranch.find("DoLaserPreview(&LaserPreviewRect, LaserDraggerOutlineColor, LaserDraggerInnerColor, LASERTYPE_DRAGGER);"), std::string::npos);
 }
 
-
 TEST(QmNewUiMenuCardsCatalogueContract, SettingsCardDeckSharedComponentExposesGraphicsAndAppearanceCatalogue)
 {
 	const std::string SettingsSource = ReadTextFile("src/game/client/components/menus_settings.cpp");

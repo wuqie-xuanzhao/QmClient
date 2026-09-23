@@ -55,9 +55,6 @@ TEST(SkinsContract, TeeBackgroundDrainSeparatesRequestedBacklogFromAdmittedQueue
 	EXPECT_NE(Source.find("return !ExistsInSkinMap || (!TracksUsage(State, AlwaysLoaded) && State != EState::BACKGROUND_REQUESTED);"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeBackgroundRequestsWaitForAdmissionBeforePending)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -80,9 +77,6 @@ TEST(SkinsContract, TeeBackgroundRequestsWaitForAdmissionBeforePending)
 	EXPECT_NE(StartLoading.find("Stats.m_NumBackgroundRequested--;"), std::string::npos);
 	EXPECT_NE(StartLoading.find("Stats.m_NumPending++;"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSkinListVirtualizationKeepsTotalListLength)
 {
@@ -107,9 +101,6 @@ TEST(SkinsContract, TeeSkinListVirtualizationKeepsTotalListLength)
 	EXPECT_NE(RenderTeeBody.find("event=list_frame page=settings:tee"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("rows_total=%d rows_visible=%d rows_rendered=%d rows_iterated=%d rows_skipped=%d"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSkinListVirtualizationUsesFourColumnContract)
 {
@@ -147,9 +138,6 @@ TEST(SkinsContract, TeeSkinListVirtualizationUsesFourColumnContract)
 	EXPECT_LT(ListSize, OverscanRows);
 	EXPECT_NE(JobsSource.find("constexpr int TeeSkinListItemsPerRow = 4;"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSkinListSortModeKeepsFavoritesPinnedThenUsesOfficialDate)
 {
@@ -240,9 +228,6 @@ TEST(SkinsContract, TeeSkinListSortModeKeepsFavoritesPinnedThenUsesOfficialDate)
 	EXPECT_NE(CompareBody.find("if(m_Favorite && !Other.m_Favorite)"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeSkinListStableIdleAvoidsFullBackgroundScan)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/menus_settings.cpp"));
@@ -274,9 +259,6 @@ TEST(SkinsContract, TeeSkinListStableIdleAvoidsFullBackgroundScan)
 	EXPECT_NE(RenderTeeBody.find("gs_TeeSettingsPageState.m_SelectedIndex = NewSelected;"), std::string::npos);
 	EXPECT_EQ(RenderTeeBody.find("visual_ready_count=%d"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSkinListSeparatesVisualReadyFromSourceSettled)
 {
@@ -311,9 +293,6 @@ TEST(SkinsContract, TeeSkinListSeparatesVisualReadyFromSourceSettled)
 	EXPECT_EQ(RenderTeeBody.find("FrameContext.m_HighPrioritySettled = VisibleSettled;"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeStartLoadingFallbackSweepIsBoundedAndLogged)
 {
 	std::ifstream HeaderFile(TestSourcePath("src/game/client/components/skins.h"));
@@ -343,9 +322,6 @@ TEST(SkinsContract, TeeStartLoadingFallbackSweepIsBoundedAndLogged)
 	EXPECT_EQ(StartLoading.find("std::advance("), std::string::npos);
 	EXPECT_EQ(StartLoading.find("for(auto &[_, pSkinContainer] : m_Skins)\n\t{"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, SettingsAssetsListVirtualizationKeepsTotalListLength)
 {
@@ -377,9 +353,6 @@ TEST(SkinsContract, SettingsAssetsListVirtualizationKeepsTotalListLength)
 	EXPECT_EQ(WorkshopListBody.find("for(size_t ListIndex = 0; ListIndex < CombinedCount; ++ListIndex)"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeePriorityRequestsReclaimBackgroundRequestedBeforeAdmittedBackgroundWork)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -400,9 +373,6 @@ TEST(SkinsContract, TeePriorityRequestsReclaimBackgroundRequestedBeforeAdmittedB
 	ASSERT_NE(PendingBranchPos, std::string::npos);
 	EXPECT_LT(BackgroundRequestedPos, PendingBranchPos);
 }
-
-
-
 
 TEST(SkinsContract, PriorityRequestsCanReclaimBackgroundLoadingSlots)
 {
@@ -430,9 +400,6 @@ TEST(SkinsContract, PriorityRequestsCanReclaimBackgroundLoadingSlots)
 	EXPECT_EQ(StartLoadBody.find("Priority != ESettingsResourcePriority::BACKGROUND"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, PrioritizedLoadQueueKeepsOriginalRequestPriority)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -452,9 +419,6 @@ TEST(SkinsContract, PrioritizedLoadQueueKeepsOriginalRequestPriority)
 	EXPECT_NE(StartLoading.find("Stats.m_NumPending + Stats.m_NumLoading"), std::string::npos);
 	EXPECT_EQ(StartLoading.find("Stats.m_NumPending + Stats.m_NumLoaded + Stats.m_NumLoading"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSettingsScrollBudgetFeedsFinalizeAndUploadLimits)
 {
@@ -476,9 +440,6 @@ TEST(SkinsContract, TeeSettingsScrollBudgetFeedsFinalizeAndUploadLimits)
 	const size_t ScrollRegionMouseDown = Source.find("(pGameClient->Input()->KeyPress(KEY_MOUSE_1) && pUi->HotScrollRegion() != nullptr)");
 	EXPECT_NE(ScrollRegionMouseDown, std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, GpuUploadLimiterResetsBeforeSkinUpdateConsumesBudget)
 {
@@ -503,9 +464,6 @@ TEST(SkinsContract, GpuUploadLimiterResetsBeforeSkinUpdateConsumesBudget)
 	const std::string OnRenderPreamble = Source.substr(OnRenderPos, OnRenderEnd - OnRenderPos);
 	EXPECT_EQ(OnRenderPreamble.find("m_GpuUploadLimiter.OnFrameStart();"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, SettingsWarmupBypassesPeriodicSkinUpdateThrottle)
 {

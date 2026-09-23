@@ -85,6 +85,12 @@ void CFriends::ConAddFriendCategory(IConsole::IResult *pResult, void *pUserData)
 	pSelf->AddCategory(pResult->GetString(0));
 }
 
+void CFriends::ConMoveFriendCategory(IConsole::IResult *pResult, void *pUserData)
+{
+	CFriends *pSelf = (CFriends *)pUserData;
+	pSelf->MoveCategory(pSelf->FindCategory(pResult->GetString(0)), pResult->GetInteger(1));
+}
+
 void CFriends::ConRenameFriendCategory(IConsole::IResult *pResult, void *pUserData)
 {
 	CFriends *pSelf = (CFriends *)pUserData;
@@ -144,6 +150,7 @@ void CFriends::Init(bool Foes)
 	pConsole->Register("add_friend", "s[name] ?s[clan] ?s[category]", CFGFLAG_CLIENT, ConAddFriend, this, "Add a friend");
 	pConsole->Register("remove_friend", "s[name] ?s[clan]", CFGFLAG_CLIENT, ConRemoveFriend, this, "Remove a friend");
 	pConsole->Register("friend_category_add", "s[category]", CFGFLAG_CLIENT, ConAddFriendCategory, this, "Add a friend category");
+	pConsole->Register("qm_friend_category_move", "s[category] i[position]", CFGFLAG_CLIENT, ConMoveFriendCategory, this, "Move a friend category to a position");
 	pConsole->Register("friend_category_rename", "s[old_category] s[new_category]", CFGFLAG_CLIENT, ConRenameFriendCategory, this, "Rename a friend category");
 	pConsole->Register("friend_category_remove", "s[category]", CFGFLAG_CLIENT, ConRemoveFriendCategory, this, "Remove a friend category");
 	pConsole->Register("set_friend_category", "s[name] s[clan] s[category]", CFGFLAG_CLIENT, ConSetFriendCategory, this, "Set friend category");
@@ -318,6 +325,7 @@ bool CFriends::MoveCategory(int FromIndex, int ToIndex)
 	}
 
 	str_copy(m_aaCategories[ToIndex], aCategory, sizeof(m_aaCategories[0]));
+	++m_Revision;
 	return true;
 }
 
@@ -492,6 +500,18 @@ void CFriends::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserDat
 			char *pDst = aBuf + str_length(aBuf);
 			str_escape(&pDst, pSelf->m_aaCategories[CategoryIndex], pEnd);
 			str_append(aBuf, "\"");
+			pConfigManager->WriteLine(aBuf);
+		}
+
+		// 先创建自定义分组，再按名称恢复包括内置分组在内的完整顺序。
+		for(int CategoryIndex = 0; CategoryIndex < pSelf->m_NumCategories; ++CategoryIndex)
+		{
+			str_copy(aBuf, "qm_friend_category_move \"");
+			char *pDst = aBuf + str_length(aBuf);
+			str_escape(&pDst, pSelf->m_aaCategories[CategoryIndex], pEnd);
+			char aPosition[16];
+			str_format(aPosition, sizeof(aPosition), "\" %d", CategoryIndex);
+			str_append(aBuf, aPosition);
 			pConfigManager->WriteLine(aBuf);
 		}
 	}

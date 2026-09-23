@@ -151,7 +151,6 @@ TEST(QmHudFrozenTeeState, FreshRespawnUsesTheNewFreezeState)
 	EXPECT_TRUE(QmHudTeeIsFrozen(State, -1, true));
 }
 
-
 TEST(QmHudMediaIslandSource, RemovedTuningSatelliteDoesNotRemain)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/hud.cpp");
@@ -181,14 +180,14 @@ TEST(QmHudMediaIslandSource, DynamicIslandUsesCompactSharedSpacing)
 	EXPECT_NE(Source.find("QmHudMediaIslandScaled(5.0f)"), std::string::npos);
 }
 
-
-TEST(QmHudMediaIslandLayout, ScalesTheCompleteDesignToEightyPercent)
+TEST(QmHudMediaIslandLayout, CompactHeightIsAboutFortyPixelsAt1080p)
 {
-	EXPECT_FLOAT_EQ(QmHudMediaIslandDesignScale, 0.8f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(16.0f), 12.8f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(12.0f), 9.6f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(5.8f), 4.64f);
-	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(3.0f), 2.4f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandDesignScale, 0.7f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(16.0f), 11.2f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(12.0f), 8.4f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(5.8f), 4.06f);
+	EXPECT_FLOAT_EQ(QmHudMediaIslandScaled(3.0f), 2.1f);
+	EXPECT_NEAR(QmHudMediaIslandScaled(16.0f) * 1080.0f / 300.0f, 40.32f, 0.001f);
 }
 
 // 意图：无媒体、无队伍内容、无左侧倒计时副岛时不得为不存在的主内容保留空胶囊，
@@ -391,9 +390,6 @@ TEST(QmHudMediaIslandLogic, TeamZeroDoesNotCreateTeamDisplay)
 	EXPECT_FALSE(QmHudMediaIslandShouldShowTeam(true, false, 1));
 }
 
-
-
-
 TEST(QmHudMediaIslandEntranceSpring, HiddenRelaxesAndReappearInheritsVelocity)
 {
 	g_Config.m_QmUiMotionLevel = 2;
@@ -434,7 +430,6 @@ TEST(QmHudMediaIslandEntranceSpring, MotionLevelZeroSnapsToSettled)
 	g_Config.m_QmUiMotionLevel = 2;
 }
 
-
 TEST(QmHudMediaIslandEntranceSpring, CapsuleSqueezeScalesWithAmount)
 {
 	constexpr float BaseIslandHeight = 32.0f;
@@ -455,9 +450,6 @@ TEST(QmHudMediaIslandEntranceSpring, CapsuleSqueezeScalesWithAmount)
 	EXPECT_FLOAT_EQ(NoSqueezeH, 32.0f);
 	EXPECT_NEAR(NoSqueezeX + NoSqueezeW * 0.5f, 400.0f, 1e-4f);
 }
-
-
-
 
 TEST(QmHudMediaIslandSatellite, SortsByTypeThenTriggerOrder)
 {
@@ -673,8 +665,6 @@ TEST(QmHudSwitchCountdown, LocationModeKeepsLegacyValuesAndAllowsBothSurfaces)
 	EXPECT_EQ(QmHudSwitchCountdownModeFromLocations(false, false, MediaIsland), MediaIsland);
 	EXPECT_EQ(QmHudSwitchCountdownModeFromLocations(false, false, Both), Both);
 }
-
-
 
 TEST(QmHudMediaIslandBlob, UnderdampedTravelOvershootsThenPullsBackToRest)
 {
@@ -903,7 +893,7 @@ TEST(QmHudMediaIslandSpectatorEye, ApprovedOpeningPoseCrossfadesAndOpensVertical
 	EXPECT_FLOAT_EQ(Closed.m_OpenScaleX, 0.88f);
 	EXPECT_FLOAT_EQ(Closed.m_OpenScaleY, 0.44f);
 	EXPECT_FLOAT_EQ(Closed.m_CountAlpha, 0.0f);
-	EXPECT_FLOAT_EQ(Closed.m_CountOffsetX, -2.4f);
+	EXPECT_FLOAT_EQ(Closed.m_CountOffsetX, -2.1f);
 
 	const SHudMediaIslandSpectatorIconPose Mid = QmHudMediaIslandSpectatorIconPose(0.5f);
 	EXPECT_FLOAT_EQ(Mid.m_ClosedAlpha, 0.5f);
@@ -961,7 +951,6 @@ TEST(QmHudMediaIslandSpectatorEye, ReopensOnlyWhileTheRightCapsuleIsBeingReclaim
 	EXPECT_FALSE(QmHudMediaIslandShouldAnimateSpectatorEyeOpen(false, false, 0.4f));
 	EXPECT_FLOAT_EQ(QmHudMediaIslandSpectatorCountAlpha(false, QmHudMediaIslandSpectatorIconPose(1.0f)), 0.0f);
 }
-
 
 TEST(QmHudMediaIslandBlob, RightCapsuleSettlesOutsideMainIsland)
 {
@@ -1119,15 +1108,17 @@ TEST(QmHudMediaIslandBackdrop, TransparentOpacityIncludesPureBlurAndSkipsOpaqueB
 	EXPECT_FALSE(QmHudMediaIslandShouldPrepareBackdropBlur(99, false));
 }
 
-TEST(QmHudMediaIslandBackdrop, RefreshesBlurOnlyAfterTheShortFrameAttemptInterval)
+TEST(QmHudMediaIslandBackdrop, RefreshesEveryNewFrameAndReusesTheSameFrameAttempt)
 {
 	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(10, 0, false));
-	// 失败尝试也要进入短暂冷却，避免后端持续失败时每帧重试。
-	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(11, 10, true));
+	// 同一次主循环里的重复绘制复用结果，下一次绘制不受循环限速方式影响。
 	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(10, 10, true));
-	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(12, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(11, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(12, 11, true));
 	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(13, 10, true));
 	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(9, 10, true));
+	EXPECT_TRUE(QmHudMediaIslandShouldRefreshBackdropBlur(0, UINT64_MAX, true));
+	EXPECT_FALSE(QmHudMediaIslandShouldRefreshBackdropBlur(0, 0, true));
 }
 
 TEST(QmHudMediaIslandBackdrop, MapsTheAnimatedOuterRectToTheCapturedScreenTexture)
@@ -1246,9 +1237,6 @@ TEST(QmHudMediaIslandSatellite, IgnoresChineseServerMuteMessagesForOtherCauses)
 	EXPECT_EQ(Seconds, 0);
 }
 
-
-
-
 TEST(QmHudMediaIslandTimerLayout, SecondaryLinePreservesTenPercentTopMargin)
 {
 	const SHudMediaIslandTimerRowLayout Layout = QmHudMediaIslandTimerRows(1.0f, 16.0f, true);
@@ -1267,7 +1255,6 @@ TEST(QmHudMediaIslandTimerLayout, RaceUsesTheWholeSlotWithoutSecondaryLine)
 	EXPECT_FLOAT_EQ(Layout.m_RaceH, 16.0f);
 	EXPECT_FLOAT_EQ(Layout.m_CheckpointH, 0.0f);
 }
-
 
 TEST(QmHudMediaIslandWaveform, PlayingBarsVaryIndependentlyAndPausedBarsSettle)
 {
@@ -1581,8 +1568,6 @@ TEST(QmHudMediaIslandSource, MediaIslandUsesGpuSdfCommandWithoutCpuRasterization
 	EXPECT_EQ(IslandBody.find("BeginRenderTarget"), std::string::npos);
 }
 
-
-
 // 意图：主胶囊保留宽度只由真实内容与左侧倒计时副岛决定，渲染路径与避让路径必须同源，
 // 且不得再拿状态区（时钟/冰冻统计）或观战卫星当保留依据。
 TEST(QmHudMediaIslandSource, BothLayoutPathsShareTheSameMainCapsuleReservation)
@@ -1673,18 +1658,6 @@ TEST(QmHudPresentationSource, MediaIslandAndWeaponHudUseContinuousPresentationSt
 	EXPECT_EQ(Source.find("HudActiveWeaponSwitchScale"), std::string::npos);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundTopAnchoredHorizontalMidlineWithCompactGap)
 {
 	constexpr float IslandY = 0.0f;
@@ -1701,6 +1674,3 @@ TEST(QmHudMediaIslandLayout, InfoStackMirrorsRowsAroundTopAnchoredHorizontalMidl
 		TextGap,
 		0.0001f);
 }
-
-
-

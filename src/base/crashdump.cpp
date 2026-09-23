@@ -14,6 +14,11 @@
 #include <iterator>
 #endif
 
+void crashdump_set_graphics_backend(const char *pBackendName)
+{
+	(void)pBackendName;
+}
+
 static std::atomic<bool> gs_SuppressNextFatalReporter{false};
 
 // QmClient: 退出阶段标记。客户端在销毁图形后端之前置位，用于识别

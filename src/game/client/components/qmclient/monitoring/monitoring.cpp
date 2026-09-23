@@ -417,181 +417,11 @@ namespace
 			aUsedRects[UsedCount++] = LabelRect;
 	}
 
-	static float SampleProcessCpuUsagePct()
+	static CQmAsyncDevicePerfSampler &ProcessPerfSamplerState()
 	{
-#if defined(CONF_FAMILY_UNIX)
-		static int64_t s_LastWallNs = 0;
-		static int64_t s_LastCpuNs = 0;
-
-		struct rusage Usage;
-		if(getrusage(RUSAGE_SELF, &Usage) != 0)
-			return -1.0f;
-
-		const int64_t WallNs = time_get_nanoseconds().count();
-		const int64_t CpuNs =
-			(int64_t)Usage.ru_utime.tv_sec * 1000000000LL + (int64_t)Usage.ru_utime.tv_usec * 1000LL +
-			(int64_t)Usage.ru_stime.tv_sec * 1000000000LL + (int64_t)Usage.ru_stime.tv_usec * 1000LL;
-
-		if(s_LastWallNs == 0 || WallNs <= s_LastWallNs || CpuNs < s_LastCpuNs)
-		{
-			s_LastWallNs = WallNs;
-			s_LastCpuNs = CpuNs;
-			return -1.0f;
-		}
-
-		const int64_t WallDeltaNs = WallNs - s_LastWallNs;
-		const int64_t CpuDeltaNs = CpuNs - s_LastCpuNs;
-		s_LastWallNs = WallNs;
-		s_LastCpuNs = CpuNs;
-
-		const float RawCpuUsagePct = (float)std::max((double)CpuDeltaNs / (double)WallDeltaNs * 100.0, 0.0);
-		return QmNormalizeProcessCpuUsagePct(RawCpuUsagePct, std::thread::hardware_concurrency());
-#elif defined(CONF_FAMILY_WINDOWS)
-		static uint64_t s_LastWall100Ns = 0;
-		static uint64_t s_LastCpu100Ns = 0;
-
-		FILETIME CreationTime, ExitTime, KernelTime, UserTime, SystemTime;
-		if(!GetProcessTimes(GetCurrentProcess(), &CreationTime, &ExitTime, &KernelTime, &UserTime))
-			return -1.0f;
-#if _WIN32_WINNT >= 0x0602
-		GetSystemTimePreciseAsFileTime(&SystemTime);
-#else
-		GetSystemTimeAsFileTime(&SystemTime);
-#endif
-
-		ULARGE_INTEGER Wall;
-		Wall.LowPart = SystemTime.dwLowDateTime;
-		Wall.HighPart = SystemTime.dwHighDateTime;
-		ULARGE_INTEGER Kernel;
-		Kernel.LowPart = KernelTime.dwLowDateTime;
-		Kernel.HighPart = KernelTime.dwHighDateTime;
-		ULARGE_INTEGER User;
-		User.LowPart = UserTime.dwLowDateTime;
-		User.HighPart = UserTime.dwHighDateTime;
-
-		const uint64_t Wall100Ns = Wall.QuadPart;
-		const uint64_t Cpu100Ns = Kernel.QuadPart + User.QuadPart;
-		if(s_LastWall100Ns == 0 || Wall100Ns <= s_LastWall100Ns || Cpu100Ns < s_LastCpu100Ns)
-		{
-			s_LastWall100Ns = Wall100Ns;
-			s_LastCpu100Ns = Cpu100Ns;
-			return -1.0f;
-		}
-
-		const uint64_t WallDelta100Ns = Wall100Ns - s_LastWall100Ns;
-		const uint64_t CpuDelta100Ns = Cpu100Ns - s_LastCpu100Ns;
-		s_LastWall100Ns = Wall100Ns;
-		s_LastCpu100Ns = Cpu100Ns;
-
-		const float RawCpuUsagePct = (float)std::max((double)CpuDelta100Ns / (double)WallDelta100Ns * 100.0, 0.0);
-		return QmNormalizeProcessCpuUsagePct(RawCpuUsagePct, std::thread::hardware_concurrency());
-#else
-		return -1.0f;
-#endif
-	}
-
-	static float SampleTotalCpuUsagePct()
-	{
-#if defined(CONF_PLATFORM_LINUX)
-		static uint64_t s_LastIdle = 0;
-		static uint64_t s_LastTotal = 0;
-
-		FILE *pFile = std::fopen("/proc/stat", "r");
-		if(pFile == nullptr)
-			return -1.0f;
-
-		char aLabel[8] = {};
-		uint64_t User = 0;
-		uint64_t Nice = 0;
-		uint64_t System = 0;
-		uint64_t Idle = 0;
-		uint64_t Iowait = 0;
-		uint64_t Irq = 0;
-		uint64_t Softirq = 0;
-		uint64_t Steal = 0;
-		const int ReadCount = std::fscanf(pFile, "%7s %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64, aLabel, &User, &Nice, &System, &Idle, &Iowait, &Irq, &Softirq, &Steal);
-		std::fclose(pFile);
-		if(ReadCount < 5 || std::strcmp(aLabel, "cpu") != 0)
-			return -1.0f;
-
-		const uint64_t IdleAll = Idle + Iowait;
-		const uint64_t Total = User + Nice + System + Idle + Iowait + Irq + Softirq + Steal;
-		if(s_LastTotal == 0 || Total <= s_LastTotal || IdleAll < s_LastIdle)
-		{
-			s_LastIdle = IdleAll;
-			s_LastTotal = Total;
-			return -1.0f;
-		}
-
-		const float UsagePct = QmComputeTotalCpuUsagePct(s_LastIdle, s_LastTotal, IdleAll, Total);
-		s_LastIdle = IdleAll;
-		s_LastTotal = Total;
-		return UsagePct;
-#elif defined(CONF_FAMILY_WINDOWS)
-		static uint64_t s_LastIdle100Ns = 0;
-		static uint64_t s_LastKernel100Ns = 0;
-		static uint64_t s_LastUser100Ns = 0;
-
-		FILETIME IdleTime, KernelTime, UserTime;
-		if(!GetSystemTimes(&IdleTime, &KernelTime, &UserTime))
-			return -1.0f;
-
-		ULARGE_INTEGER Idle;
-		Idle.LowPart = IdleTime.dwLowDateTime;
-		Idle.HighPart = IdleTime.dwHighDateTime;
-		ULARGE_INTEGER Kernel;
-		Kernel.LowPart = KernelTime.dwLowDateTime;
-		Kernel.HighPart = KernelTime.dwHighDateTime;
-		ULARGE_INTEGER User;
-		User.LowPart = UserTime.dwLowDateTime;
-		User.HighPart = UserTime.dwHighDateTime;
-
-		if(s_LastKernel100Ns == 0 || Kernel.QuadPart < s_LastKernel100Ns || User.QuadPart < s_LastUser100Ns || Idle.QuadPart < s_LastIdle100Ns)
-		{
-			s_LastIdle100Ns = Idle.QuadPart;
-			s_LastKernel100Ns = Kernel.QuadPart;
-			s_LastUser100Ns = User.QuadPart;
-			return -1.0f;
-		}
-
-		const uint64_t PreviousTotal = s_LastKernel100Ns + s_LastUser100Ns;
-		const uint64_t CurrentTotal = Kernel.QuadPart + User.QuadPart;
-		const float UsagePct = QmComputeTotalCpuUsagePct(s_LastIdle100Ns, PreviousTotal, Idle.QuadPart, CurrentTotal);
-		s_LastIdle100Ns = Idle.QuadPart;
-		s_LastKernel100Ns = Kernel.QuadPart;
-		s_LastUser100Ns = User.QuadPart;
-
-		return UsagePct;
-#else
-		return -1.0f;
-#endif
-	}
-
-	static float SampleProcessMemoryMb()
-	{
-#if defined(CONF_PLATFORM_MACOS)
-		mach_task_basic_info Info;
-		mach_msg_type_number_t Count = MACH_TASK_BASIC_INFO_COUNT;
-		if(task_info(mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&Info), &Count) != KERN_SUCCESS)
-			return -1.0f;
-		return (float)Info.resident_size / (1024.0f * 1024.0f);
-#elif defined(CONF_FAMILY_UNIX)
-		struct rusage Usage;
-		if(getrusage(RUSAGE_SELF, &Usage) != 0)
-			return -1.0f;
-#if defined(CONF_PLATFORM_LINUX)
-		return (float)Usage.ru_maxrss / 1024.0f;
-#else
-		return (float)Usage.ru_maxrss / (1024.0f * 1024.0f);
-#endif
-#elif defined(CONF_FAMILY_WINDOWS)
-		PROCESS_MEMORY_COUNTERS_EX Counters;
-		if(!GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&Counters), sizeof(Counters)))
-			return -1.0f;
-		return (float)Counters.WorkingSetSize / (1024.0f * 1024.0f);
-#else
-		return -1.0f;
-#endif
+		// CPU/内存始终供监控使用，独立于仅在性能日志开启时运行的 GPU 查询。
+		static CQmAsyncDevicePerfSampler s_Sampler(QmSampleProcessPerf, std::chrono::milliseconds(50));
+		return s_Sampler;
 	}
 
 	static CQmAsyncDevicePerfSampler &DevicePerfSamplerState()
@@ -655,10 +485,12 @@ void CQmMonitoring::ResetHistory()
 void CQmMonitoring::OnInit()
 {
 	ResetHistory();
+	QmUpdateDevicePerfSamplerState(ProcessPerfSamplerState(), true);
 }
 
 void CQmMonitoring::OnShutdown()
 {
+	ProcessPerfSamplerState().Stop();
 	DevicePerfSamplerState().Stop();
 }
 
@@ -834,9 +666,10 @@ void CQmMonitoring::UpdatePerformanceMetrics(SQmPerformanceMetrics &Perf)
 	Perf.m_FrameTimeUs = Client()->FrameTimeAverage() * 1000000.0f;
 	Perf.m_Fps = Perf.m_FrameTimeMs > 0.0f ? 1000.0f / Perf.m_FrameTimeMs : 0.0f;
 	Perf.m_PredictionTimeMs = (float)Client()->GetPredictionTime();
-	Perf.m_CpuUsagePct = SampleProcessCpuUsagePct();
-	Perf.m_TotalCpuUsagePct = SampleTotalCpuUsagePct();
-	Perf.m_MemoryUsageMb = SampleProcessMemoryMb();
+	const SQmDevicePerfSample ProcessSample = ProcessPerfSamplerState().Snapshot().m_Sample;
+	Perf.m_CpuUsagePct = ProcessSample.m_CpuUsagePct;
+	Perf.m_TotalCpuUsagePct = ProcessSample.m_TotalCpuUsagePct;
+	Perf.m_MemoryUsageMb = ProcessSample.m_MemoryUsageMb;
 	Perf.m_GameTick = Client()->GameTick(g_Config.m_ClDummy);
 	Perf.m_PredictedTick = Client()->PredGameTick(g_Config.m_ClDummy);
 	Perf.m_GraphicsMemory.m_TextureKiB = Graphics()->TextureMemoryUsage() / 1024;

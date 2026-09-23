@@ -10,6 +10,8 @@
 #include <game/client/components/player_points.h>
 
 #include <algorithm>
+#include <map>
+#include <string>
 
 namespace tclient_statusbar
 {
@@ -69,6 +71,7 @@ public:
 	int Sizeof() const override { return sizeof(*this); }
 	void OnRender() override;
 	void OnInit() override;
+	void OnWindowResize() override { m_TextWidths.clear(); }
 
 	CStatusItem m_Angle = CStatusItem([this] { AngleRender(); }, [this] { return AngleWidth(); },
 		"a", "Angle", "", "Displays your current angle in degrees");
@@ -125,6 +128,13 @@ public:
 	bool m_PingActive = false;
 
 private:
+	std::map<std::string, float, std::less<>> m_TextWidths;
+	float m_MetricsFontSize = 0.0f;
+	vec2 m_MetricsScreenScale = vec2(0.0f, 0.0f);
+	unsigned m_MetricsRenderFlags = 0;
+	int m_MetricsFontPreset = 0;
+	float CachedTextWidth(const char *pText);
+
 	float m_FrameTimeAverage = 0.0f;
 	int m_PlayerId = 0;
 	float m_FontSize = 12.0f;

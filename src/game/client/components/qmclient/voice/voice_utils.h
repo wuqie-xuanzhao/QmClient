@@ -6,10 +6,12 @@
 #include <base/vmath.h>
 
 #include <engine/shared/protocol.h>
+#include <engine/shared/websocket_client.h>
 
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -24,6 +26,7 @@ constexpr int VOICE_PACKET_HEADER_SIZE = 4 + 1 + 1 + 2 + 4 + 4 + 1 + 2 + 2 + 4 +
 constexpr int VOICE_MAX_PAYLOAD = VOICE_MAX_PACKET - VOICE_PACKET_HEADER_SIZE;
 constexpr uint8_t VOICE_FLAG_VAD = 1 << 0;
 constexpr uint8_t VOICE_FLAG_LOOPBACK = 1 << 1;
+constexpr uint8_t VOICE_ALLOWED_FLAGS = VOICE_FLAG_VAD | VOICE_FLAG_LOOPBACK;
 constexpr int VOICE_NOISE_SUPPRESS_OFF = 0;
 constexpr int VOICE_NOISE_SUPPRESS_SIMPLE = 1;
 constexpr int VOICE_NOISE_SUPPRESS_RNNOISE = 2;
@@ -31,6 +34,34 @@ inline constexpr float VOICE_HPF_CUTOFF_HZ = 120.0f;
 
 namespace VoiceUtils
 {
+	const char *EffectiveVoiceWebSocketUrl(const char *pUrl);
+
+	// 语音 worker 独占传输对象，停止 worker 后才从外部销毁。
+	class CVoiceWebSocketTransport
+	{
+		std::unique_ptr<IQmWebSocketClient> m_pClient;
+		std::string m_Url;
+		std::string m_Error;
+		uint32_t m_ContextHash = 0;
+		uint32_t m_TokenHash = 0;
+		uint8_t m_ProtocolVersion = 0;
+		bool m_Enabled = false;
+		bool m_UrlValid = false;
+		bool m_Connected = false;
+		int64_t m_LastConnectedTick = 0;
+
+	public:
+		CVoiceWebSocketTransport();
+		explicit CVoiceWebSocketTransport(std::unique_ptr<IQmWebSocketClient> pClient);
+		bool Update(const char *pUrl, bool Enabled, uint32_t ContextHash, uint32_t TokenHash, uint8_t ProtocolVersion);
+		void Disconnect();
+		bool Connected() const;
+		bool Connecting() const;
+		bool UrlValid() const { return m_UrlValid; }
+		const char *LastError() const;
+		bool SendPacket(const uint8_t *pData, size_t Size);
+		bool PollPacket(SQmWebSocketMessage &Out);
+	};
 	struct SVoicePacketHeader
 	{
 		// Keep this layout in sync with WriteVoicePacketHeader/ReadVoicePacketHeader.
@@ -134,6 +165,7 @@ namespace VoiceUtils
 		DROP_HEADER,
 		DROP_VERSION,
 		DROP_TYPE,
+		DROP_FLAGS,
 		DROP_CONTEXT,
 		DROP_GROUP,
 		DROP_SENDER,
@@ -228,6 +260,7 @@ namespace VoiceUtils
 		bool m_AudioRefreshPending = false;
 		bool m_ServerAddrValid = false;
 		bool m_HaveSocket = false;
+		bool m_Connecting = false;
 		bool m_Online = false;
 		bool m_CaptureReady = false;
 		bool m_CaptureUnavailable = false;

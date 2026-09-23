@@ -68,9 +68,6 @@ TEST(SkinsContract, SkinQueueIntervalUsesMilliseconds)
 	EXPECT_EQ(ClientSource.find("g_Config.m_QmDummySkinQueueInterval *= 10"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, SkinQueueRotationUsesExplicitEnableSwitchAndBoundedInterval)
 {
 	// Intent only: rotation has an explicit enable switch and a bounded (0..120000ms)
@@ -98,9 +95,6 @@ TEST(SkinsContract, SkinQueueRotationUsesExplicitEnableSwitchAndBoundedInterval)
 	EXPECT_EQ(UpdateBody.find("QueueInterval <= 0"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, DisabledSkinQueuePreventsMapRotateAutoApply)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/skins.cpp");
@@ -116,9 +110,6 @@ TEST(SkinsContract, DisabledSkinQueuePreventsMapRotateAutoApply)
 	EXPECT_NE(SyncBody.find("ApplySkinQueueCurrent(Dummy);"), std::string::npos);
 	EXPECT_LT(SyncBody.find("if(SkinQueueEnabledVar(Dummy))"), SyncBody.find("ApplySkinQueueCurrent(Dummy);"));
 }
-
-
-
 
 TEST(SkinsContract, SkinQueueCatchUpAppliesOnlyFinalStepOncePerFrame)
 {
@@ -136,9 +127,6 @@ TEST(SkinsContract, SkinQueueCatchUpAppliesOnlyFinalStepOncePerFrame)
 	EXPECT_EQ(UpdateBody.find("while(m_aSkinQueueElapsed[Dummy] >= Interval)"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeRenderInfoValidityIncludesSixupBodyTexture)
 {
 	const std::string Header = ReadTestSourceFile("src/game/client/render.h");
@@ -154,9 +142,6 @@ TEST(SkinsContract, TeeRenderInfoValidityIncludesSixupBodyTexture)
 	EXPECT_NE(ValidBody.find("protocol7::SKINPART_BODY"), std::string::npos);
 	EXPECT_NE(ValidBody.find("IsDrawableTexture(Sixup.PartTexture(protocol7::SKINPART_BODY))"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSkinUploadRequiresWholeSourceTextureBudgetBeforeUpload)
 {
@@ -181,9 +166,6 @@ TEST(SkinsContract, TeeSkinUploadRequiresWholeSourceTextureBudgetBeforeUpload)
 	EXPECT_NE(Source.find("event=%s skin=%s artifact=source width=%d height=%d bytes=%d dur_ms=%.3f uploads=%d"), std::string::npos);
 	EXPECT_NE(Source.find("LogSettingsSkinSourceStageEvent(\"upload_done\""), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSettingsListUsesIdleBackgroundRequestsAfterVisibleSettle)
 {
@@ -217,9 +199,6 @@ TEST(SkinsContract, TeeSettingsListUsesIdleBackgroundRequestsAfterVisibleSettle)
 	EXPECT_NE(RenderTeeBody.find("GameClient()->m_Skins.SetSettingsTeeVisibleSnapshot(VisibleSnapshot);"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeSourcePathEmitsRequestAndFrameCapPerfLogs)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -234,9 +213,6 @@ TEST(SkinsContract, TeeSourcePathEmitsRequestAndFrameCapPerfLogs)
 	EXPECT_NE(Source.find("LogSettingsSkinSourceRequestEvent(pSkinContainer->Name(), Priority, pSkinContainer->m_State);"), std::string::npos);
 	EXPECT_NE(Source.find("LogSettingsSkinFrameCapEvent(GameClient());"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSourcePathCapsActiveLoadingBeforeQueueFuse)
 {
@@ -264,9 +240,6 @@ TEST(SkinsContract, TeeSourcePathCapsActiveLoadingBeforeQueueFuse)
 	EXPECT_NE(StartLoading.find("LogSettingsSkinSourceWaitEvent(pSkinContainer->Name(), Admission.m_pBlockReason"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeBackgroundWindowUsesRealDecodeJobSaturationSignal)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -288,9 +261,6 @@ TEST(SkinsContract, TeeBackgroundWindowUsesRealDecodeJobSaturationSignal)
 	EXPECT_NE(PrepareBody.find("LoadingJobsReadyForMainThread == 0"), std::string::npos);
 	EXPECT_NE(PrepareBody.find("m_SettingsThroughputControllerOutput = SettingsSkinThroughputControllerStep({"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeFinishLoadingKeepsPriorityBeforeBackgroundSweep)
 {
@@ -319,9 +289,6 @@ TEST(SkinsContract, TeeFinishLoadingKeepsPriorityBeforeBackgroundSweep)
 	EXPECT_LT(DeferBackgroundPos, BackgroundListPos);
 	EXPECT_LT(BackgroundListPos, FallbackSweepPos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSettingsListEmitsRequestWindowPerfLogs)
 {

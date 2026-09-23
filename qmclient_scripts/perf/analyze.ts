@@ -3,13 +3,19 @@
 // analyze.ts — QmClient 性能日志分析入口
 // 用法: bun analyze.ts [log文件路径]
 //       如果不传路径，自动读取 %APPDATA%/DDNet/dumps/QmClient_Perf/ 下最新日志
-//       自动检测上一次报告对应的日志，生成对比分析
+//       自动检测上一次报告对应的日志，生成对比分析；--no-compare 可跳过历史日志
 
 import { createReadStream, writeFileSync, readdirSync, statSync, mkdirSync, existsSync } from 'node:fs';
 import { createInterface } from 'node:readline';
+import { homedir } from 'node:os';
+import { PerfLogCollector, expandFrameBatch } from './lib/stream.ts';
 import { join, basename, dirname, extname, resolve } from 'node:path';
 
-const PERF_DIR = () => join(process.env.APPDATA ?? '', 'DDNet', 'dumps', 'QmClient_Perf');
+const PERF_DIR = () => {
+  if (process.platform === 'win32') return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), 'DDNet', 'dumps', 'QmClient_Perf');
+  if (process.platform === 'darwin') return join(homedir(), 'Library', 'Application Support', 'DDNet', 'dumps', 'QmClient_Perf');
+  return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), 'ddnet', 'dumps', 'QmClient_Perf');
+};
 const REPORT_DIR = () => join(PERF_DIR(), 'Perf_Report');
 
 function listLogFiles(): { name: string; path: string; mtime: number }[] {
@@ -28,7 +34,7 @@ function findLatestLog(): string {
   const files = listLogFiles();
   if (files.length === 0) {
     console.error('无法找到性能日志文件。请确保:');
-    console.error('  1. qm_perf_debug 1 和 qm_perf_logfile 1 已启用');
+    console.error('  1. qm_perf_debug 1 已启用');
     console.error('  2. 至少运行过一次游戏客户端');
     process.exit(1);
   }
@@ -52,7 +58,7 @@ async function main() {
   const { summarizeForBundle } = await import('./lib/quality.ts');
 
   async function parseLogFileWithDiagnostics(path: string) {
-    const entries = [];
+    const collector = new PerfLogCollector();
     let totalLines = 0;
     let invalidLines = 0;
     const lines = createInterface({
@@ -70,9 +76,13 @@ async function main() {
         invalidLines++;
         continue;
       }
-      entries.push(entry);
+      try {
+        for (const expanded of expandFrameBatch(entry)) collector.add(expanded);
+      } catch {
+        invalidLines++;
+      }
     }
-    return { entries, diagnostics: { totalLines, invalidLines } };
+    return collector.finish({ totalLines, invalidLines });
   }
 
   const args = process.argv.slice(2);
@@ -81,14 +91,15 @@ async function main() {
   if (outputIndex >= 0 && !outputPath) {
     throw new Error('--output requires an HTML path');
   }
-  const logPath = args.find((arg, index) => arg !== '--output' && index !== outputIndex + 1) ?? findLatestLog();
+  const logPath = args.find((arg, index) => arg !== '--output' && arg !== '--no-compare' && (outputIndex < 0 || index !== outputIndex + 1)) ?? findLatestLog();
   console.log(`读取: ${logPath}`);
 
-  console.log('解析中...（流式读取）');
+  console.log('解析中...（流式读取、限制驻留样本数量）');
   const parsed = await parseLogFileWithDiagnostics(logPath);
   const entries = parsed.entries;
   console.log(`解析行数: ${parsed.diagnostics.totalLines}`);
-  console.log(`有效条目: ${entries.length}`);
+  console.log(`保留条目: ${entries.length} / ${parsed.diagnostics.totalEntries}`);
+  if (parsed.diagnostics.sampledEntries) console.log('日志较大：报告使用有界样本，配置保留初始值和最新值。');
   if (parsed.diagnostics.invalidLines > 0) {
     console.log(`忽略无效行: ${parsed.diagnostics.invalidLines}`);
   }
@@ -98,12 +109,12 @@ async function main() {
 
   // 自动查找上一次日志并生成对比
   let comparison = null;
-  const prevLogPath = findPreviousLog(logPath);
+  const prevLogPath = args.includes('--no-compare') ? null : findPreviousLog(logPath);
   if (prevLogPath) {
     try {
       const prevParsed = await parseLogFileWithDiagnostics(prevLogPath);
       const prevEntries = prevParsed.entries;
-      if (prevEntries.length > 0) {
+      if (prevEntries.length > 0 && !prevParsed.diagnostics.sampledEntries && !parsed.diagnostics.sampledEntries) {
         const prevSnapshot = snapshot(prevEntries, prevLogPath);
         comparison = compareSessions(prevSnapshot, currentSnapshot);
         console.log(`对比基线: ${basename(prevLogPath)} (${prevEntries.length} 条)`);

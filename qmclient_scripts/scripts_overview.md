@@ -74,6 +74,18 @@
 - `qmclient_scripts/tw_api.py`
 - `qmclient_scripts/update.zsh`：旧增量更新服务部署脚本；必须显式设置 `QM_UPDATE_SCRIPTS_DIR` 与 `QM_UPDATE_OUTPUT_DIR`，可用 `QM_UPDATE_RELEASE_REPOSITORY` 覆盖发布仓库
 
+### 5. 独立开源的服务仓库
+
+`qmclient_scripts/` 下另有一组**独立 Git 仓库**（各自有独立 remote，已被根 `.gitignore` 排除，不并入主仓库）：
+
+| 目录 | 仓库 | 语言 |
+|------|------|------|
+| `qmclient_scripts/qmclient_center_server/` | [wxj881027/qmclient-center-server](https://github.com/wxj881027/qmclient-center-server) | Node.js |
+| `qmclient_scripts/qmclient_voice_server/` | [wxj881027/qmclient-voicesrv](https://github.com/wxj881027/qmclient-voicesrv) | Rust |
+| `qmclient_scripts/qmclient_titles/` | [wxj881027/qmclient-titles](https://github.com/wxj881027/qmclient-titles) | Node.js |
+
+分工、端口与部署约定见 `qmclient_scripts/SERVICES.md`。这些目录只做源码与部署配置，**不含运行期数据**（游玩时长、新闻内容、称号兑换码等），密钥一律通过 `EnvironmentFile` 注入。
+
 `qmclient_scripts/languages_qmclient/` 语言脚本入口：
 
 测试层级与高债务测试统计：

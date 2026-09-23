@@ -1,6 +1,13 @@
 #include "chat_emoji.h"
 
+#include <base/log.h>
+
+#include <engine/engine.h>
+#include <engine/gfx/image_loader.h>
+#include <engine/gfx/image_manipulation.h>
 #include <engine/storage.h>
+
+#include <game/client/gameclient.h>
 
 void CQmChatEmoji::EnsureTextureLoaded(EQmChatEmoji Emoji) const
 {
@@ -10,15 +17,64 @@ void CQmChatEmoji::EnsureTextureLoaded(EQmChatEmoji Emoji) const
 	if(!QmChatEmojiShouldLoadTexture(Emoji, m_aLoadAttempted[TextureIndex]))
 		return;
 
-	// 原图较大，首次遇到对应表情时再上传纹理，避免启动即常驻整套资源。
+	// 首次遇到时排队；同时只保留一张正在解码或等待上传的原图。
 	m_aLoadAttempted[TextureIndex] = true;
-	const char *pTexturePath = QmChatEmojiTexturePath(Emoji);
-	if(pTexturePath != nullptr)
-		m_aTextures[TextureIndex] = Graphics()->LoadTexture(pTexturePath, IStorage::TYPE_ALL);
+	m_LoadQueue.push_back(Emoji);
+	StartNextLoad();
+}
+
+void CQmChatEmoji::StartNextLoad() const
+{
+	if(m_pLoadJob || m_LoadQueue.empty())
+		return;
+	m_LoadingEmoji = m_LoadQueue.front();
+	m_LoadQueue.pop_front();
+	const std::string Path = QmChatEmojiTexturePath(m_LoadingEmoji);
+	m_pLoadJob = std::make_shared<CQmChatEmojiLoadJob>([pStorage = Storage(), Path](CImageInfo &Image) {
+		void *pData = nullptr;
+		unsigned Size = 0;
+		if(!pStorage->ReadFile(Path.c_str(), IStorage::TYPE_ALL, &pData, &Size))
+		{
+			log_error("chat_emoji", "Failed to read '%s'", Path.c_str());
+			return;
+		}
+		const bool Loaded = CImageLoader::LoadPng(pData, Size, Path.c_str(), Image) || CImageLoader::LoadWebP(pData, Size, Path.c_str(), Image);
+		free(pData);
+		if(Loaded)
+			ConvertToRgba(Image);
+		// ConvertToRgba 返回的是原格式是否已为 RGBA，而非转换成功标记。
+		if(!Loaded || Image.m_Format != CImageInfo::FORMAT_RGBA)
+			Image.Free();
+	});
+	Engine()->AddJob(m_pLoadJob);
+}
+
+void CQmChatEmoji::OnUpdate()
+{
+	if(!m_pLoadJob)
+		return;
+	CImageInfo *pImage = m_pLoadJob->Image();
+	if(!pImage)
+		return;
+	if(pImage->m_pData)
+	{
+		auto *pLimiter = GameClient()->GpuUploadLimiter();
+		if(!pLimiter->CanUpload())
+			return;
+		const size_t Index = static_cast<size_t>(m_LoadingEmoji) - 1;
+		m_aTextures[Index] = Graphics()->LoadTextureRawMove(*pImage, 0, QmChatEmojiTexturePath(m_LoadingEmoji));
+		pLimiter->OnUploaded();
+	}
+	m_pLoadJob.reset();
+	m_LoadingEmoji = EQmChatEmoji::NONE;
+	StartNextLoad();
 }
 
 void CQmChatEmoji::OnShutdown()
 {
+	m_pLoadJob.reset();
+	m_LoadQueue.clear();
+	m_LoadingEmoji = EQmChatEmoji::NONE;
 	for(IGraphics::CTextureHandle &Texture : m_aTextures)
 	{
 		if(Texture.IsValid())

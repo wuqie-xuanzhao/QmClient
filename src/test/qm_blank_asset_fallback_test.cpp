@@ -196,7 +196,7 @@ TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectMapsEachCellAcrossCanvasSize
 	CImageInfo Custom = MakeRgbaImage(6, 3);
 	CImageInfo Default = MakeRgbaImage(12, 6);
 	SetPixel(Default, 4, 0, 40, 40, 40, 255); // 默认图第 1 格（x 4..7）
-	SetPixel(Custom, 0, 0, 10, 10, 10, 255);  // 自定义图只有第 0 格有内容
+	SetPixel(Custom, 0, 0, 10, 10, 10, 255); // 自定义图只有第 0 格有内容
 
 	// 自定义第 1 格 (2,0)-(4,3) 对应默认第 1 格 (4,0)-(8,6)。
 	ASSERT_TRUE(CopyFallbackOverBlankRect(Custom, Default, 2, 0, 2, 3, 4, 0, 4, 6));
@@ -232,4 +232,98 @@ TEST(QmBlankAssetFallback, CopyFallbackOverBlankRectRequiresMatchingFormat)
 
 	Custom.Free();
 	Default.Free();
+}
+
+namespace
+{
+	// 32x32 图集按 2x2 网格切成 16x16 格，便于用少量像素验证提取区域。
+	constexpr size_t QM_TEST_ATLAS_SIZE = 32;
+	constexpr int QM_TEST_ATLAS_GRID = 2;
+
+	CDataSpriteset MakeAtlasSet()
+	{
+		CDataSpriteset Set{};
+		Set.m_Gridx = QM_TEST_ATLAS_GRID;
+		Set.m_Gridy = QM_TEST_ATLAS_GRID;
+		return Set;
+	}
+
+	CDataSprite MakeSprite(CDataSpriteset *pSet, int X, int Y, int W, int H)
+	{
+		CDataSprite Sprite{};
+		Sprite.m_pSet = pSet;
+		Sprite.m_X = X;
+		Sprite.m_Y = Y;
+		Sprite.m_W = W;
+		Sprite.m_H = H;
+		Sprite.m_pName = "test_sprite";
+		return Sprite;
+	}
+} // namespace
+
+TEST(QmBlankAssetFallback, ExtractSpriteImageCopiesTheGridCellRegionFromTheAtlas)
+{
+	CImageInfo Atlas = MakeRgbaImage(QM_TEST_ATLAS_SIZE, QM_TEST_ATLAS_SIZE);
+	// 第二列首行的像素用可区分的颜色标记，提取后应出现在结果的原点。
+	SetPixel(Atlas, 16, 0, 11, 22, 33, 44);
+	SetPixel(Atlas, 31, 15, 55, 66, 77, 88);
+
+	CDataSpriteset Set = MakeAtlasSet();
+	const CDataSprite Sprite = MakeSprite(&Set, 1, 0, 1, 1);
+
+	CImageInfo Result;
+	ASSERT_TRUE(ExtractSpriteImage(Atlas, &Sprite, Result));
+
+	EXPECT_EQ(Result.m_Width, 16u);
+	EXPECT_EQ(Result.m_Height, 16u);
+	EXPECT_EQ(Result.m_Format, CImageInfo::FORMAT_RGBA);
+	EXPECT_TRUE(PixelEquals(Result, 0, 0, 11, 22, 33, 44));
+	// 图集内该格的右下角像素也要一起搬过来，而不是只复制原点。
+	EXPECT_TRUE(PixelEquals(Result, 15, 15, 55, 66, 77, 88));
+
+	Atlas.Free();
+	Result.Free();
+}
+
+TEST(QmBlankAssetFallback, ExtractSpriteImageRejectsSpriteBeyondTheAtlasWithoutTouchingResult)
+{
+	CImageInfo Atlas = MakeRgbaImage(QM_TEST_ATLAS_SIZE, QM_TEST_ATLAS_SIZE);
+
+	// 自定义图集比默认布局小时，越界精灵是预期情形：此处必须失败，
+	// 由调用方按 qm_blank_asset_fallback 决定回退默认资源还是保持不可见。
+	CDataSpriteset Set = MakeAtlasSet();
+	const CDataSprite Sprite = MakeSprite(&Set, 1, 0, 2, 1);
+
+	CImageInfo Result;
+	EXPECT_FALSE(ExtractSpriteImage(Atlas, &Sprite, Result));
+	EXPECT_EQ(Result.m_pData, nullptr);
+
+	Atlas.Free();
+}
+
+TEST(QmBlankAssetFallback, ExtractSpriteImageRejectsMissingSpriteMissingDataAndBadGrid)
+{
+	CImageInfo Atlas = MakeRgbaImage(QM_TEST_ATLAS_SIZE, QM_TEST_ATLAS_SIZE);
+	CDataSpriteset Set = MakeAtlasSet();
+	const CDataSprite Sprite = MakeSprite(&Set, 0, 0, 1, 1);
+
+	CImageInfo Result;
+	EXPECT_FALSE(ExtractSpriteImage(Atlas, nullptr, Result));
+
+	// 图集没有像素数据时不能进入复制路径。
+	CImageInfo NoData;
+	NoData.m_Width = QM_TEST_ATLAS_SIZE;
+	NoData.m_Height = QM_TEST_ATLAS_SIZE;
+	NoData.m_Format = CImageInfo::FORMAT_RGBA;
+	EXPECT_FALSE(ExtractSpriteImage(NoData, &Sprite, Result));
+
+	// 网格为 0 的 sprite 无法换算像素矩形。
+	CDataSpriteset BadSet{};
+	const CDataSprite BadSprite = MakeSprite(&BadSet, 0, 0, 1, 1);
+	EXPECT_FALSE(ExtractSpriteImage(Atlas, &BadSprite, Result));
+
+	// 越界之外的无数据情形同样不应写入结果。
+	EXPECT_EQ(Result.m_pData, nullptr);
+
+	Atlas.Free();
 }

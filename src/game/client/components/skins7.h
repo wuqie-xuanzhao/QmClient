@@ -15,6 +15,7 @@
 #include <generated/protocol7.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qmclient/qm_chat_avatar.h>
 #include <game/client/render.h>
 
 #include <chrono>
@@ -45,7 +46,12 @@ public:
 		char m_aName[24];
 		IGraphics::CTextureHandle m_OriginalTexture;
 		IGraphics::CTextureHandle m_ColorableTexture;
+		// 部件描边：与纹理句柄解耦的 CPU 遮罩，句柄失效时按需重建；卸载部件时一并释放。
+		std::shared_ptr<CQmSkinOutline> m_QmSkinOutline;
 		ColorRGBA m_BloodColor;
+		// 聊天导出的部件头像素材：加载时缩好的 CPU 副本，与纹理句柄解耦。
+		std::shared_ptr<const QmChatAvatar::SSource> m_pChatAvatarOriginal;
+		std::shared_ptr<const QmChatAvatar::SSource> m_pChatAvatarColorable;
 
 		void ApplyTo(CTeeRenderInfo::CSixup &SixupRenderInfo) const;
 

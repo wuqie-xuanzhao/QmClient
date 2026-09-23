@@ -1,0 +1,48 @@
+# 聊天导出进度与取消提示
+[[message]]
+key = "Chat export cancelled"
+[message.translations]
+simplified_chinese = "已取消聊天导出"
+traditional_chinese = "已取消聊天匯出"
+japanese = "チャットのエクスポートをキャンセルしました"
+korean = "채팅 내보내기가 취소되었습니다"
+russian = "Экспорт чата отменён"
+german = "Chat-Export abgebrochen"
+spanish = "Exportación del chat cancelada"
+french = "Exportation du chat annulée"
+brazilian_portuguese = "Exportação do chat cancelada"
+portuguese = "Exportação da conversa cancelada"
+turkish = "Sohbet dışa aktarımı iptal edildi"
+polish = "Anulowano eksport czatu"
+
+[[message]]
+key = "Exporting chat images: %d"
+[message.translations]
+simplified_chinese = "正在导出聊天图片：%d"
+traditional_chinese = "正在匯出聊天圖片：%d"
+japanese = "チャット画像をエクスポート中：%d"
+korean = "채팅 이미지 내보내는 중: %d"
+russian = "Экспорт изображений чата: %d"
+german = "Chat-Bilder werden exportiert: %d"
+spanish = "Exportando imágenes del chat: %d"
+french = "Exportation des images du chat : %d"
+brazilian_portuguese = "Exportando imagens do chat: %d"
+portuguese = "A exportar imagens da conversa: %d"
+turkish = "Sohbet görselleri dışa aktarılıyor: %d"
+polish = "Eksportowanie obrazów czatu: %d"
+
+[[message]]
+key = "Preparing chat export: %d%%"
+[message.translations]
+simplified_chinese = "正在准备聊天导出：%d%%"
+traditional_chinese = "正在準備聊天匯出：%d%%"
+japanese = "チャットのエクスポートを準備中：%d%%"
+korean = "채팅 내보내기 준비 중: %d%%"
+russian = "Подготовка экспорта чата: %d%%"
+german = "Chat-Export wird vorbereitet: %d%%"
+spanish = "Preparando la exportación del chat: %d%%"
+french = "Préparation de l’exportation du chat : %d%%"
+brazilian_portuguese = "Preparando a exportação do chat: %d%%"
+portuguese = "A preparar a exportação da conversa: %d%%"
+turkish = "Sohbet dışa aktarımı hazırlanıyor: %d%%"
+polish = "Przygotowywanie eksportu czatu: %d%%"

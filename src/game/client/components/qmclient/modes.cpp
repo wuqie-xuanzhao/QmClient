@@ -193,6 +193,29 @@ bool ShouldShowQmHookStrongWeakScope(int Scope, bool Self, bool Strong, bool Wea
 	}
 }
 
+bool ShouldShowQmNameplateName(int Scope, bool IsCurrentChar, bool IsLocalClient)
+{
+	// 当前操控角色：只有 IsCurrentChar 那一个。
+	if(IsCurrentChar)
+		return Scope == QM_NAMEPLATE_SHOW_SCOPE_CURRENT || Scope == QM_NAMEPLATE_SHOW_SCOPE_LOCAL || Scope == QM_NAMEPLATE_SHOW_SCOPE_ALL;
+	// 本机其他角色（分身）：本机但不是当前操控角色。
+	if(IsLocalClient)
+		return Scope == QM_NAMEPLATE_SHOW_SCOPE_LOCAL || Scope == QM_NAMEPLATE_SHOW_SCOPE_OTHERS_LOCAL || Scope == QM_NAMEPLATE_SHOW_SCOPE_ALL;
+	// 其他玩家：既不是本机、也不是当前操控角色。
+	return Scope == QM_NAMEPLATE_SHOW_SCOPE_OTHERS || Scope == QM_NAMEPLATE_SHOW_SCOPE_OTHERS_LOCAL || Scope == QM_NAMEPLATE_SHOW_SCOPE_ALL;
+}
+
+int QmNameplateShowScopeFromLegacyFlags(bool ShowOthers, bool ShowOwn)
+{
+	if(ShowOwn && ShowOthers)
+		return QM_NAMEPLATE_SHOW_SCOPE_ALL;
+	if(ShowOwn)
+		return QM_NAMEPLATE_SHOW_SCOPE_LOCAL;
+	if(ShowOthers)
+		return QM_NAMEPLATE_SHOW_SCOPE_OTHERS;
+	return QM_NAMEPLATE_SHOW_SCOPE_OFF;
+}
+
 static bool ShouldUseQmNameplateTextPlayingScope(int Scope, bool Self, bool Friend)
 {
 	switch(Scope)

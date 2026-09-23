@@ -67,7 +67,7 @@ export const BUDGET = {
   h120: 8.33,
   /** 60Hz → 16.67ms */
   h60: 16.67,
-  /** 默认性能日志采样阈值 qm_perf_debug_threshold_ms */
+  /** 旧版日志的采样阈值，仅用于识别历史数据偏差。 */
   samplingDefault: 4,
   /** 2x 60Hz 帧预算，作为严重尖峰阈值 */
   h60Double: 33,
@@ -93,6 +93,7 @@ export interface FrameTimeSeries {
 }
 
 export const PERF_SYSTEM = {
+  FRAME: 'perf/frame',
   MENU: 'perf/menu',
   FPS: 'perf/fps',
   GAMECLIENT: 'perf/gameclient',
@@ -133,11 +134,17 @@ export function entryDurationMs(e: PerfEntry): number | null {
 }
 
 export function isFrameTimeEntry(e: PerfEntry): boolean {
-  return FRAME_TIME_SYSTEMS.has(e.system) && entryDurationMs(e) !== null;
+  return (e.system === PERF_SYSTEM.FRAME || FRAME_TIME_SYSTEMS.has(e.system)) && entryDurationMs(e) !== null;
+}
+
+export function hasUnifiedFrameSamples(entries: PerfEntry[]): boolean {
+  return entries.some(e => e.system === PERF_SYSTEM.FRAME && e.fields.event === 'frame_sample');
 }
 
 export function selectFrameTimeEntries(entries: PerfEntry[]): PerfEntry[] {
-  return entries.filter(isFrameTimeEntry);
+  // 新会话使用完整渲染间隔，组件和菜单阶段耗时只用于归因。
+  const frames = entries.filter(e => e.system === PERF_SYSTEM.FRAME && e.fields.event === 'frame_sample');
+  return frames.length > 0 ? frames : entries.filter(isFrameTimeEntry);
 }
 
 export function toTimeSeries(entries: PerfEntry[]): FrameTimeSeries {
@@ -2481,7 +2488,7 @@ export function generateNarrative(p: Percentiles, spikes: SpikeInfo[], complianc
   lines.push(`本次 session 共采集 ${p.count} 帧渲染数据，整体 ${verdictText}。`);
 
   if (biased) {
-    lines.push(`注意：当前采样阈值估计 p5=${samplingThresholdMs.toFixed(1)}ms（当前默认 4ms），日志可能仅包含超过阈值的帧。实际合规率可能高于日志所示。建议确认 qm_perf_debug_threshold_ms 4 后重新采集完整帧分布。`);
+    lines.push(`注意：当前采样阈值估计 p5=${samplingThresholdMs.toFixed(1)}ms（当前默认 4ms），日志可能仅包含超过阈值的帧。实际合规率可能高于日志所示。建议使用统一诊断开关 qm_perf_debug 1 重新采集完整帧分布。`);
   } else {
     lines.push(`帧预算合规率：240Hz (4.17ms) 为 ${compliance240.toFixed(1)}%，120Hz (8.33ms) 为 ${compliance120.toFixed(1)}%，60Hz (16.67ms) 为 ${compliance60.toFixed(1)}%。`);
   }

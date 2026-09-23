@@ -1,4 +1,5 @@
 #include <game/client/QmUi/SettingsPageLayout.h>
+#include <game/client/QmUi/cards/QmCardCatalogSkinMetrics.h>
 
 #include <gtest/gtest.h>
 
@@ -12,8 +13,9 @@ TEST(SettingsPageLayout, DynamicVisualCardHeightsUseSharedMetrics)
 	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, false), Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ResolveQmVisualCollisionHitboxHeight(Metrics, true), 16.0f * Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ResolveQmVisualFocusModeHeight(Metrics), 16.0f * Metrics.m_RowStep + 3.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing) + Metrics.m_LineSpacing);
+	EXPECT_FLOAT_EQ(ResolveQmVisualSkinAppearanceHeight(Metrics), 9.0f * Metrics.m_RowStep + 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing));
 	EXPECT_FLOAT_EQ(ResolveQmVisualSkinTransitionHeight(Metrics, true) - ResolveQmVisualSkinTransitionHeight(Metrics, false), 5.0f * Metrics.m_RowStep);
-	EXPECT_GT(ResolveQmVisualSkinTransitionHeight(Metrics, false), 0.0f);
+	EXPECT_FLOAT_EQ(ResolveQmVisualSkinTransitionHeight(Metrics, false), 2.0f * Metrics.m_RowStep);
 }
 
 TEST(SettingsPageLayout, GeneralDynamicCameraConsumesNoHiddenRowWhenCollapsed)
@@ -21,7 +23,7 @@ TEST(SettingsPageLayout, GeneralDynamicCameraConsumesNoHiddenRowWhenCollapsed)
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
 	const float Collapsed = ResolveSettingsGeneralGameContentHeight(Metrics, false);
 	const float Expanded = ResolveSettingsGeneralGameContentHeight(Metrics, true);
-	EXPECT_FLOAT_EQ(Collapsed, ResolveSettingsRowsHeight(4, Metrics.m_LineHeight, Metrics.m_LineSpacing));
-	EXPECT_FLOAT_EQ(Expanded, ResolveSettingsRowsHeight(5, Metrics.m_LineHeight, Metrics.m_LineSpacing));
+	EXPECT_FLOAT_EQ(Collapsed, ResolveSettingsRowsHeight(3, Metrics.m_LineHeight, Metrics.m_LineSpacing));
+	EXPECT_FLOAT_EQ(Expanded, ResolveSettingsRowsHeight(4, Metrics.m_LineHeight, Metrics.m_LineSpacing));
 	EXPECT_FLOAT_EQ(Expanded - Collapsed, Metrics.m_RowStep);
 }

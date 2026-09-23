@@ -7,10 +7,15 @@
 #include <engine/shared/protocol.h>
 
 #include <algorithm>
+#include <cctype>
+#include <string>
 #include <unordered_map>
 
 namespace
 {
+	// 彩虹档的饱和度与明度：与既有名牌彩虹（以及开发者彩虹）保持同一观感。
+	constexpr float QM_TITLE_RAINBOW_SATURATION = 0.8f;
+	constexpr float QM_TITLE_RAINBOW_LIGHTNESS = 0.65f;
 
 	const json_value *JsonObjectField(const json_value *pObject, const char *pName)
 	{
@@ -72,6 +77,59 @@ namespace
 		return EClientBrand::QM;
 	}
 } // namespace
+
+std::string NormalizeQmServerAddress(const char *pServerAddress)
+{
+	std::string Address = pServerAddress ? pServerAddress : "";
+	while(!Address.empty() && std::isspace((unsigned char)Address.front()))
+		Address.erase(Address.begin());
+	while(!Address.empty() && std::isspace((unsigned char)Address.back()))
+		Address.pop_back();
+	std::transform(Address.begin(), Address.end(), Address.begin(), [](unsigned char Character) { return (char)std::tolower(Character); });
+	const size_t Scheme = Address.find("://");
+	if(Scheme != std::string::npos)
+		Address.erase(0, Scheme + 3);
+	while(!Address.empty() && Address.back() == '/')
+		Address.pop_back();
+	if(Address.empty())
+		return {};
+	std::string Host = Address;
+	std::string Port;
+	if(Address.front() == '[')
+	{
+		const size_t Close = Address.find(']');
+		if(Close == std::string::npos)
+			return {};
+		Host = Address.substr(1, Close - 1);
+		if(Close + 1 < Address.size() && Address[Close + 1] == ':')
+			Port = Address.substr(Close + 2);
+	}
+	else if(std::count(Address.begin(), Address.end(), ':') == 1)
+	{
+		const size_t Separator = Address.rfind(':');
+		Host = Address.substr(0, Separator);
+		Port = Address.substr(Separator + 1);
+	}
+	while(!Host.empty() && Host.back() == '.')
+		Host.pop_back();
+	if(Host.empty() || (!Port.empty() && !std::all_of(Port.begin(), Port.end(), [](unsigned char Character) { return std::isdigit(Character) != 0; })))
+		return {};
+	if(!Port.empty())
+	{
+		try
+		{
+			const unsigned long NumericPort = std::stoul(Port);
+			if(NumericPort < 1 || NumericPort > 65535)
+				return {};
+			Port = std::to_string(NumericPort);
+		}
+		catch(...)
+		{
+			return {};
+		}
+	}
+	return Host.find(':') != std::string::npos ? "[" + Host + "]" + (Port.empty() ? "" : ":" + Port) : Host + (Port.empty() ? "" : ":" + Port);
+}
 
 bool ParseQmClientUsersJson(const json_value *pRoot, const char *pServerAddress, SQmClientUsersParseResult &OutResult)
 {
@@ -299,9 +357,14 @@ bool IsValidQmTitle(const char *pTitle)
 	return true;
 }
 
-std::vector<SQmTitlePresence> ParseQmTitlePresences(const json_value *pRoot, const char *pServerAddress)
+std::vector<SQmTitlePresence> ParseQmTitlePresences(const json_value *pRoot, const char *pServerAddress, int64_t *pServerTime)
 {
 	std::vector<SQmTitlePresence> Result;
+	if(pServerTime)
+		*pServerTime = 0;
+	const json_value *pServerTimeValue = JsonObjectField(pRoot, "server_time");
+	if(pServerTime && pServerTimeValue && pServerTimeValue->type == json_integer)
+		*pServerTime = pServerTimeValue->u.integer;
 	int64_t Now;
 	if(!pServerAddress || !JsonReadInteger(JsonObjectField(pRoot, "server_time"), Now) || Now <= 0)
 		return Result;
@@ -314,6 +377,7 @@ std::vector<SQmTitlePresence> ParseQmTitlePresences(const json_value *pRoot, con
 		const json_value *pServer = JsonObjectField(pEntry, "server_address");
 		const json_value *pName = JsonObjectField(pEntry, "player_name");
 		const json_value *pTitle = JsonObjectField(pEntry, "title");
+		const json_value *pStyle = JsonObjectField(pEntry, "style");
 		int64_t Id, Issued, Expires;
 		if(pServer->type != json_string || str_comp(pServer->u.string.ptr, pServerAddress) != 0 ||
 			pName->type != json_string || !pName->u.string.ptr[0] || pName->u.string.length >= MAX_NAME_LENGTH ||
@@ -322,7 +386,36 @@ std::vector<SQmTitlePresence> ParseQmTitlePresences(const json_value *pRoot, con
 			!JsonReadInteger(JsonObjectField(pEntry, "issued_at"), Issued) || Issued > Now ||
 			!JsonReadInteger(JsonObjectField(pEntry, "expires_at"), Expires) || Expires <= Now)
 			continue;
-		Result.push_back({(int)Id, pName->u.string.ptr, pTitle->u.string.ptr, std::min<int64_t>(Expires - Now, 15)});
+		Result.push_back({(int)Id, pName->u.string.ptr, pTitle->u.string.ptr, pStyle && pStyle->type == json_string ? pStyle->u.string.ptr : "", std::min<int64_t>(Expires - Now, 15)});
 	}
 	return Result;
+}
+
+SQmTitleColorStyle ResolveQmTitleColorStyle(const int Mode, const unsigned int PackedColor, const int Opacity, const bool ServerRainbow)
+{
+	SQmTitleColorStyle Style;
+	if(Mode == (int)EQmTitleColorMode::SINGLE)
+		Style.m_Mode = EQmTitleColorMode::SINGLE;
+	else if(Mode == (int)EQmTitleColorMode::RAINBOW)
+		Style.m_Mode = EQmTitleColorMode::RAINBOW;
+	else
+		Style.m_Mode = EQmTitleColorMode::FOLLOW_SERVER;
+
+	if(Style.m_Mode == EQmTitleColorMode::FOLLOW_SERVER)
+	{
+		// 跟随服务器档不读取本地颜色与透明度，调用方继续使用自己解析出的颜色。
+		Style.m_Rainbow = ServerRainbow;
+		return Style;
+	}
+
+	Style.m_Alpha = std::clamp(Opacity, 0, 100) / 100.0f;
+	Style.m_Rainbow = Style.m_Mode == EQmTitleColorMode::RAINBOW;
+	Style.m_Color = color_cast<ColorRGBA>(ColorHSLA(PackedColor).WithAlpha(Style.m_Alpha));
+	return Style;
+}
+
+ColorRGBA QmTitleRainbowColor(const int CharIndex, const int CharCount, const float Alpha)
+{
+	const float Hue = CharCount > 0 ? (float)CharIndex / (float)CharCount : 0.0f;
+	return color_cast<ColorRGBA>(ColorHSLA(Hue, QM_TITLE_RAINBOW_SATURATION, QM_TITLE_RAINBOW_LIGHTNESS).WithAlpha(std::clamp(Alpha, 0.0f, 1.0f)));
 }

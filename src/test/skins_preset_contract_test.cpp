@@ -96,9 +96,6 @@ TEST(SkinsContract, MapPlayerSkinQueueSyncReplacesCurrentQueue)
 	EXPECT_EQ(UpdateBody.find("SkinQueueLengthVar(Dummy)"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, SkinQueuePresetsAreSelectableEditableQueues)
 {
 	std::ifstream HeaderFile(TestSourcePath("src/game/client/components/skins.h"));
@@ -249,9 +246,6 @@ TEST(SkinsContract, SkinQueuePresetsAreSelectableEditableQueues)
 	EXPECT_EQ(Source.find("m_aActiveSkinQueuePresetIndex[Dummy] = -1;"), std::string::npos);
 	EXPECT_EQ(Source.find("m_vSkinQueuePresets[PresetIndex].IsProtected()"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, SkinQueuePresetCompatibilityKeepsLimitAndMigratesLegacyDummyPresetCommands)
 {

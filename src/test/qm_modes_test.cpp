@@ -9,6 +9,7 @@
 
 #include <generated/protocol.h>
 
+#include <game/client/components/emoticon.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/translate/translate_ui_settings.h>
 
@@ -316,6 +317,89 @@ TEST(QmNameplateHookStrongWeak, ScopeFiltersExpectedPlayers)
 	EXPECT_TRUE(ShouldShowQmHookStrongWeakScope(QM_HOOK_STRONG_WEAK_SCOPE_ALL, true, false, false));
 	EXPECT_TRUE(ShouldShowQmHookStrongWeakScope(QM_HOOK_STRONG_WEAK_SCOPE_ALL, false, true, false));
 	EXPECT_FALSE(ShouldShowQmHookStrongWeakScope(99, false, true, false));
+}
+
+TEST(QmNameplateNameScope, OwnCharactersRespectCurrentAndLocalScopes)
+{
+	// 当前：只有当前操控角色显示自己的昵称（= 旧 cl_nameplates_own 行为）。
+	EXPECT_TRUE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_CURRENT, true, true));
+	// 当前：分身（本机但非当前角色）不显示。
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_CURRENT, false, true));
+	// 当前 + 本地：主号与分身都显示。
+	EXPECT_TRUE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_LOCAL, false, true));
+	// 本地 + 他人：当前操控角色不算在内。
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OTHERS_LOCAL, true, true));
+	// 他人：只看别人，本机角色一律不显示。
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OTHERS, true, true));
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OTHERS, false, true));
+}
+
+TEST(QmNameplateNameScope, OtherPlayersRespectOthersAndAllScopes)
+{
+	// 他人：任何非本机玩家都显示（= 旧 cl_nameplates 行为）。
+	EXPECT_TRUE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OTHERS, false, false));
+	// 本地 + 他人：非本机玩家同样显示。
+	EXPECT_TRUE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OTHERS_LOCAL, false, false));
+	// 全体：三类玩家全显示。
+	EXPECT_TRUE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_ALL, false, false));
+	// 只覆盖本机角色的档位不能显示别人。
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_CURRENT, false, false));
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_LOCAL, false, false));
+	// 关：谁都不显示；越界档位按关闭处理。
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OFF, true, true));
+	EXPECT_FALSE(ShouldShowQmNameplateName(QM_NAMEPLATE_SHOW_SCOPE_OFF, false, false));
+	EXPECT_FALSE(ShouldShowQmNameplateName(99, true, true));
+	EXPECT_FALSE(ShouldShowQmNameplateName(99, false, false));
+}
+
+TEST(QmNameplateShowScopeMigration, LegacyFlagPairsMapToEquivalentScope)
+{
+	// 旧四态各自映射到语义等价的档位，升级后玩家看到的仍是原来那批人。
+	EXPECT_EQ(QmNameplateShowScopeFromLegacyFlags(true, true), QM_NAMEPLATE_SHOW_SCOPE_ALL);
+	EXPECT_EQ(QmNameplateShowScopeFromLegacyFlags(false, true), QM_NAMEPLATE_SHOW_SCOPE_LOCAL);
+	EXPECT_EQ(QmNameplateShowScopeFromLegacyFlags(true, false), QM_NAMEPLATE_SHOW_SCOPE_OTHERS);
+	EXPECT_EQ(QmNameplateShowScopeFromLegacyFlags(false, false), QM_NAMEPLATE_SHOW_SCOPE_OFF);
+}
+
+TEST(QmNameplateShowScopeMigration, MigratedScopeKeepsTheSameVisiblePlayers)
+{
+	// 迁移的原意是「档位换了、可见玩家不变」。旧模型只有两类（本机 / 其他），
+	// 新模型把本机拆成当前操控与分身，所以对三类玩家两两核对。
+	struct SCase
+	{
+		bool m_ShowOthers;
+		bool m_ShowOwn;
+		const char *m_pName;
+	};
+	const SCase aCases[] = {
+		{true, true, "both"},
+		{true, false, "others only"},
+		{false, true, "own only"},
+		{false, false, "neither"},
+	};
+	const bool aCurrentChar[] = {true, false};
+	const bool aLocalClient[] = {true, false};
+
+	for(const SCase &Case : aCases)
+	{
+		const int Scope = QmNameplateShowScopeFromLegacyFlags(Case.m_ShowOthers, Case.m_ShowOwn);
+		for(const bool CurrentChar : aCurrentChar)
+		{
+			for(const bool LocalClient : aLocalClient)
+			{
+				// 当前操控角色必然是本机客户端（IsCurrentChar ⟹ IsLocalClient），
+				// 这一组合在生产路径不可达：新函数先判 IsCurrentChar，与旧两开关模型
+				// 只在这个不可达组合上分歧，故不纳入等价性核对。
+				if(CurrentChar && !LocalClient)
+					continue;
+				// 旧语义：本机角色（当前操控与分身都算）看 cl_nameplates_own，其他人看 cl_nameplates。
+				const bool LegacyVisible = LocalClient ? Case.m_ShowOwn : Case.m_ShowOthers;
+				const bool MigratedVisible = ShouldShowQmNameplateName(Scope, CurrentChar, LocalClient);
+				EXPECT_EQ(MigratedVisible, LegacyVisible)
+					<< "case=" << Case.m_pName << " CurrentChar=" << CurrentChar << " LocalClient=" << LocalClient;
+			}
+		}
+	}
 }
 
 TEST(QmNameplateTextEffects, PlayingScopeSupportsSelfOthersFriendsAndAll)
@@ -898,4 +982,82 @@ TEST(QmTranslateUiSettings, MigrationMarkerPreservesIntentionalTransparentColor)
 	EXPECT_EQ(Background, 0x00A1B2C3u);
 	EXPECT_EQ(Selected, 0x00000000u);
 	EXPECT_EQ(Normal, 0x00D4E5F6u);
+}
+
+TEST(QmEmoticonEffect, EffectKindResolvesFromLaunchAndSuperFlags)
+{
+	struct SCase
+	{
+		bool m_Launch;
+		bool m_Super;
+		QmEmoticon::EEffect m_Expected;
+	};
+	const SCase aCases[] = {
+		{false, false, QmEmoticon::EEffect::NONE},
+		{false, true, QmEmoticon::EEffect::SUPER_HEAD},
+		{true, false, QmEmoticon::EEffect::PROJECTILE},
+		{true, true, QmEmoticon::EEffect::SUPER_PROJECTILE},
+	};
+	for(const SCase &Case : aCases)
+	{
+		EXPECT_EQ(QmEmoticon::ResolveEffect(4, Case.m_Launch, Case.m_Super), Case.m_Expected);
+		// 本机侧走 ConsumeEffect：一次性取出 pending 的 Super 标记，并保留 ForceLaunch 强制发射。
+		bool SuperPending = Case.m_Super;
+		EXPECT_EQ(QmEmoticon::ConsumeEffect(4, Case.m_Launch, SuperPending), Case.m_Expected);
+		EXPECT_FALSE(SuperPending) << "Super 标记必须被消费掉，否则下一次表情会意外变成超大表情";
+		// 远端侧在开关全开时应得到同一种效果。
+		EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, Case.m_Launch, Case.m_Super, true, false, true, true), Case.m_Expected);
+	}
+}
+
+TEST(QmEmoticonEffect, ForceLaunchOverridesLaunchMode)
+{
+	// 出界表情一律 INVALID（不发送、不消耗任何效果）。
+	bool SuperPending = false;
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(-1, false, SuperPending), QmEmoticon::EEffect::INVALID);
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(NUM_EMOTICONS, false, SuperPending), QmEmoticon::EEffect::INVALID);
+	EXPECT_EQ(QmEmoticon::ResolveEffect(-1, true, true), QmEmoticon::EEffect::INVALID);
+	// ForceLaunch 让普通表情也走发射；配合 pending 的 Super 就变成超大发射。
+	SuperPending = false;
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(4, false, SuperPending, true), QmEmoticon::EEffect::PROJECTILE);
+	SuperPending = true;
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(4, false, SuperPending, true), QmEmoticon::EEffect::SUPER_PROJECTILE);
+	// 大表情不因 ForceLaunch 变成发射：这是本轮新增的 SUPER_HEAD 语义。
+	SuperPending = true;
+	EXPECT_EQ(QmEmoticon::ConsumeEffect(4, false, SuperPending, false), QmEmoticon::EEffect::SUPER_HEAD);
+}
+
+TEST(QmEmoticonEffect, GlobalAndPerPlayerMuteSuppressAllRemoteEffects)
+{
+	for(const bool Launch : {false, true})
+	{
+		for(const bool Super : {false, true})
+		{
+			// cl_showemotes 关闭，或该玩家在忽略名单里：任何远端效果都不产生。
+			EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, Launch, Super, false, false, true, true), QmEmoticon::EEffect::NONE);
+			EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, Launch, Super, true, true, true, true), QmEmoticon::EEffect::NONE);
+		}
+	}
+}
+
+TEST(QmEmoticonEffect, RemoteVisibilityFiltersHeadAndProjectileIndependently)
+{
+	// 两个开关各管一种效果，互不牵连：关掉大表情不该连带关掉发射表情，反之亦然。
+	for(const bool ShowSuper : {false, true})
+	{
+		for(const bool ShowLaunch : {false, true})
+		{
+			EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, false, true, true, false, ShowSuper, ShowLaunch), ShowSuper ? QmEmoticon::EEffect::SUPER_HEAD : QmEmoticon::EEffect::NONE);
+			EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, true, false, true, false, ShowSuper, ShowLaunch), ShowLaunch ? QmEmoticon::EEffect::PROJECTILE : QmEmoticon::EEffect::NONE);
+			EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, true, true, true, false, ShowSuper, ShowLaunch), ShowLaunch ? QmEmoticon::EEffect::SUPER_PROJECTILE : QmEmoticon::EEffect::NONE);
+			// 普通表情（没有特殊效果）不受这两个开关影响。
+			EXPECT_EQ(QmEmoticon::ResolveRemoteEffect(4, false, false, true, false, ShowSuper, ShowLaunch), QmEmoticon::EEffect::NONE);
+		}
+	}
+}
+
+TEST(QmEmoticonEffect, DefaultsShowBothOtherPlayerEffects)
+{
+	EXPECT_EQ(DefaultConfig::QmShowOtherSuperEmotes, 1);
+	EXPECT_EQ(DefaultConfig::QmShowOtherLaunchEmotes, 1);
 }

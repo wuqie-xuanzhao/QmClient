@@ -22,7 +22,10 @@
 #include <game/client/animstate.h>
 #include <game/client/components/menus.h>
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/qm_chat_avatar.h>
+#include <game/client/components/qmclient/qm_skin_outline.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/skin_load_budget.h>
 #include <game/client/components/settings_runtime_cache.h>
 #include <game/client/gameclient.h>
 #include <game/client/render.h>
@@ -1013,35 +1016,50 @@ bool CSkins::PrepareSkinData(const char *pName, CSkinLoadData &Data)
 		}
 	}
 
+	// 在作业线程备好 CPU 侧素材（轮廓、聊天头像、逐精灵像素），
+	// 主线程 LoadSkinFinish 只做纹理上传与共享指针接管，不再重复提取精灵。
+	Data.m_PreparedVisuals = QmPrepareSkinVisuals(Data.m_Info, Data.m_InfoGrayscale, g_pData->m_aSprites);
+	Data.m_pPreparedTextures = QmPrepareSkinTextures(Data.m_Info, Data.m_InfoGrayscale, g_pData->m_aSprites);
+
 	return true;
 }
 
-void CSkins::LoadSkinFinish(CSkinContainer *pSkinContainer, const CSkinLoadData &Data)
+void CSkins::LoadSkinFinish(CSkinContainer *pSkinContainer, CSkinLoadData &Data)
 {
 	const std::chrono::nanoseconds UploadStart = time_get_nanoseconds();
 	CSkin Skin{pSkinContainer->Name()};
 
-	Skin.m_OriginalSkin.m_Body = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_BODY]);
-	Skin.m_OriginalSkin.m_BodyOutline = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_BODY_OUTLINE]);
-	Skin.m_OriginalSkin.m_Feet = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_FOOT]);
-	Skin.m_OriginalSkin.m_FeetOutline = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_FOOT_OUTLINE]);
-	Skin.m_OriginalSkin.m_Hands = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_HAND]);
-	Skin.m_OriginalSkin.m_HandsOutline = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_HAND_OUTLINE]);
-	for(size_t i = 0; i < std::size(Skin.m_OriginalSkin.m_aEyes); ++i)
-	{
-		Skin.m_OriginalSkin.m_aEyes[i] = Graphics()->LoadSpriteTexture(Data.m_Info, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_EYE_NORMAL + i]);
-	}
+	// 12 张精灵已在作业线程按 SpriteId 的顺序提取好，这里只做上传。
+	// 但自定义图集可能比默认布局小，越界精灵在作业侧就被记为「不可用」——
+	// 那些精灵必须回落到 LoadSpriteTexture，才能保住 qm_blank_asset_fallback
+	// 的空白素材回退（回退默认资源或保持不可见），否则整包皮肤会加载失败。
+	const auto UploadVariant = [&](CSkin::CSkinTextures &Textures, const CImageInfo &Source, size_t Variant) {
+		size_t Index = 0;
+		const auto Upload = [&]() {
+			const int SpriteId = CQmPreparedSkinTextures::SpriteId(Index);
+			const CDataSprite &Sprite = g_pData->m_aSprites[SpriteId];
+			if(Data.m_pPreparedTextures != nullptr && Data.m_pPreparedTextures->Available(Variant, Index))
+			{
+				CImageInfo &Image = Data.m_pPreparedTextures->Image(Variant, Index++);
+				return Graphics()->LoadTextureRawMove(Image, 0, Sprite.m_pName);
+			}
+			++Index;
+			return Graphics()->LoadSpriteTexture(Source, std::nullopt, &g_pData->m_aSprites[SpriteId]);
+		};
+		Textures.m_Body = Upload();
+		Textures.m_BodyOutline = Upload();
+		Textures.m_Feet = Upload();
+		Textures.m_FeetOutline = Upload();
+		Textures.m_Hands = Upload();
+		Textures.m_HandsOutline = Upload();
+		for(auto &Eye : Textures.m_aEyes)
+			Eye = Upload();
+	};
+	UploadVariant(Skin.m_OriginalSkin, Data.m_Info, 0);
+	UploadVariant(Skin.m_ColorableSkin, Data.m_InfoGrayscale, 1);
 
-	Skin.m_ColorableSkin.m_Body = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_BODY]);
-	Skin.m_ColorableSkin.m_BodyOutline = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_BODY_OUTLINE]);
-	Skin.m_ColorableSkin.m_Feet = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_FOOT]);
-	Skin.m_ColorableSkin.m_FeetOutline = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_FOOT_OUTLINE]);
-	Skin.m_ColorableSkin.m_Hands = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_HAND]);
-	Skin.m_ColorableSkin.m_HandsOutline = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_HAND_OUTLINE]);
-	for(size_t i = 0; i < std::size(Skin.m_ColorableSkin.m_aEyes); ++i)
-	{
-		Skin.m_ColorableSkin.m_aEyes[i] = Graphics()->LoadSpriteTexture(Data.m_InfoGrayscale, std::nullopt, &g_pData->m_aSprites[SPRITE_TEE_EYE_NORMAL + i]);
-	}
+	// 轮廓与聊天头像同样在作业线程备好，这里只接管共享指针。
+	Data.m_PreparedVisuals.Apply(Skin);
 
 	Skin.m_Metrics = Data.m_Metrics;
 	Skin.m_BloodColor = Data.m_BloodColor;
@@ -1206,6 +1224,10 @@ void CSkins::FinishSkinPreviewUpload(CSkinContainer *pSkinContainer)
 	dbg_assert(SkinIt != m_Skins.end(), "FinishSkinPreviewUpload on skin '%s' which is not in m_Skins", pSkinContainer->Name());
 	const bool BackgroundTracked = SkinIt->second->IsBackgroundTracked();
 	pSkinContainer->m_pSkin->m_Metrics = pSkinContainer->m_SettingsPendingUploadData.m_Metrics;
+	const CImageInfo &OutlineSource = pSkinContainer->m_SettingsPendingUploadData.m_Info;
+	pSkinContainer->m_pSkin->m_OriginalSkin.m_QmBodyOutline = QmCreateSkinOutline(OutlineSource, g_pData->m_aSprites[SPRITE_TEE_BODY], g_pData->m_aSprites[SPRITE_TEE_BODY_OUTLINE], vec2(64, 64));
+	pSkinContainer->m_pSkin->m_OriginalSkin.m_QmFeetOutline = QmCreateSkinOutline(OutlineSource, g_pData->m_aSprites[SPRITE_TEE_FOOT], g_pData->m_aSprites[SPRITE_TEE_FOOT_OUTLINE], vec2(64, 32));
+	pSkinContainer->m_pSkin->m_OriginalSkin.m_QmChatAvatar = QmPrepareSkinChatAvatar(OutlineSource, g_pData->m_aSprites);
 	pSkinContainer->m_pSkin->m_BloodColor = pSkinContainer->m_SettingsPendingUploadData.m_BloodColor;
 	SkinIt->second->m_SettingsSourceApproxBytes = SettingsSkinSourceBytesEstimate((int)pSkinContainer->m_SettingsPendingUploadData.m_Info.m_Width, (int)pSkinContainer->m_SettingsPendingUploadData.m_Info.m_Height, 2);
 	pSkinContainer->SetState(CSkinContainer::EState::LOADED, BackgroundTracked ? ESettingsResourcePriority::BACKGROUND : ESettingsResourcePriority::VISIBLE);
@@ -1337,7 +1359,8 @@ void CSkins::OnUpdate()
 	ProcessSkinDirectoryScanJob();
 	UpdateUnloadSkins(Stats);
 	UpdateStartLoading(Stats);
-	UpdateFinishLoading(Stats, Now, MaxTime);
+	// 检查间隔不是主线程预算：终局上传使用独立的 1 ms 预算，首个皮肤始终取得进展。
+	UpdateFinishLoading(Stats, Now, std::chrono::milliseconds(1));
 	ProcessSkinListPlanJob();
 }
 
@@ -2121,6 +2144,12 @@ CSkins::ESkinProcessResult CSkins::ProcessSkinContainer(CSkinContainer *pSkinCon
 		return ESkinProcessResult::CONTINUE;
 	}
 
+	// 首个已就绪皮肤始终取得进展，后续皮肤超过时间预算则留到下一轮。
+	if(!QmSkinCanFinalize(SkinsProcessedThisFrame, time_get_nanoseconds() - StartTime, MaxTime))
+	{
+		return ESkinProcessResult::BREAK_TIME_EXCEEDED;
+	}
+
 	if(pSkinContainer->m_pLoadJob->State() == IJob::STATE_DONE && pSkinContainer->m_pLoadJob->m_Data.m_Info.m_pData)
 		return DrainSettingsSkinPreviewUpload(pSkinContainer, Stats, SkinsProcessedThisFrame, StartTime, MaxTime);
 	else
@@ -2193,7 +2222,7 @@ CSkins::ESkinProcessResult CSkins::DrainSettingsSkinPreviewUpload(CSkinContainer
 	++m_SettingsSourceLoadsCompleted;
 	LogSkinSettingsResourcePerf("upload", 1, MaxSkinsPerFrame, (int)Stats.m_NumLoading, ESettingsWarmupMissReason::NONE, 0.0);
 
-	if(time_get_nanoseconds() - StartTime >= MaxTime)
+	if(!QmSkinCanFinalize(SkinsProcessedThisFrame, time_get_nanoseconds() - StartTime, MaxTime))
 		return ESkinProcessResult::BREAK_TIME_EXCEEDED;
 	return ESkinProcessResult::CONTINUE;
 }

@@ -95,18 +95,13 @@ TEST(QmMonitoringMetricsContract, FrameSchedulerServiceExposesConsumerScopedInte
 	EXPECT_NE(Header.find("#include <game/client/components/settings_resource_jobs.h>"), std::string::npos);
 }
 
-TEST(QmMonitoringMetricsContract, LegacyPingAndRespawnCancelPathsRemainPresent)
+TEST(QmMonitoringMetricsContract, LegacyPingPathRemainsPresent)
 {
 	const std::string Client = ReadRepoFile("src/engine/client/client.cpp");
-	const std::string Controls = ReadRepoFile("src/game/client/components/controls.cpp");
 	const std::string AutomaticPing = ExtractSourceFunctionBody(Client, "void CClient::UpdateGamePing()");
-	const std::string Respawn = ExtractSourceFunctionBody(Controls, "void CControls::OnRender()");
 	ASSERT_FALSE(AutomaticPing.empty());
-	ASSERT_FALSE(Respawn.empty());
 	EXPECT_NE(AutomaticPing.find("BeginLegacy"), std::string::npos);
 	EXPECT_NE(AutomaticPing.find("NETMSG_PING, true"), std::string::npos);
-	EXPECT_NE(Respawn.find("用户主动选择了其他武器"), std::string::npos);
-	EXPECT_NE(Respawn.find("else"), std::string::npos);
 }
 
 TEST(QmMonitoringMetricsContract, AutomaticAndManualPingPathsCoordinateWithExplicitLegacySharing)

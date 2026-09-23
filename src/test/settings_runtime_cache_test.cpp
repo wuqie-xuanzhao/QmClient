@@ -27,7 +27,6 @@ TEST(SettingsRuntimeCache, BudgetStopsEveryMainThreadCost)
 	EXPECT_EQ(Budget.m_StopReason, ESettingsWarmupStopReason::MERGE_BUDGET);
 }
 
-
 TEST(SettingsRuntimeCache, DefaultGpuBudgetAllowsOneSkinUploadBatch)
 {
 	SSettingsWarmupFrameBudget Budget;
@@ -37,13 +36,11 @@ TEST(SettingsRuntimeCache, DefaultGpuBudgetAllowsOneSkinUploadBatch)
 	EXPECT_EQ(Budget.m_StopReason, ESettingsWarmupStopReason::GPU_UPLOAD_BUDGET);
 }
 
-
 TEST(SettingsRuntimeCache, BudgetStopReasonsMapToProductionMissReasons)
 {
 	EXPECT_STREQ(SettingsWarmupBudgetStopMissReasonName(ESettingsWarmupStopReason::TEXT_BUDGET), "text_budget");
 	EXPECT_STREQ(SettingsWarmupBudgetStopMissReasonName(ESettingsWarmupStopReason::NONE), "none");
 }
-
 
 TEST(SettingsRuntimeCache, TClientPerfStageNamesAreStable)
 {
@@ -54,7 +51,6 @@ TEST(SettingsRuntimeCache, TClientPerfStageNamesAreStable)
 	EXPECT_STREQ(SettingsTClientPerfStageName(ETClientSettingsPerfStage::STATIC_LAYER), "tclient_static_layer");
 	EXPECT_STREQ(SettingsTClientPerfStageName(ETClientSettingsPerfStage::INTERACTIVE_LAYER), "tclient_interactive_layer");
 }
-
 
 TEST(SettingsRuntimeCache, PerfReasonNamesAreStable)
 {
@@ -71,7 +67,6 @@ TEST(SettingsRuntimeCache, PerfReasonNamesAreStable)
 	EXPECT_STREQ(SettingsWarmupMissReasonName(ESettingsWarmupMissReason::INVALID_RUNTIME_KEY), "invalid_runtime_key");
 }
 
-
 TEST(SettingsRuntimeCache, InvalidationReasonNamesAreStable)
 {
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::LANGUAGE_CHANGED), "language_changed");
@@ -84,7 +79,6 @@ TEST(SettingsRuntimeCache, InvalidationReasonNamesAreStable)
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::SECTION_SIZE_CHANGED), "section_size_changed");
 	EXPECT_STREQ(SettingsInvalidationReasonName(ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED), "resource_directory_changed");
 }
-
 
 TEST(SettingsRuntimeCache, ClearsTextPoolOnlyForContentChangingReasons)
 {
@@ -104,7 +98,6 @@ TEST(SettingsRuntimeCache, ClearsTextPoolOnlyForContentChangingReasons)
 	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::SECTION_SIZE_CHANGED));
 	EXPECT_FALSE(SettingsInvalidationClearsTextPool(ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED));
 }
-
 
 TEST(SettingsRuntimeCache, RuntimeKeyMismatchNamesDirtyReason)
 {
@@ -143,7 +136,6 @@ TEST(SettingsRuntimeCache, RuntimeKeyMismatchNamesDirtyReason)
 	EXPECT_EQ(SettingsRuntimeKeyMismatchDirtyReason(Base, Config), ESettingsCacheDirtyReason::CONFIG);
 }
 
-
 TEST(SettingsRuntimeCache, SectionCacheMetadataRequiresMatchingRuntimeKey)
 {
 	SSettingsSectionCacheRuntimeKey RuntimeKey;
@@ -170,14 +162,12 @@ TEST(SettingsRuntimeCache, SectionCacheMetadataRequiresMatchingRuntimeKey)
 	EXPECT_FALSE(Metadata.Matches(RuntimeKey));
 }
 
-
 TEST(SettingsRuntimeCache, NumericKeysRejectNonFiniteValues)
 {
 	EXPECT_EQ(SettingsRuntimeCacheDimensionKey(-std::numeric_limits<float>::infinity()), 1);
 	EXPECT_EQ(SettingsRuntimeCachePositiveRoundedKey(-std::numeric_limits<float>::infinity()), 1);
 	EXPECT_EQ(SettingsRuntimeCacheRoundedKey(std::numeric_limits<float>::infinity(), 7), 7);
 }
-
 
 TEST(SettingsRuntimeCache, NumericKeysClampBeforeIntConversion)
 {
@@ -188,7 +178,6 @@ TEST(SettingsRuntimeCache, NumericKeysClampBeforeIntConversion)
 	EXPECT_EQ(SettingsRuntimeCacheDimensionKey(std::numeric_limits<float>::max()), std::numeric_limits<int>::max());
 	EXPECT_EQ(SettingsRuntimeCacheRoundedKey(-std::numeric_limits<float>::max()), std::numeric_limits<int>::min());
 }
-
 
 TEST(SettingsRuntimeCache, CompactVisibleTextIsRejected)
 {

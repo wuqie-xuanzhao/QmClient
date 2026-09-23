@@ -325,7 +325,8 @@ inline float ResolveSettingsGeneralClientContentHeight(const SSettingsContentMet
 
 inline float ResolveSettingsGeneralGameContentHeight(const SSettingsContentMetrics &Metrics, const bool DynamicCameraExpanded)
 {
-	return ResolveSettingsRowsHeight(4 + (DynamicCameraExpanded ? 1 : 0), Metrics.m_LineHeight, Metrics.m_LineSpacing);
+	// 默认重生武器已移除（远程同名删除），本卡只剩 3 行：动态镜头、拾取换枪、弹药耗尽换枪。
+	return ResolveSettingsRowsHeight(3 + (DynamicCameraExpanded ? 1 : 0), Metrics.m_LineHeight, Metrics.m_LineSpacing);
 }
 
 inline unsigned int PackSettingsAlphaColor(const unsigned int ColorValue, const int Opacity)
@@ -436,14 +437,6 @@ inline float ResolveSettingsTeeIdentityHeight(const SSettingsContentMetrics &Met
 {
 	// 名称/国旗、Tee 预览、标签和底部颜色按钮均需要自己的安全间距。
 	return Metrics.m_InputHeight + Metrics.m_LineSpacing + Metrics.m_LineHeight * 2.0f + Metrics.m_ButtonHeight * 4.0f;
-}
-
-inline float ResolveQmVisualSkinTransitionHeight(const SSettingsContentMetrics &Metrics, const bool Enabled)
-{
-	// 标题、开关、控件和说明均按 renderer 的实际顺序计数；每个可见行消费一次尾部间距。
-	const float StandardRow = Metrics.m_RowStep;
-	const float Notes = 2.0f * (Metrics.m_SmallSize + Metrics.m_LineSpacing);
-	return 7.0f * StandardRow + Notes + (Enabled ? 5.0f * StandardRow : 0.0f);
 }
 
 inline float ResolveQmVisualWeaponAnimationHeight(const SSettingsContentMetrics &Metrics, const bool SwitchEnabled, const bool ReloadEnabled)
@@ -570,6 +563,118 @@ inline SSettingsRadioRowLayout ResolveSettingsRadioRowLayout(const CUIRect &View
 	return Layout;
 }
 
+// 两级分段选择行（例：昵称显示范围）：一级选项等宽排布，激活的一级选项按子项数加宽，
+// 子级菜单就在同一行内、紧跟在激活的一级标签右侧 —— 对应设计稿的「主滑块 + 子级菜单」。
+// 行高固定为「标签一行 + 控件一行」：一级选项带不带子级都不改行高，卡片高度因此不随选择跳动。
+struct SSettingsNestedRadioRowLayout
+{
+	CUIRect m_LabelRect{};
+	CUIRect m_ContainerRect{};
+	float m_Height = 0.0f;
+};
+
+inline SSettingsNestedRadioRowLayout ResolveSettingsNestedRadioRowLayout(const CUIRect &View, const SSettingsContentMetrics &Metrics)
+{
+	SSettingsNestedRadioRowLayout Layout;
+	if(View.w <= 0.0f)
+		return Layout;
+
+	Layout.m_LabelRect = {View.x, View.y, View.w, Metrics.m_LineHeight};
+	Layout.m_ContainerRect = {View.x, View.y + Metrics.m_LineHeight + Metrics.m_LineSpacing, View.w, Metrics.m_ButtonHeight};
+	Layout.m_Height = Metrics.m_LineHeight + Metrics.m_LineSpacing + Metrics.m_ButtonHeight;
+	return Layout;
+}
+
+// 两级分段行的槽位表：一级槽位与子级槽位都不含动画，动画只发生在滑块胶囊上，
+// 这样文字宽度稳定、文本缓存键不会每帧变化。
+// 激活的一级项带子级时，它的一级槽位整段让给子级菜单（一级标签被替换掉，不再绘制），
+// 主滑块因此盖住整段子级区域，次级滑块再在主滑块之上标出当前子项。
+struct SSettingsNestedRadioSlots
+{
+	static constexpr int MAX_SLOTS = 8;
+	CUIRect m_aMain[MAX_SLOTS]{};
+	CUIRect m_aSub[MAX_SLOTS]{};
+	int m_MainCount = 0;
+	int m_SubCount = 0;
+};
+
+inline SSettingsNestedRadioSlots ResolveSettingsNestedRadioSlots(const CUIRect &Container, const int OptionCount, const int ActiveIndex, const int SubOptionCount, const float Inset)
+{
+	SSettingsNestedRadioSlots Slots;
+	if(OptionCount <= 0 || Container.w <= 0.0f)
+		return Slots;
+
+	CUIRect Inner = Container;
+	Inner.Margin(Inset, &Inner);
+	if(Inner.w <= 0.0f || Inner.h <= 0.0f)
+		return Slots;
+
+	const int MainCount = std::clamp(OptionCount, 0, SSettingsNestedRadioSlots::MAX_SLOTS);
+	const bool SubInline = ActiveIndex >= 0 && ActiveIndex < MainCount;
+	const int SubCount = SubInline ? std::clamp(SubOptionCount, 0, SSettingsNestedRadioSlots::MAX_SLOTS - 1) : 0;
+	// 激活项不再占一个单位（标签被子级替换），所以单位数是「其它一级项 + 子项」。
+	const int UnitCount = std::max(1, MainCount + (SubCount > 0 ? SubCount - 1 : 0));
+	const float UnitWidth = Inner.w / (float)UnitCount;
+	CUIRect Remainder = Inner;
+	for(int i = 0; i < MainCount; ++i)
+	{
+		const bool Expanded = i == ActiveIndex && SubCount > 0;
+		const int Span = Expanded ? SubCount : 1;
+		CUIRect Slot;
+		Remainder.VSplitLeft(UnitWidth * Span, &Slot, &Remainder);
+		Slots.m_aMain[i] = Slot;
+		if(!Expanded)
+			continue;
+		for(int s = 0; s < SubCount; ++s)
+		{
+			CUIRect SubSlot;
+			Slot.VSplitLeft(Slot.w / (float)(SubCount - s), &SubSlot, &Slot);
+			Slots.m_aSub[s] = SubSlot;
+		}
+		Slots.m_SubCount = SubCount;
+	}
+	Slots.m_MainCount = MainCount;
+	return Slots;
+}
+
+// 多档分段行的落位：控件行够宽时用等宽胶囊分段（一行排完，标签不换行）；
+// 主内容区太窄、分段会被挤到贴边时，退回「标签一行 + 可换行分段行」的普通分段行，
+// 高度随之变化，所以测量、预布局与绘制三个阶段必须共用这一个解析结果。
+// MinOptionWidth 由调用方按真实最长标签给出（胶囊分段没有内边距，这个值通常远小于
+// ResolveSettingsRadioRowLayout 的 72px 下限）；给 0 时退回保守估算。
+// 胶囊分段的标签独占上一行、控件行用满整行宽度，判定因此只有「档数 × 单档宽度」；
+// 若照并排的分段行那样再预扣一列标签宽，两列卡片这类正常宽度会白白退回旧分段行。
+struct SSettingsSegmentedRowLayout
+{
+	bool m_Capsule = false;
+	CUIRect m_LabelRect{};
+	CUIRect m_ContainerRect{};
+	float m_Height = 0.0f;
+};
+
+inline SSettingsSegmentedRowLayout ResolveSettingsSegmentedRowLayout(const CUIRect &View, const int OptionCount, const SSettingsContentMetrics &Metrics, const float MinOptionWidth = 0.0f)
+{
+	SSettingsSegmentedRowLayout Layout;
+	if(View.w <= 0.0f)
+		return Layout;
+
+	const float RequiredPerOption = MinOptionWidth > 0.0f ? MinOptionWidth : std::max(72.0f, Metrics.m_ButtonHeight * 3.0f);
+	if(View.w >= RequiredPerOption * (float)std::max(1, OptionCount))
+	{
+		const SSettingsNestedRadioRowLayout Capsule = ResolveSettingsNestedRadioRowLayout(View, Metrics);
+		Layout.m_Capsule = true;
+		Layout.m_LabelRect = Capsule.m_LabelRect;
+		Layout.m_ContainerRect = Capsule.m_ContainerRect;
+		Layout.m_Height = Capsule.m_Height;
+		return Layout;
+	}
+
+	const SSettingsRadioRowLayout Radio = ResolveSettingsRadioRowLayout(View, OptionCount, Metrics);
+	Layout.m_LabelRect = Radio.m_LabelRect;
+	Layout.m_ContainerRect = Radio.m_ButtonsRect;
+	Layout.m_Height = Radio.m_Height;
+	return Layout;
+}
 inline float ResolveSettingsControllerAxisPickerHeight(const int AxisCount, const int MaxAxisCount, const float RowHeight, const float RowSpacing)
 {
 	return (std::clamp(AxisCount, 0, std::max(0, MaxAxisCount)) + 1) * (std::max(0.0f, RowHeight) + std::max(0.0f, RowSpacing));
@@ -655,8 +760,8 @@ inline float ResolveQmHudInputOverlayHeight(const SSettingsContentMetrics &Metri
 {
 	if(!Enabled)
 		return Metrics.m_LineHeight;
-	// 总开关、三个数值项和编辑器按钮共五行，最后一行没有尾部间距。
-	return 5.0f * Metrics.m_RowStep - Metrics.m_LineSpacing;
+	// 总开关与五个数值项共六行。
+	return 6.0f * Metrics.m_RowStep;
 }
 
 inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metrics, const bool Expanded)
@@ -665,14 +770,17 @@ inline float ResolveQmHudDummyMiniViewHeight(const SSettingsContentMetrics &Metr
 	return Expanded ? 4.0f * Metrics.m_RowStep + PreviewGap : Metrics.m_RowStep;
 }
 
-inline float ResolveQmHudDynamicIslandHeight(const SSettingsContentMetrics &Metrics, const bool OriginalStyle, const float ContentWidth)
+inline float ResolveQmHudDynamicIslandHeight(const SSettingsContentMetrics &Metrics, const bool OriginalStyle, const bool SwitchCountdownEnabled, const float ContentWidth)
 {
-	float Height = 2.0f * Metrics.m_RowStep;
+	// 常驻行：原始样式、显示队伍、钩子倒计时和开关倒计时。
+	float Height = 4.0f * Metrics.m_RowStep;
 	if(!OriginalStyle)
 	{
 		const CUIRect ColorRowView{0.0f, 0.0f, std::max(0.0f, ContentWidth), 0.0f};
 		Height += ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight;
 	}
+	// 开关倒计时启用时增加跟随 Tee / 灵动岛两个位置开关，不再保留位置标题行。
+	Height += (SwitchCountdownEnabled ? 2.0f : 0.0f) * Metrics.m_RowStep;
 	return Height;
 }
 
@@ -688,6 +796,8 @@ inline float ResolveQmHudVoiceHeight(const SSettingsContentMetrics &Metrics, con
 
 	// 高级固定区域：状态开关、服务器/设备/编码/降噪、AGC、播放、立体声、半径和房间范围。
 	Height += 11.0f * Metrics.m_RowStep + Metrics.m_LineSpacing * 1.15f;
+	// 可选 WebSocket endpoint 与 UDP 地址并列显示，始终占一行避免配置切换时卡片跳动。
+	Height += Metrics.m_RowStep;
 	if(NoiseSuppressMode != 0)
 		Height += Metrics.m_RowStep;
 #if !defined(CONF_RNNOISE)

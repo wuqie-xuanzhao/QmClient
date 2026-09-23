@@ -23,7 +23,6 @@
 #include <test/qmclient_source_contract_test.h>
 #include <test/test.h>
 
-
 TEST(QmNewUiMenuSettingsFeaturesContract, DynamicIslandSettingsOmitsEdgeMarginControl)
 {
 	const std::string Source = ReadTextFile("src/game/client/components/qmclient/menus_qmclient.cpp");
@@ -65,8 +64,6 @@ TEST(QmNewUiMenuSettingsFeaturesContract, DynamicIslandPreLayoutConsumesTheSameC
 	EXPECT_NE(DynamicIsland.find("ResolveSettingsColorRowLayout(Content, Metrics, false)"), std::string::npos);
 	EXPECT_NE(DynamicIsland.find("if(!g_Config.m_QmHudIslandUseOriginalStyle)"), std::string::npos);
 }
-
-
 
 TEST(QmNewUiMenuSettingsFeaturesContract, WeaponAnimationAdvancedControlsAreConfigurable)
 {
@@ -156,7 +153,7 @@ TEST(QmNewUiMenuSettingsFeaturesContract, EmoticonShadowHasConfigRenderPassAndVi
 	EXPECT_EQ(CountOccurrences(RenderPlayerBody, "if(g_Config.m_QmEmoticonShadow)"), 3);
 	EXPECT_EQ(CountOccurrences(RenderPlayerBody, "Graphics()->SetColor(0.0f, 0.0f, 0.0f"), 3);
 	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetX * h"), std::string::npos);
-	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetY * h, h, h"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetY * h"), std::string::npos);
 	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);\n\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
 	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);\n\t\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
 	EXPECT_NE(EmoticonRenderBody.find("EmoticonSelectorShadowOpacity"), std::string::npos);
@@ -171,7 +168,12 @@ TEST(QmNewUiMenuSettingsFeaturesContract, EmoticonShadowHasConfigRenderPassAndVi
 	ASSERT_NE(ShadowClear, std::string::npos);
 	ASSERT_NE(ShadowBegin, std::string::npos);
 	EXPECT_LT(ShadowClear, ShadowBegin);
-	const std::string SkinTransitionContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
-	EXPECT_NE(SkinTransitionContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmEmoticonShadow"), std::string::npos);
-	EXPECT_NE(MenusSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
+	// 皮肤卡的内容函数已迁入全局卡片目录（N3）：改在目录文件里定位函数体。
+	// 「表情阴影」开关仍在皮肤外观卡内（QmCardCatalogSkin.cpp），未因迁移丢失。
+	const std::string SkinCardSource = ReadTextFile("src/game/client/QmUi/cards/QmCardCatalogSkin.cpp");
+	const std::string SkinAppearanceContent = FunctionBody(SkinCardSource, "void CMenus::RenderQmVisualSkinAppearanceContent(");
+	const std::string SkinTransitionContent = FunctionBody(SkinCardSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
+	EXPECT_NE(SkinAppearanceContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmEmoticonShadow"), std::string::npos);
+	EXPECT_EQ(SkinTransitionContent.find("g_Config.m_QmEmoticonShadow"), std::string::npos);
+	EXPECT_NE(SkinCardSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
 }

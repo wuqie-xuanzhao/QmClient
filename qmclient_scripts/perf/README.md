@@ -1,73 +1,48 @@
-> 请抬头享受阳光｜日子很好 我很我---------致咩子
-# QmClient Perf — 性能日志分析工具
+# 统一性能诊断
 
-## 快速开始
+在控制台输入 `qm_perf_debug 1`，或在「设置 → QmClient → HUD → 调试模式」开启唯一总开关。关闭使用 `qm_perf_debug 0`，游戏内立即生效；每次开启创建新的日志和会话 ID。
 
-```bash
+## 自动采集
+
+- 完整渲染间隔按最多 64 帧或累计 1 秒批量写入 `perf/frame`，包括快帧和慢帧。首帧用作时间基点。
+- 主线程、渲染阶段明细使用 300 FPS 对应的帧预算自动筛选；普通明细每秒最多 1000 条，超出数量写入日志。完整帧统计、FPS 窗口和卡顿汇总不受此限制。
+- 卡顿目标保持 300 FPS。连续低帧合并为同一区间，恢复稳定一秒后结束；持续低帧每 10 秒写出分段，包含所有顶层组件的 update/render CPU 耗时和最慢帧的功能开关。
+- 图标诊断按窗口汇总；关闭采集、退出或重启时，先写完剩余帧、卡顿窗口、配置和会话结束标记，再关闭文件。
+- `qm_perf_logfile`、`qm_perf_stutter_diagnostics`、`qm_perf_debug_threshold_ms` 已移除，使用 `qm_perf_debug` 即可。
+
+## 当前配置
+
+每个会话开始时枚举运行时全部客户端配置变量，包含 DDNet、QmClient、TClient 的整数、关闭项、默认值、颜色和字符串，不包含按键绑定。分类依据变量声明所在配置头，不只看命名前缀。
+
+采集中每秒检查一次变化，关闭时再检查一次。短于检查间隔且已恢复的瞬时变化可能不被记录。密码、Token、翻译服务 API Key、SecretId/SecretKey、Spotify Cookie 等在写日志前脱敏。长字符串按 UTF-8 边界分段，分析时重组；缺失分段会被标记，不能当作完整值使用。
+
+HTML 中可按配置名或值搜索，分 DDNet / QmClient / TClient 查看当前值、开始采集时的值和修改状态。JSON 摘要包含同样的 `configuration` 字段。原日志保留采集到的变化，分析产物保留初始值和最新完整值。
+
+## 分析
+
+~~~bash
 cd qmclient_scripts/perf
 bun install
-bun analyze.ts          # 自动读取最新日志
-bun analyze.ts path/to/qm_perf_xxx.log  # 指定日志文件
-```
+bun analyze.ts
+bun analyze.ts path/to/qm_perf_xxx.log
+bun analyze.ts path/to/qm_perf_xxx.log --output path/to/report.html --no-compare
+~~~
 
-## 前置条件
+默认查找系统 DDNet 数据目录下 `dumps/QmClient_Perf/` 的最新日志；自定义存储目录或便携版请直接传入日志路径。Windows 默认为 `%APPDATA%/DDNet/dumps/QmClient_Perf/`。
 
-游戏运行时需开启：
+默认产物写入该目录的 `Perf_Report/`，包括 `*_report.html`、同名 `*_summary.json` 和供 debug bundle 拾取的 `perf_summary.json`。指定 `--output` 时仅生成指定 HTML 和同目录同名摘要。
 
-```
-qm_perf_debug 1
-qm_perf_logfile 1
-```
+分析器流式读取，最多保留 100000 个帧样本、50000 条普通明细和最近 20000 条窗口/会话事件，另保留各配置初始值和最新完整值。帧和普通明细超过上限后使用均匀蓄水池抽样；报告标记 `analysis_sampled`，统计作为估计值，不输出抽样后的严格通过结论。原始日志不被改写。
 
-也可以直接在 设置 → QmClient → HUD → 调试模式 卡片中一键开启（总开关等效于同时设置 `qm_perf_debug`、`qm_perf_logfile`、`qm_perf_stutter_diagnostics` 三个开关，并可单独微调与设置采样阈值 `qm_perf_debug_threshold_ms`）。
+小日志默认与上一份日志比较；任一日志分析时发生抽样则跳过会话对比。`--no-compare` 可避免读取历史日志。不同页面、操作或系统环境的结果仅能作趋势提示。
 
-开关在游戏内即时生效：打开即立刻创建日志文件并开始落盘，关闭即立刻停止写入并关闭文件；同一次运行中重复开关会生成独立的时间戳文件。
+支持历史 key=value 和 JSON 日志。历史日志未包含统一帧样本时仍使用原统计口径，并保留采样偏差提示；新会话使用完整渲染间隔计算帧指标，组件/菜单阶段仅用于归因。CPU 回调耗时不等于逐模块 GPU 时间；限帧、VSync、后台限帧和菜单节流会单独标记。
 
-日志输出到 `%APPDATA%/DDNet/dumps/QmClient_Perf/qm_perf_*.log`。
+## 维护
 
-## 客户端卡顿诊断
+~~~bash
+bun run analyze
+bun run test
+~~~
 
-开启 `qm_perf_stutter_diagnostics 1`（或调试模式总开关）：
-
-```
-qm_perf_stutter_diagnostics 1
-```
-
-诊断以 300 FPS（每帧 `1000 / 300 = 3.333...ms`）为目标。连续低于目标的帧会合并为同一区间；恢复稳定一秒后结束，持续低帧则每 10 秒写出一个分段。日志中的 `perf/stutter` 包含窗口摘要、所有顶层客户端组件的 `OnUpdate` / `OnRender` CPU 耗时汇总，以及最慢帧对应的已启用 `qm_` / `tc_` / `cl_` 整数功能开关。
-
-组件墙钟时间反映 CPU 回调成本，不等于逐模块 GPU 时间。`graphics_swap` 偏高只能指向 GPU、驱动或 VSync 压力；启用限帧、VSync、后台限帧或菜单 idle throttle 时，报告会优先标记帧率限制，不把组件排名描述为确定原因。诊断数据仅写入本地性能日志，不包含密码、聊天内容或玩家信息。
-
-功能开关、当前页面和组件回调耗时都取自同一最慢帧窗口。通用 `CComponent` 没有统一的“是否真的绘制了 HUD”查询接口，因此无法可靠判断的逐功能 HUD/设置可见性会写为 `unknown`，不会根据回调耗时伪造可见状态。
-
-## 输出
-
-生成与日志同名的 `_report.html` 文件，浏览器打开即可查看交互式报表。
-
-## 生产级使用约定
-
-- 默认采集阈值使用 `qm_perf_debug_threshold_ms 4`；4.17ms 只表示 240Hz 帧预算线。
-- HTML 报表用于人工分析，`*_summary.json` 用于按日志归档，固定名 `perf_summary.json` 用于 debug bundle 自动拾取。
-- 自动选择的上一份日志只作为趋势提示；只有 page/system operation signature 一致时，才可以作为严格对比依据。
-- 空日志、缺字段、畸形行和采样偏差必须看作质量警告，不能解读为性能优秀。
-
-## 固定场景
-
-性能优化 PR 的前后对比应使用相同的页面、操作步骤和系统环境，避免把不同操作路径的日志当成严格回归数据。
-
-## 报表内容
-
-- KPI 卡片: p50 / p95 / p99 / Max / 240Hz / 120Hz / 60Hz 合规率
-- Session 自动对比（自动使用当前日志的上一份日志）
-- 采样偏差提示（使用 p5 估计采样阈值）
-- 帧时间趋势图、直方图 + KDE、QQ 图、百分位图
-- 页面级耗时分解与尖峰帧详情
-- 页面性能归因: page switch / list frame / UI rebuild / work drain
-- Section Top-10（基于当前 `perf/section` 样本，仍受 C++ 覆盖面限制）
-- 交互窗口、Tee 收敛、设备资源表格
-
-## 开发
-
-```bash
-bun run analyze    # 等同于 bun analyze.ts
-bun run test       # 使用 test/sample.log 和内联边界样本验证解析/报表
-```
+修改诊断链路时应同步维护 C++ 边界测试、`test.ts`、HTML 和 JSON 输出。

@@ -5,6 +5,30 @@
 
 #include "QmAnimResolve.h"
 #include "UiContext.h"
+#include "UiTokens.h"
+
+// 进行中的页面继续沿原侧归位，避免反向点击把可见内容瞬间翻到另一侧。
+inline float ResolveUiSwitchDirection(const CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, float CurrentDirection, float RequestedDirection)
+{
+	return CurrentDirection != 0.0f && AnimRuntime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_X) ? CurrentDirection : RequestedDirection;
+}
+
+// 连续切页只续接当前进度；结束后的下一次切换才重新入场。
+inline void BeginUiSwitchAnimation(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, float DurationSec)
+{
+	if(!AnimRuntime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_X))
+		AnimRuntime.SetValue(NodeKey, EUiAnimProperty::POS_X, 1.0f);
+
+	SUiAnimRequest Request;
+	Request.m_NodeKey = NodeKey;
+	Request.m_Property = EUiAnimProperty::POS_X;
+	Request.m_Target = 0.0f;
+	Request.m_Transition = ui_token::motion::PAGE_SLIDE;
+	Request.m_Transition.m_DurationSec = DurationSec;
+	Request.m_Transition.m_Priority = 1;
+	Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
+	AnimRuntime.RequestAnimation(Request);
+}
 
 namespace ui_widget
 {

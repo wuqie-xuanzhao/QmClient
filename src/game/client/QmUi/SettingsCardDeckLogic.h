@@ -1,6 +1,7 @@
 #ifndef GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H
 #define GAME_CLIENT_QMUI_SETTINGSCARDDECKLOGIC_H
 
+#include <game/client/QmUi/QmAnimationBackend.h>
 #include <game/client/QmUi/QmCardOrderModel.h>
 #include <game/client/ui_rect.h>
 
@@ -11,6 +12,8 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+
+struct SCardMotionSpec;
 
 struct SSettingsCardDeckItemGeometry
 {
@@ -53,9 +56,10 @@ class CSettingsCardDeckFrameRuntime
 {
 public:
 	bool BeginDisplayCycle(uint64_t DisplayCycle, bool AnimateEntry);
-	void OnTabChanged();
+	void OnTabChanged(bool StartEntryCycle = false);
 	bool EntryCyclePending() const { return m_EntryDisplayCycle != m_DisplayCycle; }
 	bool ConsumeEntryCycle();
+	float ResolveContinuousEntryOffset(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, const SCardMotionSpec &Motion);
 	bool AnimateEntry() const { return m_AnimateEntry; }
 	bool EntryWasActive() const { return m_EntryWasActive; }
 	void SetEntryActive(bool Active) { m_EntryWasActive = Active; }
@@ -91,15 +95,20 @@ inline bool SettingsCardDeckShouldRunPreLayoutInput(const bool HasPointerInput, 
 	return (((HasPointerInput || HasPendingInput) && ControllerVisible) || HasActiveItemContinuation) && !Collapsed && VisibleContentHeight > 0.0f;
 }
 
-inline bool SettingsCardDeckUsesDefaultCollapseControl()
+inline bool SettingsCardDeckUsesDefaultCollapseControl(const bool HasCustomCollapsedState, const bool HasCustomHeaderInput)
 {
-	return true;
+	return !HasCustomCollapsedState && !HasCustomHeaderInput;
 }
 
-// 默认折叠按钮的唯一状态转移；RenderOnly 不能改写卡片状态。
-inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool Collapsed, const bool TogglePressed, const bool RenderOnly)
+inline bool SettingsCardDeckResolveCollapsed(const bool HasCustomCollapsedState, const bool CustomCollapsed, const bool DefaultCollapsed)
 {
-	return !RenderOnly && TogglePressed ? !Collapsed : Collapsed;
+	return HasCustomCollapsedState ? CustomCollapsed : DefaultCollapsed;
+}
+
+// 默认折叠按钮的唯一状态转移；自定义卡片和 RenderOnly 不能被公共按钮改写。
+inline bool SettingsCardDeckApplyDefaultCollapseToggle(const bool HasCustomCollapsedState, const bool Collapsed, const bool TogglePressed, const bool RenderOnly)
+{
+	return !HasCustomCollapsedState && !RenderOnly && TogglePressed ? !Collapsed : Collapsed;
 }
 
 inline bool SettingsCardDeckDefinitionsRevisionChanged(const bool Initialized, const uint64_t CurrentRevision, const uint64_t NextRevision)
@@ -123,11 +132,6 @@ inline void SettingsCardDeckStoreCollapsed(std::unordered_map<std::string, bool>
 {
 	if(pStableId != nullptr && pStableId[0] != '\0')
 		States[pStableId] = Collapsed;
-}
-
-inline bool SettingsCardDeckResolveCollapsedSnapshot(const std::unordered_map<std::string, bool> &States, const char *pStableId, const bool DefinitionCollapsed, const bool DefinitionAuthoritative)
-{
-	return DefinitionAuthoritative ? DefinitionCollapsed : SettingsCardDeckLoadCollapsed(States, pStableId, DefinitionCollapsed);
 }
 
 struct SSettingsCardAnimationWork

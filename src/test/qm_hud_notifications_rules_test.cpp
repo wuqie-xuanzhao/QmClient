@@ -362,40 +362,20 @@ TEST(QmHudNotificationRules, FallsBackForUnknownMessage)
 	EXPECT_TRUE(Analysis.m_UseFallbackLocalization);
 }
 
-TEST(QmHudNotificationRules, ConsumesHiddenBasicInfoWhenConfigured)
+TEST(QmHudNotificationRules, BasicInfoIsNotQueuedWhenItsCategoryIsDisabled)
 {
 	const auto Analysis = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 18.9", QmHudNotifications::ESoloPrompt::None);
-	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, true, true, false);
-	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
+	// 区间删掉了「按隐藏标志吞消息」的旁路，只剩分类开关决定是否入列。
+	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, true);
 	EXPECT_FALSE(Decision.m_QueueNotification);
 	EXPECT_FALSE(Decision.m_ClearPendingCompatPrompt);
 	EXPECT_FALSE(Decision.m_UseFallbackNotification);
-}
-
-TEST(QmHudNotificationRules, ConsumesHiddenPromptWhenConfigured)
-{
-	const auto Analysis = QmHudNotifications::AnalyzeServerMessage("Team save already in progress", QmHudNotifications::ESoloPrompt::None);
-	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, true, false, true);
-	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
-	EXPECT_FALSE(Decision.m_QueueNotification);
-	EXPECT_FALSE(Decision.m_ClearPendingCompatPrompt);
-	EXPECT_FALSE(Decision.m_UseFallbackNotification);
-}
-
-TEST(QmHudNotificationRules, ClearsPendingCompatWhenSoloPromptIsHidden)
-{
-	const auto Analysis = QmHudNotifications::AnalyzeServerMessage("You are now in a solo part", QmHudNotifications::ESoloPrompt::Enter);
-	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, true, false, true);
-	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
-	EXPECT_FALSE(Decision.m_QueueNotification);
-	EXPECT_TRUE(Decision.m_ClearPendingCompatPrompt);
 }
 
 TEST(QmHudNotificationRules, DoesNotQueueWhenSystemRouteIsDisabled)
 {
 	const auto Analysis = QmHudNotifications::AnalyzeServerMessage("Team save already in progress", QmHudNotifications::ESoloPrompt::None);
-	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, false, false, false);
-	EXPECT_FALSE(Decision.m_ConsumeHiddenMessage);
+	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, false);
 	EXPECT_FALSE(Decision.m_QueueNotification);
 	EXPECT_FALSE(Decision.m_ClearPendingCompatPrompt);
 	EXPECT_FALSE(Decision.m_UseFallbackNotification);
@@ -404,8 +384,7 @@ TEST(QmHudNotificationRules, DoesNotQueueWhenSystemRouteIsDisabled)
 TEST(QmHudNotificationRules, KeepsUnknownFallbackNotificationWhenSystemRouteIsEnabled)
 {
 	const auto Analysis = QmHudNotifications::AnalyzeServerMessage("regular server message", QmHudNotifications::ESoloPrompt::None);
-	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, true, false, false);
-	EXPECT_FALSE(Decision.m_ConsumeHiddenMessage);
+	const auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, true);
 	EXPECT_TRUE(Decision.m_QueueNotification);
 	EXPECT_FALSE(Decision.m_ClearPendingCompatPrompt);
 	EXPECT_TRUE(Decision.m_UseFallbackNotification);
@@ -489,36 +468,18 @@ TEST(QmHudNotificationRules, DisabledCategoryFiltersRouteNonEmptySystemMessages)
 	EXPECT_TRUE(Decision.m_UseFallbackNotification);
 }
 
-TEST(QmHudNotificationRules, FocusModeHiddenMessagesOverrideCategoryFilters)
-{
-	QmHudNotifications::SServerMessageRouteConfig Config;
-	Config.m_RouteSystemMessages = true;
-	Config.m_ShowBasicInfo = true;
-	Config.m_ShowPrompts = true;
-	Config.m_HideBasicInfo = true;
-	Config.m_HidePrompt = true;
-
-	auto Analysis = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 18.9", QmHudNotifications::ESoloPrompt::None);
-	auto Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
-	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
-	EXPECT_FALSE(Decision.m_QueueNotification);
-
-	Analysis = QmHudNotifications::AnalyzeServerMessage("Team save already in progress", QmHudNotifications::ESoloPrompt::None);
-	Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, Config);
-	EXPECT_TRUE(Decision.m_ConsumeHiddenMessage);
-	EXPECT_FALSE(Decision.m_QueueNotification);
-}
-
 TEST(QmHudNotificationRules, QueuedSystemNotificationsRemainVisibleInChat)
 {
 	const auto Prompt = QmHudNotifications::AnalyzeServerMessage("Welcome to DDraceNetwork!", QmHudNotifications::ESoloPrompt::None);
-	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt, false, false));
-	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt, false, true));
+	EXPECT_EQ(Prompt.m_Route, QmHudNotifications::EServerMessageRoute::System);
+	// 抑制只看分析结果：系统路由消息保持可见。
+	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(Prompt));
 
 	const auto BasicInfo = QmHudNotifications::AnalyzeServerMessage("DDraceNetwork Version: 20.0", QmHudNotifications::ESoloPrompt::None);
-	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo, false, false));
-	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo, true, false));
+	EXPECT_FALSE(QmHudNotifications::ShouldSuppressServerMessageChat(BasicInfo));
 
+	// 单人路由消息被抑制（区间把「按隐藏标志抑制」改成只按分析结果判定）。
 	const auto Solo = QmHudNotifications::AnalyzeServerMessage("You are now in a solo part", QmHudNotifications::ESoloPrompt::Enter);
-	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Solo, false, false));
+	EXPECT_EQ(Solo.m_Route, QmHudNotifications::EServerMessageRoute::Solo);
+	EXPECT_TRUE(QmHudNotifications::ShouldSuppressServerMessageChat(Solo));
 }

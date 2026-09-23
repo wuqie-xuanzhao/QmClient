@@ -23,7 +23,6 @@
 #include <test/qmclient_source_contract_test.h>
 #include <test/test.h>
 
-
 TEST(QmNewUiMenuSettingsColorsContract, NewSettingsUseToggleAndExposeAccentAndBlurControls)
 {
 	const std::string ConfigSource = ReadTextFile("src/engine/shared/config_variables_qmclient.h");

@@ -1,3 +1,5 @@
+#include "str_test_helpers.h"
+
 #include <base/mem.h>
 #include <base/str.h>
 #include <base/windows.h>
@@ -10,8 +12,6 @@
 
 #include <limits>
 #include <vector>
-
-#include "str_test_helpers.h"
 
 TEST(StrFilename, SanitizeFilename)
 {

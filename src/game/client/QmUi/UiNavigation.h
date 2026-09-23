@@ -93,6 +93,29 @@ namespace ui_widget
 		return CapsuleTabBarSurfaceIsLight(SurfaceColor) ? ColorRGBA(0.0f, 0.0f, 0.0f, 0.06f) : ui_token::color::SURFACE_HIGHLIGHT;
 	}
 
+	// 两级分段选择器的外观：最外层容器胶囊 + 主滑块 + 次级滑块。
+	// 绘制顺序是硬约束 —— 容器、主滑块、次级滑块必须先画，各段文字随后自己画，否则滑块
+	// 滑动途中会盖住经过的文字。主滑块标记一级选项；一级项带子级时它整段盖住子级菜单，
+	// 次级滑块再压在主滑块之上标出当前子项，所以子级文字色要按「主滑块底色」推导，
+	// 不能按容器底色推导（容器上正常的字色压到主滑块上会看不见）。
+	struct SNestedSegmentStyle
+	{
+		ColorRGBA m_ContainerColor = ui_token::color::SURFACE_HIGHLIGHT; // 最外层容器底色
+		ColorRGBA m_MainIndicatorColor = ui_token::color::TEXT_PRIMARY; // 主滑块底色
+		ColorRGBA m_SubIndicatorColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.16f); // 次级滑块底色（画在主滑块之上）
+		ColorRGBA m_SubIndicatorBorderColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.38f); // 次级滑块描边
+		ColorRGBA m_SubActiveLabelColor = ui_token::color::TEXT_ON_ACCENT; // 次级选中文字（压在主滑块上）
+		ColorRGBA m_SubInactiveLabelColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.45f); // 次级未选中文字
+		ColorRGBA m_SubHoverColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.08f); // 次级分段 hover 反馈
+		float m_IndicatorInset = 2.0f; // 主滑块相对一级槽位的内缩
+		float m_SubIndicatorInset = 3.0f; // 次级滑块相对二级槽位的内缩
+	};
+
+	// 画容器胶囊与两枚滑块胶囊。GroupId 标识同一排分段（不同排必须不同），滑块位置由
+	// v2 动画运行时的弹簧轨道按帧求解，切换选项时带速度续接地滑过去。
+	// pMainSlot / pSubSlot 为 nullptr 时对应滑块不绘制（例如一级项没有子级）。
+	void NestedSegmentChrome(const IUiContext &Ctx, uint64_t GroupId, const CUIRect &ContainerRect, const CUIRect *pMainSlot, const CUIRect *pSubSlot, const SNestedSegmentStyle &Style);
+
 	struct SListItemProps
 	{
 		const char *m_pLeadingIcon = nullptr;

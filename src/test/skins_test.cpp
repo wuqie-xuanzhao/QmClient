@@ -4,6 +4,7 @@
 #include <generated/client_data.h>
 
 #include <game/client/animstate.h>
+#include <game/client/components/qmclient/skin_load_budget.h>
 #include <game/client/components/skins.h>
 #include <game/client/render.h>
 
@@ -496,4 +497,15 @@ TEST(Skins, WebPSaveRoundTripPreservesImageShape)
 
 	Reloaded.Free();
 	Image.Free();
+}
+
+TEST(Skins, FinalizeBudgetAlwaysLetsFirstSkinProgress)
+{
+	using namespace std::chrono_literals;
+	// 即使预算已被超支，首个就绪皮肤仍必须完成，否则低帧率下加载会完全停滞。
+	EXPECT_TRUE(QmSkinCanFinalize(0, 50ms, 1ms));
+	// 已有进展后按时间预算让出主线程。
+	EXPECT_TRUE(QmSkinCanFinalize(1, 999us, 1ms));
+	EXPECT_FALSE(QmSkinCanFinalize(1, 1ms, 1ms));
+	EXPECT_FALSE(QmSkinCanFinalize(2, 5ms, 1ms));
 }

@@ -22,7 +22,16 @@
 
 namespace
 {
-
+	std::string FindRuntimeTranslation(const std::string &LanguageData, const char *pKey)
+	{
+		const std::string Prefix = std::string(pKey) + "\n== ";
+		const size_t TranslationStart = LanguageData.find(Prefix);
+		if(TranslationStart == std::string::npos)
+			return {};
+		const size_t ValueStart = TranslationStart + Prefix.size();
+		const size_t ValueEnd = LanguageData.find('\n', ValueStart);
+		return LanguageData.substr(ValueStart, ValueEnd - ValueStart);
+	}
 }
 
 TEST(CollisionHitboxLogic, CapsuleOutlineHandlesDegenerateAndAxisAlignedLasers)
@@ -51,15 +60,91 @@ TEST(CollisionHitboxLogic, CapsuleOutlineHandlesDegenerateAndAxisAlignedLasers)
 	EXPECT_TRUE(BuildHitboxCapsuleOutline({-MaxFloat, 0.0f}, {MaxFloat, 0.0f}, 2.0f).empty());
 }
 
+TEST(CollisionHitboxLogic, CapsuleEmitOverloadProducesTheSameOutlineAsTheVectorOverload)
+{
+	// 渲染热路径改用直接输出重载（栈上定长缓冲），两者必须逐点一致，
+	// 否则渲染结果会与既有行为发生偏移。
+	const vec2 Cases[][2] = {
+		{{10.0f, 20.0f}, {10.0f, 20.0f}}, // 退化为圆
+		{{0.0f, 0.0f}, {10.0f, 0.0f}}, // 水平
+		{{0.0f, 0.0f}, {0.0f, 10.0f}}, // 垂直
+		{{-3.0f, 5.0f}, {7.0f, -11.0f}}, // 斜向
+	};
+	for(const auto &Case : Cases)
+	{
+		for(const int ArcSegments : {2, 3, 4, 16, 64})
+		{
+			const auto Expected = BuildHitboxCapsuleOutline(Case[0], Case[1], 2.5f, ArcSegments);
+			std::vector<SCollisionHitboxLine> Emitted;
+			BuildHitboxCapsuleOutline(Case[0], Case[1], 2.5f, ArcSegments, [&](vec2 From, vec2 To) {
+				Emitted.push_back({From, To});
+			});
+			ASSERT_EQ(Emitted.size(), Expected.size()) << "ArcSegments=" << ArcSegments;
+			for(size_t Index = 0; Index < Emitted.size(); ++Index)
+			{
+				EXPECT_EQ(Emitted[Index].m_From.x, Expected[Index].m_From.x) << "ArcSegments=" << ArcSegments << " Index=" << Index;
+				EXPECT_EQ(Emitted[Index].m_From.y, Expected[Index].m_From.y) << "ArcSegments=" << ArcSegments << " Index=" << Index;
+				EXPECT_EQ(Emitted[Index].m_To.x, Expected[Index].m_To.x) << "ArcSegments=" << ArcSegments << " Index=" << Index;
+				EXPECT_EQ(Emitted[Index].m_To.y, Expected[Index].m_To.y) << "ArcSegments=" << ArcSegments << " Index=" << Index;
+			}
+		}
+	}
+
+	// 被拒绝的输入不能输出任何线段；合法输入不能超过栈上定长缓冲的容量。
+	std::vector<SCollisionHitboxLine> Rejected;
+	BuildHitboxCapsuleOutline({0.0f, 0.0f}, {1.0f, 1.0f}, 0.0f, 16, [&](vec2 From, vec2 To) { Rejected.push_back({From, To}); });
+	EXPECT_TRUE(Rejected.empty());
+	std::vector<SCollisionHitboxLine> Overflowed;
+	const float MaxFloat = std::numeric_limits<float>::max();
+	BuildHitboxCapsuleOutline({-MaxFloat, 0.0f}, {MaxFloat, 0.0f}, 2.0f, 16, [&](vec2 From, vec2 To) { Overflowed.push_back({From, To}); });
+	EXPECT_TRUE(Overflowed.empty());
+	std::vector<SCollisionHitboxLine> MaxSegments;
+	BuildHitboxCapsuleOutline({0.0f, 0.0f}, {10.0f, 0.0f}, 2.0f, 4096, [&](vec2 From, vec2 To) { MaxSegments.push_back({From, To}); });
+	EXPECT_LE(MaxSegments.size(), (size_t)COLLISION_HITBOX_CAPSULE_MAX_LINES);
+}
+
+TEST(CollisionHitboxLogic, CachedCircleDirectionsKeepIncreasingAnglesPerSegmentCount)
+{
+	CQmHitboxCircleDirections Directions;
+	for(const int Segments : {CQmHitboxCircleDirections::MIN_SEGMENTS, 32, CQmHitboxCircleDirections::MAX_SEGMENTS})
+	{
+		const vec2 *pFirst = Directions.Get(Segments);
+		const vec2 *pSecond = Directions.Get(Segments);
+		// 同一档位重复取用必须命中缓存，返回同一块表。
+		EXPECT_EQ(pFirst, pSecond);
+		// 起点固定为角度 0，末端保留原角度运算的浮点值（不吸附回起点）。
+		EXPECT_FLOAT_EQ(pFirst[0].x, 1.0f);
+		EXPECT_FLOAT_EQ(pFirst[0].y, 0.0f);
+		const float Step = 2.0f * pi / Segments;
+		for(int Index = 0; Index <= Segments; ++Index)
+		{
+			EXPECT_FLOAT_EQ(pFirst[Index].x, std::cos(Step * Index));
+			EXPECT_FLOAT_EQ(pFirst[Index].y, std::sin(Step * Index));
+			EXPECT_NEAR(length(pFirst[Index]), 1.0f, 0.0001f);
+		}
+	}
+	// 不同档位各自独立，不互相覆盖。
+	const vec2 *pSmall = Directions.Get(CQmHitboxCircleDirections::MIN_SEGMENTS);
+	const vec2 *pLarge = Directions.Get(CQmHitboxCircleDirections::MAX_SEGMENTS);
+	EXPECT_NE(pSmall, pLarge);
+	EXPECT_NEAR(length(pSmall[CQmHitboxCircleDirections::MIN_SEGMENTS]), 1.0f, 0.0001f);
+	EXPECT_NEAR(length(pLarge[CQmHitboxCircleDirections::MAX_SEGMENTS]), 1.0f, 0.0001f);
+}
+
 TEST(SettingsPageLayout, DynamicIslandHeightMatchesTheRenderedRowsAndColorRow)
 {
 	const SSettingsContentMetrics Metrics = ResolveSettingsContentMetrics(1000.0f);
-	const float OriginalHeight = ResolveQmHudDynamicIslandHeight(Metrics, true, 700.0f);
-	const float ExpandedHeight = ResolveQmHudDynamicIslandHeight(Metrics, false, 700.0f);
+	const float OriginalHeight = ResolveQmHudDynamicIslandHeight(Metrics, true, false, 700.0f);
+	const float ExpandedHeight = ResolveQmHudDynamicIslandHeight(Metrics, false, false, 700.0f);
 	const CUIRect ColorRowView{0.0f, 0.0f, 700.0f, 0.0f};
 
-	EXPECT_FLOAT_EQ(OriginalHeight, 2.0f * Metrics.m_RowStep);
+	// 卡片固定渲染 4 行：使用原版样式、显示队伍、钩子倒计时、开关倒计时总开关。
+	// 展开时再多一行背景色。
+	EXPECT_FLOAT_EQ(OriginalHeight, 4.0f * Metrics.m_RowStep);
 	EXPECT_FLOAT_EQ(ExpandedHeight - OriginalHeight, ResolveSettingsColorRowLayout(ColorRowView, Metrics, false).m_ConsumedHeight);
+	// 开关倒计时启用后再多出「跟随 Tee」「灵动岛」两个位置开关（没有位置标题行）。
+	EXPECT_FLOAT_EQ(ResolveQmHudDynamicIslandHeight(Metrics, true, true, 700.0f) - OriginalHeight, 2.0f * Metrics.m_RowStep);
+	EXPECT_FLOAT_EQ(ResolveQmHudDynamicIslandHeight(Metrics, false, true, 700.0f) - ExpandedHeight, 2.0f * Metrics.m_RowStep);
 }
 
 TEST(SettingsPageLayout, ContentRowFlowKeepsConditionalRowsAndMeasuredHeightInSync)
@@ -503,8 +588,12 @@ TEST(SettingsCardDeck, ExplicitCollapseStateOverridesCachedStableIdState)
 {
 	std::unordered_map<std::string, bool> States;
 	SettingsCardDeckStoreCollapsed(States, "qm:coords", true);
-	EXPECT_FALSE(SettingsCardDeckResolveCollapsedSnapshot(States, "qm:coords", false, true));
-	EXPECT_TRUE(SettingsCardDeckResolveCollapsedSnapshot(States, "qm:coords", false, false));
+	const bool CachedCollapsed = SettingsCardDeckLoadCollapsed(States, "qm:coords", false);
+	EXPECT_TRUE(CachedCollapsed);
+	// 卡片自带折叠状态时以它为准，缓存与默认状态都不参与；没有自定义状态时才跟随 Deck 的公共折叠状态。
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(true, true, !CachedCollapsed));
+	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(true, false, CachedCollapsed));
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(false, false, CachedCollapsed));
 }
 
 TEST(SettingsCardDeck, DragPlacementUsesVisualOrderWithoutRendering)
@@ -722,4 +811,339 @@ TEST(SettingsCardDeck, ColumnProjectionCacheRebuildsOnlyForLayoutOrActiveDefinit
 	const auto &aMovedColumns = Cache.Resolve(Model, "graphics", vActiveStateIndices);
 	EXPECT_EQ(Cache.RebuildCount(), 3u);
 	EXPECT_EQ(aMovedColumns[2], (std::vector<int>{Visual, Modes}));
+}
+TEST(SettingsCardDeck, StateIndexRevisionChangesWhenSameSizedModelIsRebuilt)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"card-a", "settings", 1, 0},
+		{"card-b", "settings", 2, 0},
+	});
+	const uint64_t InitialRevision = Model.StateIndexRevision();
+	EXPECT_EQ(Model.StateIndexForStableId("card-a"), 0);
+	EXPECT_EQ(Model.StateIndexForStableId("card-b"), 1);
+
+	Model.SetEntries({
+		{"card-b", "settings", 2, 0},
+		{"card-a", "settings", 1, 0},
+	});
+
+	EXPECT_GT(Model.StateIndexRevision(), InitialRevision);
+	EXPECT_EQ(Model.Count(), 2);
+	EXPECT_EQ(Model.StateIndexForStableId("card-b"), 0);
+	EXPECT_EQ(Model.StateIndexForStableId("card-a"), 1);
+}
+
+TEST(SettingsCardDeck, CrossColumnDropMovesOnlyTheGlobalModel)
+{
+	qm_card_order::CModel Model;
+	Model.LoadMerged("", qm_card_registry::BuildDefaultEntries());
+
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "graphics", "deck:graphics-display", 2, 0));
+	const int Index = Model.FindByStableId("deck:graphics-display");
+	ASSERT_GE(Index, 0);
+	EXPECT_EQ(Model.Entry(Index).m_Column, 2);
+	EXPECT_EQ(Model.Entry(Index).m_OrderInColumn, 0);
+	EXPECT_STREQ(Model.Entry(Index).m_pDefaultTab, "graphics");
+	EXPECT_TRUE(Model.IsDirty());
+}
+
+TEST(SettingsCardDeck, CrossColumnDropUsesVisibleOrderWhenHiddenCardsInterleave)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"sound-toggle", "sound", 1, 0},
+		{"sound-hidden-before", "sound", 2, 0},
+		{"sound-visible", "sound", 2, 1},
+		{"sound-hidden-after", "sound", 2, 2},
+	});
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("sound-toggle"),
+		Model.StateIndexForStableId("sound-visible"),
+	};
+
+	// 拖拽只按当前可见卡片计数，隐藏卡片仍保留在持久化顺序中。
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "sound", "sound-toggle", 2, 1, &vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"sound-hidden-before", "sound-visible", "sound-toggle", "sound-hidden-after"}));
+}
+
+TEST(SettingsCardDeck, EmptyVisibleColumnDropsBeforeHiddenCards)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"sound-toggle", "sound", 1, 0},
+		{"sound-hidden", "sound", 2, 0},
+	});
+	const std::vector<int> vActiveStateIndices{Model.StateIndexForStableId("sound-toggle")};
+
+	ASSERT_TRUE(CommitSettingsCardDeckDrop(Model, "sound", "sound-toggle", 2, 0, &vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"sound-toggle", "sound-hidden"}));
+}
+
+TEST(SettingsCardDeck, SameColumnVisualNoOpPreservesHiddenRelativeOrder)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries({
+		{"sound-toggle", "sound", 2, 0},
+		{"sound-hidden", "sound", 2, 1},
+		{"sound-visible", "sound", 2, 2},
+	});
+	const std::vector<int> vActiveStateIndices{
+		Model.StateIndexForStableId("sound-toggle"),
+		Model.StateIndexForStableId("sound-visible"),
+	};
+
+	EXPECT_FALSE(CommitSettingsCardDeckDrop(Model, "sound", "sound-toggle", 2, 0, &vActiveStateIndices));
+	EXPECT_EQ(Model.StableIdOrder("", "sound", 2), (std::vector<std::string>{"sound-toggle", "sound-hidden", "sound-visible"}));
+}
+
+TEST(SettingsCardDeck, OrdinaryCardsUseDefaultCollapseWhileCustomCardsRemainAuthoritative)
+{
+	EXPECT_TRUE(SettingsCardDeckUsesDefaultCollapseControl(false, false));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, false));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(false, true));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, true));
+
+	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(false, true, false));
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(false, false, true));
+	EXPECT_TRUE(SettingsCardDeckResolveCollapsed(true, true, false));
+	EXPECT_FALSE(SettingsCardDeckResolveCollapsed(true, false, true));
+}
+
+TEST(SettingsCardDeck, DisplayViewKeyChangesWhenAnySettingsSubTabChanges)
+{
+	const uint64_t Base = ResolveSettingsCardDisplayViewKey(0, 0, 0, 0, 0);
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(1, 0, 0, 0, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 1, 0, 0, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 0, 1, 0, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 0, 0, 1, 0));
+	EXPECT_NE(Base, ResolveSettingsCardDisplayViewKey(0, 0, 0, 0, 1));
+	EXPECT_EQ(Base, ResolveSettingsCardDisplayViewKey(0, 0, 0, 0, 0));
+}
+
+TEST(SettingsCardDeck, GeometryMotionIncludesCardsPushedByAnEarlierHeightAnimation)
+{
+	EXPECT_FALSE(SettingsCardDeckGeometryMoved(false, 100.0f, 80.0f, 120.0f, 80.0f));
+	EXPECT_FALSE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 100.0f, 80.0f));
+	EXPECT_TRUE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 120.0f, 80.0f));
+	EXPECT_TRUE(SettingsCardDeckGeometryMoved(true, 100.0f, 80.0f, 100.0f, 90.0f));
+}
+
+TEST(SettingsCardDeck, AnimatedColumnFramesNeverOverlap)
+{
+	const float Gap = 12.0f;
+	const SSettingsCardColumnFrame First = ResolveSettingsCardColumnFrame(100.0f, 80.0f, Gap);
+	const SSettingsCardColumnFrame Second = ResolveSettingsCardColumnFrame(First.m_NextY, 140.0f, Gap);
+	EXPECT_FLOAT_EQ(First.m_NextY, Second.m_Y);
+	EXPECT_GE(Second.m_Y, First.m_Y + First.m_Height + Gap);
+	EXPECT_FLOAT_EQ(Second.m_Height, 140.0f);
+}
+
+TEST(SettingsCardDeck, DrawGeometryKeepsSubpixelOffsetsThroughMotionAndRest)
+{
+	SSettingsCardSpec Spec;
+	const SSettingsCardFrame Start = BuildSettingsCardFrame({10.2f, 20.3f, 199.6f, 0.0f}, Spec, 49.4f, 1.0f);
+	for(const float Offset : {0.0f, 0.025f, 0.05f, 0.075f, 0.05f, 0.025f, 0.0f})
+	{
+		const SSettingsCardFrame Draw = ResolveSettingsCardDrawFrame(Start, Offset, Offset);
+		EXPECT_FLOAT_EQ(Draw.m_Rect.x, Start.m_Rect.x + Offset);
+		EXPECT_FLOAT_EQ(Draw.m_Rect.y, Start.m_Rect.y + Offset);
+		EXPECT_FLOAT_EQ(Draw.m_Rect.w, Start.m_Rect.w);
+		EXPECT_FLOAT_EQ(Draw.m_Rect.h, Start.m_Rect.h);
+		EXPECT_FLOAT_EQ(Draw.m_HandleRect.x, Start.m_HandleRect.x + Offset);
+		EXPECT_FLOAT_EQ(Draw.m_HandleRect.y, Start.m_HandleRect.y + Offset);
+		EXPECT_FLOAT_EQ(ResolveSettingsCardBorderWidth(1.3f, 0.5f), 2.5f);
+	}
+}
+
+TEST(SettingsCardDeck, EveryCardDescriptionHasASimplifiedChineseRuntimeTranslation)
+{
+	const std::string SimplifiedChinese = ReadTestSourceFile("data/languages/simplified_chinese.txt");
+	for(const qm_card_registry::SCardDefault &Default : qm_card_registry::Defaults())
+	{
+		SCOPED_TRACE(Default.m_pStableId);
+		const char *pDescription = qm_card_registry::ResolveDescriptionKey(Default);
+		const std::string Translation = FindRuntimeTranslation(SimplifiedChinese, pDescription);
+		ASSERT_FALSE(Translation.empty()) << pDescription;
+		EXPECT_NE(Translation, pDescription);
+	}
+}
+
+TEST(SettingsCardDeck, AuditedUiLabelsHaveSimplifiedChineseRuntimeTranslations)
+{
+	const std::string SimplifiedChinese = ReadTestSourceFile("data/languages/simplified_chinese.txt");
+	static const char *const s_apKeys[] = {
+		"Card height animation",
+		"Card list entry animation",
+		"Card reflow animation",
+		"Enable enhanced scoreboard presentation",
+		// 本地把该配置改成 qm_graphics_trace 的已弃用别名（本地独有演进），按本地当前 Desc 钉住标签。
+		"Deprecated compatibility alias for qm_graphics_trace (macOS signposts)",
+		"Enable smooth cinematic camera while free spectating",
+		"Global UI size percentage",
+		"Gores",
+		"Hide chat messages from players marked as enemies",
+		"Interface surface",
+		"Map browser surface",
+		"Ping",
+		"Relative X position of the draggable back button",
+		"Relative Y position of the draggable back button",
+		"RTT",
+		"Scoreboard surface",
+		"Text input focus ring color",
+		"Presentation animations",
+		"Show draggable virtual back button",
+		"UI rounded corner segments (even numbers recommended)",
+		"UI icon custom color",
+		"Word filter action: 0=replace matching words, 1=hide entire message",
+	};
+	for(const char *pKey : s_apKeys)
+	{
+		SCOPED_TRACE(pKey);
+		const std::string Translation = FindRuntimeTranslation(SimplifiedChinese, pKey);
+		ASSERT_FALSE(Translation.empty());
+		EXPECT_NE(Translation, pKey);
+	}
+}
+
+TEST(SettingsCardDeck, ContinuousEntryKeepsPositionAndVelocityAcrossPageSwitches)
+{
+	CSettingsCardDeckFrameRuntime Runtime;
+	CUiV2AnimationRuntime Animation;
+	SCardMotionSpec Motion = ResolveCardMotionSpec(2, true, true, true, true);
+	const uint64_t Node = 100;
+	Runtime.BeginDisplayCycle(1, true);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, Node, Motion), Motion.m_EntryDistance);
+	Animation.Advance(0.05f);
+	const float BeforeSwitch = Runtime.ResolveContinuousEntryOffset(Animation, Node, Motion);
+	ASSERT_GT(BeforeSwitch, 0.0f);
+	ASSERT_LT(BeforeSwitch, Motion.m_EntryDistance);
+	CUiV2AnimationRuntime Reference = Animation;
+
+	Runtime.BeginDisplayCycle(2, true);
+	Runtime.OnTabChanged();
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, Node, Motion), BeforeSwitch);
+	Animation.Advance(0.01f);
+	Reference.Advance(0.01f);
+	EXPECT_NEAR(Runtime.ResolveContinuousEntryOffset(Animation, Node, Motion), Reference.GetValue(Node, EUiAnimProperty::POS_Y), 0.0001f);
+
+	Runtime.BeginDisplayCycle(3, true);
+	Runtime.OnTabChanged();
+	EXPECT_NEAR(Runtime.ResolveContinuousEntryOffset(Animation, Node, Motion), Reference.GetValue(Node, EUiAnimProperty::POS_Y), 0.0001f);
+	EXPECT_EQ(Animation.ActiveTrackCount(), 1);
+	EXPECT_EQ(Animation.QueuedTrackCount(), 0);
+}
+
+TEST(SettingsCardDeck, SubTabStartsEntryInTheClickFrameAndParentCycleDoesNotRestartIt)
+{
+	CSettingsCardDeckFrameRuntime Runtime;
+	CUiV2AnimationRuntime Animation;
+	const SCardMotionSpec Motion = ResolveCardMotionSpec(2, true, true, true, true);
+	Runtime.BeginDisplayCycle(1, true);
+	Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion);
+	for(int Frame = 0; Frame < 30; ++Frame)
+	{
+		Animation.Advance(1.0f / 60.0f);
+		Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion);
+	}
+	ASSERT_FALSE(Runtime.EntryWasActive());
+
+	// 子分类输入发生在父设置页的 display cycle 检测之后，必须当帧启动。
+	Runtime.OnTabChanged(true);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), Motion.m_EntryDistance);
+	Animation.Advance(1.0f / 120.0f);
+	const float BeforeParentCycle = Animation.GetValue(100, EUiAnimProperty::POS_Y);
+	Runtime.BeginDisplayCycle(2, true);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), BeforeParentCycle);
+	EXPECT_LT(BeforeParentCycle, Motion.m_EntryDistance);
+	EXPECT_EQ(Animation.ActiveTrackCount(), 1);
+}
+
+TEST(SettingsCardDeck, ContinuousEntrySettlesWithOnlyASmallReboundAtDifferentRefreshRates)
+{
+	for(const int RefreshRate : {60, 120, 240})
+	{
+		SCOPED_TRACE(RefreshRate);
+		CSettingsCardDeckFrameRuntime Runtime;
+		CUiV2AnimationRuntime Animation;
+		const SCardMotionSpec Motion = ResolveCardMotionSpec(2, true, true, true, true);
+		Runtime.BeginDisplayCycle(1, true);
+		Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion);
+		float MinimumOffset = Motion.m_EntryDistance;
+		for(int Frame = 0; Frame < RefreshRate / 2; ++Frame)
+		{
+			Animation.Advance(1.0f / RefreshRate);
+			const float Offset = Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion);
+			MinimumOffset = std::min(MinimumOffset, Offset);
+			EXPECT_LE(Offset, Motion.m_EntryDistance);
+		}
+		EXPECT_LT(MinimumOffset, 0.0f);
+		EXPECT_GT(MinimumOffset, -Motion.m_EntryDistance * 0.03f);
+		EXPECT_FALSE(Runtime.EntryWasActive());
+		EXPECT_EQ(Animation.ActiveTrackCount(), 0);
+		EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), 0.0f);
+		EXPECT_EQ(Animation.ActiveTrackCount(), 0);
+	}
+}
+
+TEST(SettingsCardDeck, ContinuousEntryCanBeDisabledImmediatelyAndReplayAfterSettling)
+{
+	CSettingsCardDeckFrameRuntime Runtime;
+	CUiV2AnimationRuntime Animation;
+	SCardMotionSpec Motion = ResolveCardMotionSpec(2, true, true, true, true);
+	Runtime.BeginDisplayCycle(1, true);
+	Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion);
+	Animation.Advance(0.05f);
+	Motion = ResolveCardMotionSpec(0, true, true, true, true);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), 0.0f);
+	EXPECT_FALSE(Runtime.EntryWasActive());
+	EXPECT_EQ(Animation.ActiveTrackCount(), 0);
+
+	Motion = ResolveCardMotionSpec(1, true, true, true, true);
+	Runtime.BeginDisplayCycle(2, true);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), Motion.m_EntryDistance);
+	for(int Frame = 0; Frame < 30; ++Frame)
+	{
+		Animation.Advance(1.0f / 120.0f);
+		Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion);
+	}
+	EXPECT_FALSE(Runtime.EntryWasActive());
+	Runtime.BeginDisplayCycle(3, true);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), Motion.m_EntryDistance);
+
+	Runtime.BeginDisplayCycle(4, false);
+	EXPECT_FLOAT_EQ(Runtime.ResolveContinuousEntryOffset(Animation, 100, Motion), 0.0f);
+	EXPECT_EQ(Animation.ActiveTrackCount(), 0);
+}
+
+TEST(SettingsCardDeck, StableAnimationFramesSkipRuntimeWork)
+{
+	const SSettingsCardAnimationWork Stable = ResolveSettingsCardAnimationWork(0.16f, false, false, false, 0.18f, false, false);
+	EXPECT_FALSE(Stable.m_ResolveEntry);
+	EXPECT_FALSE(Stable.m_ResetEntry);
+	EXPECT_FALSE(Stable.m_ResolveReflow);
+	EXPECT_FALSE(Stable.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork TargetChanged = ResolveSettingsCardAnimationWork(0.16f, false, false, false, 0.18f, true, false);
+	EXPECT_TRUE(TargetChanged.m_ResolveReflow);
+	EXPECT_FALSE(TargetChanged.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork Active = ResolveSettingsCardAnimationWork(0.16f, true, false, false, 0.18f, false, true);
+	EXPECT_TRUE(Active.m_ResolveEntry);
+	EXPECT_TRUE(Active.m_ResolveReflow);
+}
+
+TEST(SettingsCardDeck, DisabledOrSnappedAnimationsOnlyResetTargets)
+{
+	const SSettingsCardAnimationWork Disabled = ResolveSettingsCardAnimationWork(0.0f, true, false, false, 0.0f, true, true);
+	EXPECT_TRUE(Disabled.m_ResetEntry);
+	EXPECT_FALSE(Disabled.m_ResolveReflow);
+	EXPECT_TRUE(Disabled.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork Snapped = ResolveSettingsCardAnimationWork(0.16f, false, false, true, 0.18f, true, true);
+	EXPECT_FALSE(Snapped.m_ResolveReflow);
+	EXPECT_TRUE(Snapped.m_SetReflowTarget);
+
+	const SSettingsCardAnimationWork FirstFrame = ResolveSettingsCardAnimationWork(0.16f, false, true, false, 0.18f, false, false);
+	EXPECT_FALSE(FirstFrame.m_SetReflowTarget);
 }

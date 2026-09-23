@@ -1,3 +1,4 @@
+#include <base/perf_timer.h>
 #include <base/time.h>
 
 #include <gtest/gtest.h>
@@ -26,6 +27,17 @@ TEST(Time, Nanoseconds)
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	const std::chrono::nanoseconds Time2 = time_get_nanoseconds();
 	EXPECT_LT(Time1, Time2);
+}
+
+TEST(Time, DisabledPerfTimerStaysIdleAcrossReset)
+{
+	CPerfTimer Disabled(false);
+	CPerfTimer Enabled;
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	EXPECT_GT(Enabled.ElapsedMs(), 0.0);
+	EXPECT_DOUBLE_EQ(Disabled.ElapsedMs(), 0.0);
+	Disabled.Reset();
+	EXPECT_DOUBLE_EQ(Disabled.ElapsedMs(), 0.0);
 }
 
 TEST(Time, StrTime)

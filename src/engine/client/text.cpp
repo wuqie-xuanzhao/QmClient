@@ -1,5 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include "font_size_cache.h"
+#include "glyph_lookup_cache.h"
+#include "text_layout_string.h"
+#include "text_word_cursor.h"
+
 #include <base/log.h>
 #include <base/math.h>
 #include <base/system.h>
@@ -354,6 +359,12 @@ private:
 	uint8_t *m_apTextureData[NUM_FONT_TEXTURES];
 	CAtlas m_TextureAtlas;
 	std::unordered_map<std::tuple<FT_Face, int, int>, SGlyph, SGlyphKeyHash, SGlyphKeyEquals> m_Glyphs;
+	// QmClient: 近期字形命中的直接索引。字形表在热路径上被按 (face, chr, size) 反复查询，
+	// 这里用固定容量、零分配的缓存挡掉大部分哈希查找；冲突只导致回落到原查找路径。
+	CQmGlyphLookupCache<SGlyph> m_GlyphLookupCache;
+	// QmClient: 记录最近一次成功的 FT_Set_Pixel_Sizes(Face, Size)，避免同一 face
+	// 在同一字号上每帧重复设置；绕过该入口的调用必须显式失效。
+	mutable CQmFontSizeCache m_FacePixelSizeCache;
 
 	// QmClient: 最近缓存未命中（需要光栅化）的字形 (Chr, FontSize)，供菜单在关闭时的
 	// 空闲帧分帧预热，避免下次打开菜单时一次性光栅化上百个字形造成掉帧；集合会持久化，
@@ -567,6 +578,13 @@ private:
 		}
 	}
 
+	void EnsureFacePixelSize(FT_Face Face, int FontSize) const
+	{
+		// 同一 face 连续用同一字号时跳过重复的 FT_Set_Pixel_Sizes；
+		// 任何绕过此入口直接设置字号的路径都必须先 InvalidateFacePixelSizeCache()。
+		m_FacePixelSizeCache.Ensure(Face, FontSize, [&]() { return FT_Set_Pixel_Sizes(Face, 0, FontSize); });
+	}
+
 	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize) const
 	{
 		if(FontSize > 48)
@@ -596,7 +614,7 @@ private:
 	bool RenderGlyph(SGlyph &Glyph)
 	{
 		const auto RasterizeStart = time_get_nanoseconds();
-		FT_Set_Pixel_Sizes(Glyph.m_Face, 0, Glyph.m_FontSize);
+		EnsureFacePixelSize(Glyph.m_Face, Glyph.m_FontSize);
 
 		if(FT_Load_Glyph(Glyph.m_Face, Glyph.m_GlyphIndex, FT_LOAD_RENDER | FT_LOAD_NO_BITMAP))
 		{
@@ -727,6 +745,12 @@ public:
 		return m_DefaultFace;
 	}
 
+	// 供绕过 EnsureFacePixelSize 直接调用 FT_Set_Pixel_Sizes 的调用方使用。
+	void InvalidateFacePixelSizeCache()
+	{
+		m_FacePixelSizeCache.Reset();
+	}
+
 	FT_Face IconFace() const
 	{
 		return m_IconFace;
@@ -739,6 +763,8 @@ public:
 
 	bool SetDefaultFaceByName(const char *pFamilyName)
 	{
+		// 默认字体变化会改变 GetCharGlyph 的解析结果，近期索引必须失效。
+		m_GlyphLookupCache.Reset();
 		m_DefaultFace = GetFaceByName(pFamilyName);
 		if(!m_DefaultFace)
 		{
@@ -844,6 +870,8 @@ public:
 			log_warn("textrender", "The fallback font face '%s' was specified multiple times", pFamilyName);
 			return true;
 		}
+		// 回退链变化同样会改变 GetCharGlyph 的解析结果，近期索引必须失效。
+		m_GlyphLookupCache.Reset();
 		m_vFallbackFaces.push_back(Face);
 		return true;
 	}
@@ -948,6 +976,8 @@ public:
 
 		m_TextureAtlas.Clear(m_TextureDimension);
 		m_Glyphs.clear();
+		m_GlyphLookupCache.Reset();
+		InvalidateFacePixelSizeCache();
 	}
 
 	// QmClient: 记录/消费“最近缺失字形”。预热集合与缓存无关，字体图集重建（语言切换）
@@ -995,6 +1025,14 @@ public:
 	{
 		FontSize = std::clamp(FontSize, MIN_FONT_SIZE, MAX_FONT_SIZE);
 
+		// 命中近期索引时直接返回，省掉一次哈希查找；索引与字形表同生共死。
+		if(const SGlyph *pCached = m_GlyphLookupCache.Find(m_SelectedFace, Chr, FontSize))
+			return pCached;
+		const auto RememberGlyph = [&](const SGlyph *pGlyph) {
+			m_GlyphLookupCache.Store(m_SelectedFace, Chr, FontSize, pGlyph);
+			return pGlyph;
+		};
+
 		// Find glyph index and most appropriate font face.
 		FT_Face Face;
 		FT_UInt GlyphIndex = GetCharGlyph(Chr, &Face, false);
@@ -1002,13 +1040,13 @@ public:
 		{
 			// Use replacement character if glyph could not be found,
 			// also retrieve replacement character from the atlas.
-			return Chr == REPLACEMENT_CHARACTER ? nullptr : GetGlyph(REPLACEMENT_CHARACTER, FontSize);
+			return RememberGlyph(Chr == REPLACEMENT_CHARACTER ? nullptr : GetGlyph(REPLACEMENT_CHARACTER, FontSize));
 		}
 
 		// Check if glyph for this (font face, character, font size)-combination was already rendered.
 		SGlyph &Glyph = m_Glyphs[std::make_tuple(Face, Chr, FontSize)];
 		if(Glyph.m_State == SGlyph::EState::RENDERED)
-			return &Glyph;
+			return RememberGlyph(&Glyph);
 		else if(Glyph.m_State == SGlyph::EState::ERROR)
 			return nullptr;
 
@@ -1022,7 +1060,7 @@ public:
 
 		const bool Rendered = RenderGlyph(Glyph);
 		if(Rendered)
-			return &Glyph;
+			return RememberGlyph(&Glyph);
 
 		// Use replacement character if the glyph could not be rendered,
 		// also retrieve replacement character from the atlas.
@@ -1030,7 +1068,7 @@ public:
 		if(pReplacementCharacter)
 		{
 			Glyph = *pReplacementCharacter;
-			return &Glyph;
+			return RememberGlyph(&Glyph);
 		}
 
 		// Keep failed glyph in the cache so we don't attempt to render it again,
@@ -1044,7 +1082,7 @@ public:
 		if(pLeft != nullptr && pRight != nullptr && pLeft->m_Face == pRight->m_Face && pLeft->m_FontSize == pRight->m_FontSize)
 		{
 			FT_Vector Kerning = {0, 0};
-			FT_Set_Pixel_Sizes(pLeft->m_Face, 0, pLeft->m_FontSize);
+			EnsureFacePixelSize(pLeft->m_Face, pLeft->m_FontSize);
 			FT_Get_Kerning(pLeft->m_Face, pLeft->m_Chr, pRight->m_Chr, FT_KERNING_DEFAULT, &Kerning);
 			return vec2(Kerning.x >> 6, Kerning.y >> 6);
 		}
@@ -1076,7 +1114,7 @@ public:
 					continue;
 				}
 
-				FT_Set_Pixel_Sizes(Face, 0, FontSize);
+				EnsureFacePixelSize(Face, FontSize);
 				if(FT_Load_Char(Face, NextCharacter, FT_LOAD_RENDER | FT_LOAD_NO_BITMAP))
 				{
 					log_debug("textrender", "Error loading glyph. Chr=%d GlyphIndex=%u", NextCharacter, GlyphIndex);
@@ -2334,7 +2372,7 @@ public:
 		if(Length < 0)
 			Length = str_length(pText);
 		else
-			Length = minimum(Length, str_length(pText));
+			Length = QmTextLayoutByteLength(pText, Length);
 
 		const char *pCurrent = pText;
 		const char *pEnd = pCurrent + Length;
@@ -2522,6 +2560,8 @@ public:
 		bool GotNewLineLast = false;
 
 		int ColorOption = 0;
+		// QmClient：逐字符顶点偏移的游标，按字符顺序消费 m_vCharOffsets。
+		int OffsetOption = 0;
 
 		while(pCurrent < pEnd && pCurrent != pEllipsis)
 		{
@@ -2530,11 +2570,9 @@ public:
 			if(pCursor->m_LineWidth > 0.0f && !(pCursor->m_Flags & TEXTFLAG_STOP_AT_END) && !(pCursor->m_Flags & TEXTFLAG_ELLIPSIS_AT_END))
 			{
 				int Wlen = minimum(WordLength(pCurrent), (int)(pEnd - pCurrent));
-				CTextCursor Compare = *pCursor;
+				CTextCursor Compare = QmTextWordMeasureCursor(*pCursor, DrawX, DrawY);
 				Compare.m_CalculateSelectionMode = TEXT_CURSOR_SELECTION_MODE_NONE;
 				Compare.m_CursorMode = TEXT_CURSOR_CURSOR_MODE_NONE;
-				Compare.m_X = DrawX;
-				Compare.m_Y = DrawY;
 				Compare.m_Flags &= ~TEXTFLAG_RENDER;
 				Compare.m_Flags |= TEXTFLAG_DISALLOW_NEWLINE;
 				Compare.m_LineWidth = -1.0f;
@@ -2543,13 +2581,11 @@ public:
 				if(Compare.m_X - DrawX > pCursor->m_LineWidth)
 				{
 					// word can't be fitted in one line, cut it
-					CTextCursor Cutter = *pCursor;
+					CTextCursor Cutter = QmTextWordMeasureCursor(*pCursor, DrawX, DrawY);
 					Cutter.m_CalculateSelectionMode = TEXT_CURSOR_SELECTION_MODE_NONE;
 					Cutter.m_CursorMode = TEXT_CURSOR_CURSOR_MODE_NONE;
 					Cutter.m_GlyphCount = 0;
 					Cutter.m_CharCount = 0;
-					Cutter.m_X = DrawX;
-					Cutter.m_Y = DrawY;
 					Cutter.m_Flags &= ~TEXTFLAG_RENDER;
 					Cutter.m_Flags |= TEXTFLAG_STOP_AT_END | TEXTFLAG_DISALLOW_NEWLINE;
 
@@ -2712,11 +2748,16 @@ public:
 
 					// Check if we have any color split
 					ColorRGBA Color = m_Color;
+					// QmClient：字符内横向渐变的右边缘色，未启用渐变时与 Color 相同。
+					ColorRGBA ColorEnd = m_Color;
 					if(ColorOption < (int)pCursor->m_vColorSplits.size())
 					{
 						STextColorSplit &Split = pCursor->m_vColorSplits.at(ColorOption);
 						if(PrevCharCount >= Split.m_CharIndex && (Split.m_Length == -1 || PrevCharCount < Split.m_CharIndex + Split.m_Length))
+						{
 							Color = Split.m_Color;
+							ColorEnd = Split.m_ColorEnd;
+						}
 						if(Split.m_Length != -1 && PrevCharCount >= (Split.m_CharIndex + Split.m_Length - 1))
 						{
 							ColorOption++;
@@ -2724,9 +2765,27 @@ public:
 							{ // Handle splits that are
 								Split = pCursor->m_vColorSplits.at(ColorOption);
 								if(PrevCharCount >= Split.m_CharIndex)
+								{
 									Color = Split.m_Color;
+									ColorEnd = Split.m_ColorEnd;
+								}
 							}
 						}
+					}
+
+					// QmClient：逐字符顶点偏移（波浪浮动）。即使该字符不渲染也要消费游标，避免与字符错位。
+					float CharOffsetX = 0.0f;
+					float CharOffsetY = 0.0f;
+					// 跳过序号已经落后的条目：调用方可能为换行等不产生顶点的字符也建了条目，
+					// 若不跳过，游标会永久卡住，之后所有字符的偏移恒为 0。
+					while(OffsetOption < (int)pCursor->m_vCharOffsets.size() && pCursor->m_vCharOffsets.at(OffsetOption).m_CharIndex < PrevCharCount)
+						++OffsetOption;
+					if(OffsetOption < (int)pCursor->m_vCharOffsets.size() && pCursor->m_vCharOffsets.at(OffsetOption).m_CharIndex == PrevCharCount)
+					{
+						const STextCharOffset &CharOffset = pCursor->m_vCharOffsets.at(OffsetOption);
+						CharOffsetX = CharOffset.m_XOffset;
+						CharOffsetY = CharOffset.m_YOffset;
+						++OffsetOption;
 					}
 
 					// don't add text that isn't drawn, the color overwrite is used for that
@@ -2735,8 +2794,8 @@ public:
 						TextContainer.m_StringInfo.m_vCharacterQuads.emplace_back();
 						STextCharQuad &TextCharQuad = TextContainer.m_StringInfo.m_vCharacterQuads.back();
 
-						TextCharQuad.m_aVertices[0].m_X = CharX;
-						TextCharQuad.m_aVertices[0].m_Y = CharY;
+						TextCharQuad.m_aVertices[0].m_X = CharX + CharOffsetX;
+						TextCharQuad.m_aVertices[0].m_Y = CharY + CharOffsetY;
 						TextCharQuad.m_aVertices[0].m_U = pGlyph->m_aUVs[0];
 						TextCharQuad.m_aVertices[0].m_V = pGlyph->m_aUVs[3];
 						TextCharQuad.m_aVertices[0].m_Color.r = (unsigned char)(Color.r * 255.f);
@@ -2744,26 +2803,26 @@ public:
 						TextCharQuad.m_aVertices[0].m_Color.b = (unsigned char)(Color.b * 255.f);
 						TextCharQuad.m_aVertices[0].m_Color.a = (unsigned char)(Color.a * 255.f);
 
-						TextCharQuad.m_aVertices[1].m_X = CharX + CharWidth;
-						TextCharQuad.m_aVertices[1].m_Y = CharY;
+						TextCharQuad.m_aVertices[1].m_X = CharX + CharWidth + CharOffsetX;
+						TextCharQuad.m_aVertices[1].m_Y = CharY + CharOffsetY;
 						TextCharQuad.m_aVertices[1].m_U = pGlyph->m_aUVs[2];
 						TextCharQuad.m_aVertices[1].m_V = pGlyph->m_aUVs[3];
-						TextCharQuad.m_aVertices[1].m_Color.r = (unsigned char)(Color.r * 255.f);
-						TextCharQuad.m_aVertices[1].m_Color.g = (unsigned char)(Color.g * 255.f);
-						TextCharQuad.m_aVertices[1].m_Color.b = (unsigned char)(Color.b * 255.f);
-						TextCharQuad.m_aVertices[1].m_Color.a = (unsigned char)(Color.a * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.r = (unsigned char)(ColorEnd.r * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.g = (unsigned char)(ColorEnd.g * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.b = (unsigned char)(ColorEnd.b * 255.f);
+						TextCharQuad.m_aVertices[1].m_Color.a = (unsigned char)(ColorEnd.a * 255.f);
 
-						TextCharQuad.m_aVertices[2].m_X = CharX + CharWidth;
-						TextCharQuad.m_aVertices[2].m_Y = CharY - CharHeight;
+						TextCharQuad.m_aVertices[2].m_X = CharX + CharWidth + CharOffsetX;
+						TextCharQuad.m_aVertices[2].m_Y = CharY - CharHeight + CharOffsetY;
 						TextCharQuad.m_aVertices[2].m_U = pGlyph->m_aUVs[2];
 						TextCharQuad.m_aVertices[2].m_V = pGlyph->m_aUVs[1];
-						TextCharQuad.m_aVertices[2].m_Color.r = (unsigned char)(Color.r * 255.f);
-						TextCharQuad.m_aVertices[2].m_Color.g = (unsigned char)(Color.g * 255.f);
-						TextCharQuad.m_aVertices[2].m_Color.b = (unsigned char)(Color.b * 255.f);
-						TextCharQuad.m_aVertices[2].m_Color.a = (unsigned char)(Color.a * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.r = (unsigned char)(ColorEnd.r * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.g = (unsigned char)(ColorEnd.g * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.b = (unsigned char)(ColorEnd.b * 255.f);
+						TextCharQuad.m_aVertices[2].m_Color.a = (unsigned char)(ColorEnd.a * 255.f);
 
-						TextCharQuad.m_aVertices[3].m_X = CharX;
-						TextCharQuad.m_aVertices[3].m_Y = CharY - CharHeight;
+						TextCharQuad.m_aVertices[3].m_X = CharX + CharOffsetX;
+						TextCharQuad.m_aVertices[3].m_Y = CharY - CharHeight + CharOffsetY;
 						TextCharQuad.m_aVertices[3].m_U = pGlyph->m_aUVs[0];
 						TextCharQuad.m_aVertices[3].m_V = pGlyph->m_aUVs[1];
 						TextCharQuad.m_aVertices[3].m_Color.r = (unsigned char)(Color.r * 255.f);
@@ -3148,6 +3207,7 @@ public:
 			return -1.0f;
 
 		FT_Set_Pixel_Sizes(m_pGlyphMap->DefaultFace(), 0, FontSize);
+		m_pGlyphMap->InvalidateFacePixelSizeCache();
 		const char *pTmp = &TextCharacter;
 		const int NextCharacter = str_utf8_decode(&pTmp);
 
@@ -3179,6 +3239,7 @@ public:
 
 		int WidthOfText = 0;
 		FT_Set_Pixel_Sizes(m_pGlyphMap->DefaultFace(), FontWidth, FontHeight);
+		m_pGlyphMap->InvalidateFacePixelSizeCache();
 		while(pCurrent < pEnd)
 		{
 			const char *pTmp = pCurrent;

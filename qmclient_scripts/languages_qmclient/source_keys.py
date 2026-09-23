@@ -1864,10 +1864,11 @@ def _business_data_records_from_path(
 
     if normalized.endswith("src/game/client/components/jump_hint_utils.h"):
         for text, line in _extract_cpp_string_literal_records(content):
-            if "JUMP_HINT_DEFAULT_TEXT" in (
-                lines[line - 1] if 0 < line <= len(lines) else ""
+            line_text = lines[line - 1] if 0 < line <= len(lines) else ""
+            if "JUMP_HINT_DEFAULT_TEXT" in line_text or line_text.strip().startswith(
+                "constexpr const char *pLegacyText ="
             ):
-                add_business(text, line, "jump hint default config text")
+                add_business(text, line, "jump hint default config or migration text")
         if records:
             return records
 

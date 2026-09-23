@@ -59,9 +59,10 @@ TEST(QmNewUiMenuCardsDeckContract, SettingsCardDeckPreLayoutUsesTheLastVisibleAn
 	EXPECT_LT(ActiveHeaderContinuation, ActiveContentContinuation);
 	EXPECT_NE(SettingsDeck.find("(ControllerVisible || HasActiveHeaderContinuation) && Card.m_pDefinition->m_PreLayoutHeaderInput"), std::string::npos);
 	EXPECT_NE(SettingsDeck.find("SettingsCardDeckShouldRunPreLayoutInput(HasPointerInput, HasPendingPreLayoutInput, HasActiveContentContinuation"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("SettingsCardDeckUsesDefaultCollapseControl()"), std::string::npos);
+	EXPECT_NE(SettingsDeck.find("SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput))"), std::string::npos);
 	EXPECT_NE(SettingsDeck.find("Card.m_pDefinition->m_HeaderAction"), std::string::npos);
-	EXPECT_NE(SettingsDeck.find("Card.m_pDefinition->m_OnCollapseChanged"), std::string::npos);
+	// 自定义折叠状态的卡片改由 m_IsCollapsed 解析，公共按钮与回调都不再改写它。
+	EXPECT_NE(SettingsDeck.find("SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed)"), std::string::npos);
 	EXPECT_NE(SettingsDeck.find("m_PreLayoutInput(PreLayoutFrame.m_ContentRect)"), std::string::npos);
 	EXPECT_NE(SettingsDeck.find("Runtime.m_LastDrawOffsetY = State.m_DrawOffsetY;"), std::string::npos);
 	EXPECT_NE(ButtonLogic.find("if(PreLayoutInput() && Inside && !IsPopupOpen())"), std::string::npos);

@@ -687,13 +687,6 @@ namespace
 	}
 }
 
-
-
-
-
-
-
-
 TEST(QmAxiomScoresComponent, PersistentCacheRoundTripsDifficultyDataInSharedDocument)
 {
 	CFakeAxiomHttp Http;
@@ -845,13 +838,6 @@ TEST(QmAxiomScoresPersistence, LoadsDdStatsOnlyPlayerEntries)
 	ASSERT_EQ(pGameTypes->size(), 1u);
 	EXPECT_EQ((*pGameTypes)[0].m_PlayTimeSeconds, 1169640);
 }
-
-
-
-
-
-
-
 
 TEST(QmAxiomScoresLayout, ConstrainsPopupAtCommonUiScales)
 {

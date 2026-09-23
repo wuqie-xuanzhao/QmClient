@@ -355,6 +355,7 @@ public:
 	virtual bool IsGettingServerlist() const = 0;
 	virtual bool IsServerlistError() const = 0;
 	virtual int LoadingProgression() const = 0;
+	virtual uint64_t FriendListRevision() const = 0;
 
 	virtual int NumServers() const = 0;
 	virtual const CServerInfo *Get(int Index) const = 0;

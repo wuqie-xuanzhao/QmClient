@@ -102,8 +102,8 @@ class CScoreboard : public CComponent
 	void RenderTitleBar(CUIRect TitleBar, int Team, const char *pTitle);
 	void RenderServerPlayerCount(CUIRect Rect, const char *pText);
 	void RenderGoals(CUIRect Goals);
+	void RenderFooter(CUIRect Footer);
 	void RenderSpectators(CUIRect Spectators);
-	void RenderMediaControls(CUIRect Controls);
 	void RenderGhostPlaybackControls(CUIRect Controls);
 	void RenderSoundMuteBar(CUIRect ScoreboardRect);
 	void RenderTeamModeIcons(float x, float y, float IconSize, const SQmScoreboardTeamModeState &State, float Alpha);
@@ -181,6 +181,7 @@ class CScoreboard : public CComponent
 		CButtonContainer m_FriendAction;
 		CButtonContainer m_MuteAction;
 		CButtonContainer m_EmoticonAction;
+		CButtonContainer m_CopySkinAction;
 
 		CButtonContainer m_SpectateButton;
 

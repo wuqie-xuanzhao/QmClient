@@ -144,6 +144,7 @@ namespace
 #include <generated/protocol7.h>
 #include <generated/protocolglue.h>
 
+#include <game/client/components/jump_hint_utils.h>
 #include <game/client/components/qmclient/perf_logging.h>
 #include <game/client/components/qmclient/sponsor_nudge.h>
 #include <game/client/frame_scheduler.h>
@@ -696,6 +697,7 @@ void CGameClient::OnConsoleInit()
 	AddComponent(&m_Mod, "mod");
 	AddComponent(&m_CustomCommunities, "custom_communities");
 	AddComponent(&m_PlayerPoints, "player_points");
+	AddComponent(&m_Emoticon.m_RenderProjectiles, "emoticon_projectiles");
 	AddComponent(&m_Hud, "hud");
 	AddComponent(&m_Spectator, "spectator");
 	AddComponent(&m_Emoticon, "emoticon");
@@ -873,6 +875,21 @@ static void MigrateJumpHintConfig()
 	MigrateInt(g_Config.m_QmJumpHintX, g_Config.m_TcJumpHintXLegacy, DefaultConfig::QmJumpHintX, DefaultConfig::TcJumpHintXLegacy);
 	MigrateInt(g_Config.m_QmJumpHintY, g_Config.m_TcJumpHintYLegacy, DefaultConfig::QmJumpHintY, DefaultConfig::TcJumpHintYLegacy);
 	MigrateInt(g_Config.m_QmJumpHintSize, g_Config.m_TcJumpHintSizeLegacy, DefaultConfig::QmJumpHintSize, DefaultConfig::TcJumpHintSizeLegacy);
+
+	// 默认文案中文化后只替换「原封不动的英文默认」并关掉三跳提示一次；
+	// 上面 MigrateStr 可能刚把旧的 tc_ 值搬进来，所以这步必须排在它之后。
+	MigrateJumpHintDefaults(g_Config.m_QmJumpHintDefaultsMigrated, g_Config.m_QmJumpHint, g_Config.m_QmJumpHintText, sizeof(g_Config.m_QmJumpHintText));
+}
+
+// 昵称显示从 cl_nameplates / cl_nameplates_own 两开关改成 qm_nameplate_show_scope 六档。
+// 远程直接换档、不做迁移，原本关掉名牌的玩家升级后会突然看到所有人；这里把旧意图
+// 一次性映射到对应档位，之后用户在新分段控件里的选择不再被覆盖。
+static void MigrateNameplateShowScopeConfig()
+{
+	if(g_Config.m_QmNameplateShowScopeMigrated)
+		return;
+	g_Config.m_QmNameplateShowScope = QmNameplateShowScopeFromLegacyFlags(g_Config.m_ClNamePlates != 0, g_Config.m_ClNamePlatesOwn != 0);
+	g_Config.m_QmNameplateShowScopeMigrated = 1;
 }
 
 // CFGFLAG_COLALPHA 将这组设置从六位 RGB 改为八位 ARGB。
@@ -937,6 +954,7 @@ void CGameClient::OnInit()
 
 	// Migrate legacy tc_jump_hint_text into qm_jump_hint_text before any HUD use.
 	MigrateJumpHintConfig();
+	MigrateNameplateShowScopeConfig();
 	MigrateTranslateUiColorAlphaConfig(ConfigManager());
 
 	// 启动赞助提醒：跨过阈值才写盘，避免每次启动都重写配置文件。
@@ -2129,6 +2147,8 @@ void CGameClient::OnRender()
 	}
 
 	UpdateManagedTeeRenderInfos();
+	// 皮肤组件的 OnUpdate 已经处理完卸载/加载通知，这里再统一兜一次失效句柄。
+	RepairStaleTeeRenderInfos();
 }
 
 void CGameClient::RecordComponentUpdate(size_t ComponentIndex, double DurationMs)
@@ -2234,7 +2254,7 @@ void CGameClient::FlushQmStutterWindow(const SQmStutterFrameDecision &Decision, 
 
 	for(size_t i = 0; i < m_vQmStutterComponentSamples.size(); ++i)
 	{
-		const auto LogSamples = [&](const char *pCallback, const CQmStutterSampleSeries &Samples) {
+		const auto LogSamples = [&](const char *pCallback, CQmStutterSampleSeries &Samples) {
 			if(Samples.Empty())
 				return;
 			char aComponentPayload[512];
@@ -2839,7 +2859,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker, int Conn, bool Dumm
 
 			if((pMsg->m_Team == 1 && (m_aClients[m_aLocalIds[0]].m_Team != m_aClients[m_aLocalIds[1]].m_Team || m_Teams.Team(m_aLocalIds[0]) != m_Teams.Team(m_aLocalIds[1]))) || pMsg->m_Team > 1)
 			{
-				m_Chat.OnMessage(MsgId, pRawMsg);
+				m_Chat.OnMessage(MsgId, pRawMsg, Conn);
 			}
 		}
 		return; // no need of all that stuff for the dummy
@@ -5907,7 +5927,10 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	const bool TargetUsesSevenSkin = (SkinDescriptor.m_Flags & CSkinDescriptor::FLAG_SEVEN) != 0;
 	const bool PreviousRenderInfoUsesSevenSkin = HasDrawableSevenSkin(m_RenderInfo);
 	const bool MayReusePreviousRenderInfo = TargetUsesSevenSkin || !PreviousRenderInfoUsesSevenSkin;
-	if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())
+	// 句柄「看起来有效」不等于纹理还在：设备重建、槽位释放、皮肤贴图被卸载之后，
+	// 继续复用旧渲染信息就会把 Tee 画成没有贴图的实心白块。失效时改走下面的 default 皮肤回退。
+	const bool PreviousRenderInfoAlive = !m_RenderInfo.HasStaleTexture(m_pGameClient != nullptr ? m_pGameClient->Graphics() : nullptr);
+	if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && PreviousRenderInfoAlive && m_RenderInfo.Valid())
 	{
 		if(!m_RenderInfoFallbackResidencyRequested && m_RenderInfoSkinDescriptor.m_aSkinName[0] != '\0')
 		{
@@ -5928,8 +5951,8 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		{
 			// 默认皮肤也不可绘制（贴图被卸载或异步任务尚未提交）。此时不能保留一份
 			// 无有效贴图的渲染信息，否则渲染层会把无效句柄当作纹理绘制成白色方块。
-			// 优先沿用上一帧可绘制的渲染信息；否则彻底清空，让渲染层跳过绘制。
-			if(PreviousRenderInfo.Valid())
+			// 优先沿用上一帧可绘制且句柄仍存活的渲染信息；否则彻底清空，让渲染层跳过绘制。
+			if(PreviousRenderInfo.Valid() && PreviousRenderInfoAlive)
 			{
 				const CTeeRenderInfo SkinProperties = NewRenderInfo;
 				NewRenderInfo = PreviousRenderInfo;
@@ -6646,52 +6669,43 @@ IGameClient *CreateGameClient()
 	return new CGameClient();
 }
 
-int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, int OwnId, vec2 *pPlayerPosition)
+void CGameClient::UpdateHookCollTargets()
 {
-	float Distance = 0.0f;
-	int ClosestId = -1;
-
-	const CClientData &OwnClientData = m_aClients[OwnId];
-
+	m_HookCollCandidates.Reset();
+	m_HookCollSpatialIndex.Reset();
+	// 每渲染帧刷新一次：这些取值在两次 OnRender 之间不会变化，而模拟循环会重复读取上万次。
+	const float Intra = Client()->IntraGameTick(g_Config.m_ClDummy);
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(i == OwnId)
-			continue;
-
 		const CClientData &Data = m_aClients[i];
-
-		if(!Data.m_Active || !m_Snap.m_aCharacters[i].m_Active)
-			continue;
-
-		CNetObj_Character Prev = m_Snap.m_aCharacters[i].m_Prev;
-		CNetObj_Character Player = m_Snap.m_aCharacters[i].m_Cur;
-
-		vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick(g_Config.m_ClDummy));
-
-		bool IsOneSuper = Data.m_Super || OwnClientData.m_Super;
-		bool IsOneSolo = Data.m_Solo || OwnClientData.m_Solo;
-
-		if(!IsOneSuper && (!m_Teams.SameTeam(i, OwnId) || IsOneSolo || OwnClientData.m_HookHitDisabled))
-			continue;
-
-		vec2 ClosestPoint;
-		if(closest_point_on_line(HookPos, NewPos, Position, ClosestPoint))
-		{
-			if(distance(Position, ClosestPoint) < CCharacterCore::PhysicalSize() + 2.0f)
-			{
-				if(ClosestId == -1 || distance(HookPos, Position) < Distance)
-				{
-					NewPos2 = ClosestPoint;
-					ClosestId = i;
-					Distance = distance(HookPos, Position);
-					if(pPlayerPosition)
-						*pPlayerPosition = Position;
-				}
-			}
-		}
+		SHookCollTarget &Target = m_aHookCollTargets[i];
+		Target.m_Valid = Data.m_Active && m_Snap.m_aCharacters[i].m_Active;
+		Target.m_Super = Data.m_Super;
+		Target.m_Solo = Data.m_Solo;
+		Target.m_HookHitDisabled = Data.m_HookHitDisabled;
+		const CNetObj_Character &Prev = m_Snap.m_aCharacters[i].m_Prev;
+		const CNetObj_Character &Cur = m_Snap.m_aCharacters[i].m_Cur;
+		Target.m_Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Cur.m_X, Cur.m_Y), Intra);
 	}
+}
 
-	return ClosestId;
+int CGameClient::IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, int OwnId, vec2 *pPlayerPosition)
+{
+	const SHookCollTarget &OwnTarget = m_aHookCollTargets[OwnId];
+
+	const auto &vCandidates = m_HookCollCandidates.Get(OwnId, [&](int Id) {
+		const SHookCollTarget &Target = m_aHookCollTargets[Id];
+		if(!Target.m_Valid)
+			return false;
+		const bool IsOneSuper = Target.m_Super || OwnTarget.m_Super;
+		const bool IsOneSolo = Target.m_Solo || OwnTarget.m_Solo;
+		return IsOneSuper || (m_Teams.SameTeam(Id, OwnId) && !IsOneSolo && !OwnTarget.m_HookHitDisabled);
+	});
+	const float Radius = CCharacterCore::PhysicalSize() + 2.0f;
+	const auto PositionOf = [&](int Id) { return m_aHookCollTargets[Id].m_Pos; };
+	const SQmHookCollSegment Segment(HookPos, NewPos, Radius);
+	const auto &vNearby = m_HookCollSpatialIndex.GetCandidates(Segment, vCandidates, PositionOf, [&](int Id) { return m_aHookCollTargets[Id].m_Valid; });
+	return QmIntersectHookCollTargets(Segment, NewPos2, vNearby, PositionOf, Radius, pPlayerPosition);
 }
 
 ColorRGBA CalculateNameColor(ColorHSLA TextColorHSL)
@@ -7996,6 +8010,10 @@ void CGameClient::LoadEmoticonsSkin(const char *pPath, bool AsDir)
 				(g_Config.m_QmBlankAssetFallback == 0 || !FallbackImgInfo.has_value()))
 				log_warn("graphics", "Emoticon asset '%s' is empty and stays blank", pSprite->m_pName);
 			m_EmoticonsSkin.m_aSpriteEmoticons[i] = Graphics()->LoadSpriteTexture(ImgInfo, FallbackImgInfo, pSprite);
+			const int CellWidth = ImgInfo.m_Width / pSprite->m_pSet->m_Gridx;
+			const int CellHeight = ImgInfo.m_Height / pSprite->m_pSet->m_Gridy;
+			m_Emoticon.SetCollisionMask(i, ImgInfo.m_pData + pSprite->m_Y * CellHeight * ImgInfo.m_Width * 4 + pSprite->m_X * CellWidth * 4,
+				pSprite->m_W * CellWidth, pSprite->m_H * CellHeight, ImgInfo.m_Width * 4);
 		}
 
 		m_EmoticonsSkinLoaded = true;
@@ -8561,6 +8579,48 @@ void CGameClient::UpdateManagedTeeRenderInfos()
 	}
 }
 
+void CGameClient::RepairStaleTeeRenderInfos()
+{
+	// 皮肤贴图被卸载、皮肤容器重建、图形设备重建这些路径只要漏掉一次通知，
+	// 引用旧句柄的渲染信息就会一直把 Tee 画成没有贴图的实心块（表现就是纯白块，且一直不恢复）。
+	// 这里每帧校验句柄是否还活着，失效就按当前皮肤重新解析；解析不到会走既有的 default 皮肤回退。
+	// 绘制期还有一层兜底（CRenderTools 只画存活句柄），因此白块最多存在一帧。
+	IGraphics *pGraphics = Graphics();
+	const auto RepairManagedInfo = [this, pGraphics](const std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo) {
+		if(!pManagedTeeRenderInfo->TeeRenderInfo().HasStaleTexture(pGraphics))
+			return;
+		if(pManagedTeeRenderInfo->m_StaleRepairAttempts < 3)
+		{
+			++pManagedTeeRenderInfo->m_StaleRepairAttempts;
+			log_info("skins", "stale tee render info repaired: skin='%s' flags=%u attempt=%d",
+				pManagedTeeRenderInfo->m_SkinDescriptor.m_aSkinName, pManagedTeeRenderInfo->m_SkinDescriptor.m_Flags,
+				pManagedTeeRenderInfo->m_StaleRepairAttempts);
+		}
+		RefreshSkin(pManagedTeeRenderInfo);
+	};
+	for(const std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo : m_vpManagedTeeRenderInfos)
+	{
+		RepairManagedInfo(pManagedTeeRenderInfo);
+	}
+	// 客户端渲染信息是托管信息的副本：托管信息已经刷新、副本还留着旧句柄时，副本要自己重解析
+	// （UpdateRenderInfo 会把失效的上一份判为不可复用，转而走 default 皮肤回退）。
+	for(CClientData &ClientData : m_aClients)
+	{
+		if(!ClientData.m_Active || ClientData.m_pSkinInfo == nullptr)
+			continue;
+		if(!ClientData.m_RenderInfo.HasStaleTexture(pGraphics))
+			continue;
+		if(ClientData.m_pSkinInfo->m_StaleRepairAttempts < 3)
+		{
+			++ClientData.m_pSkinInfo->m_StaleRepairAttempts;
+			log_info("skins", "stale client tee render info repaired: skin='%s' flags=%u attempt=%d",
+				ClientData.m_pSkinInfo->m_SkinDescriptor.m_aSkinName, ClientData.m_pSkinInfo->m_SkinDescriptor.m_Flags,
+				ClientData.m_pSkinInfo->m_StaleRepairAttempts);
+		}
+		ClientData.UpdateRenderInfo();
+	}
+}
+
 void CGameClient::CollectManagedTeeRenderInfos(const std::function<void(const char *pSkinName)> &ActiveSkinAcceptor)
 {
 	for(const std::shared_ptr<CManagedTeeRenderInfo> &pManagedTeeRenderInfo : m_vpManagedTeeRenderInfos)
@@ -8753,46 +8813,21 @@ void CGameClient::SnapCollectEntities()
 {
 	int NumSnapItems = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 
-	std::vector<CSnapEntities> vItemData;
-	std::vector<CSnapEntities> vItemEx;
+	// 两个容器都只 clear 不销毁：容量跨帧复用，排序与关联均在原地完成，
+	// 避免每帧为实体列表与扩展信息重新分配。
+	m_vSnapEntities.clear();
+	m_vSnapEntityExtensionsScratch.clear();
 
 	for(int Index = 0; Index < NumSnapItems; Index++)
 	{
 		const IClient::CSnapItem Item = Client()->SnapGetItem(IClient::SNAP_CURRENT, Index);
 		if(Item.m_Type == NETOBJTYPE_ENTITYEX)
-			vItemEx.push_back({Item, nullptr});
+			m_vSnapEntityExtensionsScratch.push_back({Item, nullptr});
 		else if(Item.m_Type == NETOBJTYPE_PICKUP || Item.m_Type == NETOBJTYPE_DDNETPICKUP || Item.m_Type == NETOBJTYPE_LASER || Item.m_Type == NETOBJTYPE_DDNETLASER || Item.m_Type == NETOBJTYPE_PROJECTILE || Item.m_Type == NETOBJTYPE_DDRACEPROJECTILE || Item.m_Type == NETOBJTYPE_DDNETPROJECTILE)
-			vItemData.push_back({Item, nullptr});
+			m_vSnapEntities.push_back({Item, nullptr});
 	}
 
-	// sort by id
-	class CEntComparer
-	{
-	public:
-		bool operator()(const CSnapEntities &Lhs, const CSnapEntities &Rhs) const
-		{
-			return Lhs.m_Item.m_Id < Rhs.m_Item.m_Id;
-		}
-	};
-
-	std::sort(vItemData.begin(), vItemData.end(), CEntComparer());
-	std::sort(vItemEx.begin(), vItemEx.end(), CEntComparer());
-
-	// merge extended items with items they belong to
-	m_vSnapEntities.clear();
-
-	size_t IndexEx = 0;
-	for(const CSnapEntities &Ent : vItemData)
-	{
-		while(IndexEx < vItemEx.size() && vItemEx[IndexEx].m_Item.m_Id < Ent.m_Item.m_Id)
-			IndexEx++;
-
-		const CNetObj_EntityEx *pDataEx = nullptr;
-		if(IndexEx < vItemEx.size() && vItemEx[IndexEx].m_Item.m_Id == Ent.m_Item.m_Id)
-			pDataEx = (const CNetObj_EntityEx *)vItemEx[IndexEx].m_Item.m_pData;
-
-		m_vSnapEntities.push_back({Ent.m_Item, pDataEx});
-	}
+	QmAttachSnapshotEntityExtensions(m_vSnapEntities, m_vSnapEntityExtensionsScratch);
 }
 
 void CGameClient::HandleMultiView()

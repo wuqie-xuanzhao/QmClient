@@ -256,21 +256,7 @@ bool CQmHudNotifications::QueueEcho(const char *pMessage, unsigned EchoColor)
 
 bool CQmHudNotifications::ShouldSuppressServerChat(const char *pMessage)
 {
-	return HandleServerChat(pMessage, CurrentRouteConfig(false, false));
-}
-
-bool CQmHudNotifications::ShouldConsumeHiddenServerChat(const char *pMessage, bool HideBasicInfo, bool HidePrompt)
-{
-	if(!HideBasicInfo && !HidePrompt)
-		return false;
-	if(g_Config.m_QmHudNotificationsCompatSolo && m_PendingCompatPrompt != QmHudNotifications::ESoloPrompt::None && time_get() > m_PendingCompatUntil)
-		m_PendingCompatPrompt = QmHudNotifications::ESoloPrompt::None;
-
-	const QmHudNotifications::SServerMessageAnalysis Analysis = QmHudNotifications::AnalyzeServerMessage(pMessage, m_PendingCompatPrompt);
-	const QmHudNotifications::SServerMessageEntryDecision Decision = QmHudNotifications::DecideServerMessageEntry(Analysis, CurrentRouteConfig(HideBasicInfo, HidePrompt));
-	if(Decision.m_ClearPendingCompatPrompt)
-		m_PendingCompatPrompt = QmHudNotifications::ESoloPrompt::None;
-	return Decision.m_ConsumeHiddenMessage;
+	return HandleServerChat(pMessage, CurrentRouteConfig());
 }
 
 bool CQmHudNotifications::LocalSoloState(bool &Solo) const

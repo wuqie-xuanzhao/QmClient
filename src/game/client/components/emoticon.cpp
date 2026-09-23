@@ -12,8 +12,11 @@
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/QmUi/UiTokens.h>
 #include <game/client/animstate.h>
+#include <game/client/components/qmclient/emoticon_commands.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
+#include <game/collision.h>
+#include <game/gamecore.h>
 
 #include <algorithm>
 #include <cmath>
@@ -57,6 +60,7 @@ static float EmoticonStaggerReveal(int Index, int Count, float PresentationAlpha
 
 CEmoticon::CEmoticon()
 {
+	m_RenderProjectiles.m_pEmoticon = this;
 	OnReset();
 }
 
@@ -76,9 +80,9 @@ void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
-void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData)
+void CEmoticon::ConSuperEmote(IConsole::IResult *pResult, void *pUserData)
 {
-	((CEmoticon *)pUserData)->Emote(pResult->GetInteger(0));
+	((CEmoticon *)pUserData)->SuperEmote(pResult->GetInteger(0));
 }
 
 void CEmoticon::ConLocalBlink(IConsole::IResult *, void *pUserData)
@@ -89,7 +93,9 @@ void CEmoticon::ConLocalBlink(IConsole::IResult *, void *pUserData)
 void CEmoticon::OnConsoleInit()
 {
 	Console()->Register("+emote", "", CFGFLAG_CLIENT, ConKeyEmoticon, this, "Open emote selector");
-	Console()->Register("emote", "i[emote-id]", CFGFLAG_CLIENT, ConEmote, this, "Use emote");
+	// emote 与 shot_emote 共用同一套参数解析与 Emote 入口（远程 qm_emoticon_commands 的结构）。
+	QmEmoticon::RegisterCommands(Console(), this);
+	Console()->Register("super_emote", "i[emote-id]", CFGFLAG_CLIENT, ConSuperEmote, this, "Launch a large emote");
 	Console()->Register("qm_blink", "", CFGFLAG_CLIENT, ConLocalBlink, this, "Blink the active local tee");
 }
 
@@ -103,11 +109,16 @@ void CEmoticon::OnReset()
 	for(auto &LocalBlinkState : m_aLocalBlinkStates)
 		LocalBlinkState.Reset();
 	m_TouchPressedOutside = false;
+	m_SuperLaunchPending = false;
+	for(auto &Projectile : m_aProjectiles)
+		Projectile.m_Active = false;
 }
 
 void CEmoticon::OnRelease()
 {
 	m_Active = false;
+	for(auto &Projectile : m_aProjectiles)
+		Projectile.m_Active = false;
 }
 
 bool CEmoticon::OnCursorMove(float x, float y, IInput::ECursorType CursorType)
@@ -325,8 +336,145 @@ void CEmoticon::OnRender()
 	RenderTools()->RenderCursor(ScreenCenter + m_SelectorMouse * PresentationScale, 24.0f * PresentationScale, PresentationAlpha);
 }
 
-void CEmoticon::Emote(int Emoticon)
+void CEmoticon::RenderProjectiles()
 {
+	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		return;
+
+	if(Client()->State() == IClient::STATE_ONLINE)
+	{
+		SQmRealtimeMessage Message;
+		while(GameClient()->m_QmClient.PopQmRealtimeEmoticon(Message))
+		{
+			if(Message.m_Event != EQmRealtimeEvent::EMOTICON || !Message.m_EmoticonPayloadValid ||
+				Message.m_EmoticonPlayerId < 0 || Message.m_EmoticonPlayerId >= MAX_CLIENTS ||
+				Message.m_EmoticonId < 0 || Message.m_EmoticonId >= NUM_EMOTICONS ||
+				!GameClient()->m_aClients[Message.m_EmoticonPlayerId].m_Active)
+				continue;
+			const int PlayerId = Message.m_EmoticonPlayerId;
+			// 与远程同一套判定：先按事件算出「该有什么效果」，特殊效果再过总开关、忽略名单
+			// 与两个「显示他人表情」开关。每条事件都重置该玩家的头顶大表情，只有本次判定为
+			// SUPER_HEAD 才重新点亮。
+			const QmEmoticon::EEffect Effect = QmEmoticon::ResolveEffect(Message.m_EmoticonId, Message.m_EmoticonLaunch, Message.m_EmoticonSuperLaunch);
+			m_aRemoteSuperHeadEmoticons[PlayerId] = -1;
+			m_aRemoteSuperHeadExpireTicks[PlayerId] = -1;
+			if(Effect == QmEmoticon::EEffect::SUPER_HEAD || Effect == QmEmoticon::EEffect::PROJECTILE || Effect == QmEmoticon::EEffect::SUPER_PROJECTILE)
+			{
+				if(QmEmoticon::ResolveRemoteEffect(Message.m_EmoticonId, Message.m_EmoticonLaunch, Message.m_EmoticonSuperLaunch,
+					   g_Config.m_ClShowEmotes, GameClient()->m_aClients[PlayerId].m_EmoticonIgnore,
+					   g_Config.m_QmShowOtherSuperEmotes, g_Config.m_QmShowOtherLaunchEmotes) == QmEmoticon::EEffect::NONE)
+					continue;
+				if(Effect == QmEmoticon::EEffect::SUPER_HEAD)
+				{
+					m_aRemoteSuperHeadEmoticons[PlayerId] = Message.m_EmoticonId;
+					m_aRemoteSuperHeadExpireTicks[PlayerId] = Client()->GameTick(g_Config.m_ClDummy) + 2 * Client()->GameTickSpeed();
+					continue;
+				}
+				const vec2 Position = GameClient()->m_aClients[PlayerId].m_RenderPos - vec2(0.0f, 20.0f);
+				const vec2 Direction = direction(GameClient()->m_aClients[PlayerId].m_RenderCur.m_Angle / 256.0f);
+				SpawnProjectile(Position, Direction, Message.m_EmoticonId, Effect == QmEmoticon::EEffect::SUPER_PROJECTILE, PlayerId);
+				continue;
+			}
+			// 普通表情（没有特殊效果）：沿用本地既有行为，写到该玩家的头顶表情状态；
+			// 是否显示仍由 players.cpp 的 cl_showemotes 判定，这里不改状态语义。
+			GameClient()->m_aClients[PlayerId].m_Emoticon = Message.m_EmoticonId;
+			GameClient()->m_aClients[PlayerId].m_EmoticonStartTick = Client()->GameTick(g_Config.m_ClDummy);
+			GameClient()->m_aClients[PlayerId].m_EmoticonStartFraction = Client()->IntraGameTickSincePrev(g_Config.m_ClDummy);
+		}
+	}
+
+	float OldX0, OldY0, OldX1, OldY1;
+	Graphics()->GetScreen(&OldX0, &OldY0, &OldX1, &OldY1);
+	float Width, Height;
+	Graphics()->CalcScreenParams(Graphics()->ScreenAspect(), GameClient()->m_Camera.m_Zoom, &Width, &Height);
+	const vec2 Center = GameClient()->m_Camera.m_Center;
+	Graphics()->MapScreen(Center.x - Width / 2, Center.y - Height / 2, Center.x + Width / 2, Center.y + Height / 2);
+	Graphics()->BlendNormal();
+	const auto Solid = [this](int X, int Y) { return Collision()->CheckPoint(X * 32.0f + 16.0f, Y * 32.0f + 16.0f); };
+	QmEmoticon::SPlayerBox aPlayerBoxes[MAX_CLIENTS];
+	int NumPlayerBoxes = 0;
+	for(int ClientId = 0; ClientId < MAX_CLIENTS; ++ClientId)
+		if(GameClient()->m_aClients[ClientId].m_Active)
+		{
+			aPlayerBoxes[NumPlayerBoxes].m_ClientId = ClientId;
+			aPlayerBoxes[NumPlayerBoxes].m_Pos = GameClient()->m_aClients[ClientId].m_RenderPos;
+			aPlayerBoxes[NumPlayerBoxes].m_Half = CCharacterCore::PhysicalSize() * 0.5f;
+			++NumPlayerBoxes;
+		}
+
+	for(auto &Projectile : m_aProjectiles)
+	{
+		if(!Projectile.m_Active || Projectile.m_Emoticon < 0 || Projectile.m_Emoticon >= NUM_EMOTICONS)
+			continue;
+		const QmEmoticon::CAlphaMask &Mask = m_aCollisionMasks[Projectile.m_Emoticon];
+		Projectile.Update(std::clamp(Client()->RenderFrameTime(), 0.0f, 0.1f), Mask, Solid, aPlayerBoxes, NumPlayerBoxes);
+		if(!Projectile.m_Active)
+			continue;
+		const float Fraction = std::clamp((float)(Projectile.m_Accumulator / CEmoticonProjectile::STEP), 0.0f, 1.0f);
+		const vec2 Position = mix(Projectile.m_PreviousPos, Projectile.m_Pos, Fraction);
+		const float Angle = mix(Projectile.m_PreviousAngle, Projectile.m_Angle, Fraction);
+		Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[Projectile.m_Emoticon]);
+		Graphics()->QuadsBegin();
+		Graphics()->QuadsSetSubset(0, 0, 1, 1);
+		Graphics()->QuadsSetRotation(Angle);
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, std::clamp(Projectile.m_LifeTime * 2.0f, 0.0f, 1.0f));
+		const float Size = Projectile.Size();
+		IGraphics::CQuadItem Quad(Position.x, Position.y, Size, Size);
+		Graphics()->QuadsDraw(&Quad, 1);
+		Graphics()->QuadsEnd();
+	}
+	Graphics()->QuadsSetRotation(0.0f);
+	Graphics()->MapScreen(OldX0, OldY0, OldX1, OldY1);
+}
+
+void CEmoticon::SpawnProjectile(vec2 Position, vec2 Direction, int Emoticon, bool Super, int OwnerClientId)
+{
+	if(Emoticon < 0 || Emoticon >= NUM_EMOTICONS)
+		return;
+	Direction = length(Direction) > 0.0001f ? normalize(Direction) : vec2(1.0f, 0.0f);
+	CEmoticonProjectile *pProjectile = &m_aProjectiles[0];
+	for(auto &Projectile : m_aProjectiles)
+	{
+		if(!Projectile.m_Active)
+		{
+			pProjectile = &Projectile;
+			break;
+		}
+		if(Projectile.m_LifeTime < pProjectile->m_LifeTime)
+			pProjectile = &Projectile;
+	}
+	pProjectile->Init(Position, Direction * 1200.0f + vec2(0.0f, -400.0f), Emoticon, Super ? 2.35f : 1.0f, OwnerClientId);
+	pProjectile->m_Active = pProjectile->PlaceOutside(m_aCollisionMasks[Emoticon], [this](int X, int Y) {
+		return Collision()->CheckPoint(X * 32.0f + 16.0f, Y * 32.0f + 16.0f);
+	});
+	if(Super)
+		GameClient()->m_Effects.Explosion(Position, 0.9f);
+	else
+		GameClient()->m_Effects.HammerHit(Position, 0.65f, 0.0f);
+}
+
+void CEmoticon::Emote(int Emoticon, bool ForceLaunch)
+{
+	const QmEmoticon::EEffect Effect = QmEmoticon::ConsumeEffect(Emoticon, false, m_SuperLaunchPending, ForceLaunch);
+	if(Effect == QmEmoticon::EEffect::INVALID)
+		return;
+	const bool Launch = Effect == QmEmoticon::EEffect::PROJECTILE || Effect == QmEmoticon::EEffect::SUPER_PROJECTILE;
+	const bool Super = Effect == QmEmoticon::EEffect::SUPER_HEAD || Effect == QmEmoticon::EEffect::SUPER_PROJECTILE;
+	// 头顶大表情：本机自己也要记一份，供 players.cpp 放大绘制。
+	if(Effect == QmEmoticon::EEffect::SUPER_HEAD)
+	{
+		m_LocalSuperHeadEmoticon = Emoticon;
+		m_LocalSuperHeadExpireTick = Client()->GameTick(g_Config.m_ClDummy) + 2 * Client()->GameTickSpeed();
+	}
+	else
+	{
+		m_LocalSuperHeadEmoticon = -1;
+		m_LocalSuperHeadExpireTick = -1;
+	}
+	const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
+	if(Launch)
+		SpawnProjectile(GameClient()->m_LocalCharacterPos - vec2(0.0f, 20.0f), GameClient()->m_Controls.m_aMousePos[g_Config.m_ClDummy], Emoticon, Super, LocalClientId);
+
 	CNetMsg_Cl_Emoticon Msg;
 	Msg.m_Emoticon = Emoticon;
 	Client()->SendPackMsgActive(&Msg, MSGFLAG_VITAL);
@@ -337,6 +485,28 @@ void CEmoticon::Emote(int Emoticon)
 		MsgDummy.AddInt(Emoticon);
 		Client()->SendMsg(!g_Config.m_ClDummy, &MsgDummy, MSGFLAG_VITAL);
 	}
+	// 发射与头顶大表情都要广播（前者生成投射物，后者让别人的头顶表情放大）。
+	if(LocalClientId >= 0 && Effect != QmEmoticon::EEffect::NONE)
+		GameClient()->m_QmClient.SendQmAnonymousEmoticon(Emoticon, LocalClientId, Launch, Super);
+}
+
+void CEmoticon::SuperEmote(int Emoticon)
+{
+	m_SuperLaunchPending = true;
+	Emote(Emoticon, true);
+}
+
+bool CEmoticon::IsLocalSuperHeadEmoticon(int ClientId, int Emoticon) const
+{
+	const int LocalClientId = GameClient()->m_aLocalIds[g_Config.m_ClDummy];
+	if(LocalClientId >= 0 && ClientId == LocalClientId && Emoticon == m_LocalSuperHeadEmoticon &&
+		m_LocalSuperHeadExpireTick >= 0 && Client()->GameTick(g_Config.m_ClDummy) <= m_LocalSuperHeadExpireTick)
+		return true;
+	if(!g_Config.m_QmShowOtherSuperEmotes || ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+	return Emoticon == m_aRemoteSuperHeadEmoticons[ClientId] &&
+	       m_aRemoteSuperHeadExpireTicks[ClientId] >= 0 &&
+	       Client()->GameTick(g_Config.m_ClDummy) <= m_aRemoteSuperHeadExpireTicks[ClientId];
 }
 
 void CEmoticon::EyeEmote(int Emote)

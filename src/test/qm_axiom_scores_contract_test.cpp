@@ -3,7 +3,6 @@
 
 #include <string>
 
-
 TEST(QmAxiomScoresContract, KeepsTheExistingDdnetPointsColumn)
 {
 	const std::string Scoreboard = ReadTestSourceFile("src/game/client/components/scoreboard.cpp");

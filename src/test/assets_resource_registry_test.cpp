@@ -691,5 +691,7 @@ TEST(AssetsEditorColorOverride, DetectsDefaultWhiteTint)
 {
 	EXPECT_FALSE(CMenus::AssetsEditorHasColorOverride(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f)));
 	EXPECT_TRUE(CMenus::AssetsEditorHasColorOverride(ColorRGBA(1.0f, 0.9f, 1.0f, 1.0f)));
-	EXPECT_TRUE(CMenus::AssetsEditorHasColorOverride(ColorRGBA(1.0f, 1.0f, 1.0f, 0.9f)));
+	EXPECT_FALSE(CMenus::AssetsEditorHasColorOverride(ColorRGBA(1.0f, 1.0f, 1.0f, 0.9f)));
+	EXPECT_TRUE(CMenus::AssetsEditorHasColorOverride(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f), CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN));
+	EXPECT_FALSE(CMenus::AssetsEditorHasColorOverride(ColorRGBA(1.0f, 0.0f, 0.0f, 0.0f), CMenus::ASSETS_EDITOR_COLOR_BLEND_NORMAL));
 }

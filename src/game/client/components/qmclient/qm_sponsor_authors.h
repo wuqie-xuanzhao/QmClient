@@ -1,0 +1,18 @@
+#ifndef GAME_CLIENT_COMPONENTS_QMCLIENT_QM_SPONSOR_AUTHORS_H
+#define GAME_CLIENT_COMPONENTS_QMCLIENT_QM_SPONSOR_AUTHORS_H
+
+#include <array>
+
+namespace QmSponsorAuthors
+{
+	struct SAuthor
+	{
+		const char *m_pTextId;
+		const char *m_pName;
+	};
+
+	const std::array<SAuthor, 3> &Authors();
+	float RowsHeight(float TeeSize, float LineSpacing);
+}
+
+#endif

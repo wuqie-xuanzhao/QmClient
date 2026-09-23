@@ -1,10 +1,13 @@
 #include "image_manipulation.h"
 
 #include <base/color.h>
+#include <base/log.h>
 #include <base/math.h>
 #include <base/system.h>
 
+#include <cstdlib>
 #include <limits>
+#include <utility>
 
 static bool CalculateImageBufferSize(size_t Width, size_t Height, size_t PixelSize, size_t &Size)
 {
@@ -475,6 +478,46 @@ bool ResolveSpritePixelRect(size_t ImageWidth, size_t ImageHeight, int GridX, in
 			*pOutOfBounds = true;
 		return false;
 	}
+	return true;
+}
+
+bool ExtractSpriteImage(const CImageInfo &FromImageInfo, const CDataSprite *pSprite, CImageInfo &Result)
+{
+	const char *pSpriteName = pSprite && pSprite->m_pName ? pSprite->m_pName : "(no name)";
+	size_t x = 0;
+	size_t y = 0;
+	size_t w = 0;
+	size_t h = 0;
+	const bool RectValid = pSprite != nullptr && pSprite->m_pSet != nullptr &&
+			       ResolveSpritePixelRect(FromImageInfo.m_Width, FromImageInfo.m_Height,
+				       pSprite->m_pSet->m_Gridx, pSprite->m_pSet->m_Gridy,
+				       pSprite->m_X, pSprite->m_Y, pSprite->m_W, pSprite->m_H,
+				       x, y, w, h);
+	if(FromImageInfo.m_pData == nullptr || !RectValid)
+	{
+		log_error("graphics/texture", "Ignoring invalid sprite texture '%s'.", pSpriteName);
+		return false;
+	}
+
+	CImageInfo SpriteInfo;
+	SpriteInfo.m_Width = w;
+	SpriteInfo.m_Height = h;
+	SpriteInfo.m_Format = FromImageInfo.m_Format;
+	size_t SpriteDataSize = 0;
+	if(!SpriteInfo.DataSize(SpriteDataSize))
+	{
+		log_error("graphics/texture", "Ignoring sprite texture '%s' with invalid data size.", pSpriteName);
+		return false;
+	}
+	SpriteInfo.m_pData = static_cast<uint8_t *>(malloc(SpriteDataSize));
+	if(SpriteInfo.m_pData == nullptr)
+	{
+		log_error("graphics/texture", "Failed to allocate sprite texture '%s'.", pSpriteName);
+		SpriteInfo.Free();
+		return false;
+	}
+	SpriteInfo.CopyRectFrom(FromImageInfo, x, y, w, h, 0, 0);
+	Result = std::move(SpriteInfo);
 	return true;
 }
 

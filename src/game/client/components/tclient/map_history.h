@@ -48,6 +48,8 @@ namespace QmMapHistory
 		void ApplyLimit(int MaxEntries);
 
 		std::vector<SMapHistoryRecord> Sorted(EMapHistoryFilter Filter) const;
+		// 索引借用 Entries() 的顺序；增删记录后应重新构建，输出容量可跨帧复用。
+		void SortedIndices(EMapHistoryFilter Filter, std::vector<size_t> &vResult) const;
 		std::string ToJson() const;
 		bool FromJson(std::string_view Json, char *pErr = nullptr, size_t ErrSize = 0);
 

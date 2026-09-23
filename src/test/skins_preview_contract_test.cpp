@@ -65,9 +65,6 @@ TEST(SkinsContract, PrewarmPlayerPreviewReadyRequiresSelectedAndVisibleSourcesLo
 	EXPECT_NE(PrewarmBody.find("State == CSkinContainer::EState::LOADED"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, PrewarmPlayerPreviewReadyNoLongerBuildsPreviewCacheKeys)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -87,9 +84,6 @@ TEST(SkinsContract, PrewarmPlayerPreviewReadyNoLongerBuildsPreviewCacheKeys)
 	EXPECT_EQ(PrewarmBody.find("ColorFeet"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeSettingsRequestsNoLongerPromoteToPendingAtRequestSite)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -108,9 +102,6 @@ TEST(SkinsContract, TeeSettingsRequestsNoLongerPromoteToPendingAtRequestSite)
 	EXPECT_NE(RequestLoadBody.find("SetState(EState::BACKGROUND_REQUESTED, Priority);"), std::string::npos);
 	EXPECT_EQ(RequestLoadBody.find("SetState(EState::PENDING, Priority);"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeePrewarmNoLongerUsesImmediateBoolPath)
 {
@@ -137,9 +128,6 @@ TEST(SkinsContract, TeePrewarmNoLongerUsesImmediateBoolPath)
 	EXPECT_NE(FindImplBody.find("ExistingSkin->second->RequestLoad(true);"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, SourceResidencyNoLongerDependsOnPreviewCachePins)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -160,9 +148,6 @@ TEST(SkinsContract, SourceResidencyNoLongerDependsOnPreviewCachePins)
 	EXPECT_EQ(Source.find("NumPendingLoadingLoaded"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, SkinListWaitsForCompletePlanInsteadOfSeedingPlaceholderEntry)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -174,9 +159,6 @@ TEST(SkinsContract, SkinListWaitsForCompletePlanInsteadOfSeedingPlaceholderEntry
 	EXPECT_EQ(Source.find("SeedVisibleSkinListIfEmpty"), std::string::npos);
 	EXPECT_NE(Source.find("m_SkinList.m_vSkins = std::move(m_vPendingSkinListEntries);"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, SkinRefreshKeepsExistingListWhileNewPlanLoads)
 {
@@ -198,9 +180,6 @@ TEST(SkinsContract, SkinRefreshKeepsExistingListWhileNewPlanLoads)
 	EXPECT_EQ(RefreshBody.find("m_SkinsBackgroundList.clear();"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextures)
 {
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
@@ -213,9 +192,6 @@ TEST(SkinsContract, TeeSkinRefreshClearsListPreviewCacheBeforeReloadingSkinTextu
 	EXPECT_NE(Menus.find("void ClearSettingsTeeListPreviewCache()"), std::string::npos);
 	EXPECT_NE(RefreshBody.find("ClearSettingsTeeListPreviewCache();"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, TeeSkinListPreviewCacheKeysCoverPreviewVariantsAndStayBounded)
 {
@@ -247,9 +223,6 @@ TEST(SkinsContract, TeeSkinListPreviewCacheKeysCoverPreviewVariantsAndStayBounde
 	EXPECT_NE(PreviewKeyCall.find("*pEmote"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, TeeSkinListLoadingEntriesUseDefaultSkinFallbackWithLoadingIndicator)
 {
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/menus_settings.cpp");
@@ -263,9 +236,6 @@ TEST(SkinsContract, TeeSkinListLoadingEntriesUseDefaultSkinFallbackWithLoadingIn
 	EXPECT_NE(RenderTeeBody.find("RenderSkinStatus(Item.m_Rect, pSkinContainer, SkinListEntry.ErrorTooltipId(), PreviewCacheReady);"), std::string::npos);
 	EXPECT_EQ(RenderTeeBody.find("RenderSettingsSkinListPlaceholder"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, AbortedLocalSkinLoadJobStopsBeforeExpensiveRefreshWork)
 {
@@ -287,9 +257,6 @@ TEST(SkinsContract, AbortedLocalSkinLoadJobStopsBeforeExpensiveRefreshWork)
 	EXPECT_LT(RunBody.find("if(State() == IJob::STATE_ABORTED)", ReadFilePos), DecodePos);
 	EXPECT_LT(RunBody.find("if(State() == IJob::STATE_ABORTED)", DecodePos), PreparePos);
 }
-
-
-
 
 TEST(SkinsContract, AsyncSkinListKeepsQueuedColorVariantsSelectable)
 {
@@ -326,9 +293,6 @@ TEST(SkinsContract, AsyncSkinListKeepsQueuedColorVariantsSelectable)
 	EXPECT_NE(MenuSource.find("*pColorFeet = SelectedColorKey.m_ColorFeet;"), std::string::npos);
 }
 
-
-
-
 TEST(SkinsContract, DirectoryScanMergesLocalAndDownloadedSkinsWithLocalPriority)
 {
 	std::ifstream File(TestSourcePath("src/game/client/components/skins.cpp"));
@@ -359,9 +323,6 @@ TEST(SkinsContract, DirectoryScanMergesLocalAndDownloadedSkinsWithLocalPriority)
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->m_pSkin.reset();"), std::string::npos);
 	EXPECT_NE(ProcessDirectoryBody.find("pSkinContainer->SetState(CSkinContainer::EState::PENDING, OldPriority);"), std::string::npos);
 }
-
-
-
 
 TEST(SkinsContract, PrepareSkinDataResetsMetricsBeforeWritingPlan)
 {

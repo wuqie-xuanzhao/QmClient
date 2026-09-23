@@ -27,4 +27,3 @@ TEST(QmGraphicsShutdownContract, FestiveCrashDialogOffersNonDestructiveFireworks
 	EXPECT_NE(FestiveDialog.find("InvalidateFireworksRegion(Window, *pState"), std::string::npos);
 	EXPECT_NE(FestiveDialog.find("KillTimer(Window, gs_FireworksTimerId)"), std::string::npos);
 }
-

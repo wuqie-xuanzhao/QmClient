@@ -24,6 +24,7 @@
 #include <generated/protocol7.h>
 #include <generated/protocolglue.h>
 
+#include <game/client/components/qmclient/snapshot_entities.h>
 #include <game/client/prediction/gameworld.h>
 #include <game/client/race.h>
 #include <game/collision.h>
@@ -84,6 +85,8 @@
 #include "components/qmclient/music_lyrics/qm_spotify_integration.h"
 #include "components/qmclient/netease/netease_integration.h"
 #include "components/qmclient/qm_bind_status_hud.h"
+#include "components/qmclient/qm_hook_coll_candidates.h"
+#include "components/qmclient/qm_hook_coll_spatial_index.h"
 #include "components/qmclient/qmclient.h"
 #include "components/qmclient/rank_ghost.h"
 #include "components/qmclient/scripting.h"
@@ -190,13 +193,7 @@ public:
 	int m_NumDDRaceTeams;
 };
 
-class CSnapEntities
-{
-public:
-	IClient::CSnapItem m_Item;
-	const CNetObj_EntityEx *m_pDataEx;
-};
-
+// CSnapEntities 及其关联逻辑已提取到 qmclient/snapshot_entities.h（本次吸收）。
 enum class EClientIdFormat
 {
 	NO_INDENT,
@@ -1023,6 +1020,25 @@ public:
 
 	CTeamsCore m_Teams;
 
+	// 钩子碰撞线模拟会以「每 tick 一次」的频率调用 IntersectCharacter，而它每次都要遍历
+	// MAX_CLIENTS 个客户端并读取 m_aClients[i]（CClientData 步长上万字节，几乎每次迭代都会
+	// cache miss）。这些数据在两次渲染之间不会变化，因此在 CPlayers::OnRender 开头预处理成
+	// 紧凑数组，让热循环变成对连续内存的线性扫描。取值与直接读原始字段逐位一致。
+	// 调用约定：IntersectCharacter 只能由 CPlayers::OnRender 路径调用（当前唯一调用点），
+	// 以保证缓存已在本帧被刷新。
+	struct SHookCollTarget
+	{
+		vec2 m_Pos;
+		bool m_Valid;
+		bool m_Super;
+		bool m_Solo;
+		bool m_HookHitDisabled;
+	};
+	SHookCollTarget m_aHookCollTargets[MAX_CLIENTS] = {};
+	CQmHookCollCandidates m_HookCollCandidates;
+	CQmHookCollSpatialIndex m_HookCollSpatialIndex;
+	void UpdateHookCollTargets();
+
 	int IntersectCharacter(vec2 HookPos, vec2 NewPos, vec2 &NewPos2, int OwnId, vec2 *pPlayerPosition = nullptr);
 
 	int LastRaceTick() const;
@@ -1318,6 +1334,8 @@ public:
 
 private:
 	std::vector<CSnapEntities> m_vSnapEntities;
+	// 扩展信息暂存区：保留容量跨帧复用，只在构建快照时原地清空。
+	std::vector<CSnapEntities> m_vSnapEntityExtensionsScratch;
 	void SnapCollectEntities();
 	int GetFastInputPredictionAmountMs();
 	int GetFastInputPredictionTicks();
@@ -1329,6 +1347,9 @@ private:
 
 	std::vector<std::shared_ptr<CManagedTeeRenderInfo>> m_vpManagedTeeRenderInfos;
 	void UpdateManagedTeeRenderInfos();
+	// 皮肤贴图被卸载 / 皮肤容器重建 / 图形设备重建这些路径只要漏掉一次通知，
+	// 引用旧句柄的渲染信息就会一直把 Tee 画成没有贴图的实心块且不会自行恢复。
+	void RepairStaleTeeRenderInfos();
 
 	void UpdateAutoTeamLock();
 	void UpdateLocalTuning();

@@ -45,10 +45,11 @@ class CSemaphore;
 
 static std::thread::id gs_MainThreadId;
 static bool gs_MainThreadIdInitialized = false;
-static constexpr int RECT_CORNER_SEGMENTS = 48; // 圆角段数上限（栈数组大小）
+// 圆角段数上限（栈数组大小）与预计算表的上限保持同一来源，避免两侧不一致。
+static constexpr int RECT_CORNER_SEGMENTS = CQmRoundedRectDirections::MAX_SEGMENTS;
 static inline int RoundedRectSegmentCount()
 {
-	return std::clamp(g_Config.m_QmRectCornerSegments & ~1, 8, RECT_CORNER_SEGMENTS);
+	return std::clamp(g_Config.m_QmRectCornerSegments & ~1, CQmRoundedRectDirections::MIN_SEGMENTS, RECT_CORNER_SEGMENTS);
 }
 static constexpr float RECT_ANTIALIAS_PIXEL_SIZE = 1.25f;
 
@@ -86,16 +87,17 @@ static ColorRGBA ColorWithAlpha(ColorRGBA Color, float Alpha)
 	return Color;
 }
 
-static IGraphics::CFreeformItem RoundedRectAntialiasSegment(float CenterX, float CenterY, float InnerRadius, float OuterRadius, float AngleStart, float AngleEnd, float XDirection, float YDirection)
+// 方向向量由 CQmRoundedRectDirections 按档位预计算，这里不再逐段算 cos/sin。
+static IGraphics::CFreeformItem RoundedRectAntialiasSegment(float CenterX, float CenterY, float InnerRadius, float OuterRadius, const vec2 &DirectionStart, const vec2 &DirectionEnd, float XDirection, float YDirection)
 {
-	const float InnerStartX = CenterX + XDirection * std::cos(AngleStart) * InnerRadius;
-	const float InnerStartY = CenterY + YDirection * std::sin(AngleStart) * InnerRadius;
-	const float OuterStartX = CenterX + XDirection * std::cos(AngleStart) * OuterRadius;
-	const float OuterStartY = CenterY + YDirection * std::sin(AngleStart) * OuterRadius;
-	const float OuterEndX = CenterX + XDirection * std::cos(AngleEnd) * OuterRadius;
-	const float OuterEndY = CenterY + YDirection * std::sin(AngleEnd) * OuterRadius;
-	const float InnerEndX = CenterX + XDirection * std::cos(AngleEnd) * InnerRadius;
-	const float InnerEndY = CenterY + YDirection * std::sin(AngleEnd) * InnerRadius;
+	const float InnerStartX = CenterX + XDirection * DirectionStart.x * InnerRadius;
+	const float InnerStartY = CenterY + YDirection * DirectionStart.y * InnerRadius;
+	const float OuterStartX = CenterX + XDirection * DirectionStart.x * OuterRadius;
+	const float OuterStartY = CenterY + YDirection * DirectionStart.y * OuterRadius;
+	const float OuterEndX = CenterX + XDirection * DirectionEnd.x * OuterRadius;
+	const float OuterEndY = CenterY + YDirection * DirectionEnd.y * OuterRadius;
+	const float InnerEndX = CenterX + XDirection * DirectionEnd.x * InnerRadius;
+	const float InnerEndY = CenterY + YDirection * DirectionEnd.y * InnerRadius;
 	return IGraphics::CFreeformItem(InnerStartX, InnerStartY, OuterStartX, OuterStartY, OuterEndX, OuterEndY, InnerEndX, InnerEndY);
 }
 
@@ -445,7 +447,7 @@ void CGraphics_Threaded::BumpTextureHandleEpochAndResetSlots()
 	m_FirstFreeTexture = 0;
 }
 
-bool CGraphics_Threaded::IsTextureHandleAllocated(CTextureHandle TextureId) const
+bool CGraphics_Threaded::IsTextureHandleAllocated(IGraphics::CTextureHandle TextureId) const
 {
 	if(!TextureId.IsValid())
 		return false;
@@ -1020,18 +1022,15 @@ void CGraphics_Threaded::DrawRenderTarget(CRenderTargetHandle Target, const SRen
 	else
 	{
 		constexpr int NumSegments = RECT_CORNER_SEGMENTS;
-		const float SegmentsAngle = pi / 2 / NumSegments;
+		const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 		for(int i = 0; i < NumSegments; i += 2)
 		{
-			const float a1 = i * SegmentsAngle;
-			const float a2 = (i + 1) * SegmentsAngle;
-			const float a3 = (i + 2) * SegmentsAngle;
-			const float Ca1 = std::cos(a1);
-			const float Ca2 = std::cos(a2);
-			const float Ca3 = std::cos(a3);
-			const float Sa1 = std::sin(a1);
-			const float Sa2 = std::sin(a2);
-			const float Sa3 = std::sin(a3);
+			const float Ca1 = pDirections[i].x;
+			const float Ca2 = pDirections[i + 1].x;
+			const float Ca3 = pDirections[i + 2].x;
+			const float Sa1 = pDirections[i].y;
+			const float Sa2 = pDirections[i + 1].y;
+			const float Sa3 = pDirections[i + 2].y;
 			if(Params.m_Corners & CORNER_TL)
 				AddQuad(
 					vec2(Params.m_X + Rounding, Params.m_Y + Rounding),
@@ -1826,6 +1825,17 @@ constexpr static CCommandBuffer::SColor NormalizeColor(ColorRGBA Color)
 	return NormalizedColor;
 }
 
+void CGraphics_Threaded::SetColorVertex(const CColorVertex *pArray, size_t Num)
+{
+	dbg_assert(m_Drawing != EDrawing::NONE, "called Graphics()->SetColorVertex without begin");
+
+	for(size_t i = 0; i < Num; ++i)
+	{
+		const CColorVertex &Vertex = pArray[i];
+		m_aColor[Vertex.m_Index] = NormalizeColor(ColorRGBA(Vertex.m_R, Vertex.m_G, Vertex.m_B, Vertex.m_A));
+	}
+}
+
 void CGraphics_Threaded::SetColor(float r, float g, float b, float a)
 {
 	SetColor(ColorRGBA(r, g, b, a));
@@ -2100,23 +2110,23 @@ void CGraphics_Threaded::DrawRectExtAntialias(float x, float y, float w, float h
 
 	const float OuterRadius = r + AntialiasSize;
 	const int NumSegments = RoundedRectSegmentCount();
-	const float SegmentsAngle = pi / 2 / NumSegments;
+	const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int Segment = 0; Segment < NumSegments; ++Segment)
 	{
-		const float AngleStart = Segment * SegmentsAngle;
-		const float AngleEnd = (Segment + 1) * SegmentsAngle;
+		const vec2 &DirectionStart = pDirections[Segment];
+		const vec2 &DirectionEnd = pDirections[Segment + 1];
 
 		if(Corners & CORNER_TL)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + r, r, OuterRadius, AngleStart, AngleEnd, -1.0f, -1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + r, r, OuterRadius, DirectionStart, DirectionEnd, -1.0f, -1.0f);
 		if(Corners & CORNER_TR)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + r, r, OuterRadius, AngleStart, AngleEnd, 1.0f, -1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + r, r, OuterRadius, DirectionStart, DirectionEnd, 1.0f, -1.0f);
 		if(Corners & CORNER_BL)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + h - r, r, OuterRadius, AngleStart, AngleEnd, -1.0f, 1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + h - r, r, OuterRadius, DirectionStart, DirectionEnd, -1.0f, 1.0f);
 		if(Corners & CORNER_BR)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + h - r, r, OuterRadius, AngleStart, AngleEnd, 1.0f, 1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + h - r, r, OuterRadius, DirectionStart, DirectionEnd, 1.0f, 1.0f);
 	}
 
 	if(NumItems > 0)
@@ -2140,21 +2150,18 @@ void CGraphics_Threaded::DrawRectExt(float x, float y, float w, float h, float r
 		r = Geometry.m_Rounding;
 	}
 	const int NumSegments = RoundedRectSegmentCount();
-	const float SegmentsAngle = pi / 2 / NumSegments;
+	const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int i = 0; i < NumSegments; i += 2)
 	{
-		float a1 = i * SegmentsAngle;
-		float a2 = (i + 1) * SegmentsAngle;
-		float a3 = (i + 2) * SegmentsAngle;
-		float Ca1 = std::cos(a1);
-		float Ca2 = std::cos(a2);
-		float Ca3 = std::cos(a3);
-		float Sa1 = std::sin(a1);
-		float Sa2 = std::sin(a2);
-		float Sa3 = std::sin(a3);
+		const float Ca1 = pDirections[i].x;
+		const float Ca2 = pDirections[i + 1].x;
+		const float Ca3 = pDirections[i + 2].x;
+		const float Sa1 = pDirections[i].y;
+		const float Sa2 = pDirections[i + 1].y;
+		const float Sa3 = pDirections[i + 2].y;
 
 		if(Corners & CORNER_TL)
 			aFreeform[NumItems++] = IGraphics::CFreeformItem(
@@ -2271,7 +2278,7 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 
 	const float OuterRadius = r + AntialiasSize;
 	const int NumSegments = RoundedRectSegmentCount();
-	const float SegmentsAngle = pi / 2 / NumSegments;
+	const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 	auto DrawCorner = [&](int Corner, ColorRGBA CornerColor, float CenterX, float CenterY, float XDirection, float YDirection) {
 		if(!(Corners & Corner) || CornerColor.a <= 0.0f)
 			return;
@@ -2279,9 +2286,9 @@ void CGraphics_Threaded::DrawRectExt4Antialias(float x, float y, float w, float 
 		IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS];
 		for(int Segment = 0; Segment < NumSegments; ++Segment)
 		{
-			const float AngleStart = Segment * SegmentsAngle;
-			const float AngleEnd = (Segment + 1) * SegmentsAngle;
-			aFreeform[Segment] = RoundedRectAntialiasSegment(CenterX, CenterY, r, OuterRadius, AngleStart, AngleEnd, XDirection, YDirection);
+			const vec2 &DirectionStart = pDirections[Segment];
+			const vec2 &DirectionEnd = pDirections[Segment + 1];
+			aFreeform[Segment] = RoundedRectAntialiasSegment(CenterX, CenterY, r, OuterRadius, DirectionStart, DirectionEnd, XDirection, YDirection);
 		}
 
 		const ColorRGBA TransparentColor = ColorWithAlpha(CornerColor, 0.0f);
@@ -2317,18 +2324,15 @@ void CGraphics_Threaded::DrawRectExt4(float x, float y, float w, float h, ColorR
 	}
 
 	const int NumSegments = RoundedRectSegmentCount();
-	const float SegmentsAngle = pi / 2 / NumSegments;
+	const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 	for(int i = 0; i < NumSegments; i += 2)
 	{
-		float a1 = i * SegmentsAngle;
-		float a2 = (i + 1) * SegmentsAngle;
-		float a3 = (i + 2) * SegmentsAngle;
-		float Ca1 = std::cos(a1);
-		float Ca2 = std::cos(a2);
-		float Ca3 = std::cos(a3);
-		float Sa1 = std::sin(a1);
-		float Sa2 = std::sin(a2);
-		float Sa3 = std::sin(a3);
+		const float Ca1 = pDirections[i].x;
+		const float Ca2 = pDirections[i + 1].x;
+		const float Ca3 = pDirections[i + 2].x;
+		const float Sa1 = pDirections[i].y;
+		const float Sa2 = pDirections[i + 1].y;
+		const float Sa3 = pDirections[i + 2].y;
 
 		if(Corners & CORNER_TL)
 		{
@@ -2477,23 +2481,23 @@ void CGraphics_Threaded::AddRectExtAntialiasToContainer(int ContainerIndex, floa
 
 	const float OuterRadius = r + AntialiasSize;
 	const int NumSegments = RoundedRectSegmentCount();
-	const float SegmentsAngle = pi / 2 / NumSegments;
+	const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int Segment = 0; Segment < NumSegments; ++Segment)
 	{
-		const float AngleStart = Segment * SegmentsAngle;
-		const float AngleEnd = (Segment + 1) * SegmentsAngle;
+		const vec2 &DirectionStart = pDirections[Segment];
+		const vec2 &DirectionEnd = pDirections[Segment + 1];
 
 		if(Corners & CORNER_TL)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + r, r, OuterRadius, AngleStart, AngleEnd, -1.0f, -1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + r, r, OuterRadius, DirectionStart, DirectionEnd, -1.0f, -1.0f);
 		if(Corners & CORNER_TR)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + r, r, OuterRadius, AngleStart, AngleEnd, 1.0f, -1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + r, r, OuterRadius, DirectionStart, DirectionEnd, 1.0f, -1.0f);
 		if(Corners & CORNER_BL)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + h - r, r, OuterRadius, AngleStart, AngleEnd, -1.0f, 1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + r, y + h - r, r, OuterRadius, DirectionStart, DirectionEnd, -1.0f, 1.0f);
 		if(Corners & CORNER_BR)
-			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + h - r, r, OuterRadius, AngleStart, AngleEnd, 1.0f, 1.0f);
+			aFreeform[NumItems++] = RoundedRectAntialiasSegment(x + w - r, y + h - r, r, OuterRadius, DirectionStart, DirectionEnd, 1.0f, 1.0f);
 	}
 
 	if(NumItems > 0)
@@ -2528,21 +2532,18 @@ int CGraphics_Threaded::CreateRectQuadContainer(float x, float y, float w, float
 	}
 
 	const int NumSegments = RoundedRectSegmentCount();
-	const float SegmentsAngle = pi / 2 / NumSegments;
+	const vec2 *pDirections = m_RoundedRectDirections.Get(NumSegments);
 	IGraphics::CFreeformItem aFreeform[RECT_CORNER_SEGMENTS * 4];
 	size_t NumItems = 0;
 
 	for(int i = 0; i < NumSegments; i += 2)
 	{
-		float a1 = i * SegmentsAngle;
-		float a2 = (i + 1) * SegmentsAngle;
-		float a3 = (i + 2) * SegmentsAngle;
-		float Ca1 = std::cos(a1);
-		float Ca2 = std::cos(a2);
-		float Ca3 = std::cos(a3);
-		float Sa1 = std::sin(a1);
-		float Sa2 = std::sin(a2);
-		float Sa3 = std::sin(a3);
+		const float Ca1 = pDirections[i].x;
+		const float Ca2 = pDirections[i + 1].x;
+		const float Ca3 = pDirections[i + 2].x;
+		const float Sa1 = pDirections[i].y;
+		const float Sa2 = pDirections[i + 1].y;
+		const float Sa3 = pDirections[i + 2].y;
 
 		if(Corners & CORNER_TL)
 			aFreeform[NumItems++] = IGraphics::CFreeformItem(

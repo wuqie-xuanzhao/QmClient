@@ -233,6 +233,14 @@ bool SettingsInvalidationClearsTextPool(ESettingsInvalidationReason Reason)
 	return true;
 }
 
+bool SettingsTextCacheNeedsBuild(const std::string &CachedText, const char *pText, int StrLen, bool ContainerValid, bool SizeChanged, bool CursorChanged)
+{
+	const bool TextChanged = StrLen >= 0 ?
+					 CachedText.size() != (size_t)StrLen || str_comp_num(CachedText.c_str(), pText, StrLen) != 0 :
+					 str_comp(CachedText.c_str(), pText) != 0;
+	return (!ContainerValid && pText[0] != '\0' && StrLen != 0) || TextChanged || SizeChanged || CursorChanged;
+}
+
 bool SettingsInvalidationClearsResourcePlan(ESettingsInvalidationReason Reason)
 {
 	return Reason == ESettingsInvalidationReason::RESOURCE_DIRECTORY_CHANGED;

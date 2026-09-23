@@ -1403,17 +1403,6 @@ namespace QmHudNotifications
 	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, const SServerMessageRouteConfig &Config)
 	{
 		SServerMessageEntryDecision Decision;
-		if(Analysis.m_Class == EServerMessageClass::BasicInfo && Config.m_HideBasicInfo)
-		{
-			Decision.m_ConsumeHiddenMessage = true;
-			return Decision;
-		}
-		if(Analysis.m_Class == EServerMessageClass::Prompt && Config.m_HidePrompt)
-		{
-			Decision.m_ConsumeHiddenMessage = true;
-			Decision.m_ClearPendingCompatPrompt = Analysis.m_Route == EServerMessageRoute::Solo;
-			return Decision;
-		}
 		if(!Config.m_RouteSystemMessages)
 			return Decision;
 		if(!Config.m_UseCategoryFilters)
@@ -1456,24 +1445,16 @@ namespace QmHudNotifications
 		return Decision;
 	}
 
-	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt)
+	SServerMessageEntryDecision DecideServerMessageEntry(const SServerMessageAnalysis &Analysis, bool RouteSystemMessages)
 	{
 		SServerMessageRouteConfig Config;
 		Config.m_RouteSystemMessages = RouteSystemMessages;
-		Config.m_HideBasicInfo = HideBasicInfo;
-		Config.m_HidePrompt = HidePrompt;
 		return DecideServerMessageEntry(Analysis, Config);
 	}
 
-	bool ShouldSuppressServerMessageChat(const SServerMessageAnalysis &Analysis, bool HideBasicInfo, bool HidePrompt)
+	bool ShouldSuppressServerMessageChat(const SServerMessageAnalysis &Analysis)
 	{
-		if(Analysis.m_Route == EServerMessageRoute::Solo)
-			return true;
-		if(Analysis.m_Class == EServerMessageClass::BasicInfo)
-			return HideBasicInfo;
-		if(Analysis.m_Class == EServerMessageClass::Prompt)
-			return HidePrompt;
-		return false;
+		return Analysis.m_Route == EServerMessageRoute::Solo;
 	}
 
 	EServerMessageRoute ServerMessageRoute(const char *pMessage, ESoloPrompt PendingCompatPrompt, bool RouteSystemMessages)

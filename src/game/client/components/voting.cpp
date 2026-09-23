@@ -404,6 +404,7 @@ void CVoting::AddOption(const char *pDescription)
 
 	str_copy(pOption->m_aDescription, pDescription);
 	++m_NumVoteOptions;
+	++m_OptionsRevision;
 
 	if(m_PendingMapVoteReady)
 		TryCallPendingMapVote();
@@ -425,6 +426,7 @@ void CVoting::RemoveOption(const char *pDescription)
 			if(pOption->m_pNext)
 				pOption->m_pNext->m_pPrev = pOption->m_pPrev;
 			--m_NumVoteOptions;
+			++m_OptionsRevision;
 
 			// add it to recycle list
 			pOption->m_pNext = nullptr;
@@ -442,6 +444,7 @@ void CVoting::RemoveOption(const char *pDescription)
 
 void CVoting::ClearOptions()
 {
+	++m_OptionsRevision;
 	m_Heap.Reset();
 
 	m_NumVoteOptions = 0;

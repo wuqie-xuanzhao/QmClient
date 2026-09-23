@@ -563,6 +563,8 @@ static CButtonContainer s_FastInputModeSaikoPlus;
 static int s_CountFrozenText = 0;
 static CUi::SDropDownState s_TrailDropDownState;
 static CScrollRegion s_TrailDropDownScrollRegion;
+static CUi::SDropDownState s_TrailStyleDropDownState;
+static CScrollRegion s_TrailStyleDropDownScrollRegion;
 
 static float TClientSettingsRowsHeight(const int NumRows)
 {
@@ -3359,6 +3361,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 			CUIRect TrailOthersRow = Rows.Next();
 			CUIRect TrailFadeRow = Rows.Next();
 			CUIRect TrailTaperRow = Rows.Next();
+			CUIRect TrailStyleColorsRow = Rows.Next();
 			if(Render)
 			{
 				CPerfTimer BaseTimer;
@@ -3366,6 +3369,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcTeeTrailOthers, "tclient-tee-trail-others", Localize("Show other tees' trails"), &g_Config.m_TcTeeTrailOthers, &TrailOthersRow, LineSize);
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcTeeTrailFade, "tclient-tee-trail-fade", Localize("Fade trail alpha"), &g_Config.m_TcTeeTrailFade, &TrailFadeRow, LineSize);
 				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcTeeTrailTaper, "tclient-tee-trail-taper", Localize("Taper trail width"), &g_Config.m_TcTeeTrailTaper, &TrailTaperRow, LineSize);
+				DoTClientSettingsButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcTeeTrailStyleColors, "tclient-tee-trail-style-colors", Localize("Use style colors"), &g_Config.m_TcTeeTrailStyleColors, &TrailStyleColorsRow, LineSize);
 				LogSettingsStage("tclient_settings_right_tee_trails_base", BaseTimer);
 			}
 			static std::vector<const char *> s_TrailDropDownNames;
@@ -3380,6 +3384,16 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				if(TrailSelectedOld != TrailSelectedNew)
 					g_Config.m_TcTeeTrailColorMode = TrailSelectedNew + 1;
 				LogSettingsStage("tclient_settings_right_tee_trails_dropdown", DropDownTimer);
+			}
+			static std::vector<const char *> s_TrailStyleNames;
+			s_TrailStyleNames = {Localize("Original"), Localize("Cursed Flame"), Localize("Violet Bolt"), Localize("Spirit Light"), Localize("Void Shadow"), Localize("Golden Grace")};
+			s_TrailStyleDropDownState.m_SelectionPopupContext.m_pScrollRegion = &s_TrailStyleDropDownScrollRegion;
+			CUIRect TrailStyleDropDownRect = Rows.Next();
+			if(Render)
+			{
+				const int TrailStyleNew = DoSettingsDropDown(&TrailStyleDropDownRect, g_Config.m_TcTeeTrailStyle, s_TrailStyleNames.data(), s_TrailStyleNames.size(), s_TrailStyleDropDownState);
+				if(TrailStyleNew != g_Config.m_TcTeeTrailStyle)
+					g_Config.m_TcTeeTrailStyle = TrailStyleNew;
 			}
 			if(g_Config.m_TcTeeTrailColorMode == CTrails::COLORMODE_SOLID)
 			{
@@ -3576,7 +3590,7 @@ void CMenus::RenderSettingsTClientSettings(CUIRect MainView, bool PrewarmOnly)
 				return RenderBoxedFullSection("Tee Trails", LayoutTeeTrailsSection, Col);
 			};
 			FillCachedStaticLayer(S, LayoutTeeTrailsSection);
-			S.m_DependencyConfigInts = {&g_Config.m_TcTeeTrail, &g_Config.m_TcTeeTrailOthers, &g_Config.m_TcTeeTrailWidth, &g_Config.m_TcTeeTrailLength, &g_Config.m_TcTeeTrailAlpha};
+			S.m_DependencyConfigInts = {&g_Config.m_TcTeeTrail, &g_Config.m_TcTeeTrailOthers, &g_Config.m_TcTeeTrailWidth, &g_Config.m_TcTeeTrailLength, &g_Config.m_TcTeeTrailAlpha, &g_Config.m_TcTeeTrailStyle, &g_Config.m_TcTeeTrailStyleColors};
 			vRightSections.push_back(S);
 
 			// -- Background Draw --

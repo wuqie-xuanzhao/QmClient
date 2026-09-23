@@ -229,8 +229,8 @@ TEST(QmIconAtlas, GeneratedMsdfManifestsContainEveryRuntimeIcon)
 		const int AtlasWidth = JsonInt(pAtlas, "width");
 		const int AtlasHeight = JsonInt(pAtlas, "height");
 		constexpr int FieldSize = 48;
-		constexpr int ToolPadding = 8;   // 官方工具的字形 pxrange 出血
-		constexpr int CellSize = 72;     // 48 + 2×12 网格间距（字形外轮廓可略超 em 框）
+		constexpr int ToolPadding = 8; // 官方工具的字形 pxrange 出血
+		constexpr int CellSize = 72; // 48 + 2×12 网格间距（字形外轮廓可略超 em 框）
 		const int IconCount = static_cast<int>(pIcons->u.object.length);
 		EXPECT_GE(IconCount, static_cast<int>(EQmIcon::COUNT));
 		// 新旧官方名共用码点 → manifest 条目数可大于唯一格数；网格按唯一格数布局。

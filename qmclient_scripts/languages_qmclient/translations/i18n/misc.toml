@@ -3521,6 +3521,38 @@ turkish = "Tuş atamaları"
 polish = "Wiązania klawiszy"
 
 [[message]]
+key = "Binds"
+[message.translations]
+simplified_chinese = "绑定"
+traditional_chinese = "綁定"
+japanese = "バインド"
+korean = "바인드"
+russian = "Привязки"
+german = "Tastenbelegungen"
+spanish = "Atajos"
+french = "Raccourcis"
+brazilian_portuguese = "Atalhos"
+portuguese = "Atalhos"
+turkish = "Tuş atamaları"
+polish = "Wiązania"
+
+[[message]]
+key = "Commands"
+[message.translations]
+simplified_chinese = "命令"
+traditional_chinese = "指令"
+japanese = "コマンド"
+korean = "명령어"
+russian = "Команды"
+german = "Befehle"
+spanish = "Comandos"
+french = "Commandes"
+brazilian_portuguese = "Comandos"
+portuguese = "Comandos"
+turkish = "Komutlar"
+polish = "Polecenia"
+
+[[message]]
 key = "Key Sticking: ?"
 [message.translations]
 simplified_chinese = "卡键：？"
@@ -12626,3 +12658,51 @@ brazilian_portuguese = "Remover um país da lista de filtros permitidos para uma
 portuguese = "Remover um país da lista de filtros permitidos para uma comunidade específica"
 turkish = "Belirli bir topluluk için izin verilen filtre listesinden bir ülkeyi kaldır"
 polish = "Usuń kraj z listy dozwolonych filtrów dla konkretnej społeczności"
+
+[[message]]
+key = "Launch a large emote"
+[message.translations]
+simplified_chinese = "发射大型表情"
+traditional_chinese = "發射大型表情"
+japanese = "大きなエモートを発射"
+korean = "큰 이모트 발사"
+russian = "Запустить большое эмовыражение"
+german = "Großes Emote abfeuern"
+spanish = "Lanzar un emote grande"
+french = "Lancer une grande émoticône"
+brazilian_portuguese = "Lançar um emote grande"
+portuguese = "Lançar um emote grande"
+turkish = "Büyük bir emote fırlat"
+polish = "Wystrzel duży emotikon"
+
+[[message]]
+key = "Launch emote"
+[message.translations]
+simplified_chinese = "发射表情"
+traditional_chinese = "發射表情"
+japanese = "エモートを発射"
+korean = "이모트 발사"
+russian = "Запустить эмовыражение"
+german = "Emote abfeuern"
+spanish = "Lanzar emote"
+french = "Lancer une émoticône"
+brazilian_portuguese = "Lançar emote"
+portuguese = "Lançar emote"
+turkish = "Emote fırlat"
+polish = "Wystrzel emotikon"
+
+[[message]]
+key = "Move a friend category to a position"
+[message.translations]
+simplified_chinese = "将好友分组移动到指定位置"
+traditional_chinese = "將好友分組移動到指定位置"
+japanese = "フレンドカテゴリを指定位置へ移動"
+korean = "친구 분류를 지정 위치로 이동"
+russian = "Переместить категорию друзей на позицию"
+german = "Freundeskategorie an eine Position verschieben"
+spanish = "Mover una categoría de amigos a una posición"
+french = "Déplacer une catégorie d'amis à une position"
+brazilian_portuguese = "Mover uma categoria de amigos para uma posição"
+portuguese = "Mover uma categoria de amigos para uma posição"
+turkish = "Arkadaş kategorisini bir konuma taşı"
+polish = "Przenieś kategorię znajomych na pozycję"

@@ -14,22 +14,22 @@
 
 namespace
 {
-CNetObj_Character MakeCharacter()
-{
-	CNetObj_Character Character{};
-	Character.m_Tick = 6536;
-	Character.m_X = 32276;
-	Character.m_Y = 5155;
-	Character.m_VelX = 1280;
-	Character.m_Angle = 460;
-	Character.m_Direction = 1;
-	Character.m_HookState = 5;
-	Character.m_HookX = 32276;
-	Character.m_HookY = 5155;
-	Character.m_Weapon = 0;
-	Character.m_AttackTick = 32;
-	return Character;
-}
+	CNetObj_Character MakeCharacter()
+	{
+		CNetObj_Character Character{};
+		Character.m_Tick = 6536;
+		Character.m_X = 32276;
+		Character.m_Y = 5155;
+		Character.m_VelX = 1280;
+		Character.m_Angle = 460;
+		Character.m_Direction = 1;
+		Character.m_HookState = 5;
+		Character.m_HookX = 32276;
+		Character.m_HookY = 5155;
+		Character.m_Weapon = 0;
+		Character.m_AttackTick = 32;
+		return Character;
+	}
 } // namespace
 
 TEST(CNetObjHandler, SecureUnpackObjReturnsSharedScratchBuffer)

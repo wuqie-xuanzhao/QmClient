@@ -7376,20 +7376,6 @@ key: '本体或 dummy 被锤醒时，在对应玩家随机的左上或右上角�
   traditional_chinese: '本體或 Dummy 被錘醒時，在對應玩家隨機的左上或右上角顯示提示'
   turkish: 'Ana karakter veya Dummy çekiçle uyandırıldığında, ilgili oyuncunun rastgele sol üst veya sağ üst köşesinde ipucu göster'
 
-key: '本地粒子：显示自己 tee 身后掉落的粒子（如冻结雪花）'
-  brazilian_portuguese: 'Partículas locais: mostrar partículas caindo atrás do seu Tee (ex.: flocos de gelo congelados)'
-  french: 'Particules locales : affiche les particules tombant derrière votre Tee (ex. flocons de gel)'
-  german: 'Lokale Partikel: Zeige Partikel, die hinter deinem eigenen Tee fallen (z.B. Frostschnee)'
-  japanese: 'ローカルパーティクル：自分の Tee の後ろに落ちるパーティクルを表示（凍結の雪など）'
-  korean: '로컬 파티클: 자신의 Tee 뒤에 떨어지는 파티클 표시 (예: 얼음 결정)'
-  polish: 'Lokalne cząsteczki: pokazuj cząsteczki spadające za własnym Tee (np. płatki śniegu podczas zamrożenia)'
-  portuguese: 'Partículas locais: mostrar partículas a cair atrás do seu Tee (por exemplo, flocos de neve de congelamento)'
-  russian: 'Локальные частицы: показывать частицы, падающие за вашим Tee (например, снежинки заморозки)'
-  simplified_chinese: '本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）'
-  spanish: 'Partículas locales: mostrar partículas que caen detrás de tu Tee (ej. copos de congelación)'
-  traditional_chinese: '本地粒子：顯示自己 Tee 身後掉落的粒子（如凍結雪花）'
-  turkish: "Yerel parçacıklar: Kendi Tee'nizin arkasına düşen parçacıkları göster (donma kar taneleri gibi)"
-
 key: '碰撞箱模式freeze边界颜色'
   brazilian_portuguese: 'Cor da borda Freeze no modo Hitbox'
   french: 'Couleur des limites Freeze en mode Hitbox'

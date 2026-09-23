@@ -151,12 +151,9 @@ class CRClientVoice
 	IConsole *m_pConsole = nullptr;
 	IEngineGraphics *m_pGraphics = nullptr;
 
-	NETSOCKET m_Socket = nullptr;
-	NETADDR m_ServerAddr = NETADDR_ZEROED;
+	std::unique_ptr<VoiceUtils::CVoiceWebSocketTransport> m_pVoiceTransport;
 	std::atomic<bool> m_ServerAddrValid = false;
-	std::atomic<bool> m_ServerAddrResolveRequested = true;
-	char m_aServerAddrStr[128] = {0};
-	std::atomic<int64_t> m_LastServerResolveAttempt = 0;
+	char m_aServerAddrStr[256] = {0};
 
 	SDL_AudioDeviceID m_CaptureDevice = 0;
 	SDL_AudioDeviceID m_OutputDevice = 0;
@@ -213,7 +210,8 @@ class CRClientVoice
 	std::atomic<bool> m_CaptureReady = false;
 	std::atomic<bool> m_OutputReady = false;
 	std::atomic<bool> m_EncoderReady = false;
-	std::atomic<bool> m_SocketReady = false;
+	std::atomic<bool> m_TransportReady = false;
+	std::atomic<bool> m_TransportConnecting = false;
 	// Connection runtime state: last successful transport activity and keepalive.
 	int64_t m_LastPingSentTime = 0;
 	uint16_t m_LastPingSeq = 0;
@@ -242,7 +240,6 @@ class CRClientVoice
 	int m_TxPackets = 0;
 	int64_t m_RxLastLog = 0;
 	int m_RxPackets = 0;
-	int m_RxDropAddr = 0;
 	int m_RxDropHeader = 0;
 	int m_RxDropVersion = 0;
 	int m_RxDropType = 0;
@@ -284,10 +281,10 @@ class CRClientVoice
 	std::array<uint8_t, MAX_CLIENTS> m_aClientActiveSnap = {};
 	std::array<uint8_t, MAX_CLIENTS> m_aClientSpecSnap = {};
 
-	bool EnsureSocket();
+	void UpdateVoiceTransport() NO_THREAD_SAFETY_ANALYSIS;
+	bool SendVoicePacket(const uint8_t *pData, size_t Size) NO_THREAD_SAFETY_ANALYSIS;
 	bool EnsureAudio() NO_THREAD_SAFETY_ANALYSIS;
 	void UpdateServerAddrConfig();
-	void ResolveServerAddr();
 	bool UpdateContext();
 	void UpdateClientSnapshot(bool Force = false);
 	void UpdateConfigSnapshot(bool Force = false);

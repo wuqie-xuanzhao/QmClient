@@ -584,7 +584,7 @@ void CMenus::AssetsEditorClearAssets()
 	m_AssetsEditorState.m_Initialized = false;
 	m_AssetsEditorState.m_HasUnsavedChanges = false;
 	m_AssetsEditorState.m_ShowExitConfirm = false;
-	m_AssetsEditorState.m_ColorBlendMode = ASSETS_EDITOR_COLOR_BLEND_MULTIPLY;
+	m_AssetsEditorState.m_SelectedTargetSlotIndex = -1;
 	m_AssetsEditorState.m_ComposedPreviewWidth = 0;
 	m_AssetsEditorState.m_ComposedPreviewHeight = 0;
 	m_AssetsEditorState.m_TargetPressPending = false;
@@ -749,8 +749,9 @@ void CMenus::AssetsEditorReloadAssetsImagesOnly()
 
 void CMenus::AssetsEditorResetPartSlots()
 {
-	// Rebuilding part slots invalidates the color picker target pointer.
+	// 重建部件会使取色器目标和当前选择失效。
 	Ui()->ClosePopupMenu(&m_ColorPickerPopupContext);
+	m_AssetsEditorState.m_SelectedTargetSlotIndex = -1;
 	m_AssetsEditorState.m_ColorPickerSlotIndex = -1;
 	m_AssetsEditorState.m_ColorPickerValue = 0;
 
@@ -1241,8 +1242,8 @@ bool CMenus::AssetsEditorComposeImage(CImageInfo &OutputImage)
 
 	for(const auto &Slot : m_AssetsEditorState.m_vPartSlots)
 	{
-		const ColorRGBA SlotTint = AssetsEditorSlotColorToRgba(Slot.m_Color);
-		const bool HasColorOverride = AssetsEditorHasColorOverride(SlotTint);
+		const ColorRGBA SlotTint = AssetsEditorSlotTint(Slot);
+		const bool HasColorOverride = AssetsEditorHasColorOverride(SlotTint, Slot.m_ColorBlendMode);
 		const bool NeedsSourceCopy = str_comp(Slot.m_aSourceAsset, MainAsset.m_aName) != 0 ||
 					     Slot.m_SrcX != Slot.m_DstX || Slot.m_SrcY != Slot.m_DstY ||
 					     Slot.m_SrcW != Slot.m_DstW || Slot.m_SrcH != Slot.m_DstH;
@@ -1300,7 +1301,7 @@ bool CMenus::AssetsEditorComposeImage(CImageInfo &OutputImage)
 		}
 
 		if(HasColorOverride)
-			AssetsEditorApplyColorOverrideToImageRect(OutputImage, DestX, DestY, DestW, DestH, SlotTint, m_AssetsEditorState.m_ColorBlendMode);
+			AssetsEditorApplyColorOverrideToImageRect(OutputImage, DestX, DestY, DestW, DestH, SlotTint, Slot.m_ColorBlendMode);
 	}
 
 	for(auto &Prepared : vPreparedDonors)
@@ -1686,6 +1687,7 @@ void CMenus::AssetsEditorApplyDrop(int TargetSlotIndex, const char *pDonorName, 
 		m_AssetsEditorState.m_StatusIsError = false;
 	}
 
+	m_AssetsEditorState.m_SelectedTargetSlotIndex = TargetSlotIndex;
 	m_AssetsEditorState.m_DirtyPreview = true;
 	m_AssetsEditorState.m_HasUnsavedChanges = true;
 }
@@ -1764,8 +1766,8 @@ void CMenus::AssetsEditorRenderCanvas(const CUIRect &Rect, IGraphics::CTextureHa
 
 		const bool IsHighlighted = (int)SlotIndex == HighlightSlot;
 		const bool IsPersistentHighlight = (int)SlotIndex == PersistentHighlightSlot;
-		const ColorRGBA SlotTint = AssetsEditorSlotColorToRgba(Slot.m_Color);
-		const bool HasTintOverride = ShowTintFeedback && AssetsEditorHasColorOverride(SlotTint);
+		const ColorRGBA SlotTint = AssetsEditorSlotTint(Slot);
+		const bool HasTintOverride = ShowTintFeedback && AssetsEditorHasColorOverride(SlotTint, Slot.m_ColorBlendMode);
 		if(IsHighlighted)
 			Graphics()->SetColor(1.0f, 0.85f, 0.2f, 0.95f);
 		else if(IsPersistentHighlight)
@@ -1804,7 +1806,8 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	if(m_AssetsEditorState.m_FullscreenOpen)
 		MainView = *Ui()->Screen();
 
-	if(!m_AssetsEditorState.m_ShowExitConfirm && Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE))
+	const bool PopupOpenAtFrameStart = Ui()->IsPopupOpen();
+	if(!m_AssetsEditorState.m_ShowExitConfirm && !PopupOpenAtFrameStart && Ui()->ConsumeHotkey(CUi::HOTKEY_ESCAPE))
 	{
 		AssetsEditorRequestClose();
 		if(!m_AssetsEditorState.m_Open)
@@ -1824,11 +1827,12 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 
 	CUIRect WorkRect;
 	EditorRect.Margin(8.0f, &WorkRect);
-	CUIRect TopPanel, TopBarRow1, TopBarRow2, ContentView, StatusRect;
-	WorkRect.HSplitTop(LineSize * 2.0f + MarginSmall + 8.0f, &TopPanel, &ContentView);
+	CUIRect TopPanel, TopBarRow1, TopBarRow2, PartColorRow, ContentView, StatusRect;
+	WorkRect.HSplitTop(LineSize * 3.0f + MarginSmall + MarginExtraSmall + 8.0f, &TopPanel, &ContentView);
 	TopPanel.HSplitTop(LineSize + 4.0f, &TopBarRow1, &TopPanel);
 	TopPanel.HSplitTop(MarginExtraSmall, nullptr, &TopPanel);
-	TopBarRow2 = TopPanel;
+	TopPanel.HSplitTop(LineSize + 4.0f, &TopBarRow2, &TopPanel);
+	TopPanel.HSplitTop(MarginExtraSmall, nullptr, &PartColorRow);
 	ContentView.HSplitBottom(LineSize + MarginSmall, &ContentView, &StatusRect);
 
 	CUIRect CloseButton, ModeRow, ExportRow, BlendRow, ReloadButton, ExportButton, GridToggleButton;
@@ -1860,7 +1864,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	BlendRow = TopBarRow2;
 
 	static CButtonContainer s_CloseButton;
-	if(Ui()->DoButton_QmIcon(&s_CloseButton, EQmIcon::CLOSE, FONT_ICON_XMARK, 0, &CloseButton, IGraphics::CORNER_ALL))
+	if(Ui()->DoButton_FontIcon(&s_CloseButton, FONT_ICON_XMARK, 0, &CloseButton, IGraphics::CORNER_ALL))
 	{
 		AssetsEditorRequestClose();
 		if(!m_AssetsEditorState.m_Open)
@@ -1975,23 +1979,76 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 		AssetsEditorCommitExportNameForType();
 
 	static CUi::SDropDownState s_BlendModeDropDownState;
-	const char *apBlendModeNames[ASSETS_EDITOR_COLOR_BLEND_COUNT] = {
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_MULTIPLY), "Assets editor blend mode"),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_NORMAL), "Assets editor blend mode"),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_SCREEN), "Assets editor blend mode"),
-		Localize(AssetsEditorColorBlendModeName(ASSETS_EDITOR_COLOR_BLEND_OVERLAY), "Assets editor blend mode"),
+	static constexpr int s_aBlendModes[] = {
+		ASSETS_EDITOR_COLOR_BLEND_NORMAL,
+		ASSETS_EDITOR_COLOR_BLEND_DARKEN,
+		ASSETS_EDITOR_COLOR_BLEND_MULTIPLY,
+		ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN,
+		ASSETS_EDITOR_COLOR_BLEND_LIGHTEN,
+		ASSETS_EDITOR_COLOR_BLEND_SCREEN,
+		ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE,
+		ASSETS_EDITOR_COLOR_BLEND_OVERLAY,
+		ASSETS_EDITOR_COLOR_BLEND_SOFT_LIGHT,
+		ASSETS_EDITOR_COLOR_BLEND_HARD_LIGHT,
+		ASSETS_EDITOR_COLOR_BLEND_DIFFERENCE,
+		ASSETS_EDITOR_COLOR_BLEND_EXCLUSION,
+		ASSETS_EDITOR_COLOR_BLEND_HUE,
+		ASSETS_EDITOR_COLOR_BLEND_SATURATION,
+		ASSETS_EDITOR_COLOR_BLEND_COLOR,
+		ASSETS_EDITOR_COLOR_BLEND_LUMINOSITY,
 	};
+	static_assert(std::size(s_aBlendModes) == ASSETS_EDITOR_COLOR_BLEND_COUNT);
+	const int SelectedSlotIndex = m_AssetsEditorState.m_SelectedTargetSlotIndex;
+	SAssetsEditorPartSlot *pSelectedSlot = SelectedSlotIndex >= 0 && SelectedSlotIndex < (int)m_AssetsEditorState.m_vPartSlots.size() ? &m_AssetsEditorState.m_vPartSlots[SelectedSlotIndex] : nullptr;
+	const bool CanEditPartColor = pSelectedSlot != nullptr && !Ui()->IsPopupOpen(&m_ColorPickerPopupContext) && !m_AssetsEditorState.m_DragActive;
+	const int CurrentBlendMode = pSelectedSlot != nullptr ? ClampAssetsEditorColorBlendMode(pSelectedSlot->m_ColorBlendMode) : ASSETS_EDITOR_COLOR_BLEND_MULTIPLY;
+	const char *apBlendModeNames[ASSETS_EDITOR_COLOR_BLEND_COUNT];
+	int BlendSelection = 0;
+	for(int Index = 0; Index < ASSETS_EDITOR_COLOR_BLEND_COUNT; ++Index)
+	{
+		apBlendModeNames[Index] = Localize(AssetsEditorColorBlendModeName(s_aBlendModes[Index]), "Assets editor blend mode");
+		if(s_aBlendModes[Index] == CurrentBlendMode)
+			BlendSelection = Index;
+	}
 	CUIRect BlendLabel, BlendDropDown;
 	const float BlendLabelW = minimum(92.0f, maximum(64.0f, TextRender()->TextWidth(FontSize, Localize("Blend mode"), -1, -1.0f) + 8.0f));
 	SplitLeftSafe(BlendRow, BlendLabelW, &BlendLabel, &BlendDropDown);
 	Ui()->DoLabel(&BlendLabel, Localize("Blend mode"), FontSize, TEXTALIGN_ML);
-	const int NewBlendMode = Ui()->DoDropDown(&BlendDropDown, m_AssetsEditorState.m_ColorBlendMode, apBlendModeNames, ASSETS_EDITOR_COLOR_BLEND_COUNT, s_BlendModeDropDownState);
-	if(NewBlendMode != m_AssetsEditorState.m_ColorBlendMode)
+	const int NewBlendSelection = Ui()->DoDropDown(&BlendDropDown, BlendSelection, apBlendModeNames, ASSETS_EDITOR_COLOR_BLEND_COUNT, s_BlendModeDropDownState, CanEditPartColor);
+	if(CanEditPartColor && NewBlendSelection != BlendSelection)
 	{
-		m_AssetsEditorState.m_ColorBlendMode = NewBlendMode;
+		pSelectedSlot->m_ColorBlendMode = s_aBlendModes[NewBlendSelection];
 		m_AssetsEditorState.m_DirtyPreview = true;
 		m_AssetsEditorState.m_HasUnsavedChanges = true;
 	}
+
+	if(pSelectedSlot != nullptr)
+	{
+		CUIRect SelectedPartLabel, StrengthRow;
+		PartColorRow.VSplitMid(&SelectedPartLabel, &StrengthRow, MarginSmall);
+		char aSelectedPart[128];
+		str_format(aSelectedPart, sizeof(aSelectedPart), Localize("Selected part: %d"), SelectedSlotIndex + 1);
+		SLabelProperties PartLabelProps;
+		PartLabelProps.m_MaxWidth = SelectedPartLabel.w;
+		PartLabelProps.m_EllipsisAtEnd = true;
+		Ui()->DoLabel(&SelectedPartLabel, aSelectedPart, EditBoxFontSize, TEXTALIGN_ML, PartLabelProps);
+		if(CanEditPartColor && !PopupOpenAtFrameStart && !Ui()->IsPopupOpen())
+		{
+			if(Ui()->DoScrollbarOption(&pSelectedSlot->m_BlendStrength, &pSelectedSlot->m_BlendStrength, &StrengthRow, Localize("Blend strength"), 0, 100, &CUi::ms_LinearScrollbarScale, 0, "%"))
+			{
+				m_AssetsEditorState.m_DirtyPreview = true;
+				m_AssetsEditorState.m_HasUnsavedChanges = true;
+			}
+		}
+		else
+		{
+			char aStrength[128];
+			str_format(aStrength, sizeof(aStrength), "%s: %d%%", Localize("Blend strength"), pSelectedSlot->m_BlendStrength);
+			Ui()->DoLabel(&StrengthRow, aStrength, EditBoxFontSize, TEXTALIGN_ML);
+		}
+	}
+	else
+		Ui()->DoLabel(&PartColorRow, Localize("Click a part on the right to edit its color, blend mode and strength."), EditBoxFontSize, TEXTALIGN_ML);
 
 	static CButtonContainer s_ReloadButton;
 	if(DoButton_Menu(&s_ReloadButton, Localize("Reload"), 0, &ReloadButton))
@@ -2043,14 +2100,16 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	CUIRect TargetFittedRect;
 	const bool HasTargetFitted = AssetsEditorCalcFittedRect(RightCanvas, m_AssetsEditorState.m_ComposedPreviewWidth, m_AssetsEditorState.m_ComposedPreviewHeight, TargetFittedRect);
 	bool ColorPickerOpen = Ui()->IsPopupOpen(&m_ColorPickerPopupContext);
+	// 下拉列表覆盖画布时，点击和关闭弹层都不能穿透到部件。
+	const bool CanvasInputBlocked = PopupOpenAtFrameStart || Ui()->IsPopupOpen();
 	const vec2 MousePos = Ui()->MousePos();
 	const bool ClickedLmb = Ui()->MouseButtonClicked(0);
 	const bool ClickedRmb = Ui()->MouseButtonClicked(1);
 	const bool MouseDownLmb = Ui()->MouseButton(0);
 
-	if(!ColorPickerOpen && HasDonorFitted)
+	if(!CanvasInputBlocked && HasDonorFitted)
 		m_AssetsEditorState.m_HoveredDonorSlotIndex = AssetsEditorResolveHoveredSlotWithCycle(DonorFittedRect, m_AssetsEditorState.m_Type, m_AssetsEditorState.m_vPartSlots, MousePos, ClickedLmb, -1);
-	if(!ColorPickerOpen && HasTargetFitted)
+	if(!CanvasInputBlocked && HasTargetFitted)
 		m_AssetsEditorState.m_HoveredTargetSlotIndex = AssetsEditorResolveHoveredSlotWithCycle(TargetFittedRect, m_AssetsEditorState.m_Type, m_AssetsEditorState.m_vPartSlots, MousePos, false, m_AssetsEditorState.m_ActiveDraggedSlotIndex);
 
 	auto ResetSlotToDefault = [&](int SlotIndex) {
@@ -2066,19 +2125,23 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 		Slot.m_SrcW = Slot.m_DstW;
 		Slot.m_SrcH = Slot.m_DstH;
 		Slot.m_Color = color_cast<ColorHSLA>(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f)).Pack(true);
+		Slot.m_ColorBlendMode = ASSETS_EDITOR_COLOR_BLEND_MULTIPLY;
+		Slot.m_BlendStrength = 100;
+		m_AssetsEditorState.m_SelectedTargetSlotIndex = SlotIndex;
 	};
 
 	auto OpenTargetColorPicker = [&](int SlotIndex) {
 		if(SlotIndex < 0 || SlotIndex >= (int)m_AssetsEditorState.m_vPartSlots.size())
 			return;
 		SAssetsEditorPartSlot &Slot = m_AssetsEditorState.m_vPartSlots[SlotIndex];
+		m_AssetsEditorState.m_SelectedTargetSlotIndex = SlotIndex;
 		const ColorRGBA SlotColor = AssetsEditorSlotColorToRgba(Slot.m_Color);
-		m_AssetsEditorState.m_ColorPickerValue = Slot.m_Color;
+		m_AssetsEditorState.m_ColorPickerValue = ColorHSLA(Slot.m_Color, true).Pack(false);
 		m_ColorPickerPopupContext.m_pHslaColor = &m_AssetsEditorState.m_ColorPickerValue;
 		m_ColorPickerPopupContext.m_HslaColor = color_cast<ColorHSLA>(SlotColor);
 		m_ColorPickerPopupContext.m_HsvaColor = color_cast<ColorHSVA>(m_ColorPickerPopupContext.m_HslaColor);
 		m_ColorPickerPopupContext.m_RgbaColor = SlotColor;
-		m_ColorPickerPopupContext.m_Alpha = true;
+		m_ColorPickerPopupContext.m_Alpha = false;
 		m_AssetsEditorState.m_ColorPickerSlotIndex = SlotIndex;
 		m_AssetsEditorState.m_LastColorPickerValue = Slot.m_Color;
 		Ui()->ShowPopupColorPicker(Ui()->MouseX(), Ui()->MouseY(), &m_ColorPickerPopupContext);
@@ -2091,7 +2154,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 			Ui()->IsPopupOpen(&m_ColorPickerPopupContext) &&
 			m_ColorPickerPopupContext.m_pHslaColor == &m_AssetsEditorState.m_ColorPickerValue)
 		{
-			const unsigned int CurrentColor = m_AssetsEditorState.m_ColorPickerValue;
+			const unsigned int CurrentColor = ColorHSLA(m_AssetsEditorState.m_ColorPickerValue).Pack(true);
 			SAssetsEditorPartSlot &Slot = m_AssetsEditorState.m_vPartSlots[m_AssetsEditorState.m_ColorPickerSlotIndex];
 			if(Slot.m_Color != CurrentColor)
 			{
@@ -2118,7 +2181,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 		}
 	}
 
-	if(ColorPickerOpen)
+	if(CanvasInputBlocked || ColorPickerOpen)
 	{
 		m_AssetsEditorState.m_TargetPressPending = false;
 		m_AssetsEditorState.m_PendingTargetSlotIndex = -1;
@@ -2214,7 +2277,7 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 	const int DonorHighlightSlot = m_AssetsEditorState.m_DragActive ? m_AssetsEditorState.m_ActiveDraggedSlotIndex : m_AssetsEditorState.m_HoveredDonorSlotIndex;
 	const int TargetHighlightSlot = ColorPickerOpen ? m_AssetsEditorState.m_ColorPickerSlotIndex : m_AssetsEditorState.m_HoveredTargetSlotIndex;
 	AssetsEditorRenderCanvas(LeftCanvas, DonorAsset.m_PreviewTexture, DonorAsset.m_PreviewWidth, DonorAsset.m_PreviewHeight, m_AssetsEditorState.m_Type, m_AssetsEditorState.m_ShowGrid, DonorHighlightSlot, false, -1);
-	AssetsEditorRenderCanvas(RightCanvas, m_AssetsEditorState.m_ComposedPreviewTexture, m_AssetsEditorState.m_ComposedPreviewWidth, m_AssetsEditorState.m_ComposedPreviewHeight, m_AssetsEditorState.m_Type, m_AssetsEditorState.m_ShowGrid, TargetHighlightSlot, true, m_AssetsEditorState.m_ColorPickerSlotIndex);
+	AssetsEditorRenderCanvas(RightCanvas, m_AssetsEditorState.m_ComposedPreviewTexture, m_AssetsEditorState.m_ComposedPreviewWidth, m_AssetsEditorState.m_ComposedPreviewHeight, m_AssetsEditorState.m_Type, m_AssetsEditorState.m_ShowGrid, TargetHighlightSlot, true, m_AssetsEditorState.m_SelectedTargetSlotIndex);
 
 	if(m_AssetsEditorState.m_DragActive && m_AssetsEditorState.m_ActiveDraggedSlotIndex >= 0 &&
 		m_AssetsEditorState.m_ActiveDraggedSlotIndex < (int)m_AssetsEditorState.m_vPartSlots.size() && HasDonorFitted)
@@ -2426,6 +2489,8 @@ void CMenus::RenderAssetsEditorScreen(CUIRect MainView)
 			Slot.m_SrcW = Slot.m_DstW;
 			Slot.m_SrcH = Slot.m_DstH;
 			Slot.m_Color = color_cast<ColorHSLA>(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f)).Pack(true);
+			Slot.m_ColorBlendMode = ASSETS_EDITOR_COLOR_BLEND_MULTIPLY;
+			Slot.m_BlendStrength = 100;
 		}
 		AssetsEditorCancelDrag();
 		m_AssetsEditorState.m_DirtyPreview = true;

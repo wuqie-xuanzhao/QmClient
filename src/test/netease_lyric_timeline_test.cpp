@@ -28,6 +28,17 @@ TEST(NeteaseLyricTimeline, SelectsBoundedLinesAndGaps)
 	EXPECT_EQ(SelectCurrentLine(Timeline, 100000).m_Index, 2);
 }
 
+TEST(NeteaseLyricTimeline, SelectsLatestStartedLineAcrossInterludes)
+{
+	const STimeline Timeline = MakeTimeline();
+	EXPECT_EQ(SelectLatestStartedLine(Timeline, 999).m_Index, -1);
+	EXPECT_EQ(SelectLatestStartedLine(Timeline, 2000).m_Index, 0);
+	EXPECT_FALSE(SelectLatestStartedLine(Timeline, 2000).m_InTimedRange);
+	EXPECT_EQ(SelectLatestStartedLine(Timeline, 2999).m_Index, 0);
+	EXPECT_EQ(SelectLatestStartedLine(Timeline, 3000).m_Index, 1);
+	EXPECT_EQ(SelectLatestStartedLine(Timeline, 100000).m_Index, 2);
+}
+
 TEST(NeteaseLyricTimeline, DetectsEquivalentTimelineReports)
 {
 	STimeline Left = MakeTimeline();

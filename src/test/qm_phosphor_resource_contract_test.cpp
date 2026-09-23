@@ -1,8 +1,8 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
+#include <game/client/qm_icon_manager.h>
+
 #include <gtest/gtest.h>
 #include <test/test.h>
-
-#include <game/client/qm_icon_manager.h>
 
 #include <array>
 #include <fstream>

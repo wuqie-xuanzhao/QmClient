@@ -307,6 +307,39 @@ _PAGE_SOURCE = {
 _DEFAULT_SOURCE = Path("src/game/client/components/menus_settings.cpp")
 _REGISTRY_SOURCE = Path("src/game/client/QmUi/QmCardRegistry.cpp")
 _NAVIGATION_SOURCE = Path("src/game/client/components/menus.cpp")
+# 卡片生产的归属：页面声明「这一页有哪些卡片」，具体生产在全局卡片目录的分类模块里（N3）。
+_CATALOGUE_SOURCE = Path("src/game/client/QmUi/cards/QmCardCatalog.cpp")
+PAGE_CATALOGUE_LIST = {
+	"qmclient_hud": "HudCardStableIds",
+	"qmclient_function": "FunctionCardStableIds",
+	"qmclient_visual": "VisualCardStableIds",
+}
+_CATALOGUE_LIST_STATICS = {
+	"HudCardStableIds": "s_vHudCards",
+	"FunctionCardStableIds": "s_vFunctionCards",
+	"VisualCardStableIds": "s_vVisualCards",
+}
+
+
+def _catalogue_list_contains(root: Path, list_name: str, stable_id: str) -> bool:
+	"""该 stableId 是否出现在目录源码对应分类清单的字面量中。
+
+	N3 之后卡片不再由页面逐个 AddCard 生产，「每张期望卡片都真的被本页生产」这一不变量
+	改由「页面调用对应分类清单 + 该 stableId 确在该清单字面量内」两段共同保证。
+	"""
+	static_name = _CATALOGUE_LIST_STATICS.get(list_name)
+	if static_name is None:
+		return False
+	source = _read(root, _CATALOGUE_SOURCE)
+	marker = f"{static_name} = {{"
+	start = source.find(marker)
+	if start == -1:
+		return False
+	end = source.find("};", start)
+	if end == -1:
+		return False
+	return f'"{stable_id}"' in source[start:end]
+
 _TYPOGRAPHY_SOURCES = (
 	Path("src/game/client/components/menus_settings.cpp"),
 	Path("src/game/client/components/menus_settings7.cpp"),
@@ -624,8 +657,19 @@ def audit_page(repo_root: Path, page: str) -> list[str]:
 	for stable_id in PAGE_STABLE_IDS[page]:
 		if stable_id not in registry:
 			errors.append(f"{page}: {stable_id}: registry/navigation entry missing")
-		if page in PRODUCER_COMPLETE_PAGES and stable_id not in page_source and page not in PAGE_PRODUCER_REQUIRED:
-			errors.append(f"{page}: {stable_id}: page producer entry missing")
+		if page in PRODUCER_COMPLETE_PAGES and page not in PAGE_PRODUCER_REQUIRED:
+			# 卡片生产已迁入全局卡片目录（N3）：页面只声明本页含有哪些分类。
+			# 仍校验「该页每张期望卡片都真的被生产」，但拆成两段：页面调用对应分类清单，
+			# 且该 stableId 确实在该清单字面量内——不是取消检查。
+			catalogue_list = PAGE_CATALOGUE_LIST.get(page)
+			if catalogue_list is None:
+				if stable_id not in page_source:
+					errors.append(f"{page}: {stable_id}: page producer entry missing")
+			else:
+				if f"qm_card_catalog::{catalogue_list}()" not in page_source:
+					errors.append(f"{page}: qm_card_catalog::{catalogue_list}(): page producer entry missing")
+				elif not _catalogue_list_contains(repo_root, catalogue_list, stable_id):
+					errors.append(f"{page}: {stable_id}: catalogue category entry missing")
 	for token in PAGE_PRODUCER_REQUIRED.get(page, ()):
 		if token not in page_source:
 			errors.append(f"{page}: {token}: page producer entry missing")

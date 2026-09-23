@@ -181,21 +181,6 @@ void CParticles::OnInit()
 	Graphics()->QuadContainerUpload(m_ExtraParticleQuadContainerIndex);
 }
 
-bool CParticles::ParticleIsVisibleOnScreen(const vec2 &CurPos, float CurSize)
-{
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
-	// for simplicity assume the worst case rotation, that increases the bounding box around the particle by its diagonal
-	const float SqrtOf2 = std::sqrt(2);
-	CurSize = SqrtOf2 * CurSize;
-
-	// always uses the mid of the particle
-	float SizeHalf = CurSize / 2;
-
-	return CurPos.x + SizeHalf >= ScreenX0 && CurPos.x - SizeHalf <= ScreenX1 && CurPos.y + SizeHalf >= ScreenY0 && CurPos.y - SizeHalf <= ScreenY1;
-}
-
 void CParticles::RenderGroup(int Group)
 {
 	const bool IsExtraGroup = Group == GROUP_EXTRA || Group == GROUP_TRAIL_EXTRA;
@@ -210,6 +195,16 @@ void CParticles::RenderGroup(int Group)
 		FirstParticleOffset = SPRITE_PART_SNOWFLAKE;
 		ParticleQuadContainerIndex = m_ExtraParticleQuadContainerIndex;
 	}
+
+	// 一组粒子共用屏幕范围，避免每个粒子重复调用图形接口；旋转包围盒公式不变。
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const auto ParticleIsVisibleOnScreen = [&](const vec2 &CurPos, float CurSize) {
+		const float SqrtOf2 = std::sqrt(2);
+		CurSize = SqrtOf2 * CurSize;
+		const float SizeHalf = CurSize / 2;
+		return CurPos.x + SizeHalf >= ScreenX0 && CurPos.x - SizeHalf <= ScreenX1 && CurPos.y + SizeHalf >= ScreenY0 && CurPos.y - SizeHalf <= ScreenY1;
+	};
 
 	// don't use the buffer methods here, else the old renderer gets many draw calls
 	if(Graphics()->IsQuadContainerBufferingEnabled())
@@ -302,6 +297,7 @@ void CParticles::RenderGroup(int Group)
 	else
 	{
 		int i = m_aFirstPart[Group];
+		int LastSprite = -1;
 
 		Graphics()->WrapClamp();
 
@@ -319,8 +315,15 @@ void CParticles::RenderGroup(int Group)
 			// the current position, respecting the size, is inside the viewport, render it, else ignore
 			if(ParticleIsVisibleOnScreen(p, Size))
 			{
-				Graphics()->TextureSet(aParticles[m_aParticles[i].m_Spr - FirstParticleOffset]);
-				Graphics()->QuadsBegin();
+				// 仅合并相邻同贴图粒子，保留透明混合顺序和每个顶点的颜色。
+				if(LastSprite != m_aParticles[i].m_Spr)
+				{
+					if(LastSprite != -1)
+						Graphics()->QuadsEnd();
+					LastSprite = m_aParticles[i].m_Spr;
+					Graphics()->TextureSet(aParticles[LastSprite - FirstParticleOffset]);
+					Graphics()->QuadsBegin();
+				}
 
 				Graphics()->QuadsSetRotation(m_aParticles[i].m_Rot);
 
@@ -332,11 +335,12 @@ void CParticles::RenderGroup(int Group)
 
 				IGraphics::CQuadItem QuadItem(p.x, p.y, Size, Size);
 				Graphics()->QuadsDraw(&QuadItem, 1);
-				Graphics()->QuadsEnd();
 			}
 
 			i = m_aParticles[i].m_NextPart;
 		}
+		if(LastSprite != -1)
+			Graphics()->QuadsEnd();
 		Graphics()->WrapNormal();
 	}
 }

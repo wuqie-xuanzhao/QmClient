@@ -47,15 +47,11 @@ TEST(VoiceUtils, VoiceFramePeakSilence)
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, 10), 0.0f);
 }
 
-
-
 TEST(VoiceUtils, VoiceFramePeakPositive)
 {
 	int16_t aSamples[4] = {10000, 20000, 15000, 5000};
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, 4), 20000 / 32768.0f);
 }
-
-
 
 TEST(VoiceUtils, VoiceFramePeakNegative)
 {
@@ -63,15 +59,11 @@ TEST(VoiceUtils, VoiceFramePeakNegative)
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, 4), 20000 / 32768.0f);
 }
 
-
-
 TEST(VoiceUtils, VoiceFramePeakMixed)
 {
 	int16_t aSamples[4] = {10000, -20000, 15000, -30000};
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, 4), 30000 / 32768.0f);
 }
-
-
 
 TEST(VoiceUtils, VoiceFramePeakMaxNegative)
 {
@@ -79,14 +71,10 @@ TEST(VoiceUtils, VoiceFramePeakMaxNegative)
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, 1), 1.0f);
 }
 
-
-
 TEST(VoiceUtils, VoiceFramePeakNullPointer)
 {
 	EXPECT_FLOAT_EQ(VoiceFramePeak(nullptr, 10), 0.0f);
 }
-
-
 
 TEST(VoiceUtils, VoiceFramePeakZeroCount)
 {
@@ -94,15 +82,11 @@ TEST(VoiceUtils, VoiceFramePeakZeroCount)
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, 0), 0.0f);
 }
 
-
-
 TEST(VoiceUtils, VoiceFramePeakNegativeCount)
 {
 	int16_t aSamples[4] = {1000, 2000, 3000, 4000};
 	EXPECT_FLOAT_EQ(VoiceFramePeak(aSamples, -5), 0.0f);
 }
-
-
 
 TEST(VoiceUtils, VoiceFrameRmsSilence)
 {
@@ -110,15 +94,11 @@ TEST(VoiceUtils, VoiceFrameRmsSilence)
 	EXPECT_FLOAT_EQ(VoiceFrameRms(aSamples, 10), 0.0f);
 }
 
-
-
 TEST(VoiceUtils, VoiceFrameRmsConstant)
 {
 	int16_t aSamples[4] = {16384, 16384, 16384, 16384};
 	EXPECT_NEAR(VoiceFrameRms(aSamples, 4), 0.5f, 0.001f);
 }
-
-
 
 TEST(VoiceUtils, VoiceFrameRmsZeroCount)
 {
@@ -126,15 +106,11 @@ TEST(VoiceUtils, VoiceFrameRmsZeroCount)
 	EXPECT_FLOAT_EQ(VoiceFrameRms(aSamples, 0), 0.0f);
 }
 
-
-
 TEST(VoiceUtils, VoiceListMatchEmpty)
 {
 	EXPECT_FALSE(VoiceListMatch("", "test"));
 	EXPECT_FALSE(VoiceListMatch(nullptr, "test"));
 }
-
-
 
 TEST(VoiceUtils, VoiceListMatchSingle)
 {
@@ -142,23 +118,17 @@ TEST(VoiceUtils, VoiceListMatchSingle)
 	EXPECT_FALSE(VoiceListMatch("player1", "player2"));
 }
 
-
-
 TEST(VoiceUtils, VoiceListMatchMultiple)
 {
 	EXPECT_TRUE(VoiceListMatch("player1,player2,player3", "player2"));
 	EXPECT_FALSE(VoiceListMatch("player1,player2,player3", "player4"));
 }
 
-
-
 TEST(VoiceUtils, VoiceListMatchWithSpaces)
 {
 	EXPECT_TRUE(VoiceListMatch("player1, player2, player3", "player2"));
 	EXPECT_TRUE(VoiceListMatch("  player1  ,  player2  ", "player1"));
 }
-
-
 
 TEST(VoiceUtils, VoiceListMatchCaseInsensitive)
 {
@@ -167,16 +137,12 @@ TEST(VoiceUtils, VoiceListMatchCaseInsensitive)
 	EXPECT_TRUE(VoiceListMatch("player1", "PLAYER1"));
 }
 
-
-
 TEST(VoiceUtils, VoiceNameVolumeEmpty)
 {
 	int OutPercent = 0;
 	EXPECT_FALSE(VoiceNameVolume("", "test", OutPercent));
 	EXPECT_FALSE(VoiceNameVolume(nullptr, "test", OutPercent));
 }
-
-
 
 TEST(VoiceUtils, VoiceNameVolumeSingle)
 {
@@ -185,16 +151,12 @@ TEST(VoiceUtils, VoiceNameVolumeSingle)
 	EXPECT_EQ(OutPercent, 50);
 }
 
-
-
 TEST(VoiceUtils, VoiceNameVolumeMultiple)
 {
 	int OutPercent = 0;
 	EXPECT_TRUE(VoiceNameVolume("player1=50,player2=75,player3=100", "player2", OutPercent));
 	EXPECT_EQ(OutPercent, 75);
 }
-
-
 
 TEST(VoiceUtils, VoiceNameVolumeWithColon)
 {
@@ -203,15 +165,11 @@ TEST(VoiceUtils, VoiceNameVolumeWithColon)
 	EXPECT_EQ(OutPercent, 50);
 }
 
-
-
 TEST(VoiceUtils, VoiceNameVolumeNotFound)
 {
 	int OutPercent = 0;
 	EXPECT_FALSE(VoiceNameVolume("player1=50,player2=75", "player3", OutPercent));
 }
-
-
 
 TEST(VoiceUtils, VoiceNameVolumeClampHigh)
 {
@@ -220,16 +178,12 @@ TEST(VoiceUtils, VoiceNameVolumeClampHigh)
 	EXPECT_EQ(OutPercent, 200);
 }
 
-
-
 TEST(VoiceUtils, VoiceNameVolumeClampLow)
 {
 	int OutPercent = 0;
 	EXPECT_TRUE(VoiceNameVolume("player1=-50", "player1", OutPercent));
 	EXPECT_EQ(OutPercent, 0);
 }
-
-
 
 TEST(VoiceUtils, ApplyMicGainUnity)
 {
@@ -241,8 +195,6 @@ TEST(VoiceUtils, ApplyMicGainUnity)
 	EXPECT_EQ(aSamples[3], -2000);
 }
 
-
-
 TEST(VoiceUtils, ApplyMicGainDouble)
 {
 	int16_t aSamples[4] = {1000, 2000, -1000, -2000};
@@ -253,8 +205,6 @@ TEST(VoiceUtils, ApplyMicGainDouble)
 	EXPECT_EQ(aSamples[3], -4000);
 }
 
-
-
 TEST(VoiceUtils, ApplyMicGainClamp)
 {
 	int16_t aSamples[2] = {20000, -20000};
@@ -262,8 +212,6 @@ TEST(VoiceUtils, ApplyMicGainClamp)
 	EXPECT_EQ(aSamples[0], 32767);
 	EXPECT_EQ(aSamples[1], -32768);
 }
-
-
 
 TEST(VoiceUtils, BlendDenoisedFrameKeepsDryWhenWetMixZero)
 {
@@ -278,8 +226,6 @@ TEST(VoiceUtils, BlendDenoisedFrameKeepsDryWhenWetMixZero)
 	EXPECT_EQ(aWet[3], aDry[3]);
 }
 
-
-
 TEST(VoiceUtils, BlendDenoisedFrameKeepsWetWhenWetMixOne)
 {
 	const int16_t aDry[4] = {1000, -2000, 3000, -4000};
@@ -293,8 +239,6 @@ TEST(VoiceUtils, BlendDenoisedFrameKeepsWetWhenWetMixOne)
 	EXPECT_EQ(aWet[2], aExpected[2]);
 	EXPECT_EQ(aWet[3], aExpected[3]);
 }
-
-
 
 TEST(VoiceUtils, BlendDenoisedFrameInterpolatesSamples)
 {

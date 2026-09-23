@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <string>
@@ -15,8 +16,7 @@
 
 namespace
 {
-	constexpr wchar_t SHARED_MAPPING_NAME[] = L"Local\\QmClient.SodaHook.v1";
-	constexpr int STOP_MAPPING_WAIT_MS = 500;
+	constexpr uint64_t HELPER_RETRY_MS = 5000;
 
 	std::wstring Utf8ToWide(const char *pText)
 	{
@@ -31,7 +31,7 @@ namespace
 		return Result;
 	}
 
-	std::wstring DefaultHelperPath()
+	std::wstring DefaultHelperPath(bool MusicHelper)
 	{
 		wchar_t aPath[MAX_PATH];
 		const DWORD Length = GetModuleFileNameW(nullptr, aPath, (DWORD)std::size(aPath));
@@ -40,20 +40,21 @@ namespace
 		std::wstring Path(aPath, Length);
 		const size_t Slash = Path.find_last_of(L"\\/");
 		if(Slash == std::wstring::npos)
-			return L"qm-soda-helper.exe";
+			return MusicHelper ? L"qm-music-helper.exe" : L"qm-soda-helper.exe";
 		Path.resize(Slash + 1);
-		Path.append(L"qm-soda-helper.exe");
+		Path.append(MusicHelper ? L"qm-music-helper.exe" : L"qm-soda-helper.exe");
 		return Path;
 	}
 
-	HANDLE LaunchHelper(const char *pHelperPath)
+	HANDLE LaunchHelper(const char *pHelperPath, const std::string &Source)
 	{
 		std::wstring Path = Utf8ToWide(pHelperPath);
 		if(Path.empty())
-			Path = DefaultHelperPath();
+			Path = DefaultHelperPath(Source != "soda");
 		if(Path.empty())
 			return nullptr;
-		const std::wstring CommandLine = L"\"" + Path + L"\" --parent-pid " + std::to_wstring(GetCurrentProcessId());
+		const std::wstring CommandLine = L"\"" + Path + L"\" --parent-pid " + std::to_wstring(GetCurrentProcessId()) +
+						 (Source == "soda" ? L"" : L" --source " + Utf8ToWide(Source.c_str()));
 		STARTUPINFOW Startup{};
 		Startup.cb = sizeof(Startup);
 		PROCESS_INFORMATION Process{};
@@ -73,7 +74,9 @@ struct CQmSodaHookProvider::SImpl
 	HANDLE m_hMapping = nullptr;
 	void *m_pView = nullptr;
 	HANDLE m_hHelperProcess = nullptr;
-	bool m_HelperStarted = false;
+	std::string m_Source = "soda";
+	std::string m_Error;
+	uint64_t m_NextLaunchTick = 0;
 	uint64_t m_LastSequence = 0;
 	uint32_t m_LastPid = 0;
 
@@ -81,7 +84,8 @@ struct CQmSodaHookProvider::SImpl
 	{
 		if(m_pView != nullptr)
 			return true;
-		m_hMapping = OpenFileMappingW(Access, FALSE, SHARED_MAPPING_NAME);
+		m_hMapping = OpenFileMappingW(Access, FALSE, m_Source == "kugou" ? L"Local\\QmClient.KugouHook.v1" : m_Source == "qqmusic" ? L"Local\\QmClient.QQMusicHook.v1" :
+																	     QmSodaHook::PROTOCOL_MAPPING_NAME_W);
 		if(m_hMapping == nullptr)
 			return false;
 		m_pView = MapViewOfFile(m_hMapping, Access, 0, 0, sizeof(QmSodaHook::SSharedBlock));
@@ -119,15 +123,65 @@ CQmSodaHookProvider::~CQmSodaHookProvider()
 	Stop();
 }
 
-void CQmSodaHookProvider::Start(const char *pHelperPath)
+void CQmSodaHookProvider::Start(const char *pHelperPath, const char *pSource)
 {
-	if(!m_pImpl)
-		return;
-	if(!m_pImpl->m_HelperStarted)
+	const std::string Source = pSource != nullptr ? pSource : "soda";
+	if(Source != m_pImpl->m_Source)
 	{
-		m_pImpl->m_hHelperProcess = LaunchHelper(pHelperPath);
-		m_pImpl->m_HelperStarted = m_pImpl->m_hHelperProcess != nullptr;
+		Stop();
+		m_pImpl->m_Source = Source;
 	}
+	if(m_pImpl->m_hHelperProcess != nullptr)
+	{
+		if(WaitForSingleObject(m_pImpl->m_hHelperProcess, 0) == WAIT_TIMEOUT)
+			return;
+		CloseHandle(m_pImpl->m_hHelperProcess);
+		m_pImpl->m_hHelperProcess = nullptr;
+	}
+	const uint64_t Now = GetTickCount64();
+	if(Now < m_pImpl->m_NextLaunchTick)
+		return;
+	m_pImpl->m_NextLaunchTick = Now + HELPER_RETRY_MS;
+	m_pImpl->m_hHelperProcess = LaunchHelper(pHelperPath, Source);
+	if(m_pImpl->m_hHelperProcess == nullptr)
+	{
+		char aError[128];
+		std::snprintf(aError, sizeof(aError), "歌词采集器启动失败（Windows 错误 %lu）", (unsigned long)GetLastError());
+		m_pImpl->m_Error = aError;
+	}
+	else
+		m_pImpl->m_Error.clear();
+}
+
+bool CQmSodaHookProvider::RunKugouSetup(bool Restore)
+{
+	const std::wstring Path = DefaultHelperPath(true);
+	if(Path.empty())
+		return false;
+	const std::wstring Command = L"\"" + Path + (Restore ? L"\" --kugou-restore" : L"\" --kugou-setup");
+	std::vector<wchar_t> Mutable(Command.begin(), Command.end());
+	Mutable.push_back(L'\0');
+	STARTUPINFOW Startup{};
+	Startup.cb = sizeof(Startup);
+	PROCESS_INFORMATION Process{};
+	if(!CreateProcessW(Path.c_str(), Mutable.data(), nullptr, nullptr, FALSE, CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT, nullptr, nullptr, &Startup, &Process))
+	{
+		char aError[160];
+		std::snprintf(aError, sizeof(aError), "无法启动酷狗接入程序（Windows 错误 %lu）", (unsigned long)GetLastError());
+		m_pImpl->m_Error = aError;
+		return false;
+	}
+	CloseHandle(Process.hThread);
+	CloseHandle(Process.hProcess);
+	return true;
+}
+
+bool CQmSodaHookProvider::GetStatus(char *pBuffer, size_t BufferSize) const
+{
+	if(pBuffer == nullptr || BufferSize == 0)
+		return false;
+	QmSodaHook::CopyUtf8Truncated(pBuffer, BufferSize, m_pImpl->m_Error.data(), m_pImpl->m_Error.size());
+	return pBuffer[0] != '\0';
 }
 
 void CQmSodaHookProvider::Stop()
@@ -140,12 +194,12 @@ void CQmSodaHookProvider::Stop()
 		{
 			// Helper 是本客户端创建的子进程;关闭 Hook 数据源时结束它的监听循环。
 			TerminateProcess(m_pImpl->m_hHelperProcess, 0);
-			WaitForSingleObject(m_pImpl->m_hHelperProcess, 3000);
 		}
 		CloseHandle(m_pImpl->m_hHelperProcess);
 		m_pImpl->m_hHelperProcess = nullptr;
 	}
-	m_pImpl->m_HelperStarted = false;
+	m_pImpl->m_NextLaunchTick = 0;
+	m_pImpl->m_Error.clear();
 	m_pImpl->CloseMapping();
 }
 
@@ -201,7 +255,14 @@ struct CQmSodaHookProvider::SImpl
 CQmSodaHookProvider::CQmSodaHookProvider() :
 	m_pImpl(std::make_unique<SImpl>()) {}
 CQmSodaHookProvider::~CQmSodaHookProvider() = default;
-void CQmSodaHookProvider::Start(const char *) {}
+void CQmSodaHookProvider::Start(const char *, const char *) {}
+bool CQmSodaHookProvider::RunKugouSetup(bool) { return false; }
+bool CQmSodaHookProvider::GetStatus(char *pBuffer, size_t BufferSize) const
+{
+	if(pBuffer != nullptr && BufferSize > 0)
+		*pBuffer = '\0';
+	return false;
+}
 void CQmSodaHookProvider::Stop() {}
 bool CQmSodaHookProvider::Read(QmSodaHook::SSnapshot *, int) { return false; }
 bool CQmSodaHookProvider::IsRunning() const { return false; }

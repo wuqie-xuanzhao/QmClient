@@ -16,7 +16,7 @@ namespace QmSodaHook
 		CSodaWriter(const CSodaWriter &) = delete;
 		CSodaWriter &operator=(const CSodaWriter &) = delete;
 
-		bool Open(bool PreferExisting = true);
+		bool Open(bool PreferExisting = true, const wchar_t *pMappingName = PROTOCOL_MAPPING_NAME_W, const wchar_t *pWriterMutexName = PROTOCOL_WRITER_MUTEX_NAME_W);
 		void Close();
 		bool IsOpen() const;
 		bool Publish(SSnapshot Snapshot);

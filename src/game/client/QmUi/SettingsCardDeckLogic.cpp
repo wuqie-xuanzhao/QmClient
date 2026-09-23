@@ -2,7 +2,9 @@
 
 #include <base/system.h>
 
+#include <game/client/QmUi/QmAnim.h>
 #include <game/client/QmUi/QmCardRegistry.h>
+#include <game/client/QmUi/SettingsCardGeometry.h>
 
 #include <algorithm>
 #include <cmath>
@@ -52,9 +54,11 @@ bool CSettingsCardDeckFrameRuntime::BeginDisplayCycle(const uint64_t DisplayCycl
 	return Changed;
 }
 
-void CSettingsCardDeckFrameRuntime::OnTabChanged()
+void CSettingsCardDeckFrameRuntime::OnTabChanged(const bool StartEntryCycle)
 {
-	// 子 Tab 的字符串变化只使布局缓存失效；入场必须由新的 display cycle 显式触发。
+	// 新版子分类在点击当帧触发入场；父页下一帧补交 display cycle 时沿用活动轨道。
+	if(StartEntryCycle)
+		m_EntryDisplayCycle = UINT64_MAX;
 	m_EntryWasActive = false;
 }
 
@@ -64,6 +68,40 @@ bool CSettingsCardDeckFrameRuntime::ConsumeEntryCycle()
 		return false;
 	m_EntryDisplayCycle = m_DisplayCycle;
 	return true;
+}
+
+float CSettingsCardDeckFrameRuntime::ResolveContinuousEntryOffset(CUiV2AnimationRuntime &AnimRuntime, const uint64_t NodeKey, const SCardMotionSpec &Motion)
+{
+	if(ConsumeEntryCycle())
+	{
+		const bool Animate = m_AnimateEntry && Motion.m_EntryDuration > 0.0f;
+		// 分类切换只替换内容，正在运动的共享轨道继续走完，不能重新跳到入场起点。
+		if(!Animate || !AnimRuntime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_Y))
+			AnimRuntime.SetValue(NodeKey, EUiAnimProperty::POS_Y, Animate ? Motion.m_EntryDistance : 0.0f);
+		m_EntryWasActive = Animate;
+	}
+	if(!m_EntryWasActive)
+		return 0.0f;
+	if(Motion.m_EntryDuration <= 0.0f)
+	{
+		AnimRuntime.SetValue(NodeKey, EUiAnimProperty::POS_Y, 0.0f);
+		m_EntryWasActive = false;
+		return 0.0f;
+	}
+
+	CountEntryAnimationResolve();
+	SUiAnimTransition Transition;
+	Transition.m_Driver = EUiAnimDriver::SPRING;
+	Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
+	Transition.m_Priority = 1;
+	// 阻尼比 0.8 只产生约 1.5% 的轻微回弹；减少动效模式沿用更短时长和更小位移。
+	const float Frequency = 5.0f / Motion.m_EntryDuration;
+	Transition.m_Spring = {1.0f, Frequency * Frequency, 1.6f * Frequency, 0.05f, 0.5f};
+	// Motion 已按用户动效等级缩放，避免再次缩放导致切换手感不一致。
+	Transition.m_RespectMotionLevel = false;
+	const float Offset = AnimRuntime.ResolveTargetValue(NodeKey, EUiAnimProperty::POS_Y, 0.0f, Transition);
+	m_EntryWasActive = AnimRuntime.HasActiveAnimation(NodeKey, EUiAnimProperty::POS_Y);
+	return Offset;
 }
 
 void CSettingsCardDeckFrameRuntime::BeginFrame(SSettingsCardDeckFrameDiagnostics *pDiagnostics)

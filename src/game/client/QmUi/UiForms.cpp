@@ -289,7 +289,7 @@ namespace ui_widget
 			const float ActionState = Ctx.m_pUi->ButtonColorMul(Options.m_pTrailingActionId);
 			if(ActionState > 1.0f)
 				DrawRoundedSurface(Ctx, TrailingRect, Ctx.m_pUi->ScaleBackgroundAlpha(ActionHoverColor(ActionState)), ColorRGBA(), ui_token::radius::BASE, 0.0f, Options.m_Clearable ? IGraphics::CORNER_NONE : IGraphics::CORNER_R);
-			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon, Options.m_pTrailingActionId);
+			DrawInputFieldIcon(Ctx, TrailingRect, Options.m_pTrailingActionIcon, InputIconColor, Options.m_TrailingActionQmIcon);
 			TrailingAction = Ctx.m_pUi->DoButtonLogic(Options.m_pTrailingActionId, 0, &TrailingRect, BUTTONFLAG_LEFT) != 0;
 		}
 		if(Options.m_pTrailingText != nullptr && TrailingRect.w > 0.0f)
@@ -646,7 +646,7 @@ namespace ui_widget
 
 	bool Toggle(const IUiContext &Ctx, const void *pId, bool *pValue, const CUIRect &Rect, bool ProcessInput, bool Animate)
 	{
-		if(Ctx.m_pUi == nullptr || pValue == nullptr)
+		if(Ctx.m_pUi == nullptr || pValue == nullptr || Ctx.m_pUi->RenderOnly())
 			return false;
 		CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ctx.m_pUi);
 
@@ -662,38 +662,24 @@ namespace ui_widget
 		if(Animate && Ctx.m_pAnim != nullptr)
 		{
 			const uint64_t TrackKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0xA5A5ull, reinterpret_cast<uint64_t>(pId));
-			Track = ResolveUiAnimValueColor(*Ctx.m_pAnim, TrackKey, Track, ui_curve::DECELERATE.m_DurationSec, ui_curve::DECELERATE.m_Easing);
+			Track = ResolveUiAnimValueColor(*Ctx.m_pAnim, TrackKey, Track, ui_token::motion::BTN_HOVER.m_DurationSec, ui_token::motion::BTN_HOVER.m_Easing);
 		}
 		DrawRoundedSurface(Ctx, Rect, Track, Track, Rect.h * 0.5f);
 
-		// Knob — slides between left and right ends. Uses a SPRING request so the
-		// motion has the expected snappy bounce on the v2 runtime.
+		// 弹簧只跟踪开关进度，控件滚动或布局移动不改变动画目标。
 		const float Padding = std::min(Rect.h * 0.15f, 3.0f);
 		const float KnobSize = Rect.h - Padding * 2.0f;
 		const float LeftX = Rect.x + Padding;
 		const float RightX = Rect.x + Rect.w - KnobSize - Padding;
-		float KnobX = *pValue ? RightX : LeftX;
+		float KnobProgress = *pValue ? 1.0f : 0.0f;
 		if(Animate && Ctx.m_pAnim != nullptr)
 		{
 			const uint64_t KnobKey = BuildUiAnimNodeKey(Ctx.m_ScopeHash ^ 0x5A5Aull, reinterpret_cast<uint64_t>(pId));
-			const float Target = *pValue ? RightX : LeftX;
-			const float Current = Ctx.m_pAnim->GetValue(KnobKey, EUiAnimProperty::POS_X, Target);
-			if(std::abs(Current - Target) > 0.5f || !Ctx.m_pAnim->HasActiveAnimation(KnobKey, EUiAnimProperty::POS_X))
-			{
-				SUiAnimRequest Request;
-				Request.m_NodeKey = KnobKey;
-				Request.m_Property = EUiAnimProperty::POS_X;
-				Request.m_Target = Target;
-				Request.m_Transition.m_Driver = EUiAnimDriver::SPRING;
-				Request.m_Transition.m_Spring = ui_token::motion::TOGGLE;
-				Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
-				Ctx.m_pAnim->RequestAnimation(Request);
-			}
-			KnobX = Ctx.m_pAnim->GetValue(KnobKey, EUiAnimProperty::POS_X, Target);
+			KnobProgress = ResolveUiAnimSpringValue(*Ctx.m_pAnim, KnobKey, EUiAnimProperty::COLOR_MIX, KnobProgress, ui_token::motion::TOGGLE);
 		}
 
 		CUIRect Knob;
-		Knob.x = KnobX;
+		Knob.x = LeftX + (RightX - LeftX) * std::clamp(KnobProgress, 0.0f, 1.0f);
 		Knob.y = Rect.y + Padding;
 		Knob.w = KnobSize;
 		Knob.h = KnobSize;

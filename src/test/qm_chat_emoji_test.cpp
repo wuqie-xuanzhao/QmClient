@@ -160,3 +160,93 @@ TEST(QmChatEmoji, BubbleDisplaySizeIsBounded)
 	EXPECT_FLOAT_EQ(QmChatEmojiBubbleDisplaySize(32.0f), 96.0f);
 	EXPECT_FLOAT_EQ(QmChatEmojiBubbleDisplaySize(64.0f), 96.0f);
 }
+
+// 表情框底边必须落在文字基线上：默认字体下行框下沉多，挂在基线下会压住下一行文字。
+TEST(QmChatEmoji, ChatBaselineOffsetKeepsEmojiOnTheTextBaseline)
+{
+	for(const float FontSize : {1.0f, 3.0f, 6.0f, 10.0f, 20.0f})
+	{
+		const float EmojiSize = QmChatEmojiChatDisplaySize(FontSize);
+		const float Offset = QmChatEmojiBaselineOffset(FontSize, EmojiSize);
+		// 基线位于光标顶部下方 FontSize 处，偏移后底边正好落在基线上。
+		EXPECT_FLOAT_EQ(Offset + EmojiSize, FontSize) << FontSize;
+		// 表情只向上收，不会掉到基线之下。
+		EXPECT_LE(Offset, 0.0f) << FontSize;
+	}
+
+	// 正常字号区间（cl_chat_size <= 100）里表情恒大于 em 框，字号越大需要上移越多。
+	EXPECT_LT(QmChatEmojiBaselineOffset(10.0f, QmChatEmojiChatDisplaySize(10.0f)), QmChatEmojiBaselineOffset(6.0f, QmChatEmojiChatDisplaySize(6.0f)));
+
+	// 无有效表情尺寸时不产生偏移。
+	EXPECT_FLOAT_EQ(QmChatEmojiBaselineOffset(6.0f, 0.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmChatEmojiBaselineOffset(6.0f, -1.0f), 0.0f);
+}
+
+// 表情不能越过行尾被聊天区右边缘裁掉：放不下时先缩小，缩到最小可读尺寸仍放不下才换行。
+TEST(QmChatEmoji, FitSizeShrinksInsteadOfOverflowingTheLine)
+{
+	const float EmojiSize = QmChatEmojiChatDisplaySize(10.0f);
+	ASSERT_FLOAT_EQ(EmojiSize, 30.0f);
+
+	// 放得下时保持原尺寸。
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, 40.0f), EmojiSize);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, EmojiSize), EmojiSize);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(18.0f, 100.0f), 18.0f);
+
+	// 放不下时按剩余宽度缩小，宽度下限取「绝对最小尺寸」与「原尺寸一半」的较大者。
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, 20.0f), 20.0f);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, 15.0f), 15.0f);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(18.0f, 12.0f), 12.0f);
+
+	// 低于最小可读尺寸时返回 0，交由调用方换行。
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, 14.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, 0.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(EmojiSize, -5.0f), 0.0f);
+
+	// 无有效表情尺寸时不做任何事。
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(0.0f, 40.0f), 0.0f);
+	EXPECT_FLOAT_EQ(QmChatEmojiFitSize(-1.0f, 40.0f), 0.0f);
+}
+
+TEST(QmChatEmoji, BackgroundImageIsVisibleOnlyAfterDecodeCompletes)
+{
+	CSemaphore Started;
+	CSemaphore Finish;
+	CJobPool Pool;
+	Pool.Init(1);
+	auto pJob = std::make_shared<CQmChatEmojiLoadJob>([&](CImageInfo &Image) {
+		Image.m_Width = 1260;
+		Started.Signal();
+		Finish.Wait();
+		Image.m_Height = 1244;
+	});
+	EXPECT_EQ(pJob->Image(), nullptr);
+	Pool.Add(pJob);
+	Started.Wait();
+	EXPECT_EQ(pJob->Image(), nullptr);
+	Finish.Signal();
+	Pool.Shutdown();
+	ASSERT_NE(pJob->Image(), nullptr);
+	EXPECT_EQ(pJob->Image()->m_Width, 1260U);
+	EXPECT_EQ(pJob->Image()->m_Height, 1244U);
+}
+
+TEST(QmChatEmoji, ReleasingComponentReferenceDoesNotInvalidateTheLoad)
+{
+	CSemaphore Started;
+	CSemaphore Finish;
+	CJobPool Pool;
+	Pool.Init(1);
+	bool Completed = false;
+	auto pJob = std::make_shared<CQmChatEmojiLoadJob>([&](CImageInfo &) {
+		Started.Signal();
+		Finish.Wait();
+		Completed = true;
+	});
+	Pool.Add(pJob);
+	Started.Wait();
+	pJob.reset();
+	Finish.Signal();
+	Pool.Shutdown();
+	EXPECT_TRUE(Completed);
+}

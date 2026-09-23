@@ -596,13 +596,6 @@
   },
   {
     "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_client_mark_trail",
-    "old": "远程粒子：通过中心服同步并渲染其他玩家（需对方开启本地+远程）",
-    "new": "Remote particles: sync and render other players via central server (requires both local+remote enabled)",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
     "script_name": "qm_client_show_badge",
     "old": "显示 Qm 标识：通过中心服识别并在名字板/计分板标记 QmClient 用户",
     "new": "Show Qm badge: identify via central server and mark QmClient users on nameplate/scoreboard",
@@ -619,35 +612,7 @@
     "header": "src/engine/shared/config_variables_qmclient.h",
     "script_name": "qm_fast_input_mode",
     "old": "快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）",
-    "new": "Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_best_input_offset",
-    "old": "Best input 预测偏移（0.01 tick）",
-    "new": "Best input prediction offset (0.01 tick)",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_best_input_smoothing",
-    "old": "Best input 平滑百分比",
-    "new": "Best input smooth percentage",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_best_input_latency_comp",
-    "old": "Best input 延迟补偿百分比",
-    "new": "Best input delay compensation percentage",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_best_input_interpolation",
-    "old": "Best input 插值模式（1=linear 2=cubic 3=smooth）",
-    "new": "Best input interpolation mode (1=linear 2=cubic 3=smooth)",
+    "new": "Quick input mode (0=Fast 4=Saiko+; legacy values fall back to Fast)",
     "method": "deepseek"
   },
   {
@@ -655,13 +620,6 @@
     "script_name": "qm_saiko_plus_amount",
     "old": "Saiko+ 输入量（0.01 tick）",
     "new": "Saiko+ input amount (0.01 tick)",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_best_input_others",
-    "old": "将 Best input 应用于其他 Tee",
-    "new": "Apply Best input to other Tees",
     "method": "deepseek"
   },
   {
@@ -942,13 +900,6 @@
     "script_name": "qm_weapon_switch_anim_easing",
     "old": "武器切换动画缓动模式",
     "new": "Weapon switch animation easing mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_respawn_default_weapon",
-    "old": "重生后默认请求切换的武器（0=关闭，1=锤子，2=手枪，3=霰弹枪，4=榴弹枪，5=激光）",
-    "new": "Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)",
     "method": "deepseek"
   },
   {
@@ -1793,160 +1744,6 @@
   },
   {
     "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode",
-    "old": "启用禅模式（Zen Mode）",
-    "new": "Enable Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_names",
-    "old": "禅模式下隐藏玩家名字",
-    "new": "Hide player names in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_nameplates",
-    "old": "禅模式下隐藏玩家名字板",
-    "new": "Hide player name plates in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_jump_effects",
-    "old": "禅模式下隐藏跳跃特效",
-    "new": "Hide jump effects in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_kill_effects",
-    "old": "禅模式下隐藏死亡/重生特效",
-    "new": "Hide death/respawn effects in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_explosion_effects",
-    "old": "禅模式下隐藏炮击特效",
-    "new": "Hide projectile effects in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_freeze_effects",
-    "old": "禅模式下隐藏冻结特效",
-    "new": "Hide freeze effects in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_hammer_effects",
-    "old": "禅模式下隐藏锤击特效",
-    "new": "Hide hammer effects in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_muzzle_effects",
-    "old": "禅模式下隐藏武器火焰特效",
-    "new": "Hide weapon fire effects in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_mute_jump_sounds",
-    "old": "禅模式下静音跳跃音效",
-    "new": "Mute jump sound in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_mute_death_sounds",
-    "old": "禅模式下静音死亡/重生音效",
-    "new": "Mute death/respawn sound in Zen Mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_mute_hammer_sounds",
-    "old": "禅模式下静音锤击音效",
-    "new": "Mute hammer sound in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_hud",
-    "old": "禅模式下隐藏 HUD",
-    "new": "Hide HUD in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_chat",
-    "old": "禅模式下隐藏玩家消息",
-    "new": "Hide player messages in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_system_info_messages",
-    "old": "禅模式下隐藏入场、版本和规则等基础系统信息",
-    "new": "Hide basic system info (join, version, rules) in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_system_messages",
-    "old": "禅模式下隐藏服务器提示通知（包括通知栏）",
-    "new": "Hide server tip notifications (including notification bar) in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_echo",
-    "old": "禅模式下隐藏 Echo 消息",
-    "new": "Hide Echo messages in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_map_progress",
-    "old": "禅模式下隐藏地图进度条",
-    "new": "Hide map progress bar in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_info_messages",
-    "old": "禅模式下隐藏击杀和完成消息",
-    "new": "Hide kill and finish messages in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_scoreboard",
-    "old": "禅模式下隐藏计分板",
-    "new": "Hide scoreboard in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_direction_indicators",
-    "old": "禅模式下隐藏方向",
-    "new": "Hide direction in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_focus_mode_hide_guide_lines",
-    "old": "禅模式下隐藏辅助线",
-    "new": "Hide helper lines in Zen mode",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
     "script_name": "qm_player_stats_hud",
     "old": "启用玩家统计面板",
     "new": "Enable player statistics panel",
@@ -2405,13 +2202,6 @@
     "script_name": "qm_dummy_skin_queue_rotate_map",
     "old": "自动获取全图玩家皮肤并作为分身轮换队列",
     "new": "Auto-fetch all players' skins for dummy rotation queue",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_foot_particles",
-    "old": "本地粒子：显示自己 Tee 身后掉落的粒子（如冻结雪花）",
-    "new": "Local particles: show particles behind own Tee (e.g. freeze snow)",
     "method": "deepseek"
   },
   {
@@ -2923,55 +2713,6 @@
     "script_name": "qm_lyrics_hide_no_lyrics",
     "old": "未找到歌词时隐藏（而非显示提示）",
     "new": "Hide when no lyrics found (instead of showing hint)",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer",
-    "old": "速通倒计时器",
-    "new": "Speedrun countdown timer",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer_time",
-    "old": "速通计时器时间（MMSS 格式，兼容旧版）",
-    "new": "Speedrun timer time (MM:SS, legacy)",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer_hours",
-    "old": "速通计时器小时",
-    "new": "Speedrun timer hours",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer_minutes",
-    "old": "速通计时器分钟",
-    "new": "Speedrun timer minutes",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer_seconds",
-    "old": "速通计时器秒",
-    "new": "Speedrun timer seconds",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer_milliseconds",
-    "old": "速通计时器毫秒",
-    "new": "Speedrun timer milliseconds",
-    "method": "deepseek"
-  },
-  {
-    "header": "src/engine/shared/config_variables_qmclient.h",
-    "script_name": "qm_speedrun_timer_auto_disable",
-    "old": "时间耗尽后自动禁用速通计时器",
-    "new": "Auto-disable speedrun timer when time runs out",
     "method": "deepseek"
   },
   {

@@ -20,6 +20,7 @@ class CFriends : public IFriends
 	static void ConAddFriend(IConsole::IResult *pResult, void *pUserData);
 	static void ConRemoveFriend(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddFriendCategory(IConsole::IResult *pResult, void *pUserData);
+	static void ConMoveFriendCategory(IConsole::IResult *pResult, void *pUserData);
 	static void ConRenameFriendCategory(IConsole::IResult *pResult, void *pUserData);
 	static void ConRemoveFriendCategory(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetFriendCategory(IConsole::IResult *pResult, void *pUserData);

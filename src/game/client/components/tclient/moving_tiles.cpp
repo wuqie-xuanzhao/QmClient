@@ -199,6 +199,10 @@ void CMovingTiles::OnRender()
 	if(g_Config.m_ClOverlayEntities != 100 || !g_Config.m_TcMovingTilesEntities || m_vQuads.empty())
 		return;
 
+	// 保存调用方坐标系，避免地图分组的偏移和视差影响后续名牌等组件。
+	float SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1;
+	Graphics()->GetScreen(&SavedScreenX0, &SavedScreenY0, &SavedScreenX1, &SavedScreenY1);
+
 	const vec2 Center = GameClient()->m_Camera.m_Center;
 	const float Zoom = GameClient()->m_Camera.m_Zoom;
 	const bool RenderMovingWater = !m_HasAxiomOrGoresOnlyQuads || ShouldRenderMovingWater();
@@ -315,11 +319,13 @@ void CMovingTiles::OnRender()
 				const vec2 Offset(PositionEval.r, PositionEval.g);
 				const float Rotation = PositionEval.b / 180.0f * pi + QuadData.m_Angle;
 
-				Graphics()->SetColor4(
-					ColorRGBA(pQuad->m_aColors[0].r, pQuad->m_aColors[0].g, pQuad->m_aColors[0].b, pQuad->m_aColors[0].a).Multiply(Color).Multiply(ColorConv),
-					ColorRGBA(pQuad->m_aColors[1].r, pQuad->m_aColors[1].g, pQuad->m_aColors[1].b, pQuad->m_aColors[1].a).Multiply(Color).Multiply(ColorConv),
-					ColorRGBA(pQuad->m_aColors[3].r, pQuad->m_aColors[3].g, pQuad->m_aColors[3].b, pQuad->m_aColors[3].a).Multiply(Color).Multiply(ColorConv),
-					ColorRGBA(pQuad->m_aColors[2].r, pQuad->m_aColors[2].g, pQuad->m_aColors[2].b, pQuad->m_aColors[2].a).Multiply(Color).Multiply(ColorConv));
+				IGraphics::CColorVertex aColors[4] = {
+					IGraphics::CColorVertex(0, ColorRGBA(pQuad->m_aColors[0].r, pQuad->m_aColors[0].g, pQuad->m_aColors[0].b, pQuad->m_aColors[0].a).Multiply(Color).Multiply(ColorConv)),
+					IGraphics::CColorVertex(1, ColorRGBA(pQuad->m_aColors[1].r, pQuad->m_aColors[1].g, pQuad->m_aColors[1].b, pQuad->m_aColors[1].a).Multiply(Color).Multiply(ColorConv)),
+					IGraphics::CColorVertex(2, ColorRGBA(pQuad->m_aColors[2].r, pQuad->m_aColors[2].g, pQuad->m_aColors[2].b, pQuad->m_aColors[2].a).Multiply(Color).Multiply(ColorConv)),
+					IGraphics::CColorVertex(3, ColorRGBA(pQuad->m_aColors[3].r, pQuad->m_aColors[3].g, pQuad->m_aColors[3].b, pQuad->m_aColors[3].a).Multiply(Color).Multiply(ColorConv)),
+				};
+				Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 				vec2 aPoints[4] = {
 					QuadData.m_Pos[0],
@@ -348,4 +354,5 @@ void CMovingTiles::OnRender()
 	RenderPass(LAYERRENDERFLAG_OPAQUE);
 	RenderPass(LAYERRENDERFLAG_TRANSPARENT);
 	Graphics()->ClipDisable();
+	Graphics()->MapScreen(SavedScreenX0, SavedScreenY0, SavedScreenX1, SavedScreenY1);
 }

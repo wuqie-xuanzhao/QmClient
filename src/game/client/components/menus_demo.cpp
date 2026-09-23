@@ -46,6 +46,9 @@ using namespace std::chrono_literals;
 
 namespace
 {
+	// 「Demo display」面板展开后的高度：外边距 12 + 标题 18 + 三行段选 66 + 双开关行 20。
+	constexpr float DEMO_DISPLAY_PANEL_HEIGHT = 116.0f;
+
 	constexpr const char *RANK_DEMO_MANIFEST_URL = "https://ddnet.org/watch/watchable.jsonl";
 	constexpr const char *RANK_DEMO_URL_PREFIX = "https://ddnet.org/watch/demos";
 	constexpr size_t RANK_DEMO_MAX_MANIFEST_BYTES = 16 * 1024 * 1024;
@@ -203,6 +206,77 @@ namespace
 			str_format(pBuf, BufSize, Localize("%.2f KiB"), SizeKiB);
 	}
 
+}
+
+void CMenus::RenderDemoExportDisplayToggle(const CUIRect &Rect)
+{
+	static CButtonContainer s_DisplayButton;
+	const bool Expanded = m_DemoExportDisplayExpanded;
+	if(DoButton_Menu(&s_DisplayButton, Localize("Demo display"), Ui()->IsPopupOpen() ? -1 : 0, &Rect, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 6.0f, 0.0f, Expanded ? ui_token::color::ACCENT_PRIMARY_DIM.WithAlpha(0.18f) : ColorRGBA(1.0f, 1.0f, 1.0f, 0.08f), nullptr, 11.0f) && !Ui()->IsPopupOpen())
+		m_DemoExportDisplayExpanded = !Expanded;
+	CUIRect Arrow;
+	Rect.VSplitRight(22.0f, nullptr, &Arrow);
+	Ui()->DoLabel(&Arrow, m_DemoExportDisplayExpanded ? "-" : "+", 12.0f, TEXTALIGN_MC);
+}
+
+void CMenus::RenderDemoDisplaySettings(CUIRect View, bool Enabled)
+{
+	CUiScopedGaussianBlurSuppression BlurSuppression(Ui());
+	View.Draw(ColorRGBA(1.0f, 1.0f, 1.0f, 0.05f), IGraphics::CORNER_ALL, 8.0f);
+	View.Margin(6.0f, &View);
+	CUIRect Row;
+	View.HSplitTop(16.0f, &Row, &View);
+	Ui()->DoLabel(&Row, Localize("Demo display"), 11.0f, TEXTALIGN_ML);
+	View.HSplitTop(2.0f, nullptr, &View);
+
+	// 三组段选：值就是配置项本身的下标，点哪档写哪档。
+	const auto Segments = [&](const char *pLabel, int *pValue, const char *const *ppLabels, int Count, CButtonContainer *pButtons) {
+		CUIRect Label, Options;
+		View.HSplitTop(20.0f, &Row, &View);
+		View.HSplitTop(2.0f, nullptr, &View);
+		Row.VSplitLeft(std::min(116.0f, Row.w * 0.27f), &Label, &Options);
+		Ui()->DoLabel(&Label, pLabel, 11.0f, TEXTALIGN_ML, {.m_MaxWidth = Label.w - 4.0f});
+		Options.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.16f), IGraphics::CORNER_ALL, 6.0f);
+		const float Width = Options.w / Count;
+		for(int i = 0; i < Count; ++i)
+		{
+			CUIRect Option{Options.x + Width * i, Options.y, Width, Options.h};
+			Option.Margin(2.0f, &Option);
+			const ColorRGBA Fill = *pValue == i ? ui_token::color::ACCENT_PRIMARY_DIM : ColorRGBA(1.0f, 1.0f, 1.0f, 0.02f);
+			if(DoButton_Menu(&pButtons[i], nullptr, Enabled ? 0 : -1, &Option, BUTTONFLAG_LEFT, nullptr, IGraphics::CORNER_ALL, 4.0f, 0.0f, Fill) && Enabled)
+				*pValue = i;
+			Ui()->DoLabel(&Option, ppLabels[i], 10.0f, TEXTALIGN_MC, {.m_MaxWidth = Option.w - 4.0f, .m_EllipsisAtEnd = true});
+			GameClient()->m_Tooltips.DoToolTip(&pButtons[i], &Option, ppLabels[i]);
+		}
+	};
+	static CButtonContainer s_aDirectionButtons[4], s_aStrongWeakButtons[3], s_aScopeButtons[5];
+	const char *apDirection[] = {Localize("None", "Show players' key presses"), Localize("Others", "Show players' key presses"), Localize("All", "Show players' key presses"), Localize("Own", "Show players' key presses")};
+	Segments(Localize("Show key presses"), &g_Config.m_QmDemoShowDirection, apDirection, std::size(apDirection), s_aDirectionButtons);
+	const char *apStrength[] = {Localize("Off"), Localize("Icons"), Localize("Icon and number")};
+	Segments(Localize("Strong Weak Hook"), &g_Config.m_QmDemoShowStrongWeak, apStrength, std::size(apStrength), s_aStrongWeakButtons);
+	const char *apScope[] = {Localize("Self"), Localize("Others"), Localize("Strong hook"), Localize("Weak hook"), Localize("All")};
+	Segments(Localize("Hook strength scope"), &g_Config.m_QmDemoStrongWeakScope, apScope, std::size(apScope), s_aScopeButtons);
+
+	// 两个开关并排：回放里是否画主 HUD 与聊天。
+	IUiContext Context;
+	Context.m_pUi = Ui();
+	Context.m_pAnim = &GameClient()->UiRuntimeV2()->AnimRuntime();
+	Context.m_ScopeHash = MakeUiScopeHash("demo_display");
+	Context.m_FrameDt = GameClient()->UiRuntimeV2()->FrameDt();
+	View.HSplitTop(20.0f, &Row, &View);
+	CUIRect Hud, Chat;
+	Row.VSplitMid(&Hud, &Chat, 16.0f);
+	const auto Toggle = [&](CUIRect Rect, const char *pLabel, int *pValue) {
+		CUIRect Switch;
+		Rect.VSplitRight(34.0f, &Rect, &Switch);
+		Switch.HMargin(2.0f, &Switch);
+		Ui()->DoLabel(&Rect, pLabel, 11.0f, TEXTALIGN_ML, {.m_MaxWidth = Rect.w - 4.0f});
+		bool Value = *pValue != 0;
+		if(ui_widget::Toggle(Context, pValue, &Value, Switch, Enabled))
+			*pValue = Value;
+	};
+	Toggle(Hud, Localize("Show ingame HUD"), &g_Config.m_QmDemoShowHud);
+	Toggle(Chat, Localize("Show chat"), &g_Config.m_QmDemoShowChat);
 }
 
 bool CMenus::DemoFilterChat(const void *pData, int Size, void *pUser)
@@ -375,7 +449,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// handle keyboard shortcuts independent of active menu
 	float PositionToSeek = -1.0f;
 	float TimeToSeek = 0.0f;
-	if(!GameClient()->m_GameConsole.IsActive() && m_DemoPlayerState == DEMOPLAYER_NONE && g_Config.m_ClDemoKeyboardShortcuts && !Ui()->IsPopupOpen())
+	if(!GameClient()->m_GameConsole.IsActive() && !GameClient()->m_Spectator.IsEditingTeleNumber() && m_DemoPlayerState == DEMOPLAYER_NONE && g_Config.m_ClDemoKeyboardShortcuts && !Ui()->IsPopupOpen())
 	{
 		// increase/decrease speed
 		if(!Input()->ModifierIsPressed() && !Input()->ShiftIsPressed() && !Input()->AltIsPressed())
@@ -1099,7 +1173,9 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	CUIRect Box;
 	const float PopupMargin = QmUiCenteredMargin(MainView, 150.0f, 300.0f, 300.0f);
 	MainView.Margin(PopupMargin, &Box);
-	const float VerticalExpansion = std::min(60.0f, PopupMargin);
+	// 展开回放显示选项时要多让出面板高度：上下各扩张一半，段列表先让位，弹窗始终居中。
+	const float DisplayPanelHeight = m_DemoExportDisplayExpanded ? DEMO_DISPLAY_PANEL_HEIGHT + 4.0f : 0.0f;
+	const float VerticalExpansion = std::min(60.0f + DisplayPanelHeight * 0.5f, PopupMargin);
 	Box.y -= VerticalExpansion;
 	Box.h += VerticalExpansion * 2.0f;
 
@@ -1161,7 +1237,7 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 	if(!m_vDemoCutSegments.empty())
 	{
 		CUIRect SegmentsHeader, SegmentsList;
-		constexpr float RemainingControlsHeight = 112.0f;
+		const float RemainingControlsHeight = 112.0f + DisplayPanelHeight;
 		constexpr float SegmentsHeaderHeight = 20.0f;
 		constexpr float SegmentRowHeight = 20.0f;
 		constexpr float MoreSegmentsHeight = 16.0f;
@@ -1245,6 +1321,17 @@ void CMenus::RenderDemoPlayerSliceSavePopup(CUIRect MainView)
 		s_RenderCut ^= 1;
 	}
 #endif
+
+	// 回放/导出显示选项：折叠开关常驻，展开后显示三组段选与两个开关。
+	CUIRect DisplayOptions;
+	Box.HSplitTop(22.0f, &DisplayOptions, &Box);
+	RenderDemoExportDisplayToggle(DisplayOptions);
+	if(m_DemoExportDisplayExpanded)
+	{
+		Box.HSplitTop(4.0f, nullptr, &Box);
+		Box.HSplitTop(DEMO_DISPLAY_PANEL_HEIGHT, &DisplayOptions, &Box);
+		RenderDemoDisplaySettings(DisplayOptions, !Ui()->IsPopupOpen());
+	}
 
 	// buttons
 	CUIRect ButtonBar, AbortButton, OkButton;

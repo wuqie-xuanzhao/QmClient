@@ -1125,13 +1125,16 @@ void CFastPractice::ResetPracticeToAnchor()
 	if(!m_Enabled)
 		return;
 
-	if(!m_MainAnchor.m_Valid || (m_RequireDummy && !m_HasDummyAnchor))
+	if(!InitPracticeWorld())
 	{
 		Disable();
 		return;
 	}
 
-	if(!InitPracticeWorld())
+	// 与远程一致：每次 /r 都按当前快照重新捕获锚点，而不是沿用开启练习时的旧锚点。
+	CaptureAnchorsFromSnapshot();
+
+	if(!m_MainAnchor.m_Valid || (m_RequireDummy && !m_HasDummyAnchor))
 	{
 		Disable();
 		return;

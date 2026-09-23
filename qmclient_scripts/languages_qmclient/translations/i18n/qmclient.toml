@@ -12363,6 +12363,38 @@ turkish = "İsim levhası metin parıltı aralığı"
 polish = "Zasięg poświaty tekstu na tabliczce"
 
 [[message]]
+key = "Nameplate text effect auto LOD (0=Off 1=On: trim outer effect layers when crowded)"
+[message.translations]
+simplified_chinese = "名牌文字特效自动降级（0=关，1=开：同屏拥挤时削减外层特效）"
+traditional_chinese = "名牌文字特效自動降級（0=關，1=開：同屏擁擠時削減外層特效）"
+japanese = "ネームプレート文字効果の自動LOD（0=無効、1=有効：密集時に外側の効果層を削減）"
+korean = "네임플레이트 텍스트 효과 자동 LOD(0=끔, 1=켬: 혼잡할 때 바깥 효과 레이어 축소)"
+russian = "Авто-LOD эффектов текста табличек (0=выкл, 1=вкл: урезать внешние слои при скоплении)"
+german = "Auto-LOD für Namensschild-TextEffekte (0=Aus, 1=An: äußere Effektschichten bei Gedränge reduzieren)"
+spanish = "LOD automático de efectos de texto (0=No, 1=Sí: recorta capas externas con mucha gente)"
+french = "LOD auto des effets de texte (0=Non, 1=Oui : réduire les couches externes en foule)"
+brazilian_portuguese = "LOD automático dos efeitos de texto (0=Desligado, 1=Ligado: corta camadas externas em multidão)"
+portuguese = "LOD automático dos efeitos de texto (0=Desligado, 1=Ligado: corta camadas externas em multidão)"
+turkish = "İsim levhası metin efekti otomatik LOD (0=Kapalı, 1=Açık: kalabalıkta dış katmanları kıs)"
+polish = "Auto-LOD efektów tekstu tabliczek (0=Wył, 1=Wł: ogranicz zewnętrzne warstwy przy tłoku)"
+
+[[message]]
+key = "Nameplate count that still keeps full text effect quality; beyond it effect layers scale down by count (higher=keep more)"
+[message.translations]
+simplified_chinese = "仍保持完整文字特效质量的名牌数量上限；超过后特效层数按人数递减（越大保留越多）"
+traditional_chinese = "仍保持完整文字特效品質的名牌數量上限；超過後特效層數依人數遞減（越大保留越多）"
+japanese = "文字効果をフル品質で保つネームプレート数。超えると人数に応じて効果層を減らします（大きいほど保持）"
+korean = "전체 텍스트 효과 품질을 유지하는 네임플레이트 수입니다. 초과하면 인원수에 따라 효과 레이어가 줄어듭니다(클수록 더 유지)"
+russian = "Число табличек, при котором сохраняется полное качество эффектов; выше — слои сокращаются по числу игроков (больше = сохранить больше)"
+german = "Anzahl Namensschilder mit voller Effektqualität; darüber werden Effektschichten je nach Anzahl reduziert (höher = mehr behalten)"
+spanish = "Número de nombres que mantiene la calidad completa; por encima, las capas se reducen según la cantidad (mayor = conserva más)"
+french = "Nombre de pseudos gardant la qualité complète ; au-delà, les couches diminuent selon le nombre (plus haut = en garder plus)"
+brazilian_portuguese = "Número de nomes que mantém a qualidade total; acima disso, as camadas diminuem conforme a quantidade (maior = mantém mais)"
+portuguese = "Número de nomes que mantém a qualidade total; acima disso, as camadas diminuem conforme a quantidade (maior = mantém mais)"
+turkish = "Tam metin efekti kalitesini koruyan isim levhası sayısı; aşılırsa efekt katmanları kişi sayısına göre azalır (yüksek = daha çok koru)"
+polish = "Liczba tabliczek z pełną jakością efektów; powyżej warstwy efektów maleją wraz z liczbą graczy (wyżej = zachowaj więcej)"
+
+[[message]]
 key = "Nameplate text gradient color"
 [message.translations]
 simplified_chinese = "铭牌文本渐变颜色"
@@ -17099,6 +17131,22 @@ turkish = "Dynamic Island içinde göster"
 polish = "Pokaż w Dynamic Island"
 
 [[message]]
+key = "Follow Tee"
+[message.translations]
+simplified_chinese = "跟随 Tee"
+traditional_chinese = "跟隨 Tee"
+japanese = "Tee を追従"
+korean = "Tee 따라가기"
+russian = "Следовать за Tee"
+german = "Tee folgen"
+spanish = "Seguir al Tee"
+french = "Suivre le Tee"
+brazilian_portuguese = "Seguir o Tee"
+portuguese = "Seguir o Tee"
+turkish = "Tee'yi takip et"
+polish = "Podążaj za Tee"
+
+[[message]]
 key = "Show input overlay"
 [message.translations]
 simplified_chinese = "显示输入叠加层"
@@ -17433,6 +17481,214 @@ brazilian_portuguese = "Mostrar insígnia Qm: identificar via servidor central e
 portuguese = "Mostrar crachá Qm: identificar utilizadores do QmClient através do servidor central e marcá-los na placa de nomes/tabela de pontuação"
 turkish = "Qm rozetini göster: Merkez sunucu aracılığıyla tanımla ve isim tabelasında/skor tablosunda QmClient kullanıcılarını işaretle"
 polish = "Pokaż identyfikator Qm: rozpoznawaj przez serwer centralny i oznaczaj użytkowników QmClient na tablicy nazw/wyników"
+
+[[message]]
+key = "Local console log category filter mask (bit flags)"
+[message.translations]
+simplified_chinese = "本地控制台日志分类过滤掩码（位标志）"
+traditional_chinese = "本機控制台日誌分類過濾遮罩（位元標誌）"
+japanese = "ローカルコンソールのログ分類フィルターマスク（ビットフラグ）"
+korean = "로컬 콘솔 로그 분류 필터 마스크(비트 플래그)"
+russian = "Маска фильтра категорий логов локальной консоли (битовые флаги)"
+german = "Filtermaske für Log-Kategorien der lokalen Konsole (Bitflags)"
+spanish = "Máscara de filtro de categorías de registro de la consola local (indicadores de bits)"
+french = "Masque de filtre des catégories de journal de la console locale (indicateurs binaires)"
+brazilian_portuguese = "Máscara de filtro de categorias de log do console local (sinalizadores de bits)"
+portuguese = "Máscara de filtro de categorias de registo da consola local (sinalizadores de bits)"
+turkish = "Yerel konsol günlük kategori filtre maskesi (bit bayrakları)"
+polish = "Maska filtra kategorii dziennika konsoli lokalnej (flagi bitowe)"
+
+[[message]]
+key = "Enable hook countdown"
+[message.translations]
+simplified_chinese = "启用钩子倒计时"
+traditional_chinese = "啟用鉤子倒數"
+japanese = "フックのカウントダウンを有効にする"
+korean = "훅 카운트다운 사용"
+russian = "Включить отсчёт крюка"
+german = "Haken-Countdown aktivieren"
+spanish = "Activar cuenta atrás del gancho"
+french = "Activer le compte à rebours du grappin"
+brazilian_portuguese = "Ativar contagem regressiva do gancho"
+portuguese = "Ativar contagem decrescente do gancho"
+turkish = "Kanca geri sayımını etkinleştir"
+polish = "Włącz odliczanie haka"
+
+[[message]]
+key = "Merge consecutive identical echo messages within this window in milliseconds (0 disables merging)"
+[message.translations]
+simplified_chinese = "在此窗口（毫秒）内合并连续相同的 echo 消息（0 表示不合并）"
+traditional_chinese = "在此視窗（毫秒）內合併連續相同的 echo 訊息（0 表示不合併）"
+japanese = "このウィンドウ（ミリ秒）内で連続する同一の echo メッセージを統合する（0 で統合しない）"
+korean = "이 시간(밀리초) 내에 연속으로 동일한 echo 메시지를 병합합니다(0이면 병합하지 않음)"
+russian = "Объединять подряд идущие одинаковые сообщения echo в этом окне в миллисекундах (0 — не объединять)"
+german = "Aufeinanderfolgende identische echo-Nachrichten innerhalb dieses Fensters in Millisekunden zusammenfassen (0 deaktiviert)"
+spanish = "Combinar mensajes echo idénticos consecutivos dentro de esta ventana en milisegundos (0 desactiva la combinación)"
+french = "Fusionner les messages echo identiques consécutifs dans cette fenêtre en millisecondes (0 désactive la fusion)"
+brazilian_portuguese = "Mesclar mensagens echo idênticas consecutivas dentro desta janela em milissegundos (0 desativa a mesclagem)"
+portuguese = "Juntar mensagens echo idênticas consecutivas dentro desta janela em milissegundos (0 desativa a junção)"
+turkish = "Bu pencere içinde (milisaniye) art arda gelen aynı echo mesajlarını birleştir (0 birleştirmeyi kapatır)"
+polish = "Scalaj kolejne identyczne wiadomości echo w tym oknie w milisekundach (0 wyłącza scalanie)"
+
+[[message]]
+key = "Jump hint defaults migration completed flag"
+[message.translations]
+simplified_chinese = "跳跃提示默认文案迁移完成标记"
+traditional_chinese = "跳躍提示預設文案遷移完成標記"
+japanese = "ジャンプヒントの既定文言の移行完了フラグ"
+korean = "점프 힌트 기본 문구 마이그레이션 완료 플래그"
+russian = "Флаг завершения миграции текста подсказки прыжка по умолчанию"
+german = "Markierung: Migration der Standardtexte für den Sprunghinweis abgeschlossen"
+spanish = "Marca de migración completada de los textos predeterminados de la ayuda de salto"
+french = "Indicateur de migration terminée des textes par défaut de l'aide au saut"
+brazilian_portuguese = "Sinalizador de migração concluída dos textos padrão da dica de salto"
+portuguese = "Sinalizador de migração concluída dos textos predefinidos da dica de salto"
+turkish = "Zıplama ipucu varsayılan metinleri taşıma tamamlandı bayrağı"
+polish = "Znacznik zakończenia migracji domyślnych tekstów podpowiedzi skoku"
+
+[[message]]
+key = "Demo key presses (0=Off 1=Others 2=All 3=Own)"
+[message.translations]
+simplified_chinese = "回放按键显示（0=关闭 1=他人 2=全部 3=自己）"
+traditional_chinese = "回放按鍵顯示（0=關閉 1=他人 2=全部 3=自己）"
+japanese = "デモのキー入力表示（0=オフ 1=他人 2=全員 3=自分）"
+korean = "데모 키 입력 표시(0=끔 1=다른 사람 2=전체 3=나)"
+russian = "Отображение нажатий клавиш в демо (0=выкл. 1=другие 2=все 3=свои)"
+german = "Tastendrücke im Demo (0=Aus 1=Andere 2=Alle 3=Eigene)"
+spanish = "Pulsaciones de teclas en demo (0=Desactivado 1=Otros 2=Todos 3=Propio)"
+french = "Touches pressées en démo (0=Désactivé 1=Autres 2=Tous 3=Soi)"
+brazilian_portuguese = "Teclas pressionadas na demo (0=Desativado 1=Outros 2=Todos 3=Próprio)"
+portuguese = "Teclas premidas na demo (0=Desativado 1=Outros 2=Todos 3=Próprio)"
+turkish = "Demoda tuş basışları (0=Kapalı 1=Diğerleri 2=Herkes 3=Kendim)"
+polish = "Naciśnięcia klawiszy w demie (0=Wył. 1=Inni 2=Wszyscy 3=Własne)"
+
+[[message]]
+key = "Demo hook strength (0=Off 1=Icon 2=Icon and number)"
+[message.translations]
+simplified_chinese = "回放钩子强弱（0=关闭 1=图标 2=图标与数字）"
+traditional_chinese = "回放鉤子強弱（0=關閉 1=圖示 2=圖示與數字）"
+japanese = "デモのフック強弱（0=オフ 1=アイコン 2=アイコンと数値）"
+korean = "데모 훅 강도(0=끔 1=아이콘 2=아이콘과 숫자)"
+russian = "Сила крюка в демо (0=выкл. 1=значок 2=значок и число)"
+german = "Hakenstärke im Demo (0=Aus 1=Symbol 2=Symbol und Zahl)"
+spanish = "Fuerza del gancho en demo (0=Desactivado 1=Icono 2=Icono y número)"
+french = "Force du grappin en démo (0=Désactivé 1=Icône 2=Icône et nombre)"
+brazilian_portuguese = "Força do gancho na demo (0=Desativado 1=Ícone 2=Ícone e número)"
+portuguese = "Força do gancho na demo (0=Desativado 1=Ícone 2=Ícone e número)"
+turkish = "Demoda kanca gücü (0=Kapalı 1=Simge 2=Simge ve sayı)"
+polish = "Siła haka w demie (0=Wył. 1=Ikona 2=Ikona i liczba)"
+
+[[message]]
+key = "Demo hook strength scope (0=Own 1=Others 2=Strong 3=Weak 4=All)"
+[message.translations]
+simplified_chinese = "回放钩子强弱范围（0=自己 1=他人 2=强钩 3=弱钩 4=全部）"
+traditional_chinese = "回放鉤子強弱範圍（0=自己 1=他人 2=強鉤 3=弱鉤 4=全部）"
+japanese = "デモのフック強弱の範囲（0=自分 1=他人 2=強フック 3=弱フック 4=全員）"
+korean = "데모 훅 강도 범위(0=나 1=다른 사람 2=강한 훅 3=약한 훅 4=전체)"
+russian = "Область силы крюка в демо (0=свои 1=другие 2=сильный 3=слабый 4=все)"
+german = "Bereich der Hakenstärke im Demo (0=Eigene 1=Andere 2=Stark 3=Schwach 4=Alle)"
+spanish = "Ámbito de fuerza del gancho en demo (0=Propio 1=Otros 2=Fuerte 3=Débil 4=Todos)"
+french = "Portée de la force du grappin en démo (0=Soi 1=Autres 2=Fort 3=Faible 4=Tous)"
+brazilian_portuguese = "Escopo da força do gancho na demo (0=Próprio 1=Outros 2=Forte 3=Franco 4=Todos)"
+portuguese = "Âmbito da força do gancho na demo (0=Próprio 1=Outros 2=Forte 3=Franco 4=Todos)"
+turkish = "Demoda kanca gücü kapsamı (0=Kendim 1=Diğerleri 2=Güçlü 3=Zayıf 4=Herkes)"
+polish = "Zakres siły haka w demie (0=Własne 1=Inni 2=Silny 3=Słaby 4=Wszyscy)"
+
+[[message]]
+key = "Show in-game HUD in demo preview and video"
+[message.translations]
+simplified_chinese = "在回放预览与视频中显示游戏内 HUD"
+traditional_chinese = "在回放預覽與影片中顯示遊戲內 HUD"
+japanese = "デモプレビューと動画でゲーム内 HUD を表示"
+korean = "데모 미리보기와 영상에서 게임 내 HUD 표시"
+russian = "Показывать игровой HUD в предпросмотре демо и видео"
+german = "In-Game-HUD in Demo-Vorschau und Video anzeigen"
+spanish = "Mostrar el HUD del juego en la vista previa de demo y el vídeo"
+french = "Afficher le HUD en jeu dans l'aperçu de démo et la vidéo"
+brazilian_portuguese = "Mostrar o HUD do jogo na prévia da demo e no vídeo"
+portuguese = "Mostrar o HUD do jogo na pré-visualização da demo e no vídeo"
+turkish = "Demo önizlemesinde ve videoda oyun içi HUD'u göster"
+polish = "Pokaż HUD w grze w podglądzie dema i wideo"
+
+[[message]]
+key = "Show chat in demo preview and video"
+[message.translations]
+simplified_chinese = "在回放预览与视频中显示聊天"
+traditional_chinese = "在回放預覽與影片中顯示聊天"
+japanese = "デモプレビューと動画でチャットを表示"
+korean = "데모 미리보기와 영상에서 채팅 표시"
+russian = "Показывать чат в предпросмотре демо и видео"
+german = "Chat in Demo-Vorschau und Video anzeigen"
+spanish = "Mostrar el chat en la vista previa de demo y el vídeo"
+french = "Afficher le chat dans l'aperçu de démo et la vidéo"
+brazilian_portuguese = "Mostrar o chat na prévia da demo e no vídeo"
+portuguese = "Mostrar o chat na pré-visualização da demo e no vídeo"
+turkish = "Demo önizlemesinde ve videoda sohbeti göster"
+polish = "Pokaż czat w podglądzie dema i wideo"
+
+[[message]]
+key = "Nameplate nickname scope (0=None 1=Current character 2=Own characters 3=Other players 4=Other players and own non-current characters 5=All)"
+[message.translations]
+simplified_chinese = "昵称显示范围（0=无 1=当前角色 2=自己的角色 3=其他玩家 4=其他玩家与自己未操控的角色 5=全体）"
+traditional_chinese = "暱稱顯示範圍（0=無 1=當前角色 2=自己的角色 3=其他玩家 4=其他玩家與自己未操控的角色 5=全體）"
+japanese = "ニックネーム表示範囲（0=なし 1=操作中のキャラ 2=自分のキャラ 3=他のプレイヤー 4=他のプレイヤーと自分の非操作キャラ 5=すべて）"
+korean = "닉네임 표시 범위(0=없음 1=현재 캐릭터 2=내 캐릭터 3=다른 플레이어 4=다른 플레이어와 내 비조작 캐릭터 5=전체)"
+russian = "Область показа ников (0=нет 1=текущий персонаж 2=свои персонажи 3=другие игроки 4=другие игроки и свои неактивные 5=все)"
+german = "Namensanzeige-Bereich (0=Keine 1=Aktuelle Figur 2=Eigene Figuren 3=Andere Spieler 4=Andere Spieler und eigene inaktive 5=Alle)"
+spanish = "Ámbito de nombres (0=Ninguno 1=Personaje actual 2=Personajes propios 3=Otros jugadores 4=Otros jugadores y propios inactivos 5=Todos)"
+french = "Portée des pseudos (0=Aucun 1=Personnage actuel 2=Personnages propres 3=Autres joueurs 4=Autres joueurs et propres inactifs 5=Tous)"
+brazilian_portuguese = "Escopo de nicknames (0=Nenhum 1=Personagem atual 2=Personagens próprios 3=Outros jogadores 4=Outros jogadores e próprios inativos 5=Todos)"
+portuguese = "Âmbito de alcumes (0=Ningún 1=Personaxe actual 2=Personaxes propios 3=Outros xogadores 4=Outros xogadores e propios inactivos 5=Todos)"
+turkish = "Takma ad kapsamı (0=Yok 1=Geçerli karakter 2=Kendi karakterlerim 3=Diğer oyuncular 4=Diğer oyuncular ve kendi pasif karakterlerim 5=Herkes)"
+polish = "Zakres nicków (0=Brak 1=Aktualna postać 2=Własne postacie 3=Inni gracze 4=Inni gracze i własne nieaktywne 5=Wszyscy)"
+
+[[message]]
+key = "Nameplate nickname scope migration completed flag"
+[message.translations]
+simplified_chinese = "昵称显示范围迁移完成标记"
+traditional_chinese = "暱稱顯示範圍遷移完成標記"
+japanese = "ニックネーム表示範囲の移行完了フラグ"
+korean = "닉네임 표시 범위 마이그레이션 완료 플래그"
+russian = "Флаг завершения миграции области показа ников"
+german = "Abschlussmarkierung der Namensanzeige-Bereichsmigration"
+spanish = "Marca de finalización de migración del ámbito de nombres"
+french = "Marqueur de fin de migration de la portée des pseudos"
+brazilian_portuguese = "Marcador de conclusão da migração do escopo de nicknames"
+portuguese = "Marca de fin da migración do ámbito de alcumes"
+turkish = "Takma ad kapsamı taşıma tamamlandı işareti"
+polish = "Znacznik zakończenia migracji zakresu nicków"
+
+[[message]]
+key = "Show other players' large emoticons"
+[message.translations]
+simplified_chinese = "显示他人的超大表情"
+traditional_chinese = "顯示他人的超大表情"
+japanese = "他のプレイヤーの大きな絵文字を表示"
+korean = "다른 플레이어의 큰 이모티콘 표시"
+russian = "Показывать большие смайлы других игроков"
+german = "Große Emoticons anderer Spieler anzeigen"
+spanish = "Mostrar emoticonos grandes de otros jugadores"
+french = "Afficher les grands émoticônes des autres joueurs"
+brazilian_portuguese = "Mostrar emoticons grandes de outros jogadores"
+portuguese = "Mostrar emoticonas grandes doutros xogadores"
+turkish = "Diğer oyuncuların büyük ifadelerini göster"
+polish = "Pokaż duże emotikony innych graczy"
+
+[[message]]
+key = "Show other players' launched emoticons"
+[message.translations]
+simplified_chinese = "显示他人的发射表情"
+traditional_chinese = "顯示他人的發射表情"
+japanese = "他のプレイヤーの発射絵文字を表示"
+korean = "다른 플레이어의 발사 이모티콘 표시"
+russian = "Показывать запущенные смайлы других игроков"
+german = "Abgeschossene Emoticons anderer Spieler anzeigen"
+spanish = "Mostrar emoticonos lanzados de otros jugadores"
+french = "Afficher les émoticônes lancés des autres joueurs"
+brazilian_portuguese = "Mostrar emoticons lançados de outros jogadores"
+portuguese = "Mostrar emoticonas lanzadas doutros xogadores"
+turkish = "Diğer oyuncuların fırlatılan ifadelerini göster"
+polish = "Pokaż wystrzelone emotikony innych graczy"
 
 [[message]]
 key = "Show scoreboard after death"
@@ -25147,6 +25403,22 @@ turkish = "Configure HUD island appearance"
 polish = "Configure HUD island appearance"
 
 [[message]]
+key = "Configure the lyrics display"
+[message.translations]
+simplified_chinese = "配置歌词显示"
+traditional_chinese = "配置歌詞顯示"
+japanese = "歌詞の表示を設定"
+korean = "가사 표시 설정"
+russian = "Настройка отображения текста песен"
+german = "Anzeige der Liedtexte konfigurieren"
+spanish = "Configurar la visualización de la letra"
+french = "Configurer l'affichage des paroles"
+brazilian_portuguese = "Configurar a exibição da letra"
+portuguese = "Configurar a exibição da letra"
+turkish = "Şarkı sözü görünümünü yapılandır"
+polish = "Skonfiguruj wyświetlanie tekstu piosenki"
+
+[[message]]
 key = "Configure keyword-based automatic replies"
 [message.translations]
 simplified_chinese = "配置基于关键词的自动回复"
@@ -29294,3 +29566,890 @@ brazilian_portuguese = "Divide principal/clone em duas equipes livres; pressione
 portuguese = "Divide principal/clone em duas equipas livres; prima novamente para voltar à equipa 0"
 turkish = "Ana/kukla karakteri iki boş takıma böler; takım 0'a dönmek için tekrar basın"
 polish = "Dzieli główną postać/dummy na dwie wolne drużyny; ponowne naciśnięcie wraca do drużyny 0"
+
+[[message]]
+key = "Cancel upload"
+[message.translations]
+simplified_chinese = "取消上传"
+traditional_chinese = "取消上傳"
+japanese = "アップロードをキャンセル"
+korean = "업로드 취소"
+russian = "Отменить загрузку"
+german = "Upload abbrechen"
+spanish = "Cancelar subida"
+french = "Annuler l'envoi"
+brazilian_portuguese = "Cancelar envio"
+portuguese = "Cancelar envio"
+turkish = "Yüklemeyi iptal et"
+polish = "Anuluj przesyłanie"
+
+[[message]]
+key = "Generated skin outline color"
+[message.translations]
+simplified_chinese = "生成描边颜色"
+traditional_chinese = "生成描邊顏色"
+japanese = "生成アウトラインの色"
+korean = "생성된 외곽선 색상"
+russian = "Цвет сгенерированной обводки"
+german = "Farbe der erzeugten Umrandung"
+spanish = "Color del contorno generado"
+french = "Couleur du contour généré"
+brazilian_portuguese = "Cor do contorno gerado"
+portuguese = "Cor do contorno gerado"
+turkish = "Oluşturulan dış çizgi rengi"
+polish = "Kolor generowanego obrysu"
+
+[[message]]
+key = "Generated skin outline opacity"
+[message.translations]
+simplified_chinese = "生成描边不透明度"
+traditional_chinese = "生成描邊不透明度"
+japanese = "生成アウトラインの不透明度"
+korean = "생성된 외곽선 불투명도"
+russian = "Непрозрачность сгенерированной обводки"
+german = "Deckkraft der erzeugten Umrandung"
+spanish = "Opacidad del contorno generado"
+french = "Opacité du contour généré"
+brazilian_portuguese = "Opacidade do contorno gerado"
+portuguese = "Opacidade do contorno gerado"
+turkish = "Oluşturulan dış çizgi opaklığı"
+polish = "Krycie generowanego obrysu"
+
+[[message]]
+key = "Generated skin outline width"
+[message.translations]
+simplified_chinese = "生成描边宽度"
+traditional_chinese = "生成描邊寬度"
+japanese = "生成アウトラインの太さ"
+korean = "생성된 외곽선 두께"
+russian = "Ширина сгенерированной обводки"
+german = "Breite der erzeugten Umrandung"
+spanish = "Grosor del contorno generado"
+french = "Épaisseur du contour généré"
+brazilian_portuguese = "Largura do contorno gerado"
+portuguese = "Largura do contorno gerado"
+turkish = "Oluşturulan dış çizgi genişliği"
+polish = "Szerokość generowanego obrysu"
+
+[[message]]
+key = "HTTPS endpoint"
+[message.translations]
+simplified_chinese = "HTTPS 端点"
+traditional_chinese = "HTTPS 端點"
+japanese = "HTTPS エンドポイント"
+korean = "HTTPS 엔드포인트"
+russian = "Конечная точка HTTPS"
+german = "HTTPS-Endpunkt"
+spanish = "Punto de conexión HTTPS"
+french = "Point de terminaison HTTPS"
+brazilian_portuguese = "Endpoint HTTPS"
+portuguese = "Endpoint HTTPS"
+turkish = "HTTPS uç noktası"
+polish = "Punkt końcowy HTTPS"
+
+[[message]]
+key = "Leave empty to use UDP"
+[message.translations]
+simplified_chinese = "留空则使用 UDP"
+traditional_chinese = "留空則使用 UDP"
+japanese = "空欄にすると UDP を使用"
+korean = "비워 두면 UDP 사용"
+russian = "Оставьте пустым для использования UDP"
+german = "Leer lassen, um UDP zu verwenden"
+spanish = "Dejar vacío para usar UDP"
+french = "Laisser vide pour utiliser UDP"
+brazilian_portuguese = "Deixe vazio para usar UDP"
+portuguese = "Deixe vazio para usar UDP"
+turkish = "UDP kullanmak için boş bırakın"
+polish = "Pozostaw puste, aby użyć UDP"
+
+[[message]]
+key = "Map name"
+[message.translations]
+simplified_chinese = "地图名称"
+traditional_chinese = "地圖名稱"
+japanese = "マップ名"
+korean = "맵 이름"
+russian = "Название карты"
+german = "Kartenname"
+spanish = "Nombre del mapa"
+french = "Nom de la carte"
+brazilian_portuguese = "Nome do mapa"
+portuguese = "Nome do mapa"
+turkish = "Harita adı"
+polish = "Nazwa mapy"
+
+[[message]]
+key = "Map path in save folder"
+[message.translations]
+simplified_chinese = "存档目录中的地图路径"
+traditional_chinese = "存檔目錄中的地圖路徑"
+japanese = "保存フォルダー内のマップパス"
+korean = "저장 폴더의 맵 경로"
+russian = "Путь к карте в папке сохранений"
+german = "Kartenpfad im Speicherordner"
+spanish = "Ruta del mapa en la carpeta de guardado"
+french = "Chemin de la carte dans le dossier de sauvegarde"
+brazilian_portuguese = "Caminho do mapa na pasta de salvamento"
+portuguese = "Caminho do mapa na pasta de gravação"
+turkish = "Kayıt klasöründeki harita yolu"
+polish = "Ścieżka mapy w folderze zapisu"
+
+[[message]]
+key = "Map upload endpoint"
+[message.translations]
+simplified_chinese = "地图上传端点"
+traditional_chinese = "地圖上傳端點"
+japanese = "マップアップロードのエンドポイント"
+korean = "맵 업로드 엔드포인트"
+russian = "Конечная точка загрузки карт"
+german = "Endpunkt für Karten-Upload"
+spanish = "Punto de conexión de subida de mapas"
+french = "Point de terminaison d'envoi de carte"
+brazilian_portuguese = "Endpoint de envio de mapa"
+portuguese = "Endpoint de envio de mapa"
+turkish = "Harita yükleme uç noktası"
+polish = "Punkt końcowy przesyłania map"
+
+[[message]]
+key = "Map upload endpoint (empty disables map upload)"
+[message.translations]
+simplified_chinese = "地图上传端点（留空则禁用地图上传）"
+traditional_chinese = "地圖上傳端點（留空則停用地圖上傳）"
+japanese = "マップアップロードのエンドポイント（空欄で無効）"
+korean = "맵 업로드 엔드포인트(비워 두면 맵 업로드 사용 안 함)"
+russian = "Конечная точка загрузки карт (пусто — загрузка отключена)"
+german = "Endpunkt für Karten-Upload (leer deaktiviert den Upload)"
+spanish = "Punto de conexión de subida de mapas (vacío lo desactiva)"
+french = "Point de terminaison d'envoi de carte (vide le désactive)"
+brazilian_portuguese = "Endpoint de envio de mapa (vazio desativa o envio)"
+portuguese = "Endpoint de envio de mapa (vazio desativa o envio)"
+turkish = "Harita yükleme uç noktası (boşsa yükleme kapalı)"
+polish = "Punkt końcowy przesyłania map (puste wyłącza przesyłanie)"
+
+[[message]]
+key = "Optional voice WebSocket endpoint (empty keeps UDP transport)"
+[message.translations]
+simplified_chinese = "可选语音 WebSocket 端点（留空则保持 UDP 传输）"
+traditional_chinese = "選用語音 WebSocket 端點（留空則保持 UDP 傳輸）"
+japanese = "省略可能な音声 WebSocket エンドポイント（空欄なら UDP を使用）"
+korean = "선택적 음성 WebSocket 엔드포인트(비워 두면 UDP 전송 유지)"
+russian = "Необязательная конечная точка голосового WebSocket (пусто сохраняет транспорт UDP)"
+german = "Optionaler Voice-WebSocket-Endpunkt (leer behält UDP-Transport bei)"
+spanish = "Punto de conexión WebSocket de voz opcional (vacío mantiene el transporte UDP)"
+french = "Point de terminaison WebSocket vocal facultatif (vide conserve le transport UDP)"
+brazilian_portuguese = "Endpoint WebSocket de voz opcional (vazio mantém o transporte UDP)"
+portuguese = "Endpoint WebSocket de voz opcional (vazio mantém o transporte UDP)"
+turkish = "İsteğe bağlı ses WebSocket uç noktası (boşsa UDP taşıması korunur)"
+polish = "Opcjonalny punkt końcowy WebSocket dla głosu (puste zachowuje transport UDP)"
+
+[[message]]
+key = "QmClient realtime WebSocket URL (empty disables transport)"
+[message.translations]
+simplified_chinese = "QmClient 实时 WebSocket 地址（留空则禁用传输）"
+traditional_chinese = "QmClient 即時 WebSocket 位址（留空則停用傳輸）"
+japanese = "QmClient リアルタイム WebSocket URL（空欄で無効）"
+korean = "QmClient 실시간 WebSocket URL(비워 두면 전송 사용 안 함)"
+russian = "URL WebSocket реального времени QmClient (пусто отключает транспорт)"
+german = "QmClient-Echtzeit-WebSocket-URL (leer deaktiviert den Transport)"
+spanish = "URL de WebSocket en tiempo real de QmClient (vacío desactiva el transporte)"
+french = "URL WebSocket temps réel de QmClient (vide désactive le transport)"
+brazilian_portuguese = "URL do WebSocket em tempo real do QmClient (vazio desativa o transporte)"
+portuguese = "URL do WebSocket em tempo real do QmClient (vazio desativa o transporte)"
+turkish = "QmClient gerçek zamanlı WebSocket adresi (boşsa taşıma kapanır)"
+polish = "Adres URL WebSocket czasu rzeczywistego QmClient (puste wyłącza transport)"
+
+[[message]]
+key = "Refine the search to see more maps"
+[message.translations]
+simplified_chinese = "请细化搜索关键字以查看更多地图"
+traditional_chinese = "請細化搜尋關鍵字以查看更多地圖"
+japanese = "検索条件を絞り込むとさらに表示されます"
+korean = "검색어를 좁히면 더 많은 맵을 볼 수 있습니다"
+russian = "Уточните поиск, чтобы увидеть больше карт"
+german = "Suche eingrenzen, um mehr Karten zu sehen"
+spanish = "Refina la búsqueda para ver más mapas"
+french = "Affinez la recherche pour voir plus de cartes"
+brazilian_portuguese = "Refine a busca para ver mais mapas"
+portuguese = "Refine a pesquisa para ver mais mapas"
+turkish = "Daha fazla harita görmek için aramayı daraltın"
+polish = "Zawęź wyszukiwanie, aby zobaczyć więcej map"
+
+[[message]]
+key = "Search local maps"
+[message.translations]
+simplified_chinese = "搜索本地地图"
+traditional_chinese = "搜尋本地地圖"
+japanese = "ローカルマップを検索"
+korean = "로컬 맵 검색"
+russian = "Поиск локальных карт"
+german = "Lokale Karten suchen"
+spanish = "Buscar mapas locales"
+french = "Rechercher les cartes locales"
+brazilian_portuguese = "Buscar mapas locais"
+portuguese = "Procurar mapas locais"
+turkish = "Yerel haritaları ara"
+polish = "Szukaj lokalnych map"
+
+[[message]]
+key = "Show generated skin outline for local tees"
+[message.translations]
+simplified_chinese = "为本机 Tee 显示生成描边"
+traditional_chinese = "為本機 Tee 顯示生成描邊"
+japanese = "自分の Tee に生成アウトラインを表示"
+korean = "내 Tee에 생성된 외곽선 표시"
+russian = "Показывать сгенерированную обводку для своих Tee"
+german = "Erzeugte Umrandung für eigene Tees anzeigen"
+spanish = "Mostrar contorno generado en los Tee locales"
+french = "Afficher le contour généré pour les Tee locaux"
+brazilian_portuguese = "Mostrar contorno gerado nos Tee locais"
+portuguese = "Mostrar contorno gerado nos Tee locais"
+turkish = "Yerel Tee'lerde oluşturulan dış çizgiyi göster"
+polish = "Pokaż generowany obrys dla lokalnych Tee"
+
+[[message]]
+key = "Show generated skin outline for other tees"
+[message.translations]
+simplified_chinese = "为其他玩家 Tee 显示生成描边"
+traditional_chinese = "為其他玩家 Tee 顯示生成描邊"
+japanese = "他の Tee に生成アウトラインを表示"
+korean = "다른 Tee에 생성된 외곽선 표시"
+russian = "Показывать сгенерированную обводку для чужих Tee"
+german = "Erzeugte Umrandung für andere Tees anzeigen"
+spanish = "Mostrar contorno generado en otros Tee"
+french = "Afficher le contour généré pour les autres Tee"
+brazilian_portuguese = "Mostrar contorno gerado em outros Tee"
+portuguese = "Mostrar contorno gerado noutros Tee"
+turkish = "Diğer Tee'lerde oluşturulan dış çizgiyi göster"
+polish = "Pokaż generowany obrys dla pozostałych Tee"
+
+[[message]]
+key = "Skin outline color"
+[message.translations]
+simplified_chinese = "皮肤描边颜色"
+traditional_chinese = "皮膚描邊顏色"
+japanese = "スキンアウトラインの色"
+korean = "스킨 외곽선 색상"
+russian = "Цвет обводки скина"
+german = "Farbe der Skin-Umrandung"
+spanish = "Color del contorno de la skin"
+french = "Couleur du contour de skin"
+brazilian_portuguese = "Cor do contorno da skin"
+portuguese = "Cor do contorno da skin"
+turkish = "Skin dış çizgi rengi"
+polish = "Kolor obrysu skina"
+
+[[message]]
+key = "Skin outline for local tees"
+[message.translations]
+simplified_chinese = "本机 Tee 皮肤描边"
+traditional_chinese = "本機 Tee 皮膚描邊"
+japanese = "自分の Tee のスキンアウトライン"
+korean = "내 Tee 스킨 외곽선"
+russian = "Обводка скина своих Tee"
+german = "Skin-Umrandung für eigene Tees"
+spanish = "Contorno de skin para Tee locales"
+french = "Contour de skin pour les Tee locaux"
+brazilian_portuguese = "Contorno de skin para Tee locais"
+portuguese = "Contorno de skin para Tee locais"
+turkish = "Yerel Tee'ler için skin dış çizgisi"
+polish = "Obrys skina dla lokalnych Tee"
+
+[[message]]
+key = "Skin outline for other tees"
+[message.translations]
+simplified_chinese = "其他玩家 Tee 皮肤描边"
+traditional_chinese = "其他玩家 Tee 皮膚描邊"
+japanese = "他の Tee のスキンアウトライン"
+korean = "다른 Tee 스킨 외곽선"
+russian = "Обводка скина чужих Tee"
+german = "Skin-Umrandung für andere Tees"
+spanish = "Contorno de skin para otros Tee"
+french = "Contour de skin pour les autres Tee"
+brazilian_portuguese = "Contorno de skin para outros Tee"
+portuguese = "Contorno de skin para outros Tee"
+turkish = "Diğer Tee'ler için skin dış çizgisi"
+polish = "Obrys skina dla pozostałych Tee"
+
+[[message]]
+key = "Skin outline opacity"
+[message.translations]
+simplified_chinese = "皮肤描边不透明度"
+traditional_chinese = "皮膚描邊不透明度"
+japanese = "スキンアウトラインの不透明度"
+korean = "스킨 외곽선 불투명도"
+russian = "Непрозрачность обводки скина"
+german = "Deckkraft der Skin-Umrandung"
+spanish = "Opacidad del contorno de la skin"
+french = "Opacité du contour de skin"
+brazilian_portuguese = "Opacidade do contorno da skin"
+portuguese = "Opacidade do contorno da skin"
+turkish = "Skin dış çizgi opaklığı"
+polish = "Krycie obrysu skina"
+
+[[message]]
+key = "Skin outline width"
+[message.translations]
+simplified_chinese = "皮肤描边宽度"
+traditional_chinese = "皮膚描邊寬度"
+japanese = "スキンアウトラインの太さ"
+korean = "스킨 외곽선 두께"
+russian = "Ширина обводки скина"
+german = "Breite der Skin-Umrandung"
+spanish = "Grosor del contorno de la skin"
+french = "Épaisseur du contour de skin"
+brazilian_portuguese = "Largura do contorno da skin"
+portuguese = "Largura do contorno da skin"
+turkish = "Skin dış çizgi genişliği"
+polish = "Szerokość obrysu skina"
+
+[[message]]
+key = "Upload map"
+[message.translations]
+simplified_chinese = "上传地图"
+traditional_chinese = "上傳地圖"
+japanese = "マップをアップロード"
+korean = "맵 업로드"
+russian = "Загрузить карту"
+german = "Karte hochladen"
+spanish = "Subir mapa"
+french = "Envoyer la carte"
+brazilian_portuguese = "Enviar mapa"
+portuguese = "Enviar mapa"
+turkish = "Haritayı yükle"
+polish = "Prześlij mapę"
+
+[[message]]
+key = "Waiting for the voice WebSocket connection"
+[message.translations]
+simplified_chinese = "正在等待语音 WebSocket 连接"
+traditional_chinese = "正在等待語音 WebSocket 連線"
+japanese = "音声 WebSocket 接続を待機中"
+korean = "음성 WebSocket 연결 대기 중"
+russian = "Ожидание подключения голосового WebSocket"
+german = "Warte auf Voice-WebSocket-Verbindung"
+spanish = "Esperando la conexión WebSocket de voz"
+french = "En attente de la connexion WebSocket vocale"
+brazilian_portuguese = "Aguardando a conexão WebSocket de voz"
+portuguese = "A aguardar a ligação WebSocket de voz"
+turkish = "Ses WebSocket bağlantısı bekleniyor"
+polish = "Oczekiwanie na połączenie WebSocket głosu"
+
+[[message]]
+key = "WebSocket endpoint (optional)"
+[message.translations]
+simplified_chinese = "WebSocket 端点（可选）"
+traditional_chinese = "WebSocket 端點（選用）"
+japanese = "WebSocket エンドポイント（任意）"
+korean = "WebSocket 엔드포인트(선택)"
+russian = "Конечная точка WebSocket (необязательно)"
+german = "WebSocket-Endpunkt (optional)"
+spanish = "Punto de conexión WebSocket (opcional)"
+french = "Point de terminaison WebSocket (facultatif)"
+brazilian_portuguese = "Endpoint WebSocket (opcional)"
+portuguese = "Endpoint WebSocket (opcional)"
+turkish = "WebSocket uç noktası (isteğe bağlı)"
+polish = "Punkt końcowy WebSocket (opcjonalny)"
+
+[[message]]
+key = "Emoticons"
+[message.translations]
+simplified_chinese = "表情"
+traditional_chinese = "表情"
+japanese = "エモート"
+korean = "이모티콘"
+russian = "Эмотиконы"
+german = "Emoticons"
+spanish = "Emoticonos"
+french = "Émoticônes"
+brazilian_portuguese = "Emoticons"
+portuguese = "Emoticons"
+turkish = "İfadeler"
+polish = "Emotikony"
+
+[[message]]
+key = "Large emoticons and launched emoticons"
+[message.translations]
+simplified_chinese = "大表情与发射表情"
+traditional_chinese = "大表情與發射表情"
+japanese = "大きな絵文字と発射絵文字"
+korean = "큰 이모티콘과 발사 이모티콘"
+russian = "Большие и запускаемые эмотиконы"
+german = "Große Emoticons und abgefeuerte Emoticons"
+spanish = "Emoticonos grandes y emoticonos lanzados"
+french = "Grands émoticônes et émoticônes lancés"
+brazilian_portuguese = "Emoticons grandes e emoticons lançados"
+portuguese = "Emoticonas grandes e emoticonas lanzadas"
+turkish = "Büyük ifadeler ve fırlatılan ifadeler"
+polish = "Duże emotikony i wysyłane emotikony"
+
+[[message]]
+key = "Animated title style id"
+[message.translations]
+simplified_chinese = "头衔动态风格 ID"
+traditional_chinese = "頭銜動態風格 ID"
+japanese = "タイトルのアニメーションスタイル ID"
+korean = "칭호 애니메이션 스타일 ID"
+russian = "Идентификатор анимированного стиля титула"
+german = "ID des animierten Titelstils"
+spanish = "ID del estilo de título animado"
+french = "Identifiant du style de titre animé"
+brazilian_portuguese = "ID do estilo de título animado"
+portuguese = "ID do estilo de título animado"
+turkish = "Animasyonlu unvan stili kimliği"
+polish = "Identyfikator animowanego stylu tytułu"
+
+
+[[message]]
+key = "Bracketed title color: 0 = follow server, 1 = single color, 2 = rainbow"
+[message.translations]
+simplified_chinese = "方括号头衔颜色：0 = 跟随服务器，1 = 单色，2 = 彩虹"
+traditional_chinese = "方括號頭銜顏色：0 = 跟隨伺服器，1 = 單色，2 = 彩虹"
+japanese = "括弧内の称号の色：0 = サーバーに従う、1 = 単色、2 = 虹色"
+korean = "대괄호 칭호 색상: 0 = 서버 설정 따르기, 1 = 단색, 2 = 무지개"
+russian = "Цвет титула в скобках: 0 = как на сервере, 1 = один цвет, 2 = радуга"
+german = "Farbe des Titels in Klammern: 0 = Server folgen, 1 = einfarbig, 2 = Regenbogen"
+spanish = "Color del título entre corchetes: 0 = seguir al servidor, 1 = color único, 2 = arcoíris"
+french = "Couleur du titre entre crochets : 0 = suivre le serveur, 1 = couleur unique, 2 = arc-en-ciel"
+brazilian_portuguese = "Cor do título entre colchetes: 0 = seguir o servidor, 1 = cor única, 2 = arco-íris"
+portuguese = "Cor do título entre parênteses retos: 0 = seguir o servidor, 1 = cor única, 2 = arco-íris"
+turkish = "Köşeli parantezli unvan rengi: 0 = sunucuyu takip et, 1 = tek renk, 2 = gökkuşağı"
+polish = "Kolor tytułu w nawiasach: 0 = zgodnie z serwerem, 1 = jeden kolor, 2 = tęcza"
+
+
+[[message]]
+key = "Bracketed title opacity (0-100)"
+[message.translations]
+simplified_chinese = "方括号头衔不透明度（0-100）"
+traditional_chinese = "方括號頭銜不透明度（0-100）"
+japanese = "括弧内の称号の不透明度 (0-100)"
+korean = "대괄호 칭호 불투명도 (0-100)"
+russian = "Прозрачность титула в скобках (0-100)"
+german = "Deckkraft des Titels in Klammern (0-100)"
+spanish = "Opacidad del título entre corchetes (0-100)"
+french = "Opacité du titre entre crochets (0-100)"
+brazilian_portuguese = "Opacidade do título entre colchetes (0-100)"
+portuguese = "Opacidade do título entre parênteses retos (0-100)"
+turkish = "Köşeli parantezli unvan opaklığı (0-100)"
+polish = "Nieprzezroczystość tytułu w nawiasach (0-100)"
+
+
+[[message]]
+key = "Bracketed title single color"
+[message.translations]
+simplified_chinese = "方括号头衔单色"
+traditional_chinese = "方括號頭銜單色"
+japanese = "括弧内の称号の単色"
+korean = "대괄호 칭호 단색"
+russian = "Один цвет для титула в скобках"
+german = "Einfarbig für Titel in Klammern"
+spanish = "Color único del título entre corchetes"
+french = "Couleur unique du titre entre crochets"
+brazilian_portuguese = "Cor única do título entre colchetes"
+portuguese = "Cor única do título entre parênteses retos"
+turkish = "Köşeli parantezli unvan tek renk"
+polish = "Jeden kolor tytułu w nawiasach"
+
+
+[[message]]
+key = "Enable Kugou Music hook integration"
+[message.translations]
+simplified_chinese = "启用酷狗音乐 Hook 集成"
+traditional_chinese = "啟用酷狗音樂 Hook 整合"
+japanese = "Kugou Music Hook 統合を有効化"
+korean = "Kugou Music Hook 통합 활성화"
+russian = "Включить интеграцию с Kugou Music через Hook"
+german = "Kugou-Music-Hook-Integration aktivieren"
+spanish = "Habilitar la integración Hook de Kugou Music"
+french = "Activer l'intégration Hook de Kugou Music"
+brazilian_portuguese = "Ativar a integração Hook do Kugou Music"
+portuguese = "Ativar a integração Hook do Kugou Music"
+turkish = "Kugou Music Hook entegrasyonunu etkinleştir"
+polish = "Włącz integrację Kugou Music przez Hook"
+
+
+[[message]]
+key = "Enable Kugou Music lyrics"
+[message.translations]
+simplified_chinese = "启用 酷狗音乐 歌词"
+traditional_chinese = "啟用 酷狗音樂 歌詞"
+japanese = "Kugou Music 歌詞を有効化"
+korean = "Kugou Music 가사 활성화"
+russian = "Включить тексты Kugou Music"
+german = "Kugou Music-Songtexte aktivieren"
+spanish = "Activar letras de Kugou Music"
+french = "Activer les paroles de Kugou Music"
+brazilian_portuguese = "Ativar letras do Kugou Music"
+portuguese = "Ativar letras do Kugou Music"
+turkish = "Kugou Music şarkı sözlerini etkinleştir"
+polish = "Włącz teksty Kugou Music"
+
+
+[[message]]
+key = "Enable QQ Music lyrics"
+[message.translations]
+simplified_chinese = "启用 QQ 音乐 歌词"
+traditional_chinese = "啟用 QQ 音樂 歌詞"
+japanese = "QQ Music 歌詞を有効化"
+korean = "QQ Music 가사 활성화"
+russian = "Включить тексты QQ Music"
+german = "QQ Music-Songtexte aktivieren"
+spanish = "Activar letras de QQ Music"
+french = "Activer les paroles de QQ Music"
+brazilian_portuguese = "Ativar letras do QQ Music"
+portuguese = "Ativar letras do QQ Music"
+turkish = "QQ Music şarkı sözlerini etkinleştir"
+polish = "Włącz teksty QQ Music"
+
+
+[[message]]
+key = "Set up Kugou lyrics"
+[message.translations]
+simplified_chinese = "设置酷狗歌词接入"
+traditional_chinese = "設定酷狗歌詞接入"
+japanese = "Kugou 歌詞の接続設定"
+korean = "Kugou 가사 연결 설정"
+russian = "Настроить тексты Kugou"
+german = "Kugou-Songtexte einrichten"
+spanish = "Configurar letras de Kugou"
+french = "Configurer les paroles Kugou"
+brazilian_portuguese = "Configurar letras do Kugou"
+portuguese = "Configurar letras do Kugou"
+turkish = "Kugou şarkı sözlerini ayarla"
+polish = "Skonfiguruj teksty Kugou"
+
+
+[[message]]
+key = "Restore Kugou files"
+[message.translations]
+simplified_chinese = "恢复酷狗原始文件"
+traditional_chinese = "還原酷狗原始檔案"
+japanese = "Kugou の元ファイルを復元"
+korean = "Kugou 원본 파일 복원"
+russian = "Восстановить файлы Kugou"
+german = "Kugou-Dateien wiederherstellen"
+spanish = "Restaurar archivos de Kugou"
+french = "Restaurer les fichiers Kugou"
+brazilian_portuguese = "Restaurar arquivos do Kugou"
+portuguese = "Restaurar ficheiros do Kugou"
+turkish = "Kugou dosyalarını geri yükle"
+polish = "Przywróć pliki Kugou"
+
+
+[[message]]
+key = "Kugou hook heartbeat timeout (milliseconds)"
+[message.translations]
+simplified_chinese = "酷狗音乐 Hook 心跳超时时间（毫秒）"
+traditional_chinese = "酷狗音樂 Hook 心跳逾時時間（毫秒）"
+japanese = "Kugou Hook のハートビートタイムアウト（ミリ秒）"
+korean = "Kugou Hook 하트비트 시간 초과(밀리초)"
+russian = "Тайм-аут heartbeat Kugou Hook (миллисекунды)"
+german = "Kugou-Hook-Heartbeat-Timeout (Millisekunden)"
+spanish = "Tiempo de espera del heartbeat de Kugou Hook (milisegundos)"
+french = "Délai d'expiration du heartbeat de Kugou Hook (millisecondes)"
+brazilian_portuguese = "Tempo limite do heartbeat do Kugou Hook (milissegundos)"
+portuguese = "Tempo limite do heartbeat do Kugou Hook (milissegundos)"
+turkish = "Kugou Hook heartbeat zaman aşımı (milisaniye)"
+polish = "Limit czasu heartbeat Kugou Hook (milisekundy)"
+
+
+[[message]]
+key = "Kugou hook helper path (empty=beside QmClient)"
+[message.translations]
+simplified_chinese = "酷狗音乐 Hook 辅助程序路径（留空则使用 QmClient 所在目录中的程序）"
+traditional_chinese = "酷狗音樂 Hook 輔助程式路徑（留空則使用 QmClient 所在目錄中的程式）"
+japanese = "Kugou Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）"
+korean = "Kugou Hook 도우미 경로(비워 두면 QmClient과 같은 디렉터리)"
+russian = "Путь к помощнику Kugou Hook (пусто = рядом с QmClient)"
+german = "Pfad zum Kugou-Hook-Hilfsprogramm (leer = neben QmClient)"
+spanish = "Ruta del ayudante de Kugou Hook (vacía = junto a QmClient)"
+french = "Chemin de l'assistant Kugou Hook (vide = à côté de QmClient)"
+brazilian_portuguese = "Caminho do auxiliar do Kugou Hook (vazio = ao lado do QmClient)"
+portuguese = "Caminho do auxiliar do Kugou Hook (vazio = junto do QmClient)"
+turkish = "Kugou Hook yardımcı yolu (boş = QmClient'ın yanında)"
+polish = "Ścieżka pomocnika Kugou Hook (pusta = obok QmClient)"
+
+
+[[message]]
+key = "QQ Music hook heartbeat timeout (milliseconds)"
+[message.translations]
+simplified_chinese = "QQ 音乐 Hook 心跳超时时间（毫秒）"
+traditional_chinese = "QQ 音樂 Hook 心跳逾時時間（毫秒）"
+japanese = "QQ Music Hook のハートビートタイムアウト（ミリ秒）"
+korean = "QQ Music Hook 하트비트 시간 초과(밀리초)"
+russian = "Тайм-аут heartbeat QQ Music Hook (миллисекунды)"
+german = "QQ Music-Hook-Heartbeat-Timeout (Millisekunden)"
+spanish = "Tiempo de espera del heartbeat de QQ Music Hook (milisegundos)"
+french = "Délai d'expiration du heartbeat de QQ Music Hook (millisecondes)"
+brazilian_portuguese = "Tempo limite do heartbeat do QQ Music Hook (milissegundos)"
+portuguese = "Tempo limite do heartbeat do QQ Music Hook (milissegundos)"
+turkish = "QQ Music Hook heartbeat zaman aşımı (milisaniye)"
+polish = "Limit czasu heartbeat QQ Music Hook (milisekundy)"
+
+
+[[message]]
+key = "QQ Music hook helper path (empty=beside QmClient)"
+[message.translations]
+simplified_chinese = "QQ 音乐 Hook 辅助程序路径（留空则使用 QmClient 所在目录中的程序）"
+traditional_chinese = "QQ 音樂 Hook 輔助程式路徑（留空則使用 QmClient 所在目錄中的程式）"
+japanese = "QQ Music Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）"
+korean = "QQ Music Hook 도우미 경로(비워 두면 QmClient과 같은 디렉터리)"
+russian = "Путь к помощнику QQ Music Hook (пусто = рядом с QmClient)"
+german = "Pfad zum QQ Music-Hook-Hilfsprogramm (leer = neben QmClient)"
+spanish = "Ruta del ayudante de QQ Music Hook (vacía = junto a QmClient)"
+french = "Chemin de l'assistant QQ Music Hook (vide = à côté de QmClient)"
+brazilian_portuguese = "Caminho do auxiliar do QQ Music Hook (vazio = ao lado do QmClient)"
+portuguese = "Caminho do auxiliar do QQ Music Hook (vazio = junto do QmClient)"
+turkish = "QQ Music Hook yardımcı yolu (boş = QmClient'ın yanında)"
+polish = "Ścieżka pomocnika QQ Music Hook (pusta = obok QmClient)"
+
+
+[[message]]
+key = "Launch emote key"
+[message.translations]
+simplified_chinese = "发射表情按键"
+traditional_chinese = "發射表情按鍵"
+japanese = "絵文字発射キー"
+korean = "이모티콘 발사 키"
+russian = "Клавиша запуска эмоции"
+german = "Emoticon-Abschuss-Taste"
+spanish = "Tecla de lanzar emoticono"
+french = "Touche de lancer d’émoticône"
+brazilian_portuguese = "Tecla de lançar emoticon"
+portuguese = "Tecla de lançar emoticon"
+turkish = "Emoticon fırlatma tuşu"
+polish = "Klawisz wystrzelenia emotikony"
+
+
+[[message]]
+key = "Skin outline for other players"
+[message.translations]
+simplified_chinese = "其他玩家的皮肤描边"
+traditional_chinese = "其他玩家的皮膚描邊"
+japanese = "他のプレイヤーのスキンの輪郭"
+korean = "다른 플레이어의 스킨 윤곽선"
+russian = "Контур скина других игроков"
+german = "Skin-Umriss anderer Spieler"
+spanish = "Contorno de skin de otros jugadores"
+french = "Contour du skin des autres joueurs"
+brazilian_portuguese = "Contorno da skin de outros jogadores"
+portuguese = "Contorno da skin dos outros jogadores"
+turkish = "Diğer oyuncuların görünüm dış çizgisi"
+polish = "Obrys skórek innych graczy"
+
+
+[[message]]
+key = "Skin outline for self and dummy"
+[message.translations]
+simplified_chinese = "自己和分身的皮肤描边"
+traditional_chinese = "自己與分身的皮膚描邊"
+japanese = "自分とダミーのスキンの輪郭"
+korean = "자신과 더미의 스킨 윤곽선"
+russian = "Контур скина для себя и дамми"
+german = "Skin-Umriss für dich und Dummy"
+spanish = "Contorno de skin propio y del dummy"
+french = "Contour du skin pour soi et le dummy"
+brazilian_portuguese = "Contorno da skin própria e do dummy"
+portuguese = "Contorno da skin própria e do dummy"
+turkish = "Kendin ve dummy için görünüm dış çizgisi"
+polish = "Obrys skórki własnej i dummy"
+
+
+[[message]]
+key = "Snap title bob offset to whole pixels (sharper glyphs, choppier motion)"
+[message.translations]
+simplified_chinese = "浮动偏移吸附到整数像素（字体更锐利，但更顿挫）"
+traditional_chinese = "浮動偏移吸附到整數像素（字體更銳利，但更頓挫）"
+japanese = "揺れのオフセットを整数ピクセルに合わせる（字形は鮮明、動きはぎこちない）"
+korean = "흔들림 오프셋을 정수 픽셀에 맞춤 (글자는 선명, 움직임은 끊김)"
+russian = "Привязывать смещение покачивания к целым пикселям (чётче глифы, резче движение)"
+german = "Schwankungsversatz auf ganze Pixel rasten (schärfere Glyphen, ruckartigere Bewegung)"
+spanish = "Ajustar el desplazamiento del balanceo a píxeles enteros (glifos más nítidos, movimiento más brusco)"
+french = "Aligner le décalage de l'oscillation sur des pixels entiers (glyphes plus nets, mouvement plus saccadé)"
+brazilian_portuguese = "Alinhar o deslocamento da oscilação a pixels inteiros (glifos mais nítidos, movimento mais travado)"
+portuguese = "Alinhar o deslocamento da oscilação a pixels inteiros (glifos mais nítidos, movimento mais travado)"
+turkish = "Salınım kaymasını tam piksele hizala (daha keskin glifler, daha kesik hareket)"
+polish = "Przyciągaj przesunięcie kołysania do całych pikseli (ostrzejsze glify, mniej płynny ruch)"
+
+
+[[message]]
+key = "Title bob angular speed in 1/100 rad/s"
+[message.translations]
+simplified_chinese = "头衔浮动角速度（1/100 弧度每秒）"
+traditional_chinese = "頭銜浮動角速度（1/100 弧度每秒）"
+japanese = "タイトルの角速度（1/100 rad/s）"
+korean = "칭호 흔들림 각속도 (1/100 rad/s)"
+russian = "Угловая скорость покачивания титула (1/100 рад/с)"
+german = "Winkelgeschwindigkeit der Titelschwankung (1/100 rad/s)"
+spanish = "Velocidad angular del balanceo del título (1/100 rad/s)"
+french = "Vitesse angulaire de l'oscillation du titre (1/100 rad/s)"
+brazilian_portuguese = "Velocidade angular da oscilação do título (1/100 rad/s)"
+portuguese = "Velocidade angular da oscilação do título (1/100 rad/s)"
+turkish = "Unvan salınım açısal hızı (1/100 rad/s)"
+polish = "Prędkość kątowa kołysania tytułu (1/100 rad/s)"
+
+
+[[message]]
+key = "Title bob wavelength in pixels"
+[message.translations]
+simplified_chinese = "头衔浮动波长（像素）"
+traditional_chinese = "頭銜浮動波長（像素）"
+japanese = "タイトルの波長（ピクセル）"
+korean = "칭호 흔들림 파장 (픽셀)"
+russian = "Длина волны покачивания титула в пикселях"
+german = "Wellenlänge der Titelschwankung in Pixeln"
+spanish = "Longitud de onda del balanceo del título en píxeles"
+french = "Longueur d'onde de l'oscillation du titre en pixels"
+brazilian_portuguese = "Comprimento de onda da oscilação do título em pixels"
+portuguese = "Comprimento de onda da oscilação do título em pixels"
+turkish = "Unvan salınım dalga boyu (piksel)"
+polish = "Długość fali kołysania tytułu w pikselach"
+
+
+[[message]]
+key = "Title light sweep speed in 1/100 row per second (0 = off)"
+[message.translations]
+simplified_chinese = "头衔掠光速度（每秒 1/100 行，0 = 关闭）"
+traditional_chinese = "頭銜掠光速度（每秒 1/100 行，0 = 關閉）"
+japanese = "タイトルの光の走査速度（毎秒 1/100 行、0 = 無効）"
+korean = "칭호 빛 이동 속도 (초당 1/100줄, 0 = 끔)"
+russian = "Скорость блика титула в 1/100 строки в секунду (0 = выкл.)"
+german = "Tempo des Titellichtstreifens in 1/100 Zeile pro Sekunde (0 = aus)"
+spanish = "Velocidad del barrido de luz del título en 1/100 de fila por segundo (0 = desactivado)"
+french = "Vitesse du balayage lumineux du titre en 1/100 de ligne par seconde (0 = désactivé)"
+brazilian_portuguese = "Velocidade da varredura de luz do título em 1/100 de linha por segundo (0 = desligado)"
+portuguese = "Velocidade do varrimento de luz do título em 1/100 de linha por segundo (0 = desligado)"
+turkish = "Unvan ışık tarama hızı (saniyede 1/100 satır, 0 = kapalı)"
+polish = "Prędkość przesuwania światła tytułu w 1/100 wiersza na sekundę (0 = wył.)"
+
+
+[[message]]
+key = "Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)"
+[message.translations]
+simplified_chinese = "头衔逐字符相位（每像素，1/1000 像素；0 = 用风格默认值，20 = 可见光带）"
+traditional_chinese = "頭銜逐字元相位（每像素，1/1000 像素；0 = 用風格預設值，20 = 可見光帶）"
+japanese = "タイトルの文字ごとの位相（1 ピクセルあたり 1/1000 px、0 = スタイル既定値、20 = 光の帯が見える）"
+korean = "칭호 글자별 위상 (픽셀당 1/1000 px, 0 = 스타일 기본값, 20 = 빛 띠 보임)"
+russian = "Фаза на пиксель для символов титула в 1/1000 px (0 = по умолчанию стиля, 20 = заметная световая полоса)"
+german = "Phase pro Zeichen und Pixel in 1/1000 px (0 = Stilstandard, 20 = sichtbares Lichtband)"
+spanish = "Fase por carácter y píxel en 1/1000 px (0 = valor del estilo, 20 = banda de luz visible)"
+french = "Phase par caractère et pixel en 1/1000 px (0 = valeur du style, 20 = bande lumineuse visible)"
+brazilian_portuguese = "Fase por caractere e pixel em 1/1000 px (0 = padrão do estilo, 20 = faixa de luz visível)"
+portuguese = "Fase por caractere e pixel em 1/1000 px (0 = padrão do estilo, 20 = faixa de luz visível)"
+turkish = "Karakter başına piksel başına faz (1/1000 px, 0 = stil varsayılanı, 20 = görünür ışık şeridi)"
+polish = "Faza na znak i piksel w 1/1000 px (0 = domyślna stylu, 20 = widoczna wstęga światła)"
+
+
+[[message]]
+key = "Title per-character vertical bob amplitude in pixels (0 = off)"
+[message.translations]
+simplified_chinese = "头衔逐字符垂直浮动幅度（像素，0 = 关闭）"
+traditional_chinese = "頭銜逐字元垂直浮動幅度（像素，0 = 關閉）"
+japanese = "タイトルの文字ごとの上下振幅（ピクセル、0 = 無効）"
+korean = "칭호 글자별 상하 흔들림 진폭 (픽셀, 0 = 끔)"
+russian = "Амплитуда вертикального покачивания символов титула в пикселях (0 = выкл.)"
+german = "Vertikale Schwankungsamplitude pro Zeichen in Pixeln (0 = aus)"
+spanish = "Amplitud de balanceo vertical por carácter en píxeles (0 = desactivado)"
+french = "Amplitude d'oscillation verticale par caractère en pixels (0 = désactivé)"
+brazilian_portuguese = "Amplitude de oscilação vertical por caractere em pixels (0 = desativado)"
+portuguese = "Amplitude de oscilação vertical por caractere em pixels (0 = desativado)"
+turkish = "Karakter başına dikey salınım genliği (piksel, 0 = kapalı)"
+polish = "Amplituda pionowego kołysania znaków w pikselach (0 = wyłączone)"
+
+
+[[message]]
+key = "Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off"
+[message.translations]
+simplified_chinese = "头衔空间效果：0 = 抛光，1 = 实体，2 = 经典 Calamity，3 = 关闭"
+traditional_chinese = "頭銜空間效果：0 = 拋光，1 = 實體，2 = 經典 Calamity，3 = 關閉"
+japanese = "タイトルの立体効果：0 = 光沢、1 = ソリッド、2 = クラシック Calamity、3 = 無効"
+korean = "칭호 입체 효과: 0 = 광택, 1 = 솔리드, 2 = 클래식 Calamity, 3 = 끔"
+russian = "Объёмный эффект титула: 0 = глянец, 1 = сплошной, 2 = классический Calamity, 3 = выкл."
+german = "Räumlicher Titeleffekt: 0 = poliert, 1 = massiv, 2 = klassisches Calamity, 3 = aus"
+spanish = "Efecto espacial del título: 0 = pulido, 1 = sólido, 2 = Calamity clásico, 3 = desactivado"
+french = "Effet de relief du titre : 0 = poli, 1 = solide, 2 = Calamity classique, 3 = désactivé"
+brazilian_portuguese = "Efeito espacial do título: 0 = polido, 1 = sólido, 2 = Calamity clássico, 3 = desligado"
+portuguese = "Efeito espacial do título: 0 = polido, 1 = sólido, 2 = Calamity clássico, 3 = desligado"
+turkish = "Unvan uzamsal efekti: 0 = cilalı, 1 = katı, 2 = klasik Calamity, 3 = kapalı"
+polish = "Efekt przestrzenny tytułu: 0 = połysk, 1 = jednolity, 2 = klasyczne Calamity, 3 = wył."
+
+
+[[message]]
+key = "Use animated title style (overrides qm_title_color_mode)"
+[message.translations]
+simplified_chinese = "使用头衔动态风格（覆盖 qm_title_color_mode）"
+traditional_chinese = "使用頭銜動態風格（覆蓋 qm_title_color_mode）"
+japanese = "タイトルのアニメーションスタイルを使う（qm_title_color_mode を上書き）"
+korean = "칭호 애니메이션 스타일 사용 (qm_title_color_mode 덮어씀)"
+russian = "Использовать анимированный стиль титула (переопределяет qm_title_color_mode)"
+german = "Animierten Titelstil verwenden (überschreibt qm_title_color_mode)"
+spanish = "Usar estilo de título animado (anula qm_title_color_mode)"
+french = "Utiliser le style de titre animé (remplace qm_title_color_mode)"
+brazilian_portuguese = "Usar estilo de título animado (substitui qm_title_color_mode)"
+portuguese = "Usar estilo de título animado (substitui qm_title_color_mode)"
+turkish = "Animasyonlu unvan stili kullan (qm_title_color_mode'u geçersiz kılar)"
+polish = "Użyj animowanego stylu tytułu (zastępuje qm_title_color_mode)"
+
+[[message]]
+key = "Find CP"
+[message.translations]
+simplified_chinese = "查找 CP"
+traditional_chinese = "尋找 CP"
+japanese = "CP を検索"
+korean = "CP 찾기"
+russian = "Найти CP"
+german = "CP suchen"
+spanish = "Buscar CP"
+french = "Trouver un CP"
+brazilian_portuguese = "Buscar CP"
+portuguese = "Procurar CP"
+turkish = "CP bul"
+polish = "Znajdź CP"
+
+[[message]]
+key = "Find / Next"
+[message.translations]
+simplified_chinese = "查找 / 下一个"
+traditional_chinese = "尋找 / 下一個"
+japanese = "検索 / 次へ"
+korean = "찾기 / 다음"
+russian = "Найти / Далее"
+german = "Suchen / Weiter"
+spanish = "Buscar / Siguiente"
+french = "Trouver / Suivant"
+brazilian_portuguese = "Buscar / Próximo"
+portuguese = "Procurar / Seguinte"
+turkish = "Bul / Sonraki"
+polish = "Znajdź / Następny"
+
+[[message]]
+key = "Enter a CP number from 1 to 255."
+[message.translations]
+simplified_chinese = "请输入 1–255 的 CP 编号"
+traditional_chinese = "請輸入 1–255 的 CP 編號"
+japanese = "1～255 の CP 番号を入力してください。"
+korean = "1~255 사이의 CP 번호를 입력하세요."
+russian = "Введите номер CP от 1 до 255."
+german = "CP-Nummer von 1 bis 255 eingeben."
+spanish = "Introduce un número de CP del 1 al 255."
+french = "Saisissez un numéro de CP entre 1 et 255."
+brazilian_portuguese = "Digite um número de CP de 1 a 255."
+portuguese = "Introduza um número de CP de 1 a 255."
+turkish = "1 ile 255 arasında bir CP numarası girin."
+polish = "Wpisz numer CP od 1 do 255."
+
+[[message]]
+key = "Click again to find the next location."
+[message.translations]
+simplified_chinese = "再次点击可查找下一个位置"
+traditional_chinese = "再次點擊可尋找下一個位置"
+japanese = "もう一度クリックすると次の場所を検索します。"
+korean = "다음 위치를 찾으려면 다시 클릭하세요."
+russian = "Нажмите ещё раз, чтобы найти следующее место."
+german = "Erneut klicken, um die nächste Position zu finden."
+spanish = "Haz clic de nuevo para encontrar la siguiente ubicación."
+french = "Cliquez à nouveau pour trouver l'emplacement suivant."
+brazilian_portuguese = "Clique novamente para encontrar o próximo local."
+portuguese = "Clique novamente para encontrar o local seguinte."
+turkish = "Sonraki konumu bulmak için tekrar tıklayın."
+polish = "Kliknij ponownie, aby znaleźć następne miejsce."

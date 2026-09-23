@@ -15,19 +15,18 @@ TEST(QmChatMessageMergeContract, ChatAndConsoleKeepStructuredMergedAuthors)
 	EXPECT_TRUE(ContainsAll(AddLine, {"g_Config.m_QmMessageMerge", "CanMergePlayerMessages(", "!Highlighted &&"}));
 	EXPECT_FALSE(ContainsAny(AddLine, {"PreviousLine.m_Team = false;", "PreviousLine.m_TeamNumber = 0;", "PreviousLine.m_ClientId == ClientId"}));
 	EXPECT_TRUE(ContainsAll(Chat, {
-		"if(Author.m_ClientId == ClientId)",
-		"Author.m_NameColor = PlayerNameColor(ClientId, NameColor, false);",
-		"\" [%d]: \", Line.m_TimesRepeated + 1",
-		"FlushPendingConsoleLine",
-		"GameClient()->m_GameConsole.PrintLineWithColorSpans",
-		"const bool MergedPlayerMessages = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();",
-		"m_PlayerLine = Line.m_vMergedAuthors.size() <= 1",
-	}));
+					      "if(Author.m_ClientId == ClientId)",
+					      "Author.m_NameColor = PlayerNameColor(ClientId, NameColor, false);",
+					      "\" [%d]: \", Line.m_TimesRepeated + 1",
+					      "FlushPendingConsoleLine",
+					      "GameClient()->m_GameConsole.PrintLineWithColorSpans",
+					      "const bool MergedPlayerMessages = Line.m_TimesRepeated > 0 && !Line.m_vMergedAuthors.empty();",
+					      "m_PlayerLine = Line.m_vMergedAuthors.size() <= 1",
+				      }));
 	EXPECT_TRUE(ContainsAll(ConsoleHeader, {"struct SColorSpan", "m_ColorSpansByExportId", "PrintLineWithColorSpans"}));
 	EXPECT_TRUE(ContainsAll(Console, {"m_PendingColorSpansByExportId", "EntryCursor.m_vColorSplits.emplace_back"}));
 	EXPECT_NE(Translate.find("for(const CChat::SMergedAuthor &Author : pLine->m_vMergedAuthors)"), std::string::npos);
 }
-
 
 TEST(QmChatMessageMergeContract, SettingIsDefaultLocalizedAndVersioned)
 {

@@ -1,6 +1,6 @@
-#include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
-
 #include <base/color.h>
+
+#include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
 
 #include <gtest/gtest.h>
 

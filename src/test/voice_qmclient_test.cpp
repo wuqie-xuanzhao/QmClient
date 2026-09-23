@@ -79,7 +79,6 @@ TEST(QmClient, ParseQmClientUsersJsonSupportsNameFieldsAndLocalMarks)
 	json_value_free(pJson);
 }
 
-
 TEST(QmClient, ParseQmClientUsersJsonRejectsMissingUsersArrayAndSkipsBrokenEntries)
 {
 	const char *pJsonText =
@@ -119,7 +118,6 @@ TEST(QmClient, ParseQmClientUsersJsonRejectsMissingUsersArrayAndSkipsBrokenEntri
 	json_value_free(pJson);
 }
 
-
 TEST(QmClient, ParseQmDeveloperPresencesSupportsArbitraryNamesAndDummy)
 {
 	const char *pJsonText =
@@ -152,7 +150,6 @@ TEST(QmClient, ParseQmDeveloperPresencesSupportsArbitraryNamesAndDummy)
 	json_value_free(pJson);
 }
 
-
 TEST(QmClient, FindQmDeveloperPresenceRequiresExactServerIdAndName)
 {
 	std::vector<SQmDeveloperPresence> vPresences = {
@@ -169,7 +166,6 @@ TEST(QmClient, FindQmDeveloperPresenceRequiresExactServerIdAndName)
 	EXPECT_EQ(FindQmDeveloperPresence(vPresences, "addr-a", 6, "SameName", 1000), nullptr);
 	EXPECT_EQ(FindQmDeveloperPresence(vPresences, "addr-a", 4, "samename", 1000), nullptr);
 }
-
 
 TEST(QmClient, ParseQmDeveloperPresencesKeepsOnlyValidLocalEntries)
 {
@@ -203,7 +199,6 @@ TEST(QmClient, ParseQmDeveloperPresencesKeepsOnlyValidLocalEntries)
 	json_value_free(pJson);
 }
 
-
 TEST(QmClient, FindQmDeveloperPresenceRechecksLifetime)
 {
 	const std::vector<SQmDeveloperPresence> vPresences = {
@@ -215,7 +210,6 @@ TEST(QmClient, FindQmDeveloperPresenceRechecksLifetime)
 	EXPECT_NE(FindQmDeveloperPresence(vPresences, "addr-a", 1, "Name", 199), nullptr);
 	EXPECT_EQ(FindQmDeveloperPresence(vPresences, "addr-a", 1, "Name", 200), nullptr);
 }
-
 
 TEST(QmClient, QmDeveloperBadgeStyleUsesExactlyTwentyRainbowBuckets)
 {
@@ -231,7 +225,6 @@ TEST(QmClient, QmDeveloperBadgeStyleUsesExactlyTwentyRainbowBuckets)
 	EXPECT_EQ(QmDeveloperBadgeStyleFromBucket(100), EQmDeveloperBadgeStyle::BLACK);
 }
 
-
 TEST(QmClient, DeveloperBadgeVisibilityRequiresAuthenticationAndVisibleIdentity)
 {
 	EXPECT_TRUE(ShouldShowQmDeveloperBadge(true, true, false));
@@ -241,7 +234,6 @@ TEST(QmClient, DeveloperBadgeVisibilityRequiresAuthenticationAndVisibleIdentity)
 	EXPECT_FALSE(ShouldShowQmDeveloperBadge(false, false, true));
 }
 
-
 TEST(QmClient, DeveloperMarkRequiresTheSameActivePlayerNameAndUnexpiredLease)
 {
 	EXPECT_TRUE(IsQmDeveloperMarkCurrent(true, "Authenticated Name", "Authenticated Name", 101, 100));
@@ -250,7 +242,6 @@ TEST(QmClient, DeveloperMarkRequiresTheSameActivePlayerNameAndUnexpiredLease)
 	EXPECT_FALSE(IsQmDeveloperMarkCurrent(true, "Authenticated Name", "Authenticated Name", 100, 100));
 	EXPECT_FALSE(IsQmDeveloperMarkCurrent(true, "", "Authenticated Name", 101, 100));
 }
-
 
 TEST(QmClient, ParseQmDeveloperPresencesResetsOutputAndKeepsOrder)
 {
@@ -276,7 +267,6 @@ TEST(QmClient, ParseQmDeveloperPresencesResetsOutputAndKeepsOrder)
 
 	json_value_free(pJson);
 }
-
 
 TEST(QmClient, ParseQmDeveloperPresencesRejectsMalformedRoot)
 {

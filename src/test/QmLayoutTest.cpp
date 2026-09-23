@@ -3,6 +3,8 @@
 
 #include <game/client/QmUi/QmLayout.h>
 #include <game/client/components/qmclient/afk_presentation.h>
+#include <game/client/components/qmclient/input_overlay.h>
+#include <game/client/components/qmclient/score_hud_layout.h>
 #include <game/client/components/qmclient/scoreboard_team_modes.h>
 #include <game/client/components/scoreboard.h>
 #include <game/map/render_map.h>
@@ -343,4 +345,115 @@ TEST(QmScoreboardRender, DdTeamLabelSpacingFitsDenseColumnsWithoutOverlap)
 	EXPECT_LT(Scale, 1.0f);
 	EXPECT_FLOAT_EQ(TeamEnd.m_RowSpacing, SCOREBOARD_TEAM_MODE_ICON_SIZE);
 	EXPECT_LE(RowsPerColumn * (PreferredLineHeight * Scale + TeamEnd.m_RowSpacing), AvailableRowsHeight + 0.001f);
+}
+
+TEST(QmScoreHudLayout, ShortRankKeepsOriginalFootprint)
+{
+	const auto Layout = QmScoreHudLayout(300.0f, 14.0f, 7.0f, 18.0f);
+	EXPECT_FLOAT_EQ(Layout.m_BoxLeft, 248.0f);
+	EXPECT_FLOAT_EQ(Layout.m_BoxWidth, 52.0f);
+	EXPECT_FLOAT_EQ(Layout.m_RankX, 251.0f);
+	EXPECT_FLOAT_EQ(Layout.m_TeeX, 274.0f);
+}
+
+TEST(QmScoreHudLayout, MeasuredRanksLeaveSpaceBeforeTee)
+{
+	// 宽度由渲染器测量，包含名次末尾的句点，覆盖短名次到三位数名次。
+	for(const float RankTextWidth : {7.0f, 12.0f, 14.0f, 19.0f, 21.0f, 24.0f})
+	{
+		for(const float ScoreWidth : {14.0f, 70.0f})
+		{
+			const auto Layout = QmScoreHudLayout(300.0f, ScoreWidth, RankTextWidth, 18.0f);
+			const float RankRight = Layout.m_RankX + RankTextWidth;
+			const float TeeLeft = Layout.m_TeeX - 9.0f;
+			EXPECT_GE(TeeLeft - RankRight, 3.0f);
+			EXPECT_FLOAT_EQ(Layout.m_RankX - Layout.m_BoxLeft, 3.0f);
+			EXPECT_FLOAT_EQ(Layout.m_BoxLeft + Layout.m_BoxWidth, 300.0f);
+		}
+	}
+}
+
+TEST(QmScoreHudLayout, WiderRankExpandsOnlyToTheLeft)
+{
+	const auto TwoDigits = QmScoreHudLayout(300.0f, 14.0f, 14.0f, 18.0f);
+	const auto ThreeDigits = QmScoreHudLayout(300.0f, 14.0f, 21.0f, 18.0f);
+	EXPECT_FLOAT_EQ(ThreeDigits.m_TeeX, TwoDigits.m_TeeX);
+	EXPECT_FLOAT_EQ(ThreeDigits.m_BoxLeft, TwoDigits.m_BoxLeft - 7.0f);
+	EXPECT_FLOAT_EQ(ThreeDigits.m_BoxWidth, TwoDigits.m_BoxWidth + 7.0f);
+	EXPECT_FLOAT_EQ(ThreeDigits.m_RankX, TwoDigits.m_RankX - 7.0f);
+}
+
+TEST(QmInputOverlayLayout, MouseClassificationRequiresMouseOnlyInputs)
+{
+	EXPECT_TRUE(QmInputOverlay::IsMouseOnlyLayout(false, true));
+	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(true, false));
+	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(true, true));
+	EXPECT_FALSE(QmInputOverlay::IsMouseOnlyLayout(false, false));
+}
+
+TEST(QmInputOverlayLayout, MouseSizeDoesNotMoveKeyboardOrMouseAnchor)
+{
+	constexpr float KeyboardScale = 0.5f;
+	const auto Keyboard = QmInputOverlay::ScaledLayoutBounds(0.0f, 0.0f, 432.0f, 300.0f, KeyboardScale, KeyboardScale);
+	const auto SmallMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.1f);
+	const auto LargeMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.5f);
+
+	EXPECT_FLOAT_EQ(Keyboard.m_MinX, 0.0f);
+	EXPECT_FLOAT_EQ(Keyboard.m_MaxX, 216.0f);
+	EXPECT_FLOAT_EQ(SmallMouse.m_MinX, LargeMouse.m_MinX);
+	EXPECT_FLOAT_EQ(SmallMouse.m_MinX - Keyboard.m_MaxX, 17.5f);
+	EXPECT_FLOAT_EQ(SmallMouse.m_MaxX - SmallMouse.m_MinX, 28.5f);
+	EXPECT_FLOAT_EQ(LargeMouse.m_MaxX - LargeMouse.m_MinX, 142.5f);
+}
+
+TEST(QmInputOverlayLayout, VisibleBoundsUseIndependentContentScales)
+{
+	constexpr float KeyboardScale = 0.5f;
+	const auto Keyboard = QmInputOverlay::ScaledLayoutBounds(0.0f, 0.0f, 432.0f, 300.0f, KeyboardScale, KeyboardScale);
+	const auto SmallMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.25f);
+	const auto LargeMouse = QmInputOverlay::ScaledLayoutBounds(467.0f, 0.0f, 285.0f, 421.0f, KeyboardScale, 0.5f);
+
+	const auto SmallBounds = QmInputOverlay::UnionBounds(Keyboard, SmallMouse);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MinX, 0.0f);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MinY, 0.0f);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MaxX, 304.75f);
+	EXPECT_FLOAT_EQ(SmallBounds.m_MaxY, 150.0f);
+
+	const auto LargeBounds = QmInputOverlay::UnionBounds(Keyboard, LargeMouse);
+	EXPECT_FLOAT_EQ(LargeBounds.m_MaxX, 376.0f);
+	EXPECT_FLOAT_EQ(LargeBounds.m_MaxY, 210.5f);
+}
+
+TEST(QmInputOverlayFiles, PendingCheckDoesNotWaitOrPublishPartialTime)
+{
+	CSemaphore Started;
+	CSemaphore Finish;
+	CJobPool Pool;
+	Pool.Init(1);
+	auto pCheck = std::make_shared<CQmInputOverlayFileTimeJob>([&]() -> std::optional<time_t> {
+		Started.Signal();
+		Finish.Wait();
+		return 123;
+	});
+	std::optional<time_t> Modified = 99;
+	Pool.Add(pCheck);
+	Started.Wait();
+	EXPECT_FALSE(pCheck->TryGetResult(Modified));
+	EXPECT_EQ(Modified, 99);
+	Finish.Signal();
+	Pool.Shutdown();
+	EXPECT_TRUE(pCheck->TryGetResult(Modified));
+	EXPECT_EQ(Modified, 123);
+}
+
+TEST(QmInputOverlayFiles, MissingFileIsACompletedResult)
+{
+	CJobPool Pool;
+	Pool.Init(1);
+	auto pCheck = std::make_shared<CQmInputOverlayFileTimeJob>([] { return std::optional<time_t>(); });
+	Pool.Add(pCheck);
+	Pool.Shutdown();
+	std::optional<time_t> Modified = 99;
+	EXPECT_TRUE(pCheck->TryGetResult(Modified));
+	EXPECT_FALSE(Modified.has_value());
 }

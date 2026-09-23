@@ -63,6 +63,7 @@ public:
 
 private:
 	bool m_aBindGroupExpanded[(int)EBindOptionGroup::NUM];
+	CButtonContainer m_aBindGroupExpandButtons[(int)EBindOptionGroup::NUM];
 	std::vector<CBindOption> m_vBindOptions;
 	size_t m_NumPredefinedBindOptions;
 	bool m_BindOptionsDirty = true;

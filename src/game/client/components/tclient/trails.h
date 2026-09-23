@@ -6,26 +6,7 @@
 #include <engine/shared/protocol.h>
 
 #include <game/client/component.h>
-
-class CTrailPart
-{
-public:
-	vec2 m_Pos = vec2(0.0f, 0.0f);
-	vec2 m_UnmovedPos = vec2(0.0f, 0.0f);
-	ColorRGBA m_Col;
-	float m_Width = 0.0f;
-	vec2 m_Normal = vec2(0.0f, 0.0f);
-	vec2 m_Top = vec2(0.0f, 0.0f);
-	vec2 m_Bot = vec2(0.0f, 0.0f);
-	bool m_Flip = false;
-	float m_Progress = 1.0f;
-	int m_Tick = -1;
-
-	bool operator==(const CTrailPart &Other) const
-	{
-		return m_Pos == Other.m_Pos;
-	}
-};
+#include <game/client/components/tclient/qm_tee_trail.h>
 
 class CTrails : public CComponent
 {
@@ -34,6 +15,7 @@ public:
 	int Sizeof() const override { return sizeof(*this); }
 	void OnRender() override;
 	void OnReset() override;
+	void OnNewSnapshot() override;
 
 	enum COLORMODES
 	{
@@ -45,18 +27,14 @@ public:
 	};
 
 private:
-	class CInfo
-	{
-	public:
-		vec2 m_Pos;
-		int m_Tick;
-	};
-	CInfo m_History[MAX_CLIENTS][200];
-	bool m_HistoryValid[MAX_CLIENTS] = {};
-
-	void ClearAllHistory();
-	void ClearHistory(int ClientId);
-	bool ShouldPredictPlayer(int ClientId);
+	qm_tee_trail::CTrailState m_aTrailStates[MAX_CLIENTS];
+	int m_aPositionSources[MAX_CLIENTS] = {};
+	std::vector<CTrailPart> m_vTrail;
+	std::vector<qm_tee_trail::SQuad> m_vQuads;
+	int m_LastDummy = -1;
+	int m_LastStyle = -1;
+	int m_LastLength = -1;
+	void RenderTeeTrails();
 };
 
 #endif

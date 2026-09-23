@@ -209,14 +209,13 @@ void CCollisionHitbox::DrawCircleOutline(vec2 Center, float Radius, ColorRGBA Co
 	if(Radius <= 0.0f || Color.a <= 0.0f)
 		return;
 
-	Segments = std::clamp(Segments, 8, 64);
-	IGraphics::CLineItem aLines[64];
-	const float Step = 2.0f * pi / Segments;
-	vec2 Previous = Center + vec2(std::cos(0.0f) * Radius, std::sin(0.0f) * Radius);
+	Segments = std::clamp(Segments, CQmHitboxCircleDirections::MIN_SEGMENTS, CQmHitboxCircleDirections::MAX_SEGMENTS);
+	IGraphics::CLineItem aLines[CQmHitboxCircleDirections::MAX_SEGMENTS];
+	const vec2 *pDirections = m_CircleDirections.Get(Segments);
+	vec2 Previous = Center + pDirections[0] * Radius;
 	for(int Segment = 0; Segment < Segments; ++Segment)
 	{
-		const float Angle = Step * (Segment + 1);
-		const vec2 Current = Center + vec2(std::cos(Angle) * Radius, std::sin(Angle) * Radius);
+		const vec2 Current = Center + pDirections[Segment + 1] * Radius;
 		aLines[Segment] = IGraphics::CLineItem(Previous, Current);
 		Previous = Current;
 	}
@@ -249,17 +248,16 @@ void CCollisionHitbox::DrawCapsuleOutline(vec2 From, vec2 To, float Radius, Colo
 	if(Color.a <= 0.0f)
 		return;
 
-	const auto vSegments = BuildHitboxCapsuleOutline(From, To, Radius, ArcSegments);
-	if(vSegments.empty())
+	IGraphics::CLineItem aLines[COLLISION_HITBOX_CAPSULE_MAX_LINES];
+	int NumLines = 0;
+	BuildHitboxCapsuleOutline(From, To, Radius, ArcSegments, [&](vec2 LineFrom, vec2 LineTo) {
+		aLines[NumLines++] = IGraphics::CLineItem(LineFrom, LineTo);
+	});
+	if(NumLines == 0)
 		return;
 
-	std::vector<IGraphics::CLineItem> vLines;
-	vLines.reserve(vSegments.size());
-	for(const auto &Segment : vSegments)
-		vLines.emplace_back(Segment.m_From, Segment.m_To);
-
 	Graphics()->SetColor(Color);
-	Graphics()->LinesDraw(vLines.data(), vLines.size());
+	Graphics()->LinesDraw(aLines, NumLines);
 }
 
 bool CCollisionHitbox::GetProjectileRenderPosition(const CProjectileData &Projectile, vec2 &Position, vec2 &PreviousPosition) const

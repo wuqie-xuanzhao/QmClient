@@ -1678,6 +1678,7 @@ bool CTranslate::TryTranslateOutgoingChat(int Team, const char *pText)
 void CTranslate::OnRender()
 {
 	const auto Time = time();
+	bool RebuildChat = false;
 	// 检查翻译响应是否仍然属于同一行
 	// 使用行索引和翻译ID来安全地检测行重用：
 	// - GetLineByIndex 通过索引安全获取行指针
@@ -1714,10 +1715,12 @@ void CTranslate::OnRender()
 			str_copy(Job.m_pTranslateResponse->m_Text, aBuf);
 		}
 		pLine->m_Time = Time;
-		GameClient()->m_Chat.RebuildChat();
+		RebuildChat = true;
 		return true;
 	};
 	m_vJobs.erase(std::remove_if(m_vJobs.begin(), m_vJobs.end(), ForEach), m_vJobs.end());
+	if(RebuildChat)
+		GameClient()->m_Chat.RebuildChat();
 
 	auto ForEachOutgoing = [&](COutgoingTranslateJob &Job) {
 		const std::optional<bool> Done = Job.m_pBackend->Update(Job.m_Response);

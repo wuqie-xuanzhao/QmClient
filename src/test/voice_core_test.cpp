@@ -8,6 +8,7 @@
 
 #include <engine/shared/config.h>
 #include <engine/shared/json.h>
+#include <engine/shared/websocket_client.h>
 
 #include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/components/qmclient/voice/voice_capture_pipeline.h>
@@ -20,8 +21,10 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <deque>
 #include <fstream>
 #include <limits>
+#include <memory>
 #include <sstream>
 
 #if defined(CONF_RNNOISE)
@@ -38,6 +41,94 @@ namespace VoiceUtils
 static constexpr int TEST_VOICE_NOISE_SUPPRESS_OFF = 0;
 static constexpr int TEST_VOICE_NOISE_SUPPRESS_SIMPLE = 1;
 static constexpr int TEST_VOICE_NOISE_SUPPRESS_RNNOISE = 2;
+
+TEST(VoiceUtils, VoiceWebSocketUrlMigratesOnlyOfficialUdpDefault)
+{
+	EXPECT_STREQ(VoiceUtils::EffectiveVoiceWebSocketUrl(nullptr), "wss://qmclient.icu/ws/voice");
+	EXPECT_STREQ(VoiceUtils::EffectiveVoiceWebSocketUrl(""), "wss://qmclient.icu/ws/voice");
+	EXPECT_STREQ(VoiceUtils::EffectiveVoiceWebSocketUrl("42.194.185.210:9987"), "wss://qmclient.icu/ws/voice");
+	EXPECT_STREQ(VoiceUtils::EffectiveVoiceWebSocketUrl("custom.example:9987"), "custom.example:9987");
+	EXPECT_STREQ(VoiceUtils::EffectiveVoiceWebSocketUrl("wss://voice.example/ws"), "wss://voice.example/ws");
+}
+
+namespace
+{
+class CVoiceTransportTestClient final : public IQmWebSocketClient
+{
+public:
+	STuning m_Tuning;
+	EQmWebSocketState m_State = EQmWebSocketState::IDLE;
+	bool m_Desired = false;
+	bool m_SendAccepted = true;
+	int64_t m_ConnectedTick = 0;
+	std::deque<SQmWebSocketMessage> m_Incoming;
+
+	bool Available() const override { return true; }
+	const char *UnavailableReason() const override { return ""; }
+	bool Connect(const SQmWebSocketConnectConfig &, std::string &) override
+	{
+		m_Desired = true;
+		m_State = EQmWebSocketState::CONNECTING;
+		return true;
+	}
+	void Disconnect() override
+	{
+		m_Desired = false;
+		m_State = EQmWebSocketState::IDLE;
+		m_Incoming.clear();
+	}
+	bool Desired() const override { return m_Desired; }
+	EQmWebSocketState State() const override { return m_State; }
+	const char *StateName() const override { return "test"; }
+	bool SendText(const char *, size_t) override { return false; }
+	bool SendBinary(const char *, size_t) override { return m_SendAccepted; }
+	void SetTuning(const STuning &Tuning) override { m_Tuning = Tuning; }
+	bool PollMessage(SQmWebSocketMessage &Out) override
+	{
+		if(m_Incoming.empty())
+			return false;
+		Out = std::move(m_Incoming.front());
+		m_Incoming.pop_front();
+		return true;
+	}
+	size_t PendingMessages() const override { return m_Incoming.size(); }
+	int64_t LastConnectedTick() const override { return m_ConnectedTick; }
+	int64_t LastMessageTick() const override { return 0; }
+	int64_t SendCount() const override { return 0; }
+	int64_t RecvCount() const override { return 0; }
+	int64_t DroppedIncomingCount() const override { return 0; }
+	int64_t DroppedOutgoingCount() const override { return 0; }
+	int64_t ReconnectCount() const override { return 0; }
+	int LastPingRttMs() const override { return -1; }
+	const char *LastError() const override { return ""; }
+};
+}
+
+TEST(VoiceUtils, WebSocketVoiceBoundsOutgoingQueueAndResetsAfterReconnect)
+{
+	auto pClient = std::make_unique<CVoiceTransportTestClient>();
+	auto *pMock = pClient.get();
+	CVoiceWebSocketTransport Transport(std::move(pClient));
+	EXPECT_EQ(pMock->m_Tuning.m_OutgoingQueueCapacity, 8u);
+	EXPECT_TRUE(Transport.Update("wss://voice.example/ws", true, 10, 20, VOICE_VERSION));
+	EXPECT_TRUE(Transport.Connecting());
+	pMock->m_State = EQmWebSocketState::CONNECTED;
+	++pMock->m_ConnectedTick;
+	EXPECT_TRUE(Transport.Update("wss://voice.example/ws", true, 10, 20, VOICE_VERSION));
+	uint8_t aPacket[VOICE_PACKET_HEADER_SIZE] = {};
+	EXPECT_TRUE(Transport.SendPacket(aPacket, sizeof(aPacket)));
+	pMock->m_SendAccepted = false;
+	EXPECT_FALSE(Transport.SendPacket(aPacket, sizeof(aPacket)));
+	pMock->m_State = EQmWebSocketState::RECONNECTING;
+	EXPECT_TRUE(Transport.Update("wss://voice.example/ws", true, 10, 20, VOICE_VERSION));
+	EXPECT_FALSE(Transport.SendPacket(aPacket, sizeof(aPacket)));
+	pMock->m_State = EQmWebSocketState::CONNECTED;
+	++pMock->m_ConnectedTick;
+	EXPECT_FALSE(Transport.SendPacket(aPacket, sizeof(aPacket)));
+	EXPECT_TRUE(Transport.Update("wss://voice.example/ws", true, 10, 20, VOICE_VERSION));
+	pMock->m_SendAccepted = true;
+	EXPECT_TRUE(Transport.SendPacket(aPacket, sizeof(aPacket)));
+}
 
 TEST(VoiceCore, ClampJitterTargetLow)
 {
@@ -176,7 +267,7 @@ TEST(VoiceCore, VoiceProcessTraceCallbackRecordsStagesInOrder)
 	EXPECT_EQ(vStages[3], EVoiceProcessStage::HPF_COMPRESSOR);
 }
 
-TEST(VoiceCore, CaptureProcessOrderIsAgcThenMicGainThenDenoiseThenDynamics)
+TEST(VoiceCore, CaptureProcessKeepsOnlyMicGain)
 {
 	CRClientVoice Voice;
 	SRClientVoiceConfigSnapshot Config;
@@ -208,12 +299,14 @@ TEST(VoiceCore, CaptureProcessOrderIsAgcThenMicGainThenDenoiseThenDynamics)
 
 	SetVoiceProcessTraceCallback(nullptr, nullptr);
 
-	ASSERT_EQ(vStages.size(), 4u);
-	EXPECT_EQ(vStages[0], EVoiceProcessStage::AGC_GAIN);
-	EXPECT_EQ(vStages[1], EVoiceProcessStage::MIC_GAIN);
-	EXPECT_EQ(vStages[2], EVoiceProcessStage::DENOISE);
-	EXPECT_EQ(vStages[3], EVoiceProcessStage::HPF_COMPRESSOR);
-	EXPECT_GT(AgcGain, 0.0f);
+	ASSERT_EQ(vStages.size(), 1u);
+	EXPECT_EQ(vStages[0], EVoiceProcessStage::MIC_GAIN);
+	EXPECT_FLOAT_EQ(AgcGain, 1.0f);
+	EXPECT_FLOAT_EQ(NoiseFloor, 0.0f);
+	EXPECT_FLOAT_EQ(NoiseGate, 1.0f);
+	EXPECT_FLOAT_EQ(HpfPrevIn, 0.0f);
+	EXPECT_FLOAT_EQ(HpfPrevOut, 0.0f);
+	EXPECT_FLOAT_EQ(CompEnv, 0.0f);
 }
 
 TEST(VoiceCore, ComputeVoiceEncoderTargetsManualProfilesOverrideAdaptiveTable)
@@ -645,8 +738,10 @@ TEST(QmClient, CustomTitleLengthAndPresenceValidation)
 	const char *pJsonText = R"({"server_time":1000,"presences":[{"server_address":"a","player_id":3,"player_name":"Twen","title":"小猫","issued_at":1000,"expires_at":1015},{"server_address":"b","player_id":4,"player_name":"Twen","title":"小猫","issued_at":1000,"expires_at":1015},{"server_address":"a","player_id":5,"player_name":"Twen","title":"小猫","issued_at":900,"expires_at":999}]})";
 	json_value *pJson = json_parse(pJsonText, str_length(pJsonText));
 	ASSERT_NE(pJson, nullptr);
-	const auto Presences = ParseQmTitlePresences(pJson, "a");
+	int64_t ServerTime = 0;
+	const auto Presences = ParseQmTitlePresences(pJson, "a", &ServerTime);
 	ASSERT_EQ(Presences.size(), 1u);
+	EXPECT_EQ(ServerTime, 1000);
 	EXPECT_EQ(Presences[0].m_PlayerId, 3);
 	EXPECT_EQ(Presences[0].m_Title, "小猫");
 	EXPECT_EQ(Presences[0].m_RemainingSeconds, 15);

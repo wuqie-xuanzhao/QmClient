@@ -1530,9 +1530,14 @@ void CGraphicsBackend_SDL_GL::HideWindow()
 void CGraphicsBackend_SDL_GL::ShowWindow()
 {
 	// QmClient: 窗口以 SDL_WINDOW_HIDDEN 创建，等第一帧真有内容后再显示，
-	// 避免启动时先闪一帧纯黑。重复调用无副作用。
+	// 避免启动时先闪一帧纯黑。终端启动时窗口可能沿用最小化状态或被终端置于后方，
+	// 因此显示前先恢复，再请求 SDL 将其抬到前台。重复调用无副作用。
 	if(m_pWindow != nullptr)
+	{
+		SDL_RestoreWindow(m_pWindow);
 		SDL_ShowWindow(m_pWindow);
+		SDL_RaiseWindow(m_pWindow);
+	}
 }
 
 void CGraphicsBackend_SDL_GL::SetWindowParams(int FullscreenMode, bool IsBorderless)

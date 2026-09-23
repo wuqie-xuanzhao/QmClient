@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace
 {
@@ -111,6 +112,17 @@ float ResolveUiAnimValue(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, E
 
 float ResolveUiAnimSpringValue(CUiV2AnimationRuntime &AnimRuntime, uint64_t NodeKey, EUiAnimProperty Property, float Target, const SUiSpringConfig &Spring, int Priority)
 {
+	// 首次出现从控件当前目标开始，避免从屏幕原点飞入；关闭动效立即停止旧轨道。
+	const float Current = AnimRuntime.GetValue(NodeKey, Property, std::numeric_limits<float>::quiet_NaN());
+	if(std::isnan(Current))
+		AnimRuntime.SetValue(NodeKey, Property, Target);
+	if(g_Config.m_QmUiMotionLevel == 0)
+	{
+		if(Current != Target || AnimRuntime.HasActiveAnimation(NodeKey, Property))
+			AnimRuntime.SetValue(NodeKey, Property, Target);
+		return Target;
+	}
+
 	SUiAnimTransition Transition;
 	Transition.m_Driver = EUiAnimDriver::SPRING;
 	Transition.m_Spring = Spring;

@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
-// 多音乐客户端(当前:汽水音乐)歌词集成。
-// 标准媒体状态由 CSystemMediaControls 提供;本组件消费汽水 Hook 私有快照
+// Windows 音乐客户端（汽水音乐、酷狗和 QQ 音乐）歌词集成。
+// 标准媒体状态由 CSystemMediaControls 提供;本组件消费各来源私有快照
 // (歌曲身份/进度/歌词文件路径),读取歌词 JSON 文件后解析为统一时间轴,
 // 并向 HUD 提供当前句。关闭展示时后台采集仍可继续(由 helper 自行维护)。
 class CMusicLyricsIntegration : public CComponent
@@ -31,12 +31,16 @@ public:
 	bool GetCurrentLyric(char *pBuffer, size_t BufferSize) const;
 	bool HasCurrentLyric() const;
 	bool HasActiveLyrics() const;
-	// 当前歌曲身份(mediaId 的稳定数字部分)。
+	// 当前歌曲身份的稳定数字标记；内部切歌以完整文本和版本判断。
 	uint64_t CurrentSongId() const;
+	bool GetStatus(char *pBuffer, size_t BufferSize) const;
+	int ActiveSource() const;
+	bool RunKugouSetup(bool Restore);
 
 private:
 	void SyncHookConfiguration();
 	void ClearForStaleMedia();
+	void ProcessLyricLoadJob();
 	void LoadLyricFile(const char *pPath);
 
 	struct SImpl;

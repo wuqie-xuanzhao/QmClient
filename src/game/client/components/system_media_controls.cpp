@@ -20,6 +20,7 @@
 #include <engine/image.h>
 
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/prepared_media_art.h>
 
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
@@ -33,6 +34,7 @@
 #include <cmath>
 #include <deque>
 #include <limits>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -81,8 +83,7 @@ struct CSystemMediaControls::SShared
 	SPlainState m_State{};
 	bool m_HasMedia = false;
 	std::deque<ECommand> m_Commands;
-	std::vector<uint8_t> m_AlbumArtRgba;
-	std::vector<uint8_t> m_AlbumArtCircularRgba;
+	std::unique_ptr<CQmPreparedMediaArt> m_pAlbumArt;
 	int m_AlbumArtWidth = 0;
 	int m_AlbumArtHeight = 0;
 	bool m_AlbumArtDirty = false;
@@ -130,22 +131,28 @@ static void ClearState(CSystemMediaControls::SWinrt *pWinrt, IGraphics *pGraphic
 
 static void ClearSharedAlbumArt(CSystemMediaControls::SShared *pShared)
 {
-	std::scoped_lock Lock(pShared->m_Mutex);
-	pShared->m_AlbumArtRgba.clear();
-	pShared->m_AlbumArtCircularRgba.clear();
-	pShared->m_AlbumArtWidth = 0;
-	pShared->m_AlbumArtHeight = 0;
-	pShared->m_AlbumArtDirty = true;
+	// 旧封面在离开锁后析构：上传线程只做一次指针移交，不再复制整块像素。
+	std::unique_ptr<CQmPreparedMediaArt> pDiscarded;
+	{
+		std::scoped_lock Lock(pShared->m_Mutex);
+		pDiscarded = std::move(pShared->m_pAlbumArt);
+		pShared->m_AlbumArtWidth = 0;
+		pShared->m_AlbumArtHeight = 0;
+		pShared->m_AlbumArtDirty = true;
+	}
 }
 
-static void SetSharedAlbumArt(CSystemMediaControls::SShared *pShared, std::vector<uint8_t> &&Pixels, std::vector<uint8_t> &&CircularPixels, int Width, int Height)
+static void SetSharedAlbumArt(CSystemMediaControls::SShared *pShared, const std::vector<uint8_t> &Pixels, const std::vector<uint8_t> &CircularPixels, int Width, int Height)
 {
-	std::scoped_lock Lock(pShared->m_Mutex);
-	pShared->m_AlbumArtRgba = std::move(Pixels);
-	pShared->m_AlbumArtCircularRgba = std::move(CircularPixels);
-	pShared->m_AlbumArtWidth = Width;
-	pShared->m_AlbumArtHeight = Height;
-	pShared->m_AlbumArtDirty = true;
+	// 分配与像素复制在后台、锁外完成；旧封面同样在离开锁后析构。
+	auto pPrepared = std::make_unique<CQmPreparedMediaArt>(Pixels, CircularPixels, Width, Height);
+	{
+		std::scoped_lock Lock(pShared->m_Mutex);
+		pShared->m_pAlbumArt.swap(pPrepared);
+		pShared->m_AlbumArtWidth = Width;
+		pShared->m_AlbumArtHeight = Height;
+		pShared->m_AlbumArtDirty = true;
+	}
 }
 
 static void ClearMediaText(SPlainState &State)
@@ -284,7 +291,7 @@ static void UpdateAlbumArtData(CSystemMediaControls::SShared *pShared, const win
 		const float RoundingRatio = 2.0f / 14.0f;
 		const float Radius = (float)std::min(DecodeSize.m_Width, DecodeSize.m_Height) * RoundingRatio;
 		ApplyRoundedMask(Copy, (int)DecodeSize.m_Width, (int)DecodeSize.m_Height, Radius);
-		SetSharedAlbumArt(pShared, std::move(Copy), std::move(CircularCopy), (int)DecodeSize.m_Width, (int)DecodeSize.m_Height);
+		SetSharedAlbumArt(pShared, Copy, CircularCopy, (int)DecodeSize.m_Width, (int)DecodeSize.m_Height);
 	}
 	catch(const winrt::hresult_error &)
 	{
@@ -403,23 +410,12 @@ static void ApplyCircularFeatherMask(std::vector<uint8_t> &Pixels, int Width, in
 	}
 }
 
-static IGraphics::CTextureHandle LoadAlbumArtTexture(IGraphics *pGraphics, const std::vector<uint8_t> &Pixels, int Width, int Height, const char *pName)
+// 像素在后台线程已备好：这里直接把 CImageInfo 交给 LoadTextureRawMove，
+// 主线程不再为上传复制一份 RGBA 缓冲。
+static IGraphics::CTextureHandle LoadAlbumArtTexture(IGraphics *pGraphics, CImageInfo &Image, const char *pName)
 {
-	if(pGraphics == nullptr || Width <= 0 || Height <= 0)
+	if(pGraphics == nullptr || Image.m_pData == nullptr)
 		return {};
-	const size_t ExpectedSize = (size_t)Width * (size_t)Height * 4;
-	if(Pixels.size() < ExpectedSize)
-		return {};
-
-	CImageInfo Image;
-	Image.m_Width = (size_t)Width;
-	Image.m_Height = (size_t)Height;
-	Image.m_Format = CImageInfo::FORMAT_RGBA;
-	Image.m_pData = static_cast<uint8_t *>(malloc(ExpectedSize));
-	if(!Image.m_pData)
-		return {};
-
-	mem_copy(Image.m_pData, Pixels.data(), ExpectedSize);
 	return pGraphics->LoadTextureRawMove(Image, 0, pName);
 }
 
@@ -431,8 +427,7 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 	bool AlbumArtDirty = false;
 	int AlbumArtWidth = 0;
 	int AlbumArtHeight = 0;
-	std::vector<uint8_t> AlbumArtPixels;
-	std::vector<uint8_t> AlbumArtCircularPixels;
+	std::unique_ptr<CQmPreparedMediaArt> pAlbumArt;
 	{
 		std::scoped_lock Lock(pShared->m_Mutex);
 		if(pShared->m_AlbumArtDirty)
@@ -440,10 +435,7 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 			AlbumArtDirty = true;
 			AlbumArtWidth = pShared->m_AlbumArtWidth;
 			AlbumArtHeight = pShared->m_AlbumArtHeight;
-			AlbumArtPixels = std::move(pShared->m_AlbumArtRgba);
-			AlbumArtCircularPixels = std::move(pShared->m_AlbumArtCircularRgba);
-			pShared->m_AlbumArtRgba.clear();
-			pShared->m_AlbumArtCircularRgba.clear();
+			pAlbumArt = std::move(pShared->m_pAlbumArt);
 			pShared->m_AlbumArtDirty = false;
 		}
 	}
@@ -454,8 +446,11 @@ static void ApplySharedAlbumArt(CSystemMediaControls::SShared *pShared, CSystemM
 
 	ClearAlbumArtLocal(pWinrt, pGraphics);
 
-	pWinrt->m_State.m_AlbumArt = LoadAlbumArtTexture(pGraphics, AlbumArtPixels, AlbumArtWidth, AlbumArtHeight, "smtc_album_art");
-	pWinrt->m_State.m_AlbumArtCircular = LoadAlbumArtTexture(pGraphics, AlbumArtCircularPixels, AlbumArtWidth, AlbumArtHeight, "smtc_album_art_circular");
+	if(pAlbumArt != nullptr)
+	{
+		pWinrt->m_State.m_AlbumArt = LoadAlbumArtTexture(pGraphics, pAlbumArt->m_Original, "smtc_album_art");
+		pWinrt->m_State.m_AlbumArtCircular = LoadAlbumArtTexture(pGraphics, pAlbumArt->m_Circular, "smtc_album_art_circular");
+	}
 	if(pWinrt->m_State.m_AlbumArt.IsValid())
 	{
 		pWinrt->m_State.m_AlbumArtWidth = AlbumArtWidth;

@@ -152,6 +152,7 @@ private:
 	float m_AnimTime = 0.0f;
 	float m_AnimTimeMax = 0.0f;
 	float m_AnimStartOffset = 0.0f;
+	float m_AnimStartVelocity = 0.0f;
 	float m_AnimTargetOffset = 0.0f;
 	bool m_HasPendingScrollTarget = false;
 	float m_PendingScrollTarget = 0.0f;

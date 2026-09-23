@@ -1,6 +1,7 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "test.h"
 
+#include <game/client/QmUi/QmAnimationBackend.h>
 #include <game/client/QmUi/QmMotion.h>
 #include <game/client/QmUi/QmTheme.h>
 #include <game/client/QmUi/UiTokens.h>
@@ -166,6 +167,58 @@ TEST(QmImeOverlay, CandidatePopupOnlyAppearsForCandidateText)
 	EXPECT_FALSE(QmImeHasPopupContent(State));
 }
 
+TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
+{
+	const std::string ManagerSource = ReadTestSourceFile("src/game/client/qm_ime_manager.cpp");
+	const std::string PopupSource = ReadTestSourceFile("src/game/client/qm_ime_candidate_popup.cpp");
+	const std::string PopupHeader = ReadTestSourceFile("src/game/client/qm_ime_candidate_popup.h");
+
+	EXPECT_NE(ManagerSource.find("State.m_Visible = HasComposition && CandidateCount > 0;"), std::string::npos);
+	EXPECT_NE(PopupHeader.find("SPresentationTargets"), std::string::npos);
+	EXPECT_NE(PopupSource.find("SImePresentationTarget"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ResolveImePresentationStateValue"), std::string::npos);
+	EXPECT_NE(PopupSource.find("ResolveUiPresentationStateValue"), std::string::npos);
+	EXPECT_NE(PopupSource.find("SetUiPresentationStateValue"), std::string::npos);
+	EXPECT_NE(PopupSource.find("TargetPresentation.m_CandidateAlpha"), std::string::npos);
+	// 首次状态只初始化一次；后续显示、重定向和淡出都沿用同一组可动画状态。
+	EXPECT_NE(PopupSource.find("if(!m_Presentation.m_Initialized)"), std::string::npos);
+	EXPECT_NE(PopupSource.find("m_Presentation.m_Initialized = true;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("Presence.m_FreshEnter"), std::string::npos);
+	EXPECT_NE(PopupSource.find("const float Alpha = minimum(Presence.m_Alpha, PresentationAlpha);"), std::string::npos);
+	EXPECT_NE(PopupSource.find("const float CandidateDrawAlpha = Alpha * CandidateAlpha;"), std::string::npos);
+	EXPECT_NE(PopupSource.find("WithAlpha(Ime.m_SelectedBg, CandidateDrawAlpha)"), std::string::npos);
+	EXPECT_NE(PopupSource.find("TargetPresentation.m_Radius = PanelHeight * 0.5f;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("PanelHeight * 0.36f"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)PresentationAlpha;"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)CandidateAlpha;"), std::string::npos);
+	EXPECT_NE(PopupSource.find("IME_CONTENT_TIME_SCALE = 0.40f"), std::string::npos);
+	EXPECT_NE(PopupSource.find("BuildCandidateViewport"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ResolveMotionValue"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ResolveMotionRect"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("FitCandidates"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("CandidateFitPanelWidth"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("SingleLongCandidate"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("--CandidateDisplayCount"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("TEXTFLAG_ELLIPSIS_AT_END"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("TextWidthBudget"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("m_TextMaxWidth"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("m_MaxCandidateTextWidth"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ShadowNear"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("ShadowFar"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("TopGlow"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("PanelInner"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("EUiAnimInterruptPolicy::QUEUE"), std::string::npos);
+}
+
+TEST(QmUiPresentationSource, OverlaysUsePresentationState)
+{
+	const std::string OverlaySource = ReadTestSourceFile("src/game/client/QmUi/UiOverlays.h");
+
+	EXPECT_NE(OverlaySource.find("ResolveUiPresentationStateValue"), std::string::npos);
+	EXPECT_NE(OverlaySource.find("SetUiPresentationStateValue"), std::string::npos);
+	EXPECT_EQ(OverlaySource.find("->SetValue("), std::string::npos);
+}
+
 TEST(QmUiTokens, MotionRefsBindToAnimCurves)
 {
 	EXPECT_EQ(ui_token::motion::HOVER_FADE.m_Easing, EEasing::EASE_OUT_QUART);
@@ -205,4 +258,19 @@ TEST(QmUiTokens, QmMotionAppliesUserMotionLevel)
 	const SUiAnimTransition Full = qm_motion::ApplyMotionLevel(Transition, 2);
 	EXPECT_EQ(Full.m_DurationSec, Transition.m_DurationSec);
 	EXPECT_EQ(Full.m_DelaySec, Transition.m_DelaySec);
+}
+
+TEST(QmAnimationBackend, MotionPolicyIsCanonical)
+{
+	SUiAnimTransition Transition = ui_token::motion::MODAL_FADE_SCALE;
+	Transition.m_DelaySec = 0.20f;
+
+	const SUiAnimTransition Direct = qm_animation::ApplyMotionLevel(Transition, 1);
+	const SUiAnimTransition Compatibility = qm_motion::ApplyMotionLevel(Transition, 1);
+
+	EXPECT_FLOAT_EQ(Direct.m_DurationSec, Compatibility.m_DurationSec);
+	EXPECT_FLOAT_EQ(Direct.m_DelaySec, Compatibility.m_DelaySec);
+	EXPECT_FLOAT_EQ(Direct.m_Spring.m_Damping, Compatibility.m_Spring.m_Damping);
+	EXPECT_EQ(Direct.m_Driver, Compatibility.m_Driver);
+	EXPECT_EQ(Direct.m_Easing, Compatibility.m_Easing);
 }

@@ -1,5 +1,7 @@
 #include "serverbrowser_http.h"
 
+#include "serverbrowser_http_parse.h"
+
 #include <base/lock.h>
 #include <base/log.h>
 #include <base/system.h>
@@ -419,7 +421,7 @@ namespace
 			bool Success = true;
 			json_value *pJson = pGetServers->State() == EHttpState::DONE ? pGetServers->ResultJson() : nullptr;
 			Success = Success && pJson;
-			Success = Success && !Parse(pJson, &m_vServers);
+			Success = Success && !ServerBrowserParseHttpList(pJson, &m_vServers);
 			json_value_free(pJson);
 			if(!Success)
 			{
@@ -463,104 +465,14 @@ namespace
 		}
 		Update();
 	}
-	bool ServerbrowserParseUrl(NETADDR *pOut, const char *pUrl)
-	{
-		int Failure = net_addr_from_url(pOut, pUrl, nullptr, 0);
-		if(Failure || pOut->port == 0)
-		{
-			return true;
-		}
-		return false;
-	}
 	bool CServerBrowserHttp::Validate(json_value *pJson)
 	{
 		std::vector<CServerInfo> vServers;
-		return Parse(pJson, &vServers);
+		return ServerBrowserParseHttpList(pJson, &vServers);
 	}
 	bool CServerBrowserHttp::Parse(json_value *pJson, std::vector<CServerInfo> *pvServers)
 	{
-		std::vector<CServerInfo> vServers;
-
-		const json_value &Json = *pJson;
-		const json_value &Servers = Json["servers"];
-		if(Servers.type != json_array)
-		{
-			return true;
-		}
-		for(unsigned int i = 0; i < Servers.u.array.length; i++)
-		{
-			const json_value &Server = Servers[i];
-			const json_value &Addresses = Server["addresses"];
-			const json_value &Info = Server["info"];
-			const json_value &Location = Server["location"];
-			int ParsedLocation = CServerInfo::LOC_UNKNOWN;
-			CServerInfo2 ParsedInfo;
-			if(Addresses.type != json_array || (Location.type != json_string && Location.type != json_none))
-			{
-				return true;
-			}
-			if(Location.type == json_string)
-			{
-				if(CServerInfo::ParseLocation(&ParsedLocation, Location))
-				{
-					return true;
-				}
-			}
-			if(CServerInfo2::FromJson(&ParsedInfo, &Info))
-			{
-				// Only skip the current server on parsing
-				// failure; the server info is "user input" by
-				// the game server and can be set to arbitrary
-				// values.
-				continue;
-			}
-			CServerInfo SetInfo = ParsedInfo;
-			SetInfo.m_Location = ParsedLocation;
-			SetInfo.m_NumAddresses = 0;
-			bool GotVersion6 = false;
-			for(unsigned int a = 0; a < Addresses.u.array.length; a++)
-			{
-				const json_value &Address = Addresses[a];
-				if(Address.type != json_string)
-				{
-					return true;
-				}
-				if(str_startswith(Addresses[a], "tw-0.6+udp://"))
-				{
-					GotVersion6 = true;
-					break;
-				}
-			}
-			for(unsigned int a = 0; a < Addresses.u.array.length; a++)
-			{
-				const json_value &Address = Addresses[a];
-				if(Address.type != json_string)
-				{
-					return true;
-				}
-				if(GotVersion6 && str_startswith(Addresses[a], "tw-0.7+udp://"))
-				{
-					continue;
-				}
-				NETADDR ParsedAddr;
-				if(ServerbrowserParseUrl(&ParsedAddr, Addresses[a]))
-				{
-					// Skip unknown addresses.
-					continue;
-				}
-				if(SetInfo.m_NumAddresses < (int)std::size(SetInfo.m_aAddresses))
-				{
-					SetInfo.m_aAddresses[SetInfo.m_NumAddresses] = ParsedAddr;
-					SetInfo.m_NumAddresses += 1;
-				}
-			}
-			if(SetInfo.m_NumAddresses > 0)
-			{
-				vServers.push_back(SetInfo);
-			}
-		}
-		*pvServers = vServers;
-		return false;
+		return ServerBrowserParseHttpList(pJson, pvServers);
 	}
 
 	const char *DEFAULT_SERVERLIST_URLS[] = {

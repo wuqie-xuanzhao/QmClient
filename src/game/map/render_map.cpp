@@ -407,11 +407,13 @@ void CRenderMap::ForceRenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, 
 		const vec2 Offset = vec2(Position.r, Position.g);
 		const float Rotation = Position.b / 180.0f * pi;
 
-		Graphics()->SetColor4(
-			ColorRGBA(pQuad->m_aColors[0].r, pQuad->m_aColors[0].g, pQuad->m_aColors[0].b, pQuad->m_aColors[0].a * Alpha).Multiply(Color).Multiply(Conv),
-			ColorRGBA(pQuad->m_aColors[1].r, pQuad->m_aColors[1].g, pQuad->m_aColors[1].b, pQuad->m_aColors[1].a * Alpha).Multiply(Color).Multiply(Conv),
-			ColorRGBA(pQuad->m_aColors[3].r, pQuad->m_aColors[3].g, pQuad->m_aColors[3].b, pQuad->m_aColors[3].a * Alpha).Multiply(Color).Multiply(Conv),
-			ColorRGBA(pQuad->m_aColors[2].r, pQuad->m_aColors[2].g, pQuad->m_aColors[2].b, pQuad->m_aColors[2].a * Alpha).Multiply(Color).Multiply(Conv));
+		IGraphics::CColorVertex aColors[4] = {
+			IGraphics::CColorVertex(0, ColorRGBA(pQuad->m_aColors[0].r, pQuad->m_aColors[0].g, pQuad->m_aColors[0].b, pQuad->m_aColors[0].a * Alpha).Multiply(Color).Multiply(Conv)),
+			IGraphics::CColorVertex(1, ColorRGBA(pQuad->m_aColors[1].r, pQuad->m_aColors[1].g, pQuad->m_aColors[1].b, pQuad->m_aColors[1].a * Alpha).Multiply(Color).Multiply(Conv)),
+			IGraphics::CColorVertex(2, ColorRGBA(pQuad->m_aColors[2].r, pQuad->m_aColors[2].g, pQuad->m_aColors[2].b, pQuad->m_aColors[2].a * Alpha).Multiply(Color).Multiply(Conv)),
+			IGraphics::CColorVertex(3, ColorRGBA(pQuad->m_aColors[3].r, pQuad->m_aColors[3].g, pQuad->m_aColors[3].b, pQuad->m_aColors[3].a * Alpha).Multiply(Color).Multiply(Conv)),
+		};
+		Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 		CPoint *pPoints = pQuad->m_aPoints;
 

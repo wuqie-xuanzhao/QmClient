@@ -4024,6 +4024,9 @@ void CTClient::ResetGoresDistanceFieldBuild()
 	m_GoresDistanceFieldBuildLayer = 0;
 	m_GoresDistanceFieldBuildLoadedVisualLayerData = -1;
 	m_GoresDistanceFieldBuildHadStart = false;
+	// 起点缓存随本轮地图构建重建；访问位图随之释放，避免跨地图残留。
+	m_GoresRouteStartIndex.Reset();
+	m_GoresDebugRouteVisited.Reset();
 	m_pGoresDistanceFieldBuildMap = nullptr;
 	m_pGoresDistanceFieldBuildGameLayer = nullptr;
 	m_pGoresDistanceFieldBuildFrontLayer = nullptr;
@@ -4186,7 +4189,8 @@ void CTClient::StepGoresDistanceFieldTileScan(int Budget)
 	{
 		const int Tile = pGame[Index].m_Index;
 		const int FrontTile = pFront ? pFront[Index].m_Index : TILE_AIR;
-		const bool IsStart = Tile == TILE_START || FrontTile == TILE_START;
+		// 顺带记录潜在起点（游戏层/前景层同格只记一次），供路线显示按需查询，避免每帧全图扫描。
+		const bool IsStart = m_GoresRouteStartIndex.AddTile(Index, Tile, FrontTile);
 		const bool IsFinish = Tile == TILE_FINISH || FrontTile == TILE_FINISH;
 		const bool HasPenalty = IsPenaltyTileForGoresDistanceField(Tile) || IsPenaltyTileForGoresDistanceField(FrontTile);
 		const bool HasReward = IsRewardTileForGoresDistanceField(Tile) || IsRewardTileForGoresDistanceField(FrontTile);
@@ -4538,6 +4542,8 @@ void CTClient::ApplyFocusModeEffects()
 		{"cl_showhud", &g_Config.m_ClShowhud, 0, Focus.m_HideHud, &m_FocusHudOverrideState},
 		{"tc_statusbar", &g_Config.m_TcStatusBar, 0, Focus.m_HideHud, &m_FocusStatusBarOverrideState},
 		// 名字文本行：禅模式"隐藏名字"与"隐藏名字板"都会隐藏它；坐标行只跟随"隐藏名字板"。
+		// 昵称显示范围是六档枚举，隐藏时压到 0（无）；旧的两开关保留在同表内，避免残留接管状态。
+		{"qm_nameplate_show_scope", &g_Config.m_QmNameplateShowScope, 0, Focus.m_HideNames || Focus.m_HideNameplates, &m_FocusNameplateShowScopeOverrideState},
 		{"cl_nameplates", &g_Config.m_ClNamePlates, 0, Focus.m_HideNames || Focus.m_HideNameplates, &m_FocusNamePlatesOverrideState},
 		{"cl_nameplates_own", &g_Config.m_ClNamePlatesOwn, 0, Focus.m_HideNames || Focus.m_HideNameplates, &m_FocusNamePlatesOwnOverrideState},
 		{"qm_nameplate_coords", &g_Config.m_QmNameplateCoords, 0, Focus.m_HideNameplates, &m_FocusNameplateCoordsOverrideState},
@@ -4733,40 +4739,30 @@ bool CTClient::BuildGoresDebugRoute(std::vector<vec2> &vRoutePoints, int Dummy) 
 	};
 
 	int StartIndex = pCollision->GetPureMapIndex(RefPos);
+	// 起点候选已在距离场构建期随递增扫描登记，此处不再全图扫描。
+	// 保留原有的「玩家所在格不可达时才改选起点格」守卫：远程在同一重构里去掉了该守卫，
+	// 但那会让「可达但非起点格」的情形改从最近的起点格出发——属可观察行为变化，
+	// 且与本次性能优化的意图（消除全图扫描）无关，故此处只吸收缓存收益、不改判定。
 	if(!IsReachableIndex(StartIndex))
 	{
-		float BestDistanceSquared = std::numeric_limits<float>::max();
-		for(int Index = 0; Index < MapCellCount; ++Index)
-		{
-			if(!IsReachableIndex(Index))
-				continue;
-
-			const int Tile = pGame[Index].m_Index;
-			const int FrontTile = pFront ? pFront[Index].m_Index : TILE_AIR;
-			if(Tile != TILE_START && FrontTile != TILE_START)
-				continue;
-
-			const float DistanceSquared = length_squared(RefPos - pCollision->GetPos(Index));
-			if(DistanceSquared < BestDistanceSquared)
-			{
-				BestDistanceSquared = DistanceSquared;
-				StartIndex = Index;
-			}
-		}
+		StartIndex = m_GoresRouteStartIndex.FindClosest(
+			RefPos, StartIndex,
+			[&](int Index) { return IsReachableIndex(Index) && (pGame[Index].m_Index == TILE_START || (pFront && pFront[Index].m_Index == TILE_START)); },
+			[&](int Index) { return pCollision->GetPos(Index); });
 	}
 
 	if(!IsReachableIndex(StartIndex))
 		return false;
 
-	std::vector<unsigned char> vVisited((size_t)MapCellCount, 0);
+	// 只清零上一条路径触及的位图字，不再每帧分配并清零整张地图。
+	m_GoresDebugRouteVisited.Begin((size_t)MapCellCount);
 	vRoutePoints.reserve(256);
 	int CurrentIndex = StartIndex;
 	for(int Guard = 0; Guard < MapCellCount + 64; ++Guard)
 	{
-		if(!IsReachableIndex(CurrentIndex) || vVisited[(size_t)CurrentIndex] != 0)
+		if(!IsReachableIndex(CurrentIndex) || !m_GoresDebugRouteVisited.Visit((size_t)CurrentIndex))
 			break;
 
-		vVisited[(size_t)CurrentIndex] = 1;
 		vRoutePoints.push_back(pCollision->GetPos(CurrentIndex));
 
 		const int CurrentDistance = m_vGoresDistanceToFinish[(size_t)CurrentIndex];

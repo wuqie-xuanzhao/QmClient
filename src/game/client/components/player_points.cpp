@@ -4,6 +4,7 @@
 #include <base/log.h>
 #include <base/system.h>
 
+#include <engine/engine.h>
 #include <engine/http.h>
 #include <engine/shared/json.h>
 
@@ -11,9 +12,60 @@
 
 #include <cstring>
 
+namespace
+{
+	// JSON 解析放到后台任务：响应体较大时主线程解析会打帧。
+	class CPlayerPointsParseJob final : public IJob
+	{
+	public:
+		using SResult = SPlayerPointsParseResult;
+
+	private:
+		std::shared_ptr<IHttpRequest> m_pRequest;
+		SResult m_Result;
+
+	protected:
+		void Run() override
+		{
+			if(!m_pRequest || m_pRequest->State() != EHttpState::DONE || m_pRequest->StatusCode() != 200)
+				return;
+
+			// ResultJson 每次调用新建解析树，所有权在本函数。
+			json_value *pRoot = m_pRequest->ResultJson();
+			if(!pRoot)
+				return;
+
+			m_Result = ExtractPlayerPointsJson(pRoot);
+			json_value_free(pRoot);
+		}
+
+	public:
+		explicit CPlayerPointsParseJob(std::shared_ptr<IHttpRequest> pRequest) :
+			m_pRequest(std::move(pRequest))
+		{
+		}
+
+		SResult TakeResult()
+		{
+			return std::move(m_Result);
+		}
+	};
+}
 void CPlayerPoints::OnRender()
 {
 	ProcessCompletedRequests();
+}
+
+void CPlayerPoints::OnShutdown()
+{
+	for(auto &Pair : m_ActiveRequests)
+	{
+		if(Pair.second)
+			Pair.second->Abort();
+	}
+	m_ActiveRequests.clear();
+	m_ParseJobs.clear();
+	m_Cache.clear();
 }
 
 void CPlayerPoints::EnsureQueried(const char *pPlayerName)
@@ -122,52 +174,61 @@ void CPlayerPoints::ProcessCompletedRequests()
 
 		if(State == EHttpState::DONE)
 		{
-			unsigned char *pData = nullptr;
-			size_t DataSize = 0;
-			pRequest->Result(&pData, &DataSize);
-
 			const int Code = pRequest->StatusCode();
 
 			if(Code != 200)
 			{
+				unsigned char *pData = nullptr;
+				size_t DataSize = 0;
+				pRequest->Result(&pData, &DataSize);
 				// 仅失败时记录详细日志。
 				dbg_msg("player_points", "Response for '%s': %zu bytes, status=%d (failed)", Name.c_str(), DataSize, Code);
 				Entry.m_Status = EPointsStatus::FAILED;
 				Entry.m_LastFailTime = time_get();
+				m_ParseJobs.erase(Name);
+				Iter = m_ActiveRequests.erase(Iter);
+				continue;
+			}
+
+			// 解析下放到后台任务；每个玩家同时只跑一个解析任务。
+			auto ParseIter = m_ParseJobs.find(Name);
+			if(ParseIter == m_ParseJobs.end())
+			{
+				auto pParseJob = std::make_shared<CPlayerPointsParseJob>(pRequest);
+				m_ParseJobs.emplace(Name, pParseJob);
+				Engine()->AddJob(pParseJob);
+				++Iter;
+				continue;
+			}
+
+			if(ParseIter->second->State() != IJob::STATE_DONE)
+			{
+				++Iter;
+				continue;
+			}
+
+			auto pParseJob = std::static_pointer_cast<CPlayerPointsParseJob>(ParseIter->second);
+			const SPlayerPointsParseResult Result = pParseJob->TakeResult();
+			m_ParseJobs.erase(ParseIter);
+			if(!Result.m_JsonParsed)
+			{
+				Entry.m_Status = EPointsStatus::FAILED;
+				Entry.m_LastFailTime = time_get();
+				dbg_msg("player_points", "'%s' -> JSON parse failed", Name.c_str());
+			}
+			else if(!Result.m_PointsFound)
+			{
+				// 常见情况：玩家不存在时 DDNet 会返回 {}。
+				Entry.m_Status = EPointsStatus::FAILED;
+				Entry.m_LastFailTime = time_get();
+				dbg_msg("player_points", "'%s' -> points missing (maybe player not found)", Name.c_str());
 			}
 			else
 			{
-				json_value *pRoot = pRequest->ResultJson();
-				if(!pRoot)
-				{
-					Entry.m_Status = EPointsStatus::FAILED;
-					Entry.m_LastFailTime = time_get();
-					dbg_msg("player_points", "'%s' -> JSON parse failed", Name.c_str());
-				}
-				else
-				{
-					// root["points"]["points"]
-					const json_value *pPointsObj = json_object_get(pRoot, "points");
-					const json_value *pPointsVal = pPointsObj ? json_object_get(pPointsObj, "points") : nullptr;
-
-					if(!pPointsVal)
-					{
-						// 常见情况：玩家不存在时 DDNet 会返回 {}。
-						Entry.m_Status = EPointsStatus::FAILED;
-						Entry.m_LastFailTime = time_get();
-						dbg_msg("player_points", "'%s' -> points missing (maybe player not found)", Name.c_str());
-					}
-					else
-					{
-						// 这里期望 points 是整型节点。
-						int Points = json_int_get(pPointsVal);
-
-						Entry.m_Points = Points;
-						Entry.m_Status = EPointsStatus::READY;
-						Entry.m_LastSuccessTime = time_get();
-						// 成功路径默认不打日志，避免刷屏。
-					}
-				}
+				Entry.m_Points = Result.m_Points;
+				Entry.m_Status = EPointsStatus::READY;
+				Entry.m_LastSuccessTime = time_get();
+				// 成功路径默认不打日志，避免刷屏。
 			}
 		}
 		else
@@ -188,53 +249,4 @@ void CPlayerPoints::ProcessCompletedRequests()
 
 		Iter = m_ActiveRequests.erase(Iter);
 	}
-}
-
-bool CPlayerPoints::ParsePointsFromPartialJson(const char *pData, size_t DataSize, int &OutPoints)
-{
-	if(!pData || DataSize == 0)
-		return false;
-
-	// 空对象 {} 通常表示玩家不存在。
-	if(DataSize <= 2)
-		return false;
-
-	// 先定位外层 "points" 对象。
-	const char *pPointsObj = str_find(pData, "\"points\"");
-	if(!pPointsObj)
-		return false;
-
-	// 跳过 "points" 键名。
-	pPointsObj += 8;
-
-	// 跳过空白和冒号。
-	while(*pPointsObj && (*pPointsObj == ' ' || *pPointsObj == '\t' || *pPointsObj == '\n' || *pPointsObj == '\r' || *pPointsObj == ':'))
-		pPointsObj++;
-
-	// 期待对象起始 '{'。
-	if(*pPointsObj != '{')
-		return false;
-	pPointsObj++;
-
-	// 再定位内层 "points" 字段。
-	const char *pPointsField = str_find(pPointsObj, "\"points\"");
-	if(!pPointsField)
-		return false;
-
-	// 跳过 "points" 键名。
-	pPointsField += 8;
-
-	// 跳过空白和冒号。
-	while(*pPointsField && (*pPointsField == ' ' || *pPointsField == '\t' || *pPointsField == '\n' || *pPointsField == '\r' || *pPointsField == ':'))
-		pPointsField++;
-
-	// 解析积分整数值。
-	char *pEnd = nullptr;
-	long Value = strtol(pPointsField, &pEnd, 10);
-
-	if(pEnd == pPointsField || Value < 0)
-		return false;
-
-	OutPoints = (int)Value;
-	return true;
 }

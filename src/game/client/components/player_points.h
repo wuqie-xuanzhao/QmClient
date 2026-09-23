@@ -4,6 +4,8 @@
 #define GAME_CLIENT_COMPONENTS_PLAYER_POINTS_H
 
 #include <engine/http.h>
+#include <engine/shared/jobs.h>
+#include <engine/shared/json.h>
 
 #include <game/client/component.h>
 
@@ -33,6 +35,29 @@ struct SPlayerPointsResult
 	int m_Points;
 };
 
+struct SPlayerPointsParseResult
+{
+	bool m_JsonParsed = false;
+	bool m_PointsFound = false;
+	int m_Points = 0;
+};
+
+inline SPlayerPointsParseResult ExtractPlayerPointsJson(const json_value *pRoot)
+{
+	SPlayerPointsParseResult Result;
+	if(!pRoot)
+		return Result;
+	Result.m_JsonParsed = true;
+	const json_value *pPointsObj = json_object_get(pRoot, "points");
+	const json_value *pPointsVal = pPointsObj ? json_object_get(pPointsObj, "points") : nullptr;
+	if(pPointsVal)
+	{
+		// 保持原有接口对整数节点的接受语义，不新增类型过滤。
+		Result.m_Points = json_int_get(pPointsVal);
+		Result.m_PointsFound = true;
+	}
+	return Result;
+}
 class CPlayerPoints : public CComponent
 {
 private:
@@ -41,6 +66,8 @@ private:
 
 	// Active HTTP requests: player name -> request
 	std::map<std::string, std::shared_ptr<IHttpRequest>> m_ActiveRequests;
+	// 已完成的 HTTP 响应每个玩家最多交给一个后台任务解析。
+	std::map<std::string, std::shared_ptr<IJob>> m_ParseJobs;
 
 	// Constants
 	static constexpr int64_t CACHE_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -50,10 +77,10 @@ private:
 	// Helper functions
 	void StartRequest(const char *pPlayerName);
 	void ProcessCompletedRequests();
-	bool ParsePointsFromPartialJson(const char *pData, size_t DataSize, int &OutPoints);
 
 public:
 	int Sizeof() const override { return sizeof(*this); }
+	void OnShutdown() override;
 	void OnRender() override;
 
 	// Public interface

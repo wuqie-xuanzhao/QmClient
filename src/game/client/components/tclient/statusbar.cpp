@@ -57,23 +57,37 @@ int CStatusBar::GetDigitsIndex(const int Value, const int Max)
 
 	return DigitsIndex;
 }
+float CStatusBar::CachedTextWidth(const char *pText)
+{
+	float X0, Y0, X1, Y1;
+	Graphics()->GetScreen(&X0, &Y0, &X1, &Y1);
+	const vec2 ScreenScale(Graphics()->ScreenWidth() / (X1 - X0), Graphics()->ScreenHeight() / (Y1 - Y0));
+	const unsigned RenderFlags = TextRender()->GetRenderFlags();
+	const int FontPreset = (int)TextRender()->GetFontPreset();
+	if(m_MetricsFontSize != m_FontSize || m_MetricsScreenScale != ScreenScale || m_MetricsRenderFlags != RenderFlags || m_MetricsFontPreset != FontPreset)
+	{
+		m_TextWidths.clear();
+		m_MetricsFontSize = m_FontSize;
+		m_MetricsScreenScale = ScreenScale;
+		m_MetricsRenderFlags = RenderFlags;
+		m_MetricsFontPreset = FontPreset;
+	}
+	const auto It = m_TextWidths.find(pText);
+	if(It != m_TextWidths.end())
+		return It->second;
+	const float Width = TextRender()->TextWidth(m_FontSize, pText);
+	// 分数与语言可能持续变化，限制缓存大小。
+	if(m_TextWidths.size() >= 128)
+		m_TextWidths.clear();
+	m_TextWidths.emplace(pText, Width);
+	return Width;
+}
 float CStatusBar::GetDurationWidth(int Duration)
 {
-	static float s_FontSize = 0.0f;
-	static float s_TextWidthM = 0.0f, s_TextWidthH = 0.0f, s_TextWidth0D = 0.0f, s_TextWidth00D = 0.0f, s_TextWidth000D = 0.0f;
-	if(s_FontSize != m_FontSize)
-	{
-		s_TextWidthM = TextRender()->TextWidth(m_FontSize, "00:00");
-		s_TextWidthH = TextRender()->TextWidth(m_FontSize, "00:00:00");
-		s_TextWidth0D = TextRender()->TextWidth(m_FontSize, "0d 00:00:00");
-		s_TextWidth00D = TextRender()->TextWidth(m_FontSize, "00d 00:00:00");
-		s_TextWidth000D = TextRender()->TextWidth(m_FontSize, "000d 00:00:00");
-		s_FontSize = m_FontSize;
-	}
-	return Duration >= 3600 * 24 * 100 ? s_TextWidth000D : Duration >= 3600 * 24 * 10 ? s_TextWidth00D :
-						       Duration >= 3600 * 24              ? s_TextWidth0D :
-						       Duration >= 3600                   ? s_TextWidthH :
-											    s_TextWidthM;
+	return CachedTextWidth(Duration >= 3600 * 24 * 100 ? "000d 00:00:00" : Duration >= 3600 * 24 * 10 ? "00d 00:00:00" :
+								       Duration >= 3600 * 24              ? "0d 00:00:00" :
+								       Duration >= 3600                   ? "00:00:00" :
+													    "00:00");
 }
 
 float CStatusBar::AngleWidth()
@@ -81,7 +95,7 @@ float CStatusBar::AngleWidth()
 	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId))
 		return 0.0f;
 
-	return TextRender()->TextWidth(m_FontSize, "000.00");
+	return CachedTextWidth("000.00");
 }
 void CStatusBar::AngleRender()
 {
@@ -108,7 +122,7 @@ float CStatusBar::PingWidth()
 	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
 		return 0.0f;
 
-	return TextRender()->TextWidth(m_FontSize, "0000");
+	return CachedTextWidth("0000");
 }
 void CStatusBar::PingRender()
 {
@@ -121,7 +135,7 @@ void CStatusBar::PingRender()
 
 float CStatusBar::PredictionWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "0000");
+	return CachedTextWidth("0000");
 }
 void CStatusBar::PredictionRender()
 {
@@ -185,7 +199,7 @@ void CStatusBar::RaceTimeRender()
 
 float CStatusBar::FPSWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "00000");
+	return CachedTextWidth("00000");
 }
 void CStatusBar::FPSRender()
 {
@@ -201,7 +215,7 @@ float CStatusBar::PositionWidth()
 	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
 		return 0.0f;
 
-	return TextRender()->TextWidth(m_FontSize, "-0000.00, -0000.00");
+	return CachedTextWidth("-0000.00, -0000.00");
 }
 void CStatusBar::PositionRender()
 {
@@ -220,7 +234,7 @@ float CStatusBar::VelocityWidth()
 	if(!tclient_statusbar::IsValidPlayerId(m_PlayerId) || !GameClient()->m_Snap.m_apPlayerInfos[m_PlayerId])
 		return 0.0f;
 
-	return TextRender()->TextWidth(m_FontSize, "+00.00, +00.00");
+	return CachedTextWidth("+00.00, +00.00");
 }
 void CStatusBar::VelocityRender()
 {
@@ -248,7 +262,7 @@ void CStatusBar::VelocityRender()
 	TextRender()->Text(m_CursorX, m_CursorY, m_FontSize, aBuf);
 }
 
-float CStatusBar::ZoomWidth() { return TextRender()->TextWidth(m_FontSize, "00.00"); }
+float CStatusBar::ZoomWidth() { return CachedTextWidth("00.00"); }
 void CStatusBar::ZoomRender()
 {
 	char aBuf[32];
@@ -263,7 +277,7 @@ float CStatusBar::ScoreWidth()
 	if(!m_HasFormattedPoints)
 		return 0.0f;
 
-	return TextRender()->TextWidth(m_FontSize, m_aFormattedPoints);
+	return CachedTextWidth(m_aFormattedPoints);
 }
 
 void CStatusBar::ScoreRender()
@@ -295,7 +309,7 @@ void CStatusBar::UpdateFormattedPoints()
 
 float CStatusBar::DownstreamWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000ms");
+	return CachedTextWidth("000ms");
 }
 
 void CStatusBar::DownstreamRender()
@@ -308,7 +322,7 @@ void CStatusBar::DownstreamRender()
 
 float CStatusBar::RttWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000ms");
+	return CachedTextWidth("000ms");
 }
 
 void CStatusBar::RttRender()
@@ -320,7 +334,7 @@ void CStatusBar::RttRender()
 
 float CStatusBar::UpstreamWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000ms");
+	return CachedTextWidth("000ms");
 }
 
 void CStatusBar::UpstreamRender()
@@ -332,7 +346,7 @@ void CStatusBar::UpstreamRender()
 
 float CStatusBar::JitterWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000ms");
+	return CachedTextWidth("000ms");
 }
 
 void CStatusBar::JitterRender()
@@ -344,7 +358,7 @@ void CStatusBar::JitterRender()
 
 float CStatusBar::SnapshotGapWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000ms");
+	return CachedTextWidth("000ms");
 }
 
 void CStatusBar::SnapshotGapRender()
@@ -356,7 +370,7 @@ void CStatusBar::SnapshotGapRender()
 
 float CStatusBar::PacketLossWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000");
+	return CachedTextWidth("000");
 }
 
 void CStatusBar::PacketLossRender()
@@ -368,7 +382,7 @@ void CStatusBar::PacketLossRender()
 
 float CStatusBar::DownRateWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000.0KiB/s");
+	return CachedTextWidth("000.0KiB/s");
 }
 
 void CStatusBar::DownRateRender()
@@ -381,7 +395,7 @@ void CStatusBar::DownRateRender()
 
 float CStatusBar::UpRateWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "000.0KiB/s");
+	return CachedTextWidth("000.0KiB/s");
 }
 
 void CStatusBar::UpRateRender()
@@ -394,7 +408,7 @@ void CStatusBar::UpRateRender()
 
 float CStatusBar::ConnectionGradeWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, Localize(ConnectionGradeLabel(GameClient()->m_QmMonitoring.Snapshot().m_Verdict.m_Grade)));
+	return CachedTextWidth(Localize(ConnectionGradeLabel(GameClient()->m_QmMonitoring.Snapshot().m_Verdict.m_Grade)));
 }
 
 void CStatusBar::ConnectionGradeRender()
@@ -404,7 +418,7 @@ void CStatusBar::ConnectionGradeRender()
 
 float CStatusBar::CpuWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "100%/100%");
+	return CachedTextWidth("100%/100%");
 }
 
 void CStatusBar::CpuRender()
@@ -417,7 +431,7 @@ void CStatusBar::CpuRender()
 
 float CStatusBar::MemoryWidth()
 {
-	return TextRender()->TextWidth(m_FontSize, "4096MB");
+	return CachedTextWidth("4096MB");
 }
 
 void CStatusBar::MemoryRender()
@@ -457,7 +471,7 @@ float CStatusBar::LabelWidth(const char *pLabel)
 {
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "%s:", pLabel);
-	return TextRender()->TextWidth(m_FontSize, aBuf);
+	return CachedTextWidth(aBuf);
 }
 
 void CStatusBar::ApplyStatusBarScheme(const char *pScheme)

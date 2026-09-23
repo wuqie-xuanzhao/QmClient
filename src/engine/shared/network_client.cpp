@@ -12,6 +12,9 @@
 
 static constexpr int CNET_QOS_MAX_ATTEMPTS = 3;
 static constexpr int CNET_QOS_RETRY_DELAY_SECONDS = 2;
+// 控制包、STUN 包或无效包不能在单次 Recv 调用里长期占用主线程。
+// 达到上限后由下一帧继续读取，UDP socket 本身不会丢弃尚未读取的数据。
+static constexpr int CNET_MAX_DATAGRAMS_PER_RECV = 64;
 
 bool CNetClient::Open(NETADDR BindAddr, bool LowLatency)
 {
@@ -174,6 +177,7 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 	if(!m_Socket)
 		return 0;
 
+	int NumDatagrams = 0;
 	while(true)
 	{
 		// Unpack next chunk from stored packet if available
@@ -185,6 +189,8 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 		}
 		if(FetchKcpChunk(pChunk, pResponseToken, Sixup))
 			return 1;
+		if(NumDatagrams >= CNET_MAX_DATAGRAMS_PER_RECV)
+			return 0;
 
 		// TODO: empty the recvinfo
 		NETADDR Addr;
@@ -194,6 +200,7 @@ int CNetClient::Recv(CNetChunk *pChunk, SECURITY_TOKEN *pResponseToken, bool Six
 		// no more packets for now
 		if(Bytes <= 0)
 			break;
+		++NumDatagrams;
 
 		if(m_pStun && m_pStun->OnPacket(Addr, pData, Bytes))
 		{

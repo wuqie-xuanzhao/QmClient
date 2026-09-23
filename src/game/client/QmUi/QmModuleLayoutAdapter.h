@@ -53,6 +53,8 @@ namespace qm_module
 	void SerializeQmLayoutFromModel(char *pOut, int OutSize);
 	// CModel → 全局 config：用当前 Qm 子模型更新 qm:* 条目，同时保留已有 tclient:/deck: 等非 Qm 条目。
 	bool SerializeMergedGlobalCardOrderFromQmModel(const char *pExistingGlobalOrder, char *pOut, int OutSize);
+	// 清除旧禅模式布局配置，仅移除对应条目，不重排其他卡片。
+	void RemoveLegacyZenModeLayoutConfig();
 	bool MigrateQmLayoutToGlobalCardOrder(const std::vector<SQmModuleEntry> &vDefaults);
 	// 过渡 singleton wrapper：P6 前旧 renderer 使用；新路径必须传入调用方拥有的 model。
 	bool MoveQmModuleInModel(EQmModuleId Id, EQmModuleColumn TargetColumn, int TargetOrder);

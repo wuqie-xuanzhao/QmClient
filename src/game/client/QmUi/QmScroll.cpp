@@ -210,6 +210,7 @@ void CQmScrollState::Reset()
 	m_AnimTime = 0.0f;
 	m_AnimTimeMax = 0.0f;
 	m_AnimStartOffset = 0.0f;
+	m_AnimStartVelocity = 0.0f;
 	m_AnimTargetOffset = 0.0f;
 	m_HasPendingScrollTarget = false;
 	m_PendingScrollTarget = 0.0f;
@@ -253,6 +254,8 @@ void CQmScrollState::ScrollTo(float TargetOffset, const SQmScrollMetrics &Metric
 		m_AnimTimeMax = 0.0f;
 		m_AnimTime = 0.0f;
 	}
+	m_AnimStartVelocity = m_AnimTimeMax > 0.0f ? 3.0f * (m_AnimTargetOffset - m_AnimStartOffset) / m_AnimTimeMax : 0.0f;
+	m_Velocity = m_AnimStartVelocity;
 	m_LastMaxOffset = MaxOffset;
 }
 
@@ -280,6 +283,7 @@ void CQmScrollState::SetOffset(float Offset, const SQmScrollMetrics &Metrics, co
 	m_AnimTime = 0.0f;
 	m_AnimTimeMax = 0.0f;
 	m_AnimStartOffset = m_Offset;
+	m_AnimStartVelocity = 0.0f;
 	m_AnimTargetOffset = m_Offset;
 }
 
@@ -298,16 +302,21 @@ void CQmScrollState::AddWheelImpulse(float WheelDelta, const SQmScrollMetrics &M
 		const float StepCount = std::max(1.0f, std::abs(WheelDelta) / 120.0f);
 		const float WheelSteps = WheelDelta < 0.0f ? StepCount : -StepCount;
 		const float AnimationTime = std::max(0.0f, Config.m_NativeWheelAnimationTime);
-		const float BaseOffset = m_AnimTime > 0.0f ? m_AnimTargetOffset : m_Offset;
+		const bool Continuing = m_AnimTime > 0.0f;
+		const float BaseOffset = Continuing ? m_AnimTargetOffset : m_Offset;
 		const float TargetOffset = std::clamp(BaseOffset + WheelSteps * Config.m_WheelScale, 0.0f, MaxOffset);
-		m_Velocity = 0.0f;
 		m_AnimStartOffset = m_Offset;
 		m_AnimTargetOffset = TargetOffset;
 		m_AnimTimeMax = AnimationTime;
 		m_AnimTime = AnimationTime;
-		if(AnimationTime <= 0.0f || std::abs(m_AnimStartOffset - m_AnimTargetOffset) < 0.5f)
+		// 首次滚动保持原三次 ease-out，后续滚轮事件继承当前速度，包括反向操作。
+		m_AnimStartVelocity = Continuing ? m_Velocity : (AnimationTime > 0.0f ? 3.0f * (TargetOffset - m_Offset) / AnimationTime : 0.0f);
+		m_Velocity = m_AnimStartVelocity;
+		if(AnimationTime <= 0.0f || (!Continuing && std::abs(m_AnimStartOffset - m_AnimTargetOffset) < 0.5f))
 		{
 			m_Offset = TargetOffset;
+			m_Velocity = 0.0f;
+			m_AnimStartVelocity = 0.0f;
 			m_AnimTimeMax = 0.0f;
 			m_AnimTime = 0.0f;
 		}
@@ -354,7 +363,7 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 			m_Velocity = 0.0f;
 	}
 	m_LastMaxOffset = MaxOffset;
-	if(Dt <= 0.0f)
+	if(!std::isfinite(Dt) || Dt <= 0.0f)
 		return;
 
 	const float ClampedDt = std::min(Dt, 1.0f / 15.0f);
@@ -368,10 +377,20 @@ void CQmScrollState::Advance(float Dt, const SQmScrollMetrics &Metrics, const SQ
 		m_AnimTime -= Dt;
 		if(m_AnimTime < 0.0f)
 			m_AnimTime = 0.0f;
-		const float AnimProgress = m_AnimTimeMax > 0.0f ? 1.0f - std::pow(m_AnimTime / m_AnimTimeMax, 3.0f) : 1.0f;
-		m_Offset = m_AnimStartOffset + (m_AnimTargetOffset - m_AnimStartOffset) * AnimProgress;
+		const float Progress = m_AnimTimeMax > 0.0f ? 1.0f - m_AnimTime / m_AnimTimeMax : 1.0f;
+		const float Remaining = 1.0f - Progress;
+		const float Distance = m_AnimTargetOffset - m_AnimStartOffset;
+		// Hermite 三次曲线同时满足当前位移、当前速度、目标位移和结束速度为零。
+		m_Offset = m_AnimStartOffset + Distance * Progress * Progress * (3.0f - 2.0f * Progress) + m_AnimStartVelocity * m_AnimTimeMax * Progress * Remaining * Remaining;
+		m_Velocity = Distance * 6.0f * Progress * Remaining / m_AnimTimeMax + m_AnimStartVelocity * (1.0f - 4.0f * Progress + 3.0f * Progress * Progress);
+		if(m_Offset < 0.0f || m_Offset > MaxOffset || (m_Offset == 0.0f && m_Velocity < 0.0f) || (m_Offset == MaxOffset && m_Velocity > 0.0f))
+			m_Velocity = 0.0f;
+		m_Offset = std::clamp(m_Offset, 0.0f, MaxOffset);
 		if(m_AnimTime <= 0.0f)
+		{
 			m_Offset = m_AnimTargetOffset;
+			m_Velocity = 0.0f;
+		}
 		return;
 	}
 

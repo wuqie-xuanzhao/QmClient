@@ -22,15 +22,21 @@ TEST(SettingsCardInteraction, CollapsedCardsSkipContentWorkAndExpandedDynamicCar
 
 TEST(SettingsCardInteraction, EveryCardUsesTheSharedCollapseControl)
 {
-	EXPECT_TRUE(SettingsCardDeckUsesDefaultCollapseControl());
+	EXPECT_TRUE(SettingsCardDeckUsesDefaultCollapseControl(false, false));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, false));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(false, true));
+	EXPECT_FALSE(SettingsCardDeckUsesDefaultCollapseControl(true, true));
 }
 
 TEST(SettingsCardInteraction, OrdinaryCollapseStateTogglesOnlyFromVisibleHeaderInput)
 {
-	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, false));
-	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(true, true, false));
-	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, true));
-	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(true, false, false));
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, false, true, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, true, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(false, false, true, true));
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(false, true, false, false));
+	// 自定义折叠状态的卡片不能被公共折叠按钮改写。
+	EXPECT_TRUE(SettingsCardDeckApplyDefaultCollapseToggle(true, true, false, false));
+	EXPECT_FALSE(SettingsCardDeckApplyDefaultCollapseToggle(true, false, true, false));
 }
 
 TEST(SettingsCardInteraction, PreLayoutReleaseUsesTheLastVisibleAnimatedFrame)

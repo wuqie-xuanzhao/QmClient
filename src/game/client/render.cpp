@@ -3,6 +3,7 @@
 #include "render.h"
 
 #include "animstate.h"
+#include "components/nameplate_text_effects.h"
 
 #include <base/math.h>
 
@@ -15,6 +16,7 @@
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
 
+#include <game/client/components/qmclient/qm_skin_outline.h>
 #include <game/client/gameclient.h>
 #include <game/mapitems.h>
 
@@ -175,6 +177,10 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 	const bool BorderEnabled = (Style.m_Effects & QM_TEXT_EFFECT_BORDER) != 0 && Style.m_BorderColor.a > 0.0f && Style.m_BorderRange > 0.0f;
 	const bool GlowEnabled = (Style.m_Effects & QM_TEXT_EFFECT_GLOW) != 0 && Style.m_GlowColor.a > 0.0f && Style.m_GlowRange > 0.0f;
 	const bool RainbowEnabled = (Style.m_Effects & QM_TEXT_EFFECT_RAINBOW) != 0;
+	// 自适应档位只削减外层特效圈数，本体永远绘制。
+	const int BorderPasses = BorderEnabled ? std::clamp(round_to_int(Style.m_BorderRange), 1, 4) : 0;
+	const int GlowPasses = GlowEnabled ? std::clamp(round_to_int(Style.m_GlowRange), 1, 6) : 0;
+	const SQmNameplateEffectPasses Passes = QmNameplateEffectResolvePasses(Style.m_MaxEffectDraws, BorderPasses, GlowPasses);
 	auto RenderOutlineOnly = [&](ColorRGBA Color, float OffsetX, float OffsetY) {
 		TextRender()->RenderTextContainer(TextContainerIndex, EmptyText, Color, X + OffsetX, Y + OffsetY);
 	};
@@ -197,8 +203,7 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 
 	if(GlowEnabled)
 	{
-		const int GlowPasses = std::clamp(round_to_int(Style.m_GlowRange), 1, 6);
-		for(int Pass = 0; Pass < GlowPasses; ++Pass)
+		for(int Pass = 0; Pass < Passes.m_GlowPasses; ++Pass)
 		{
 			const float Radius = Style.m_GlowRange * (float)(Pass + 1) / (float)GlowPasses;
 			const float PassAlpha = Style.m_GlowColor.a * Alpha * (1.0f - (float)Pass / (float)(GlowPasses + 1));
@@ -213,8 +218,7 @@ void CRenderTools::RenderTextContainerWithEffects(STextContainerIndex TextContai
 		OutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);
 	if(BorderEnabled && Style.m_BorderRange > 1.0f)
 	{
-		const int BorderPasses = std::clamp(round_to_int(Style.m_BorderRange), 1, 4);
-		for(int Pass = 0; Pass < BorderPasses; ++Pass)
+		for(int Pass = 0; Pass < Passes.m_BorderPasses; ++Pass)
 		{
 			const float Radius = (float)(Pass + 1);
 			const float PassAlpha = OutlineColor.a * (1.0f - (float)Pass / (float)(BorderPasses + 1));
@@ -364,10 +368,71 @@ void CRenderTools::RenderTeeWithSkinChangeTransition(const CAnimState *pAnim, co
 	}
 }
 
+// 句柄失效（设备重建、槽位释放、皮肤贴图被卸载）后 TextureSet 会把它降级成「无贴图」，
+// 画出来就是一块实心色块。渲染工具里所有皮肤纹理绘制前统一走这一层判断。
+static bool IsDrawableTextureAlive(IGraphics *pGraphics, const IGraphics::CTextureHandle &Texture)
+{
+	return CTeeRenderInfo::IsLiveDrawableTexture(pGraphics, Texture);
+}
+
+bool CTeeRenderInfo::HasStaleTexture(const IGraphics *pGraphics) const
+{
+	if(pGraphics == nullptr)
+	{
+		return false;
+	}
+	// 只关心「看起来可绘制」的句柄：本来就不合法的句柄绘制期会直接跳过，不会画出白块。
+	const auto IsStale = [pGraphics](const IGraphics::CTextureHandle &Texture) {
+		return IsDrawableTexture(Texture) && !pGraphics->IsTextureHandleAllocated(Texture);
+	};
+	const auto HasStaleSkinTextures = [&IsStale](const CSkin::CSkinTextures &Textures) {
+		if(IsStale(Textures.m_Body) || IsStale(Textures.m_BodyOutline) || IsStale(Textures.m_Feet) || IsStale(Textures.m_FeetOutline) ||
+			IsStale(Textures.m_Hands) || IsStale(Textures.m_HandsOutline))
+		{
+			return true;
+		}
+		for(const IGraphics::CTextureHandle &Eye : Textures.m_aEyes)
+		{
+			if(IsStale(Eye))
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+	if(HasStaleSkinTextures(m_OriginalRenderSkin) || HasStaleSkinTextures(m_ColorableRenderSkin))
+	{
+		return true;
+	}
+	for(const CSixup &Sixup : m_aSixup)
+	{
+		for(const IGraphics::CTextureHandle &Texture : Sixup.m_aOriginalTextures)
+		{
+			if(IsStale(Texture))
+			{
+				return true;
+			}
+		}
+		for(const IGraphics::CTextureHandle &Texture : Sixup.m_aColorableTextures)
+		{
+			if(IsStale(Texture))
+			{
+				return true;
+			}
+		}
+		if(IsStale(Sixup.m_HatTexture) || IsStale(Sixup.m_BotTexture))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void CRenderTools::RenderTee(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha, vec2 BodyScale, vec2 FeetScale, float BodyAngle, float FeetAngle) const
 {
-	const bool SixupBodyValid = CTeeRenderInfo::IsDrawableTexture(pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_BODY));
-	const bool SixBodyValid = CTeeRenderInfo::IsDrawableTexture(pInfo->m_CustomColoredSkin ? pInfo->m_ColorableRenderSkin.m_Body : pInfo->m_OriginalRenderSkin.m_Body);
+	// 句柄失效时必须当成不可绘制：否则会把 Tee 画成没有贴图的实心块。
+	const bool SixupBodyValid = IsDrawableTextureAlive(Graphics(), pInfo->m_aSixup[g_Config.m_ClDummy].PartTexture(protocol7::SKINPART_BODY));
+	const bool SixBodyValid = IsDrawableTextureAlive(Graphics(), pInfo->m_CustomColoredSkin ? pInfo->m_ColorableRenderSkin.m_Body : pInfo->m_OriginalRenderSkin.m_Body);
 	if(SixupBodyValid)
 		RenderTee7(pAnim, pInfo, Emote, Dir, Pos, Alpha, BodyScale, FeetScale, BodyAngle, FeetAngle);
 	else if(SixBodyValid)
@@ -382,6 +447,33 @@ void CRenderTools::RenderTee7(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
 	const bool IsBot = CTeeRenderInfo::IsDrawableTexture(pInfo->m_aSixup[g_Config.m_ClDummy].m_BotTexture);
+
+	if(pInfo->m_QmSkinOutlineWidth > 0 && Alpha > 0.0f)
+	{
+		const auto &Sixup = pInfo->m_aSixup[g_Config.m_ClDummy];
+		const float OutlineAnimScale = pInfo->m_Size / 64.0f;
+		const ColorRGBA OutlineColor = pInfo->m_QmSkinOutlineColor.WithAlpha(pInfo->m_QmSkinOutlineColor.a * Alpha);
+		if(HasTeePreviewLayer(pInfo->m_TeeRenderFlags, TEE_PREVIEW_LAYER_BODY_OUTLINE))
+		{
+			for(int Part : {protocol7::SKINPART_DECORATION, protocol7::SKINPART_BODY})
+			{
+				if(Sixup.m_apQmSkinOutlines[Part])
+					Sixup.m_apQmSkinOutlines[Part]->Render(Graphics(), Pos + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y) * OutlineAnimScale,
+						BodyScale * pInfo->m_Size, pAnim->GetBody()->m_Angle * pi * 2 + BodyAngle, OutlineColor, pInfo->m_QmSkinOutlineWidth);
+			}
+		}
+		if(Sixup.m_apQmSkinOutlines[protocol7::SKINPART_FEET])
+		{
+			for(int Front = 0; Front < 2; ++Front)
+			{
+				if(!HasTeePreviewLayer(pInfo->m_TeeRenderFlags, Front ? TEE_PREVIEW_LAYER_FRONT_FEET_OUTLINE : TEE_PREVIEW_LAYER_BACK_FEET_OUTLINE))
+					continue;
+				const CAnimKeyframe *pFoot = Front ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
+				Sixup.m_apQmSkinOutlines[protocol7::SKINPART_FEET]->Render(Graphics(), Pos + vec2(pFoot->m_X, pFoot->m_Y) * OutlineAnimScale,
+					FeetScale * (pInfo->m_Size / 2.1f), pFoot->m_Angle * pi * 2 + FeetAngle, OutlineColor, pInfo->m_QmSkinOutlineWidth);
+			}
+		}
+	}
 
 	// first pass we draw the outline
 	// second pass we draw the filling
@@ -627,6 +719,37 @@ void CRenderTools::RenderTee6(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 
 	const CSkin::CSkinTextures *pSkinTextures = pInfo->m_CustomColoredSkin ? &pInfo->m_ColorableRenderSkin : &pInfo->m_OriginalRenderSkin;
 
+	// TClient：白脚皮肤只由配置与皮肤系统状态决定，与 Pass/Filling 无关。
+	// 提到循环外解析，避免每个 Tee 每帧重复做 4 次皮肤名查找与 usage 记录。
+	const CSkin *pWhiteFeetSkin = nullptr;
+	if(g_Config.m_TcWhiteFeet && pInfo->m_CustomColoredSkin)
+		pWhiteFeetSkin = GameClient()->m_Skins.FindOrNullptr(g_Config.m_TcWhiteFeetSkin);
+	// 描边在贴图之前画：整皮肤描边只有身体与脚两处，与经典皮肤的 Pass/Filling 无关。
+	if(pInfo->m_QmSkinOutlineWidth > 0 && Alpha > 0.0f)
+	{
+		const ColorRGBA Color = pInfo->m_QmSkinOutlineColor.WithAlpha(pInfo->m_QmSkinOutlineColor.a * Alpha);
+		const float BodySize = pInfo->m_Size * (TinyTee ? TinyBodyScale * SizeMultiplier : 1.0f);
+		float BodyRenderScale;
+		GetRenderTeeBodyScale(BodySize, BodyRenderScale);
+		if(pInfo->m_OriginalRenderSkin.m_QmBodyOutline && HasTeePreviewLayer(pInfo->m_TeeRenderFlags, TEE_PREVIEW_LAYER_BODY_OUTLINE))
+			pInfo->m_OriginalRenderSkin.m_QmBodyOutline->Render(Graphics(), Pos + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y) * (BodySize / 64.0f),
+				BodyScale * (64.0f * BodyRenderScale), pAnim->GetBody()->m_Angle * pi * 2 + BodyAngle, Color, pInfo->m_QmSkinOutlineWidth);
+		const auto &pFeetOutline = pWhiteFeetSkin != nullptr && IsDrawableTextureAlive(Graphics(), pWhiteFeetSkin->m_OriginalSkin.m_FeetOutline) ?
+						   pWhiteFeetSkin->m_OriginalSkin.m_QmFeetOutline :
+						   pInfo->m_OriginalRenderSkin.m_QmFeetOutline;
+		if(pFeetOutline)
+		{
+			const float FeetSize = pInfo->m_Size * (TinyTee ? TinyFeetScale * SizeMultiplier : 1.0f);
+			for(int Front = 0; Front < 2; ++Front)
+			{
+				if(!HasTeePreviewLayer(pInfo->m_TeeRenderFlags, Front ? TEE_PREVIEW_LAYER_FRONT_FEET_OUTLINE : TEE_PREVIEW_LAYER_BACK_FEET_OUTLINE))
+					continue;
+				const CAnimKeyframe *pFoot = Front ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
+				pFeetOutline->Render(Graphics(), Pos + vec2(pFoot->m_X, pFoot->m_Y) * (pInfo->m_Size / 64.0f),
+					vec2(FeetSize * FeetScale.x, FeetSize * 0.5f * FeetScale.y), pFoot->m_Angle * pi * 2 + FeetAngle, Color, pInfo->m_QmSkinOutlineWidth, Dir.x < 0 && pInfo->m_FeetFlipped);
+			}
+		}
+	}
 	// first pass we draw the outline
 	// second pass we draw the filling
 	for(int Pass = 0; Pass < 2; Pass++)
@@ -755,17 +878,13 @@ void CRenderTools::RenderTee6(const CAnimState *pAnim, const CTeeRenderInfo *pIn
 						     ColorRGBA(pInfo->m_ColorFeet.r * ColorScale, pInfo->m_ColorFeet.g * ColorScale, pInfo->m_ColorFeet.b * ColorScale, Alpha));
 
 			const IGraphics::CTextureHandle *pFeetTexture = OutLine == 1 ? &pSkinTextures->m_FeetOutline : &pSkinTextures->m_Feet;
-			if(g_Config.m_TcWhiteFeet && pInfo->m_CustomColoredSkin)
+			if(pWhiteFeetSkin != nullptr)
 			{
-				const CSkin *pWhiteFeetSkin = GameClient()->m_Skins.FindOrNullptr(g_Config.m_TcWhiteFeetSkin);
-				if(pWhiteFeetSkin != nullptr)
-				{
-					const IGraphics::CTextureHandle &WhiteFeetTexture = OutLine == 1 ? pWhiteFeetSkin->m_OriginalSkin.m_FeetOutline : pWhiteFeetSkin->m_OriginalSkin.m_Feet;
-					if(CTeeRenderInfo::IsDrawableTexture(WhiteFeetTexture))
-						pFeetTexture = &WhiteFeetTexture;
-				}
+				const IGraphics::CTextureHandle &WhiteFeetTexture = OutLine == 1 ? pWhiteFeetSkin->m_OriginalSkin.m_FeetOutline : pWhiteFeetSkin->m_OriginalSkin.m_Feet;
+				if(IsDrawableTextureAlive(Graphics(), WhiteFeetTexture))
+					pFeetTexture = &WhiteFeetTexture;
 			}
-			if(!CTeeRenderInfo::IsDrawableTexture(*pFeetTexture))
+			if(!IsDrawableTextureAlive(Graphics(), *pFeetTexture))
 				continue;
 			Graphics()->TextureSet(*pFeetTexture);
 

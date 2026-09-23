@@ -14,6 +14,8 @@
 #include <game/client/component.h>
 #include <game/client/components/qmclient/chat_emoji.h>
 #include <game/client/components/qmclient/hud_notifications/hud_notifications.h>
+#include <game/client/components/qmclient/qm_chat_export_metadata.h>
+#include <game/client/components/qmclient/qm_chat_log_jobs.h>
 #include <game/client/lineinput.h>
 #include <game/client/render.h>
 #include <game/client/ui.h>
@@ -73,6 +75,9 @@ public:
 	static void UpdateLinePresentation(SPresentationState &Presentation, int64_t LineTime, int64_t Now, float DeltaSeconds, bool ShowLargeArea, bool ForceVisible, int64_t LargeAreaOpenTick, float RecallDelaySeconds, bool ExtraAnimations = true);
 	static float SmoothPresentationY(float CurrentY, float TargetY, float DeltaSeconds);
 	static bool CanMergePlayerMessages(int PreviousClientId, int PreviousTeam, const char *pPreviousText, int64_t PreviousTime, int ClientId, int Team, const char *pText, int64_t Now);
+	// echo 合并的窗口判定：上一次同文本 echo 发生在 LastTime，当前时间为 Now，
+	// 窗口为 WindowMs 毫秒（0 表示关闭合并）。时间倒流或超出窗口都返回 false。
+	static bool EchoRepeatWithinWindow(int64_t Now, int64_t LastTime, int WindowMs);
 	static bool IsSensitiveChatCommand(const char *pLine)
 	{
 		if(pLine == nullptr)
@@ -148,6 +153,9 @@ private:
 
 		std::shared_ptr<CManagedTeeRenderInfo> m_pManagedTeeRenderInfo;
 
+		// 聊天导出的身份与头像快照：在收到消息时固化，导出时不再按当前名字反查皮肤。
+		std::shared_ptr<const QmChatExport::SMetadata> m_pExportMetadata;
+
 		float m_TextYOffset;
 		// 当前消息实际占用的水平宽度，用于鼠标命中和选中高亮。
 		float m_ContentWidth;
@@ -171,6 +179,12 @@ private:
 	int64_t m_LargeAreaOpenTick;
 	bool m_LastPresentationShowLargeArea;
 	int m_PendingConsoleLineIndex;
+
+	// echo 合并：与玩家消息合并（qm_message_merge）无关，始终生效。
+	// 相同文本在 qm_echo_merge_window_ms 内连续出现时只计数，等这一段结束后补一行带 [N] 的统计。
+	char m_aPendingEchoRepeat[1024];
+	int64_t m_PendingEchoRepeatTime;
+	int m_PendingEchoRepeatCount;
 
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
@@ -264,7 +278,8 @@ private:
 	bool m_EditingNewLine;
 	char m_aSavedInputText[MAX_LINE_LENGTH];
 	bool m_SavedInputPending;
-	char m_aChatLogLastCleanupDate[11];
+	CQmChatLogWriteQueue m_ChatLogWrites;
+	std::shared_ptr<std::string> m_pChatLogLastCleanupDate = std::make_shared<std::string>();
 
 	bool m_ServerSupportsCommandInfo;
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
@@ -280,8 +295,6 @@ private:
 
 	bool LineShouldHighlight(const char *pLine, const char *pName);
 	void StoreSave(const char *pText);
-	bool EnsureChatLogFolder() const;
-	void CleanupOldChatLogs(const char *pToday);
 	void SaveChatLogLine(int ClientId, int Team, const char *pLine);
 	void PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine);
 	void SendChatQueued(int Team, const char *pLine, bool AllowOutgoingTranslation);
@@ -502,7 +515,7 @@ public:
 	bool IsActive() const { return m_Mode != MODE_NONE; }
 	const char *GetInputText() const { return m_Input.GetString(); }
 	void AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible = false);
-	void AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass);
+	void AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass, int SourceConnection = -1, int TimesRepeated = 0);
 	void EnableMode(int Team);
 	void DisableMode();
 	void SaveDraft();
@@ -510,6 +523,10 @@ public:
 	void UnregisterCommand(const char *pName);
 	void Echo(const char *pString);
 	void Echo(const char *pString, bool ForceVisible);
+	// echo 合并闸门：相同文本在 qm_echo_merge_window_ms 内再次出现时返回 true，
+	// 调用方直接跳过，控制台聊天栏与通知栏都不会收到这一条。
+	// 同时负责在换文本时把上一段的 [N] 统计收口。始终生效，不受 qm_message_merge 影响。
+	bool GateEchoRepeat(const char *pString);
 
 	void OnWindowResize() override;
 	void OnConsoleInit() override;
@@ -519,6 +536,7 @@ public:
 	void Reset();
 	void OnRelease() override;
 	void OnMessage(int MsgType, void *pRawMsg) override;
+	void OnMessage(int MsgType, void *pRawMsg, int SourceConnection);
 	bool OnCursorMove(float x, float y, IInput::ECursorType CursorType) override;
 	bool OnInput(const IInput::CEvent &Event) override;
 	void OnInit() override;
@@ -575,6 +593,16 @@ public:
 	void RebuildMergedAuthorName(CLine &Line);
 	void PrintLineToConsole(const CLine &Line) const;
 	void FlushPendingConsoleLine(bool Force = false);
+	// echo 落地路径（两个 Echo 重载共用）：窗口开启时登记这一段重复文本。
+	void EchoLine(const char *pString, bool ForceVisible);
+	bool HasPendingEchoLine() const { return m_aPendingEchoRepeat[0] != '\0'; }
+	bool HasPendingEchoRepeat() const { return HasPendingEchoLine() && m_PendingEchoRepeatCount > 1; }
+	void ResetPendingEchoRepeat()
+	{
+		m_aPendingEchoRepeat[0] = '\0';
+		m_PendingEchoRepeatCount = 0;
+		m_PendingEchoRepeatTime = 0;
+	}
 
 	// ----- send functions -----
 
@@ -641,6 +669,16 @@ inline bool CChat::CanMergePlayerMessages(int PreviousClientId, int PreviousTeam
 	if(Now < PreviousTime)
 		return false;
 	return Now - PreviousTime <= time_freq() * 2;
+}
+
+inline bool CChat::EchoRepeatWithinWindow(int64_t Now, int64_t LastTime, int WindowMs)
+{
+	if(WindowMs <= 0)
+		return false;
+	if(Now < LastTime)
+		return false;
+	// 时间戳单位是 time_freq() 计数，比较前先把毫秒窗口换算成同一单位。
+	return Now - LastTime <= time_freq() * WindowMs / 1000;
 }
 
 inline void CChat::ResetPresentationState(SPresentationState &Presentation)

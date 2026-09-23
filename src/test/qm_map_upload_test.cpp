@@ -1,0 +1,56 @@
+#include "test.h"
+
+#include <game/client/components/qmclient/qm_map_upload.h>
+
+#include <gtest/gtest.h>
+TEST(QmMapUpload, ValidatesSafeMapNames)
+{
+	EXPECT_TRUE(QmMapUpload::IsMapFilename("test.map"));
+	EXPECT_FALSE(QmMapUpload::IsMapFilename("test.txt"));
+	EXPECT_TRUE(QmMapUpload::ValidateFilename("test.map"));
+	EXPECT_FALSE(QmMapUpload::ValidateFilename("../test.map"));
+	EXPECT_FALSE(QmMapUpload::ValidateFilename("test .map"));
+}
+TEST(QmMapUpload, BuildsAndParses)
+{
+	const unsigned char Data[] = {'m', 'a', 'p'};
+	std::string Body;
+	ASSERT_TRUE(QmMapUpload::BuildMultipart("test.map", "player", Data, sizeof(Data), "Boundary-1", Body));
+	EXPECT_NE(Body.find("filename=\"test.map\""), std::string::npos);
+	const char *pResponse = "{\"success\":true,\"message\":\"ok\"}";
+	auto R = QmMapUpload::ParseResponse(200, pResponse, str_length(pResponse));
+	EXPECT_TRUE(R.m_Success);
+}
+
+TEST(QmMapUpload, UploadLifecycleRejectsUnconfiguredEndpoints)
+{
+	QmMapUpload::CUpload Upload;
+	Upload.Start(nullptr, nullptr, nullptr, "ftp://invalid", "maps/test.map", 0, "player");
+	EXPECT_EQ(Upload.Status(), QmMapUpload::EStatus::INVALID_ENDPOINT);
+	EXPECT_FALSE(Upload.Busy());
+}
+
+TEST(QmMapUpload, SearchIndexMatchesNestedMapsWithoutMatchingFolders)
+{
+	CTestInfo Info;
+	auto pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	for(const char *pFolder : {"maps", "maps/nested", "downloadedmaps", "downloadedmaps/other"})
+		ASSERT_TRUE(pStorage->CreateFolder(pFolder, IStorage::TYPE_SAVE));
+	for(const char *pPath : {"maps/nested/Test.map", "downloadedmaps/other/TEST.MAP", "maps/nested/Test.txt"})
+	{
+		IOHANDLE File = pStorage->OpenFile(pPath, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		ASSERT_NE(File, nullptr);
+		io_close(File);
+	}
+	QmMapUpload::CSearchIndex Index;
+	Index.Reset(1);
+	for(int Step = 0; Step < 100 && Index.Busy(); ++Step)
+		Index.ScanNext(pStorage.get());
+	ASSERT_FALSE(Index.Busy());
+	const auto Matches = Index.Find("test");
+	ASSERT_EQ(Matches.size(), 2u);
+	EXPECT_STREQ(Matches[0].m_aPath, "downloadedmaps/other/TEST.MAP");
+	EXPECT_STREQ(Matches[1].m_aPath, "maps/nested/Test.map");
+	EXPECT_TRUE(Index.Find("nested").empty());
+}

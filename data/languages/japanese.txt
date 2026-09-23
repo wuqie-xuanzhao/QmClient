@@ -262,9 +262,6 @@
 3 stars
 == 3 つ星
 
-3D Background
-== 3D 背景
-
 3D background
 == 3D 背景
 
@@ -298,6 +295,9 @@ A demo with this name already exists
 
 A folder with this name already exists
 == この名前のフォルダーは既に存在します
+
+A player name is required.
+== プレイヤー名が必要です。
 
 A screenshot with this name already exists
 == この名前のスクリーンショットは既に存在します
@@ -593,6 +593,9 @@ After hammer fly, whether dummy switches back to previous weapon
 After Load
 == ロード後
 
+After uploading again, use: reload or hot_reload
+== 再アップロード後、reload または hot_reload を実行します
+
 Afterimage pop
 == 残像ポップ
 
@@ -733,6 +736,9 @@ Animate settings card lists when entering a page
 
 Animate settings card reorder and layout reflow
 == 設定カードの並べ替えとレイアウト再配置をアニメーション化
+
+Animated title style id
+== タイトルのアニメーションスタイル ID
 
 Animation
 == アニメーション
@@ -1184,6 +1190,9 @@ Auto-unspec when unfrozen
 Automate demos, screenshots, and match exports
 == Automate demos, screenshots, and match exports
 
+Automatic effect LOD when crowded
+== 密集時にエフェクトを自動で軽量化
+
 Automatic gain control (0=off 1=on)
 == 自動ゲインコントロール（0=オフ 1=オン）
 
@@ -1481,6 +1490,9 @@ Bind Wheel
 Bind Wheel Key
 == バインドホイールキー
 
+Binds
+== バインド
+
 Bit flags for disabling settings tabs
 == 設定タブを無効化するためのビットフラグ
 
@@ -1495,6 +1507,9 @@ Blank: hides this asset
 
 Blend mode
 == ブレンドモード
+
+Blend strength
+== ブレンド強度
 
 Blink the active local tee
 == 操作中のローカルキャラクターを点滅させる
@@ -1546,6 +1561,15 @@ Both sides of keyword rules must be filled
 
 Bounce
 == バウンス
+
+Bracketed title color: 0 = follow server, 1 = single color, 2 = rainbow
+== 括弧内の称号の色：0 = サーバーに従う、1 = 単色、2 = 虹色
+
+Bracketed title opacity (0-100)
+== 括弧内の称号の不透明度 (0-100)
+
+Bracketed title single color
+== 括弧内の称号の単色
 
 Brightness shift
 == 明るさシフト
@@ -1622,9 +1646,6 @@ Call vote
 Camera
 == カメラ
 
-Camera & FOV
-== カメラと FOV
-
 Camera drift intensity (0-200)
 == カメラドリフト強度 (0-200)
 
@@ -1675,6 +1696,9 @@ Can't swap with yourself
 
 Cancel
 == キャンセル
+
+Cancel upload
+== アップロードをキャンセル
 
 Cancel your swap request
 == 交換リクエストをキャンセル
@@ -1751,9 +1775,6 @@ Chat Binds
 Chat box width
 == チャットボックスの幅
 
-Chat Bubble
-== チャットバブル
-
 Chat bubble
 == チャットバブル
 
@@ -1780,6 +1801,9 @@ Chat command
 
 Chat command (e.g. showall 1)
 == チャットコマンド（例：showall 1）
+
+Chat export cancelled
+== チャットのエクスポートをキャンセルしました
 
 Chat export failed
 == チャットエクスポート失敗
@@ -1970,6 +1994,12 @@ Clearable text...
 Clears the voting options
 == 投票オプションをクリア
 
+Click a part on the right to edit its color, blend mode and strength.
+== 右側のパーツをクリックして、色、ブレンドモード、強度を調整します。
+
+Click again to find the next location.
+== もう一度クリックすると次の場所を検索します。
+
 Click to add this community to favorites
 == クリックしてこのコミュニティをお気に入りに追加
 
@@ -2113,6 +2143,9 @@ Command to run when joining server
 
 Command:
 == コマンド：
+
+Commands
+== コマンド
 
 Commands run in the console
 == コンソールで実行されるコマンド
@@ -2275,6 +2308,9 @@ Configure the ingame cursor scale
 
 Configure the input overlay display
 == Configure the input overlay display
+
+Configure the lyrics display
+== 歌詞の表示を設定
 
 Configure these settings
 == これらの設定を構成
@@ -2486,6 +2522,9 @@ Could not load touch controls from file. See local console for details.
 Could not preview this image
 == この画像をプレビューできませんでした
 
+Could not read the map file.
+== マップファイルを読み込めませんでした。
+
 Could not resolve connect address '%s'. See local console for details.
 == 接続アドレス '%s' を解決できませんでした。詳細はローカルコンソールを確認してください。
 
@@ -2572,6 +2611,9 @@ Current: Score
 
 Current: Time
 == 現在：時間
+
+Cursed Flame
+== 呪いの炎
 
 Custom
 == カスタム
@@ -2873,9 +2915,6 @@ Default output open failed
 Default preset
 == デフォルトプリセット
 
-Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)
-== リスポーン後にデフォルトでリクエストする武器（0=オフ、1=ハンマー、2=ピストル、3=ショットガン、4=グレネードランチャー、5=レーザー）
-
 Default zoom
 == デフォルトのズーム
 
@@ -2939,8 +2978,20 @@ Delete this preset
 Demo
 == デモ
 
+Demo display
+== デモ表示
+
 Demo effects
 == デモエフェクト
+
+Demo hook strength (0=Off 1=Icon 2=Icon and number)
+== デモのフック強弱（0=オフ 1=アイコン 2=アイコンと数値）
+
+Demo hook strength scope (0=Own 1=Others 2=Strong 3=Weak 4=All)
+== デモのフック強弱の範囲（0=自分 1=他人 2=強フック 3=弱フック 4=全員）
+
+Demo key presses (0=Off 1=Others 2=All 3=Own)
+== デモのキー入力表示（0=オフ 1=他人 2=全員 3=自分）
 
 Demo marker added
 == デモマーカーを追加しました
@@ -3275,9 +3326,6 @@ Draw where mouse is
 Draw!
 == 引き分け！
 
-Dream Features
-== ドリーム機能
-
 Drift direction
 == ドリフト方向
 
@@ -3410,9 +3458,6 @@ Dummy skin queue max length
 Dummy skin queue switch interval (ms, 0=no timed rotation, random start only)
 == ダミースキンキューの切替間隔（ミリ秒、0=時刻によるローテーションなし）
 
-Dummy Window
-== ダミーウィンドウ
-
 Dummy window size
 == ダミーウィンドウサイズ
 
@@ -3466,9 +3511,6 @@ Dynamic FOV smoothness
 
 Dynamic FOV smoothness (0=instant, 100=smoothest)
 == 動的視野の滑らかさ（0=瞬時、100=最も滑らか）
-
-Dynamic Island
-== ダイナミックアイランド
 
 Dynamic island
 == ダイナミックアイランド
@@ -3725,6 +3767,9 @@ Enable gun sound
 Enable highlighted chat sound
 == ハイライトチャットサウンドを有効化
 
+Enable hook countdown
+== フックのカウントダウンを有効にする
+
 Enable HUD animations
 == HUD アニメーションを有効にする
 
@@ -3745,6 +3790,12 @@ Enable keyboard shortcuts in replay player
 
 Enable keyword reply
 == キーワード返信を有効化
+
+Enable Kugou Music hook integration
+== Kugou Music Hook 統合を有効化
+
+Enable Kugou Music lyrics
+== Kugou Music 歌詞を有効化
 
 Enable left swipe offset on chat fade
 == チャットメッセージフェードアウト時に左スライドオフセットを有効化
@@ -3805,6 +3856,12 @@ Enable practice mode for teams. Allows /rescue but scores not recorded
 
 Enable QmClient style background 3D particles
 == QmClient スタイルの背景 3D パーティクルを有効化
+
+Enable QQ Music hook integration
+== QQ Music Hook 統合を有効化
+
+Enable QQ Music lyrics
+== QQ Music 歌詞を有効化
 
 Enable rainbow rendering for hook
 == フックのレインボーレンダリングを有効化
@@ -3989,6 +4046,9 @@ Endpoint (optional)
 Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
 == /practice モードに入るか再起動してください。そうしないと 60 秒後にチーム全員が処刑されます
 
+Enter a CP number from 1 to 255.
+== 1～255 の CP 番号を入力してください。
+
 Enter Password
 == パスワードを入力
 
@@ -4012,9 +4072,6 @@ Entity assets
 
 Entity Background Image
 == エンティティ背景画像
-
-Entity Layer Colors
-== エンティティレイヤーの色
 
 Entity overlay
 == エンティティオーバーレイ
@@ -4147,6 +4204,9 @@ Exported %d chat messages
 
 Exported to %s
 == %s にエクスポートしました
+
+Exporting chat images: %d
+== チャット画像をエクスポート中：%d
 
 Expose playback controls to the operating system
 == Expose playback controls to the operating system
@@ -4304,6 +4364,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == 告知ファイル（1 行に 1 件）
 
+File: %s
+== ファイル: %s
+
 Fill
 == 塗りつぶし
 
@@ -4340,8 +4403,14 @@ Filter out spectators from player count
 Filtered word console color
 == ブロックワードコンソール色
 
+Find / Next
+== 検索 / 次へ
+
 Find all ban records for the specified IP address
 == 指定された IP アドレスのすべての禁止記録を検索
+
+Find CP
+== CP を検索
 
 Find QmClient communities and project links
 == Find QmClient communities and project links
@@ -4390,6 +4459,9 @@ Folder Link
 
 Follow
 == フォロー
+
+Follow Tee
+== Tee を追従
 
 Following
 == フォロー中
@@ -4547,9 +4619,6 @@ Friend note
 Friend notification refresh interval (sec)
 == フレンド通知の更新間隔（秒）
 
-Friend Notifications
-== フレンド通知
-
 Friend notify
 == フレンド通知
 
@@ -4588,6 +4657,9 @@ Full
 
 Full map listen in same room
 == 同じ部屋でマップ全体を聴く
+
+Full quality nameplate count
+== フル品質を保つネームプレート数
 
 Full: each enabled animation category uses its complete transition
 == 完全：有効な各アニメーションカテゴリで完全な遷移を使用します
@@ -4669,6 +4741,15 @@ Gaussian
 
 General
 == 一般
+
+Generated skin outline color
+== 生成アウトラインの色
+
+Generated skin outline opacity
+== 生成アウトラインの不透明度
+
+Generated skin outline width
+== 生成アウトラインの太さ
 
 Getting game info
 == ゲーム情報を取得中
@@ -4799,11 +4880,11 @@ Go forward one tick
 Go forward the specified duration
 == 指定時間だけ進む
 
+Golden Grace
+== 黄金の恵み
+
 Gores
 == ゴア
-
-Gores Actor
-== Gores アクター専用
 
 Gores actor
 == ゴアアクター
@@ -4876,9 +4957,6 @@ GUI cursor assets
 
 Guide line color
 == ガイドラインの色
-
-Gun
-== ピストル
 
 Hammer
 == ハンマー
@@ -5111,9 +5189,6 @@ Highlighted message
 Highlighted message color
 == ハイライトされたメッセージの色
 
-Hitbox mode
-== ヒットボックスモード
-
 Hitbox Mode Freeze Border Color
 == 衝突ボックスモード Freeze 境界色
 
@@ -5131,9 +5206,6 @@ Hitbox Mode Tee Collision Color
 
 Hitbox Mode Weapon Interaction Color
 == 衝突ボックスモード武器インタラクション色
-
-HJ Assist
-== HJ アシスト
 
 HJ assist
 == HJ アシスト
@@ -5234,6 +5306,9 @@ HTTP map download: low speed limit (in bytes/s, 0=disabled)
 HTTP map download: low speed limit period (0=disabled)
 == HTTP マップダウンロード：低速制限期間（0=無効）
 
+HTTPS endpoint
+== HTTPS エンドポイント
+
 https://ddnet.org/discord
 == https://ddnet.org/discord
 
@@ -5258,9 +5333,6 @@ HUD editor layout
 HUD editor preview
 == HUD エディタープレビュー
 
-HUD island appearance settings
-== HUD アイランド表示設定
-
 HUD notifications
 == HUD 通知
 
@@ -5276,14 +5348,14 @@ Hue speed
 i = Receive rate
 == i = 受信レート
 
-I am a robot
-== 私はロボットです
-
 I am away from the game window
 == ゲームウィンドウから離れています
 
 I muted you
 == ミュートしました
+
+Icon and number
+== アイコンと数値
 
 Icons
 == アイコン
@@ -5450,9 +5522,6 @@ Input device open failed, try reconnecting headset/mic or reselecting input devi
 Input overlay
 == 入力オーバーレイ
 
-Input overlay display
-== 入力オーバーレイ表示
-
 Input overlay keyboard scale (percent)
 == 入力オーバーレイのキーボード倍率（パーセント）
 
@@ -5461,6 +5530,12 @@ Input overlay mouse scale (percent)
 
 Input overlay opacity (percent)
 == 入力オーバーレイの不透明度（パーセント）
+
+Input overlay X position (percent)
+== 入力オーバーレイ X 位置（パーセント）
+
+Input overlay Y position (percent)
+== 入力オーバーレイ Y 位置（パーセント）
 
 Input smoothing
 == 入力スムージング
@@ -5533,6 +5608,9 @@ Invalid Demo
 
 Invalid ID
 == 無効な ID
+
+Invalid map file or filename.
+== マップファイルまたはファイル名が無効です。
 
 Invalid option
 == 無効なオプションです
@@ -5624,6 +5702,9 @@ Jump hint
 Jump hint color
 == ジャンプヒントの色
 
+Jump hint defaults migration completed flag
+== ジャンプヒントの既定文言の移行完了フラグ
+
 Jump hint font size
 == ジャンプヒントのフォントサイズ
 
@@ -5657,9 +5738,6 @@ Keep unsent message on chat close
 Keep vote window open after voting
 == 投票後も投票ウィンドウを開いたままにする
 
-Key Bindings
-== キーバインディング
-
 Key binds
 == キーバインド
 
@@ -5686,9 +5764,6 @@ Keyboard focus ring color
 
 Keyboard size
 == キーボードサイズ
-
-Keyword Reply
-== キーワード返信
 
 Keyword reply
 == キーワード返信
@@ -5741,6 +5816,12 @@ Kills a player and announces the kill
 Kills team and disables practice mode
 == チームをキルし、プラクティスモードを無効にします
 
+Kugou hook heartbeat timeout (milliseconds)
+== Kugou Hook のハートビートタイムアウト（ミリ秒）
+
+Kugou hook helper path (empty=beside QmClient)
+== Kugou Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）
+
 l = Local time
 == l = ローカル時間
 
@@ -5761,6 +5842,9 @@ Language
 
 Language file to use
 == 使用する言語ファイル
+
+Large emoticons and launched emoticons
+== 大きな絵文字と発射絵文字
 
 Large text announcement for friend joining
 == フレンド参加時の大きなテキスト通知
@@ -5825,8 +5909,17 @@ Latency compensation
 Latency Jitter
 == レイテンシジッター
 
+Launch a large emote
+== 大きなエモートを発射
+
 Launch count threshold for the next sponsor reminder
 == 次のスポンサー通知までの起動回数しきい値
+
+Launch emote
+== エモートを発射
+
+Launch emote key
+== 絵文字発射キー
 
 Layout
 == レイアウト
@@ -5851,6 +5944,9 @@ Leave empty to show everyone
 
 Leave empty to use default prompt
 == 空欄にしてデフォルトプロンプトを使用
+
+Leave empty to use UDP
+== 空欄にすると UDP を使用
 
 Left jump
 == 左ジャンプ
@@ -6068,6 +6164,9 @@ Local
 Local + Dummy
 == ローカル + ダミー
 
+Local console log category filter mask (bit flags)
+== ローカルコンソールのログ分類フィルターマスク（ビットフラグ）
+
 Local game mode statistics
 == ローカルゲームモード統計
 
@@ -6227,6 +6326,18 @@ Map danger border
 Map download send window
 == マップダウンロード送信ウィンドウ
 
+Map exceeds the client limit of 64 MiB.
+== マップがクライアントの上限 64 MiB を超えています。
+
+Map folders
+== マップフォルダー
+
+Map name
+== マップ名
+
+Map path in save folder
+== 保存フォルダー内のマップパス
+
 Map play history
 == マッププレイ履歴
 
@@ -6272,8 +6383,32 @@ Map to use on server
 Map type:
 == マップタイプ：
 
+Map upload
+== マップのアップロード
+
+Map upload cancelled.
+== マップのアップロードをキャンセルしました。
+
+Map upload endpoint
+== マップアップロードのエンドポイント
+
+Map upload endpoint (empty disables map upload)
+== マップアップロードのエンドポイント（空欄で無効）
+
+Map upload in progress...
+== マップをアップロード中...
+
+Map upload network error.
+== マップのアップロード中に通信エラーが発生しました。
+
+Map uploaded successfully.
+== マップをアップロードしました。
+
 Maps finished
 == クリアしたマップ
+
+maps/example.map
+== maps/example.map
 
 Margin when notification is docked
 == 通知バーが端に寄ったときの余白
@@ -6470,6 +6605,9 @@ Menu option - normal
 Menu option - selected
 == メニューオプション - 選択中
 
+Merge consecutive identical echo messages within this window in milliseconds (0 disables merging)
+== このウィンドウ（ミリ秒）内で連続する同一の echo メッセージを統合する（0 で統合しない）
+
 Merge consecutive identical player messages within 2 seconds
 == 2 秒以内に連続した同一プレイヤーの同じメッセージを統合
 
@@ -6631,6 +6769,9 @@ Mouse sensitivity in menu/editor
 
 Mouse size
 == マウスサイズ
+
+Move a friend category to a position
+== フレンドカテゴリを指定位置へ移動
 
 Move left
 == 左に移動
@@ -6809,8 +6950,17 @@ Name:
 Name: %s
 == 名前：%s
 
+Nameplate count that still keeps full text effect quality; beyond it effect layers scale down by count (higher=keep more)
+== 文字効果をフル品質で保つネームプレート数。超えると人数に応じて効果層を減らします（大きいほど保持）
+
 Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
 == ネームプレートフック強度アイコン範囲（0=自分 1=他人 2=強フック 3=弱フック 4=全プレイヤー）
+
+Nameplate nickname scope (0=None 1=Current character 2=Own characters 3=Other players 4=Other players and own non-current characters 5=All)
+== ニックネーム表示範囲（0=なし 1=操作中のキャラ 2=自分のキャラ 3=他のプレイヤー 4=他のプレイヤーと自分の非操作キャラ 5=すべて）
+
+Nameplate nickname scope migration completed flag
+== ニックネーム表示範囲の移行完了フラグ
 
 Nameplate position X
 == ネームプレートに X 座標を表示
@@ -6832,6 +6982,9 @@ Nameplate text border color
 
 Nameplate text border range
 == ネームプレートテキストの境界範囲
+
+Nameplate text effect auto LOD (0=Off 1=On: trim outer effect layers when crowded)
+== ネームプレート文字効果の自動LOD（0=無効、1=有効：密集時に外側の効果層を削減）
 
 Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)
 == ネームプレートテキストエフェクト（1=境界 2=グラデーション 4=レインボー 8=グロー）
@@ -7049,6 +7202,9 @@ No login required
 No map play history yet
 == マッププレイ履歴がまだありません
 
+No map selected
+== マップが選択されていません
+
 No maps found on this server!
 == このサーバーに条件を満たすマップが見つかりません！
 
@@ -7108,6 +7264,9 @@ No Rules Defined, Kill em all!!
 
 No safe position found
 == 安全な位置が見つかりません
+
+No saved maps found
+== 保存済みのマップが見つかりません
 
 No saved profiles available yet. Save one first.
 == 保存されたプロファイルはまだありません。先に保存してください。
@@ -7256,9 +7415,6 @@ Notification hold time
 Notification text size
 == 通知のテキストサイズ
 
-Notifications
-== 通知
-
 Notify when friends come online
 == フレンドがオンラインになったら通知
 
@@ -7355,9 +7511,6 @@ Only show when the other Tee is not on screen
 Only show with this nickname
 == このニックネーム使用時のみ表示
 
-Only what you can't imagine, nothing Dream can't do
-== 想像できないことだけが、Dreamにできないことです
-
 Opacity
 == 不透明度
 
@@ -7427,9 +7580,6 @@ Open the folder containing demo files
 Open the folder containing screenshots
 == スクリーンショットが保存されているフォルダを開く
 
-Open the input overlay editor
-== 入力オーバーレイエディターを開く
-
 Open the saves file
 == セーブファイルを開く
 
@@ -7481,8 +7631,14 @@ Option color
 Optional authentication key for the DNSBL provider
 == DNSBL プロバイダーのオプションの認証キー
 
+Optional voice WebSocket endpoint (empty keeps UDP transport)
+== 省略可能な音声 WebSocket エンドポイント（空欄なら UDP を使用）
+
 Or visit DDNet.org
 == または DDNet.org をご覧ください
+
+Original
+== オリジナル
 
 Other
 == その他
@@ -7739,9 +7895,6 @@ Pick the source that matches your music app and keep it playing; the lyrics foll
 Pickup range
 == ピックアップ範囲
 
-Pie Menu
-== パイメニュー
-
 Pie menu
 == パイメニュー
 
@@ -7819,9 +7972,6 @@ Player country filter in server browser (ISO 3166-1 numeric)
 
 Player country:
 == プレイヤーの国：
-
-Player data
-== プレイヤーデータ
 
 Player decoration color
 == プレイヤーのデコレーションカラー
@@ -7918,6 +8068,9 @@ Player stats
 
 Player stats and info display
 == プレイヤー統計と情報表示
+
+Player: %s
+== プレイヤー: %s
 
 Players
 == プレイヤー
@@ -8105,6 +8258,9 @@ Prediction margin when frozen
 Prediction offset
 == 予測オフセット
 
+Preparing chat export: %d%%
+== チャットのエクスポートを準備中：%d%%
+
 Preparing demo playback
 == デモ再生を準備中
 
@@ -8128,6 +8284,9 @@ Press ESC to close. Watch the scale-in spring on open.
 
 Press Esc to exit the HUD editor
 == Esc を押して HUD エディターを終了
+
+Press F2, log in, then use: change_map map_name
+== F2 を押してログイン後、change_map map_name を実行します
 
 Prev. weapon
 == 前の武器
@@ -8351,6 +8510,9 @@ QmClient information and project links
 QmClient online distribution
 == QmClient オンライン分布
 
+QmClient realtime WebSocket URL (empty disables transport)
+== QmClient リアルタイム WebSocket URL（空欄で無効）
+
 QmClient Settings
 == QmClient 設定
 
@@ -8368,6 +8530,12 @@ QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform
 
 QQ group: 1076765929 (click to copy)
 == QQ グループ：1076765929（クリックしてコピー）
+
+QQ Music hook heartbeat timeout (milliseconds)
+== QQ Music Hook のハートビートタイムアウト（ミリ秒）
+
+QQ Music hook helper path (empty=beside QmClient)
+== QQ Music Hook ヘルパーのパス（空欄の場合は QmClient と同じディレクトリ）
 
 Quads are used for background decoration
 == 背景装飾に使用されるクアッド
@@ -8641,6 +8809,9 @@ Reduced
 
 Reduced: uses shorter transitions and disables presentation animations
 == 軽減：短い遷移を使用し、演出アニメーションを無効にします
+
+Refine the search to see more maps
+== 検索条件を絞り込むとさらに表示されます
 
 Refresh
 == 更新
@@ -9128,9 +9299,6 @@ Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
 == リソースプレビューのVRAM予算パーセント（デバイスのローカルVRAM予算に基づく）
 
-Respawn default weapon (when owned)
-== リスポーン時のデフォルト武器（所持時のみ）
-
 Restart
 == 再起動
 
@@ -9142,6 +9310,9 @@ Restart the client
 
 Restarting. Please wait…
 == 再起動しています。お待ちください…
+
+Restore Kugou files
+== Kugou の元ファイルを復元
 
 Restore old single-segment hook collision line behavior
 == 旧式の単一セグメントフック衝突線動作を復元
@@ -9500,8 +9671,14 @@ Search and navigate settings
 Search donor asset
 == ドナーアセットを検索
 
+Search local maps
+== ローカルマップを検索
+
 Search main asset
 == メインアセットを検索
+
+Search maps and downloadedmaps, including subfolders
+== maps と downloadedmaps のサブフォルダーも検索
 
 Search maps for Rank 1 replays ...
 == Rank 1 リプレイのあるマップを検索 ...
@@ -9514,6 +9691,9 @@ Search, filter, and manage skins
 
 Searching
 == 検索中
+
+Searching all map folders...
+== すべてのマップフォルダーを検索中…
 
 Secondary
 == セカンダリ
@@ -9536,6 +9716,9 @@ SecretKey
 See /practicecmdlist for a list of all available practice commands. Most commonly used ones are /telecursor, /lasttp and /rescue
 == /practicecmdlist で利用可能な練習コマンドの一覧を確認できます。よく使われるのは /telecursor、/lasttp、/rescue です
 
+Select a saved .map file (client limit: 64 MiB).
+== 保存済みの .map ファイルを選択してください（クライアントの上限: 64 MiB）。
+
 Select all chat
 == チャットをすべて選択
 
@@ -9544,6 +9727,9 @@ Select button by touch
 
 Select export
 == エクスポート内容を選択
+
+Select map
+== マップを選択
 
 Select the country flag for each player
 == Select the country flag for each player
@@ -9565,6 +9751,9 @@ Selected candidate %d/%d under cursor.
 
 Selected item color
 == 選択項目の色
+
+Selected part: %d
+== 選択中のパーツ：%d
 
 Selected server
 == 選択したサーバー
@@ -9773,6 +9962,9 @@ Set team for a player (spectators = -1, game = 0)
 Set timeout protection code s
 == タイムアウト保護コード s を設定
 
+Set up Kugou lyrics
+== Kugou 歌詞の接続設定
+
 Set voice input device
 == 音声入力デバイスを設定
 
@@ -9820,6 +10012,9 @@ Severe
 
 Shape
 == 形状
+
+Share of the server browser name/map split given to the name column (per mille)
+== サーバーブラウザーの名前/マップ分割で名前列に割り当てる割合（パーミル）
 
 Short server names
 == 短いサーバー名
@@ -9902,6 +10097,9 @@ Show chat (2 always show large chat area)
 Show chat bubbles above players
 == プレイヤーの上にチャットバブルを表示
 
+Show chat in demo preview and video
+== デモプレビューと動画でチャットを表示
+
 Show chat messages above players
 == プレイヤーの上にチャットメッセージを表示
 
@@ -9958,9 +10156,6 @@ Show compact vote HUD
 
 Show configurable outlines around map tiles
 == Show configurable outlines around map tiles
-
-Show Coordinates
-== 座標を表示
 
 Show coordinates above players
 == プレイヤーの上に座標を表示
@@ -10097,6 +10292,12 @@ Show frozen Tee HUD only in team
 Show frozen tee particles
 == 凍結 Tee のパーティクルを表示
 
+Show generated skin outline for local tees
+== 自分の Tee に生成アウトラインを表示
+
+Show generated skin outline for other tees
+== 他の Tee に生成アウトラインを表示
+
 Show ghost
 == ゴーストを表示
 
@@ -10148,11 +10349,11 @@ Show important messages when rendering video
 Show important server prompts
 == 重要なサーバープロンプトを表示
 
-Show important server prompts and Echo messages as popups
-== 重要なサーバープロンプトと Echo メッセージをポップアップ表示
-
 Show important server prompts as notifications
 == 重要なサーバープロンプトを通知として表示
+
+Show in Dynamic Island
+== Dynamic Island に表示
 
 Show in-game FPS
 == ゲーム内 FPS を表示
@@ -10208,6 +10409,9 @@ Show in-game HUD (spectator HUD)
 Show in-game HUD (timer)
 == ゲーム内 HUD を表示（タイマー）
 
+Show in-game HUD in demo preview and video
+== デモプレビューと動画でゲーム内 HUD を表示
+
 Show in-game HUD when rendering video
 == 動画レンダリング時にゲーム内 HUD を表示
 
@@ -10249,6 +10453,9 @@ Show katan on frozen players
 
 Show katana on frozen players (restores old behavior)
 == フリーズしたプレイヤーに刀を表示 (旧動作を復元)
+
+Show key presses
+== キー入力を表示
 
 Show key presses (1 = others, 2 = all, 3 = own only)
 == キー入力を表示（1 = 他人、2 = 全員、3 = 自分のみ）
@@ -10363,6 +10570,12 @@ Show other players' hook collision lines (2 always shown)
 
 Show other players' hook collision lines when rendering video
 == 動画レンダリング時に他のプレイヤーのフック衝突線を表示
+
+Show other players' large emoticons
+== 他のプレイヤーの大きな絵文字を表示
+
+Show other players' launched emoticons
+== 他のプレイヤーの発射絵文字を表示
 
 Show other team players (2=own team only)
 == 他のチームのプレイヤーを表示（2 = 自チームのみ）
@@ -10757,6 +10970,9 @@ Size of strength/weakness icon and number
 Skin
 == スキン
 
+Skin copying is only available for 0.6 skins
+== スキンのコピーは 0.6 スキンのみ対応しています
+
 Skin could not be found.
 == スキンが見つかりませんでした。
 
@@ -10777,6 +10993,21 @@ Skin list sort mode (0=Name, 1=Release date)
 
 Skin options
 == スキンオプション
+
+Skin outline color
+== スキンアウトラインの色
+
+Skin outline for other players
+== 他のプレイヤーのスキンの輪郭
+
+Skin outline for self and dummy
+== 自分とダミーのスキンの輪郭
+
+Skin outline opacity
+== スキンアウトラインの不透明度
+
+Skin outline width
+== スキンアウトラインの太さ
 
 Skin prefix
 == スキンプレフィックス
@@ -10901,8 +11132,8 @@ Smooth zoom animation time in editor (in ms, 0=off)
 Smoothness of multi-view zoom (in ms, higher = slower)
 == マルチビューズームのスムーズさ（ms、高いほど遅い）
 
-SMTC
-== システムメディアコントロール
+Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
+== 揺れのオフセットを整数ピクセルに合わせる（字形は鮮明、動きはぎこちない）
 
 Snapshot Age
 == スナップショット経過時間
@@ -10939,9 +11170,6 @@ Solid tile outline opacity
 
 Solo
 == ソロ
-
-Solo Split
-== ソロスプリット
 
 Solo split
 == ソロスプリット
@@ -11075,9 +11303,6 @@ Speed:
 Speedrun countdown timer
 == スピードランのカウントダウンタイマー
 
-Speedrun Timer
-== スピードランタイマー
-
 Speedrun timer
 == スピードラインタイマー
 
@@ -11101,6 +11326,9 @@ Sphere
 
 Spin pop
 == スピンポップ
+
+Spirit Light
+== 精霊の光
 
 Split main and dummy into different teams for solo-run sync
 == 本体と分身を別々のチームに入れ、solo ランの開始を同期します（team-0 で同期しにくいマップ向け）
@@ -11254,9 +11482,6 @@ Stop server
 
 Stop the current demo
 == 現在のデモを停止
-
-Streamer Mode
-== ストリーマーモード
 
 Streamer mode
 == ストリーマーモード
@@ -11420,9 +11645,6 @@ System
 System default
 == システムデフォルト
 
-System media control and lyrics
-== システムメディア操作と歌詞
-
 System media controls
 == システムメディアコントロール
 
@@ -11458,6 +11680,9 @@ Target language code (e.g. zh, en, ja, zh-TW)
 
 Target language ratio
 == ターゲット言語比率
+
+Target server: %s
+== 送信先サーバー：%s
 
 Task running ...
 == タスク実行中…
@@ -11630,6 +11855,9 @@ Tee trail color
 Tee trail color mode (1=Solid, 2=Current Tee color, 3=Rainbow, 4=Tee speed, 5=Random)
 == Tee トレイルの色モード（1=単色、2=現在の Tee 色、3=虹色、4=Tee 速度、5=ランダム）
 
+Tee trail style (0=Original, 1=Cursed flame, 2=Violet bolt, 3=Spirit light, 4=Void shadow, 5=Golden grace)
+== Tee トレイルスタイル（0=オリジナル、1=呪いの炎、2=紫電、3=精霊の光、4=虚空の影、5=黄金の恵み）
+
 Tee Trails
 == Tee トレイル
 
@@ -11800,6 +12028,9 @@ The selected part stays highlighted while you adjust its color.
 
 The server is running a non-standard tuning on a pure game type.
 == サーバーが純粋なゲームタイプで非標準のチューニングを実行しています。
+
+The server rejected the map upload.
+== サーバーがマップのアップロードを拒否しました。
 
 The update is ready and will be installed when you exit.
 == アップデートの準備ができました。終了時にインストールされます。
@@ -11999,8 +12230,26 @@ Timer isn't displayed.
 Tiny Tee Size
 == ミニ Tee のサイズ
 
+Title bob angular speed in 1/100 rad/s
+== タイトルの角速度（1/100 rad/s）
+
+Title bob wavelength in pixels
+== タイトルの波長（ピクセル）
+
+Title light sweep speed in 1/100 row per second (0 = off)
+== タイトルの光の走査速度（毎秒 1/100 行、0 = 無効）
+
+Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
+== タイトルの文字ごとの位相（1 ピクセルあたり 1/1000 px、0 = スタイル既定値、20 = 光の帯が見える）
+
+Title per-character vertical bob amplitude in pixels (0 = off)
+== タイトルの文字ごとの上下振幅（ピクセル、0 = 無効）
+
 Title server unavailable; retry
 == 称号サーバーに接続できません。再試行してください
+
+Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
+== タイトルの立体効果：0 = 光沢、1 = ソリッド、2 = クラシック Calamity、3 = 無効
 
 Title too long or contains unsupported characters
 == 称号が長すぎるか使用できない文字を含んでいます
@@ -12175,9 +12424,6 @@ Trail width
 
 Translate
 == 翻訳
-
-Translate button
-== 翻訳ボタン
 
 Translate ID:
 == 翻訳 ID：
@@ -12425,6 +12671,9 @@ Uncertainty duration
 Unclassified audio issue
 == 未分類のオーディオ問題
 
+Unexpected map upload response.
+== マップのアップロードに対する応答が不正です。
+
 Unfinished
 == 未完了
 
@@ -12548,6 +12797,15 @@ Update or add a specific war group
 Update Rate
 == 更新レート
 
+Upload .map files. Server and admin passwords: s.
+== .map ファイルをアップロードします。サーバーと管理者のパスワードは s です。
+
+Upload a saved map to the public test server
+== 保存済みのマップを公開テストサーバーにアップロード
+
+Upload map
+== マップをアップロード
+
 URL for downloading community skins
 == コミュニティスキン用ダウンロード URL
 
@@ -12580,6 +12838,9 @@ Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 
 Use alternative world tick calculation making hooks behave as if all players have Strong.
 == 代替ワールドティック計算を使用し、全プレイヤーが Strong を持っているかのようにフックを動作させる。
+
+Use animated title style (overrides qm_title_color_mode)
+== タイトルのアニメーションスタイルを使う（qm_title_color_mode を上書き）
 
 Use colored skins for frozen tees
 == 凍結 Tee にカラースキンを使用
@@ -12674,6 +12935,9 @@ Use skin color when Tee is frozen
 Use sounds
 == サウンドを使用
 
+Use style colors
+== スタイルの色を使用
+
 Use team colors for name plates
 == ネームプレートにチームカラーを使用
 
@@ -12685,6 +12949,9 @@ Use the mouse wheel on a hovered module to scale it by 5%
 
 Use the scoreboard cursor mode to scroll the list
 == リストをスクロールするにはスコアボードカーソルモードを使用してください
+
+Use the selected tee trail style palette
+== 選択した Tee トレイルスタイルのパレットを使用
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == `add_favorite` の後にこれを使用してお気に入りをグループ化します。`begin_favorite_group` で開始します
@@ -12784,6 +13051,9 @@ View the developers and contributors
 
 View the people supporting QmClient development
 == View the people supporting QmClient development
+
+Violet Bolt
+== 紫電
 
 Virtual joystick which always uses fire.
 == 常に発射を使用するバーチャルジョイスティック。
@@ -12896,6 +13166,9 @@ Voice test mode (0=Off 1=Local 2=Server Loopback)
 Voice whitelist (comma-separated)
 == 音声ホワイトリスト（カンマ区切り）
 
+Void Shadow
+== 虚空の影
+
 Volume
 == 音量
 
@@ -12970,6 +13243,9 @@ Waiting for local server to stop…
 
 Waiting for snapshot
 == スナップショットを待機中
+
+Waiting for the voice WebSocket connection
+== 音声 WebSocket 接続を待機中
 
 Waiting to open
 == 開くのを待機中
@@ -13088,14 +13364,14 @@ Weapons
 Website
 == ウェブサイト
 
+WebSocket endpoint (optional)
+== WebSocket エンドポイント（任意）
+
 Welcome to DDNet
 == DDNet へようこそ
 
 What level DDRace binding is set to (automatic, you don't need to use it).
 == DDRace バインディングが設定されているレベル（自動設定のため、使用する必要はありません）。
-
-What's done is done, no use saying more
-== 済んだことは仕方ない、言っても無駄だ
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == TClient のレインボー Tee が有効な場合、この機能は効果がありません。
@@ -13210,6 +13486,9 @@ Width of others' hook collision line
 
 Width of players column in server browser
 == サーバーブラウザのプレイヤー列の幅
+
+Width of Qm clients column in server browser
+== サーバーブラウザーの Qm クライアント列の幅
 
 Width of type column in server browser
 == サーバーブラウザのタイプ列の幅
@@ -13629,6 +13908,46 @@ Zoom to current mouse target
 == ⚠️ テンセントクラウド API が設定されていません
 
 [Assets editor blend mode]
+Color
+== カラー
+
+[Assets editor blend mode]
+Color Burn
+== 焼き込みカラー
+
+[Assets editor blend mode]
+Color Dodge
+== 覆い焼きカラー
+
+[Assets editor blend mode]
+Darken
+== 比較（暗）
+
+[Assets editor blend mode]
+Difference
+== 差の絶対値
+
+[Assets editor blend mode]
+Exclusion
+== 除外
+
+[Assets editor blend mode]
+Hard Light
+== ハードライト
+
+[Assets editor blend mode]
+Hue
+== 色相
+
+[Assets editor blend mode]
+Lighten
+== 比較（明）
+
+[Assets editor blend mode]
+Luminosity
+== 輝度
+
+[Assets editor blend mode]
 Multiply
 == 乗算
 
@@ -13641,8 +13960,16 @@ Overlay
 == オーバーレイ
 
 [Assets editor blend mode]
+Saturation
+== 彩度
+
+[Assets editor blend mode]
 Screen
 == スクリーン
+
+[Assets editor blend mode]
+Soft Light
+== ソフトライト
 
 [Auto camera]
 Active
@@ -13901,6 +14228,10 @@ All
 == すべて
 
 [Show name plates]
+Current
+== 操作中のキャラ
+
+[Show name plates]
 None
 == なし
 
@@ -13909,8 +14240,12 @@ Others
 == 他人
 
 [Show name plates]
-Own
-== 自身
+Others and own
+== 他人と自分の他キャラ
+
+[Show name plates]
+Own characters
+== 自分のキャラ
 
 [Show players' key presses]
 All

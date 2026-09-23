@@ -1035,6 +1035,68 @@ TEST(QmCardRegistry, DataDebtCardsHaveTabAssignment)
 	EXPECT_NE(qm_card_registry::FindByStableId("qm:nameplate_text")->m_pDefaultTab, nullptr);
 }
 
+// 意图：没有 deck 渲染器的注册表条目（激光、名牌文字、项目链接）功能由旧设置页承载，
+// 搜索点击必须落到真正显示这些设置的卡，而不是自己那个空 tab。
+TEST(QmCardRegistry, RendererlessCardsNavigateToHostingCard)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+
+	const auto ExpectTarget = [&Model](const char *pStableId, const char *pExpectedTab, const char *pExpectedStableId) {
+		const qm_card_registry::SCardDefault *pDefault = qm_card_registry::FindByStableId(pStableId);
+		ASSERT_NE(pDefault, nullptr) << pStableId;
+		const qm_card_registry::SCardNavigationTarget Target = qm_card_registry::ResolveCardNavigationTarget(*pDefault, Model);
+		EXPECT_STREQ(Target.m_pTab, pExpectedTab) << pStableId;
+		EXPECT_STREQ(Target.m_pStableId, pExpectedStableId) << pStableId;
+	};
+
+	ExpectTarget("qm:laser", "appearance-laser", "deck:appearance-laser-enhanced");
+	ExpectTarget("qm:nameplate_text", "appearance-name-plate", "deck:appearance-name-plate-settings");
+	ExpectTarget("qm:info", "qmclient-contributors", "deck:qmclient-contributors-ddnet");
+	// 歌词开关渲染在灵动岛卡内，因此停留在 hud 页但指向承载卡。
+	ExpectTarget("qm:lyrics", "hud", "qm:dynamic_island");
+
+	// 有自己渲染器的卡不受影响，仍指向自身。
+	const qm_card_registry::SCardDefault *pFocus = qm_card_registry::FindByStableId("qm:focus_mode");
+	ASSERT_NE(pFocus, nullptr);
+	const qm_card_registry::SCardNavigationTarget FocusTarget = qm_card_registry::ResolveCardNavigationTarget(*pFocus, Model);
+	EXPECT_STREQ(FocusTarget.m_pTab, "visual");
+	EXPECT_STREQ(FocusTarget.m_pStableId, "qm:focus_mode");
+}
+
+// 意图：搜索命中激光/名牌文字时，结果携带的目标必须是承载卡的 tab 与 id，
+// 否则玩家点进去只会看到一个没有该设置的页面。
+TEST(QmCardRegistry, SearchResultsCarryHostingCardTarget)
+{
+	const qm_card_order::CModel Model = RegistryModelAfterRoundTrip();
+
+	const auto ExpectSearchTarget = [&Model](const char *pQuery, const char *pStableId, const char *pExpectedTab, const char *pExpectedStableId) {
+		const auto vResults = qm_card_registry::SearchCards(pQuery, Model);
+		const auto It = std::find_if(vResults.begin(), vResults.end(), [pStableId](const auto &Result) {
+			return std::string(Result.m_pStableId) == pStableId;
+		});
+		ASSERT_NE(It, vResults.end()) << pQuery;
+		EXPECT_STREQ(It->m_Target.m_pTab, pExpectedTab) << pQuery;
+		EXPECT_STREQ(It->m_Target.m_pStableId, pExpectedStableId) << pQuery;
+	};
+
+	ExpectSearchTarget("激光", "qm:laser", "appearance-laser", "deck:appearance-laser-enhanced");
+	ExpectSearchTarget("名牌", "qm:nameplate_text", "appearance-name-plate", "deck:appearance-name-plate-settings");
+	ExpectSearchTarget("歌词", "qm:lyrics", "hud", "qm:dynamic_island");
+}
+
+// 意图：歌词在旧栖梦子布局里有模块条目，适配层也把 Lyrics 映射到 qm:lyrics，
+// 注册表必须存在同名条目，否则迁移出的全局顺序里会留下注册表不认识的 id。
+TEST(QmCardRegistry, LyricsCardRegisteredForSidebarModuleMigration)
+{
+	const qm_card_registry::SCardDefault *pLyrics = qm_card_registry::FindByStableId("qm:lyrics");
+	ASSERT_NE(pLyrics, nullptr);
+	// 与 s_aQmModuleDefaults 的 Lyrics（Right, 16）保持一致。
+	EXPECT_STREQ(pLyrics->m_pDefaultTab, "hud");
+	EXPECT_EQ(pLyrics->m_DefaultColumn, qm_card_registry::ECardColumn::Right);
+	EXPECT_EQ(pLyrics->m_DefaultOrder, 16);
+	EXPECT_GE(RegistryModelAfterRoundTrip().StateIndexForStableId("qm:lyrics"), 0);
+}
+
 // 意图：调试模式卡片必须挂在 HUD 页，携带可搜索的中文/拼音关键词，且模块枚举可反查。
 TEST(QmCardRegistry, DebugModeCardRegisteredInHudTab)
 {
@@ -1081,5 +1143,24 @@ TEST(QmCardRegistry, AllQimengLegacyKeysMigratable)
 			EXPECT_NE(qm_card_registry::MigrateLegacyKey(Legacy.c_str()), nullptr)
 				<< "未映射的栖梦 key: " << Legacy;
 		}
+	}
+}
+
+TEST(QmCardRegistry, TimeoutDisconnectSearchPointsToControls)
+{
+	qm_card_order::CModel Model;
+	Model.SetEntries(qm_card_registry::BuildDefaultEntries());
+	for(const char *pQuery : {"qm_timeout_disconnect", "Active disconnect", "主动断开", "异常断开", "timeout disconnect"})
+	{
+		const auto Results = qm_card_registry::SearchCards(pQuery, Model);
+		ASSERT_FALSE(Results.empty()) << pQuery;
+		// 本地把同一批中文/拼音关键词也写进了总览卡片 qm:key_binds（远程没有），所以中文查询会多命中一张；
+		// 这里断言「命中控件卡片」，唯一无歧义的命令名仍然只应命中一张卡。
+		bool Found = false;
+		for(const auto &Result : Results)
+			Found = Found || std::string(Result.m_pStableId) == "deck:controls-miscellaneous";
+		EXPECT_TRUE(Found) << pQuery;
+		if(std::string(pQuery) == "qm_timeout_disconnect")
+			EXPECT_EQ(Results.size(), 1u) << pQuery;
 	}
 }

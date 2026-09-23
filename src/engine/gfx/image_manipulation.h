@@ -3,6 +3,8 @@
 
 #include <engine/image.h>
 
+#include <generated/data_types.h>
+
 #include <cstdint>
 
 // Destination must have appropriate size for RGBA data
@@ -37,6 +39,11 @@ int HighestBit(int OfVar);
 bool ResolveSpritePixelRect(size_t ImageWidth, size_t ImageHeight, int GridX, int GridY,
 	int SpriteX, int SpriteY, int SpriteW, int SpriteH,
 	size_t &OutX, size_t &OutY, size_t &OutW, size_t &OutH, bool *pOutOfBounds = nullptr);
+
+// 从图集里提取单个 sprite 的像素数据（分配缓冲并复制），供资源解码任务在 CPU 侧调用，
+// 与 ResolveSpritePixelRect 共用同一套网格换算，不另起一份实现。
+// 图集不可整除、sprite 越界、无像素数据、尺寸非法或分配失败都返回 false，Result 不被写入。
+bool ExtractSpriteImage(const CImageInfo &FromImageInfo, const CDataSprite *pSprite, CImageInfo &Result);
 
 // 判断图像中指定矩形是否完全透明。仅对带 alpha 通道的格式（FORMAT_R / FORMAT_RA / FORMAT_RGBA）
 // 有效，其它格式、空数据或越界矩形都返回 false。

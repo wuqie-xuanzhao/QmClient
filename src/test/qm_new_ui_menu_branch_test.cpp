@@ -633,7 +633,12 @@ TEST(QmUiScaleSource, BlockingPopupsAndDemoRowsFitScaledScreen)
 	EXPECT_NE(Menus.find("QmUiCenteredMargin(Box, 150.0f, 300.0f, 300.0f)"), std::string::npos);
 	EXPECT_NE(Menus.find("QmUiCenteredMargin(Screen, 150.0f, 300.0f, 300.0f)"), std::string::npos);
 	EXPECT_NE(DemoMenus.find("QmUiVisibleRows(SegmentsArea.h"), std::string::npos);
-	EXPECT_NE(DemoMenus.find("VerticalExpansion = std::min(60.0f, PopupMargin)"), std::string::npos);
+	// 弹窗的纵向扩张必须被外边距夹住，缩放后才不会溢出屏幕。
+	// 这里只锁定「用 std::min 对 PopupMargin 取夹」这一稳定事实，不锁定具体常量——
+	// 弹窗增删一行内容时那个常量本来就会变（例如加入回放显示面板）。
+	const size_t Expansion = DemoMenus.find("const float VerticalExpansion = std::min(");
+	ASSERT_NE(Expansion, std::string::npos);
+	EXPECT_NE(DemoMenus.find("PopupMargin)", Expansion), std::string::npos);
 }
 
 TEST(QmDemoCutRender, UsesExportedCutAsRenderSource)
@@ -1417,7 +1422,7 @@ TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 	EXPECT_EQ(CountOccurrences(RenderPlayerBody, "if(g_Config.m_QmEmoticonShadow)"), 3);
 	EXPECT_EQ(CountOccurrences(RenderPlayerBody, "Graphics()->SetColor(0.0f, 0.0f, 0.0f"), 3);
 	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetX * h"), std::string::npos);
-	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetY * h, h, h"), std::string::npos);
+	EXPECT_NE(RenderPlayerBody.find("EmoticonShadowOffsetY * h"), std::string::npos);
 	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, Alpha);\n\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
 	EXPECT_NE(RenderPlayerBody.find("Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);\n\t\t\tGraphics()->RenderQuadContainerAsSprite"), std::string::npos);
 	EXPECT_NE(EmoticonRenderBody.find("EmoticonSelectorShadowOpacity"), std::string::npos);
@@ -1432,9 +1437,14 @@ TEST(QmNewUiMenuBranches, EmoticonShadowHasConfigRenderPassAndVisualToggle)
 	ASSERT_NE(ShadowClear, std::string::npos);
 	ASSERT_NE(ShadowBegin, std::string::npos);
 	EXPECT_LT(ShadowClear, ShadowBegin);
-	const std::string SkinTransitionContent = FunctionBody(MenusSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
-	EXPECT_NE(SkinTransitionContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmEmoticonShadow"), std::string::npos);
-	EXPECT_NE(MenusSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
+	// 皮肤卡的内容函数已迁入全局卡片目录（N3）：改在目录文件里定位函数体。
+	// 「表情阴影」开关仍在皮肤外观卡内（QmCardCatalogSkin.cpp），未因迁移丢失。
+	const std::string SkinCardSource = ReadTextFile("src/game/client/QmUi/cards/QmCardCatalogSkin.cpp");
+	const std::string SkinAppearanceContent = FunctionBody(SkinCardSource, "void CMenus::RenderQmVisualSkinAppearanceContent(");
+	const std::string SkinTransitionContent = FunctionBody(SkinCardSource, "void CMenus::RenderQmVisualSkinTransitionContent(");
+	EXPECT_NE(SkinAppearanceContent.find("RenderQmVisualCheckbox(Content, LineHeight, LineSpacing, &g_Config.m_QmEmoticonShadow"), std::string::npos);
+	EXPECT_EQ(SkinTransitionContent.find("g_Config.m_QmEmoticonShadow"), std::string::npos);
+	EXPECT_NE(SkinCardSource.find("Localize(\"Emoticon shadow\")"), std::string::npos);
 }
 
 TEST(QmNewUiMenuBranches, NameplateOthersModeSuppressesLocalIdentityRows)
@@ -1458,9 +1468,11 @@ TEST(QmNewUiMenuBranches, NameplateOthersModeSuppressesLocalIdentityRows)
 	EXPECT_EQ(RenderNamePlateGame.find("IsLocalClient &&\n\t\tm_pData->m_CoordXAlignFrame.m_LocalAligned"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("const bool OwnNameplateScopeVisible"), std::string::npos);
 	// 录像机/禅模式重构后取值统一走 NameplateRenderValue(ConfigManager(), &...)：
-	// 录制中读回接管前的真实值，未接管时与直接读 g_Config 等价，与旧断言语义一致。
-	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowName = pPlayerInfo->m_Local ? NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) :"), std::string::npos);
-	EXPECT_NE(RenderNamePlateGame.find("NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates);"), std::string::npos);
+	// 录制中读回接管前的真实值，未接管时与直接读 g_Config 等价。
+	// 昵称可见性本身由 QmNameplateNameScope 单元测试覆盖；这里只锁定两件无法从
+	// 纯函数观察到的事实：取值仍经 NameplateRenderValue，且判定委托给纯函数。
+	EXPECT_NE(RenderNamePlateGame.find("NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateShowScope)"), std::string::npos);
+	EXPECT_NE(RenderNamePlateGame.find("ShouldShowQmNameplateName(NameplateScope, pPlayerInfo->m_Local, GameClient()->IsLocalClientId(ClientId))"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds) && !HideIdentity;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("Data.m_ShowClan = Data.m_ShowName && g_Config.m_ClNamePlatesClan && !HideIdentity;"), std::string::npos);
 	EXPECT_EQ(RenderNamePlateGame.find("const bool NameplateScopeAllowsCoords"), std::string::npos);
@@ -1535,7 +1547,8 @@ TEST(QmNewUiMenuBranches, NameplatePreviewNameScopeGatesPlateExceptDirectionKeys
 	const std::string RenderNamePlatePreview = FunctionBody(Source, "void CNamePlates::RenderNamePlatePreview");
 
 	EXPECT_NE(RenderNamePlatePreview.find("const bool IsOwnPreview = DummyIdx == 0;"), std::string::npos);
-	EXPECT_NE(RenderNamePlatePreview.find("const bool NameplateScopeAllowsPreview = ForceNameplateScopeAll || (IsOwnPreview ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates);"), std::string::npos);
+	// 预览档位判定同样委托给纯函数（DummyIdx==0 视作当前操控角色，其余算本机分身）。
+	EXPECT_NE(RenderNamePlatePreview.find("ShouldShowQmNameplateName(g_Config.m_QmNameplateShowScope, IsOwnPreview, true)"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("const bool CoordModuleAllowsPreview = IsOwnPreview ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("Data.m_ShowName = NameplateScopeAllowsPreview;"), std::string::npos);
 	EXPECT_NE(RenderNamePlatePreview.find("Data.m_ShowClientId = Data.m_ShowName && (g_Config.m_Debug || g_Config.m_ClNamePlatesIds);"), std::string::npos);
@@ -1581,9 +1594,9 @@ TEST(QmNewUiMenuBranches, NameplateGameUsesFullScopeReferenceFrame)
 
 	EXPECT_NE(Source.find("CNamePlate m_aNamePlateFrameReferences[MAX_CLIENTS];"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("CNamePlate *pLayoutReference = nullptr;"), std::string::npos);
-	// 同一条件的可读化重构：NameplatePartiallyHidden 就是「本名或他人名牌被关掉」，
-	// 取值同样经 NameplateRenderValue 读回接管前的真实值。
-	EXPECT_NE(RenderNamePlateGame.find("const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) == 0 || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) == 0;"), std::string::npos);
+	// NameplatePartiallyHidden 现在的含义是「六档里没选到全体」，取值同样经
+	// NameplateRenderValue 读回接管前的真实值。
+	EXPECT_NE(RenderNamePlateGame.find("const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateShowScope) != QM_NAMEPLATE_SHOW_SCOPE_ALL;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("if(Alpha > 0.0f && NameplateFreeMoveEnabled() && NameplatePartiallyHidden)"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("CNamePlateData FrameData = Data;"), std::string::npos);
 	EXPECT_NE(RenderNamePlateGame.find("FrameData.m_ShowName = true;"), std::string::npos);
@@ -1730,9 +1743,12 @@ TEST(QmNewUiMenuBranches, ScoreboardMediaButtonSymbolsFollowContentAlpha)
 	EXPECT_NE(Helper.find("DefaultTextColor().WithMultipliedAlpha(IconAlpha)"), std::string::npos);
 	EXPECT_NE(Helper.find("ColorRGBA(1.0f, 0.0f, 0.0f, IconAlpha)"), std::string::npos);
 	EXPECT_NE(Helper.find("FontIcons::FONT_ICON_SLASH"), std::string::npos);
-	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPrevButton"), std::string::npos);
-	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcPlayButton"), std::string::npos);
-	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_SmtcNextButton"), std::string::npos);
+	// 计分板的三个 SMTC 播放控制按钮已按远程结果删除，助手只服务影子回放控制条。
+	EXPECT_EQ(Source.find("s_SmtcPrevButton"), std::string::npos);
+	EXPECT_EQ(Source.find("s_SmtcPlayButton"), std::string::npos);
+	EXPECT_EQ(Source.find("s_SmtcNextButton"), std::string::npos);
+	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_GhostPlayButton"), std::string::npos);
+	EXPECT_NE(Source.find("DoScoreboardMediaIconButton(Ui(), TextRender(), &s_GhostCloseButton"), std::string::npos);
 	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcPrevButton"), std::string::npos);
 	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcPlayButton"), std::string::npos);
 	EXPECT_EQ(Source.find("Ui()->DoButton_FontIcon(&s_SmtcNextButton"), std::string::npos);
@@ -2113,7 +2129,7 @@ TEST(QmNewUiMenuBranches, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(RenderSource.find("if(BorderEnabled)\n\t\tOutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);"), std::string::npos);
 	EXPECT_NE(RenderSource.find("QM_TEXT_EFFECT_RAINBOW"), std::string::npos);
 	EXPECT_NE(RenderSource.find("QM_TEXT_EFFECT_GLOW"), std::string::npos);
-	EXPECT_NE(RenderSource.find("for(int Pass = 0; Pass < GlowPasses; ++Pass)"), std::string::npos);
+	EXPECT_NE(RenderSource.find("for(int Pass = 0; Pass < Passes.m_GlowPasses; ++Pass)"), std::string::npos);
 
 	EXPECT_NE(QmConfigHeader.find("QmNameplateTextEffects"), std::string::npos);
 	EXPECT_NE(QmConfigHeader.find("QmNameplateTextBorderColor"), std::string::npos);

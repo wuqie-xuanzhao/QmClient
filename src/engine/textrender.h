@@ -304,9 +304,27 @@ struct STextColorSplit
 	int m_CharIndex; // Which index within the text should the split occur
 	int m_Length; // How long is the split
 	ColorRGBA m_Color; // The color the text should be starting from m_CharIndex
+	// QmClient：字符内横向渐变的右边缘色。默认等于 m_Color，此时顶点色与旧行为逐字节一致。
+	ColorRGBA m_ColorEnd;
 
 	STextColorSplit(int CharIndex, int Length, const ColorRGBA &Color) :
-		m_CharIndex(CharIndex), m_Length(Length), m_Color(Color) {}
+		m_CharIndex(CharIndex), m_Length(Length), m_Color(Color), m_ColorEnd(Color) {}
+
+	// QmClient：显式指定左右边缘色，使单个字符内部产生横向渐变。
+	STextColorSplit(int CharIndex, int Length, const ColorRGBA &Color, const ColorRGBA &ColorEnd) :
+		m_CharIndex(CharIndex), m_Length(Length), m_Color(Color), m_ColorEnd(ColorEnd) {}
+};
+
+// QmClient：逐字符顶点偏移，用于波浪浮动一类几何效果。
+// 偏移只作用于渲染顶点，不参与布局、断行、选区与光标计算，因此文字宽度和对齐保持稳定。
+struct STextCharOffset
+{
+	int m_CharIndex; // 文本中的字符序号，与 STextColorSplit 使用同一套序号
+	float m_XOffset;
+	float m_YOffset;
+
+	STextCharOffset(int CharIndex, float XOffset, float YOffset) :
+		m_CharIndex(CharIndex), m_XOffset(XOffset), m_YOffset(YOffset) {}
 };
 
 class CTextCursor
@@ -367,6 +385,10 @@ public:
 
 	// Color splits of the cursor to allow multicolored text
 	std::vector<STextColorSplit> m_vColorSplits;
+
+	// QmClient：逐字符顶点偏移。按字符序号升序排列且覆盖每个字符，未偏移的字符填 0，
+	// 否则游标推进方式（顺序消费）会与字符错位。
+	std::vector<STextCharOffset> m_vCharOffsets;
 
 	float Height() const;
 	STextBoundingBox BoundingBox() const;

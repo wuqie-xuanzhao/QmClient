@@ -10,9 +10,110 @@
 #include <cctype>
 #include <cmath>
 #include <mutex>
+#include <utility>
 
 namespace VoiceUtils
 {
+	const char *EffectiveVoiceWebSocketUrl(const char *pUrl)
+	{
+		if(!pUrl || pUrl[0] == '\0' || str_comp(pUrl, "42.194.185.210:9987") == 0)
+			return "wss://qmclient.icu/ws/voice";
+		return pUrl;
+	}
+
+	CVoiceWebSocketTransport::CVoiceWebSocketTransport() :
+		CVoiceWebSocketTransport(CreateQmWebSocketClient({}))
+	{
+	}
+
+	CVoiceWebSocketTransport::CVoiceWebSocketTransport(std::unique_ptr<IQmWebSocketClient> pClient) :
+		m_pClient(std::move(pClient))
+	{
+		IQmWebSocketClient::STuning Tuning;
+		Tuning.m_OutgoingQueueCapacity = 8;
+		m_pClient->SetTuning(Tuning);
+	}
+
+	bool CVoiceWebSocketTransport::Update(const char *pUrl, bool Enabled, uint32_t ContextHash, uint32_t TokenHash, uint8_t ProtocolVersion)
+	{
+		const std::string Url = EffectiveVoiceWebSocketUrl(pUrl);
+		const bool ConfigChanged = m_Url != Url || m_ContextHash != ContextHash || m_TokenHash != TokenHash || m_ProtocolVersion != ProtocolVersion;
+		bool ResetRuntime = ConfigChanged || m_Enabled != Enabled;
+		if(ResetRuntime)
+		{
+			Disconnect();
+			m_Url = Url;
+			m_ContextHash = ContextHash;
+			m_TokenHash = TokenHash;
+			m_ProtocolVersion = ProtocolVersion;
+			m_Enabled = Enabled;
+			m_Error.clear();
+			SQmWebSocketConnectConfig Config;
+			m_Error = ParseQmWebSocketUrl(m_Url.c_str(), Config);
+			m_UrlValid = m_Error.empty();
+			if(m_Enabled && m_UrlValid)
+			{
+				Config.m_MaxMessageSize = 128 * 1024;
+				if(!m_pClient->Available())
+					m_Error = m_pClient->UnavailableReason();
+				else if(!m_pClient->Connect(Config, m_Error) && m_Error.empty())
+					m_Error = "voice WebSocket connection failed";
+			}
+		}
+		const bool IsConnected = m_Enabled && m_UrlValid && m_pClient->Desired() && m_pClient->State() == EQmWebSocketState::CONNECTED;
+		const int64_t ConnectedTick = IsConnected ? m_pClient->LastConnectedTick() : 0;
+		ResetRuntime = ResetRuntime || m_Connected != IsConnected || (IsConnected && m_LastConnectedTick != ConnectedTick);
+		m_Connected = IsConnected;
+		m_LastConnectedTick = ConnectedTick;
+		if(IsConnected)
+			m_Error.clear();
+		return ResetRuntime;
+	}
+
+	void CVoiceWebSocketTransport::Disconnect()
+	{
+		m_pClient->Disconnect();
+		m_Enabled = false;
+		m_Connected = false;
+		m_LastConnectedTick = 0;
+	}
+
+	bool CVoiceWebSocketTransport::Connected() const
+	{
+		return m_Connected && m_pClient->Desired() && m_pClient->State() == EQmWebSocketState::CONNECTED && m_pClient->LastConnectedTick() == m_LastConnectedTick;
+	}
+
+	bool CVoiceWebSocketTransport::Connecting() const
+	{
+		return m_Enabled && m_UrlValid && m_pClient->Desired() && !Connected();
+	}
+
+	const char *CVoiceWebSocketTransport::LastError() const
+	{
+		if(!m_Error.empty())
+			return m_Error.c_str();
+		return m_Enabled && !Connected() ? m_pClient->LastError() : "";
+	}
+
+	bool CVoiceWebSocketTransport::SendPacket(const uint8_t *pData, size_t Size)
+	{
+		if(!pData || Size < VOICE_PACKET_HEADER_SIZE || Size > VOICE_MAX_PACKET || !Connected())
+			return false;
+		return m_pClient->SendBinary(reinterpret_cast<const char *>(pData), Size);
+	}
+
+	bool CVoiceWebSocketTransport::PollPacket(SQmWebSocketMessage &Out)
+	{
+		SQmWebSocketMessage Message;
+		while(Connected() && m_pClient->PollMessage(Message))
+		{
+			if(Message.m_Type != EQmWebSocketMessageType::BINARY || Message.m_Data.size() < VOICE_PACKET_HEADER_SIZE || Message.m_Data.size() > VOICE_MAX_PACKET)
+				continue;
+			Out = std::move(Message);
+			return true;
+		}
+		return false;
+	}
 
 	static constexpr char VOICE_MAGIC[4] = {'R', 'V', '0', '1'};
 	static constexpr uint32_t VOICE_GROUP_MASK = 0x3fffffff;
@@ -171,6 +272,8 @@ namespace VoiceUtils
 		OutHeader.m_PosX = ReadFloat(pBuf + Offset);
 		Offset += sizeof(float);
 		OutHeader.m_PosY = ReadFloat(pBuf + Offset);
+		if(OutHeader.m_PayloadSize > VOICE_MAX_PAYLOAD || !std::isfinite(OutHeader.m_PosX) || !std::isfinite(OutHeader.m_PosY))
+			return false;
 		return true;
 	}
 
@@ -353,6 +456,8 @@ namespace VoiceUtils
 			return EVoiceIncomingPacketDecision::DROP_VERSION;
 		if(Header.m_Type != VOICE_TYPE_AUDIO && Header.m_Type != VOICE_TYPE_PING && Header.m_Type != VOICE_TYPE_PONG)
 			return EVoiceIncomingPacketDecision::DROP_TYPE;
+		if((Header.m_Flags & ~VOICE_ALLOWED_FLAGS) != 0)
+			return EVoiceIncomingPacketDecision::DROP_FLAGS;
 		if(Header.m_ContextHash == 0 || Header.m_ContextHash != Context.m_LocalContextHash)
 			return EVoiceIncomingPacketDecision::DROP_CONTEXT;
 
@@ -372,7 +477,7 @@ namespace VoiceUtils
 
 		if(Header.m_PayloadSize > (uint16_t)VOICE_MAX_PAYLOAD)
 			return EVoiceIncomingPacketDecision::DROP_PAYLOAD;
-		if((size_t)VOICE_PACKET_HEADER_SIZE + Header.m_PayloadSize > PacketSize)
+		if((size_t)VOICE_PACKET_HEADER_SIZE + Header.m_PayloadSize != PacketSize)
 			return EVoiceIncomingPacketDecision::DROP_PAYLOAD;
 		if(Header.m_PayloadSize == 0)
 			return EVoiceIncomingPacketDecision::DROP_PAYLOAD;

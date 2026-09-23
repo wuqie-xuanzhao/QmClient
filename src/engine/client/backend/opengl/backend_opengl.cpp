@@ -1073,6 +1073,11 @@ void CCommandProcessorFragment_OpenGL::Cmd_Render(const CCommandBuffer::SCommand
 	default:
 		dbg_assert_failed("Invalid primitive type: %d", (int)pCommand->m_PrimType);
 	};
+
+	// 防止后续地图缓冲绘制沿用本次的客户端数组指针并越界读取。
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 #endif
 }
 
@@ -1198,6 +1203,11 @@ void CCommandProcessorFragment_OpenGL::Cmd_RenderTarget_Draw(const CCommandBuffe
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glDrawArrays(GL_QUADS, 0, pCommand->m_PrimCount * 4);
+
+	// 离屏纹理回绘也必须清理数组状态，不能泄漏给后续地图绘制。
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 #endif
 }
 

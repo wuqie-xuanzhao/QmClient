@@ -136,4 +136,3 @@ TEST(QmMonitoringPersistenceContract, AudioPackDirectoryOpensWritableSaveFolder)
 	EXPECT_NE(Body.find("Storage()->GetCompletePath(IStorage::TYPE_SAVE, \"audio\", aBuf, sizeof(aBuf));"), std::string::npos);
 	EXPECT_EQ(Body.find("Storage()->GetCompletePath(IStorage::TYPE_ALL, \"audio\""), std::string::npos);
 }
-

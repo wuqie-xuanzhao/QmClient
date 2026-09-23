@@ -18,6 +18,8 @@ namespace NeteaseLyrics
 
 	// 选择当前句。时间在第一句之前或明确的时间空洞中返回无效，不显示旧句。
 	SSelectedLine SelectCurrentLine(const STimeline &Timeline, int64_t PositionMs);
+	// 选择已经开始的最近一句,忽略该句结束时间,用于间奏中继续显示上一句的歌词。
+	SSelectedLine SelectLatestStartedLine(const STimeline &Timeline, int64_t PositionMs);
 	bool AreTimelinesEquivalent(const STimeline &Left, const STimeline &Right);
 
 	struct SPlaybackAnchor
@@ -52,6 +54,7 @@ namespace QmNetease
 	using NeteaseLyrics::AreTimelinesEquivalent;
 	using NeteaseLyrics::IsSnapshotStale;
 	using NeteaseLyrics::SelectCurrentLine;
+	using NeteaseLyrics::SelectLatestStartedLine;
 	using NeteaseLyrics::SGenerationState;
 	using NeteaseLyrics::SPlaybackAnchor;
 	using NeteaseLyrics::SSelectedLine;

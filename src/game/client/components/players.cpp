@@ -23,6 +23,7 @@
 #include <game/client/components/qmclient/afk_presentation.h>
 #include <game/client/components/qmclient/jelly_tee.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/qm_skin_outline.h>
 #include <game/client/components/qmclient/tee_hue_cycle.h>
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
@@ -146,6 +147,15 @@ static void BuildQmJellyExtraImpulse(const CGameClient *pGameClient, const CColl
 	}
 }
 
+// 描边参数统一在渲染前写进 render info；绘制本身由 CRenderTools::RenderTee6 / RenderTee7 按
+// 部件完成，避免每个调用点各写一份内联描边逻辑。
+static void ConfigureSkinOutline(CGameClient *pGameClient, int ClientId, CTeeRenderInfo &RenderInfo)
+{
+	const bool Enabled = !pGameClient->IsRenderingDummyMiniMap() && QmShouldDrawSkinOutline(ClientId,
+										pGameClient->m_aLocalIds[0], pGameClient->m_aLocalIds[1], g_Config.m_QmSkinOutlineLocal != 0, g_Config.m_QmSkinOutlineOthers != 0);
+	RenderInfo.m_QmSkinOutlineWidth = Enabled ? g_Config.m_QmSkinOutlineWidth : 0;
+	RenderInfo.m_QmSkinOutlineColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmSkinOutlineColor)).WithAlpha(g_Config.m_QmSkinOutlineAlpha / 100.0f);
+}
 static bool GetWarListTeeGlowColor(CGameClient *pGameClient, int ClientId, ColorRGBA &Color)
 {
 	if(!g_Config.m_TcWarList || ClientId < 0 || ClientId >= MAX_CLIENTS)
@@ -414,6 +424,16 @@ void CPlayers::RenderHookCollLine(
 	if(!AlwaysRenderHookColl && !RenderHookCollPlayer)
 		return;
 
+	// 完全透明的提示线无需执行后面的钩子模拟。
+	float Alpha = 1.0f;
+	if(GameClient()->IsOtherTeam(ClientId))
+		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
+	Alpha *= (float)g_Config.m_ClHookCollAlpha / 100;
+	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
+		Alpha = std::min(Alpha, 0.5f);
+	if(Alpha <= 0.0f)
+		return;
+
 	float Intra = GameClient()->m_aClients[ClientId].m_IsPredicted ? Client()->PredIntraGameTick(g_Config.m_ClDummy) : Client()->IntraGameTick(g_Config.m_ClDummy);
 	float Angle = GetPlayerTargetAngle(&Prev, &Player, ClientId, Intra);
 
@@ -428,21 +448,6 @@ void CPlayers::RenderHookCollLine(
 	float HookLength = PlayerCore.m_Tuning.m_HookLength;
 	float HookFireSpeed = PlayerCore.m_Tuning.m_HookFireSpeed;
 
-	// 检查玩家是否在屏幕外且朝远离屏幕的方向瞄准
-	// 若地图含 hook teleport 则无法预知是否会进入屏幕
-	if(!Collision()->HasHookTeleIns())
-	{
-		const float MaxHookReach = HookLength + HookFireSpeed;
-
-		if(Position.x < ScreenRect.m_TopLeft.x - (Direction.x >= 0 ? MaxHookReach : 0) ||
-			Position.x > ScreenRect.m_BottomRight.x + (Direction.x <= 0 ? MaxHookReach : 0) ||
-			Position.y < ScreenRect.m_TopLeft.y - (Direction.y >= 0 ? MaxHookReach : 0) ||
-			Position.y > ScreenRect.m_BottomRight.y + (Direction.y <= 0 ? MaxHookReach : 0))
-		{
-			return;
-		}
-	}
-
 	// TClient: Hook collision line length follows cursor distance
 	// 有问题,暂定改回原版
 	//if(Local && g_Config.m_TcHookCollCursor)
@@ -455,6 +460,14 @@ void CPlayers::RenderHookCollLine(
 	if(HookLength < HOOK_START_DISTANCE || HookFireSpeed <= 0.0f)
 		return;
 
+	const int HookCollSize = Local ? g_Config.m_ClHookCollSize : g_Config.m_ClHookCollSizeOther;
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	const float PixelPadding = std::max((ScreenX1 - ScreenX0) / Graphics()->ScreenWidth(), (ScreenY1 - ScreenY0) / Graphics()->ScreenHeight());
+	const float LinePadding = HookCollSize > 0 ? (0.5f + (HookCollSize - 1) * 0.25f) * GameClient()->m_Camera.m_Zoom + PixelPadding : PixelPadding;
+	if(!m_HookCollVisibility.MayReachView(Position, HookLength, HookFireSpeed, vec2(ScreenX0, ScreenY0), vec2(ScreenX1, ScreenY1), LinePadding, g_Config.m_SvOldTeleportHook != 0))
+		return;
+
 	vec2 QuantizedDirection = Direction;
 	vec2 StartOffset = Direction * HOOK_START_DISTANCE;
 	vec2 BasePos = Position;
@@ -462,7 +475,8 @@ void CPlayers::RenderHookCollLine(
 	vec2 SegmentStartPos = LineStartPos;
 
 	ColorRGBA HookCollColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollColorNoColl));
-	std::vector<IGraphics::CLineItem> vLineSegments;
+	m_HookCollLineScratch.Reset();
+	auto &vLineSegments = m_HookCollLineScratch.m_vLineSegments;
 
 	const int MaxHookTicks = 5 * Client()->GameTickSpeed(); // calculating above 5 seconds is very expensive and unlikely to happen
 
@@ -623,40 +637,20 @@ void CPlayers::RenderHookCollLine(
 	}
 
 	// Render hook coll line
-	const int HookCollSize = Local ? g_Config.m_ClHookCollSize : g_Config.m_ClHookCollSizeOther;
-
-	float Alpha = 1.0f;
-	if(GameClient()->IsOtherTeam(ClientId))
-		Alpha = g_Config.m_ClShowOthersAlpha / 100.0f;
-	Alpha *= (float)g_Config.m_ClHookCollAlpha / 100;
-	if(ClientId >= 0 && GameClient()->m_FastPractice.Enabled() && !GameClient()->m_Snap.m_SpecInfo.m_Active && !GameClient()->m_FastPractice.IsPracticeParticipant(ClientId))
-		Alpha = std::min(Alpha, 0.5f);
-	if(Alpha <= 0.0f)
-		return;
 	ColorRGBA HookCollTipColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClHookCollTipColor, true));
 
 	Graphics()->TextureClear();
 	if(HookCollSize > 0)
 	{
-		std::vector<IGraphics::CFreeformItem> vLineQuadSegments;
+		auto &vLineQuadSegments = m_HookCollLineScratch.m_vLineQuadSegments;
 		vLineQuadSegments.reserve(vLineSegments.size());
 
 		float LineWidth = 0.5f + (float)(HookCollSize - 1) * 0.25f;
 		const vec2 PerpToAngle = normalize(vec2(Direction.y, -Direction.x)) * GameClient()->m_Camera.m_Zoom;
 
-		auto ConvertLineSegments = [&](const IGraphics::CLineItem &LineSegment) {
-			vec2 DrawInitPos(LineSegment.m_X0, LineSegment.m_Y0);
-			vec2 DrawFinishPos(LineSegment.m_X1, LineSegment.m_Y1);
-			vec2 Pos0 = DrawFinishPos + PerpToAngle * -LineWidth;
-			vec2 Pos1 = DrawFinishPos + PerpToAngle * LineWidth;
-			vec2 Pos2 = DrawInitPos + PerpToAngle * -LineWidth;
-			vec2 Pos3 = DrawInitPos + PerpToAngle * LineWidth;
-			vLineQuadSegments.emplace_back(Pos0.x, Pos0.y, Pos1.x, Pos1.y, Pos2.x, Pos2.y, Pos3.x, Pos3.y);
-		};
-
 		for(const auto &LineSegment : vLineSegments)
 		{
-			ConvertLineSegments(LineSegment);
+			m_HookCollLineScratch.AppendQuad(LineSegment, PerpToAngle, LineWidth);
 		}
 
 		vLineSegments.clear();
@@ -667,7 +661,7 @@ void CPlayers::RenderHookCollLine(
 		if(HookTipLineSegment.has_value() && HookCollTipColor.a > 0.0f && !g_Config.m_TcRevertHookLine)
 		{
 			vLineQuadSegments.clear();
-			ConvertLineSegments(HookTipLineSegment.value());
+			m_HookCollLineScratch.AppendQuad(HookTipLineSegment.value(), PerpToAngle, LineWidth);
 			Graphics()->SetColor(HookCollTipColor.WithMultipliedAlpha(Alpha));
 			Graphics()->QuadsDrawFreeform(vLineQuadSegments.data(), vLineQuadSegments.size());
 		}
@@ -1366,6 +1360,14 @@ void CPlayers::RenderPlayer(
 	{
 		RenderTeeGlow(RenderTools(), &State, RenderInfo, Player.m_Emote, Direction, Position, Alpha, JellyDeform, TeamGlowColor);
 	}
+	ConfigureSkinOutline(GameClient(), ClientId, RenderInfo);
+	CTeeRenderInfo PreviousSkinInfoOutline;
+	if(pPreviousSkinInfo != nullptr && RenderInfo.m_QmSkinOutlineWidth > 0)
+	{
+		PreviousSkinInfoOutline = *pPreviousSkinInfo;
+		ConfigureSkinOutline(GameClient(), ClientId, PreviousSkinInfoOutline);
+		pPreviousSkinInfo = &PreviousSkinInfoOutline;
+	}
 
 	RenderTools()->RenderTeeWithSkinChangeTransition(&State, pPreviousSkinInfo, &RenderInfo, Player.m_Emote, Direction, Position, SkinTransitionProgress, Alpha, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
 
@@ -1450,13 +1452,17 @@ void CPlayers::RenderPlayer(
 
 			int QuadOffset = QuadOffsetToEmoticon + GameClient()->m_aClients[ClientId].m_Emoticon;
 			Graphics()->TextureSet(GameClient()->m_EmoticonsSkin.m_aSpriteEmoticons[GameClient()->m_aClients[ClientId].m_Emoticon]);
+			// 头顶大表情（super emote）放大并抬高，避免和普通表情叠在一起。
+			const bool IsSuperEmote = GameClient()->m_Emoticon.IsLocalSuperHeadEmoticon(ClientId, GameClient()->m_aClients[ClientId].m_Emoticon);
+			const float EmoticonScale = IsSuperEmote ? 2.35f : 1.0f;
+			const float SuperYOffset = IsSuperEmote ? 44.0f * h : 0.0f;
 			if(g_Config.m_QmEmoticonShadow)
 			{
 				Graphics()->SetColor(0.0f, 0.0f, 0.0f, a * Alpha * EmoticonShadowOpacity);
-				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + EmoticonShadowOffsetX * h, Position.y - 23.f - 32.f * h + EmoticonShadowOffsetY * h, h, h);
+				Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x + EmoticonShadowOffsetX * h, Position.y - 23.f - 32.f * h - SuperYOffset + EmoticonShadowOffsetY * h, h * EmoticonScale, h * EmoticonScale);
 			}
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, a * Alpha);
-			Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x, Position.y - 23.f - 32.f * h, h, h);
+			Graphics()->RenderQuadContainerAsSprite(m_WeaponEmoteQuadContainerIndex, QuadOffset, Position.x, Position.y - 23.f - 32.f * h - SuperYOffset, h * EmoticonScale, h * EmoticonScale);
 
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			Graphics()->QuadsSetRotation(0);
@@ -1898,6 +1904,7 @@ void CPlayers::RenderPlayerGhost(
 		RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, ShadowPosition, 0.5f, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle); // render ghost
 	}
 
+	ConfigureSkinOutline(GameClient(), ClientId, RenderInfo);
 	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position, Alpha, JellyDeform.m_BodyScale, JellyDeform.m_FeetScale, JellyDeform.m_BodyAngle, JellyDeform.m_FeetAngle);
 
 	float TeeAnimScale, TeeBaseSize;
@@ -1947,6 +1954,10 @@ void CPlayers::OnRender()
 {
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
+
+	// 刷新钩子碰撞线的目标缓存：IntersectCharacter 会被每秒模拟循环调用上万次，
+	// 必须在任何 RenderHookCollLine 之前完成（本帧内数据不变）。
+	GameClient()->UpdateHookCollTargets();
 
 	// update render info for ninja
 	CTeeRenderInfo aRenderInfo[MAX_CLIENTS];
@@ -2146,6 +2157,12 @@ void CPlayers::CreateNinjaTeeRenderInfo()
 	NinjaSkinDescriptor.m_Flags |= CSkinDescriptor::FLAG_SIX;
 	str_copy(NinjaSkinDescriptor.m_aSkinName, "x_ninja");
 	m_pNinjaTeeRenderInfo = GameClient()->CreateManagedTeeRenderInfo(NinjaTeeRenderInfo, NinjaSkinDescriptor);
+}
+
+void CPlayers::OnMapLoad()
+{
+	// 传送层在地图加载后保持不变；两种钩子传送规则分别记录，支持运行时切换设置。
+	m_HookCollVisibility.OnMapLoad(Collision()->TeleLayer(), (size_t)Collision()->GetWidth() * Collision()->GetHeight());
 }
 
 void CPlayers::CreateSpectatorTeeRenderInfo()

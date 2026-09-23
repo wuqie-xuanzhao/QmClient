@@ -14,9 +14,15 @@
 #include <game/client/animstate.h>
 #include <game/client/components/nameplate_text_effects.h>
 #include <game/client/components/qmclient/chat_emoji.h>
+#include <game/client/components/qmclient/demo_display.h>
+#include <game/client/components/qmclient/friend_heart_icon.h>
 #include <game/client/components/qmclient/modes.h>
+#include <game/client/components/qmclient/nameplate_layout.h>
 #include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_gate.h>
 #include <game/client/components/qmclient/nameplate_msdf/qm_nameplate_msdf_renderer.h>
+#include <game/client/components/qmclient/nameplate_text_cache.h>
+#include <game/client/components/qmclient/qm_title_render.h>
+#include <game/client/components/qmclient/qm_title_style.h>
 #include <game/client/components/qmclient/qmclient_utils.h>
 #include <game/client/gameclient.h>
 #include <game/client/prediction/entities/character.h>
@@ -53,17 +59,7 @@ enum class EHookStrongWeakState
 	STRONG
 };
 
-enum class ENameplateCoreRow
-{
-	NAME,
-	CLAN,
-	HOOK,
-	COORDS,
-	KEYS,
-	NUM_ROWS
-};
-
-static constexpr size_t kNameplateCoreRowCount = static_cast<size_t>(ENameplateCoreRow::NUM_ROWS);
+// 核心行枚举与行数常量已提取到 nameplate_layout.h（本次吸收）。
 static constexpr std::array<ENameplateCoreRow, kNameplateCoreRowCount> s_aDefaultNameplateCoreRowsTopToBottom = {
 	ENameplateCoreRow::KEYS,
 	ENameplateCoreRow::COORDS,
@@ -176,6 +172,48 @@ static ColorRGBA HookStrongWeakColor(EHookStrongWeakState State, float Alpha)
 	return ColorRGBA(1.0f, 1.0f, 1.0f, Alpha);
 }
 
+// QmClient：名牌文字特效的自适应降级状态（qm_nameplate_effect_auto_lod）。
+// 只在渲染线程、且只在 OnRender 的名牌渲染段内有效：档位每帧开场算一次，同一帧内所有名牌共用，
+// 因此不会出现同屏不同玩家效果不一致。OnRender 之外（设置页预览等）读到的是满档。
+static int s_QmNameplateEffectLodSmoothed = 0; // 平滑后的同屏名牌数
+static int s_QmNameplateEffectLodVisible = 0; // 上一帧真正画出特效层的名牌数
+static int s_QmNameplateEffectLodVisibleThisFrame = 0; // 本帧已画出的带特效名牌数
+static int s_QmNameplateEffectLodDraws = QM_TEXT_EFFECT_DRAWS_UNLIMITED; // 本帧每个名牌文本行允许的特效绘制次数
+
+static void QmNameplateEffectLodBeginFrame()
+{
+	const int FullDraws = QmNameplateEffectFullDraws(
+		g_Config.m_QmNameplateTextEffects,
+		g_Config.m_QmNameplateTextBorderRange,
+		g_Config.m_QmNameplateTextGlowRange);
+	if(g_Config.m_QmNameplateEffectAutoLod && FullDraws > 0)
+	{
+		s_QmNameplateEffectLodSmoothed = QmNameplateEffectLodSmoothCount(
+			s_QmNameplateEffectLodSmoothed,
+			s_QmNameplateEffectLodVisible,
+			QM_NAMEPLATE_EFFECT_LOD_DEAD_ZONE_NAMEPLATES,
+			QM_NAMEPLATE_EFFECT_LOD_STEP_UP_NAMEPLATES,
+			QM_NAMEPLATE_EFFECT_LOD_STEP_DOWN_NAMEPLATES);
+		s_QmNameplateEffectLodDraws = QmNameplateEffectLodIdealDraws(
+			s_QmNameplateEffectLodSmoothed,
+			FullDraws,
+			std::clamp(g_Config.m_QmNameplateEffectLodThreshold, 4, 64));
+	}
+	else
+	{
+		// 关掉自动档位时仍然跟踪人数，这样中途打开不会从过期值开始。
+		s_QmNameplateEffectLodSmoothed = s_QmNameplateEffectLodVisible;
+		s_QmNameplateEffectLodDraws = QM_TEXT_EFFECT_DRAWS_UNLIMITED;
+	}
+	s_QmNameplateEffectLodVisibleThisFrame = 0;
+}
+
+static void QmNameplateEffectLodEndFrame()
+{
+	s_QmNameplateEffectLodVisible = s_QmNameplateEffectLodVisibleThisFrame;
+	s_QmNameplateEffectLodDraws = QM_TEXT_EFFECT_DRAWS_UNLIMITED;
+}
+
 static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, ColorRGBA TextColor, bool UseEffects)
 {
 	SQmTextEffectRenderStyle Style;
@@ -189,6 +227,11 @@ static SQmTextEffectRenderStyle BuildQmNameplateTextStyle(CGameClient &This, Col
 	Style.m_GlowColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmNameplateTextGlowColor, true));
 	Style.m_GlowRange = (float)std::clamp(g_Config.m_QmNameplateTextGlowRange, 1, 12);
 	Style.m_Time = This.Client()->GlobalTime();
+	if(Style.m_Effects != 0)
+	{
+		Style.m_MaxEffectDraws = s_QmNameplateEffectLodDraws;
+		++s_QmNameplateEffectLodVisibleThisFrame;
+	}
 	return Style;
 }
 
@@ -536,6 +579,9 @@ class CNamePlatePartText : public CNamePlatePart
 {
 protected:
 	STextContainerIndex m_TextContainerIndex;
+	// 空文字也可能渲染出无效容器，故「是否已算过」必须用显式标志记录，
+	// 不能拿容器是否存在来推断（否则空文字部件每帧重跑整条文字更新路径）。
+	CQmNameplateTextCache m_TextCache;
 	vec2 m_RenderSize = vec2(0.0f, 0.0f);
 	// 上次栅格化字形时所在映射的密度（相对默认缩放密度的倍数）；0 = 尚未烘焙。
 	// 文字位图按烘焙时的映射密度栅格化并被 1:1 使用，密度错配就会重采样发虚，
@@ -807,8 +853,12 @@ public:
 				}
 			}
 		}
-		if(!NeedsTextUpdate && m_TextContainerIndex.Valid())
+		// 以显式「已算过」标志判断是否需要更新，而不是容器是否存在：
+		// 空文字会渲染出无效容器，用 Valid() 判断会让该部件每帧重跑下面的整条更新路径。
+		if(!m_TextCache.NeedsUpdate(m_Visible, NeedsTextUpdate))
 		{
+			if(!m_Visible)
+				return;
 			const float EffectPadding = m_UseTextEffects ? QmNameplateTextEffectPadding(g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange, g_Config.m_QmNameplateTextGlowRange) : 0.0f;
 			m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
 			return;
@@ -841,6 +891,9 @@ public:
 
 		if(!m_TextContainerIndex.Valid())
 		{
+			// 本次已尝试并得到「无容器」这一有效结果，同样要记入缓存，
+			// 否则下一帧仍会被判为待更新，退化成逐帧重建。
+			m_TextCache.OnUpdate();
 			m_Visible = false;
 			m_BakedDensityRatio = 0.0f;
 			return;
@@ -853,10 +906,12 @@ public:
 		m_RenderSize = vec2(Container.m_W, Container.m_H);
 		const float EffectPadding = m_UseTextEffects ? QmNameplateTextEffectPadding(g_Config.m_QmNameplateTextEffects, g_Config.m_QmNameplateTextBorderRange, g_Config.m_QmNameplateTextGlowRange) : 0.0f;
 		m_Size = m_RenderSize + vec2(EffectPadding * 2.0f, EffectPadding * 2.0f);
+		m_TextCache.OnUpdate();
 	}
 	void Reset(CGameClient &This) override
 	{
 		This.TextRender()->DeleteTextContainer(m_TextContainerIndex);
+		m_TextCache.Reset();
 		m_BakedDensityRatio = 0.0f;
 		m_MsdfTextValid = false;
 		m_NameplateForceFreeType = false;
@@ -1059,9 +1114,11 @@ protected:
 	{
 		m_FontSize = Data.m_FontSize;
 		CTextCursor Cursor;
-		This.TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+		// 好友爱心：图标字体没有实心爱心，改用默认字体回退的 U+2665（见 friend_heart_icon.h）。
+		// 字形在创建文本容器时就被解析，所以预设必须在 CreateOrAppendTextContainer 之前切换。
+		This.TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		Cursor.m_FontSize = m_FontSize;
-		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, FontIcons::FONT_ICON_HEART);
+		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, QM_FRIEND_HEART_ICON);
 		This.TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 	}
 
@@ -1081,6 +1138,10 @@ private:
 	float m_FontSize = -INFINITY;
 	float m_Alpha = 1.0f;
 	bool m_Rainbow = false;
+	char m_aStyle[48] = "";
+	// 上一帧的内容是否随时间变化。由称号渲染器自己的判定回填，而不是在这里镜像它的条件：
+	// 逐字符浮动、掠光与本地配色档都会让顶点逐帧变化，漏判会让浮动/掠光停在第一帧。
+	bool m_TitleAnimated = false;
 
 protected:
 	bool UpdateNeeded(CGameClient &This, const CNamePlateData &Data) override
@@ -1090,42 +1151,65 @@ protected:
 		if(!m_Visible)
 			return false;
 		const float FontSize = Data.m_FontSize * ms_FontSizeScale;
-		return m_FontSize != FontSize || m_Rainbow != Data.m_DeveloperRainbow || str_comp(m_aText, Data.m_aQmTitle) != 0;
+		const char *pStyle = This.m_QmClient.PlayerTitleStyle(Data.m_ClientId);
+		return m_FontSize != FontSize || m_Rainbow != Data.m_DeveloperRainbow || str_comp(m_aText, Data.m_aQmTitle) != 0 || str_comp(m_aStyle, pStyle) != 0 || m_TitleAnimated;
 	}
 
 	void UpdateText(CGameClient &This, const CNamePlateData &Data) override
 	{
 		m_FontSize = Data.m_FontSize * ms_FontSizeScale;
 		m_Rainbow = Data.m_DeveloperRainbow;
+		str_copy(m_aStyle, This.m_QmClient.PlayerTitleStyle(Data.m_ClientId));
 		str_copy(m_aText, Data.m_aQmTitle);
+		// 称号渲染统一走 qm_title_render：解析出的风格同时决定逐字符色段、字符内渐变与浮动偏移。
+		// 配色被本地档位接管时（单色/彩虹）风格只保留浮动与掠光，颜色由下面两个分支给出。
+		const SQmTitleRenderStyle TitleStyle = QmTitleResolveRenderStyle(m_aStyle);
+		const SQmTitleShimmer TitleShimmer = QmTitleShimmerFromConfig();
+		const SQmTitleColorStyle ColorStyle = ResolveQmTitleColorStyle(g_Config.m_QmTitleColorMode, g_Config.m_QmTitleColor, g_Config.m_QmTitleOpacity, Data.m_DeveloperRainbow);
+		// 逐字符浮动需要逐字符位移顶点。
+		const bool TitleHasBob = TitleStyle.m_Bob.m_Amplitude != 0.0f && TitleStyle.m_Bob.m_WaveLength > 0.0f;
 		if(m_MsdfBuildAllowed)
 		{
 			SetMsdfPlainText(m_aText, m_FontSize);
-			return;
+			// MSDF 只能整段单色、且不能逐字符位移顶点：静态单色称号继续走 MSDF，
+			// 动态配色（含本地配色档）、逐字符浮动与掠光都回退到本地 FreeType 容器。
+			if(TitleStyle.m_pStyle == nullptr || (TitleStyle.m_pStyle->m_Mode == EQmTitleStyleMode::Static && !TitleHasBob && !TitleShimmer.m_Enabled && !TitleStyle.m_ColorOverride))
+				return;
+			m_MsdfTextValid = false;
 		}
 		CTextCursor Cursor;
 		Cursor.m_FontSize = m_FontSize;
-		if(m_Rainbow)
+		const float TitleTimeSec = (float)This.m_QmClient.TitleAnimationTime();
+		if(ColorStyle.m_Rainbow)
 		{
-			int NumChars = 0;
-			const char *pCurrent = m_aText;
-			while(str_utf8_decode(&pCurrent) > 0)
-				++NumChars;
+			// 彩虹档（开发者彩虹或本地彩虹配色）：逐字符上色，字符内不渐变（左右同色）。
+			const int NumChars = QmTitleShimmerUtf8CharCount(m_aText);
 			Cursor.m_vColorSplits.reserve(NumChars);
-			pCurrent = m_aText;
+			const char *pCurrent = m_aText;
 			for(int CharIndex = 0; CharIndex < NumChars; ++CharIndex)
 			{
 				const char *pNext = pCurrent;
 				if(str_utf8_decode(&pNext) <= 0)
 					break;
-				const float Hue = (float)CharIndex / NumChars;
-				Cursor.m_vColorSplits.emplace_back((int)(pCurrent - m_aText), (int)(pNext - pCurrent), color_cast<ColorRGBA>(ColorHSLA(Hue, 0.8f, 0.65f)));
+				const ColorRGBA Color = QmTitleRainbowColor(CharIndex, NumChars, ColorStyle.m_Alpha);
+				Cursor.m_vColorSplits.emplace_back((int)(pCurrent - m_aText), (int)(pNext - pCurrent), Color);
 				pCurrent = pNext;
 			}
+			QmTitleRenderFillMotionOffsets(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, TitleShimmer);
+			// 彩虹档的逐字符颜色是静态的，只有浮动与掠光会让顶点逐帧变化。
+			m_TitleAnimated = TitleShimmer.m_Enabled || TitleHasBob;
+		}
+		else if(TitleStyle.m_pStyle != nullptr)
+		{
+			// 单色档把本地颜色与透明度交给渲染器；跟随服务器档不覆盖颜色（渲染器自己采样风格），
+			// 此时 Alpha 固定 1.0，名牌淡入淡出仍由 Render 的 m_Alpha 负责。
+			const bool ColorOverride = ColorStyle.m_Mode == EQmTitleColorMode::SINGLE;
+			m_TitleAnimated = QmTitleRenderFillCursor(This.TextRender(), Cursor, m_aText, m_FontSize, TitleStyle, TitleTimeSec, ColorOverride ? ColorStyle.m_Alpha : 1.0f, TitleShimmer, nullptr, ColorStyle.m_Color);
 		}
 		else
 		{
 			Cursor.m_vColorSplits.emplace_back(0, -1, ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+			m_TitleAnimated = false;
 		}
 		This.TextRender()->CreateOrAppendTextContainer(m_TextContainerIndex, &Cursor, m_aText);
 	}
@@ -2269,8 +2353,11 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 
 	const bool HideIdentity = GameClient()->ShouldHideStreamerIdentity(ClientId);
 
-	Data.m_ShowName = pPlayerInfo->m_Local ? NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) :
-						 NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates);
+	// 昵称显示范围取代旧的 cl_nameplates / cl_nameplates_own 两开关：六档互斥，
+	// 按「当前操控角色 / 本机分身 / 其他玩家」三类玩家决定。仍走 NameplateRenderValue，
+	// 让禅模式接管时录像里的预览能读到接管前的真实值。
+	const int NameplateScope = NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateShowScope);
+	Data.m_ShowName = ShouldShowQmNameplateName(NameplateScope, pPlayerInfo->m_Local, GameClient()->IsLocalClientId(ClientId));
 	GameClient()->FormatStreamerName(ClientId, Data.m_aName, sizeof(Data.m_aName));
 	str_copy(Data.m_aQmTitle, Data.m_ShowName ? GameClient()->m_QmClient.PlayerTitle(ClientId) : "");
 	Data.m_DeveloperRainbow = Data.m_aQmTitle[0] != '\0' && GameClient()->IsQmDeveloperRainbow(ClientId);
@@ -2365,11 +2452,14 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	}
 	Data.m_Color.a = Alpha;
 
+	// 回放中按键显示改读回放专用选项；其余情况沿用本地原逻辑（录视频时读 cl_video_show_direction）。
 	int ShowDirectionConfig = g_Config.m_ClShowDirection;
 #if defined(CONF_VIDEORECORDER)
 	if(IVideo::Current())
 		ShowDirectionConfig = g_Config.m_ClVideoShowDirection;
 #endif
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		ShowDirectionConfig = qm_demo_display::Resolve(g_Config, true, false).m_Direction;
 	Data.m_DirLeft = Data.m_DirJump = Data.m_DirRight = false;
 	switch(ShowDirectionConfig)
 	{
@@ -2453,7 +2543,8 @@ void CNamePlates::RenderNamePlateGame(vec2 Position, const CNetObj_PlayerInfo *p
 	Data.m_Local = pPlayerInfo->m_Local;
 
 	CNamePlate *pLayoutReference = nullptr;
-	const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) == 0 || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn) == 0;
+	// 「部分隐藏」= 六档里没有选到全体：自由移动时给这类名牌补一个完整预览框。
+	const bool NameplatePartiallyHidden = NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateShowScope) != QM_NAMEPLATE_SHOW_SCOPE_ALL;
 	if(Alpha > 0.0f && NameplateFreeMoveEnabled() && NameplatePartiallyHidden)
 	{
 		CNamePlateData FrameData = Data;
@@ -2496,7 +2587,8 @@ void CNamePlates::RenderNamePlatePreview(vec2 Position, int Dummy)
 		Data.m_Color = g_Config.m_ClNamePlatesTeamcolors ? GameClient()->GetDDTeamColor(13, 0.75f) : TextRender()->DefaultTextColor();
 		Data.m_Color.a = 1.0f;
 		const bool IsOwnPreview = DummyIdx == 0;
-		const bool NameplateScopeAllowsPreview = ForceNameplateScopeAll || (IsOwnPreview ? g_Config.m_ClNamePlatesOwn : g_Config.m_ClNamePlates);
+		// 设置页预览：DummyIdx==0 视作当前操控角色，其余视作本机分身，两者都算本机。
+		const bool NameplateScopeAllowsPreview = ForceNameplateScopeAll || ShouldShowQmNameplateName(g_Config.m_QmNameplateShowScope, IsOwnPreview, true);
 		const bool CoordModuleAllowsPreview = IsOwnPreview ? g_Config.m_QmNameplateCoordsOwn : g_Config.m_QmNameplateCoords;
 
 		Data.m_ShowName = NameplateScopeAllowsPreview;
@@ -3221,23 +3313,38 @@ void CNamePlates::OnRender()
 	// 每帧重置名牌文字重建预算，把缩放档位变化带来的重建开销摊平到多帧
 	s_NameplateTextRebuildBudget = NAMEPLATE_TEXT_REBUILD_BUDGET_PER_FRAME;
 
-	int ShowDirection = NameplateRenderValue(ConfigManager(), &g_Config.m_ClShowDirection);
 #if defined(CONF_VIDEORECORDER)
-	if(IVideo::Current())
+	const bool VideoRendering = IVideo::Current() != nullptr;
+#else
+	const bool VideoRendering = false;
+#endif
+	// 回放中按键显示改读回放专用选项；非回放保留本地「录像读真实值」的语义。
+	const bool DemoPlayback = Client()->State() == IClient::STATE_DEMOPLAYBACK;
+	const auto DisplaySettings = qm_demo_display::Resolve(g_Config, DemoPlayback, VideoRendering);
+	int ShowDirection = NameplateRenderValue(ConfigManager(), &g_Config.m_ClShowDirection);
+	if(DemoPlayback)
+		ShowDirection = DisplaySettings.m_Direction;
+#if defined(CONF_VIDEORECORDER)
+	else if(VideoRendering)
 		ShowDirection = g_Config.m_ClVideoShowDirection;
 #endif
 	const bool ShowCoordXAlignHint = g_Config.m_QmNameplateCoordXAlignHint || g_Config.m_QmNameplateCoordXAlignHintStrict;
 	const bool ShowCoords = (NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoords) || NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoordsOwn)) &&
 				(NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoordX) || NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateCoordY));
-	const bool RenderNames = NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlates) || NameplateRenderValue(ConfigManager(), &g_Config.m_ClNamePlatesOwn);
+	const bool RenderNames = NameplateRenderValue(ConfigManager(), &g_Config.m_QmNameplateShowScope) != QM_NAMEPLATE_SHOW_SCOPE_OFF;
 	const bool RenderClan = g_Config.m_ClNamePlatesClan || (g_Config.m_TcWarList && g_Config.m_TcWarListShowClan);
 	const bool RenderClientIds = g_Config.m_Debug || g_Config.m_ClNamePlatesIds;
-	const bool RenderStrongWeak = g_Config.m_Debug || g_Config.m_ClNamePlatesStrong > 0;
+	// 回放的强弱钩改成独立档位；调试模式下回放不强行显示（避免导出画面被调试标记污染）。
+	const bool RenderStrongWeak = (g_Config.m_Debug && !DemoPlayback) ||
+				      (DemoPlayback ? DisplaySettings.m_StrongWeak > 0 : g_Config.m_ClNamePlatesStrong > 0);
 	const bool RenderTClientExtras = g_Config.m_TcNameplatePingCircle || g_Config.m_TcNameplateCountry || g_Config.m_TcNameplateSkins || (g_Config.m_TcWarList && g_Config.m_TcWarListReason);
 	const bool RenderDirection = ShowDirection != 0;
 	const bool RenderNameplates = RenderNames || RenderClan || RenderClientIds || RenderStrongWeak || RenderTClientExtras || RenderDirection || ShowCoords || ShowCoordXAlignHint;
 	const bool RenderChatBubbles = g_Config.m_QmChatBubble != 0 && !FocusModeHidesChat();
 	const bool RenderFreezeWakeupPopups = GameClient()->HasFreezeWakeupPopups();
+	// 自适应特效档位每帧开场算一次，同帧内所有名牌共用，避免同屏不同玩家效果不一致。
+	if(RenderNameplates)
+		QmNameplateEffectLodBeginFrame();
 	if(!RenderNameplates && !RenderChatBubbles && !RenderFreezeWakeupPopups)
 		return;
 
@@ -3288,6 +3395,8 @@ void CNamePlates::OnRender()
 
 	if(RenderFreezeWakeupPopups)
 		GameClient()->RenderFreezeWakeupPopups();
+
+	QmNameplateEffectLodEndFrame();
 
 	// MSDF 调试汇总：每 10 秒一行（当前帧口径）
 	if(g_Config.m_QmNameplateMsdfDebug)

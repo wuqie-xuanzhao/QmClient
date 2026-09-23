@@ -9,9 +9,12 @@
 #include <engine/shared/ringbuffer.h>
 
 #include <game/client/component.h>
+#include <game/client/components/qm_console_log_filter.h>
+#include <game/client/components/qmclient/qm_chat_export_metadata.h>
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
 
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -24,6 +27,7 @@ enum
 };
 
 class CConsoleLogger;
+class CQmChatExportJob;
 
 class CGameConsole : public CComponent
 {
@@ -40,26 +44,20 @@ private:
 	class CInstance
 	{
 	public:
-		enum class ELogCategory : unsigned char
+		enum
 		{
-			SYSTEM = 0,
-			PLAYER,
+			LOG_FILTER_BUTTON_COUNT = 5,
 		};
 
-		enum class ELogFilter : unsigned char
-		{
-			ALL = 0,
-			PLAYER,
-			SYSTEM,
-		};
-
+		// 单行日志的类别与筛选掩码见 qm_console_log_filter.h；顶栏按钮是多选，
+		// 点亮哪些类别就显示哪些，全部点亮等价于不筛选。
 		struct CBacklogEntry
 		{
 			float m_YOffset;
 			int m_LineCount;
 			ColorRGBA m_PrintColor;
 			size_t m_Length;
-			ELogCategory m_LogCategory;
+			int m_LogCategory;
 			int m_ExportId;
 			bool m_ExportSelected;
 			char m_aText[1];
@@ -69,6 +67,9 @@ private:
 		CStaticRingBuffer<CBacklogEntry, 1024 * 1024, CRingBufferBase::FLAG_RECYCLE> m_BacklogPending GUARDED_BY(m_BacklogPendingLock);
 		std::unordered_map<int, std::vector<SColorSpan>> m_ColorSpansByExportId;
 		std::unordered_map<int, std::vector<SColorSpan>> m_PendingColorSpansByExportId GUARDED_BY(m_BacklogPendingLock);
+		// 聊天导出的身份与头像快照：随日志条目一起保存，导出时不再按当前名字反查皮肤。
+		std::unordered_map<int, std::shared_ptr<const QmChatExport::SMetadata>> m_ChatMetadataByExportId;
+		std::unordered_map<int, std::shared_ptr<const QmChatExport::SMetadata>> m_PendingChatMetadataByExportId GUARDED_BY(m_BacklogPendingLock);
 		CStaticRingBuffer<char, 64 * 1024, CRingBufferBase::FLAG_RECYCLE> m_History;
 		char *m_pHistoryEntry;
 
@@ -78,11 +79,13 @@ private:
 		int m_BacklogCurLine;
 		int m_BacklogLastActiveLine = -1;
 		int m_LinesRendered;
-		ELogFilter m_LogFilter = ELogFilter::ALL;
-		ELogFilter m_ChatExportPreviousFilter = ELogFilter::ALL;
+		// 顶栏筛选是多选掩码，见 qm_console_log_filter.h
+		int m_LogFilterMask = QM_CONSOLE_LOG_CATEGORY_ALL;
+		int m_ChatExportPreviousFilterMask = QM_CONSOLE_LOG_CATEGORY_ALL;
 		int m_NextExportId = 1;
 		int m_ChatExportAnchorId = -1;
 		bool m_ChatExportMode = false;
+		std::shared_ptr<CQmChatExportJob> m_pChatExportJob;
 
 		STextBoundingBox m_BoundingBox = {0.0f, 0.0f, 0.0f, 0.0f};
 		float m_LastInputHeight = 0.0f;
@@ -153,7 +156,7 @@ private:
 		void ExecuteLine(const char *pLine);
 
 		bool OnInput(const IInput::CEvent &Event);
-		void PrintLine(const char *pLine, int Len, ColorRGBA PrintColor, const SColorSpan *pColorSpans = nullptr, size_t NumColorSpans = 0) REQUIRES(!m_BacklogPendingLock);
+		void PrintLine(const char *pLine, int Len, ColorRGBA PrintColor, const SColorSpan *pColorSpans = nullptr, size_t NumColorSpans = 0, std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata = nullptr) REQUIRES(!m_BacklogPendingLock);
 		int GetLinesToScroll(int Direction, int LinesToScroll);
 		void ScrollToCenter(int StartLine, int EndLine);
 		void Dump() REQUIRES(!m_BacklogPendingLock);
@@ -164,6 +167,8 @@ private:
 		bool IsChatExportableEntry(const CBacklogEntry *pEntry) const;
 		void ToggleChatExportEntry(CBacklogEntry *pEntry, bool RangeSelect);
 		bool ExportSelectedChat() REQUIRES(!m_BacklogPendingLock);
+		void UpdateChatExport();
+		void CancelChatExport();
 
 		const char *GetString() const { return m_Input.GetString(); }
 		/**
@@ -185,10 +190,12 @@ private:
 		bool IsInputHidden() const;
 		void UpdateCompletionSuggestions();
 
+		/** 顶栏筛选按钮对应的日志类别位；下标即按钮顺序（与 m_aFilterButtons 一致）。 */
+		static int LogFilterCategoryForButton(int ButtonIndex);
+
 	private:
-		void SetLogFilter(ELogFilter Filter);
+		void SetLogFilterMask(int Mask);
 		bool MatchesLogFilter(const CBacklogEntry *pEntry) const;
-		static ELogCategory ClassifyLogCategory(const char *pLine, size_t Length);
 		void SetSearching(bool Searching);
 		void ClearSearch();
 		void UpdateSearch();
@@ -218,7 +225,7 @@ private:
 	bool m_ButtonPressed = false;
 
 	bool DoButton(const CUIRect &Rect, const char *pIcon, vec2 MousePosition, bool Released);
-	CButtonContainer m_aFilterButtons[3];
+	CButtonContainer m_aFilterButtons[CInstance::LOG_FILTER_BUTTON_COUNT];
 	CButtonContainer m_ChatExportButton;
 	CButtonContainer m_ChatExportSelectAllButton;
 	CButtonContainer m_ChatExportClearButton;
@@ -257,7 +264,7 @@ public:
 	int Sizeof() const override { return sizeof(*this); }
 
 	void PrintLine(int Type, const char *pLine);
-	void PrintLineWithColorSpans(int Level, const char *pFrom, const char *pLine, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans);
+	void PrintLineWithColorSpans(int Level, const char *pFrom, const char *pLine, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans, std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata = nullptr);
 	void RequireUsername(bool UsernameReq);
 
 	void OnStateChange(int NewState, int OldState) override;

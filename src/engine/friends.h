@@ -40,6 +40,7 @@ public:
 	virtual void Init(bool Foes = false) = 0;
 
 	virtual int NumFriends() const = 0;
+	// 好友身份与分组变化的版本；备注在显示时直接读取。
 	virtual uint64_t Revision() const = 0;
 	virtual const CFriendInfo *GetFriend(int Index) const = 0;
 	virtual int GetFriendState(const char *pName, const char *pClan) const = 0;

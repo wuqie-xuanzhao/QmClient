@@ -120,7 +120,7 @@ TEST(QmNewUiMenuGameplayHudContract, NameplateTextEffectsUseSharedRenderHelper)
 	EXPECT_NE(RenderSource.find("if(BorderEnabled)\n\t\tOutlineColor = Style.m_BorderColor.WithMultipliedAlpha(Alpha);"), std::string::npos);
 	EXPECT_NE(RenderSource.find("QM_TEXT_EFFECT_RAINBOW"), std::string::npos);
 	EXPECT_NE(RenderSource.find("QM_TEXT_EFFECT_GLOW"), std::string::npos);
-	EXPECT_NE(RenderSource.find("for(int Pass = 0; Pass < GlowPasses; ++Pass)"), std::string::npos);
+	EXPECT_NE(RenderSource.find("for(int Pass = 0; Pass < Passes.m_GlowPasses; ++Pass)"), std::string::npos);
 
 	EXPECT_NE(QmConfigHeader.find("QmNameplateTextEffects"), std::string::npos);
 	EXPECT_NE(QmConfigHeader.find("QmNameplateTextBorderColor"), std::string::npos);

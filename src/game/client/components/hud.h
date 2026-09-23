@@ -38,12 +38,14 @@ struct SScoreInfo
 		m_aRankText[0] = 0;
 		m_aPlayerNameText[0] = 0;
 		m_ScoreTextWidth = 0.f;
+		m_RankTextWidth = 0.f;
 		m_Initialized = false;
 	}
 
 	STextContainerIndex m_TextRankContainerIndex;
 	STextContainerIndex m_TextScoreContainerIndex;
 	float m_ScoreTextWidth;
+	float m_RankTextWidth;
 	char m_aScoreText[16];
 	char m_aRankText[16];
 	char m_aPlayerNameText[MAX_NAME_LENGTH];
@@ -474,6 +476,33 @@ class CHud : public CComponent
 		}
 	};
 	SHudSwitchCountdownTracker m_SwitchCountdownTracker;
+	struct SHudHookCountdownRingState
+	{
+		int m_ClientId = -1;
+		int m_Connection = 0;
+		int m_GrabTick = 0;
+		// 上一次咬住的玩家 id：用来识别 rehook（目标变了就重新计时，而不是让环淡出重来）。
+		// 松钩时不更新，才能把它留到下一次咬住时做比较。
+		int m_HookedPlayer = -1;
+		// 起钩那一刻记下的地图 tuning（hook_duration），用来算这一轮钩子动作的寿命。
+		float m_HookDurationSeconds = 1.25f;
+		float m_Progress = 1.0f;
+		vec2 m_Position{};
+		vec2 m_Velocity{};
+		float m_Alpha = 0.0f;
+		bool m_Tracking = false;
+		bool m_Seen = false;
+		bool m_Initialized = false;
+
+		void Reset()
+		{
+			*this = {};
+			m_ClientId = -1;
+			m_HookDurationSeconds = 1.25f;
+			m_Progress = 1.0f;
+		}
+	};
+	SHudHookCountdownRingState m_HookCountdownRing;
 	struct SHudMediaIslandMuteState
 	{
 		bool m_Confirmed = false;
@@ -500,6 +529,9 @@ class CHud : public CComponent
 	bool BuildSwitchCountdownSummary(char *pBuf, size_t BufSize) const;
 	void ResetSwitchCountdownRings();
 	void RenderFollowSwitchCountdowns();
+	void ResetHookCountdownRing();
+	void UpdateHookCountdownTracker();
+	void RenderFollowHookCountdown();
 	void RenderDummyMiniMap();
 	void DestroyDummyMiniViewRenderTarget();
 	bool GetDummyMiniMapRect(float &X, float &Y, float &W, float &H) const;
@@ -572,6 +604,7 @@ public:
 	void OnMessage(int MsgType, void *pRawMsg) override;
 	void HandleSpamProtectionMessage(const char *pMessage);
 	void RenderNinjaBarPos(float x, float y, float Width, float Height, float Progress, float Alpha = 1.0f);
+	void RenderProgressBarWithTee(const CUIRect &BarRect, float Progress, const ColorRGBA &FillColor, bool AnimateTee = true, int Corners = IGraphics::CORNER_ALL);
 
 private:
 	void RenderRecord();

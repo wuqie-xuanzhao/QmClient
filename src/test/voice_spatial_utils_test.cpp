@@ -51,8 +51,6 @@ TEST(VoiceUtils, Compute3DAudioSamePosition)
 	EXPECT_FLOAT_EQ(Result.m_RightGain, 1.0f);
 }
 
-
-
 TEST(VoiceUtils, Compute3DAudioLeftSide)
 {
 	vec2 LocalPos(0.0f, 0.0f);
@@ -62,8 +60,6 @@ TEST(VoiceUtils, Compute3DAudioLeftSide)
 	EXPECT_GT(Result.m_LeftGain, Result.m_RightGain);
 }
 
-
-
 TEST(VoiceUtils, Compute3DAudioRightSide)
 {
 	vec2 LocalPos(0.0f, 0.0f);
@@ -72,8 +68,6 @@ TEST(VoiceUtils, Compute3DAudioRightSide)
 
 	EXPECT_LT(Result.m_LeftGain, Result.m_RightGain);
 }
-
-
 
 TEST(VoiceUtils, Compute3DAudioOutsideRadius)
 {
@@ -86,8 +80,6 @@ TEST(VoiceUtils, Compute3DAudioOutsideRadius)
 	EXPECT_FLOAT_EQ(Result.m_RightGain, 0.0f);
 }
 
-
-
 TEST(VoiceUtils, Compute3DAudioIgnoreDistance)
 {
 	vec2 LocalPos(0.0f, 0.0f);
@@ -97,8 +89,6 @@ TEST(VoiceUtils, Compute3DAudioIgnoreDistance)
 	EXPECT_FLOAT_EQ(Result.m_Volume, 1.0f);
 }
 
-
-
 TEST(VoiceUtils, Compute3DAudioMono)
 {
 	vec2 LocalPos(0.0f, 0.0f);
@@ -107,8 +97,6 @@ TEST(VoiceUtils, Compute3DAudioMono)
 
 	EXPECT_FLOAT_EQ(Result.m_LeftGain, Result.m_RightGain);
 }
-
-
 
 TEST(VoiceUtils, Compute3DAudioDistanceAttenuation)
 {
@@ -121,8 +109,6 @@ TEST(VoiceUtils, Compute3DAudioDistanceAttenuation)
 
 	EXPECT_GT(Result1.m_Volume, Result2.m_Volume);
 }
-
-
 
 TEST(VoiceUtils, HpfCompressorDisabled)
 {
@@ -138,8 +124,6 @@ TEST(VoiceUtils, HpfCompressorDisabled)
 	for(int i = 0; i < 4; i++)
 		EXPECT_EQ(aSamples[i], aExpected[i]);
 }
-
-
 
 TEST(VoiceUtils, HpfCompressorEnabled)
 {
@@ -167,8 +151,6 @@ TEST(VoiceUtils, HpfCompressorEnabled)
 	}
 	EXPECT_TRUE(AnyChanged);
 }
-
-
 
 TEST(VoiceUtils, VoiceProcessingFactoryDefaultsMatchConfigDefaults)
 {

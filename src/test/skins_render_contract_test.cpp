@@ -100,19 +100,44 @@ TEST(SkinsContract, SkinTransitionUsesDefaultKeyWhenInitialDescriptorIsNotReady)
 
 	EXPECT_NE(UpdateRenderInfoBody.find("CSkinDescriptor RenderSkinDescriptor = SkinDescriptor;"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && PreviousRenderInfoAlive && m_RenderInfo.Valid())"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("else if(!DescriptorRenderInfoReady)"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("const float OriginalSize = NewRenderInfo.m_Size;"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("BuildDefaultSkinDescriptor(RenderSkinDescriptor, SkinDescriptor.m_Flags);"), std::string::npos);
 	// 默认皮肤不可绘制时先复用上一份渲染信息，不能直接 Reset 成白块。
 	EXPECT_NE(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid() && PreviousRenderInfoAlive)"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("NewRenderInfo = PreviousRenderInfo;"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("CopySkinColorsOnly(NewRenderInfo, SkinProperties);"), std::string::npos);
 	// Reset 只允许作为「连上一份渲染信息都不可用」时的最后手段，不能在失败分支里无条件执行。
 	EXPECT_NE(UpdateRenderInfoBody.find("else\n\t\t\t{\n\t\t\t\tNewRenderInfo.Reset();\n\t\t\t}"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);"), std::string::npos);
 	EXPECT_EQ(UpdateRenderInfoBody.find("UpdateSkinChangeTransition(NewRenderInfo, SkinDescriptor);"), std::string::npos);
+}
+
+TEST(SkinsContract, StaleTextureHandlesAreNotTreatedAsDrawable)
+{
+	// 句柄 IsValid() 为真、也不是 null 贴图，但纹理已经不在（设备重建、槽位释放、贴图被卸载）：
+	// 这种句柄交给绘制会变成没有贴图的实心块，必须判为不可绘制。
+	EXPECT_FALSE(CTeeRenderInfo::IsLiveDrawableTextureState(true, false, false));
+	EXPECT_TRUE(CTeeRenderInfo::IsLiveDrawableTextureState(true, false, true));
+	// 本来就不可绘制的句柄，是否分配过纹理都不改变结论。
+	EXPECT_FALSE(CTeeRenderInfo::IsLiveDrawableTextureState(true, true, true));
+	EXPECT_FALSE(CTeeRenderInfo::IsLiveDrawableTextureState(true, true, false));
+	EXPECT_FALSE(CTeeRenderInfo::IsLiveDrawableTextureState(false, false, true));
+	EXPECT_FALSE(CTeeRenderInfo::IsLiveDrawableTextureState(false, false, false));
+	// 与旧判据的关系：旧判据只看「合法且非 null」，新判据在其上再要求纹理仍然分配着。
+	for(const bool IsValid : {false, true})
+	{
+		for(const bool IsNull : {false, true})
+		{
+			for(const bool IsAllocated : {false, true})
+			{
+				const bool Drawable = CTeeRenderInfo::IsDrawableTextureState(IsValid, IsNull);
+				EXPECT_EQ(CTeeRenderInfo::IsLiveDrawableTextureState(IsValid, IsNull, IsAllocated), Drawable && IsAllocated);
+			}
+		}
+	}
 }
 
 TEST(SkinsContract, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
@@ -142,7 +167,7 @@ TEST(SkinsContract, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
 	// 默认皮肤不可绘制时，调用方必须先尝试沿用上一份可绘制渲染信息，
 	// 只有确实没有可复用资源时才 Reset；不能无条件 Reset 成白色方块。
 	EXPECT_NE(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid() && PreviousRenderInfoAlive)"), std::string::npos);
 	EXPECT_EQ(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))\n\t\t\tNewRenderInfo.Reset();"), std::string::npos);
 
 	const std::string RenderSource = ReadTestSourceFile("src/game/client/render.cpp");
@@ -152,7 +177,9 @@ TEST(SkinsContract, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
 	ASSERT_FALSE(RenderTeeBody.empty());
 	EXPECT_NE(RenderTeeBody.find("const bool SixupBodyValid"), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("const bool SixBodyValid"), std::string::npos);
-	EXPECT_NE(RenderTeeBody.find("CTeeRenderInfo::IsDrawableTexture"), std::string::npos);
+	// RenderTee 的体绘制判定必须走「存活句柄」检查：句柄失效时当成不可绘制，而不是画出无色块的实心 Tee。
+	EXPECT_NE(RenderTeeBody.find("IsDrawableTextureAlive(Graphics()"), std::string::npos);
+	EXPECT_EQ(RenderTeeBody.find("CTeeRenderInfo::IsDrawableTexture("), std::string::npos);
 	EXPECT_NE(RenderTeeBody.find("else if(SixBodyValid)"), std::string::npos);
 	EXPECT_EQ(RenderTeeBody.find("else\n\t\treturn;"), std::string::npos);
 	EXPECT_LT(RenderTeeBody.find("else if(SixBodyValid)"), RenderTeeBody.find("Graphics()->SetColor(1.f, 1.f, 1.f, 1.f);"));
@@ -163,7 +190,9 @@ TEST(SkinsContract, DefaultFallbackNeverAppliesTheUntexturedPlaceholder)
 	EXPECT_NE(RenderTee7Body.find("IsDrawableTexture(EyesTexture)"), std::string::npos);
 	const std::string RenderTee6Body = FunctionBody(RenderSource, "void CRenderTools::RenderTee6(");
 	ASSERT_FALSE(RenderTee6Body.empty());
-	EXPECT_NE(RenderTee6Body.find("if(!CTeeRenderInfo::IsDrawableTexture(*pFeetTexture))"), std::string::npos);
+	// 脚部贴图同样必须走「存活句柄」检查：句柄失效时当成不可绘制，而不是画出无色块的实心脚。
+	EXPECT_NE(RenderTee6Body.find("if(!IsDrawableTextureAlive(Graphics(), *pFeetTexture))"), std::string::npos);
+	EXPECT_EQ(RenderTee6Body.find("if(!CTeeRenderInfo::IsDrawableTexture(*pFeetTexture))"), std::string::npos);
 	EXPECT_NE(RenderTee6Body.find("m_Skins.FindOrNullptr(g_Config.m_TcWhiteFeetSkin)"), std::string::npos);
 	EXPECT_EQ(RenderTee6Body.find("m_Skins.Find(g_Config.m_TcWhiteFeetSkin)"), std::string::npos);
 }
@@ -204,7 +233,7 @@ TEST(SkinsContract, SevenSkinRenderingIsRestrictedToOnlineServerControlledAppear
 	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && !TargetUsesSevenSkin && PreviousRenderInfoUsesSevenSkin)"), std::string::npos);
 	// 默认皮肤也不可绘制时必须沿用上一份可绘制渲染信息，不能直接 Reset 成白块。
 	EXPECT_NE(UpdateRenderInfoBody.find("if(!ApplyDefaultSkin(m_pGameClient, NewRenderInfo, SkinDescriptor.m_Flags))"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(PreviousRenderInfo.Valid() && PreviousRenderInfoAlive)"), std::string::npos);
 
 	const std::string TransitionBody = FunctionBody(GameClientSource, "void CGameClient::CClientData::UpdateSkinChangeTransition");
 	ASSERT_FALSE(TransitionBody.empty());
@@ -262,10 +291,10 @@ TEST(SkinsContract, SkinTransitionKeepsPreviousSkinBaseWhileDescriptorIsPending)
 	const std::string UpdateRenderInfoBody = Source.substr(UpdateRenderInfoPos, UpdateTransitionPos - UpdateRenderInfoPos);
 
 	EXPECT_NE(UpdateRenderInfoBody.find("const bool DescriptorRenderInfoReady = m_pSkinInfo->DescriptorRenderInfoReady();"), std::string::npos);
-	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())"), std::string::npos);
+	EXPECT_NE(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && PreviousRenderInfoAlive && m_RenderInfo.Valid())"), std::string::npos);
 	EXPECT_NE(UpdateRenderInfoBody.find("NewRenderInfo = m_RenderInfo;"), std::string::npos);
 	EXPECT_EQ(UpdateRenderInfoBody.find("return;\n\t\t}"), std::string::npos);
-	EXPECT_LT(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && m_RenderInfo.Valid())"), UpdateRenderInfoBody.find("// force team colors"));
+	EXPECT_LT(UpdateRenderInfoBody.find("if(!DescriptorRenderInfoReady && MayReusePreviousRenderInfo && PreviousRenderInfoAlive && m_RenderInfo.Valid())"), UpdateRenderInfoBody.find("// force team colors"));
 	EXPECT_LT(UpdateRenderInfoBody.find("// force team colors"), UpdateRenderInfoBody.find("UpdateSkinChangeTransition(NewRenderInfo, RenderSkinDescriptor);"));
 }
 

@@ -35,6 +35,8 @@ struct SCardMotionSpec
 	float m_ReflowDuration = 0.0f;
 	float m_DropFeedbackDuration = 0.08f;
 	float m_ReflowCompleteFeedbackDuration = 0.08f;
+	// 新版设置在分类之间共用入场轨道，连续切换时保留位置和速度。
+	bool m_ContinuousEntry = false;
 	bool m_DecorativeMotion = false;
 	bool m_KeepDragProxy = true;
 	bool m_KeepDropFeedback = true;

@@ -47,6 +47,23 @@ namespace ui_widget
 		return {Presence.m_Render, Presence.m_Alpha, NodeKey, Presence.m_FreshEnter};
 	}
 
+	inline float ResolveModalScale(const IUiContext &Ctx, const SAnimatePresenceResult &Presence, bool Open)
+	{
+		if(Ctx.m_pAnim == nullptr)
+			return 1.0f;
+		if(Ctx.m_pTree == nullptr || g_Config.m_QmUiMotionLevel < 2)
+		{
+			// 减少动态效果或缺少生命周期状态时保持原尺寸，并停止已有缩放。
+			SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, 1.0f);
+			return 1.0f;
+		}
+
+		// 只在完整入场时设置起点；稳定绘制与退出中重开都延续当前状态。
+		if(Open && Presence.m_FreshEnter)
+			SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.98f);
+		return ResolveUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, Open ? 1.0f : 0.98f, ui_token::motion::MODAL_IN.m_Spring, 2, 0.004f);
+	}
+
 	struct SModalProps
 	{
 		float m_Width = 480.0f;
@@ -93,11 +110,18 @@ namespace ui_widget
 
 		if(Ctx.m_pAnim != nullptr)
 		{
-			if(Visible && pState != nullptr && !pState->m_WasVisible)
+			if(g_Config.m_QmUiMotionLevel < 2)
 			{
-				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, HiddenY);
+				// 减少动态效果只保留淡入淡出，中途切换也立即停止位移。
+				CurrentY = Target.y;
+				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, CurrentY);
 			}
-			CurrentY = ResolveUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, Visible ? Target.y : HiddenY, ui_token::motion::TOAST_SLIDE.m_Spring, 2, 0.004f);
+			else
+			{
+				if(Visible && pState != nullptr && !pState->m_WasVisible)
+					SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, HiddenY);
+				CurrentY = ResolveUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::POS_Y, Visible ? Target.y : HiddenY, ui_token::motion::TOAST_SLIDE.m_Spring, 2, 0.004f);
+			}
 		}
 		else if(!Visible)
 		{
@@ -161,24 +185,7 @@ namespace ui_widget
 		Centered.x = ScreenRect.x + (ScreenRect.w - Centered.w) * 0.5f;
 		Centered.y = ScreenRect.y + (ScreenRect.h - Centered.h) * 0.5f;
 
-		// Scale-in animation. Drive SCALE from 0.92 → 1.0 on open via SPRING for a
-		// soft pop; collapse back when closed (handled by GetValue going to 0 once
-		// *pOpen=false on next call — though we only render while open).
-		float Scale = 1.0f;
-		if(Ctx.m_pAnim != nullptr)
-		{
-			if(*pOpen && Presence.m_FreshEnter && g_Config.m_QmUiMotionLevel != 0)
-				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.92f);
-			Scale = ResolveUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, *pOpen ? 1.0f : 0.96f, ui_token::motion::MODAL_IN.m_Spring, 2, 0.004f);
-			// First frame after open we need to seed Scale at 0.92 so the spring
-			// has somewhere to travel from. Done by snapping if very close to 1
-			// without prior history.
-			if(*pOpen && !Presence.m_FreshEnter && g_Config.m_QmUiMotionLevel != 0 && Scale > 0.99f && !Ctx.m_pAnim->HasActiveAnimation(Presence.m_NodeKey, EUiAnimProperty::SCALE))
-			{
-				SetUiPresentationStateValue(*Ctx.m_pAnim, Presence.m_NodeKey, EUiAnimProperty::SCALE, 0.92f);
-				Scale = 0.92f;
-			}
-		}
+		const float Scale = ResolveModalScale(Ctx, Presence, *pOpen);
 
 		CUIRect Scaled = Centered;
 		const float DeltaW = Centered.w * (1.0f - Scale);

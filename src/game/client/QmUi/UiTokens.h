@@ -191,6 +191,8 @@ namespace ui_token::motion
 	inline constexpr const SUiAnimTransition &INPUT_FOCUS_RING = ui_curve::DECELERATE;
 	inline constexpr const SUiAnimTransition &TOAST_SLIDE = ui_curve::EMPHASIZED;
 	inline constexpr const SUiAnimTransition &TOOLTIP_FADE = ui_curve::DECELERATE;
+	// 导航滑块专用：切换 Tab / 分段时带速度续接地滑过去（ζ≈0.93）。
+	inline constexpr SUiSpringConfig NAVIGATION_SPRING{1.0f, 500.0f, 42.0f, 0.05f, 0.4f};
 	inline constexpr const SUiSpringConfig &TOGGLE_SPRING = ui_spring::SNAPPY;
 	inline constexpr SUiSpringConfig CARD_REORDER{1.0f, 900.0f, 48.0f, 0.01f, 0.05f};
 

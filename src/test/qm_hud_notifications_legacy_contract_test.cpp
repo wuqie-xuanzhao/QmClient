@@ -1,12 +1,12 @@
-#include <game/client/components/qmclient/hud_notifications/hud_notification_static_rules.h>
-
 #include <base/str.h>
+
+#include <game/client/components/qmclient/hud_notifications/hud_notification_static_rules.h>
 
 #include <gtest/gtest.h>
 
 namespace
 {
-bool HasLegacyStaticCompatibilityLiteral(const char *pNeedle)
+	bool HasLegacyStaticCompatibilityLiteral(const char *pNeedle)
 	{
 		struct SLiteralPair
 		{

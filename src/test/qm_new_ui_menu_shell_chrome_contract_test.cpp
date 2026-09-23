@@ -49,18 +49,10 @@ namespace
 		return std::string::npos;
 	}
 
-
 } // namespace
 
-TEST(QmNewUiMenuShellChromeContract, RespawnWeaponAndCallvoteFiltersUseSharedBoundedSemantics)
+TEST(QmNewUiMenuShellChromeContract, CallvoteFiltersUseSharedBoundedSemantics)
 {
-	EXPECT_EQ(QmRespawnDefaultWantedWeapon(-1), 0);
-	EXPECT_EQ(QmRespawnDefaultWantedWeapon(0), 0);
-	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_HAMMER + 1), WEAPON_HAMMER + 1);
-	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_GUN + 1), WEAPON_GUN + 1);
-	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_LASER + 1), WEAPON_LASER + 1);
-	EXPECT_EQ(QmRespawnDefaultWantedWeapon(WEAPON_LASER + 2), WEAPON_LASER + 1);
-
 	EXPECT_TRUE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "deep", ""));
 	EXPECT_TRUE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "", "race"));
 	EXPECT_FALSE(QmTextMatchesIncludeExcludeFilter("Deep Freeze", "race", ""));
@@ -114,7 +106,9 @@ TEST(QmNewUiMenuShellChromeContract, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(Source.find("ColorRGBA InactiveColor = ms_ColorTabbarInactive;"), std::string::npos);
 	EXPECT_NE(Source.find("ColorRGBA ActiveColor = ms_ColorTabbarActive;"), std::string::npos);
 	EXPECT_NE(Source.find("ColorRGBA HoverColor = ms_ColorTabbarHover;"), std::string::npos);
-	EXPECT_NE(Source.find("const ColorRGBA IndicatorColor = g_Config.m_QmNewUi != 0 ? MenuUiColorAccent(1.0f) : ui_token::color::ACCENT_PRIMARY;"), std::string::npos);
+	// 新 UI 的激活位置改由各排胶囊 Tabbar 的滑块表达，页签下方的下划线指示块已移除。
+	EXPECT_EQ(Source.find("if(UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())"), std::string::npos);
+	EXPECT_NE(Source.find("ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash(\"menubar_capsule_ingame_tabs\")"), std::string::npos);
 	EXPECT_NE(RenderMenubar.find("if(!UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())"), std::string::npos);
 	EXPECT_NE(RenderMenubar.find("if(UseNewUi)"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f)"), std::string::npos);
@@ -124,10 +118,13 @@ TEST(QmNewUiMenuShellChromeContract, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_NE(UseNewUiBlock.find("const float GameButtonWidth = (CompactOnlineMenuTabs ? 56.0f : 64.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float ServerInfoButtonWidth = (CompactOnlineMenuTabs ? 94.0f : 104.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("const float OnlineTabGap = 4.0f;"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("DoIngameMenuTab(&s_GameButton, PAGE_GAME, \"ingame-tab-game\", Localize(\"Game\"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_ALL)"), std::string::npos);
+	// 在线页签同样改为「收集槽位 → 画胶囊容器与滑块 → 画页签」的循环。
+	EXPECT_NE(UseNewUiBlock.find("if(DoIngameMenuTab(&s_aOnlineTabButtons[DrawnOnlineTabs], Tab.m_Page, Tab.m_pTextId, Tab.m_pText, ActivePage == Tab.m_Page, &TabRect, IGraphics::CORNER_ALL))"), std::string::npos);
 	EXPECT_EQ(UseNewUiBlock.find("DoIngameMenuTab(&s_GameButton, PAGE_GAME, \"ingame-tab-game\", Localize(\"Game\"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_TL)"), std::string::npos);
 	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2_QmIcon(&s_SettingsButton"), std::string::npos);
-	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2_QmIcon(&s_InternetButton"), std::string::npos);
+	// 起始页签改为「先收集槽位、再画胶囊容器与滑块、最后画图标」的循环，槽位数组取代了逐页签的内联绘制。
+	EXPECT_NE(UseNewUiBlock.find("if(DoMenuTabV2_QmIcon(&s_aStartTabButtons[TabIndex], Tab.m_Icon, Tab.m_pIcon, TabActive, &aStartTabSlots[TabIndex]"), std::string::npos);
+	EXPECT_NE(UseNewUiBlock.find("ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash(\"menubar_capsule_start_tabs\")"), std::string::npos);
 	EXPECT_EQ(UseNewUiBlock.find("DoButton_MenuTab(&s_SettingsButton"), std::string::npos);
 	EXPECT_EQ(UseNewUiBlock.find("DoButton_MenuTab(&s_InternetButton"), std::string::npos);
 	EXPECT_EQ(OldUiBlock.find("Box.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.12f)"), std::string::npos);
@@ -145,7 +142,6 @@ TEST(QmNewUiMenuShellChromeContract, MenubarUsesExplicitQmNewUiColorBranch)
 	EXPECT_EQ(OldUiBlock.find("DoMenuTabV2(&s_InternetButton"), std::string::npos);
 	EXPECT_NE(OldUiBlock.find("DoIngameMenuTab(&s_GameButton, PAGE_GAME, \"ingame-tab-game\", Localize(\"Game\"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_TL)"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuShellChromeContract, IngameGameButtonBarRoundsAllCornersOnlyInNewUi)
 {

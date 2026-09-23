@@ -262,9 +262,6 @@
 3 stars
 == 3 yıldız
 
-3D Background
-== 3D Arka Plan
-
 3D background
 == 3D arka plan
 
@@ -298,6 +295,9 @@ A demo with this name already exists
 
 A folder with this name already exists
 == Bu isimde bir klasör zaten mevcut
+
+A player name is required.
+== Oyuncu adı gereklidir.
 
 A screenshot with this name already exists
 == Bu isimde bir ekran görüntüsü zaten mevcut
@@ -593,6 +593,9 @@ After hammer fly, whether dummy switches back to previous weapon
 After Load
 == Yüklemeden Sonra
 
+After uploading again, use: reload or hot_reload
+== Yeniden yükledikten sonra şunu kullanın: reload veya hot_reload
+
 Afterimage pop
 == Gölge patlaması
 
@@ -733,6 +736,9 @@ Animate settings card lists when entering a page
 
 Animate settings card reorder and layout reflow
 == Ayar kartı sıralamasını ve düzen yeniden akışını canlandır
+
+Animated title style id
+== Animasyonlu unvan stili kimliği
 
 Animation
 == Animasyon
@@ -1184,6 +1190,9 @@ Auto-unspec when unfrozen
 Automate demos, screenshots, and match exports
 == Automate demos, screenshots, and match exports
 
+Automatic effect LOD when crowded
+== Kalabalıkta efektleri otomatik basitleştir
+
 Automatic gain control (0=off 1=on)
 == Otomatik Kazanç Kontrolü (0=Kapalı 1=Açık)
 
@@ -1481,6 +1490,9 @@ Bind Wheel
 Bind Wheel Key
 == Bind Tekerleği Tuşu
 
+Binds
+== Tuş atamaları
+
 Bit flags for disabling settings tabs
 == Ayarlar sekmelerini devre dışı bırakmak için bit bayrakları
 
@@ -1495,6 +1507,9 @@ Blank: hides this asset
 
 Blend mode
 == Karışım modu
+
+Blend strength
+== Karıştırma gücü
 
 Blink the active local tee
 == Etkin yerel karakteri yanıp söndür
@@ -1546,6 +1561,15 @@ Both sides of keyword rules must be filled
 
 Bounce
 == Sekme
+
+Bracketed title color: 0 = follow server, 1 = single color, 2 = rainbow
+== Köşeli parantezli unvan rengi: 0 = sunucuyu takip et, 1 = tek renk, 2 = gökkuşağı
+
+Bracketed title opacity (0-100)
+== Köşeli parantezli unvan opaklığı (0-100)
+
+Bracketed title single color
+== Köşeli parantezli unvan tek renk
 
 Brightness shift
 == Parlaklık kayması
@@ -1622,9 +1646,6 @@ Call vote
 Camera
 == Kamera
 
-Camera & FOV
-== Kamera ve Görüş Alanı
-
 Camera drift intensity (0-200)
 == Kamera kayması yoğunluğu (0-200)
 
@@ -1675,6 +1696,9 @@ Can't swap with yourself
 
 Cancel
 == İptal
+
+Cancel upload
+== Yüklemeyi iptal et
 
 Cancel your swap request
 == Takas isteğini iptal et
@@ -1751,9 +1775,6 @@ Chat Binds
 Chat box width
 == Sohbet kutusu genişliği
 
-Chat Bubble
-== Sohbet Balonu
-
 Chat bubble
 == Sohbet balonu
 
@@ -1780,6 +1801,9 @@ Chat command
 
 Chat command (e.g. showall 1)
 == Sohbet komutu (ör. showall 1)
+
+Chat export cancelled
+== Sohbet dışa aktarımı iptal edildi
 
 Chat export failed
 == Sohbet dışa aktarma başarısız oldu
@@ -1970,6 +1994,12 @@ Clearable text...
 Clears the voting options
 == Oylama seçeneklerini temizler
 
+Click a part on the right to edit its color, blend mode and strength.
+== Rengini, karıştırma modunu ve gücünü ayarlamak için sağdaki bir parçaya tıklayın.
+
+Click again to find the next location.
+== Sonraki konumu bulmak için tekrar tıklayın.
+
 Click to add this community to favorites
 == Bu topluluğu favorilere eklemek için tıklayın
 
@@ -2113,6 +2143,9 @@ Command to run when joining server
 
 Command:
 == Komut:
+
+Commands
+== Komutlar
 
 Commands run in the console
 == Konsolda çalıştırılan komutlar
@@ -2275,6 +2308,9 @@ Configure the ingame cursor scale
 
 Configure the input overlay display
 == Configure the input overlay display
+
+Configure the lyrics display
+== Şarkı sözü görünümünü yapılandır
 
 Configure these settings
 == Bu ayarları yapılandır
@@ -2486,6 +2522,9 @@ Could not load touch controls from file. See local console for details.
 Could not preview this image
 == Bu resim önizlenemiyor
 
+Could not read the map file.
+== Harita dosyası okunamadı.
+
 Could not resolve connect address '%s'. See local console for details.
 == '%s' bağlantı adresi çözülemedi. Ayrıntılar için yerel konsola bakın.
 
@@ -2572,6 +2611,9 @@ Current: Score
 
 Current: Time
 == Geçerli: Süre
+
+Cursed Flame
+== Lanetli Alev
 
 Custom
 == Özel
@@ -2873,9 +2915,6 @@ Default output open failed
 Default preset
 == Varsayılan ön ayar
 
-Default weapon on respawn (0=Off, 1=Hammer, 2=Pistol, 3=Shotgun, 4=Grenade, 5=Laser)
-== Yeniden doğduktan sonra varsayılan olarak istenen silah (0=kapalı, 1=çekiç, 2=tabanca, 3=pompalı, 4=bomba atar, 5=lazer)
-
 Default zoom
 == Varsayılan yakınlaştırma
 
@@ -2939,8 +2978,20 @@ Delete this preset
 Demo
 == Demo
 
+Demo display
+== Demo görünümü
+
 Demo effects
 == Demo efektleri
+
+Demo hook strength (0=Off 1=Icon 2=Icon and number)
+== Demoda kanca gücü (0=Kapalı 1=Simge 2=Simge ve sayı)
+
+Demo hook strength scope (0=Own 1=Others 2=Strong 3=Weak 4=All)
+== Demoda kanca gücü kapsamı (0=Kendim 1=Diğerleri 2=Güçlü 3=Zayıf 4=Herkes)
+
+Demo key presses (0=Off 1=Others 2=All 3=Own)
+== Demoda tuş basışları (0=Kapalı 1=Diğerleri 2=Herkes 3=Kendim)
 
 Demo marker added
 == Demo işareti eklendi
@@ -3275,9 +3326,6 @@ Draw where mouse is
 Draw!
 == Beraberlik!
 
-Dream Features
-== Rüya Özellikleri
-
 Drift direction
 == Sürüklenme yönü
 
@@ -3410,9 +3458,6 @@ Dummy skin queue max length
 Dummy skin queue switch interval (ms, 0=no timed rotation, random start only)
 == Kukla skin kuyruğu geçiş aralığı (ms, 0=zamanlanmış döndürme yok)
 
-Dummy Window
-== Kukla Penceresi
-
 Dummy window size
 == Kukla pencere boyutu
 
@@ -3466,9 +3511,6 @@ Dynamic FOV smoothness
 
 Dynamic FOV smoothness (0=instant, 100=smoothest)
 == Dinamik görüş alanı düzgünlüğü (0=anlık, 100=en düzgün)
-
-Dynamic Island
-== Dinamik Ada
 
 Dynamic island
 == Dinamik ada
@@ -3725,6 +3767,9 @@ Enable gun sound
 Enable highlighted chat sound
 == Vurgulanan sohbet sesini etkinleştir
 
+Enable hook countdown
+== Kanca geri sayımını etkinleştir
+
 Enable HUD animations
 == HUD animasyonlarını etkinleştir
 
@@ -3745,6 +3790,12 @@ Enable keyboard shortcuts in replay player
 
 Enable keyword reply
 == Anahtar kelime yanıtını etkinleştir
+
+Enable Kugou Music hook integration
+== Kugou Music Hook entegrasyonunu etkinleştir
+
+Enable Kugou Music lyrics
+== Kugou Music şarkı sözlerini etkinleştir
 
 Enable left swipe offset on chat fade
 == Sohbet mesajı soldurulurken sola kaydırmayı etkinleştir
@@ -3805,6 +3856,12 @@ Enable practice mode for teams. Allows /rescue but scores not recorded
 
 Enable QmClient style background 3D particles
 == QmClient tarzı arka plan 3D parçacıklarını etkinleştir
+
+Enable QQ Music hook integration
+== QQ Music Hook entegrasyonunu etkinleştir
+
+Enable QQ Music lyrics
+== QQ Music şarkı sözlerini etkinleştir
 
 Enable rainbow rendering for hook
 == Kanca için gökkuşağı oluşturmayı etkinleştir
@@ -3989,6 +4046,9 @@ Endpoint (optional)
 Enter /practice mode or restart to avoid the entire team being killed in 60 seconds
 == /practice yazın veya yeniden başlatın, aksi takdirde tüm takım 60 saniye içinde öldürülecek
 
+Enter a CP number from 1 to 255.
+== 1 ile 255 arasında bir CP numarası girin.
+
 Enter Password
 == Şifre Gir
 
@@ -4012,9 +4072,6 @@ Entity assets
 
 Entity Background Image
 == Varlık Arka Plan Görüntüsü
-
-Entity Layer Colors
-== Varlık Katmanı Renkleri
 
 Entity overlay
 == Varlık kaplaması
@@ -4147,6 +4204,9 @@ Exported %d chat messages
 
 Exported to %s
 == %s konumuna dışa aktarıldı
+
+Exporting chat images: %d
+== Sohbet görselleri dışa aktarılıyor: %d
 
 Expose playback controls to the operating system
 == Expose playback controls to the operating system
@@ -4304,6 +4364,9 @@ File for storing ranks if sv_use_sql is disabled or as backup SQL server.
 File with announcements, one per line.
 == Duyuruları içeren dosya, her satırda bir tane.
 
+File: %s
+== Dosya: %s
+
 Fill
 == Dolgu
 
@@ -4340,8 +4403,14 @@ Filter out spectators from player count
 Filtered word console color
 == Engellenen Kelime Konsol Rengi
 
+Find / Next
+== Bul / Sonraki
+
 Find all ban records for the specified IP address
 == Belirtilen IP adresi için tüm yasak kayıtlarını bul
+
+Find CP
+== CP bul
 
 Find QmClient communities and project links
 == Find QmClient communities and project links
@@ -4390,6 +4459,9 @@ Folder Link
 
 Follow
 == Takip et
+
+Follow Tee
+== Tee'yi takip et
 
 Following
 == Takip Ediliyor
@@ -4547,9 +4619,6 @@ Friend note
 Friend notification refresh interval (sec)
 == Arkadaş bildirimi yenileme aralığı (sn)
 
-Friend Notifications
-== Arkadaş Bildirimleri
-
 Friend notify
 == Arkadaş bildirimi
 
@@ -4588,6 +4657,9 @@ Full
 
 Full map listen in same room
 == Aynı odada tam harita dinleme
+
+Full quality nameplate count
+== Tam kalitede tutulacak isim levhası sayısı
 
 Full: each enabled animation category uses its complete transition
 == Tam: etkin her animasyon kategorisi tam geçişini kullanır
@@ -4669,6 +4741,15 @@ Gaussian
 
 General
 == Genel
+
+Generated skin outline color
+== Oluşturulan dış çizgi rengi
+
+Generated skin outline opacity
+== Oluşturulan dış çizgi opaklığı
+
+Generated skin outline width
+== Oluşturulan dış çizgi genişliği
 
 Getting game info
 == Oyun bilgisi alınıyor
@@ -4799,11 +4880,11 @@ Go forward one tick
 Go forward the specified duration
 == Belirtilen süre kadar ileri git
 
+Golden Grace
+== Altın Lütuf
+
 Gores
 == Gores
-
-Gores Actor
-== Gores Aktörü
 
 Gores actor
 == Gores aktörü
@@ -4876,9 +4957,6 @@ GUI cursor assets
 
 Guide line color
 == Kılavuz çizgisi rengi
-
-Gun
-== Tabanca
 
 Hammer
 == Çekiç
@@ -5111,9 +5189,6 @@ Highlighted message
 Highlighted message color
 == Vurgulanan mesaj rengi
 
-Hitbox mode
-== Darbe kutusu modu
-
 Hitbox Mode Freeze Border Color
 == Hitbox modu Freeze sınır rengi
 
@@ -5131,9 +5206,6 @@ Hitbox Mode Tee Collision Color
 
 Hitbox Mode Weapon Interaction Color
 == Hitbox modu silah etkileşim rengi
-
-HJ Assist
-== HJ Yardımı
 
 HJ assist
 == HJ yardımı
@@ -5234,6 +5306,9 @@ HTTP map download: low speed limit (in bytes/s, 0=disabled)
 HTTP map download: low speed limit period (0=disabled)
 == HTTP harita indirme: düşük hız sınırı süresi (0=devre dışı)
 
+HTTPS endpoint
+== HTTPS uç noktası
+
 https://ddnet.org/discord
 == https://ddnet.org/discord
 
@@ -5258,9 +5333,6 @@ HUD editor layout
 HUD editor preview
 == HUD düzenleyici önizlemesi
 
-HUD island appearance settings
-== HUD ada görünüm ayarları
-
 HUD notifications
 == HUD bildirimleri
 
@@ -5276,14 +5348,14 @@ Hue speed
 i = Receive rate
 == i = Alma hızı
 
-I am a robot
-== Ben bir robotum
-
 I am away from the game window
 == Oyun penceresinden uzaktayım
 
 I muted you
 == Seni sessize aldım
+
+Icon and number
+== Simge ve sayı
 
 Icons
 == Simgeler
@@ -5450,9 +5522,6 @@ Input device open failed, try reconnecting headset/mic or reselecting input devi
 Input overlay
 == Giriş kaplaması
 
-Input overlay display
-== Giriş kaplaması görüntüsü
-
 Input overlay keyboard scale (percent)
 == Giriş katmanındaki klavye ölçeği (yüzde)
 
@@ -5461,6 +5530,12 @@ Input overlay mouse scale (percent)
 
 Input overlay opacity (percent)
 == Giriş Katmanı Opaklığı (Yüzde)
+
+Input overlay X position (percent)
+== Giriş Katmanı X Konumu (Yüzde)
+
+Input overlay Y position (percent)
+== Giriş Katmanı Y Konumu (Yüzde)
 
 Input smoothing
 == Giriş yumuşatma
@@ -5533,6 +5608,9 @@ Invalid Demo
 
 Invalid ID
 == Geçersiz ID
+
+Invalid map file or filename.
+== Geçersiz harita dosyası veya dosya adı.
 
 Invalid option
 == Geçersiz seçenek
@@ -5624,6 +5702,9 @@ Jump hint
 Jump hint color
 == Zıplama İpucu Rengi
 
+Jump hint defaults migration completed flag
+== Zıplama ipucu varsayılan metinleri taşıma tamamlandı bayrağı
+
 Jump hint font size
 == Zıplama İpucu Yazı Boyutu
 
@@ -5657,9 +5738,6 @@ Keep unsent message on chat close
 Keep vote window open after voting
 == Oylamadan sonra oylama penceresini açık tut
 
-Key Bindings
-== Tuş Bağlamaları
-
 Key binds
 == Tuş atamaları
 
@@ -5686,9 +5764,6 @@ Keyboard focus ring color
 
 Keyboard size
 == Klavye boyutu
-
-Keyword Reply
-== Anahtar Kelime Yanıtı
 
 Keyword reply
 == Anahtar kelime yanıtı
@@ -5741,6 +5816,12 @@ Kills a player and announces the kill
 Kills team and disables practice mode
 == Takımı öldürür ve pratik modunu devre dışı bırakır
 
+Kugou hook heartbeat timeout (milliseconds)
+== Kugou Hook heartbeat zaman aşımı (milisaniye)
+
+Kugou hook helper path (empty=beside QmClient)
+== Kugou Hook yardımcı yolu (boş = QmClient'ın yanında)
+
 l = Local time
 == l = Yerel saat
 
@@ -5761,6 +5842,9 @@ Language
 
 Language file to use
 == Kullanılacak dil dosyası
+
+Large emoticons and launched emoticons
+== Büyük ifadeler ve fırlatılan ifadeler
 
 Large text announcement for friend joining
 == Arkadaş katılımı için büyük metin duyurusu
@@ -5825,8 +5909,17 @@ Latency compensation
 Latency Jitter
 == Gecikme dalgalanması
 
+Launch a large emote
+== Büyük bir emote fırlat
+
 Launch count threshold for the next sponsor reminder
 == Sonraki hatırlatma için başlatma eşiği
+
+Launch emote
+== Emote fırlat
+
+Launch emote key
+== Emoticon fırlatma tuşu
 
 Layout
 == Düzen
@@ -5851,6 +5944,9 @@ Leave empty to show everyone
 
 Leave empty to use default prompt
 == Varsayılan istemi kullanmak için boş bırakın
+
+Leave empty to use UDP
+== UDP kullanmak için boş bırakın
 
 Left jump
 == Sol zıplama
@@ -6068,6 +6164,9 @@ Local
 Local + Dummy
 == Yerel + Dummy
 
+Local console log category filter mask (bit flags)
+== Yerel konsol günlük kategori filtre maskesi (bit bayrakları)
+
 Local game mode statistics
 == Yerel oyun modu istatistikleri
 
@@ -6227,6 +6326,18 @@ Map danger border
 Map download send window
 == Harita indirme gönderme penceresi
 
+Map exceeds the client limit of 64 MiB.
+== Harita, istemcinin 64 MiB sınırını aşıyor.
+
+Map folders
+== Harita klasörleri
+
+Map name
+== Harita adı
+
+Map path in save folder
+== Kayıt klasöründeki harita yolu
+
 Map play history
 == Harita oynama geçmişi
 
@@ -6272,8 +6383,32 @@ Map to use on server
 Map type:
 == Harita türü:
 
+Map upload
+== Harita yükleme
+
+Map upload cancelled.
+== Harita yükleme iptal edildi.
+
+Map upload endpoint
+== Harita yükleme uç noktası
+
+Map upload endpoint (empty disables map upload)
+== Harita yükleme uç noktası (boşsa yükleme kapalı)
+
+Map upload in progress...
+== Harita yükleniyor...
+
+Map upload network error.
+== Harita yüklenirken ağ hatası oluştu.
+
+Map uploaded successfully.
+== Harita başarıyla yüklendi.
+
 Maps finished
 == Tamamlanan haritalar
+
+maps/example.map
+== maps/example.map
 
 Margin when notification is docked
 == Bildirim çubuğu kenara yaslandığında kenar boşluğu bırak
@@ -6470,6 +6605,9 @@ Menu option - normal
 Menu option - selected
 == Menü seçeneği - seçili
 
+Merge consecutive identical echo messages within this window in milliseconds (0 disables merging)
+== Bu pencere içinde (milisaniye) art arda gelen aynı echo mesajlarını birleştir (0 birleştirmeyi kapatır)
+
 Merge consecutive identical player messages within 2 seconds
 == 2 saniye içindeki art arda gelen aynı oyuncu mesajlarını birleştir
 
@@ -6631,6 +6769,9 @@ Mouse sensitivity in menu/editor
 
 Mouse size
 == Fare boyutu
+
+Move a friend category to a position
+== Arkadaş kategorisini bir konuma taşı
 
 Move left
 == Sola hareket et
@@ -6809,8 +6950,17 @@ Name:
 Name: %s
 == İsim: %s
 
+Nameplate count that still keeps full text effect quality; beyond it effect layers scale down by count (higher=keep more)
+== Tam metin efekti kalitesini koruyan isim levhası sayısı; aşılırsa efekt katmanları kişi sayısına göre azalır (yüksek = daha çok koru)
+
 Nameplate hook strength icon scope (0=Own 1=Others 2=Strong hook 3=Weak hook 4=All players)
 == İsim levhası kanca gücü simge kapsamı (0=Kendi 1=Diğerleri 2=Güçlü kanca 3=Zayıf kanca 4=Tüm oyuncular)
+
+Nameplate nickname scope (0=None 1=Current character 2=Own characters 3=Other players 4=Other players and own non-current characters 5=All)
+== Takma ad kapsamı (0=Yok 1=Geçerli karakter 2=Kendi karakterlerim 3=Diğer oyuncular 4=Diğer oyuncular ve kendi pasif karakterlerim 5=Herkes)
+
+Nameplate nickname scope migration completed flag
+== Takma ad kapsamı taşıma tamamlandı işareti
 
 Nameplate position X
 == İsim Plakasında Koordinat X'i Göster
@@ -6832,6 +6982,9 @@ Nameplate text border color
 
 Nameplate text border range
 == İsim levhası metin kenarlık aralığı
+
+Nameplate text effect auto LOD (0=Off 1=On: trim outer effect layers when crowded)
+== İsim levhası metin efekti otomatik LOD (0=Kapalı, 1=Açık: kalabalıkta dış katmanları kıs)
 
 Nameplate text effects (1=Border 2=Gradient 4=Rainbow 8=Glow)
 == İsim levhası metin efektleri (1=Kenarlık 2=Gradyan 4=Gökkuşağı 8=Parlama)
@@ -7049,6 +7202,9 @@ No login required
 No map play history yet
 == Henüz harita oynama geçmişi yok
 
+No map selected
+== Harita seçilmedi
+
 No maps found on this server!
 == Bu sunucuda uygun harita bulunamadı!
 
@@ -7108,6 +7264,9 @@ No Rules Defined, Kill em all!!
 
 No safe position found
 == Güvenli konum bulunamadı
+
+No saved maps found
+== Kaydedilmiş harita bulunamadı
 
 No saved profiles available yet. Save one first.
 == Henüz kaydedilmiş profil yok. Önce bir tane kaydedin.
@@ -7256,9 +7415,6 @@ Notification hold time
 Notification text size
 == Bildirim metin boyutu
 
-Notifications
-== Bildirimler
-
 Notify when friends come online
 == Arkadaşlar çevrimiçi olduğunda bildir
 
@@ -7355,9 +7511,6 @@ Only show when the other Tee is not on screen
 Only show with this nickname
 == Yalnızca bu takma adla göster
 
-Only what you can't imagine, nothing Dream can't do
-== Hayal edemediğin şeyler dışında, Dream'in yapamayacağı hiçbir şey yok
-
 Opacity
 == Opaklık
 
@@ -7427,9 +7580,6 @@ Open the folder containing demo files
 Open the folder containing screenshots
 == Ekran görüntülerini içeren klasörü aç
 
-Open the input overlay editor
-== Giriş kaplaması düzenleyicisini aç
-
 Open the saves file
 == Kayıtlı oyun dosyasını aç
 
@@ -7481,8 +7631,14 @@ Option color
 Optional authentication key for the DNSBL provider
 == DNSBL sağlayıcısı için isteğe bağlı kimlik doğrulama anahtarı
 
+Optional voice WebSocket endpoint (empty keeps UDP transport)
+== İsteğe bağlı ses WebSocket uç noktası (boşsa UDP taşıması korunur)
+
 Or visit DDNet.org
 == Veya DDNet.org adresini ziyaret edin
+
+Original
+== Özgün
 
 Other
 == Diğer
@@ -7739,9 +7895,6 @@ Pick the source that matches your music app and keep it playing; the lyrics foll
 Pickup range
 == Toplama aralığı
 
-Pie Menu
-== Pasta Menüsü
-
 Pie menu
 == Pasta menüsü
 
@@ -7819,9 +7972,6 @@ Player country filter in server browser (ISO 3166-1 numeric)
 
 Player country:
 == Oyuncu ülkesi:
-
-Player data
-== Oyuncu verileri
 
 Player decoration color
 == Oyuncu dekorasyon rengi
@@ -7918,6 +8068,9 @@ Player stats
 
 Player stats and info display
 == Oyuncu istatistikleri ve bilgi görüntüsü
+
+Player: %s
+== Oyuncu: %s
 
 Players
 == Oyuncular
@@ -8105,6 +8258,9 @@ Prediction margin when frozen
 Prediction offset
 == Tahmin kayması
 
+Preparing chat export: %d%%
+== Sohbet dışa aktarımı hazırlanıyor: %d%%
+
 Preparing demo playback
 == Demo oynatımı hazırlanıyor
 
@@ -8128,6 +8284,9 @@ Press ESC to close. Watch the scale-in spring on open.
 
 Press Esc to exit the HUD editor
 == HUD düzenleyiciden çıkmak için Esc tuşuna basın
+
+Press F2, log in, then use: change_map map_name
+== F2'ye basın, giriş yapın ve şunu kullanın: change_map map_name
 
 Prev. weapon
 == Önceki silah
@@ -8351,6 +8510,9 @@ QmClient information and project links
 QmClient online distribution
 == QmClient çevrimiçi dağılımı
 
+QmClient realtime WebSocket URL (empty disables transport)
+== QmClient gerçek zamanlı WebSocket adresi (boşsa taşıma kapanır)
+
 QmClient Settings
 == QmClient Ayarları
 
@@ -8368,6 +8530,12 @@ QmUi color animation interpolation: 0=sRGB linear, 1=OKLAB perceptually uniform
 
 QQ group: 1076765929 (click to copy)
 == QQ grubu: 1076765929 (kopyalamak için tıklayın)
+
+QQ Music hook heartbeat timeout (milliseconds)
+== QQ Music Hook heartbeat zaman aşımı (milisaniye)
+
+QQ Music hook helper path (empty=beside QmClient)
+== QQ Music Hook yardımcı yolu (boş = QmClient'ın yanında)
 
 Quads are used for background decoration
 == Dörtgenler arka plan dekorasyonu için kullanılır
@@ -8641,6 +8809,9 @@ Reduced
 
 Reduced: uses shorter transitions and disables presentation animations
 == Azaltılmış: daha kısa geçişler kullanır ve sunum animasyonlarını devre dışı bırakır
+
+Refine the search to see more maps
+== Daha fazla harita görmek için aramayı daraltın
 
 Refresh
 == Yenile
@@ -9128,9 +9299,6 @@ Resource preview VRAM budget override (MB, 0=auto)
 Resource preview VRAM budget percentage (based on device local VRAM budget)
 == Kaynak Önizleme VRAM Bütçe Yüzdesi (Cihazın Yerel VRAM Bütçesine Göre)
 
-Respawn default weapon (when owned)
-== Yeniden doğma varsayılan silahı (sahipse)
-
 Restart
 == Yeniden Başlat
 
@@ -9142,6 +9310,9 @@ Restart the client
 
 Restarting. Please wait…
 == Yeniden başlatılıyor. Lütfen bekleyin…
+
+Restore Kugou files
+== Kugou dosyalarını geri yükle
 
 Restore old single-segment hook collision line behavior
 == Eski tek parçalı kanca çarpışma çizgisi davranışını geri yükle
@@ -9500,8 +9671,14 @@ Search and navigate settings
 Search donor asset
 == Kaynak varlık ara
 
+Search local maps
+== Yerel haritaları ara
+
 Search main asset
 == Ana varlık ara
+
+Search maps and downloadedmaps, including subfolders
+== Alt klasörler dahil maps ve downloadedmaps içinde ara
 
 Search maps for Rank 1 replays ...
 == Rank 1 demosu olan haritaları ara ...
@@ -9514,6 +9691,9 @@ Search, filter, and manage skins
 
 Searching
 == Aranıyor
+
+Searching all map folders...
+== Tüm harita klasörleri aranıyor...
 
 Secondary
 == İkincil
@@ -9536,6 +9716,9 @@ SecretKey
 See /practicecmdlist for a list of all available practice commands. Most commonly used ones are /telecursor, /lasttp and /rescue
 == Kullanılabilir tüm alıştırma komutlarının listesi için /practicecmdlist yazın. En çok kullanılanlar /telecursor, /lasttp ve /rescue
 
+Select a saved .map file (client limit: 64 MiB).
+== Kaydedilmiş bir .map dosyası seçin (istemci sınırı: 64 MiB).
+
 Select all chat
 == Tüm sohbeti seç
 
@@ -9544,6 +9727,9 @@ Select button by touch
 
 Select export
 == Dışa aktarımı seç
+
+Select map
+== Harita seç
 
 Select the country flag for each player
 == Select the country flag for each player
@@ -9565,6 +9751,9 @@ Selected candidate %d/%d under cursor.
 
 Selected item color
 == Seçili öğe rengi
+
+Selected part: %d
+== Seçili parça: %d
 
 Selected server
 == Seçili sunucu
@@ -9773,6 +9962,9 @@ Set team for a player (spectators = -1, game = 0)
 Set timeout protection code s
 == Zaman aşımı koruma kodu s'yi ayarla
 
+Set up Kugou lyrics
+== Kugou şarkı sözlerini ayarla
+
 Set voice input device
 == Ses giriş cihazını ayarla
 
@@ -9820,6 +10012,9 @@ Severe
 
 Shape
 == Şekil
+
+Share of the server browser name/map split given to the name column (per mille)
+== Sunucu tarayıcısı ad/harita bölünmesinden ad sütununa ayrılan oran (binde)
 
 Short server names
 == Kısa sunucu adları
@@ -9902,6 +10097,9 @@ Show chat (2 always show large chat area)
 Show chat bubbles above players
 == Oyuncuların üzerinde sohbet balonlarını göster
 
+Show chat in demo preview and video
+== Demo önizlemesinde ve videoda sohbeti göster
+
 Show chat messages above players
 == Oyuncuların üzerinde sohbet mesajlarını göster
 
@@ -9958,9 +10156,6 @@ Show compact vote HUD
 
 Show configurable outlines around map tiles
 == Show configurable outlines around map tiles
-
-Show Coordinates
-== Koordinatları göster
 
 Show coordinates above players
 == Oyuncuların üzerinde koordinatları göster
@@ -10097,6 +10292,12 @@ Show frozen Tee HUD only in team
 Show frozen tee particles
 == Donmuş tee parçacıklarını göster
 
+Show generated skin outline for local tees
+== Yerel Tee'lerde oluşturulan dış çizgiyi göster
+
+Show generated skin outline for other tees
+== Diğer Tee'lerde oluşturulan dış çizgiyi göster
+
 Show ghost
 == Hayaleti göster
 
@@ -10148,11 +10349,11 @@ Show important messages when rendering video
 Show important server prompts
 == Önemli sunucu uyarılarını göster
 
-Show important server prompts and Echo messages as popups
-== Önemli sunucu uyarılarını ve Echo mesajlarını açılır bildirim olarak göster
-
 Show important server prompts as notifications
 == Önemli sunucu uyarılarını bildirim olarak göster
+
+Show in Dynamic Island
+== Dynamic Island içinde göster
 
 Show in-game FPS
 == Oyunda FPS göster
@@ -10208,6 +10409,9 @@ Show in-game HUD (spectator HUD)
 Show in-game HUD (timer)
 == Oyunda HUD'u göster (zamanlayıcı)
 
+Show in-game HUD in demo preview and video
+== Demo önizlemesinde ve videoda oyun içi HUD'u göster
+
 Show in-game HUD when rendering video
 == Video oluştururken oyunda HUD'u göster
 
@@ -10249,6 +10453,9 @@ Show katan on frozen players
 
 Show katana on frozen players (restores old behavior)
 == Donmuş oyuncularda kılıcı göster (eski davranışı geri yükler)
+
+Show key presses
+== Tuş basışlarını göster
 
 Show key presses (1 = others, 2 = all, 3 = own only)
 == Tuş basımlarını göster (1 = diğerleri, 2 = tümü, 3 = yalnızca kendin)
@@ -10363,6 +10570,12 @@ Show other players' hook collision lines (2 always shown)
 
 Show other players' hook collision lines when rendering video
 == Video oluştururken diğer oyuncuların kanca çarpışma çizgilerini göster
+
+Show other players' large emoticons
+== Diğer oyuncuların büyük ifadelerini göster
+
+Show other players' launched emoticons
+== Diğer oyuncuların fırlatılan ifadelerini göster
 
 Show other team players (2=own team only)
 == Diğer takım oyuncularını göster (2 = yalnızca kendi takımın)
@@ -10757,6 +10970,9 @@ Size of strength/weakness icon and number
 Skin
 == Skin
 
+Skin copying is only available for 0.6 skins
+== Yalnızca 0.6 görünümleri kopyalanabilir
+
 Skin could not be found.
 == Skin bulunamadı.
 
@@ -10777,6 +10993,21 @@ Skin list sort mode (0=Name, 1=Release date)
 
 Skin options
 == Görünüm seçenekleri
+
+Skin outline color
+== Skin dış çizgi rengi
+
+Skin outline for other players
+== Diğer oyuncuların görünüm dış çizgisi
+
+Skin outline for self and dummy
+== Kendin ve dummy için görünüm dış çizgisi
+
+Skin outline opacity
+== Skin dış çizgi opaklığı
+
+Skin outline width
+== Skin dış çizgi genişliği
 
 Skin prefix
 == Skin ön eki
@@ -10901,8 +11132,8 @@ Smooth zoom animation time in editor (in ms, 0=off)
 Smoothness of multi-view zoom (in ms, higher = slower)
 == Çoklu görünüm yakınlaştırma yumuşaklığı (ms cinsinden, yüksek = daha yavaş)
 
-SMTC
-== Sistem Medya Kontrolü
+Snap title bob offset to whole pixels (sharper glyphs, choppier motion)
+== Salınım kaymasını tam piksele hizala (daha keskin glifler, daha kesik hareket)
 
 Snapshot Age
 == Anlık görüntü yaşı
@@ -10939,9 +11170,6 @@ Solid tile outline opacity
 
 Solo
 == Solo
-
-Solo Split
-== Solo bölme
 
 Solo split
 == Solo bölme
@@ -11075,9 +11303,6 @@ Speed:
 Speedrun countdown timer
 == Hızlı koşu geri sayım zamanlayıcısı
 
-Speedrun Timer
-== Hızlı koşu zamanlayıcısı
-
 Speedrun timer
 == Hızlı koşu zamanlayıcısı
 
@@ -11101,6 +11326,9 @@ Sphere
 
 Spin pop
 == Döndürerek aç
+
+Spirit Light
+== Ruh Işığı
 
 Split main and dummy into different teams for solo-run sync
 == Ana karakter ve kuklayı solo koşu senkronizasyonu için farklı takımlara dağıtır
@@ -11254,9 +11482,6 @@ Stop server
 
 Stop the current demo
 == Geçerli demoyu durdur
-
-Streamer Mode
-== Yayıncı Modu
 
 Streamer mode
 == Yayıncı modu
@@ -11420,9 +11645,6 @@ System
 System default
 == Sistem varsayılanı
 
-System media control and lyrics
-== Sistem medya denetimi ve şarkı sözleri
-
 System media controls
 == Sistem medya kontrolleri
 
@@ -11458,6 +11680,9 @@ Target language code (e.g. zh, en, ja, zh-TW)
 
 Target language ratio
 == Hedef dil oranı
+
+Target server: %s
+== Hedef sunucu: %s
 
 Task running ...
 == Görev çalışıyor…
@@ -11630,6 +11855,9 @@ Tee trail color
 Tee trail color mode (1=Solid, 2=Current Tee color, 3=Rainbow, 4=Tee speed, 5=Random)
 == Tee izi renk modu (1=Düz, 2=Geçerli Tee rengi, 3=Gökkuşağı, 4=Tee hızı, 5=Rastgele)
 
+Tee trail style (0=Original, 1=Cursed flame, 2=Violet bolt, 3=Spirit light, 4=Void shadow, 5=Golden grace)
+== Tee iz stili (0=Özgün, 1=Lanetli Alev, 2=Mor Şimşek, 3=Ruh Işığı, 4=Boşluk Gölgesi, 5=Altın Lütuf)
+
 Tee Trails
 == Tee İzleri
 
@@ -11800,6 +12028,9 @@ The selected part stays highlighted while you adjust its color.
 
 The server is running a non-standard tuning on a pure game type.
 == Sunucu, saf bir oyun türünde standart olmayan bir ayar çalıştırıyor.
+
+The server rejected the map upload.
+== Sunucu harita yüklemesini reddetti.
 
 The update is ready and will be installed when you exit.
 == Güncelleme hazır ve çıkışta kurulacak.
@@ -11999,8 +12230,26 @@ Timer isn't displayed.
 Tiny Tee Size
 == Minik Tee Boyutu
 
+Title bob angular speed in 1/100 rad/s
+== Unvan salınım açısal hızı (1/100 rad/s)
+
+Title bob wavelength in pixels
+== Unvan salınım dalga boyu (piksel)
+
+Title light sweep speed in 1/100 row per second (0 = off)
+== Unvan ışık tarama hızı (saniyede 1/100 satır, 0 = kapalı)
+
+Title per-character phase per pixel in 1/1000 px (0 = style default, 20 = visible light band)
+== Karakter başına piksel başına faz (1/1000 px, 0 = stil varsayılanı, 20 = görünür ışık şeridi)
+
+Title per-character vertical bob amplitude in pixels (0 = off)
+== Karakter başına dikey salınım genliği (piksel, 0 = kapalı)
+
 Title server unavailable; retry
 == Unvan sunucusu kullanılamıyor; tekrar dene
+
+Title spatial effect: 0 = polished, 1 = solid, 2 = classic Calamity, 3 = off
+== Unvan uzamsal efekti: 0 = cilalı, 1 = katı, 2 = klasik Calamity, 3 = kapalı
 
 Title too long or contains unsupported characters
 == Unvan çok uzun veya desteklenmeyen karakterler içeriyor
@@ -12175,9 +12424,6 @@ Trail width
 
 Translate
 == Çevir
-
-Translate button
-== Çeviri düğmesi
 
 Translate ID:
 == Çeviri ID'si:
@@ -12425,6 +12671,9 @@ Uncertainty duration
 Unclassified audio issue
 == Sınıflandırılmamış ses sorunu
 
+Unexpected map upload response.
+== Harita yüklemesine beklenmeyen yanıt geldi.
+
 Unfinished
 == Tamamlanmamış
 
@@ -12548,6 +12797,15 @@ Update or add a specific war group
 Update Rate
 == Güncelleme Hızı
 
+Upload .map files. Server and admin passwords: s.
+== .map dosyalarını yükleyin. Sunucu ve yönetici şifreleri: s.
+
+Upload a saved map to the public test server
+== Kaydedilmiş bir haritayı herkese açık test sunucusuna yükle
+
+Upload map
+== Haritayı yükle
+
 URL for downloading community skins
 == Topluluk skinleri indirmek için URL
 
@@ -12580,6 +12838,9 @@ Use alternative antiping smoothing, incompatible with cl_antiping_smooth
 
 Use alternative world tick calculation making hooks behave as if all players have Strong.
 == Tüm oyuncuların Güçlü özelliğine sahipmiş gibi kancaların davranmasını sağlayan alternatif dünya tick hesaplamasını kullan.
+
+Use animated title style (overrides qm_title_color_mode)
+== Animasyonlu unvan stili kullan (qm_title_color_mode'u geçersiz kılar)
 
 Use colored skins for frozen tees
 == Donmuş teeler için renkli görünümler kullan
@@ -12674,6 +12935,9 @@ Use skin color when Tee is frozen
 Use sounds
 == Sesleri kullan
 
+Use style colors
+== Stil renklerini kullan
+
 Use team colors for name plates
 == İsim plakaları için takım renklerini kullan
 
@@ -12685,6 +12949,9 @@ Use the mouse wheel on a hovered module to scale it by 5%
 
 Use the scoreboard cursor mode to scroll the list
 == Listeyi kaydırmak için skor tablosu imleç modunu kullanın
+
+Use the selected tee trail style palette
+== Seçili Tee iz stili paletini kullan
 
 Use this after `add_favorite` to group favorites. Start with `begin_favorite_group`
 == Favorileri gruplamak için `add_favorite`'den sonra kullanın. `begin_favorite_group` ile başlayın
@@ -12784,6 +13051,9 @@ View the developers and contributors
 
 View the people supporting QmClient development
 == View the people supporting QmClient development
+
+Violet Bolt
+== Mor Şimşek
 
 Virtual joystick which always uses fire.
 == Her zaman ateş kullanan sanal joystick.
@@ -12896,6 +13166,9 @@ Voice test mode (0=Off 1=Local 2=Server Loopback)
 Voice whitelist (comma-separated)
 == Ses Beyaz Listesi (Virgülle Ayrılmış)
 
+Void Shadow
+== Boşluk Gölgesi
+
 Volume
 == Ses düzeyi
 
@@ -12970,6 +13243,9 @@ Waiting for local server to stop…
 
 Waiting for snapshot
 == Anlık görüntü bekleniyor
+
+Waiting for the voice WebSocket connection
+== Ses WebSocket bağlantısı bekleniyor
 
 Waiting to open
 == Açılması bekleniyor
@@ -13088,14 +13364,14 @@ Weapons
 Website
 == Web Sitesi
 
+WebSocket endpoint (optional)
+== WebSocket uç noktası (isteğe bağlı)
+
 Welcome to DDNet
 == DDNet'e Hoş Geldiniz
 
 What level DDRace binding is set to (automatic, you don't need to use it).
 == DDRace bağlamasının hangi seviyeye ayarlandığı (otomatiktir, kullanmanız gerekmez).
-
-What's done is done, no use saying more
-== Olan oldu, daha fazla söylemenin faydası yok
 
 When TClient rainbow Tee is enabled, this feature has no effect.
 == TClient gökkuşağı Tee açıkken bu özellik etkili olmaz.
@@ -13210,6 +13486,9 @@ Width of others' hook collision line
 
 Width of players column in server browser
 == Sunucu tarayıcısında oyuncu sütununun genişliği
+
+Width of Qm clients column in server browser
+== Sunucu tarayıcısındaki Qm istemci sütununun genişliği
 
 Width of type column in server browser
 == Sunucu tarayıcısında tür sütununun genişliği
@@ -13629,6 +13908,46 @@ Zoom to current mouse target
 == ⚠️ Tencent Cloud API yapılandırılmamış
 
 [Assets editor blend mode]
+Color
+== Renk
+
+[Assets editor blend mode]
+Color Burn
+== Renk Yanması
+
+[Assets editor blend mode]
+Color Dodge
+== Renk Soldurma
+
+[Assets editor blend mode]
+Darken
+== Koyulaştır
+
+[Assets editor blend mode]
+Difference
+== Fark
+
+[Assets editor blend mode]
+Exclusion
+== Dışlama
+
+[Assets editor blend mode]
+Hard Light
+== Sert Işık
+
+[Assets editor blend mode]
+Hue
+== Ton
+
+[Assets editor blend mode]
+Lighten
+== Açıklaştır
+
+[Assets editor blend mode]
+Luminosity
+== Parlaklık
+
+[Assets editor blend mode]
 Multiply
 == Çarp
 
@@ -13641,8 +13960,16 @@ Overlay
 == Kaplama
 
 [Assets editor blend mode]
+Saturation
+== Doygunluk
+
+[Assets editor blend mode]
 Screen
 == Ekran
+
+[Assets editor blend mode]
+Soft Light
+== Yumuşak Işık
 
 [Auto camera]
 Active
@@ -13901,6 +14228,10 @@ All
 == Tümü
 
 [Show name plates]
+Current
+== Geçerli karakter
+
+[Show name plates]
 None
 == Yok
 
@@ -13909,8 +14240,12 @@ Others
 == Başkaları
 
 [Show name plates]
-Own
-== Kendi
+Others and own
+== Diğerleri ve aktif olmayan kendim
+
+[Show name plates]
+Own characters
+== Kendi karakterlerim
 
 [Show players' key presses]
 All

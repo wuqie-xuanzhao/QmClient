@@ -196,14 +196,15 @@ public:
 		}
 	}
 
-	double Percentile(double Percent) const
+	double Percentile(double Percent)
 	{
 		if(m_vSamples.empty())
 			return 0.0;
-		std::vector<double> vSorted = m_vSamples;
-		std::sort(vSorted.begin(), vSorted.end());
-		const size_t Rank = (size_t)std::ceil(std::clamp(Percent, 0.0, 100.0) / 100.0 * vSorted.size());
-		return vSorted[std::min(vSorted.size() - 1, Rank > 0 ? Rank - 1 : (size_t)0)];
+		const size_t Rank = (size_t)std::ceil(std::clamp(Percent, 0.0, 100.0) / 100.0 * m_vSamples.size());
+		const size_t Index = std::min(m_vSamples.size() - 1, Rank > 0 ? Rank - 1 : (size_t)0);
+		// 样本不暴露时序，累计值与最大帧单独维护；原地选择避免卡顿报告再次复制并完整排序。
+		std::nth_element(m_vSamples.begin(), m_vSamples.begin() + Index, m_vSamples.end());
+		return m_vSamples[Index];
 	}
 
 	void Reset()

@@ -16,27 +16,27 @@
 
 namespace
 {
-std::string SourceFunctionBody(const std::string &Source, const std::string &Signature)
-{
-	const size_t FunctionStart = Source.find(Signature);
-	EXPECT_NE(FunctionStart, std::string::npos) << Signature;
-	const size_t BodyStart = Source.find("{", FunctionStart);
-	EXPECT_NE(BodyStart, std::string::npos) << Signature;
-	int Depth = 0;
-	for(size_t Index = BodyStart; Index < Source.size(); ++Index)
+	std::string SourceFunctionBody(const std::string &Source, const std::string &Signature)
 	{
-		if(Source[Index] == '{')
-			++Depth;
-		else if(Source[Index] == '}')
+		const size_t FunctionStart = Source.find(Signature);
+		EXPECT_NE(FunctionStart, std::string::npos) << Signature;
+		const size_t BodyStart = Source.find("{", FunctionStart);
+		EXPECT_NE(BodyStart, std::string::npos) << Signature;
+		int Depth = 0;
+		for(size_t Index = BodyStart; Index < Source.size(); ++Index)
 		{
-			--Depth;
-			if(Depth == 0)
-				return Source.substr(BodyStart, Index - BodyStart);
+			if(Source[Index] == '{')
+				++Depth;
+			else if(Source[Index] == '}')
+			{
+				--Depth;
+				if(Depth == 0)
+					return Source.substr(BodyStart, Index - BodyStart);
+			}
 		}
+		ADD_FAILURE() << Signature;
+		return {};
 	}
-	ADD_FAILURE() << Signature;
-	return {};
-}
 
 	int64_t TestTicks(float Seconds)
 	{
@@ -108,6 +108,27 @@ TEST(QmChatMessageMerge, EligibilityUsesExactTextSlidingWindowAndMatchingChannel
 	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, TEAM_WHISPER_RECV, "same", Start, 7, 0, "same", Start + TestTicks(0.1f)));
 	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, TEAM_WHISPER_SEND, "same", Start + TestTicks(0.1f)));
 	EXPECT_FALSE(CChat::CanMergePlayerMessages(2, 0, "same", Start, 7, 0, "same", Start - 1));
+}
+
+TEST(QmChatEchoMerge, WindowAcceptsRepeatsInsideTheWindowOnly)
+{
+	const int64_t Start = TestTicks(10.0f);
+
+	// 窗口内连续重复：合并。
+	EXPECT_TRUE(CChat::EchoRepeatWithinWindow(Start, Start, 2000));
+	EXPECT_TRUE(CChat::EchoRepeatWithinWindow(Start + TestTicks(1.9f), Start, 2000));
+	// 正好卡在窗口边界上仍然合并。
+	EXPECT_TRUE(CChat::EchoRepeatWithinWindow(Start + TestTicks(2.0f), Start, 2000));
+	// 超出窗口：另一段重复，重新计数。
+	EXPECT_FALSE(CChat::EchoRepeatWithinWindow(Start + TestTicks(2.01f), Start, 2000));
+	// 时间倒流不能当成窗口内。
+	EXPECT_FALSE(CChat::EchoRepeatWithinWindow(Start - 1, Start, 2000));
+	// 窗口为 0（或负数）表示关闭合并。
+	EXPECT_FALSE(CChat::EchoRepeatWithinWindow(Start, Start, 0));
+	EXPECT_FALSE(CChat::EchoRepeatWithinWindow(Start, Start, -1));
+	// 窗口更长时应答更久，验证窗口本身参与换算而不是写死 2 秒。
+	EXPECT_TRUE(CChat::EchoRepeatWithinWindow(Start + TestTicks(5.0f), Start, 60000));
+	EXPECT_FALSE(CChat::EchoRepeatWithinWindow(Start + TestTicks(5.0f), Start, 2000));
 }
 
 TEST(QmAxiomAutoLogin, ClassifiesOnlyExplicitLoginSuccessReplies)
@@ -374,8 +395,6 @@ TEST(QmChatInteractions, ChatLineMenuUsesContentBoundsAndKeepsTargetHighlighted)
 	EXPECT_EQ(OpenMenu.find("ChatToUiScale"), std::string::npos);
 	EXPECT_NE(OnRender.find("OpenChatLineMenu(*pMenuLine, GetUiMousePos());"), std::string::npos);
 }
-
-
 
 TEST(QmChatInteractions, ScrollbarValueToBacklogLine)
 {

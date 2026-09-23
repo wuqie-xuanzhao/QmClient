@@ -288,6 +288,7 @@ public:
 	bool IsGettingServerlist() const override;
 	bool IsServerlistError() const override;
 	int LoadingProgression() const override;
+	uint64_t FriendListRevision() const override { return m_FriendListRevision; }
 	void RequestResort() { m_NeedResort = true; }
 
 	int NumServers() const override { return m_vpServerlist.size(); }
@@ -394,6 +395,7 @@ private:
 	int m_NumRequests;
 
 	bool m_NeedResort;
+	uint64_t m_FriendListRevision = 0;
 	int m_Sorthash;
 
 	// used instead of g_Config.br_max_requests to get more servers
@@ -453,7 +455,7 @@ private:
 	bool ValidateCountryName(const char *pCountryName) const;
 	bool ValidateTypeName(const char *pTypeName) const;
 
-	void SetInfo(CServerEntry *pEntry, const CServerInfo &Info) const;
+	void SetInfo(CServerEntry *pEntry, const CServerInfo &Info);
 	void SetLatency(NETADDR Addr, int Latency);
 
 	static bool ParseCommunityFinishes(CCommunity *pCommunity, const json_value &Finishes);

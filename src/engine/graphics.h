@@ -707,6 +707,14 @@ public:
 	virtual CTextureHandle LoadTextureRaw(const CImageInfo &Image, int Flags, const char *pTexName = nullptr) = 0;
 	virtual CTextureHandle LoadTextureRawMove(CImageInfo &Image, int Flags, const char *pTexName = nullptr) = 0;
 	virtual CTextureHandle LoadTexture(const char *pFilename, int StorageType, int Flags = 0) = 0;
+	/**
+	 * 判断句柄当前是否真的还指向一张已分配贴图。
+	 *
+	 * 贴图被卸载（UnloadTexture）或经历显卡设备重建后，旧句柄的 IsValid() 依旧为真，
+	 * 但 TextureSet 会把它降级成「无贴图」，于是绘制出来的是一块没有贴图的实心色块。
+	 * 绘制前可用它判断资源是否还活着。
+	 */
+	virtual bool IsTextureHandleAllocated(CTextureHandle Handle) const = 0;
 	virtual void TextureSet(CTextureHandle Texture) = 0;
 	void TextureClear() { TextureSet(CTextureHandle()); }
 
@@ -980,6 +988,21 @@ public:
 	/**
 	 * @deprecated Use @link SetColor(ColorRGBA) @endlink instead of this function (avoid primitive obsession code smell).
 	 */
+	// QmClient：角点颜色提交单元。m_Index 为角点槽位（0=左上、1=右上、2=右下、3=左下）。
+	struct CColorVertex
+	{
+		int m_Index;
+		float m_R, m_G, m_B, m_A;
+		CColorVertex() = default;
+		CColorVertex(int i, float r, float g, float b, float a) :
+			m_Index(i), m_R(r), m_G(g), m_B(b), m_A(a) {}
+		CColorVertex(int i, ColorRGBA Color) :
+			m_Index(i), m_R(Color.r), m_G(Color.g), m_B(Color.b), m_A(Color.a) {}
+	};
+
+	// QmClient：按 CColorVertex 的 m_Index 逐槽提交角点颜色，
+	// 供需要在一次绘制里指定任意角点颜色的调用点使用；未指定的槽位保持原值。
+	virtual void SetColorVertex(const CColorVertex *pArray, size_t Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
 	virtual void SetColor(ColorRGBA Color) = 0;
 	virtual void SetColor2(ColorRGBA First, ColorRGBA Second) = 0;

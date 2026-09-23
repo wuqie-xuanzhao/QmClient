@@ -12,6 +12,7 @@
 #include <generated/protocol.h>
 #include <generated/protocol7.h>
 
+#include <game/client/qm_title_effect.h>
 #include <game/client/skin.h>
 #include <game/client/ui_rect.h>
 
@@ -77,6 +78,21 @@ public:
 		return IsDrawableTextureState(Texture.IsValid(), Texture.IsNullTexture());
 	}
 
+	/**
+	 * 句柄不仅「看起来有效」，而且在当前图形纪元里还真的分配着纹理。
+	 * 设备重建、槽位释放、皮肤贴图被卸载之后，旧句柄依旧 IsValid()，
+	 * 交给绘制就会变成没有贴图的实心块（纯白 Tee 就是这么来的）。
+	 */
+	static bool IsLiveDrawableTextureState(const bool IsValid, const bool IsNullTexture, const bool IsAllocated)
+	{
+		return IsDrawableTextureState(IsValid, IsNullTexture) && IsAllocated;
+	}
+
+	static bool IsLiveDrawableTexture(const IGraphics *pGraphics, const IGraphics::CTextureHandle &Texture)
+	{
+		return IsLiveDrawableTextureState(Texture.IsValid(), Texture.IsNullTexture(), pGraphics == nullptr || pGraphics->IsTextureHandleAllocated(Texture));
+	}
+
 	static bool AreTextureVariantsDrawableState(const bool OriginalValid, const bool OriginalNullTexture, const bool ColorableValid, const bool ColorableNullTexture)
 	{
 		return IsDrawableTextureState(OriginalValid, OriginalNullTexture) && IsDrawableTextureState(ColorableValid, ColorableNullTexture);
@@ -102,6 +118,8 @@ public:
 		m_ColorBody = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		m_ColorFeet = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
 		m_OutlineColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		m_QmSkinOutlineColor = ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f);
+		m_QmSkinOutlineWidth = 0;
 		m_Size = 1.0f;
 		m_GotAirJump = true;
 		m_TeeRenderFlags = 0;
@@ -173,6 +191,12 @@ public:
 		return false;
 	}
 
+	/**
+	 * 这份渲染信息里是否有已经失效的纹理（设备重建、槽位释放、皮肤贴图被卸载）。
+	 * 失效句柄在 IsValid() 上依旧为真，继续复用就会把 Tee 画成没有贴图的实心白块。
+	 */
+	bool HasStaleTexture(const IGraphics *pGraphics) const;
+
 	CSkin::CSkinTextures m_OriginalRenderSkin;
 	CSkin::CSkinTextures m_ColorableRenderSkin;
 
@@ -184,6 +208,8 @@ public:
 	ColorRGBA m_ColorBody;
 	ColorRGBA m_ColorFeet;
 	ColorRGBA m_OutlineColor;
+	ColorRGBA m_QmSkinOutlineColor;
+	int m_QmSkinOutlineWidth;
 	float m_Size;
 	bool m_GotAirJump;
 	int m_TeeRenderFlags;
@@ -209,6 +235,12 @@ public:
 			m_BotTexture.Invalidate();
 			m_HatSpriteIndex = 0;
 			m_BotColor = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+			for(auto &pSource : m_apChatAvatarOriginal)
+				pSource.reset();
+			for(auto &pSource : m_apChatAvatarColorable)
+				pSource.reset();
+			for(auto &pOutline : m_apQmSkinOutlines)
+				pOutline.reset();
 		}
 
 		IGraphics::CTextureHandle m_aOriginalTextures[protocol7::NUM_SKINPARTS];
@@ -220,6 +252,10 @@ public:
 		IGraphics::CTextureHandle m_BotTexture;
 		int m_HatSpriteIndex;
 		ColorRGBA m_BotColor;
+		// 聊天导出的六人皮肤头像素材，按部件与原始/可着色两套分别持有；皮肤描边同样按部件持有。
+		std::shared_ptr<CQmSkinOutline> m_apQmSkinOutlines[protocol7::NUM_SKINPARTS];
+		std::shared_ptr<const QmChatAvatar::SSource> m_apChatAvatarOriginal[protocol7::NUM_SKINPARTS];
+		std::shared_ptr<const QmChatAvatar::SSource> m_apChatAvatarColorable[protocol7::NUM_SKINPARTS];
 
 		const IGraphics::CTextureHandle &PartTexture(int Part) const
 		{
@@ -519,6 +555,8 @@ class CManagedTeeRenderInfo
 	CTeeRenderInfo m_TeeRenderInfo;
 	CSkinDescriptor m_SkinDescriptor;
 	bool m_DescriptorRenderInfoReady = false;
+	// 失效句柄的修复次数，只用于限制日志刷屏（修复本身每次都会做）。
+	int m_StaleRepairAttempts = 0;
 	std::function<void()> m_RefreshCallback = nullptr;
 
 public:
@@ -572,6 +610,8 @@ enum
 	QM_TEXT_EFFECT_GRADIENT = 1 << 1,
 	QM_TEXT_EFFECT_RAINBOW = 1 << 2,
 	QM_TEXT_EFFECT_GLOW = 1 << 3,
+	// QmClient：名牌文字特效每帧允许的绘制次数；-1 表示不限制（满档，等同历史行为）。
+	QM_TEXT_EFFECT_DRAWS_UNLIMITED = -1,
 };
 
 struct SQmTextEffectRenderStyle
@@ -585,7 +625,15 @@ struct SQmTextEffectRenderStyle
 	float m_BorderRange = 1.0f;
 	float m_GlowRange = 0.0f;
 	float m_Time = 0.0f;
+	// QmClient：本帧允许的特效绘制次数（不含本体），由名牌的自适应档位写入；
+	// QM_TEXT_EFFECT_DRAWS_UNLIMITED 表示满档。设置页预览不写这个字段，因此永远是满档。
+	int m_MaxEffectDraws = QM_TEXT_EFFECT_DRAWS_UNLIMITED;
 };
+
+// QmClient：旧版 Calamity 语义的头衔绘制参数已移到 qm_title_effect.h（与「抛光」档同处一处，
+// 便于对比两套效果的差异）。描边是固定半径的 8 方向偏移（Calamity 的 ExoticRainbow / BurnishedAuric 用 2 像素）；
+// 辉光是沿圆周均布的加法混合副本，半径带 sin^5 呼吸、整圈随时间旋转，
+// 对应 Calamity 的 16 份 / 半径 4 + 16*sine。
 
 class CRenderTools
 {
@@ -615,6 +663,8 @@ public:
 	void RenderCursor(vec2 Center, float Size, float Alpha = 1.0f) const;
 	void RenderIcon(int ImageId, int SpriteId, const CUIRect *pRect, const ColorRGBA *pColor = nullptr) const;
 	void RenderTextContainerWithEffects(STextContainerIndex TextContainerIndex, const SQmTextEffectRenderStyle &Style, float X, float Y) const;
+	void RenderTitleContainerWithPolishedEffects(STextContainerIndex TextContainerIndex, const SQmTitlePolishStyle &Style, float X, float Y) const;
+	void RenderTitleContainerWithCalamityEffects(STextContainerIndex TextContainerIndex, const SQmTitleEffectStyle &Style, float X, float Y) const;
 
 	// larger rendering methods
 	static void GetRenderTeeBodySize(const CAnimState *pAnim, const CTeeRenderInfo *pInfo, vec2 &BodyOffset, float &Width, float &Height);

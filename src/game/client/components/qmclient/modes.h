@@ -93,6 +93,24 @@ enum EQmHookStrongWeakScope
 	QM_HOOK_STRONG_WEAK_SCOPE_ALL = 4,
 };
 
+// 昵称显示范围：把玩家分成三类 —— 当前操控角色、本机其他角色（分身）、其他玩家，
+// 六档就是这三类可见组合的枚举，档位之间互斥。不再按好友过滤（好友标记仍走 cl_nameplates_friendmark）。
+enum EQmNameplateShowScope
+{
+	QM_NAMEPLATE_SHOW_SCOPE_OFF = 0, // 无：谁都不看
+	QM_NAMEPLATE_SHOW_SCOPE_CURRENT = 1, // 当前：只看当前操控的角色
+	QM_NAMEPLATE_SHOW_SCOPE_LOCAL = 2, // 当前 + 本地：看自己（当前角色与分身）
+	QM_NAMEPLATE_SHOW_SCOPE_OTHERS = 3, // 他人：只看其他玩家
+	QM_NAMEPLATE_SHOW_SCOPE_OTHERS_LOCAL = 4, // 本地 + 他人：只看非当前操控的角色
+	QM_NAMEPLATE_SHOW_SCOPE_ALL = 5, // 全体：都看
+};
+
+// 档位个数：设置页的分段行、行高与配置范围都以它为准，避免多处各写一个 6。
+enum
+{
+	QM_NAMEPLATE_SHOW_SCOPE_COUNT = 6,
+};
+
 enum EQmNameplateTextPlayingScope
 {
 	QM_NAMEPLATE_TEXT_PLAYING_SCOPE_OFF = 0,
@@ -138,6 +156,10 @@ int GoresRestoreWeaponAfterHammer(int PreHammerWeapon, bool HasPreHammerWeapon);
 bool ShouldPulseGoresHammerOnFire(bool GoresCycleActive, bool FireJustPressed, bool CurrentWeaponIsHammer, bool FreezeWakeupActive);
 bool ShouldRestoreGoresWeaponAfterHammer(bool CurrentWeaponIsHammer, bool HasPreHammerWeapon);
 bool ShouldShowQmHookStrongWeakScope(int Scope, bool Self, bool Strong, bool Weak);
+bool ShouldShowQmNameplateName(int Scope, bool IsCurrentChar, bool IsLocalClient);
+// 旧 cl_nameplates / cl_nameplates_own 两开关 -> 六档显示范围。远程直接换档且不迁移，
+// 会让原本关掉名牌的玩家升级后突然看到所有人，这里把旧意图映射成对应档位。
+int QmNameplateShowScopeFromLegacyFlags(bool ShowOthers, bool ShowOwn);
 bool ShouldUseQmNameplateTextEffects(int PlayingScope, int SpectateScope, int DemoMode, int DemoTarget, bool DemoPlayback, bool Spectating, bool Self, bool Friend, bool SpectateTarget, int ClientId);
 
 bool ShouldHideGoresGuide(bool GoresEnabled, bool HideGuidesEnabled, bool ManualGuideVisible);

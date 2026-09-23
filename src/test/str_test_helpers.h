@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
-
 #include <base/str.h>
+
+#include <gtest/gtest.h>
 
 using TStringArgumentFunction = void (*)(char *pStr);
 

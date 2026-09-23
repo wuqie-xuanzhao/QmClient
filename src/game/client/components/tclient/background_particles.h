@@ -37,23 +37,26 @@ inline float BackgroundParticleDepthScale(float Depth, float DepthRange)
 	return 1.0f - DepthFactor * 0.72f;
 }
 
+// 同一次网格绘制复用三轴三角函数，保持原来的 Z、X、Y 运算顺序。
+struct SBackgroundParticleRotation
+{
+	float m_CosZ, m_SinZ, m_CosX, m_SinX, m_CosY, m_SinY;
+	explicit SBackgroundParticleRotation(const vec3 &Rotation) :
+		m_CosZ(std::cos(Rotation.z)), m_SinZ(std::sin(Rotation.z)), m_CosX(std::cos(Rotation.x)), m_SinX(std::sin(Rotation.x)), m_CosY(std::cos(Rotation.y)), m_SinY(std::sin(Rotation.y))
+	{
+	}
+	vec3 Apply(const vec3 &Vertex) const
+	{
+		vec3 Result = Vertex;
+		Result = vec3(Result.x * m_CosZ - Result.y * m_SinZ, Result.x * m_SinZ + Result.y * m_CosZ, Result.z);
+		Result = vec3(Result.x, Result.y * m_CosX - Result.z * m_SinX, Result.y * m_SinX + Result.z * m_CosX);
+		return vec3(Result.x * m_CosY + Result.z * m_SinY, Result.y, -Result.x * m_SinY + Result.z * m_CosY);
+	}
+};
+
 inline vec3 BackgroundParticleRotateVertex(const vec3 &Vertex, const vec3 &Rotation)
 {
-	vec3 Result = Vertex;
-
-	const float CosZ = std::cos(Rotation.z);
-	const float SinZ = std::sin(Rotation.z);
-	Result = vec3(Result.x * CosZ - Result.y * SinZ, Result.x * SinZ + Result.y * CosZ, Result.z);
-
-	const float CosX = std::cos(Rotation.x);
-	const float SinX = std::sin(Rotation.x);
-	Result = vec3(Result.x, Result.y * CosX - Result.z * SinX, Result.y * SinX + Result.z * CosX);
-
-	const float CosY = std::cos(Rotation.y);
-	const float SinY = std::sin(Rotation.y);
-	Result = vec3(Result.x * CosY + Result.z * SinY, Result.y, -Result.x * SinY + Result.z * CosY);
-
-	return Result;
+	return SBackgroundParticleRotation(Rotation).Apply(Vertex);
 }
 
 inline vec2 BackgroundParticleWorldToScreen(const SBackgroundParticleProjection &Projection, const vec2 &WorldPosition)
@@ -331,6 +334,7 @@ class CBackgroundParticles : public CComponent
 
 	std::vector<SParticle> m_vParticles;
 	std::vector<int> m_vRenderOrder;
+	bool m_RenderOrderDirty = true;
 	int m_LastConfiguredCount = -1;
 	float m_LastLeft = 0.0f;
 	float m_LastTop = 0.0f;

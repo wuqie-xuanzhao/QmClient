@@ -1,0 +1,17 @@
+# 计分板复制皮肤提示
+
+[[message]]
+key = "Skin copying is only available for 0.6 skins"
+[message.translations]
+simplified_chinese = "仅支持复制 0.6 皮肤"
+traditional_chinese = "僅支援複製 0.6 皮膚"
+japanese = "スキンのコピーは 0.6 スキンのみ対応しています"
+korean = "0.6 스킨만 복사할 수 있습니다"
+russian = "Копирование доступно только для скинов 0.6"
+german = "Nur 0.6-Skins können kopiert werden"
+spanish = "Solo se pueden copiar aspectos de la versión 0.6"
+french = "Seuls les skins de la version 0.6 peuvent être copiés"
+brazilian_portuguese = "Só é possível copiar skins da versão 0.6"
+portuguese = "Só é possível copiar skins da versão 0.6"
+turkish = "Yalnızca 0.6 görünümleri kopyalanabilir"
+polish = "Można kopiować tylko skórki w wersji 0.6"

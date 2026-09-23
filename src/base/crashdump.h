@@ -15,6 +15,9 @@
  */
 void crashdump_init_if_available(const char *log_file_path);
 
+// 图形后端在初始化/切换时可报告名称；不支持的平台保留空实现。
+void crashdump_set_graphics_backend(const char *pBackendName);
+
 /**
  * 为指定报告启动一个干净的客户端崩溃报告进程。
  *

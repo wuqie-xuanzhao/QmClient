@@ -54,8 +54,6 @@ TEST(VoiceUtils, VoiceTransmitBlockersNetworkAndDevice)
 	EXPECT_NE(Blockers & VOICE_TX_BLOCK_ENCODER, 0u);
 }
 
-
-
 TEST(VoiceUtils, VoiceTransmitBlockersLocalTestIgnoresNetwork)
 {
 	SVoiceTransmitPreconditions Preconditions;
@@ -69,8 +67,6 @@ TEST(VoiceUtils, VoiceTransmitBlockersLocalTestIgnoresNetwork)
 	EXPECT_EQ(Blockers & VOICE_TX_BLOCK_ONLINE, 0u);
 	EXPECT_EQ(Blockers, 0u);
 }
-
-
 
 TEST(VoiceUtils, VoiceTransmitBlockersMicMutedIsReportedSeparately)
 {
@@ -87,16 +83,12 @@ TEST(VoiceUtils, VoiceTransmitBlockersMicMutedIsReportedSeparately)
 	EXPECT_EQ(Blockers, VOICE_TX_BLOCK_MIC_MUTED);
 }
 
-
-
 TEST(VoiceUtils, FormatVoiceTransmitBlockersEmpty)
 {
 	char aBuf[64];
 	FormatVoiceTransmitBlockers(0, aBuf, (int)sizeof(aBuf));
 	EXPECT_STREQ(aBuf, "none");
 }
-
-
 
 TEST(VoiceUtils, FormatVoiceTransmitBlockersListsReasonsInStableOrder)
 {
@@ -110,8 +102,6 @@ TEST(VoiceUtils, FormatVoiceTransmitBlockersListsReasonsInStableOrder)
 	EXPECT_STREQ(aBuf, "server_addr,socket,capture,mic_muted");
 }
 
-
-
 TEST(VoiceUtils, VoiceNeedsAudioRefreshWhenStereoLayoutChanges)
 {
 	SVoiceAudioRefreshState State;
@@ -124,8 +114,6 @@ TEST(VoiceUtils, VoiceNeedsAudioRefreshWhenStereoLayoutChanges)
 	EXPECT_TRUE(VoiceNeedsAudioRefresh(State));
 }
 
-
-
 TEST(VoiceUtils, VoiceNeedsAudioRefreshWhenUnavailableDeviceCanRetry)
 {
 	SVoiceAudioRefreshState State;
@@ -136,8 +124,6 @@ TEST(VoiceUtils, VoiceNeedsAudioRefreshWhenUnavailableDeviceCanRetry)
 
 	EXPECT_TRUE(VoiceNeedsAudioRefresh(State));
 }
-
-
 
 TEST(VoiceUtils, VoiceNeedsAudioRefreshStaysIdleWhenEverythingIsReady)
 {
@@ -151,29 +137,21 @@ TEST(VoiceUtils, VoiceNeedsAudioRefreshStaysIdleWhenEverythingIsReady)
 	EXPECT_FALSE(VoiceNeedsAudioRefresh(State));
 }
 
-
-
 TEST(VoiceUtils, VoiceRuntimeResetFlagsStayIdleWhenContextAndTokenStaySame)
 {
 	EXPECT_EQ(VoiceRuntimeResetFlags(false, true, 0x11u, 0x11u), 0u);
 }
-
-
 
 TEST(VoiceUtils, VoiceRuntimeResetFlagsResetPeersWhenRoomTokenChanges)
 {
 	EXPECT_EQ(VoiceRuntimeResetFlags(false, true, 0x11u, 0x22u), VOICE_RUNTIME_RESET_PEERS);
 }
 
-
-
 TEST(VoiceUtils, VoiceRuntimeResetFlagsResetConnectionAndPeersWhenOfflineOrContextChanges)
 {
 	EXPECT_EQ(VoiceRuntimeResetFlags(true, true, 0x11u, 0x11u), VOICE_RUNTIME_RESET_CONNECTION | VOICE_RUNTIME_RESET_PEERS);
 	EXPECT_EQ(VoiceRuntimeResetFlags(false, false, 0x11u, 0x11u), VOICE_RUNTIME_RESET_CONNECTION | VOICE_RUNTIME_RESET_PEERS);
 }
-
-
 
 TEST(VoiceUtils, VoiceUiMicStatusReportsMutedAndUnavailable)
 {
@@ -186,8 +164,6 @@ TEST(VoiceUtils, VoiceUiMicStatusReportsMutedAndUnavailable)
 	Status.m_CaptureUnavailable = true;
 	EXPECT_STREQ(VoiceUiMicStatus(Status), "unavailable");
 }
-
-
 
 TEST(VoiceUtils, VoiceUiServerStatusDistinguishesLocalOfflineAndConnected)
 {
@@ -205,8 +181,6 @@ TEST(VoiceUtils, VoiceUiServerStatusDistinguishesLocalOfflineAndConnected)
 	Status.m_PingMs = 42;
 	EXPECT_STREQ(VoiceUiServerStatus(Status), "connected");
 }
-
-
 
 TEST(VoiceUtils, VoiceUiRoomAndTransportStatusReflectPeerAndTraffic)
 {
@@ -227,8 +201,6 @@ TEST(VoiceUtils, VoiceUiRoomAndTransportStatusReflectPeerAndTraffic)
 	Status.m_HaveRecentRx = true;
 	EXPECT_STREQ(VoiceUiTransportStatus(Status), "tx_rx_active");
 }
-
-
 
 TEST(VoiceUtils, VoiceUiActionHintPointsToNextCheck)
 {
@@ -253,8 +225,6 @@ TEST(VoiceUtils, VoiceUiActionHintPointsToNextCheck)
 	EXPECT_STREQ(VoiceUiActionHint(Status), "wait_peer");
 }
 
-
-
 TEST(VoiceUtils, VoiceUiActionHintPrefersSpecificAudioFailureGuidance)
 {
 	SVoiceUiStatus Status;
@@ -271,8 +241,6 @@ TEST(VoiceUtils, VoiceUiActionHintPrefersSpecificAudioFailureGuidance)
 	str_copy(Status.m_aAudioError, "Output device not found: 'USB DAC'", sizeof(Status.m_aAudioError));
 	EXPECT_STREQ(VoiceUiActionHint(Status), "select_output_device");
 }
-
-
 
 TEST(VoiceUtils, VoiceUiRouteStatusShowsSwitchingAndSelectedDeviceResults)
 {
@@ -298,8 +266,6 @@ TEST(VoiceUtils, VoiceUiRouteStatusShowsSwitchingAndSelectedDeviceResults)
 	EXPECT_STREQ(VoiceUiOutputRouteStatus(Status), "using_default");
 }
 
-
-
 TEST(VoiceUtils, VoiceUiRouteStatusDistinguishesPermissionAndFailure)
 {
 	SVoiceUiStatus Status;
@@ -323,8 +289,6 @@ TEST(VoiceUtils, VoiceUiRouteStatusDistinguishesPermissionAndFailure)
 	EXPECT_STREQ(VoiceUiAudioIssueKey(Status), "open_output_failed");
 }
 
-
-
 TEST(VoiceUtils, VoiceUiPrimaryErrorPrefersAudioThenNetworkThenCodec)
 {
 	SVoiceUiStatus Status;
@@ -338,16 +302,12 @@ TEST(VoiceUtils, VoiceUiPrimaryErrorPrefersAudioThenNetworkThenCodec)
 	EXPECT_STREQ(VoiceUiPrimaryError(Status), "audio");
 }
 
-
-
 TEST(VoiceUtils, VoiceAudioErrorLooksLikeMacPermissionDenied)
 {
 	EXPECT_TRUE(VoiceAudioErrorLooksLikePermissionDenied("Failed to open capture device: kAudioHardwareNotPermittedError"));
 	EXPECT_TRUE(VoiceAudioErrorLooksLikePermissionDenied("Failed to open capture device: microphone access not authorized"));
 	EXPECT_FALSE(VoiceAudioErrorLooksLikePermissionDenied("Failed to open capture device: device busy"));
 }
-
-
 
 TEST(VoiceUtils, ClassifyVoiceAudioIssueRecognizesDeviceFailurePaths)
 {
@@ -370,8 +330,6 @@ TEST(VoiceUtils, ClassifyVoiceAudioIssueRecognizesDeviceFailurePaths)
 	EXPECT_STREQ(VoiceUiAudioFailureHint(Status), "check_audio_backend");
 }
 
-
-
 TEST(VoiceUtils, ClassifyVoiceAudioIssueMapsMacPermissionToHint)
 {
 	SVoiceUiStatus Status;
@@ -380,8 +338,6 @@ TEST(VoiceUtils, ClassifyVoiceAudioIssueMapsMacPermissionToHint)
 	EXPECT_EQ(ClassifyVoiceAudioIssue(Status), EVoiceAudioIssue::PERMISSION_DENIED);
 	EXPECT_STREQ(VoiceUiAudioFailureHint(Status), "grant_mic_permission");
 }
-
-
 
 TEST(VoiceUtils, VoiceShouldIgnoreDistanceRespectsConfigAndSharedGroup)
 {
@@ -393,8 +349,6 @@ TEST(VoiceUtils, VoiceShouldIgnoreDistanceRespectsConfigAndSharedGroup)
 	EXPECT_TRUE(VoiceShouldIgnoreDistance(false, true, 0x40000011u, 0x00000011u));
 }
 
-
-
 TEST(VoiceUtils, VoiceResolveListenerPositionUsesSpecPositionOnlyWhenEnabled)
 {
 	const vec2 LocalPos(10.0f, 20.0f);
@@ -405,8 +359,6 @@ TEST(VoiceUtils, VoiceResolveListenerPositionUsesSpecPositionOnlyWhenEnabled)
 	EXPECT_EQ(VoiceResolveListenerPosition(LocalPos, true, SpecPos, true), SpecPos);
 }
 
-
-
 TEST(VoiceUtils, EvaluateVoiceReceiveAudibilityBlocksSelfUnlessTestServer)
 {
 	SVoiceReceiveAudibilityContext Context;
@@ -416,8 +368,6 @@ TEST(VoiceUtils, EvaluateVoiceReceiveAudibilityBlocksSelfUnlessTestServer)
 	Context.m_TestServer = true;
 	EXPECT_EQ(EvaluateVoiceReceiveAudibility(Context, "self"), EVoiceReceiveAudibility::ALLOW);
 }
-
-
 
 TEST(VoiceUtils, EvaluateVoiceReceiveAudibilityAppliesVisibilityRules)
 {
@@ -439,8 +389,6 @@ TEST(VoiceUtils, EvaluateVoiceReceiveAudibilityAppliesVisibilityRules)
 	Context.m_SenderSpec = false;
 	EXPECT_EQ(EvaluateVoiceReceiveAudibility(Context, "peer"), EVoiceReceiveAudibility::ALLOW);
 }
-
-
 
 TEST(VoiceUtils, EvaluateVoiceReceiveAudibilityAppliesMuteListsAndVad)
 {
@@ -472,8 +420,6 @@ TEST(VoiceUtils, EvaluateVoiceReceiveAudibilityAppliesMuteListsAndVad)
 	EXPECT_EQ(EvaluateVoiceReceiveAudibility(Context, "peer"), EVoiceReceiveAudibility::ALLOW);
 }
 
-
-
 TEST(VoiceUtils, VoiceIsPacketWithinAudibleRadiusRespectsDistanceAndOverride)
 {
 	const vec2 LocalPos(0.0f, 0.0f);
@@ -484,8 +430,6 @@ TEST(VoiceUtils, VoiceIsPacketWithinAudibleRadiusRespectsDistanceAndOverride)
 	EXPECT_FALSE(VoiceIsPacketWithinAudibleRadius(LocalPos, FarPos, 32.0f, false));
 	EXPECT_TRUE(VoiceIsPacketWithinAudibleRadius(LocalPos, FarPos, 32.0f, true));
 }
-
-
 
 TEST(VoiceUtils, VoiceAudioDeviceConfigEqualsForIdenticalRequests)
 {
@@ -499,8 +443,6 @@ TEST(VoiceUtils, VoiceAudioDeviceConfigEqualsForIdenticalRequests)
 	EXPECT_TRUE(VoiceAudioDeviceConfigEquals(Left, Right));
 	EXPECT_EQ(VoiceDesiredOutputChannels(Left), 2);
 }
-
-
 
 TEST(VoiceUtils, VoiceAudioDeviceConfigEqualsDetectsAnyFieldChange)
 {
@@ -528,8 +470,6 @@ TEST(VoiceUtils, VoiceAudioDeviceConfigEqualsDetectsAnyFieldChange)
 	EXPECT_EQ(VoiceDesiredOutputChannels(Base), 1);
 }
 
-
-
 TEST(VoiceUtils, BuildVoiceDeviceDropdownEntriesKeepsDefaultAndDeduplicatesDevices)
 {
 	std::vector<std::string> vDetectedDeviceNames = {"Built-in Microphone", "USB Mic", "usb mic", "", "Line In"};
@@ -547,8 +487,6 @@ TEST(VoiceUtils, BuildVoiceDeviceDropdownEntriesKeepsDefaultAndDeduplicatesDevic
 	EXPECT_EQ(VoiceFindSelectedDeviceIndex(vEntries, "usb mic"), 2);
 }
 
-
-
 TEST(VoiceUtils, BuildVoiceDeviceDropdownEntriesPreservesDisconnectedCurrentDevice)
 {
 	std::vector<std::string> vDetectedDeviceNames = {"Built-in Output", "Headset"};
@@ -562,8 +500,6 @@ TEST(VoiceUtils, BuildVoiceDeviceDropdownEntriesPreservesDisconnectedCurrentDevi
 	EXPECT_TRUE(vEntries.back().m_Disconnected);
 	EXPECT_EQ(VoiceFindSelectedDeviceIndex(vEntries, "USB DAC"), 3);
 }
-
-
 
 TEST(VoiceUtils, BuildVoiceDeviceDropdownEntriesDoesNotDuplicateCurrentDeviceWhenCaseDiffers)
 {

@@ -49,8 +49,6 @@ TEST(VoiceUtils, ResolveNoiseSuppressModeDisabled)
 	EXPECT_FALSE(FallbackUsed);
 }
 
-
-
 TEST(VoiceUtils, ResolveNoiseSuppressModeSimple)
 {
 	bool FallbackUsed = true;
@@ -58,8 +56,6 @@ TEST(VoiceUtils, ResolveNoiseSuppressModeSimple)
 	EXPECT_EQ(Mode, TEST_VOICE_NOISE_SUPPRESS_SIMPLE);
 	EXPECT_FALSE(FallbackUsed);
 }
-
-
 
 TEST(VoiceUtils, ResolveNoiseSuppressModeRnnoiseWhenAvailable)
 {
@@ -69,8 +65,6 @@ TEST(VoiceUtils, ResolveNoiseSuppressModeRnnoiseWhenAvailable)
 	EXPECT_FALSE(FallbackUsed);
 }
 
-
-
 TEST(VoiceUtils, ResolveNoiseSuppressModeFallbackToSimpleWhenRnnoiseUnavailable)
 {
 	bool FallbackUsed = false;
@@ -78,8 +72,6 @@ TEST(VoiceUtils, ResolveNoiseSuppressModeFallbackToSimpleWhenRnnoiseUnavailable)
 	EXPECT_EQ(Mode, TEST_VOICE_NOISE_SUPPRESS_SIMPLE);
 	EXPECT_TRUE(FallbackUsed);
 }
-
-
 
 TEST(VoiceUtils, ResolveNoiseSuppressModeInvalidValue)
 {
@@ -89,8 +81,6 @@ TEST(VoiceUtils, ResolveNoiseSuppressModeInvalidValue)
 	EXPECT_FALSE(FallbackUsed);
 }
 
-
-
 TEST(VoiceUtils, ResolveNoiseSuppressModeNegativeValue)
 {
 	bool FallbackUsed = false;
@@ -99,15 +89,11 @@ TEST(VoiceUtils, ResolveNoiseSuppressModeNegativeValue)
 	EXPECT_FALSE(FallbackUsed);
 }
 
-
-
 TEST(VoiceUtils, ResolveNoiseSuppressModeNullFallbackPointer)
 {
 	const int Mode = ResolveNoiseSuppressMode(TEST_VOICE_NOISE_SUPPRESS_RNNOISE, false, nullptr);
 	EXPECT_EQ(Mode, TEST_VOICE_NOISE_SUPPRESS_SIMPLE);
 }
-
-
 
 TEST(VoiceUtils, RnnoiseIsCompiledIn)
 {
@@ -115,7 +101,6 @@ TEST(VoiceUtils, RnnoiseIsCompiledIn)
 }
 
 #if defined(CONF_RNNOISE)
-
 
 TEST(VoiceUtils, RnnoiseProcessesSilenceFrame)
 {
@@ -137,8 +122,6 @@ TEST(VoiceUtils, RnnoiseProcessesSilenceFrame)
 }
 #endif
 
-
-
 TEST(VoiceUtils, ComputeVoiceEncoderTargetsHealthyNetwork)
 {
 	int TargetBitrate = 0;
@@ -150,8 +133,6 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsHealthyNetwork)
 	EXPECT_FALSE(TargetFec);
 }
 
-
-
 TEST(VoiceUtils, VoiceProcessingFactoryDefaultsDisableNoiseSuppressByDefault)
 {
 	const auto Defaults = VoiceProcessingFactoryDefaults();
@@ -159,8 +140,6 @@ TEST(VoiceUtils, VoiceProcessingFactoryDefaultsDisableNoiseSuppressByDefault)
 	EXPECT_EQ(Defaults.m_NoiseSuppressStrength, 35);
 	EXPECT_EQ(Defaults.m_EncoderComplexity, 8);
 }
-
-
 
 TEST(VoiceUtils, ComputeVoiceEncoderTargetsWithComplexityHealthyNetworkKeepsHighQuality)
 {
@@ -175,8 +154,6 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsWithComplexityHealthyNetworkKeepsHigh
 	EXPECT_EQ(TargetComplexity, 8);
 }
 
-
-
 TEST(VoiceUtils, ComputeVoiceAutoGainRaisesQuietFramesButHonorsMaxGain)
 {
 	const auto Config = VoiceAgcConfigFromRuntime(true);
@@ -184,8 +161,6 @@ TEST(VoiceUtils, ComputeVoiceAutoGainRaisesQuietFramesButHonorsMaxGain)
 	EXPECT_GT(Next, 1.0f);
 	EXPECT_LE(Next, Config.m_MaxGain);
 }
-
-
 
 TEST(VoiceUtils, ComputeVoiceEncoderTargetsWithComplexityBackwardCompatibleWithOldFunction)
 {
@@ -205,8 +180,6 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsWithComplexityBackwardCompatibleWithO
 	EXPECT_EQ(TargetFecOld, TargetFecNew);
 }
 
-
-
 TEST(VoiceUtils, ComputeVoiceAutoGainFallsBackTowardUnityForLoudFrames)
 {
 	const auto Config = VoiceAgcConfigFromRuntime(true);
@@ -215,16 +188,12 @@ TEST(VoiceUtils, ComputeVoiceAutoGainFallsBackTowardUnityForLoudFrames)
 	EXPECT_GE(Next, Config.m_MinGain);
 }
 
-
-
 TEST(VoiceUtils, ComputeVoiceAutoGainDisabledReturnsUnity)
 {
 	const auto Config = VoiceAgcConfigFromRuntime(false);
 	const float Next = ComputeVoiceAutoGain(1.5f, 0.05f, Config);
 	EXPECT_FLOAT_EQ(Next, 1.0f);
 }
-
-
 
 TEST(VoiceUtils, ComputeVoiceAutoGainAttackAndReleaseAffectSlewRate)
 {
@@ -245,8 +214,6 @@ TEST(VoiceUtils, ComputeVoiceAutoGainAttackAndReleaseAffectSlewRate)
 	EXPECT_LT(FastFall, SlowFall);
 }
 
-
-
 TEST(VoiceUtils, ComputeVoiceEncoderTargetsKeepsMoreBitrateBeforeWeakNetwork)
 {
 	int TargetBitrate = 0;
@@ -257,8 +224,6 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsKeepsMoreBitrateBeforeWeakNetwork)
 	EXPECT_EQ(TargetLoss, 5);
 	EXPECT_TRUE(TargetFec);
 }
-
-
 
 TEST(VoiceUtils, ComputeVoiceEncoderTargetsWeakNetwork)
 {
@@ -271,8 +236,6 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsWeakNetwork)
 	EXPECT_TRUE(TargetFec);
 }
 
-
-
 TEST(VoiceUtils, ComputeVoiceEncoderTargetsPoorNetwork)
 {
 	int TargetBitrate = 0;
@@ -284,8 +247,6 @@ TEST(VoiceUtils, ComputeVoiceEncoderTargetsPoorNetwork)
 	EXPECT_TRUE(TargetFec);
 }
 
-
-
 TEST(VoiceUtils, SanitizeFloatNormalValues)
 {
 	EXPECT_FLOAT_EQ(SanitizeFloat(0.0f), 0.0f);
@@ -295,22 +256,16 @@ TEST(VoiceUtils, SanitizeFloatNormalValues)
 	EXPECT_FLOAT_EQ(SanitizeFloat(-100.0f), -100.0f);
 }
 
-
-
 TEST(VoiceUtils, SanitizeFloatInfinity)
 {
 	EXPECT_FLOAT_EQ(SanitizeFloat(std::numeric_limits<float>::infinity()), 0.0f);
 	EXPECT_FLOAT_EQ(SanitizeFloat(-std::numeric_limits<float>::infinity()), 0.0f);
 }
 
-
-
 TEST(VoiceUtils, SanitizeFloatNaN)
 {
 	EXPECT_FLOAT_EQ(SanitizeFloat(std::numeric_limits<float>::quiet_NaN()), 0.0f);
 }
-
-
 
 TEST(VoiceUtils, SanitizeFloatClamp)
 {

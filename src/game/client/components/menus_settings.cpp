@@ -860,18 +860,6 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
 			if(DoSettingsButton_CheckBox(SETTINGS_GENERAL, -1, &g_Config.m_ClAutoswitchWeaponsOutOfAmmo, "general-switch-weapon-out-of-ammo", Localize("Switch weapon when out of ammo"), g_Config.m_ClAutoswitchWeaponsOutOfAmmo, &Button))
 				g_Config.m_ClAutoswitchWeaponsOutOfAmmo ^= 1;
-			Content.HSplitTop(GeneralMetrics.m_LineSpacing, nullptr, &Content);
-			Content.HSplitTop(GeneralMetrics.m_LineHeight, &Button, &Content);
-			CUIRect Label, DropDown;
-			const float DropDownWidth = std::min(140.0f * GeneralMetrics.m_UiScale, Button.w);
-			Button.VSplitRight(DropDownWidth, &Label, &DropDown);
-			Label.VSplitRight(GeneralMetrics.m_LineSpacing, &Label, nullptr);
-			DoSettingsMenuLabel(SETTINGS_GENERAL, -1, -1, "general-respawn-default-weapon-label", &Label, Localize("Respawn default weapon (when owned)"), BodySize, TEXTALIGN_ML);
-			const char *apRespawnDefaultWeapons[] = {Localize("Off"), Localize("Hammer"), Localize("Gun"), Localize("Shotgun"), Localize("Grenade"), Localize("Laser")};
-			static CUi::SDropDownState s_RespawnDefaultWeaponDropDownState;
-			const int RespawnDefaultWeapon = DoSettingsDropDown(&DropDown, std::clamp(g_Config.m_QmRespawnDefaultWeapon, 0, 5), apRespawnDefaultWeapons, std::size(apRespawnDefaultWeapons), s_RespawnDefaultWeaponDropDownState);
-			if(RespawnDefaultWeapon != g_Config.m_QmRespawnDefaultWeapon)
-				g_Config.m_QmRespawnDefaultWeapon = RespawnDefaultWeapon;
 		});
 		vCards.back().m_Measure = [GeneralMetrics, IsGeneralDynamicCameraEnabled](float) {
 			return ResolveSettingsGeneralGameContentHeight(GeneralMetrics, IsGeneralDynamicCameraEnabled());
@@ -6330,11 +6318,13 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 
 		// red to yellow
 		{
-			Graphics()->SetColor4(
-				ColorRGBA(1, 0, 0, 1),
-				ColorRGBA(1, 1, 0, 1),
-				ColorRGBA(1, 1, 0, 1),
-				ColorRGBA(1, 0, 0, 1));
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, ColorRGBA(1, 0, 0, 1)),
+				IGraphics::CColorVertex(1, ColorRGBA(1, 1, 0, 1)),
+				IGraphics::CColorVertex(2, ColorRGBA(1, 0, 0, 1)),
+				IGraphics::CColorVertex(3, ColorRGBA(1, 1, 0, 1)),
+			};
+			Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 			IGraphics::CFreeformItem Freeform(
 				CurXOff, pColorRect->y,
@@ -6347,11 +6337,13 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		// yellow to green
 		CurXOff += SizeColor;
 		{
-			Graphics()->SetColor4(
-				ColorRGBA(1, 1, 0, 1),
-				ColorRGBA(0, 1, 0, 1),
-				ColorRGBA(0, 1, 0, 1),
-				ColorRGBA(1, 1, 0, 1));
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, ColorRGBA(1, 1, 0, 1)),
+				IGraphics::CColorVertex(1, ColorRGBA(0, 1, 0, 1)),
+				IGraphics::CColorVertex(2, ColorRGBA(1, 1, 0, 1)),
+				IGraphics::CColorVertex(3, ColorRGBA(0, 1, 0, 1)),
+			};
+			Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 			IGraphics::CFreeformItem Freeform(
 				CurXOff, pColorRect->y,
@@ -6364,11 +6356,13 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		CurXOff += SizeColor;
 		// green to turquoise
 		{
-			Graphics()->SetColor4(
-				ColorRGBA(0, 1, 0, 1),
-				ColorRGBA(0, 1, 1, 1),
-				ColorRGBA(0, 1, 1, 1),
-				ColorRGBA(0, 1, 0, 1));
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, ColorRGBA(0, 1, 0, 1)),
+				IGraphics::CColorVertex(1, ColorRGBA(0, 1, 1, 1)),
+				IGraphics::CColorVertex(2, ColorRGBA(0, 1, 0, 1)),
+				IGraphics::CColorVertex(3, ColorRGBA(0, 1, 1, 1)),
+			};
+			Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 			IGraphics::CFreeformItem Freeform(
 				CurXOff, pColorRect->y,
@@ -6381,11 +6375,13 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		CurXOff += SizeColor;
 		// turquoise to blue
 		{
-			Graphics()->SetColor4(
-				ColorRGBA(0, 1, 1, 1),
-				ColorRGBA(0, 0, 1, 1),
-				ColorRGBA(0, 0, 1, 1),
-				ColorRGBA(0, 1, 1, 1));
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, ColorRGBA(0, 1, 1, 1)),
+				IGraphics::CColorVertex(1, ColorRGBA(0, 0, 1, 1)),
+				IGraphics::CColorVertex(2, ColorRGBA(0, 1, 1, 1)),
+				IGraphics::CColorVertex(3, ColorRGBA(0, 0, 1, 1)),
+			};
+			Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 			IGraphics::CFreeformItem Freeform(
 				CurXOff, pColorRect->y,
@@ -6398,11 +6394,13 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		CurXOff += SizeColor;
 		// blue to purple
 		{
-			Graphics()->SetColor4(
-				ColorRGBA(0, 0, 1, 1),
-				ColorRGBA(1, 0, 1, 1),
-				ColorRGBA(1, 0, 1, 1),
-				ColorRGBA(0, 0, 1, 1));
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, ColorRGBA(0, 0, 1, 1)),
+				IGraphics::CColorVertex(1, ColorRGBA(1, 0, 1, 1)),
+				IGraphics::CColorVertex(2, ColorRGBA(0, 0, 1, 1)),
+				IGraphics::CColorVertex(3, ColorRGBA(1, 0, 1, 1)),
+			};
+			Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 			IGraphics::CFreeformItem Freeform(
 				CurXOff, pColorRect->y,
@@ -6415,11 +6413,13 @@ bool CMenus::RenderHslaScrollbars(CUIRect *pRect, unsigned int *pColor, bool Alp
 		CurXOff += SizeColor;
 		// purple to red
 		{
-			Graphics()->SetColor4(
-				ColorRGBA(1, 0, 1, 1),
-				ColorRGBA(1, 0, 0, 1),
-				ColorRGBA(1, 0, 0, 1),
-				ColorRGBA(1, 0, 1, 1));
+			IGraphics::CColorVertex aColors[4] = {
+				IGraphics::CColorVertex(0, ColorRGBA(1, 0, 1, 1)),
+				IGraphics::CColorVertex(1, ColorRGBA(1, 0, 0, 1)),
+				IGraphics::CColorVertex(2, ColorRGBA(1, 0, 1, 1)),
+				IGraphics::CColorVertex(3, ColorRGBA(1, 0, 0, 1)),
+			};
+			Graphics()->SetColorVertex(aColors, std::size(aColors));
 
 			IGraphics::CFreeformItem Freeform(
 				CurXOff, pColorRect->y,
@@ -7317,22 +7317,20 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				// ***** Name Plate ***** //
 				// General name plate settings
 				{
-					// 名字板被禅模式接管时整行灰化：这一项同时控制 ClNamePlates/ClNamePlatesOwn，
-					// 任一被接管都算被接管（禅模式隐藏名字板会同时接管两者）。
-					const int *pNamePlateOverrideSource =
-						TemporaryOverrideTooltip(&g_Config.m_ClNamePlates) != nullptr ? &g_Config.m_ClNamePlates : (TemporaryOverrideTooltip(&g_Config.m_ClNamePlatesOwn) != nullptr ? &g_Config.m_ClNamePlatesOwn : nullptr);
-					int Pressed = (g_Config.m_ClNamePlates ? 2 : 0) + (g_Config.m_ClNamePlatesOwn ? 1 : 0);
+					// 名字板被禅模式接管时整行灰化。
+					const int *pNamePlateOverrideSource = TemporaryOverrideTooltip(&g_Config.m_QmNameplateShowScope) != nullptr ? &g_Config.m_QmNameplateShowScope : nullptr;
+					const int ShowScopeCount = QM_NAMEPLATE_SHOW_SCOPE_COUNT;
+					int ShowScope = std::clamp(g_Config.m_QmNameplateShowScope, 0, ShowScopeCount - 1);
 					if(DoSettingsLine_RadioMenu(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, LeftView, "appearance-show-name-plates-label", Localize("Show name plates"),
 						   m_vButtonContainersNamePlateShow,
-						   {"appearance-show-name-plates-none", "appearance-show-name-plates-own", "appearance-show-name-plates-others", "appearance-show-name-plates-all"},
-						   {Localize("None", "Show name plates"), Localize("Own", "Show name plates"), Localize("Others", "Show name plates"), Localize("All", "Show name plates")},
-						   {0, 1, 2, 3},
-						   Pressed,
+						   {"appearance-show-name-plates-none", "appearance-show-name-plates-current", "appearance-show-name-plates-local", "appearance-show-name-plates-others", "appearance-show-name-plates-others-local", "appearance-show-name-plates-all"},
+						   {Localize("None", "Show name plates"), Localize("Current", "Show name plates"), Localize("Own characters", "Show name plates"), Localize("Others", "Show name plates"), Localize("Others and own", "Show name plates"), Localize("All", "Show name plates")},
+						   {QM_NAMEPLATE_SHOW_SCOPE_OFF, QM_NAMEPLATE_SHOW_SCOPE_CURRENT, QM_NAMEPLATE_SHOW_SCOPE_LOCAL, QM_NAMEPLATE_SHOW_SCOPE_OTHERS, QM_NAMEPLATE_SHOW_SCOPE_OTHERS_LOCAL, QM_NAMEPLATE_SHOW_SCOPE_ALL},
+						   ShowScope,
 						   AppearanceMetrics,
 						   pNamePlateOverrideSource))
 					{
-						g_Config.m_ClNamePlates = Pressed & 2 ? 1 : 0;
-						g_Config.m_ClNamePlatesOwn = Pressed & 1 ? 1 : 0;
+						g_Config.m_QmNameplateShowScope = ShowScope;
 					}
 				}
 				LeftView.HSplitTop(MarginSmall, nullptr, &LeftView);
@@ -7479,6 +7477,16 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-border-range", &g_Config.m_QmNameplateTextBorderRange, &g_Config.m_QmNameplateTextBorderRange, Button, Localize("Border range"), 1, 4);
 				NextNamePlateRow(Button);
 				DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-glow-range", &g_Config.m_QmNameplateTextGlowRange, &g_Config.m_QmNameplateTextGlowRange, Button, Localize("Glow range"), 1, 12);
+
+				// 同屏人多时按人均摊特效绘制预算，避免每个名牌都画满描边/辉光。
+				NextNamePlateRow(Button);
+				if(DoSettingsButton_CheckBox(SETTINGS_APPEARANCE, APPEARANCE_TAB_NAME_PLATE, APPEARANCE_TAB_NAME_PLATE, &g_Config.m_QmNameplateEffectAutoLod, "appearance-nameplate-text-auto-lod", Localize("Automatic effect LOD when crowded"), g_Config.m_QmNameplateEffectAutoLod, &Button))
+					g_Config.m_QmNameplateEffectAutoLod = g_Config.m_QmNameplateEffectAutoLod ? 0 : 1;
+				if(g_Config.m_QmNameplateEffectAutoLod)
+				{
+					NextNamePlateRow(Button);
+					DoAppearanceNumericField(APPEARANCE_TAB_NAME_PLATE, "appearance-nameplate-text-lod-threshold", &g_Config.m_QmNameplateEffectLodThreshold, &g_Config.m_QmNameplateEffectLodThreshold, Button, Localize("Full quality nameplate count"), 4, 64);
+				}
 
 				static CButtonContainer s_NameplateTextBorderColorId;
 				DoLine_ColorPicker(&s_NameplateTextBorderColorId, AppearanceMetrics, &LeftView, Localize("Border color"), &g_Config.m_QmNameplateTextBorderColor, ColorRGBA(0.0f, 0.0f, 0.0f, 0.5f), false, nullptr, true);

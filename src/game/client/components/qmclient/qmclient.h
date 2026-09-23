@@ -3,15 +3,21 @@
 #define GAME_CLIENT_COMPONENTS_QMCLIENT_QMCLIENT_H
 
 #include "ddnet_player_stats_state.h"
+#include "markdown_cache_writer.h"
+#include "qm_markdown_broadcast.h"
+#include "qm_realtime.h"
+#include "qm_realtime_channel.h"
 #include "qmclient_utils.h"
 
 #include <base/hash.h>
 
 #include <engine/http.h>
 #include <engine/shared/protocol.h>
+#include <engine/shared/websocket_client.h>
 
 #include <game/client/component.h>
 
+#include <deque>
 #include <memory>
 #include <mutex>
 
@@ -54,9 +60,12 @@ class CQmClient : public CComponent
 	char m_aTitleBoundName[64] = "";
 	char m_aTitlePendingServer[NETADDR_MAXSTRSIZE] = "";
 	char m_aaPlayerTitles[MAX_CLIENTS][64] = {};
+	char m_aaPlayerTitleStyles[MAX_CLIENTS][48] = {};
 	char m_aaTitleNames[MAX_CLIENTS][MAX_NAME_LENGTH] = {};
 	int64_t m_aTitleExpires[MAX_CLIENTS] = {};
 	int64_t m_TitleLastSync = 0;
+	double m_TitleServerTimeOffset = 0.0;
+	bool m_TitleServerTimeOffsetValid = false;
 	bool m_TitleAuthenticated = false;
 	int m_TitleRevision = 0;
 	const char *m_pTitleStatus = "Enter your sponsor code";
@@ -78,6 +87,17 @@ class CQmClient : public CComponent
 	std::shared_ptr<IHttpRequest> m_pQmDdnetPlayerTask = nullptr;
 	std::shared_ptr<IJob> m_pQmDdnetPlayerParseJob = nullptr;
 	CQmDdnetPlayerStatsState m_QmDdnetPlayerState;
+	CQmMarkdownBroadcast m_QmMarkdownBroadcast;
+	// 每个缓存文件一个写作业实例：界面立即更新，磁盘只保留最新完整快照。
+	CQmMarkdownCacheWriter m_QmMarkdownBroadcastCacheWriter;
+	CQmRealtimeChannel m_QmRealtimeChannel;
+	std::unique_ptr<IQmWebSocketClient> m_pQmRealtimeTransport;
+	std::mutex m_QmRealtimeTransportMutex;
+	std::deque<std::string> m_QmRealtimeTransportMessages;
+	std::deque<SQmRealtimeMessage> m_QmRealtimeEvents;
+	std::deque<SQmRealtimeMessage> m_QmRealtimeEmoticonEvents;
+	std::string m_QmRealtimeServerAddress;
+	bool m_QmRealtimeHelloSent = false;
 
 	char m_aQmClientAuthToken[256] = "";
 	char m_aQmClientMachineHash[SHA256_MAXSTRSIZE] = "";
@@ -186,6 +206,13 @@ class CQmClient : public CComponent
 	void RecordQmClientLocalRaceFinish(int TimeMs);
 	void RefreshQmDdnetPlayerStats();
 	void RefreshQmClientPlaytime();
+	void UpdateQmRealtimeChannel();
+	void DrainQmRealtimeTransportMessages();
+	void ApplyQmRealtimeServiceData(const SQmRealtimeMessage &Message);
+	void ApplyQmRealtimeBroadcast(const SQmRealtimeMessage &Message);
+	// 广播 markdown 的磁盘缓存：Apply 成功后落盘（交给作业），启动时读回上次内容。
+	void SaveQmMarkdownBroadcastCache();
+	void LoadQmMarkdownBroadcastCache();
 
 public:
 	void RedeemTitleCode(const char *pCode);
@@ -198,6 +225,17 @@ public:
 	const char *TitleBoundName() const { return m_aTitleBoundName; }
 	int TitleRevision() const { return m_TitleRevision; }
 	const char *PlayerTitle(int ClientId) const;
+	const char *PlayerTitleStyle(int ClientId) const;
+	double TitleAnimationTime() const;
+	const CQmRealtimeChannel &QmRealtimeChannel() const { return m_QmRealtimeChannel; }
+	bool HasQmMarkdownBroadcast() const { return m_QmMarkdownBroadcast.HasMarkdown(); }
+	const char *QmMarkdownBroadcast() const { return m_QmMarkdownBroadcast.Markdown(); }
+	int QmMarkdownBroadcastVersion() const { return m_QmMarkdownBroadcast.Version(); }
+	int QmMarkdownBroadcastRevision() const { return m_QmMarkdownBroadcast.Revision(); }
+	void EnqueueQmRealtimeMessage(const char *pData, size_t Size);
+	bool PopQmRealtimeMessage(SQmRealtimeMessage &Message);
+	bool PopQmRealtimeEmoticon(SQmRealtimeMessage &Message);
+	void SendQmAnonymousEmoticon(int Emoticon, int PlayerId, bool LaunchMode, bool SuperLaunch);
 	int Sizeof() const override { return sizeof(*this); }
 	void OnInit() override;
 	void OnShutdown() override;

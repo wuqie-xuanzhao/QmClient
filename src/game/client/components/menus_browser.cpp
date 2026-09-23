@@ -18,6 +18,7 @@
 #include <engine/textrender.h>
 
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiMotion.h>
 #include <game/client/QmUi/UiNavigation.h>
 #include <game/client/QmUi/UiSurface.h>
 #include <game/client/animstate.h>
@@ -42,6 +43,8 @@
 using namespace FontIcons;
 
 static constexpr ColorRGBA gs_HighlightedTextColor = ColorRGBA(0.4f, 0.4f, 1.0f, 1.0f);
+static constexpr ColorRGBA gs_QmClientCountColor = ColorRGBA(0.75f, 0.55f, 1.0f, 1.0f);
+static constexpr float SERVER_LIST_TEXT_SIZE = 11.0f;
 
 static ColorRGBA BrowserOpacityColor(ColorRGBA Color, float AlphaScale = 1.0f)
 {
@@ -149,37 +152,6 @@ static const char *FavoriteMapCategoryDisplayName(const char *pType)
 	if(str_comp_nocase(pType, "Event") == 0)
 		return Localize("Event");
 	return Localize("Unknown");
-}
-
-static bool TryParseVoteMapDifficulty(const char *pDescription, const char *pMapName, char *pOut, int OutSize)
-{
-	if(!pDescription || !pMapName || pMapName[0] == '\0')
-		return false;
-
-	const char *pBy = str_find_nocase(pDescription, " by ");
-	const char *pStars = str_find(pDescription, "/5");
-	if(!pBy || !pStars || pStars <= pDescription)
-		return false;
-
-	const int MapNameLength = (int)(pBy - pDescription);
-	if((int)str_length(pMapName) != MapNameLength || str_comp_nocase_num(pDescription, pMapName, MapNameLength) != 0)
-		return false;
-
-	const char *pStarNumber = pStars;
-	while(pStarNumber > pDescription && pStarNumber[-1] >= '0' && pStarNumber[-1] <= '9')
-		--pStarNumber;
-	if(pStarNumber == pStars)
-		return false;
-
-	char aStars[8];
-	const int StarNumberLength = minimum((int)(pStars - pStarNumber), (int)sizeof(aStars) - 1);
-	str_copy(aStars, pStarNumber, StarNumberLength + 1);
-	const int Stars = str_toint(aStars);
-	if(Stars < 0 || Stars > 5)
-		return false;
-
-	str_format(pOut, OutSize, "%d/5 ★", Stars);
-	return true;
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
@@ -398,9 +370,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	CUIRect Headers;
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	const CUIRect ListView = View;
-	Headers.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_T, 5.0f);
 	Headers.VSplitRight(s_ListBox.ScrollbarWidthMax(), &Headers, nullptr);
-	View.Draw(BrowserOpacityColor(ColorRGBA(0.0f, 0.0f, 0.0f, 0.15f)), IGraphics::CORNER_NONE, 0.0f);
+	Headers.Draw(BrowserOpacityColor(ColorRGBA(1.0f, 1.0f, 1.0f, 0.25f)), IGraphics::CORNER_T, 2.0f);
 
 	{
 		CUIRect ResetBtn;
@@ -410,11 +381,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		if(Ui()->DoButton_QmIcon(&s_ResetColsButton, EQmIcon::ARROW_ROTATE_RIGHT, FONT_ICON_ARROW_ROTATE_RIGHT, 0, &ResetBtn, BUTTONFLAG_LEFT))
 		{
 			g_Config.m_BrColWidthName = 120;
-			g_Config.m_BrColWidthGametype = 50;
+			g_Config.m_BrColNameSplit = 600;
+			g_Config.m_BrColWidthGametype = 68;
 			g_Config.m_BrColWidthMap = 120;
-			g_Config.m_BrColWidthFriends = 20;
-			g_Config.m_BrColWidthPlayers = 60;
-			g_Config.m_BrColWidthPing = 40;
+			g_Config.m_BrColWidthFriends = 14;
+			g_Config.m_BrColWidthPlayers = 40;
+			g_Config.m_BrColWidthQmClients = 24;
+			g_Config.m_BrColWidthPing = 30;
 			ConfigManager()->Save();
 		}
 		if(Ui()->HotItem() == &s_ResetColsButton)
@@ -441,6 +414,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		COL_MAP,
 		COL_FRIENDS,
 		COL_PLAYERS,
+		COL_QM_CLIENTS,
 		COL_PING,
 	};
 
@@ -458,6 +432,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		UI_ELEM_FINISH_ICON,
 		UI_ELEM_PLAYERS,
 		UI_ELEM_FRIEND_ICON,
+		UI_ELEM_QM_CLIENTS,
 		UI_ELEM_PING,
 		UI_ELEM_KEY_ICON,
 		NUM_UI_ELEMS,
@@ -476,18 +451,24 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		{COL_FRIENDS, IServerBrowser::SORT_NUMFRIENDS, "", 1, ClickableIconSpace, {0}},
 		{COL_PLAYERS, IServerBrowser::SORT_NUMPLAYERS, Localizable("Players"), 1, 60.0f, {0}},
 		{-1, -1, "", 1, 4.0f, {0}},
-		{COL_PING, IServerBrowser::SORT_PING, Localizable("Ping"), 1, 40.0f, {0}},
+		{COL_QM_CLIENTS, -1, "梦", 1, 24.0f, {0}},
+		{COL_PING, IServerBrowser::SORT_PING, Localizable("Ping"), 1, 30.0f, {0}},
 	};
 
 	auto ClampConfigWidth = [](int Value, int MinWidth, int MaxWidth) {
 		return std::clamp(Value, MinWidth, MaxWidth);
 	};
 
-	s_aCols[5].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthGametype, 36, 300);
-	s_aCols[6].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthMap, 60, 800);
-	s_aCols[7].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthFriends, 18, 120);
-	s_aCols[8].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthPlayers, 48, 240);
-	s_aCols[10].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthPing, 32, 180);
+	s_aCols[5].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthGametype, 62, 300);
+	s_aCols[7].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthFriends, 12, 120);
+	s_aCols[8].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthPlayers, 34, 240);
+	s_aCols[10].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthQmClients, 20, 120);
+	s_aCols[11].m_Width = (float)ClampConfigWidth(g_Config.m_BrColWidthPing, 26, 180);
+	const float MinNameMapBaseWidth = (float)ClampConfigWidth(g_Config.m_BrColWidthName, 60, 1000);
+	const float MinMapWidth = 90.0f;
+	const float NameShare = std::clamp((float)g_Config.m_BrColNameSplit / 1000.0f, 0.35f, 0.75f);
+	const float FreeNameMapWidth = maximum(Headers.w - MinNameMapBaseWidth - MinMapWidth, 0.0f);
+	s_aCols[6].m_Width = MinMapWidth + FreeNameMapWidth * (1.0f - NameShare);
 
 	const int NumCols = std::size(s_aCols);
 
@@ -495,9 +476,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		switch(ColId)
 		{
 		case COL_GAMETYPE: return &g_Config.m_BrColWidthGametype;
-		case COL_MAP: return &g_Config.m_BrColWidthMap;
+		case COL_MAP: return nullptr;
 		case COL_FRIENDS: return &g_Config.m_BrColWidthFriends;
 		case COL_PLAYERS: return &g_Config.m_BrColWidthPlayers;
+		case COL_QM_CLIENTS: return &g_Config.m_BrColWidthQmClients;
 		case COL_PING: return &g_Config.m_BrColWidthPing;
 		default: return nullptr;
 		}
@@ -506,11 +488,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	auto GetColMinWidth = [](int ColId) {
 		switch(ColId)
 		{
-		case COL_GAMETYPE: return 36.0f;
-		case COL_MAP: return 60.0f;
-		case COL_FRIENDS: return 18.0f;
-		case COL_PLAYERS: return 48.0f;
-		case COL_PING: return 32.0f;
+		case COL_GAMETYPE: return 62.0f;
+		case COL_MAP: return 90.0f;
+		case COL_FRIENDS: return 12.0f;
+		case COL_PLAYERS: return 34.0f;
+		case COL_QM_CLIENTS: return 20.0f;
+		case COL_PING: return 26.0f;
 		default: return 10.0f;
 		}
 	};
@@ -522,6 +505,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		case COL_MAP: return 800.0f;
 		case COL_FRIENDS: return 120.0f;
 		case COL_PLAYERS: return 240.0f;
+		case COL_QM_CLIENTS: return 120.0f;
 		case COL_PING: return 180.0f;
 		default: return 1000.0f;
 		}
@@ -557,8 +541,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				int *pConfig = GetColWidthConfig(s_aCols[i].m_Id);
 				if(pConfig)
 				{
-					Gap.x -= 3.0f;
-					Gap.w = 8.0f;
+					Gap.x -= 2.0f;
+					Gap.w = 6.0f;
 					s_vResizeHandles.push_back({Gap, i, pConfig, GetColMinWidth(s_aCols[i].m_Id), GetColMaxWidth(s_aCols[i].m_Id)});
 				}
 			}
@@ -575,8 +559,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 			int *pConfig = GetColWidthConfig(s_aCols[i].m_Id);
 			if(pConfig)
 			{
-				Gap.x -= 3.0f;
-				Gap.w = 8.0f;
+				Gap.x -= 2.0f;
+				Gap.w = 6.0f;
 				s_vResizeHandles.push_back({Gap, i, pConfig, GetColMinWidth(s_aCols[i].m_Id), GetColMaxWidth(s_aCols[i].m_Id)});
 			}
 		}
@@ -597,7 +581,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 		if(PlayersOrPing && g_Config.m_BrSortOrder == 2 && (Col.m_Sort == IServerBrowser::SORT_NUMPLAYERS || Col.m_Sort == IServerBrowser::SORT_PING))
 			Checked = 2;
 
-		if(DoButton_GridHeader(&Col.m_Id, Localize(Col.m_pCaption), Checked, &Col.m_Rect))
+		const char *pCaption = Col.m_Id == COL_QM_CLIENTS ? Col.m_pCaption : Localize(Col.m_pCaption);
+		if(DoButton_GridHeader(&Col.m_Id, pCaption, Checked, &Col.m_Rect))
 		{
 			if(Col.m_Sort != -1)
 			{
@@ -719,6 +704,21 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 	}
 
 	const int NumServers = ServerBrowser()->NumSortedServers();
+	std::unordered_map<std::string, int> QmClientsByServer;
+	for(const SQmClientServerDistribution &Distribution : GameClient()->m_QmClient.QmClientServerDistribution())
+	{
+		const int Count = Distribution.m_UserCount + Distribution.m_DummyCount;
+		if(Count > 0 && !Distribution.m_ServerAddress.empty())
+			QmClientsByServer[Distribution.m_ServerAddress] = Count;
+	}
+	const auto FindQmClientCount = [&QmClientsByServer](const CServerInfo *pInfo) {
+		if(pInfo->m_NumAddresses <= 0)
+			return 0;
+		char aAddress[NETADDR_MAXSTRSIZE];
+		net_addr_str(&pInfo->m_aAddresses[0], aAddress, sizeof(aAddress), true);
+		const auto It = QmClientsByServer.find(aAddress);
+		return It == QmClientsByServer.end() ? 0 : It->second;
+	};
 
 	// display important messages in the middle of the screen so no
 	// users misses it
@@ -1032,6 +1032,18 @@ void CMenus::RenderServerbrowserServerList(CUIRect View, bool &WasListboxItemAct
 				}
 				Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_PLAYERS), &Button, aTemp, FontSize, TEXTALIGN_MR);
 				TextRender()->TextColor(TextRender()->DefaultTextColor());
+			}
+			else if(Id == COL_QM_CLIENTS)
+			{
+				const int QmClients = FindQmClientCount(pItem);
+				if(QmClients > 0)
+				{
+					Button.VMargin(2.0f, &Button);
+					str_format(aTemp, sizeof(aTemp), "%d", QmClients);
+					TextRender()->TextColor(gs_QmClientCountColor);
+					Ui()->DoLabelStreamed(*pUiElement->Rect(UI_ELEM_QM_CLIENTS), &Button, aTemp, FontSize, TEXTALIGN_MR);
+					TextRender()->TextColor(TextRender()->DefaultTextColor());
+				}
 			}
 			else if(Id == COL_PING)
 			{
@@ -1460,8 +1472,8 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 
 		if(s_ActiveTab != s_PrevFilterTab)
 		{
-			s_FilterTabDirection = s_ActiveTab > s_PrevFilterTab ? 1.0f : -1.0f;
-			TriggerUiSwitchAnimation(UiAnimNodeKey("browser_filter_tab_switch"), 0.18f);
+			s_FilterTabDirection = ResolveUiSwitchDirection(GameClient()->UiRuntimeV2()->AnimRuntime(), UiAnimNodeKey("browser_filter_tab_switch"), s_FilterTabDirection, s_ActiveTab > s_PrevFilterTab ? 1.0f : -1.0f);
+			TriggerUiSwitchAnimation(UiAnimNodeKey("browser_filter_tab_switch"), ui_token::motion::TAB_SWITCH.m_DurationSec);
 			s_PrevFilterTab = s_ActiveTab;
 		}
 		const float TransitionStrength = ReadUiSwitchAnimation(UiAnimNodeKey("browser_filter_tab_switch"));
@@ -2112,70 +2124,17 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
 	FriendlistOnUpdate();
 	const int NumCategories = maximum(1, GameClient()->Friends()->NumCategories());
 
-	std::vector<std::vector<CFriendItem>> vvFriends(NumCategories);
-	const int OfflineCategoryIndex = maximum(0, GameClient()->Friends()->FindCategory(IFriends::OFFLINE_CATEGORY));
+	m_BrowserFriendList.Update(*GameClient()->Friends(), *ServerBrowser(), g_Config.m_ClFriendsIgnoreClan != 0);
+	const auto &vvFriends = m_BrowserFriendList.Groups();
 
-	// calculate friends
 	bool OpenRemovePopup = false;
 	static CScrollRegion s_FriendsMoveCategoryPopupScrollRegion;
 	static CScrollRegion s_FriendsActionPopupScrollRegion;
-	for(int FriendIndex = 0; FriendIndex < GameClient()->Friends()->NumFriends(); ++FriendIndex)
-	{
-		const CFriendInfo *pFriendInfo = GameClient()->Friends()->GetFriend(FriendIndex);
-		if(pFriendInfo->m_aName[0] == '\0')
-			continue;
-
-		vvFriends[OfflineCategoryIndex].emplace_back(pFriendInfo);
-	}
-
-	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
-	{
-		const CServerInfo *pEntry = ServerBrowser()->Get(ServerIndex);
-		if(pEntry->m_FriendState == IFriends::FRIEND_NO)
-			continue;
-
-		for(const CServerInfo::CClient &CurrentClient : pEntry->m_vClients)
-		{
-			if(CurrentClient.m_FriendState == IFriends::FRIEND_NO)
-				continue;
-
-			const bool ClanOnlyMatch = CurrentClient.m_FriendState == IFriends::FRIEND_CLAN;
-			const char *pCategory = ClanOnlyMatch ? IFriends::CLAN_MEMBERS_CATEGORY : GameClient()->Friends()->GetFriendCategory(CurrentClient.m_aName, CurrentClient.m_aClan);
-			if(!ClanOnlyMatch && IsOfflineFriendsCategory(pCategory))
-				pCategory = GameClient()->Friends()->DefaultCategory();
-
-			int CategoryIndex = GameClient()->Friends()->FindCategory(pCategory);
-			if(CategoryIndex < 0 || CategoryIndex >= NumCategories)
-				CategoryIndex = 0;
-
-			vvFriends[CategoryIndex].emplace_back(CurrentClient, pEntry, pCategory);
-
-			if(!ClanOnlyMatch)
-			{
-				auto &vOfflineFriends = vvFriends[OfflineCategoryIndex];
-				vOfflineFriends.erase(std::remove_if(vOfflineFriends.begin(), vOfflineFriends.end(), [&](const CFriendItem &Friend) {
-					return Friend.ServerInfo() == nullptr && Friend.Name()[0] != '\0' && str_comp(Friend.Name(), CurrentClient.m_aName) == 0 && (g_Config.m_ClFriendsIgnoreClan || str_comp(Friend.Clan(), CurrentClient.m_aClan) == 0);
-				}),
-					vOfflineFriends.end());
-			}
-		}
-	}
-	for(auto &vFriends : vvFriends)
-	{
-		std::sort(vFriends.begin(), vFriends.end(), [](const CFriendItem &Left, const CFriendItem &Right) {
-			const bool LeftOnline = Left.ServerInfo() != nullptr;
-			const bool RightOnline = Right.ServerInfo() != nullptr;
-			if(LeftOnline != RightOnline)
-				return LeftOnline;
-			return Left < Right;
-		});
-	}
-
 	bool FollowTargetOnline = false;
 	const char *pFollowTargetAddress = "";
 	for(const auto &vFriends : vvFriends)
 	{
-		for(const CFriendItem &Friend : vFriends)
+		for(const auto &Friend : vFriends)
 		{
 			if(Friend.ServerInfo() == nullptr)
 				continue;
@@ -3602,12 +3561,12 @@ void CMenus::RenderServerbrowserFavoriteMaps(CUIRect View)
 	};
 
 	auto GetFavoriteMapDifficulty = [&](const char *pMapName, char *pOut, int OutSize) {
-		for(const CVoteOptionClient *pOption = GameClient()->m_Voting.FirstOption(); pOption; pOption = pOption->m_pNext)
-		{
-			if(TryParseVoteMapDifficulty(pOption->m_aDescription, pMapName, pOut, OutSize))
-				return;
-		}
-		str_copy(pOut, Localize("Unknown"), OutSize);
+		const CVoting &Voting = GameClient()->m_Voting;
+		const int Stars = m_MapVoteDifficulty.Find(Voting.OptionsRevision(), Voting.FirstOption(), pMapName);
+		if(Stars >= 0)
+			str_format(pOut, OutSize, "%d/5 ★", Stars);
+		else
+			str_copy(pOut, Localize("Unknown"), OutSize);
 	};
 
 	auto HasLocalSaveForMap = [&](const char *pMapName) {
@@ -4066,8 +4025,8 @@ void CMenus::RenderServerbrowserToolBox(CUIRect ToolBox)
 	static float s_ToolboxDirection = 0.0f;
 	if(g_Config.m_UiToolboxPage != s_PrevToolboxPage)
 	{
-		s_ToolboxDirection = g_Config.m_UiToolboxPage > s_PrevToolboxPage ? 1.0f : -1.0f;
-		TriggerUiSwitchAnimation(UiAnimNodeKey("browser_toolbox_tab_switch"), 0.18f);
+		s_ToolboxDirection = ResolveUiSwitchDirection(GameClient()->UiRuntimeV2()->AnimRuntime(), UiAnimNodeKey("browser_toolbox_tab_switch"), s_ToolboxDirection, g_Config.m_UiToolboxPage > s_PrevToolboxPage ? 1.0f : -1.0f);
+		TriggerUiSwitchAnimation(UiAnimNodeKey("browser_toolbox_tab_switch"), ui_token::motion::TAB_SWITCH.m_DurationSec);
 		s_PrevToolboxPage = g_Config.m_UiToolboxPage;
 	}
 

@@ -25,6 +25,11 @@ docs/dyl/BestClient/
 qmclient_scripts/perf/node_modules/
 qmclient_scripts/languages_qmclient/translations_draft/
 
+# 各服务独立开源仓库（各自有独立 remote，勿并入主仓库）
+/qmclient_scripts/qmclient_center_server/
+/qmclient_scripts/qmclient_voice_server/
+/qmclient_scripts/qmclient_titles/
+
 # 本地资源
 .codex-*.png
 .trae

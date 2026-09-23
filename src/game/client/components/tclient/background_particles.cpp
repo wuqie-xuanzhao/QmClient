@@ -177,6 +177,7 @@ void CBackgroundParticles::ResetParticles()
 {
 	m_vParticles.clear();
 	m_vRenderOrder.clear();
+	m_RenderOrderDirty = true;
 	m_LastConfiguredCount = -1;
 }
 
@@ -232,6 +233,7 @@ void CBackgroundParticles::SpawnParticle(SParticle &Particle, bool Initial, floa
 	const float DepthRange = (float)std::clamp(g_Config.m_Qm3DParticlesDepth, 10, 1000);
 	const float SizeMin = ClampedSizeMin();
 	const float SizeMax = ClampedSizeMax();
+	m_RenderOrderDirty = true;
 	Particle.m_Depth = random_float(0.0f, DepthRange);
 	const float DepthFactor = std::clamp(Particle.m_Depth / DepthRange, 0.0f, 1.0f);
 	Particle.m_Size = random_float(SizeMin, SizeMax);
@@ -280,6 +282,7 @@ void CBackgroundParticles::EnsureParticleCount(float Left, float Top, float Righ
 	if(m_LastConfiguredCount == Count && (int)m_vParticles.size() == Count)
 		return;
 
+	m_RenderOrderDirty = true;
 	m_LastConfiguredCount = Count;
 	if((int)m_vParticles.size() > Count)
 	{
@@ -381,8 +384,10 @@ void CBackgroundParticles::ApplyParticleCollisions(float Delta)
 			SParticle &Left = m_vParticles[LeftIndex];
 			SParticle &Right = m_vParticles[RightIndex];
 			const vec2 Diff = Right.m_Pos - Left.m_Pos;
-			const float Dist = length(Diff);
 			const float MinDist = (Left.m_Size + Right.m_Size) * 0.45f;
+			if(absolute(Diff.x) >= MinDist || absolute(Diff.y) >= MinDist)
+				continue;
+			const float Dist = length(Diff);
 			if(Dist <= 0.001f || Dist >= MinDist)
 				continue;
 
@@ -409,10 +414,11 @@ void CBackgroundParticles::RenderMesh(const SBackgroundParticleMesh &Mesh, vec2 
 		return;
 
 	const float DepthRange = (float)std::clamp(g_Config.m_Qm3DParticlesDepth, 10, 1000);
+	const SBackgroundParticleRotation PreparedRotation(Rotation);
 	std::array<vec2, MAX_MESH_VERTICES> aProjected;
 	for(size_t VertexIndex = 0; VertexIndex < Mesh.m_vVertices.size(); ++VertexIndex)
 	{
-		const vec3 RotatedVertex = BackgroundParticleRotateVertex(Mesh.m_vVertices[VertexIndex] * Size, Rotation);
+		const vec3 RotatedVertex = PreparedRotation.Apply(Mesh.m_vVertices[VertexIndex] * Size);
 		aProjected[VertexIndex] = BackgroundParticleProjectVertex(Projection, WorldPos, RotatedVertex, Depth, DepthRange) + ScreenOffset;
 	}
 
@@ -567,13 +573,17 @@ void CBackgroundParticles::OnRender()
 		UpdateParticle(Particle, Delta, Left, Top, Right, Bottom);
 	ApplyParticleCollisions(Delta);
 
-	m_vRenderOrder.clear();
-	m_vRenderOrder.reserve(m_vParticles.size());
-	for(size_t ParticleIndex = 0; ParticleIndex < m_vParticles.size(); ++ParticleIndex)
-		m_vRenderOrder.push_back((int)ParticleIndex);
-	std::sort(m_vRenderOrder.begin(), m_vRenderOrder.end(), [&](int LeftIndex, int RightIndex) {
-		return m_vParticles[LeftIndex].m_Depth > m_vParticles[RightIndex].m_Depth;
-	});
+	if(m_RenderOrderDirty)
+	{
+		m_vRenderOrder.clear();
+		m_vRenderOrder.reserve(m_vParticles.size());
+		for(size_t ParticleIndex = 0; ParticleIndex < m_vParticles.size(); ++ParticleIndex)
+			m_vRenderOrder.push_back((int)ParticleIndex);
+		std::sort(m_vRenderOrder.begin(), m_vRenderOrder.end(), [&](int LeftIndex, int RightIndex) {
+			return m_vParticles[LeftIndex].m_Depth > m_vParticles[RightIndex].m_Depth;
+		});
+		m_RenderOrderDirty = false;
+	}
 
 	SBackgroundParticleProjection Projection;
 	Projection.m_CameraCenter = GameClient()->m_Camera.m_Center;

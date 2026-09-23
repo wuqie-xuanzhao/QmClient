@@ -212,23 +212,36 @@ namespace QmMapHistory
 
 	std::vector<SMapHistoryRecord> CMapHistory::Sorted(EMapHistoryFilter Filter) const
 	{
+		std::vector<size_t> vIndices;
+		SortedIndices(Filter, vIndices);
 		std::vector<SMapHistoryRecord> vResult;
+		vResult.reserve(vIndices.size());
+		for(const size_t Index : vIndices)
+			vResult.push_back(m_vEntries[Index]);
+		return vResult;
+	}
+
+	void CMapHistory::SortedIndices(EMapHistoryFilter Filter, std::vector<size_t> &vResult) const
+	{
+		vResult.clear();
 		vResult.reserve(m_vEntries.size());
-		for(const SMapHistoryRecord &Record : m_vEntries)
+		for(size_t Index = 0; Index < m_vEntries.size(); ++Index)
 		{
+			const SMapHistoryRecord &Record = m_vEntries[Index];
 			if(Filter == EMapHistoryFilter::UNFINISHED && Record.m_Finished)
 				continue;
 			if(Filter == EMapHistoryFilter::FINISHED && !Record.m_Finished)
 				continue;
-			vResult.push_back(Record);
+			vResult.push_back(Index);
 		}
 
-		std::sort(vResult.begin(), vResult.end(), [](const SMapHistoryRecord &A, const SMapHistoryRecord &B) {
+		std::sort(vResult.begin(), vResult.end(), [&](size_t AIndex, size_t BIndex) {
+			const SMapHistoryRecord &A = m_vEntries[AIndex];
+			const SMapHistoryRecord &B = m_vEntries[BIndex];
 			if(A.m_LastEnteredAt != B.m_LastEnteredAt)
 				return A.m_LastEnteredAt > B.m_LastEnteredAt;
 			return A.m_MapName < B.m_MapName;
 		});
-		return vResult;
 	}
 
 	std::string CMapHistory::ToJson() const

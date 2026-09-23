@@ -53,7 +53,7 @@ TEST(QmRankDemoManifest, AcceptsLeadingBomAndWhitespace)
 TEST(QmRankDemoManifest, ParsesKindTeamFinishersAndUuid)
 {
 	const std::string Manifest = std::string(R"({"kind":"team","map":"Map","names":["a","b"],"time":"120.5","ts":1700,"uuid":"4830765d-9d84-49ee-8dfe-5672e924c6ab","rank":1,"status":"ok","cid":8,"team":7,"finishers":[4,8],"demo":"team.demo.gz","rev":"13a314d0099f"})") +
-		"\n" + R"({"kind":"solo","map":"Map","names":["c"],"time":"80.5","ts":1800,"rank":1,"status":"ok","cid":0,"team":0,"finishers":[0],"demo":"solo.demo.gz"})";
+				     "\n" + R"({"kind":"solo","map":"Map","names":["c"],"time":"80.5","ts":1800,"rank":1,"status":"ok","cid":0,"team":0,"finishers":[0],"demo":"solo.demo.gz"})";
 	std::vector<qmclient::rank_demo::SEntry> Entries;
 	ASSERT_TRUE(qmclient::rank_demo::ParseManifest(reinterpret_cast<const unsigned char *>(Manifest.data()), Manifest.size(), Entries));
 	ASSERT_EQ(Entries.size(), 2U);

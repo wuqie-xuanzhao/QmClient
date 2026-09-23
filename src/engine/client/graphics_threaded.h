@@ -5,6 +5,8 @@
 #include <base/sphore.h>
 #include <base/system.h>
 
+#include <engine/client/quad_rotation_cache.h>
+#include <engine/client/rounded_rect_directions.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 
@@ -973,6 +975,9 @@ class CGraphics_Threaded : public IEngineGraphics
 	ivec2 m_DesktopSize = ivec2(0, 0);
 
 	float m_Rotation;
+	CQmQuadRotationCache m_QuadRotationCache;
+	// QmClient：圆角每段方向按档位预计算并复用，避免每个圆角逐段重算 cos/sin。
+	CQmRoundedRectDirections m_RoundedRectDirections;
 	EDrawing m_Drawing;
 	bool m_DoScreenshot;
 	char m_aScreenshotName[IO_MAX_PATH_LENGTH];
@@ -1097,8 +1102,9 @@ class CGraphics_Threaded : public IEngineGraphics
 	template<typename TName>
 	void Rotate(const CCommandBuffer::SPoint &Center, TName *pPoints, int NumPoints)
 	{
-		float c = std::cos(m_Rotation);
-		float s = std::sin(m_Rotation);
+		const vec2 Direction = m_QuadRotationCache.Get(m_Rotation);
+		const float c = Direction.x;
+		const float s = Direction.y;
 		float x, y;
 		int i;
 
@@ -1179,7 +1185,7 @@ public:
 
 	IGraphics::CTextureHandle FindFreeTextureIndex();
 	void BumpTextureHandleEpochAndResetSlots();
-	bool IsTextureHandleAllocated(CTextureHandle TextureId) const;
+	bool IsTextureHandleAllocated(IGraphics::CTextureHandle TextureId) const override;
 	void FreeTextureIndex(CTextureHandle *pIndex);
 	// 显卡设备重建会清空 m_vQuadContainers，旧索引随之失效；
 	// 所有按索引取用容器的入口都必须先过这一层校验。
@@ -1241,6 +1247,7 @@ public:
 	void QuadsDrawCurrentVertices(bool KeepVertices = true) override;
 	void QuadsSetRotation(float Angle) override;
 
+	void SetColorVertex(const CColorVertex *pArray, size_t Num) override;
 	void SetColor(float r, float g, float b, float a) override;
 	void SetColor(ColorRGBA Color) override;
 	void SetColor2(ColorRGBA First, ColorRGBA Second) override;

@@ -15,6 +15,8 @@
 
 #include <game/client/component.h>
 #include <game/client/components/qmclient/settings_resource_preview.h>
+#include <game/client/components/qmclient/skin_prepared_textures.h>
+#include <game/client/components/qmclient/skin_prepared_visuals.h>
 #include <game/client/components/settings_resource_jobs.h>
 #include <game/client/skin.h>
 
@@ -47,6 +49,10 @@ private:
 		CImageInfo m_InfoGrayscale;
 		CSkin::CSkinMetrics m_Metrics;
 		ColorRGBA m_BloodColor;
+		// 解码任务在 CPU 侧备好素材，主线程只做纹理上传与接管（避免主线程重复提取精灵）。
+		// 纹理预备按精灵粒度记录可用性，越界精灵留待主线程走空白素材回退。
+		SQmPreparedSkinVisuals m_PreparedVisuals;
+		std::unique_ptr<CQmPreparedSkinTextures> m_pPreparedTextures;
 	};
 
 	/**
@@ -831,7 +837,7 @@ private:
 	};
 
 	static bool PrepareSkinData(const char *pName, CSkinLoadData &Data);
-	void LoadSkinFinish(CSkinContainer *pSkinContainer, const CSkinLoadData &Data);
+	void LoadSkinFinish(CSkinContainer *pSkinContainer, CSkinLoadData &Data);
 	bool BeginSkinPreviewUpload(CSkinContainer *pSkinContainer, CSkinLoadData &&Data);
 	bool UploadNextSkinPreviewSprite(CSkinContainer *pSkinContainer, SResourcePreviewUploadBudget &Budget);
 	void FinishSkinPreviewUpload(CSkinContainer *pSkinContainer);

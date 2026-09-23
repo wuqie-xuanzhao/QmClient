@@ -21,6 +21,7 @@ namespace qm_module
 		MiniFeatures,
 		JumpHint,
 		SkinTransition,
+		SkinAppearance,
 		CameraView,
 		DummyMiniView,
 		Coords,
@@ -50,6 +51,11 @@ namespace qm_module
 		WeaponAnimation,
 		DebugMode,
 		BindStatusHud,
+		// 本地差异：远程把 Emoticons / MapUpload 插在枚举中段（QmModuleTypes.h:50-51），
+		// 本地改为**追加到末尾**——严格增量，不重编号任何既有 ID，避免顺序迁移与任何
+		// 以 (int)Id 为下标的既有表被整体位移。持久化走 m_pKey 字符串，与枚举序无关。
+		Emoticons,
+		MapUpload,
 	};
 
 	enum class EQmModuleColumn
@@ -67,7 +73,7 @@ namespace qm_module
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 39;
+	constexpr size_t QmModuleCount = 42;
 } // namespace qm_module
 
 #endif // GAME_CLIENT_QMUI_QMMODULETYPES_H

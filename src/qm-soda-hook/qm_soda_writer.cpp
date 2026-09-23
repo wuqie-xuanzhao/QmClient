@@ -40,7 +40,7 @@ namespace QmSodaHook
 
 	CSodaWriter::~CSodaWriter() { Close(); }
 
-	bool CSodaWriter::Open(bool PreferExisting)
+	bool CSodaWriter::Open(bool PreferExisting, const wchar_t *pMappingName, const wchar_t *pWriterMutexName)
 	{
 		if(!m_pImpl)
 			return false;
@@ -50,16 +50,16 @@ namespace QmSodaHook
 		bool CreatedMapping = false;
 		if(PreferExisting)
 		{
-			m_pImpl->m_hMapping = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE, FALSE, PROTOCOL_MAPPING_NAME_W);
+			m_pImpl->m_hMapping = OpenFileMappingW(FILE_MAP_READ | FILE_MAP_WRITE, FALSE, pMappingName);
 			if(m_pImpl->m_hMapping == nullptr)
 			{
-				m_pImpl->m_hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, (DWORD)sizeof(SSharedBlock), PROTOCOL_MAPPING_NAME_W);
+				m_pImpl->m_hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, (DWORD)sizeof(SSharedBlock), pMappingName);
 				CreatedMapping = m_pImpl->m_hMapping != nullptr && GetLastError() != ERROR_ALREADY_EXISTS;
 			}
 		}
 		else
 		{
-			m_pImpl->m_hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, (DWORD)sizeof(SSharedBlock), PROTOCOL_MAPPING_NAME_W);
+			m_pImpl->m_hMapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, (DWORD)sizeof(SSharedBlock), pMappingName);
 			CreatedMapping = m_pImpl->m_hMapping != nullptr && GetLastError() != ERROR_ALREADY_EXISTS;
 		}
 		if(m_pImpl->m_hMapping == nullptr)
@@ -71,7 +71,7 @@ namespace QmSodaHook
 			m_pImpl->m_hMapping = nullptr;
 			return false;
 		}
-		m_pImpl->m_hWriterMutex = CreateMutexW(nullptr, FALSE, PROTOCOL_WRITER_MUTEX_NAME_W);
+		m_pImpl->m_hWriterMutex = CreateMutexW(nullptr, FALSE, pWriterMutexName);
 		if(m_pImpl->m_hWriterMutex == nullptr)
 		{
 			UnmapViewOfFile(m_pImpl->m_pBlock);
@@ -86,6 +86,8 @@ namespace QmSodaHook
 		return true;
 #else
 		(void)PreferExisting;
+		(void)pMappingName;
+		(void)pWriterMutexName;
 		return false;
 #endif
 	}

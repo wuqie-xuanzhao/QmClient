@@ -463,7 +463,6 @@ TEST(GraphicsRenderTargetGaussianBlur, FrontendRejectsNestedRenderTargets)
 	EXPECT_NE(EndBody.find("m_RenderTargetActive = false"), std::string::npos);
 }
 
-
 TEST(GraphicsRenderTargetDualBlur, MediaIslandUsesHalfResolutionIntermediateTargets)
 {
 	const std::string Source = ReadFile("src/game/client/components/hud.cpp");

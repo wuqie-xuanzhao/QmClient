@@ -4,12 +4,17 @@
 #include <base/system.h>
 
 #include <engine/graphics.h>
+#include <engine/shared/jobs.h>
 
 #include <game/client/component.h>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <deque>
+#include <functional>
+#include <memory>
+#include <utility>
 
 enum class EQmChatEmoji
 {
@@ -179,15 +184,65 @@ inline float QmChatEmojiBubbleDisplaySize(float FontSize)
 	return std::clamp(FontSize * 3.0f, 48.0f, 96.0f);
 }
 
+// 图片表情的最小可读尺寸：小于这个宽度就不再压缩，交给调用方（换行）处理。
+constexpr float QM_CHAT_EMOJI_MIN_SIZE = 10.0f;
+
+// 表情在给定宽度内的可用尺寸：放得下就保持原尺寸，放不下才等比缩小。
+// 返回 0 表示这行已经放不下可读的表情，应换到下一行。
+// 聊天宽度可调（cl_chat_width 最小 140）且玩家名可能很长，表情框直接整块摆在
+// 文字后面时会被聊天区右边缘裁掉，所以这里按剩余宽度收一下。
+inline float QmChatEmojiFitSize(float EmojiSize, float MaximumWidth)
+{
+	if(EmojiSize <= 0.0f)
+		return 0.0f;
+	if(EmojiSize <= MaximumWidth)
+		return EmojiSize;
+	if(MaximumWidth <= 0.0f)
+		return 0.0f;
+	const float MinimumSize = std::max(QM_CHAT_EMOJI_MIN_SIZE, EmojiSize * 0.5f);
+	return MaximumWidth >= MinimumSize ? MaximumWidth : 0.0f;
+}
+
+// 图片表情按文字基线对齐时的纵向下移量（恒为非正值：表情只向上收）。
+// 文字的基线在光标 Y 起算的第 AlignedFontSize 个像素，而表情框此前直接落在光标 Y 上，
+// 于是整块表情都挂在基线之下（默认字体尤为明显：字形视觉高度远小于 em 框，本身下沉就多，
+// 再加一个表情的高度就会压到下一行文字上）。这里把表情框底边压回基线，让表情坐在基线上、
+// 保持与文字同一行，且不再侵入相邻行。
+inline float QmChatEmojiBaselineOffset(float AlignedFontSize, float EmojiSize)
+{
+	if(EmojiSize <= 0.0f)
+		return 0.0f;
+	return std::min(0.0f, AlignedFontSize - EmojiSize);
+}
+
+// 解码任务独立持有图像，渲染线程只在完成后接管像素所有权。
+class CQmChatEmojiLoadJob : public IJob
+{
+	std::function<void(CImageInfo &)> m_Load;
+	CImageInfo m_Image;
+	void Run() override { m_Load(m_Image); }
+
+public:
+	explicit CQmChatEmojiLoadJob(std::function<void(CImageInfo &)> Load) :
+		m_Load(std::move(Load)) {}
+	~CQmChatEmojiLoadJob() override { m_Image.Free(); }
+	CImageInfo *Image() { return State() == STATE_DONE ? &m_Image : nullptr; }
+};
+
 class CQmChatEmoji : public CComponent
 {
 	mutable std::array<IGraphics::CTextureHandle, QM_CHAT_EMOJI_COUNT> m_aTextures;
 	mutable std::array<bool, QM_CHAT_EMOJI_COUNT> m_aLoadAttempted{};
+	mutable std::deque<EQmChatEmoji> m_LoadQueue;
+	mutable std::shared_ptr<CQmChatEmojiLoadJob> m_pLoadJob;
+	mutable EQmChatEmoji m_LoadingEmoji = EQmChatEmoji::NONE;
 
 	void EnsureTextureLoaded(EQmChatEmoji Emoji) const;
+	void StartNextLoad() const;
 
 public:
 	int Sizeof() const override { return sizeof(*this); }
+	void OnUpdate() override;
 	void OnShutdown() override;
 
 	bool CanRender(EQmChatEmoji Emoji) const;

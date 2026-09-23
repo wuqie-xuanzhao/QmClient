@@ -4,13 +4,14 @@
 #ifndef GAME_CLIENT_QMUI_UICONTEXT_H
 #define GAME_CLIENT_QMUI_UICONTEXT_H
 
+#include "QmAnimationBackend.h"
+
 #include <base/system.h>
 
 #include <cstdint>
 
 class CUi;
 class CMenus;
-class CUiV2AnimationRuntime;
 class CUiV2Tree;
 class CQmIconManager;
 class CTooltips;

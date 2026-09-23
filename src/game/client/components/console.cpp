@@ -23,14 +23,17 @@
 #include <generated/client_data.h>
 
 #include <game/client/components/qmclient/colored_parts.h>
+#include <game/client/components/qmclient/qm_chat_export.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/localization.h>
 #include <game/version.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <iterator>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -244,71 +247,6 @@ bool CGameConsole::DoButton(const CUIRect &Rect, const char *pIcon, vec2 MousePo
 }
 
 // NOLINTNEXTLINE(misc-use-internal-linkage)
-struct SChatExportLine
-{
-	std::string m_Raw;
-	std::string m_Time;
-	std::string m_Sender;
-	std::string m_Message;
-	bool m_Local;
-};
-
-// NOLINTNEXTLINE(misc-use-internal-linkage)
-struct SChatExportLayout
-{
-	SChatExportLine m_Line;
-	std::vector<std::string> m_vMessageLines;
-	int m_CardWidth;
-	int m_CardHeight;
-	int m_RecordHeight;
-};
-
-// NOLINTNEXTLINE(misc-use-internal-linkage)
-struct SChatExportPage
-{
-	int m_Start;
-	int m_End;
-	int m_Height;
-};
-
-static bool WriteAll(IOHANDLE File, const void *pData, size_t Size)
-{
-	return Size == 0 || io_write(File, pData, Size) == Size;
-}
-
-static bool WriteString(IOHANDLE File, const std::string &Text)
-{
-	return WriteAll(File, Text.data(), Text.size());
-}
-
-static void AppendHtmlEscaped(std::string &Output, const std::string &Text)
-{
-	for(const char Char : Text)
-	{
-		switch(Char)
-		{
-		case '&':
-			Output.append("&amp;");
-			break;
-		case '<':
-			Output.append("&lt;");
-			break;
-		case '>':
-			Output.append("&gt;");
-			break;
-		case '"':
-			Output.append("&quot;");
-			break;
-		case '\'':
-			Output.append("&#39;");
-			break;
-		default:
-			Output.push_back(Char);
-			break;
-		}
-	}
-}
-
 static void TrimAsciiSpaces(std::string &Text)
 {
 	size_t Start = 0;
@@ -321,17 +259,7 @@ static void TrimAsciiSpaces(std::string &Text)
 		Text = Text.substr(Start, End - Start);
 }
 
-static std::string ChatExportDisplayText(const SChatExportLine &Line)
-{
-	if(Line.m_Sender.empty())
-		return Line.m_Message;
-	std::string Text = Line.m_Sender;
-	Text.append(":");
-	Text.append(Line.m_Message);
-	return Text;
-}
-
-static bool TryParseChatExportLine(const char *pText, const char *pLocalName, SChatExportLine &Line)
+static bool TryParseChatExportLine(const char *pText, const char *pLocalName, QmChatExport::SLine &Line)
 {
 	struct SChatPrefix
 	{
@@ -361,6 +289,13 @@ static bool TryParseChatExportLine(const char *pText, const char *pLocalName, SC
 	if(str_length(pText) >= 19 && pText[4] == '-' && pText[7] == '-' && pText[10] == ' ' && pText[13] == ':' && pText[16] == ':')
 		Line.m_Time.assign(pText, 19);
 
+	// 悄悄话日志形如 "→ 对方: 内容"（发出）或 "← 对方: 内容"（收到）。
+	// 箭头方向就是气泡方向：不识别它会把自己发出的悄悄话渲染成对方发来的，
+	// 且箭头会被当成玩家名的一部分参与本地作者比较。
+	bool WhisperOutgoing = false;
+	if(pMessage[0] == '\xe2' && pMessage[1] == '\x86' && (pMessage[2] == '\x92' || pMessage[2] == '\x90'))
+		WhisperOutgoing = pMessage[2] == '\x92'; // U+2192 发出，U+2190 收到
+
 	const char *pNameEnd = str_find(pMessage, ": ");
 	if(pNameEnd && pNameEnd > pMessage)
 	{
@@ -372,454 +307,129 @@ static bool TryParseChatExportLine(const char *pText, const char *pLocalName, SC
 		Line.m_Sender.clear();
 		Line.m_Message = pMessage;
 	}
-	Line.m_Local = pLocalName && pLocalName[0] != '\0' && !Line.m_Sender.empty() && str_comp(Line.m_Sender.c_str(), pLocalName) == 0;
+	// 发出的悄悄话里，名字位置是收件人；本地作者判定只能依据箭头方向。
+	Line.m_Local = WhisperOutgoing || (pLocalName && pLocalName[0] != '\0' && !Line.m_Sender.empty() && str_comp(Line.m_Sender.c_str(), pLocalName) == 0);
 	return true;
 }
 
-static std::vector<std::string> WrapChatExportText(ITextRender *pTextRender, const std::string &Text, int FontSize, int MaxWidth)
+// 导出任务：字形由主线程分帧光栅化，条目排版、头像合成与 PNG 编码都在后台线程做。
+class CQmChatExportJob : public IJob
 {
-	std::vector<std::string> vLines;
-	std::string Remaining = Text;
-	TrimAsciiSpaces(Remaining);
-	if(Remaining.empty())
+	IStorage *m_pStorage;
+	std::string m_BaseFilename;
+	QmChatExport::SLabels m_Labels;
+	std::vector<std::pair<int, int>> m_vGlyphKeys;
+	QmChatExport::TGlyphs m_Glyphs;
+	size_t m_NextGlyph = 0;
+
+	void Run() override
 	{
-		vLines.emplace_back("");
-		return vLines;
+		if(m_Cancelled.load())
+			return;
+		for(const char *pDirectory : {"qmclient", "qmclient/chat_log"})
+		{
+			if(!m_pStorage->CreateFolder(pDirectory, IStorage::TYPE_SAVE) && !m_pStorage->FolderExists(pDirectory, IStorage::TYPE_SAVE))
+				return;
+		}
+		m_Success = QmChatExport::Export(m_pStorage, m_BaseFilename, m_vLines, m_Glyphs, m_Labels, m_Cancelled, m_CompletedPages);
 	}
 
-	while(!Remaining.empty())
-	{
-		if(pTextRender->TextWidth(FontSize, Remaining.c_str()) <= MaxWidth)
-		{
-			vLines.push_back(Remaining);
-			break;
-		}
+public:
+	const std::vector<QmChatExport::SLine> m_vLines;
+	std::atomic<bool> m_Cancelled{false};
+	std::atomic<int> m_CompletedPages{0};
+	bool m_Queued = false;
+	bool m_Success = false;
 
-		int BestEnd = 0;
-		int LastSpaceEnd = -1;
-		int Cursor = 0;
-		while(Cursor < (int)Remaining.size())
+	CQmChatExportJob(IStorage *pStorage, std::string BaseFilename, std::vector<QmChatExport::SLine> vLines, QmChatExport::SLabels Labels) :
+		m_pStorage(pStorage), m_BaseFilename(std::move(BaseFilename)), m_Labels(std::move(Labels)), m_vLines(std::move(vLines))
+	{
+		std::set<std::pair<int, int>> Keys;
+		auto AddText = [&Keys](int FontSize, const std::string &Text) {
+			Keys.emplace(FontSize, '?');
+			Keys.emplace(FontSize, ' ');
+			const char *pText = Text.c_str();
+			while(*pText)
+			{
+				const int Codepoint = str_utf8_decode(&pText);
+				if(Codepoint >= 32)
+					Keys.emplace(FontSize, Codepoint);
+			}
+		};
+		for(const auto &Line : m_vLines)
 		{
-			const int NextCursor = str_utf8_forward(Remaining.c_str(), Cursor);
-			const int SafeNextCursor = NextCursor > Cursor ? NextCursor : Cursor + 1;
-			std::string Candidate = Remaining.substr(0, SafeNextCursor);
-			if(pTextRender->TextWidth(FontSize, Candidate.c_str()) > MaxWidth && BestEnd > 0)
+			AddText(QmChatExport::FONT_MESSAGE, Line.m_Message);
+			AddText(QmChatExport::FONT_NAME, Line.m_Sender);
+			AddText(QmChatExport::FONT_TIME, Line.m_Time);
+		}
+		m_vGlyphKeys.assign(Keys.begin(), Keys.end());
+	}
+
+	int PreparationPercent() const
+	{
+		return m_vGlyphKeys.empty() ? 100 : (int)(100 * m_NextGlyph / m_vGlyphKeys.size());
+	}
+
+	// 每帧只做一小段：避免导出准备卡住主线程，同时不让后台任务碰到渲染资源。
+	bool PrepareGlyphs(ITextRender *pTextRender, IGraphics *pGraphics)
+	{
+		const unsigned PreviousFlags = pTextRender->GetRenderFlags();
+		const EFontPreset PreviousFont = pTextRender->GetFontPreset();
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		// 像素映射使导出尺寸不受控制台开关、UI 缩放和窗口大小影响。
+		pGraphics->MapScreen(0, 0, pGraphics->ScreenWidth(), pGraphics->ScreenHeight());
+		pTextRender->SetFontPreset(EFontPreset::DEFAULT_FONT);
+		pTextRender->SetRenderFlags(TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT);
+		const auto Deadline = time_get_nanoseconds() + std::chrono::milliseconds(2);
+		int Prepared = 0;
+		while(m_NextGlyph < m_vGlyphKeys.size() && Prepared < 32)
+		{
+			const auto Key = m_vGlyphKeys[m_NextGlyph++];
+			const int FontSize = Key.first;
+			char aCharacter[5] = {};
+			const int Length = str_utf8_encode(aCharacter, Key.second);
+			float VisualTop = 0.0f;
+			STextSizeProperties Props;
+			Props.m_pVisualTop = &VisualTop;
+			QmChatExport::SGlyph Glyph;
+			Glyph.m_Advance = maximum(1, round_to_int(pTextRender->TextWidth(FontSize, aCharacter, Length, -1.0f, 0, Props)));
+			Glyph.m_OffsetY = maximum(0, round_to_int(VisualTop));
+			const int MaskWidth = FontSize * 3;
+			const int MaskHeight = FontSize * 2;
+			std::vector<uint8_t> vMask((size_t)MaskWidth * MaskHeight * 4, 0);
+			CImageInfo Mask;
+			Mask.m_Width = MaskWidth;
+			Mask.m_Height = MaskHeight;
+			Mask.m_Format = CImageInfo::FORMAT_RGBA;
+			Mask.m_pData = vMask.data();
+			if(Key.second != ' ')
+				pTextRender->UploadEntityLayerText(Mask, MaskWidth, MaskHeight, aCharacter, Length, 0, 0, FontSize);
+			else
+				Glyph.m_Advance = maximum(Glyph.m_Advance, FontSize / 3);
+			for(int Y = 0; Y < MaskHeight; ++Y)
+				for(int X = 0; X < MaskWidth; ++X)
+					if(vMask[((size_t)Y * MaskWidth + X) * 4 + 3] != 0)
+					{
+						Glyph.m_Width = maximum(Glyph.m_Width, X + 1);
+						Glyph.m_Height = maximum(Glyph.m_Height, Y + 1);
+					}
+			Glyph.m_Advance = maximum(Glyph.m_Advance, Glyph.m_Width + 1);
+			Glyph.m_vAlpha.resize((size_t)Glyph.m_Width * Glyph.m_Height);
+			for(int Y = 0; Y < Glyph.m_Height; ++Y)
+				for(int X = 0; X < Glyph.m_Width; ++X)
+					Glyph.m_vAlpha[(size_t)Y * Glyph.m_Width + X] = vMask[((size_t)Y * MaskWidth + X) * 4 + 3];
+			m_Glyphs.emplace(Key, std::move(Glyph));
+			++Prepared;
+			if(time_get_nanoseconds() >= Deadline)
 				break;
-			BestEnd = SafeNextCursor;
-			if(Remaining[SafeNextCursor - 1] == ' ' || Remaining[SafeNextCursor - 1] == '\t')
-				LastSpaceEnd = SafeNextCursor;
-			Cursor = SafeNextCursor;
 		}
-
-		int Cut = BestEnd;
-		if(BestEnd < (int)Remaining.size() && LastSpaceEnd > 0)
-			Cut = LastSpaceEnd;
-		if(Cut <= 0)
-			Cut = maximum(1, str_utf8_forward(Remaining.c_str(), 0));
-
-		std::string Line = Remaining.substr(0, Cut);
-		TrimAsciiSpaces(Line);
-		if(!Line.empty())
-			vLines.push_back(Line);
-		Remaining.erase(0, Cut);
-		TrimAsciiSpaces(Remaining);
+		pTextRender->SetRenderFlags(PreviousFlags);
+		pTextRender->SetFontPreset(PreviousFont);
+		pGraphics->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+		return m_NextGlyph == m_vGlyphKeys.size();
 	}
-
-	return vLines;
-}
-
-static unsigned char ColorByte(float Value)
-{
-	return (unsigned char)std::clamp(round_to_int(Value * 255.0f), 0, 255);
-}
-
-static void BlendPixel(CImageInfo &Image, int PosX, int PosY, ColorRGBA Color, float AlphaMultiplier = 1.0f)
-{
-	if(PosX < 0 || PosY < 0 || PosX >= (int)Image.m_Width || PosY >= (int)Image.m_Height)
-		return;
-
-	const float Alpha = std::clamp(Color.a * AlphaMultiplier, 0.0f, 1.0f);
-	const size_t Offset = ((size_t)PosY * Image.m_Width + (size_t)PosX) * Image.PixelSize();
-	Image.m_pData[Offset + 0] = ColorByte(Color.r * Alpha + (Image.m_pData[Offset + 0] / 255.0f) * (1.0f - Alpha));
-	Image.m_pData[Offset + 1] = ColorByte(Color.g * Alpha + (Image.m_pData[Offset + 1] / 255.0f) * (1.0f - Alpha));
-	Image.m_pData[Offset + 2] = ColorByte(Color.b * Alpha + (Image.m_pData[Offset + 2] / 255.0f) * (1.0f - Alpha));
-	Image.m_pData[Offset + 3] = 255;
-}
-
-static void FillRect(CImageInfo &Image, int PosX, int PosY, int Width, int Height, ColorRGBA Color)
-{
-	const int StartX = std::clamp(PosX, 0, (int)Image.m_Width);
-	const int StartY = std::clamp(PosY, 0, (int)Image.m_Height);
-	const int EndX = std::clamp(PosX + Width, 0, (int)Image.m_Width);
-	const int EndY = std::clamp(PosY + Height, 0, (int)Image.m_Height);
-	for(int Row = StartY; Row < EndY; ++Row)
-	{
-		for(int Column = StartX; Column < EndX; ++Column)
-			BlendPixel(Image, Column, Row, Color);
-	}
-}
-
-static void FillRoundedRect(CImageInfo &Image, int PosX, int PosY, int Width, int Height, int Radius, ColorRGBA Color)
-{
-	const int StartX = std::clamp(PosX, 0, (int)Image.m_Width);
-	const int StartY = std::clamp(PosY, 0, (int)Image.m_Height);
-	const int EndX = std::clamp(PosX + Width, 0, (int)Image.m_Width);
-	const int EndY = std::clamp(PosY + Height, 0, (int)Image.m_Height);
-	const int RadiusSq = Radius * Radius;
-	for(int Row = StartY; Row < EndY; ++Row)
-	{
-		for(int Column = StartX; Column < EndX; ++Column)
-		{
-			int CornerX = 0;
-			if(Column < PosX + Radius)
-				CornerX = PosX + Radius - Column;
-			else if(Column >= PosX + Width - Radius)
-				CornerX = Column - (PosX + Width - Radius - 1);
-			int CornerY = 0;
-			if(Row < PosY + Radius)
-				CornerY = PosY + Radius - Row;
-			else if(Row >= PosY + Height - Radius)
-				CornerY = Row - (PosY + Height - Radius - 1);
-			if(CornerX > 0 && CornerY > 0 && CornerX * CornerX + CornerY * CornerY > RadiusSq)
-				continue;
-			BlendPixel(Image, Column, Row, Color);
-		}
-	}
-}
-
-static void DrawCircleOutline(CImageInfo &Image, int CenterX, int CenterY, int Radius, int Thickness, ColorRGBA Color)
-{
-	const int OuterSq = Radius * Radius;
-	const int InnerRadius = maximum(0, Radius - Thickness);
-	const int InnerSq = InnerRadius * InnerRadius;
-	for(int Row = CenterY - Radius; Row <= CenterY + Radius; ++Row)
-	{
-		for(int Column = CenterX - Radius; Column <= CenterX + Radius; ++Column)
-		{
-			const int DistX = Column - CenterX;
-			const int DistY = Row - CenterY;
-			const int DistSq = DistX * DistX + DistY * DistY;
-			if(DistSq <= OuterSq && DistSq >= InnerSq)
-				BlendPixel(Image, Column, Row, Color);
-		}
-	}
-}
-
-static void ClearImageRect(CImageInfo &Image, int PosX, int PosY, int Width, int Height)
-{
-	const int StartX = std::clamp(PosX, 0, (int)Image.m_Width);
-	const int StartY = std::clamp(PosY, 0, (int)Image.m_Height);
-	const int EndX = std::clamp(PosX + Width, 0, (int)Image.m_Width);
-	const int EndY = std::clamp(PosY + Height, 0, (int)Image.m_Height);
-	for(int Row = StartY; Row < EndY; ++Row)
-	{
-		uint8_t *pRow = Image.m_pData + ((size_t)Row * Image.m_Width + (size_t)StartX) * Image.PixelSize();
-		mem_zero(pRow, (EndX - StartX) * Image.PixelSize());
-	}
-}
-
-static void DrawPngText(ITextRender *pTextRender, CImageInfo &Image, CImageInfo &Mask, int PosX, int PosY, int MaxWidth, int FontSize, const std::string &Text, ColorRGBA Color)
-{
-	if(Text.empty() || PosX >= (int)Image.m_Width || PosY >= (int)Image.m_Height)
-		return;
-
-	const int RectWidth = std::clamp(MaxWidth, 1, (int)Image.m_Width - PosX);
-	const int RectHeight = std::clamp(FontSize + 14, 1, (int)Image.m_Height - PosY);
-	ClearImageRect(Mask, PosX, PosY, RectWidth, RectHeight);
-
-	int Cursor = 0;
-	int DrawX = PosX;
-	const int EndX = PosX + RectWidth;
-	while(Cursor < (int)Text.size() && DrawX < EndX)
-	{
-		const int NextCursor = str_utf8_forward(Text.c_str(), Cursor);
-		const int SafeNextCursor = NextCursor > Cursor ? NextCursor : Cursor + 1;
-		const std::string Character = Text.substr(Cursor, SafeNextCursor - Cursor);
-		int Advance = round_to_int(pTextRender->TextWidth(FontSize, Character.c_str()));
-		if(Character == " " || Character == "\t")
-			Advance = maximum(Advance, FontSize / 3);
-		else
-			Advance = maximum(Advance, 1);
-
-		if(Character != " " && Character != "\t")
-			pTextRender->UploadEntityLayerText(Mask, EndX - DrawX, RectHeight, Character.c_str(), str_length(Character.c_str()), DrawX, PosY, FontSize);
-
-		DrawX += Advance;
-		Cursor = SafeNextCursor;
-	}
-
-	for(int Row = PosY; Row < PosY + RectHeight && Row < (int)Image.m_Height; ++Row)
-	{
-		for(int Column = PosX; Column < PosX + RectWidth && Column < (int)Image.m_Width; ++Column)
-		{
-			const size_t Offset = ((size_t)Row * Mask.m_Width + (size_t)Column) * Mask.PixelSize();
-			const float Alpha = Mask.m_pData[Offset + 3] / 255.0f;
-			if(Alpha > 0.0f)
-				BlendPixel(Image, Column, Row, Color, Alpha);
-		}
-	}
-	ClearImageRect(Mask, PosX, PosY, RectWidth, RectHeight);
-}
-
-static void DrawPngTextCentered(ITextRender *pTextRender, CImageInfo &Image, CImageInfo &Mask, int CenterX, int PosY, int MaxWidth, int FontSize, const std::string &Text, ColorRGBA Color)
-{
-	if(Text.empty())
-		return;
-	const int TextWidth = round_to_int(pTextRender->TextWidth(FontSize, Text.c_str()));
-	const int DrawWidth = minimum(TextWidth, MaxWidth);
-	const int TextX = std::clamp(CenterX - TextWidth / 2, 0, maximum(0, (int)Image.m_Width - DrawWidth));
-	DrawPngText(pTextRender, Image, Mask, TextX, PosY, MaxWidth, FontSize, Text, Color);
-}
-
-static bool SaveChatExportTxt(IStorage *pStorage, const char *pFilename, const std::vector<SChatExportLine> &vLines)
-{
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-	if(!File)
-	{
-		log_error("console", "Failed to open '%s'", pFilename);
-		return false;
-	}
-
-	bool Success = true;
-	for(const SChatExportLine &Line : vLines)
-	{
-		Success &= WriteString(File, Line.m_Raw);
-		Success &= io_write_newline(File);
-	}
-	io_close(File);
-	if(!Success)
-		log_error("console", "Failed to write '%s'", pFilename);
-	return Success;
-}
-
-static bool SaveChatExportHtml(IStorage *pStorage, const char *pFilename, const std::vector<SChatExportLine> &vLines)
-{
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-	if(!File)
-	{
-		log_error("console", "Failed to open '%s'", pFilename);
-		return false;
-	}
-
-	std::string Html;
-	Html.reserve(vLines.size() * 256 + 2048);
-	Html.append("<!doctype html><html><head><meta charset=\"utf-8\"><title>");
-	AppendHtmlEscaped(Html, Localize("QmClient chat log"));
-	Html.append("</title>");
-	Html.append("<style>body{margin:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:#202124}.wrap{max-width:920px;margin:0 auto;padding:28px}.title{font-size:26px;font-weight:700;margin-bottom:6px}.sub{color:#68707a;margin-bottom:24px}.msg{display:flex;margin:12px 0}.msg.local{justify-content:flex-end}.bubble{max-width:72%;border-radius:16px;padding:10px 14px;background:#fff;box-shadow:0 1px 3px #0002;white-space:pre-wrap;word-break:break-word}.local .bubble{background:#3d7eff;color:#fff}.time{font-size:12px;opacity:.68;margin-top:6px}</style>");
-	Html.append("</head><body><div class=\"wrap\"><div class=\"title\">");
-	AppendHtmlEscaped(Html, Localize("QmClient chat log"));
-	Html.append("</div><div class=\"sub\">");
-	AppendHtmlEscaped(Html, Localize("Total"));
-	Html.append(" ");
-	Html.append(std::to_string(vLines.size()));
-	Html.append(" ");
-	AppendHtmlEscaped(Html, Localize("Messages"));
-	Html.append("</div>");
-	for(const SChatExportLine &Line : vLines)
-	{
-		const std::string DisplayText = ChatExportDisplayText(Line);
-		Html.append("<div class=\"msg");
-		if(Line.m_Local)
-			Html.append(" local");
-		Html.append("\"><div class=\"bubble\">");
-		AppendHtmlEscaped(Html, DisplayText);
-		if(!Line.m_Time.empty())
-		{
-			Html.append("<div class=\"time\">");
-			AppendHtmlEscaped(Html, Line.m_Time);
-			Html.append("</div>");
-		}
-		Html.append("</div></div>");
-	}
-	Html.append("</div></body></html>\n");
-
-	const bool Success = WriteString(File, Html);
-	io_close(File);
-	if(!Success)
-		log_error("console", "Failed to write '%s'", pFilename);
-	return Success;
-}
-
-static std::vector<SChatExportLayout> BuildChatExportLayouts(ITextRender *pTextRender, const std::vector<SChatExportLine> &vLines)
-{
-	static constexpr int FONT_SIZE_MESSAGE = 58;
-	static constexpr int CARD_MAX_WIDTH = 620;
-	static constexpr int CARD_MIN_WIDTH = 220;
-	static constexpr int CARD_PADDING_X = 46;
-	static constexpr int CARD_PADDING_Y = 26;
-	static constexpr int MESSAGE_LINE_HEIGHT = 72;
-	static constexpr int TIME_LINE_HEIGHT = 52;
-	static constexpr int TIME_TOP_MARGIN = 18;
-	static constexpr int RECORD_GAP = 54;
-
-	std::vector<SChatExportLayout> vLayouts;
-	vLayouts.reserve(vLines.size());
-	for(const SChatExportLine &Line : vLines)
-	{
-		SChatExportLayout Layout;
-		Layout.m_Line = Line;
-		const int TextMaxWidth = CARD_MAX_WIDTH - CARD_PADDING_X * 2;
-		Layout.m_vMessageLines = WrapChatExportText(pTextRender, ChatExportDisplayText(Line), FONT_SIZE_MESSAGE, TextMaxWidth);
-
-		float MaxTextWidth = 0.0f;
-		for(const std::string &MessageLine : Layout.m_vMessageLines)
-			MaxTextWidth = maximum(MaxTextWidth, pTextRender->TextWidth(FONT_SIZE_MESSAGE, MessageLine.c_str()));
-		Layout.m_CardWidth = std::clamp(round_to_int(MaxTextWidth) + CARD_PADDING_X * 2, CARD_MIN_WIDTH, CARD_MAX_WIDTH);
-		Layout.m_CardHeight = CARD_PADDING_Y * 2 + (int)Layout.m_vMessageLines.size() * MESSAGE_LINE_HEIGHT;
-		Layout.m_RecordHeight = Layout.m_CardHeight + (Line.m_Time.empty() ? 0 : TIME_TOP_MARGIN + TIME_LINE_HEIGHT) + RECORD_GAP;
-		vLayouts.push_back(std::move(Layout));
-	}
-	return vLayouts;
-}
-
-static std::vector<SChatExportPage> BuildChatExportPages(const std::vector<SChatExportLayout> &vLayouts)
-{
-	static constexpr int TOP_MARGIN = 36;
-	static constexpr int BOTTOM_MARGIN = 44;
-	static constexpr int MIN_IMAGE_HEIGHT = 360;
-	static constexpr int MAX_IMAGE_HEIGHT = 12000;
-
-	std::vector<SChatExportPage> vPages;
-	int PageStart = 0;
-	int PageHeight = TOP_MARGIN;
-	for(int LayoutIndex = 0; LayoutIndex < (int)vLayouts.size(); ++LayoutIndex)
-	{
-		if(LayoutIndex > PageStart && PageHeight + vLayouts[LayoutIndex].m_RecordHeight + BOTTOM_MARGIN > MAX_IMAGE_HEIGHT)
-		{
-			vPages.push_back({PageStart, LayoutIndex, std::clamp(PageHeight + BOTTOM_MARGIN, MIN_IMAGE_HEIGHT, MAX_IMAGE_HEIGHT)});
-			PageStart = LayoutIndex;
-			PageHeight = TOP_MARGIN;
-		}
-		PageHeight += vLayouts[LayoutIndex].m_RecordHeight;
-	}
-	if(PageStart < (int)vLayouts.size())
-		vPages.push_back({PageStart, (int)vLayouts.size(), std::clamp(PageHeight + BOTTOM_MARGIN, MIN_IMAGE_HEIGHT, MAX_IMAGE_HEIGHT)});
-	return vPages;
-}
-
-static bool AllocateImage(CImageInfo &Image, int Width, int Height, ColorRGBA FillColor)
-{
-	Image.m_Width = Width;
-	Image.m_Height = Height;
-	Image.m_Format = CImageInfo::FORMAT_RGBA;
-	size_t ImageDataSize = 0;
-	if(Width <= 0 || Height <= 0 || !Image.DataSize(ImageDataSize))
-	{
-		Image.Free();
-		return false;
-	}
-	Image.m_pData = static_cast<uint8_t *>(malloc(ImageDataSize));
-	if(!Image.m_pData)
-	{
-		Image.Free();
-		return false;
-	}
-	mem_zero(Image.m_pData, ImageDataSize);
-	FillRect(Image, 0, 0, Width, Height, FillColor);
-	return true;
-}
-
-static bool AllocateClearImage(CImageInfo &Image, int Width, int Height)
-{
-	Image.m_Width = Width;
-	Image.m_Height = Height;
-	Image.m_Format = CImageInfo::FORMAT_RGBA;
-	size_t ImageDataSize = 0;
-	if(Width <= 0 || Height <= 0 || !Image.DataSize(ImageDataSize))
-	{
-		Image.Free();
-		return false;
-	}
-	Image.m_pData = static_cast<uint8_t *>(calloc(ImageDataSize, sizeof(uint8_t)));
-	if(!Image.m_pData)
-	{
-		Image.Free();
-		return false;
-	}
-	return true;
-}
-
-static bool SaveChatExportPngPage(IStorage *pStorage, ITextRender *pTextRender, const char *pFilename, const std::vector<SChatExportLayout> &vLayouts, const SChatExportPage &Page, int, int, int)
-{
-	static constexpr int IMAGE_WIDTH = 1080;
-	static constexpr int TOP_MARGIN = 36;
-	static constexpr int CARD_CENTER_X = 720;
-	static constexpr int CARD_PADDING_X = 46;
-	static constexpr int CARD_PADDING_Y = 26;
-	static constexpr int MESSAGE_LINE_HEIGHT = 72;
-	static constexpr int TIME_TOP_MARGIN = 18;
-	static constexpr int CIRCLE_OFFSET_X = 92;
-	static constexpr int FONT_SIZE_MESSAGE = 58;
-	static constexpr int FONT_SIZE_TIME = 34;
-	static constexpr int FONT_SIZE_PLUS = 34;
-
-	CImageInfo Image;
-	CImageInfo Mask;
-	if(!AllocateImage(Image, IMAGE_WIDTH, Page.m_Height, ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f)) || !AllocateClearImage(Mask, IMAGE_WIDTH, Page.m_Height))
-	{
-		Image.Free();
-		Mask.Free();
-		log_error("console", "Failed to allocate chat export image");
-		return false;
-	}
-
-	int PosY = TOP_MARGIN;
-	for(int LayoutIndex = Page.m_Start; LayoutIndex < Page.m_End; ++LayoutIndex)
-	{
-		const SChatExportLayout &Layout = vLayouts[LayoutIndex];
-		const int CardX = CARD_CENTER_X - Layout.m_CardWidth / 2;
-		const int CardY = PosY;
-		const int CardCenterY = CardY + Layout.m_CardHeight / 2;
-		const int CircleCenterX = CardX - CIRCLE_OFFSET_X;
-
-		for(int Glow = 18; Glow >= 4; Glow -= 4)
-		{
-			const float Alpha = 0.035f + (18 - Glow) * 0.003f;
-			FillRoundedRect(Image, CardX - Glow, CardY - Glow, Layout.m_CardWidth + Glow * 2, Layout.m_CardHeight + Glow * 2, 24 + Glow, ColorRGBA(1.0f, 1.0f, 1.0f, Alpha));
-		}
-		FillRoundedRect(Image, CardX, CardY, Layout.m_CardWidth, Layout.m_CardHeight, 20, ColorRGBA(1.0f, 1.0f, 1.0f, 0.98f));
-
-		DrawCircleOutline(Image, CircleCenterX, CardCenterY, 34, 4, ColorRGBA(0.0f, 0.55f, 1.0f, 1.0f));
-		DrawPngTextCentered(pTextRender, Image, Mask, CircleCenterX, CardCenterY - FONT_SIZE_PLUS / 2 - 4, 72, FONT_SIZE_PLUS, "+1", ColorRGBA(0.0f, 0.60f, 1.0f, 1.0f));
-
-		int TextY = CardY + CARD_PADDING_Y;
-		for(const std::string &MessageLine : Layout.m_vMessageLines)
-		{
-			DrawPngTextCentered(pTextRender, Image, Mask, CardX + Layout.m_CardWidth / 2, TextY, Layout.m_CardWidth - CARD_PADDING_X * 2, FONT_SIZE_MESSAGE, MessageLine, ColorRGBA(0.30f, 0.30f, 0.30f, 1.0f));
-			TextY += MESSAGE_LINE_HEIGHT;
-		}
-		if(!Layout.m_Line.m_Time.empty())
-			DrawPngTextCentered(pTextRender, Image, Mask, CardX + Layout.m_CardWidth / 2, CardY + Layout.m_CardHeight + TIME_TOP_MARGIN, Layout.m_CardWidth + 180, FONT_SIZE_TIME, Layout.m_Line.m_Time, ColorRGBA(0.94f, 0.94f, 0.94f, 1.0f));
-
-		PosY += Layout.m_RecordHeight;
-	}
-
-	char aWholePath[IO_MAX_PATH_LENGTH];
-	const bool Success = CImageLoader::SavePng(pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath)), pFilename, Image);
-	if(Success)
-		log_info("console", "Saved chat export image to '%s'", aWholePath);
-	Image.Free();
-	Mask.Free();
-	return Success;
-}
-
-static bool SaveChatExportPng(IStorage *pStorage, ITextRender *pTextRender, const char *pBaseFilename, const std::vector<SChatExportLine> &vLines)
-{
-	const std::vector<SChatExportLayout> vLayouts = BuildChatExportLayouts(pTextRender, vLines);
-	const std::vector<SChatExportPage> vPages = BuildChatExportPages(vLayouts);
-	bool Success = true;
-	for(int PageIndex = 0; PageIndex < (int)vPages.size(); ++PageIndex)
-	{
-		char aFilename[IO_MAX_PATH_LENGTH];
-		if(vPages.size() == 1)
-			str_format(aFilename, sizeof(aFilename), "%s.png", pBaseFilename);
-		else
-			str_format(aFilename, sizeof(aFilename), "%s_%03d.png", pBaseFilename, PageIndex + 1);
-		Success &= SaveChatExportPngPage(pStorage, pTextRender, aFilename, vLayouts, vPages[PageIndex], PageIndex, (int)vPages.size(), (int)vLines.size());
-	}
-	return Success;
-}
+};
 
 class CConsoleLogger : public ILogger
 {
@@ -829,6 +439,7 @@ class CConsoleLogger : public ILogger
 	std::string m_PendingColorSpansSystem GUARDED_BY(m_PendingColorSpansLock);
 	std::string m_PendingColorSpansMessage GUARDED_BY(m_PendingColorSpansLock);
 	std::vector<CGameConsole::SColorSpan> m_vPendingColorSpans GUARDED_BY(m_PendingColorSpansLock);
+	std::shared_ptr<const QmChatExport::SMetadata> m_pPendingChatMetadata GUARDED_BY(m_PendingColorSpansLock);
 
 public:
 	CConsoleLogger(CGameConsole *pConsole) :
@@ -839,7 +450,7 @@ public:
 
 	void Log(const CLogMessage *pMessage) override REQUIRES(!m_ConsoleMutex);
 	void OnConsoleDeletion() REQUIRES(!m_ConsoleMutex);
-	void SetPendingColorSpans(const char *pSystem, const char *pMessage, const CGameConsole::SColorSpan *pColorSpans, size_t NumColorSpans) REQUIRES(!m_PendingColorSpansLock);
+	void SetPendingColorSpans(const char *pSystem, const char *pMessage, const CGameConsole::SColorSpan *pColorSpans, size_t NumColorSpans, std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata) REQUIRES(!m_PendingColorSpansLock);
 	void ClearPendingColorSpans() REQUIRES(!m_PendingColorSpansLock);
 };
 
@@ -860,11 +471,13 @@ void CConsoleLogger::Log(const CLogMessage *pMessage)
 	if(m_pConsole)
 	{
 		std::vector<CGameConsole::SColorSpan> vColorSpans;
+		std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata;
 		{
 			const CLockScope ColorSpansLockScope(m_PendingColorSpansLock);
 			if(m_PendingColorSpansSystem == pMessage->m_aSystem && m_PendingColorSpansMessage == pMessage->Message())
 			{
 				vColorSpans = std::move(m_vPendingColorSpans);
+				pChatMetadata = std::move(m_pPendingChatMetadata);
 				m_PendingColorSpansSystem.clear();
 				m_PendingColorSpansMessage.clear();
 				m_vPendingColorSpans.clear();
@@ -872,15 +485,16 @@ void CConsoleLogger::Log(const CLogMessage *pMessage)
 		}
 		for(CGameConsole::SColorSpan &Span : vColorSpans)
 			Span.m_CharIndex += (int)str_utf8_offset_bytes_to_chars(pMessage->m_aLine, pMessage->m_LineMessageOffset);
-		m_pConsole->m_LocalConsole.PrintLine(pMessage->m_aLine, pMessage->m_LineLength, Color, vColorSpans.data(), vColorSpans.size());
+		m_pConsole->m_LocalConsole.PrintLine(pMessage->m_aLine, pMessage->m_LineLength, Color, vColorSpans.data(), vColorSpans.size(), std::move(pChatMetadata));
 	}
 }
 
-void CConsoleLogger::SetPendingColorSpans(const char *pSystem, const char *pMessage, const CGameConsole::SColorSpan *pColorSpans, size_t NumColorSpans)
+void CConsoleLogger::SetPendingColorSpans(const char *pSystem, const char *pMessage, const CGameConsole::SColorSpan *pColorSpans, size_t NumColorSpans, std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata)
 {
 	const CLockScope LockScope(m_PendingColorSpansLock);
 	m_PendingColorSpansSystem = pSystem;
 	m_PendingColorSpansMessage = pMessage;
+	m_pPendingChatMetadata = std::move(pChatMetadata);
 	if(NumColorSpans == 0)
 		m_vPendingColorSpans.clear();
 	else
@@ -893,6 +507,7 @@ void CConsoleLogger::ClearPendingColorSpans()
 	m_PendingColorSpansSystem.clear();
 	m_PendingColorSpansMessage.clear();
 	m_vPendingColorSpans.clear();
+	m_pPendingChatMetadata.reset();
 }
 
 void CConsoleLogger::OnConsoleDeletion()
@@ -1145,6 +760,9 @@ void CGameConsole::CInstance::PumpBacklogPending()
 			const size_t EntrySize = sizeof(CBacklogEntry) + pPendingEntry->m_Length;
 			CBacklogEntry *pEntry = m_Backlog.Allocate(EntrySize);
 			mem_copy(pEntry, pPendingEntry, EntrySize);
+			const auto MetadataIt = m_PendingChatMetadataByExportId.find(pPendingEntry->m_ExportId);
+			if(MetadataIt != m_PendingChatMetadataByExportId.end())
+				m_ChatMetadataByExportId[pEntry->m_ExportId] = std::move(MetadataIt->second);
 			const auto ColorSpansIt = m_PendingColorSpansByExportId.find(pPendingEntry->m_ExportId);
 			if(ColorSpansIt != m_PendingColorSpansByExportId.end())
 				m_ColorSpansByExportId[pEntry->m_ExportId] = std::move(ColorSpansIt->second);
@@ -1152,6 +770,7 @@ void CGameConsole::CInstance::PumpBacklogPending()
 
 		m_BacklogPending.Init();
 		m_PendingColorSpansByExportId.clear();
+		m_PendingChatMetadataByExportId.clear();
 	}
 
 	// Update text attributes and count number of added lines
@@ -1609,7 +1228,7 @@ bool CGameConsole::CInstance::OnInput(const IInput::CEvent &Event)
 	return Handled;
 }
 
-void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans)
+void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans, std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata)
 {
 	// We must ensure that no log messages are printed while owning
 	// m_BacklogPendingLock or this will result in a dead lock.
@@ -1618,55 +1237,43 @@ void CGameConsole::CInstance::PrintLine(const char *pLine, int Len, ColorRGBA Pr
 	pEntry->m_YOffset = -1.0f;
 	pEntry->m_PrintColor = PrintColor;
 	pEntry->m_Length = Len;
-	pEntry->m_LogCategory = ClassifyLogCategory(pLine, (size_t)Len);
+	pEntry->m_LogCategory = QmClassifyConsoleLogLine(pLine, (size_t)Len);
 	pEntry->m_ExportId = m_NextExportId++;
 	pEntry->m_ExportSelected = false;
 	if(NumColorSpans > 0)
 		m_PendingColorSpansByExportId[pEntry->m_ExportId].assign(pColorSpans, pColorSpans + NumColorSpans);
+	if(pChatMetadata)
+		m_PendingChatMetadataByExportId[pEntry->m_ExportId] = std::move(pChatMetadata);
 	pEntry->m_LineCount = -1;
 	str_copy(pEntry->m_aText, pLine, Len + 1);
 }
 
-CGameConsole::CInstance::ELogCategory CGameConsole::CInstance::ClassifyLogCategory(const char *pLine, size_t Length)
+int CGameConsole::CInstance::LogFilterCategoryForButton(int ButtonIndex)
 {
-	if(!pLine || Length == 0)
-		return ELogCategory::SYSTEM;
-
-	const char *pSearchEnd = pLine + Length;
-	const char *pSystemStart = pLine;
-	if(const char *pColon = str_find(pLine, ": "))
+	switch(ButtonIndex)
 	{
-		pSearchEnd = pColon;
-		const char *pIt = pColon;
-		while(pIt > pLine && pIt[-1] != ' ')
-			--pIt;
-		pSystemStart = pIt;
+	case 0: return QM_CONSOLE_LOG_CATEGORY_ALL;
+	case 1: return QM_CONSOLE_LOG_CATEGORY_PLAYER;
+	case 2: return QM_CONSOLE_LOG_CATEGORY_SYSTEM;
+	case 3: return QM_CONSOLE_LOG_CATEGORY_COMMAND;
+	case 4: return QM_CONSOLE_LOG_CATEGORY_BINDS;
+	default: return QM_CONSOLE_LOG_CATEGORY_ALL;
 	}
-
-	const char *pChat = str_find_nocase(pSystemStart, "chat/");
-	if(pChat && pChat < pSearchEnd)
-	{
-		if(str_startswith_nocase(pChat, "chat/all") || str_startswith_nocase(pChat, "chat/team") || str_startswith_nocase(pChat, "chat/whisper"))
-			return ELogCategory::PLAYER;
-	}
-	return ELogCategory::SYSTEM;
 }
 
 bool CGameConsole::CInstance::MatchesLogFilter(const CBacklogEntry *pEntry) const
 {
-	if(m_LogFilter == ELogFilter::ALL)
-		return true;
-	const ELogCategory Category = ClassifyLogCategory(pEntry->m_aText, pEntry->m_Length);
-	if(Category == ELogCategory::PLAYER)
-		return m_LogFilter == ELogFilter::PLAYER;
-	return m_LogFilter == ELogFilter::SYSTEM;
+	// 分类在 PrintLine 时已存进条目，这里不再按行文本重新分类。
+	return pEntry != nullptr && QmConsoleLogCategoryPassesFilter(pEntry->m_LogCategory, m_LogFilterMask);
 }
 
-void CGameConsole::CInstance::SetLogFilter(ELogFilter Filter)
+void CGameConsole::CInstance::SetLogFilterMask(int Mask)
 {
-	if(m_LogFilter == Filter)
+	// 空掩码会让控制台一行不剩，用户也没有可点的按钮能走出来，因此不保留这个状态。
+	const int Normalized = QmNormalizeConsoleLogFilterMask(Mask);
+	if(m_LogFilterMask == Normalized)
 		return;
-	m_LogFilter = Filter;
+	m_LogFilterMask = Normalized;
 	m_BacklogCurLine = 0;
 	m_BacklogLastActiveLine = -1;
 	m_NewLineCounter = 0;
@@ -1679,6 +1286,10 @@ void CGameConsole::CInstance::SetLogFilter(ELogFilter Filter)
 	m_ScrollbarDragOffset = 0.0f;
 	if(m_Searching)
 		UpdateSearch();
+
+	// 顶栏分类选择跨启动保留；只写变量，落盘交给常规配置保存
+	if(m_Type == CONSOLETYPE_LOCAL)
+		g_Config.m_QmConsoleFilterMask = Normalized;
 }
 
 int CGameConsole::CInstance::TotalBacklogLines()
@@ -1705,7 +1316,8 @@ void CGameConsole::CInstance::InvalidateTotalBacklogLines()
 
 bool CGameConsole::CInstance::IsChatExportableEntry(const CBacklogEntry *pEntry) const
 {
-	return pEntry && pEntry->m_LogCategory == ELogCategory::PLAYER;
+	// 导出只针对玩家聊天行；分类已存进条目，直接按位判断。
+	return pEntry != nullptr && (pEntry->m_LogCategory & QM_CONSOLE_LOG_CATEGORY_PLAYER) != 0;
 }
 
 void CGameConsole::CInstance::ClearChatExportSelection()
@@ -1764,6 +1376,8 @@ void CGameConsole::CInstance::ToggleChatExportEntry(CBacklogEntry *pEntry, bool 
 
 void CGameConsole::CInstance::SetChatExportMode(bool Enable)
 {
+	if(!Enable)
+		CancelChatExport();
 	if(m_ChatExportMode == Enable)
 		return;
 
@@ -1773,8 +1387,8 @@ void CGameConsole::CInstance::SetChatExportMode(bool Enable)
 		if(m_Searching)
 			SetSearching(false);
 		ClearChatExportSelection();
-		m_ChatExportPreviousFilter = m_LogFilter;
-		SetLogFilter(ELogFilter::PLAYER);
+		m_ChatExportPreviousFilterMask = m_LogFilterMask;
+		SetLogFilterMask(QM_CONSOLE_LOG_CATEGORY_PLAYER);
 		m_ChatExportMode = true;
 		m_HasSelection = false;
 		m_MouseIsPress = false;
@@ -1783,7 +1397,7 @@ void CGameConsole::CInstance::SetChatExportMode(bool Enable)
 	{
 		m_ChatExportMode = false;
 		ClearChatExportSelection();
-		SetLogFilter(m_ChatExportPreviousFilter);
+		SetLogFilterMask(m_ChatExportPreviousFilterMask);
 		m_HasSelection = false;
 		m_MouseIsPress = false;
 	}
@@ -2026,6 +1640,8 @@ void CGameConsole::CInstance::Dump()
 
 bool CGameConsole::CInstance::ExportSelectedChat()
 {
+	if(m_pChatExportJob)
+		return false;
 	PumpBacklogPending();
 
 	const char *pLocalName = "";
@@ -2033,14 +1649,24 @@ bool CGameConsole::CInstance::ExportSelectedChat()
 	if(LocalClientId >= 0 && LocalClientId < MAX_CLIENTS)
 		pLocalName = m_pGameConsole->GameClient()->m_aClients[LocalClientId].m_aName;
 
-	std::vector<SChatExportLine> vLines;
+	std::vector<QmChatExport::SLine> vLines;
 	for(CBacklogEntry *pEntry = m_Backlog.First(); pEntry; pEntry = m_Backlog.Next(pEntry))
 	{
 		if(!IsChatExportableEntry(pEntry) || !pEntry->m_ExportSelected)
 			continue;
-		SChatExportLine Line;
-		if(TryParseChatExportLine(pEntry->m_aText, pLocalName, Line))
-			vLines.push_back(std::move(Line));
+		QmChatExport::SLine Line;
+		if(!TryParseChatExportLine(pEntry->m_aText, pLocalName, Line))
+			continue;
+		// 打印时记下的身份与头像优先于事后解析：改名或换皮肤不影响历史消息。
+		const auto Metadata = m_ChatMetadataByExportId.find(pEntry->m_ExportId);
+		if(Metadata != m_ChatMetadataByExportId.end())
+		{
+			Line.m_Sender = Metadata->second->m_Sender;
+			Line.m_Message = Metadata->second->m_Message;
+			Line.m_Local = Metadata->second->m_Local;
+			Line.m_pAvatar = Metadata->second->m_pAvatar;
+		}
+		vLines.push_back(std::move(Line));
 	}
 
 	if(vLines.empty())
@@ -2049,44 +1675,60 @@ bool CGameConsole::CInstance::ExportSelectedChat()
 		return false;
 	}
 
-	if(!m_pGameConsole->Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE) && !m_pGameConsole->Storage()->FolderExists("qmclient", IStorage::TYPE_SAVE))
-	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
-		return false;
-	}
-	if(!m_pGameConsole->Storage()->CreateFolder("qmclient/chat_log", IStorage::TYPE_SAVE) && !m_pGameConsole->Storage()->FolderExists("qmclient/chat_log", IStorage::TYPE_SAVE))
-	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
-		return false;
-	}
-
 	char aTimestamp[20];
 	str_timestamp(aTimestamp, sizeof(aTimestamp));
 	char aBaseFilename[IO_MAX_PATH_LENGTH];
-	str_format(aBaseFilename, sizeof(aBaseFilename), "qmclient/chat_log/local_chat_export_%s", aTimestamp);
+	str_format(aBaseFilename, sizeof(aBaseFilename), "qmclient/chat_log/local_chat_export_%s_%lld", aTimestamp, (long long)time_get_nanoseconds().count());
+	QmChatExport::SLabels Labels{Localize("QmClient chat log"), Localize("Total"), Localize("Messages")};
+	m_pChatExportJob = std::make_shared<CQmChatExportJob>(m_pGameConsole->Storage(), aBaseFilename, std::move(vLines), std::move(Labels));
+	return true;
+}
 
-	char aTxtFilename[IO_MAX_PATH_LENGTH];
-	char aHtmlFilename[IO_MAX_PATH_LENGTH];
-	str_format(aTxtFilename, sizeof(aTxtFilename), "%s.txt", aBaseFilename);
-	str_format(aHtmlFilename, sizeof(aHtmlFilename), "%s.html", aBaseFilename);
-
-	bool Success = true;
-	Success &= SaveChatExportTxt(m_pGameConsole->Storage(), aTxtFilename, vLines);
-	Success &= SaveChatExportHtml(m_pGameConsole->Storage(), aHtmlFilename, vLines);
-	Success &= SaveChatExportPng(m_pGameConsole->Storage(), m_pGameConsole->TextRender(), aBaseFilename, vLines);
-
-	if(Success)
+void CGameConsole::CInstance::CancelChatExport()
+{
+	if(!m_pChatExportJob)
+		return;
+	if(m_pChatExportJob->m_Queued)
 	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), Localize("Exported %d chat messages"), (int)vLines.size());
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-		SetChatExportMode(false);
+		// 已经交给后台：只发取消请求，等它自己收尾，避免拆掉正在使用的数据。
+		if(m_pChatExportJob->State() != IJob::STATE_DONE)
+			m_pChatExportJob->m_Cancelled.store(true);
 	}
 	else
 	{
-		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
+		m_pChatExportJob.reset();
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export cancelled"));
 	}
-	return Success;
+}
+
+void CGameConsole::CInstance::UpdateChatExport()
+{
+	if(!m_pChatExportJob)
+		return;
+	if(!m_pChatExportJob->m_Queued)
+	{
+		if(m_pChatExportJob->PrepareGlyphs(m_pGameConsole->TextRender(), m_pGameConsole->Graphics()))
+		{
+			m_pChatExportJob->m_Queued = true;
+			m_pGameConsole->Engine()->AddJob(m_pChatExportJob);
+		}
+		return;
+	}
+	// 取消仅发请求；STATE_DONE 后才能读取后台结果并释放任务。
+	if(m_pChatExportJob->State() != IJob::STATE_DONE)
+		return;
+	const auto pJob = std::move(m_pChatExportJob);
+	if(pJob->m_Success)
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), Localize("Exported %d chat messages"), (int)pJob->m_vLines.size());
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+		SetChatExportMode(false);
+	}
+	else if(pJob->m_Cancelled.load())
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export cancelled"));
+	else
+		m_pGameConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", Localize("Chat export failed"));
 }
 
 CGameConsole::CGameConsole() :
@@ -2236,6 +1878,8 @@ void CGameConsole::Prompt(char (&aPrompt)[32])
 
 void CGameConsole::OnRender()
 {
+	// 导出准备每帧推进一步，完成后任务才交给后台线程。
+	m_LocalConsole.UpdateChatExport();
 	CUIRect Screen = *Ui()->Screen();
 	CInstance *pConsole = CurrentConsole();
 
@@ -2992,7 +2636,16 @@ void CGameConsole::OnRender()
 		if(pConsole->m_ChatExportMode)
 		{
 			char aSelectedBuf[64];
-			str_format(aSelectedBuf, sizeof(aSelectedBuf), Localize("Selected %d"), pConsole->SelectedChatExportCount());
+			if(pConsole->m_pChatExportJob)
+			{
+				const auto &Job = *pConsole->m_pChatExportJob;
+				if(Job.m_Queued)
+					str_format(aSelectedBuf, sizeof(aSelectedBuf), Localize("Exporting chat images: %d"), Job.m_CompletedPages.load());
+				else
+					str_format(aSelectedBuf, sizeof(aSelectedBuf), Localize("Preparing chat export: %d%%"), Job.PreparationPercent());
+			}
+			else
+				str_format(aSelectedBuf, sizeof(aSelectedBuf), Localize("Selected %d"), pConsole->SelectedChatExportCount());
 			TextRender()->Text(LinesTextX + LinesWidth + 10.0f, LinesTextY, FONT_SIZE, aSelectedBuf);
 
 			enum class EExportAction
@@ -3017,6 +2670,9 @@ void CGameConsole::OnRender()
 			float ButtonRight = Screen.w - TopbarRightMargin;
 			for(const SExportButton &ExportButton : aButtons)
 			{
+				// 导出进行中只保留取消，避免重复发起或改动正在导出的选择。
+				if(pConsole->m_pChatExportJob && ExportButton.m_Action != EExportAction::CANCEL)
+					continue;
 				const float ButtonWidth = TextRender()->TextWidth(FilterFontSize, ExportButton.m_pLabel) + FilterPadding * 2.0f;
 				CUIRect Button = {ButtonRight - ButtonWidth, FilterY, ButtonWidth, FilterHeight};
 				Ui()->DoButton_PopupMenu(ExportButton.m_pButton, ExportButton.m_pLabel, &Button, FilterFontSize, TEXTALIGN_MC);
@@ -3040,19 +2696,24 @@ void CGameConsole::OnRender()
 			char aVersionBuf[128];
 			str_copy(aVersionBuf, "v" GAME_VERSION " on " CONF_PLATFORM_STRING " " CONF_ARCH_STRING);
 			const char *pClientVersion = CLIENT_NAME " " CLIENT_RELEASE_VERSION;
-			const char *apFilterLabels[] = {Localize("All"), Localize("Players"), Localize("System")};
-			const CInstance::ELogFilter aFilters[] = {CInstance::ELogFilter::ALL, CInstance::ELogFilter::PLAYER, CInstance::ELogFilter::SYSTEM};
+			const char *apFilterLabels[CInstance::LOG_FILTER_BUTTON_COUNT] = {
+				Localize("All"),
+				Localize("Players"),
+				Localize("System"),
+				Localize("Commands"),
+				Localize("Binds"),
+			};
 			const bool ShowExportButton = m_ConsoleType == CONSOLETYPE_LOCAL;
 			const char *pExportLabel = Localize("Select export");
 			const float ExportButtonWidth = ShowExportButton ? TextRender()->TextWidth(FilterFontSize, pExportLabel) + FilterPadding * 2.0f : 0.0f;
 			const float VersionRight = ShowExportButton ? Screen.w - TopbarRightMargin - ExportButtonWidth - FilterSpacing : Screen.w - TopbarRightMargin;
-			float aFilterWidths[3];
+			float aFilterWidths[CInstance::LOG_FILTER_BUTTON_COUNT];
 			float TotalFilterWidth = 0.0f;
-			for(int i = 0; i < 3; ++i)
+			for(int i = 0; i < CInstance::LOG_FILTER_BUTTON_COUNT; ++i)
 			{
 				aFilterWidths[i] = TextRender()->TextWidth(FilterFontSize, apFilterLabels[i]) + FilterPadding * 2.0f;
 				TotalFilterWidth += aFilterWidths[i];
-				if(i != 2)
+				if(i != CInstance::LOG_FILTER_BUTTON_COUNT - 1)
 					TotalFilterWidth += FilterSpacing;
 			}
 
@@ -3062,22 +2723,29 @@ void CGameConsole::OnRender()
 			if(FilterX + TotalFilterWidth > FilterRightLimit)
 				FilterX = maximum(LinesTextX + LinesWidth + 10.0f, FilterRightLimit - TotalFilterWidth);
 
-			CUIRect aFilterRects[3];
+			CUIRect aFilterRects[CInstance::LOG_FILTER_BUTTON_COUNT];
 			float FilterLayoutX = FilterX;
-			for(int i = 0; i < 3; ++i)
+			for(int i = 0; i < CInstance::LOG_FILTER_BUTTON_COUNT; ++i)
 			{
 				aFilterRects[i] = {FilterLayoutX, FilterY, aFilterWidths[i], FilterHeight};
 				FilterLayoutX += aFilterWidths[i] + FilterSpacing;
 			}
 
-			for(int i = 0; i < 3; ++i)
+			for(int i = 0; i < CInstance::LOG_FILTER_BUTTON_COUNT; ++i)
 			{
 				CUIRect Button = aFilterRects[i];
-				const bool Active = pConsole->m_LogFilter == aFilters[i];
+				const int Category = CInstance::LogFilterCategoryForButton(i);
+				const bool Active = (pConsole->m_LogFilterMask & Category) != 0;
 				const bool UiClicked = Ui()->DoButton_PopupMenu(&m_aFilterButtons[i], apFilterLabels[i], &Button, FilterFontSize, TEXTALIGN_MC);
 				const bool ManualClicked = MousePressed && Button.Inside(UiMousePos);
 				if(UiClicked || ManualClicked)
-					pConsole->SetLogFilter(aFilters[i]);
+				{
+					// i==0 的「全部」是总开关：点亮即其余全亮，再点一次则全部熄灭（熄灭会归一化回全亮）
+					const unsigned int Mask = (unsigned int)pConsole->m_LogFilterMask;
+					const unsigned int CategoryMask = (unsigned int)Category;
+					const unsigned int NewMask = i == 0 ? (Active ? 0u : (unsigned int)QM_CONSOLE_LOG_CATEGORY_ALL) : (Active ? (Mask & ~CategoryMask) : (Mask | CategoryMask));
+					pConsole->SetLogFilterMask((int)NewMask);
+				}
 				if(Active)
 					Button.DrawOutline(ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f));
 			}
@@ -3282,9 +2950,9 @@ void CGameConsole::PrintLine(int Type, const char *pLine)
 		m_RemoteConsole.PrintLine(pLine, str_length(pLine), TextRender()->DefaultTextColor());
 }
 
-void CGameConsole::PrintLineWithColorSpans(int Level, const char *pFrom, const char *pLine, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans)
+void CGameConsole::PrintLineWithColorSpans(int Level, const char *pFrom, const char *pLine, ColorRGBA PrintColor, const SColorSpan *pColorSpans, size_t NumColorSpans, std::shared_ptr<const QmChatExport::SMetadata> pChatMetadata)
 {
-	m_pConsoleLogger->SetPendingColorSpans(pFrom, pLine, pColorSpans, NumColorSpans);
+	m_pConsoleLogger->SetPendingColorSpans(pFrom, pLine, pColorSpans, NumColorSpans, std::move(pChatMetadata));
 	Console()->Print(Level, pFrom, pLine, PrintColor);
 	m_pConsoleLogger->ClearPendingColorSpans();
 }
@@ -3294,6 +2962,9 @@ void CGameConsole::OnConsoleInit()
 	// init console instances
 	m_LocalConsole.Init(this);
 	m_RemoteConsole.Init(this);
+
+	// 本地控制台的分类选择跨启动保留（远程控制台保持独立，不受该配置影响）
+	m_LocalConsole.m_LogFilterMask = QmNormalizeConsoleLogFilterMask(g_Config.m_QmConsoleFilterMask);
 
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 

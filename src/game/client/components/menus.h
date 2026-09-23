@@ -20,6 +20,7 @@
 
 #include <generated/client_data.h>
 
+#include <game/client/QmUi/QmIslandNotice.h>
 #include <game/client/QmUi/QmScroll.h>
 #include <game/client/QmUi/QmUiPerf.h>
 #include <game/client/QmUi/SettingsCardDeck.h>
@@ -33,6 +34,9 @@
 #include <game/client/components/menus_ingame_touch_controls.h>
 #include <game/client/components/menus_settings_controls.h>
 #include <game/client/components/menus_start.h>
+#include <game/client/components/qmclient/browser_friend_list.h>
+#include <game/client/components/qmclient/map_vote_difficulty.h>
+#include <game/client/components/qmclient/qm_map_upload.h>
 #include <game/client/components/qmclient/settings_perf_windows.h>
 #include <game/client/components/section_loader.h>
 #include <game/client/components/settings_resource_jobs.h>
@@ -41,6 +45,7 @@
 #include <game/client/frame_scheduler.h>
 #include <game/client/lineinput.h>
 #include <game/client/ui.h>
+#include <game/client/ui_listbox.h>
 #include <game/voting.h>
 
 #include <array>
@@ -61,6 +66,12 @@ class CChat;
 namespace qm_card_registry
 {
 	struct SCardNavigationTarget;
+}
+// 卡片目录的受控渲染入口：卡片模块是独立文件，不能触达 CMenus 私有内容函数，
+// 故在此前向声明并授予友元，只开放 QmCardRenderHook 显式列出的那组助手。
+namespace qm_card_catalog
+{
+	struct QmCardRenderHook;
 }
 
 inline bool QmTextMatchesIncludeExcludeFilter(const char *pText, const char *pInclude, const char *pExclude)
@@ -406,6 +417,27 @@ public:
 		bool m_PreviewLoaded = false;
 	};
 
+	enum
+	{
+		ASSETS_EDITOR_COLOR_BLEND_MULTIPLY = 0,
+		ASSETS_EDITOR_COLOR_BLEND_NORMAL,
+		ASSETS_EDITOR_COLOR_BLEND_SCREEN,
+		ASSETS_EDITOR_COLOR_BLEND_OVERLAY,
+		ASSETS_EDITOR_COLOR_BLEND_DARKEN,
+		ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN,
+		ASSETS_EDITOR_COLOR_BLEND_LIGHTEN,
+		ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE,
+		ASSETS_EDITOR_COLOR_BLEND_SOFT_LIGHT,
+		ASSETS_EDITOR_COLOR_BLEND_HARD_LIGHT,
+		ASSETS_EDITOR_COLOR_BLEND_DIFFERENCE,
+		ASSETS_EDITOR_COLOR_BLEND_EXCLUSION,
+		ASSETS_EDITOR_COLOR_BLEND_HUE,
+		ASSETS_EDITOR_COLOR_BLEND_SATURATION,
+		ASSETS_EDITOR_COLOR_BLEND_COLOR,
+		ASSETS_EDITOR_COLOR_BLEND_LUMINOSITY,
+		ASSETS_EDITOR_COLOR_BLEND_COUNT,
+	};
+
 	struct SAssetsEditorPartSlot
 	{
 		int m_SpriteId = -1;
@@ -420,6 +452,8 @@ public:
 		int m_SrcW = 0;
 		int m_SrcH = 0;
 		unsigned int m_Color = color_cast<ColorHSLA>(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f)).Pack(true);
+		int m_ColorBlendMode = ASSETS_EDITOR_COLOR_BLEND_MULTIPLY;
+		int m_BlendStrength = 100;
 		char m_aFamilyKey[64] = {0};
 		char m_aSourceAsset[64] = {0};
 	};
@@ -440,15 +474,6 @@ public:
 		std::string m_DisplayName;
 		bool m_IsCurrentFile = false;
 		bool m_IsCurrentPackFile = false;
-	};
-
-	enum
-	{
-		ASSETS_EDITOR_COLOR_BLEND_MULTIPLY = 0,
-		ASSETS_EDITOR_COLOR_BLEND_NORMAL,
-		ASSETS_EDITOR_COLOR_BLEND_SCREEN,
-		ASSETS_EDITOR_COLOR_BLEND_OVERLAY,
-		ASSETS_EDITOR_COLOR_BLEND_COUNT,
 	};
 
 	static void GetStrongWeakEditorGridSize(int &OutGridX, int &OutGridY)
@@ -711,6 +736,18 @@ public:
 		case ASSETS_EDITOR_COLOR_BLEND_NORMAL: return "Normal";
 		case ASSETS_EDITOR_COLOR_BLEND_SCREEN: return "Screen";
 		case ASSETS_EDITOR_COLOR_BLEND_OVERLAY: return "Overlay";
+		case ASSETS_EDITOR_COLOR_BLEND_DARKEN: return "Darken";
+		case ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN: return "Color Burn";
+		case ASSETS_EDITOR_COLOR_BLEND_LIGHTEN: return "Lighten";
+		case ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE: return "Color Dodge";
+		case ASSETS_EDITOR_COLOR_BLEND_SOFT_LIGHT: return "Soft Light";
+		case ASSETS_EDITOR_COLOR_BLEND_HARD_LIGHT: return "Hard Light";
+		case ASSETS_EDITOR_COLOR_BLEND_DIFFERENCE: return "Difference";
+		case ASSETS_EDITOR_COLOR_BLEND_EXCLUSION: return "Exclusion";
+		case ASSETS_EDITOR_COLOR_BLEND_HUE: return "Hue";
+		case ASSETS_EDITOR_COLOR_BLEND_SATURATION: return "Saturation";
+		case ASSETS_EDITOR_COLOR_BLEND_COLOR: return "Color";
+		case ASSETS_EDITOR_COLOR_BLEND_LUMINOSITY: return "Luminosity";
 		default: return "Multiply";
 		}
 	}
@@ -720,36 +757,100 @@ public:
 		return color_cast<ColorRGBA>(ColorHSLA(PackedColor, true));
 	}
 
+	static ColorRGBA AssetsEditorSlotTint(const SAssetsEditorPartSlot &Slot)
+	{
+		ColorRGBA Tint = AssetsEditorSlotColorToRgba(Slot.m_Color);
+		// 混合强度独立保存，不改变部件像素的透明度。
+		Tint.a = std::clamp(Slot.m_BlendStrength, 0, 100) / 100.0f;
+		return Tint;
+	}
+
 	static float AssetsEditorClampColorChannel(float Value)
 	{
 		return minimum(maximum(Value, 0.0f), 1.0f);
 	}
 
-	static float AssetsEditorColorLuma(const ColorRGBA &Base)
+	static float AssetsEditorColorLuma(const ColorRGBA &Color)
 	{
-		return AssetsEditorClampColorChannel(Base.r * 0.299f + Base.g * 0.587f + Base.b * 0.114f);
+		return Color.r * 0.30f + Color.g * 0.59f + Color.b * 0.11f;
 	}
 
-	static float AssetsEditorScreenTone(float Luma)
+	static float AssetsEditorColorSaturation(const ColorRGBA &Color)
 	{
-		return AssetsEditorClampColorChannel(Luma * (1.0f + (1.0f - Luma) * 0.65f));
+		return maximum(Color.r, maximum(Color.g, Color.b)) - minimum(Color.r, minimum(Color.g, Color.b));
 	}
 
-	static float AssetsEditorOverlayTone(float Luma)
+	static ColorRGBA AssetsEditorSetColorLuma(ColorRGBA Color, float Luma)
 	{
-		if(Luma <= 0.5f)
-			return AssetsEditorClampColorChannel(2.0f * Luma * Luma);
-		return AssetsEditorClampColorChannel(1.0f - 2.0f * (1.0f - Luma) * (1.0f - Luma));
+		// W3C SetLum / ClipColor：超出色域时缩放色差，保持目标明度。
+		const float Delta = Luma - AssetsEditorColorLuma(Color);
+		Color.r += Delta;
+		Color.g += Delta;
+		Color.b += Delta;
+		const float Min = minimum(Color.r, minimum(Color.g, Color.b));
+		const float Max = maximum(Color.r, maximum(Color.g, Color.b));
+		if(Min < 0.0f)
+		{
+			Color.r = Luma + (Color.r - Luma) * Luma / (Luma - Min);
+			Color.g = Luma + (Color.g - Luma) * Luma / (Luma - Min);
+			Color.b = Luma + (Color.b - Luma) * Luma / (Luma - Min);
+		}
+		if(Max > 1.0f)
+		{
+			Color.r = Luma + (Color.r - Luma) * (1.0f - Luma) / (Max - Luma);
+			Color.g = Luma + (Color.g - Luma) * (1.0f - Luma) / (Max - Luma);
+			Color.b = Luma + (Color.b - Luma) * (1.0f - Luma) / (Max - Luma);
+		}
+		return Color;
 	}
 
-	static ColorRGBA AssetsEditorRecolorColor(const ColorRGBA &Base, const ColorRGBA &Tint, float Tone, float DetailPreserve)
+	static ColorRGBA AssetsEditorSetColorSaturation(ColorRGBA Color, float Saturation)
 	{
-		const float BaseLuma = AssetsEditorColorLuma(Base);
-		return ColorRGBA(
-			AssetsEditorClampColorChannel(Tint.r * Tone + (Base.r - BaseLuma) * DetailPreserve),
-			AssetsEditorClampColorChannel(Tint.g * Tone + (Base.g - BaseLuma) * DetailPreserve),
-			AssetsEditorClampColorChannel(Tint.b * Tone + (Base.b - BaseLuma) * DetailPreserve),
-			Base.a);
+		float *apChannels[] = {&Color.r, &Color.g, &Color.b};
+		std::sort(std::begin(apChannels), std::end(apChannels), [](const float *pLeft, const float *pRight) { return *pLeft < *pRight; });
+		float &Min = *apChannels[0];
+		float &Mid = *apChannels[1];
+		float &Max = *apChannels[2];
+		if(Max > Min)
+		{
+			Mid = (Mid - Min) * Saturation / (Max - Min);
+			Max = Saturation;
+		}
+		else
+			Mid = Max = 0.0f;
+		Min = 0.0f;
+		return Color;
+	}
+
+	static float AssetsEditorBlendChannel(float Base, float Tint, int BlendMode)
+	{
+		switch(BlendMode)
+		{
+		case ASSETS_EDITOR_COLOR_BLEND_NORMAL: return Tint;
+		case ASSETS_EDITOR_COLOR_BLEND_SCREEN: return 1.0f - (1.0f - Base) * (1.0f - Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_OVERLAY: return Base <= 0.5f ? 2.0f * Base * Tint : 1.0f - 2.0f * (1.0f - Base) * (1.0f - Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_DARKEN: return minimum(Base, Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_LIGHTEN: return maximum(Base, Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE:
+			if(Base == 0.0f)
+				return 0.0f;
+			return Tint == 1.0f ? 1.0f : minimum(1.0f, Base / (1.0f - Tint));
+		case ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN:
+			if(Base == 1.0f)
+				return 1.0f;
+			return Tint == 0.0f ? 0.0f : 1.0f - minimum(1.0f, (1.0f - Base) / Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_HARD_LIGHT: return Tint <= 0.5f ? 2.0f * Base * Tint : 1.0f - 2.0f * (1.0f - Base) * (1.0f - Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_SOFT_LIGHT:
+		{
+			if(Tint <= 0.5f)
+				return Base - (1.0f - 2.0f * Tint) * Base * (1.0f - Base);
+			const float Curve = Base <= 0.25f ? ((16.0f * Base - 12.0f) * Base + 4.0f) * Base : sqrtf(Base);
+			return Base + (2.0f * Tint - 1.0f) * (Curve - Base);
+		}
+		case ASSETS_EDITOR_COLOR_BLEND_DIFFERENCE: return absolute(Base - Tint);
+		case ASSETS_EDITOR_COLOR_BLEND_EXCLUSION: return Base + Tint - 2.0f * Base * Tint;
+		default: return Base * Tint;
+		}
 	}
 
 	static ColorRGBA AssetsEditorMultiplyColor(const ColorRGBA &Base, const ColorRGBA &Tint)
@@ -760,39 +861,51 @@ public:
 	static ColorRGBA AssetsEditorBlendColor(const ColorRGBA &Base, const ColorRGBA &Tint, int BlendMode)
 	{
 		const int ClampedBlendMode = ClampAssetsEditorColorBlendMode(BlendMode);
-		const float BlendStrength = minimum(maximum(Tint.a, 0.0f), 1.0f);
-		ColorRGBA Blended = Base;
-		const float BaseLuma = AssetsEditorColorLuma(Base);
+		const float BlendStrength = AssetsEditorClampColorChannel(Tint.a);
+		if(BlendStrength == 0.0f || Base.a == 0.0f)
+			return Base;
+		ColorRGBA Blended;
+		// 混合公式参考 W3C Compositing and Blending Level 1 第 10 节。
 		switch(ClampedBlendMode)
 		{
-		case ASSETS_EDITOR_COLOR_BLEND_NORMAL:
-			Blended = AssetsEditorRecolorColor(Base, Tint, BaseLuma, 0.18f);
+		case ASSETS_EDITOR_COLOR_BLEND_HUE:
+			Blended = AssetsEditorSetColorLuma(AssetsEditorSetColorSaturation(Tint, AssetsEditorColorSaturation(Base)), AssetsEditorColorLuma(Base));
 			break;
-		case ASSETS_EDITOR_COLOR_BLEND_SCREEN:
-			Blended = AssetsEditorRecolorColor(Base, Tint, AssetsEditorScreenTone(BaseLuma), 0.10f);
+		case ASSETS_EDITOR_COLOR_BLEND_SATURATION:
+			Blended = AssetsEditorSetColorLuma(AssetsEditorSetColorSaturation(Base, AssetsEditorColorSaturation(Tint)), AssetsEditorColorLuma(Base));
 			break;
-		case ASSETS_EDITOR_COLOR_BLEND_OVERLAY:
-			Blended = AssetsEditorRecolorColor(Base, Tint, AssetsEditorOverlayTone(BaseLuma), 0.28f);
+		case ASSETS_EDITOR_COLOR_BLEND_COLOR:
+			Blended = AssetsEditorSetColorLuma(Tint, AssetsEditorColorLuma(Base));
+			break;
+		case ASSETS_EDITOR_COLOR_BLEND_LUMINOSITY:
+			Blended = AssetsEditorSetColorLuma(Base, AssetsEditorColorLuma(Tint));
 			break;
 		default:
-			Blended = ColorRGBA(Base.r * Tint.r, Base.g * Tint.g, Base.b * Tint.b, Base.a);
+			Blended = ColorRGBA(
+				AssetsEditorBlendChannel(Base.r, Tint.r, ClampedBlendMode),
+				AssetsEditorBlendChannel(Base.g, Tint.g, ClampedBlendMode),
+				AssetsEditorBlendChannel(Base.b, Tint.b, ClampedBlendMode));
 			break;
 		}
 
 		return ColorRGBA(
-			Base.r + (Blended.r - Base.r) * BlendStrength,
-			Base.g + (Blended.g - Base.g) * BlendStrength,
-			Base.b + (Blended.b - Base.b) * BlendStrength,
+			AssetsEditorClampColorChannel(Base.r + (Blended.r - Base.r) * BlendStrength),
+			AssetsEditorClampColorChannel(Base.g + (Blended.g - Base.g) * BlendStrength),
+			AssetsEditorClampColorChannel(Base.b + (Blended.b - Base.b) * BlendStrength),
 			Base.a);
 	}
 
-	static bool AssetsEditorHasColorOverride(const ColorRGBA &Tint)
+	static bool AssetsEditorHasColorOverride(const ColorRGBA &Tint, int BlendMode = ASSETS_EDITOR_COLOR_BLEND_MULTIPLY)
 	{
+		if(Tint.a <= 0.0f)
+			return false;
+		// 白色只在默认的正片叠底中代表无变化，其他模式必须正常计算。
+		if(ClampAssetsEditorColorBlendMode(BlendMode) != ASSETS_EDITOR_COLOR_BLEND_MULTIPLY)
+			return true;
 		constexpr float Epsilon = 0.001f;
 		return absolute(Tint.r - 1.0f) > Epsilon ||
 		       absolute(Tint.g - 1.0f) > Epsilon ||
-		       absolute(Tint.b - 1.0f) > Epsilon ||
-		       absolute(Tint.a - 1.0f) > Epsilon;
+		       absolute(Tint.b - 1.0f) > Epsilon;
 	}
 
 	static bool AssetsEditorSlotNeedsProcessing(const SAssetsEditorPartSlot &Slot, const char *pMainAssetName)
@@ -801,14 +914,14 @@ public:
 		const bool UsesMainSourceRect = str_comp(Slot.m_aSourceAsset, pResolvedMainAssetName) == 0 &&
 						Slot.m_SrcX == Slot.m_DstX && Slot.m_SrcY == Slot.m_DstY &&
 						Slot.m_SrcW == Slot.m_DstW && Slot.m_SrcH == Slot.m_DstH;
-		return !UsesMainSourceRect || AssetsEditorHasColorOverride(AssetsEditorSlotColorToRgba(Slot.m_Color));
+		return !UsesMainSourceRect || AssetsEditorHasColorOverride(AssetsEditorSlotTint(Slot), Slot.m_ColorBlendMode);
 	}
 
 	static void AssetsEditorApplyColorOverrideToImageRect(CImageInfo &Image, int X, int Y, int W, int H, const ColorRGBA &Tint, int BlendMode)
 	{
 		if(Image.m_pData == nullptr || Image.m_Format != CImageInfo::FORMAT_RGBA || W <= 0 || H <= 0)
 			return;
-		if(!AssetsEditorHasColorOverride(Tint))
+		if(!AssetsEditorHasColorOverride(Tint, BlendMode))
 			return;
 
 		const int ImageWidth = Image.m_Width;
@@ -1287,7 +1400,7 @@ private:
 		int m_aDonorAssetIndex[ASSETS_EDITOR_TYPE_COUNT] = {0};
 		bool m_ShowGrid = true;
 		bool m_ApplySameSize = false;
-		int m_ColorBlendMode = ASSETS_EDITOR_COLOR_BLEND_MULTIPLY;
+		int m_SelectedTargetSlotIndex = -1;
 		bool m_DragActive = false;
 		int m_ActiveDraggedSlotIndex = -1;
 		char m_aDraggedSourceAsset[64] = {0};
@@ -1638,6 +1751,8 @@ protected:
 	char m_aCurrentDemoSelectionName[IO_MAX_PATH_LENGTH];
 	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_DemoRenameInput;
 	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_DemoSliceInput;
+	// 导出/预览弹窗里的「Demo display」折叠状态：展开后显示回放专用显示选项。
+	bool m_DemoExportDisplayExpanded = false;
 	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_DemoSearchInput;
 #if defined(CONF_VIDEORECORDER)
 	CLineInputBuffered<IO_MAX_PATH_LENGTH> m_DemoRenderInput;
@@ -1812,6 +1927,7 @@ protected:
 			return Result < 0 || (Result == 0 && str_comp_nocase(m_aClan, Other.m_aClan) < 0);
 		}
 	};
+	CQmBrowserFriendList m_BrowserFriendList;
 
 	std::vector<unsigned char> m_vFriendsCategoryExpanded;
 	std::vector<std::string> m_vFriendsCategoryNames;
@@ -1909,6 +2025,9 @@ protected:
 	void HandleDemoSeeking(float PositionToSeek, float TimeToSeek);
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoPlayerSliceSavePopup(CUIRect MainView);
+	// 回放/导出共用的显示选项面板与其折叠开关。
+	void RenderDemoDisplaySettings(CUIRect View, bool Enabled = true);
+	void RenderDemoExportDisplayToggle(const CUIRect &Rect);
 	bool m_DemoBrowserListInitialized = false;
 	void RenderDemoBrowser(CUIRect MainView);
 	void RenderDemoBrowserList(CUIRect ListView, bool &WasListboxItemActivated);
@@ -2033,6 +2152,31 @@ protected:
 	};
 
 	std::shared_ptr<IHttpRequest> m_pReportScanRequest;
+	QmMapUpload::CUpload m_QmMapUpload;
+	// 地图上传选择器（卡片目录的 qm:map_upload 卡使用）：带搜索的文件列表弹窗。
+	// 本地差异：远程命名空间为小写 qm_map_upload，本地既有为 QmMapUpload（全树 23 处引用），
+	// 此处按本地命名空间书写；m_QmMapUpload 本地已存在，不重复声明。
+	using SQmMapUploadFile = QmMapUpload::SMapFile;
+	class CQmMapUploadPicker : public SPopupMenuId
+	{
+	public:
+		CMenus *m_pMenus = nullptr;
+		char m_aFolder[IO_MAX_PATH_LENGTH] = "";
+		int m_StorageType = IStorage::TYPE_ALL;
+		int m_Selected = -1;
+		std::vector<SQmMapUploadFile> m_vFiles;
+		CLineInputBuffered<IO_MAX_PATH_LENGTH> m_SearchInput;
+		QmMapUpload::CSearchIndex m_SearchIndex;
+		CListBox m_ListBox;
+		CButtonContainer m_CancelButton;
+	} m_QmMapUploadPicker;
+	char m_aQmMapUploadPath[IO_MAX_PATH_LENGTH] = "";
+	char m_aQmMapUploadPlayer[MAX_NAME_LENGTH] = "";
+	int m_QmMapUploadStorageType = IStorage::TYPE_ALL;
+	void PopulateQmMapUploadPicker();
+	static int QmMapUploadScan(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser);
+	static CUi::EPopupMenuFunctionResult PopupQmMapUploadPicker(void *pContext, CUIRect View, bool Active);
+	const char *QmMapUploadPlayerName() const;
 	EReportScanState m_ReportScanState = EReportScanState::IDLE;
 	char m_aReportScanAddress[NETADDR_MAXSTRSIZE] = "";
 	void ResetReportScan();
@@ -2115,6 +2259,7 @@ protected:
 	void RenderServerbrowserInfoScoreboard(CUIRect View, const CServerInfo *pSelectedServer);
 	void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserQm(CUIRect View);
+	CQmMapVoteDifficulty m_MapVoteDifficulty;
 	void RenderServerbrowserFavoriteMaps(CUIRect View);
 	static CUi::EPopupMenuFunctionResult PopupFriendsCategory(void *pContext, CUIRect View, bool Active);
 	static CUi::EPopupMenuFunctionResult PopupFriendNote(void *pContext, CUIRect View, bool Active);
@@ -2159,7 +2304,7 @@ protected:
 	//       member function, to move this function to CMenusSettingsControls
 	void ResetSettingsControls();
 
-	std::vector<CButtonContainer> m_vButtonContainersNamePlateShow = {{}, {}, {}, {}};
+	std::vector<CButtonContainer> m_vButtonContainersNamePlateShow = {{}, {}, {}, {}, {}, {}};
 	std::vector<CButtonContainer> m_vButtonContainersNamePlateHookStrongWeakScope = {{}, {}, {}, {}, {}};
 	std::vector<CButtonContainer> m_vButtonContainersNamePlateKeyPresses = {{}, {}, {}, {}};
 	class CSkinQueuePresetRenamePopupContext : public SPopupMenuId
@@ -2366,8 +2511,8 @@ public:
 	std::array<CUIElement, SETTINGS_LENGTH> m_aSettingsTabLabelElements;
 	std::array<const char *, SETTINGS_LENGTH> m_apSettingsTabs{};
 	int m_QmClientSettingsTab = QMCLIENT_SETTINGS_TAB_VISUAL;
-	// 启动赞助提醒（灵动岛）已显示时长，用于 5 秒后自动收回。
-	float m_QmSponsorNudgeElapsed = 0.0f;
+	// 启动赞助提醒（灵动岛）的两段式状态（掉落/展开进度 + 停留倒计时）。
+	qm_island::SNoticeState m_QmSponsorNudgeNotice;
 	bool m_QmNewFeaturesScrollReset = true;
 	int m_TClientSettingsTab = 0;
 	int m_AppearanceSettingsTab = APPEARANCE_TAB_HUD;
@@ -2553,6 +2698,7 @@ public:
 	void DoSettingsMenuLabel(int Page, int Tab, int Subtab, const char *pTextId, const CUIRect *pRect, const char *pText, float Size, int Align, const SLabelProperties &Props = {}, int MaxWidth = -1);
 	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = ui_token::radius::BASE, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), float FontFactor = 0.0f, float BodySize = -1.0f);
 	int DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SSettingsContentMetrics &Metrics, int Flags = BUTTONFLAG_LEFT, int Corners = IGraphics::CORNER_ALL, float Rounding = ui_token::radius::BASE, const ColorRGBA &Color = ColorRGBA(1.0f, 1.0f, 1.0f, 0.5f), float FontFactor = 0.0f);
+	int DoSettingsButton_CapsuleSegment(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, float BodySize, const ColorRGBA *pLabelColor = nullptr, const ColorRGBA *pHoverColor = nullptr);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps);
 	int DoSettingsButton_CheckBox(int Page, int Tab, int Subtab, const void *pId, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, const SLabelProperties &LabelProps, bool ProcessInput, float RequestedFontSize = -1.0f);
@@ -2861,6 +3007,8 @@ private:
 	friend CMenusIngameTouchControls;
 	CMenusSettingsControls m_MenusSettingsControls;
 	friend CMenusSettingsControls;
+	// 卡片目录分类模块经该桥接取用下面的私有内容渲染/输入助手（见 QmCardCatalog.h）。
+	friend struct qm_card_catalog::QmCardRenderHook;
 	CMenusStart m_MenusStart;
 
 	static int GhostlistFetchCallback(const CFsFileInfo *pInfo, int IsDir, int StorageType, void *pUser);
@@ -2928,6 +3076,7 @@ private:
 	void RenderQmVisualWeaponAnimationContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, float ContentGap, bool PrewarmOnly);
 	void RenderQmVisualChatBubbleContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmVisualSkinTransitionContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
+	void RenderQmVisualSkinAppearanceContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmVisualFocusModeContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float ColumnGap, float LabelWidth);
 	void RenderQmVisualCameraViewContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	bool RenderQmHudCheckbox(CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, const char *pTextId, const char *pText, int *pValue);
@@ -2938,6 +3087,14 @@ private:
 	void RenderQmFunctionGoresActorContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionGoresContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionSoloSplitContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
+	// 地图上传卡的内容渲染：实现在 QmUi/cards/QmMapUpload.cpp（卡片目录模块负责自己的渲染）。
+	void RenderQmFunctionMapUploadContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, bool PrewarmOnly);
+	// 表情卡的内容渲染（R3：自 MiniFeatures 列表迁出，独立成 qm:emoticons 卡）。
+	void RenderQmFunctionEmoticonsContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth);
+	// 灵动岛倒计时位置开关（卡片目录的桥接入口按本地签名调用）。
+	bool ToggleQmHudCountdownLocation(CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, int *pValue);
+	// 歌词卡的内容渲染（音乐 Hook 开关 + 歌词开关；Hook 开关改为遍历 QmMusicHookRegistry）。
+	void RenderQmHudLyricsContent(CUIRect &Content, float LineHeight, float LineSpacing, bool PrewarmOnly);
 	void RenderQmFunctionJumpHintContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionWeaponTrajectoryContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 	void RenderQmFunctionFriendNotifyContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);

@@ -798,7 +798,7 @@ static void ServerBrowserFormatAddresses(char *pBuffer, int BufferSize, NETADDR 
 	}
 }
 
-void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info) const
+void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info)
 {
 	const CServerInfo TmpInfo = pEntry->m_Info;
 	pEntry->m_Info = Info;
@@ -872,6 +872,7 @@ void CServerBrowser::SetInfo(CServerEntry *pEntry, const CServerInfo &Info) cons
 	std::sort(pEntry->m_Info.m_vClients.begin(), pEntry->m_Info.m_vClients.end(), CPlayerScoreNameLess(pEntry->m_Info.m_ClientScoreKind));
 
 	pEntry->m_GotInfo = 1;
+	++m_FriendListRevision;
 }
 
 // 可用延迟：未测量（-1）或触到 1 秒测量上限的值都不能当作实测延迟使用。
@@ -1348,6 +1349,7 @@ void CServerBrowser::CleanUp()
 	m_pLastReqServer = nullptr;
 	m_NumRequests = 0;
 	m_CurrentMaxRequests = g_Config.m_BrMaxRequests;
+	++m_FriendListRevision;
 }
 
 void CServerBrowser::Update()

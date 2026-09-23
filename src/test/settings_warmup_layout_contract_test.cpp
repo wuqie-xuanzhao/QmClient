@@ -134,7 +134,10 @@ TEST(SettingsWarmupLayoutContract, SettingsCardsAvoidIdlePerFrameMeasurement)
 	EXPECT_EQ(TClient.find("m_MeasureEachFrame = true;"), std::string::npos);
 	EXPECT_NE(Settings.find("Definition.m_MeasureRevision = static_cast<uint64_t>"), std::string::npos);
 	EXPECT_EQ(QmClient.find("Definition.m_MeasureRevision = static_cast<uint64_t>"), std::string::npos);
-	EXPECT_NE(QmClient.find("Definition.m_MeasureRevision = MeasureContentRevision(Id);"), std::string::npos);
+	// 卡片定义装配已迁入全局卡片目录（N3）：Qm 侧三个页面不再各自出现该赋值行，
+	// 但「每张卡有独立重测版本、避免逐帧测量」这一不变量仍成立，改在目录的构造器中断言。
+	const std::string CardCatalog = ReadTestSourceFile("src/game/client/QmUi/cards/QmCardCatalog.cpp");
+	EXPECT_NE(CardCatalog.find("Out.m_MeasureRevision = MeasureRevision;"), std::string::npos);
 }
 
 TEST(SettingsWarmupLayoutContract, TClientSettingsUseTwoLevelFontScale)

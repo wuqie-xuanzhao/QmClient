@@ -3,10 +3,12 @@
 
 #include <base/system.h>
 
+#include <engine/client/serverbrowser_http_parse.h>
 #include <engine/client/serverbrowser_ping_cache.h>
 #include <engine/console.h>
 #include <engine/engine.h>
 #include <engine/shared/config.h>
+#include <engine/shared/json.h>
 #include <engine/sqlite.h>
 #include <engine/storage.h>
 
@@ -14,6 +16,8 @@
 #include <sqlite3.h>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 TEST(ServerBrowser, PingCache)
 {
@@ -148,4 +152,61 @@ TEST(ServerBrowser, PingCacheIgnoresExpiredEntries)
 	EXPECT_EQ(pPingCache->GetPing(&OldAddr, 1), 171);
 
 	g_Config.m_QmPingCacheMaxAgeHours = OldMaxAgeHours;
+}
+
+namespace
+{
+	std::string HttpListEntry(const char *pAddresses, const char *pName = "Example")
+	{
+		return std::string("{\"addresses\":") + pAddresses + R"(,"location":"eu","info":{"max_clients":16,"max_players":16,"passworded":false,"game_type":"DDRace","name":")" + pName + R"(","map":{"name":"Map"},"version":"0.6","clients":[]}})";
+	}
+
+	bool ParseHttpListForTest(const std::string &Text, std::vector<CServerInfo> &vServers)
+	{
+		json_value *pJson = JsonParse(Text.c_str(), Text.size());
+		const bool Failed = ServerBrowserParseHttpList(pJson, &vServers);
+		json_value_free(pJson);
+		return Failed;
+	}
+}
+
+TEST(ServerBrowserHttpParse, PreservesAddressPreferenceAndSkipsUnsupportedServers)
+{
+	std::vector<CServerInfo> vServers;
+	const std::string Text = "{\"servers\":[" +
+				 HttpListEntry(R"(["tw-0.7+udp://127.0.0.1:8303","tw-0.6+udp://127.0.0.1:8304"])", "Mixed") + "," +
+				 HttpListEntry(R"(["invalid://127.0.0.1:8303"])") + "," +
+				 HttpListEntry(R"(["tw-0.7+udp://127.0.0.1:8305"])", "Seven") + "]}";
+	ASSERT_FALSE(ParseHttpListForTest(Text, vServers));
+	ASSERT_EQ(vServers.size(), 2u);
+	EXPECT_STREQ(vServers[0].m_aName, "Mixed");
+	EXPECT_EQ(vServers[0].m_NumAddresses, 1);
+	EXPECT_EQ(vServers[0].m_aAddresses[0].port, 8304);
+	EXPECT_STREQ(vServers[1].m_aName, "Seven");
+	EXPECT_EQ(vServers[1].m_aAddresses[0].port, 8305);
+}
+
+TEST(ServerBrowserHttpParse, InvalidResponsePreservesPublishedList)
+{
+	std::vector<CServerInfo> vServers(1);
+	str_copy(vServers[0].m_aName, "Old list");
+	for(const std::string &Text : {std::string("not json"), std::string("{}"),
+		    "{\"servers\":[" + HttpListEntry(R"(["tw-0.6+udp://127.0.0.1:8303"])") + R"(,{"addresses":false,"info":{}}]})"})
+	{
+		EXPECT_TRUE(ParseHttpListForTest(Text, vServers));
+		ASSERT_EQ(vServers.size(), 1u);
+		EXPECT_STREQ(vServers[0].m_aName, "Old list");
+	}
+}
+
+TEST(ServerBrowserHttpParse, EmptySuccessReplacesOldListAndSkipsInvalidInfo)
+{
+	std::vector<CServerInfo> vServers(1);
+	EXPECT_FALSE(ParseHttpListForTest(R"({"servers":[]})", vServers));
+	EXPECT_TRUE(vServers.empty());
+	const std::string Text = R"({"servers":[{"addresses":["tw-0.6+udp://127.0.0.1:8303"],"info":{}},)" +
+				 HttpListEntry(R"(["tw-0.6+udp://127.0.0.1:8304"])") + "]}";
+	ASSERT_FALSE(ParseHttpListForTest(Text, vServers));
+	ASSERT_EQ(vServers.size(), 1u);
+	EXPECT_EQ(vServers[0].m_aAddresses[0].port, 8304);
 }

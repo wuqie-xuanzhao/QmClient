@@ -49,9 +49,7 @@ namespace
 		return std::string::npos;
 	}
 
-
 } // namespace
-
 
 TEST(QmNewUiMenuShellBrowserContract, BrowserInteriorBackgroundsUseMapBrowserOpacity)
 {
@@ -113,7 +111,6 @@ TEST(QmNewUiMenuShellBrowserContract, DemoBrowserUsesExplicitLegacyShellBranches
 	EXPECT_NE(LegacyButtonsBranch.find("ButtonsView.HSplitMid(&ButtonBarTop, &ButtonBarBottom, 5.0f);"), std::string::npos);
 	EXPECT_EQ(RenderDemoBrowser.find("MainView.Draw(MenuPanelColor()"), std::string::npos);
 }
-
 
 TEST(QmNewUiMenuShellBrowserContract, MapHistoryUsesFullHeightTabbedResponsiveCardGrid)
 {

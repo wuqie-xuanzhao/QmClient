@@ -47,6 +47,25 @@ namespace NeteaseLyrics
 		return Result;
 	}
 
+	SSelectedLine SelectLatestStartedLine(const STimeline &Timeline, int64_t PositionMs)
+	{
+		SSelectedLine Result;
+		if(!Timeline.m_HasTiming || Timeline.m_vLines.empty() || PositionMs < 0)
+			return Result;
+
+		const auto It = std::upper_bound(Timeline.m_vLines.begin(), Timeline.m_vLines.end(), PositionMs, [](int64_t Position, const SLine &Line) {
+			return Position < Line.m_StartMs;
+		});
+		if(It == Timeline.m_vLines.begin())
+			return Result;
+		const int Index = (int)std::distance(Timeline.m_vLines.begin(), It) - 1;
+		const SLine &Line = Timeline.m_vLines[(size_t)Index];
+		Result.m_Index = Index;
+		Result.m_pLine = &Line;
+		Result.m_InTimedRange = Line.m_EndMs < 0 || PositionMs < Line.m_EndMs;
+		return Result;
+	}
+
 	void SPlaybackAnchor::Reset()
 	{
 		m_PositionMs = 0;

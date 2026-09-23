@@ -3,6 +3,8 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <game/client/components/qmclient/qm_skin_outline.h>
+
 #include <limits>
 
 void CSkin::CSkinTextures::Reset()
@@ -17,6 +19,9 @@ void CSkin::CSkinTextures::Reset()
 	{
 		Eye = IGraphics::CTextureHandle();
 	}
+	m_QmBodyOutline.reset();
+	m_QmFeetOutline.reset();
+	m_QmChatAvatar.reset();
 }
 
 void CSkin::CSkinTextures::Unload(IGraphics *pGraphics)
@@ -31,6 +36,10 @@ void CSkin::CSkinTextures::Unload(IGraphics *pGraphics)
 	{
 		pGraphics->UnloadTexture(&Eye);
 	}
+	if(m_QmBodyOutline)
+		m_QmBodyOutline->Unload(pGraphics);
+	if(m_QmFeetOutline)
+		m_QmFeetOutline->Unload(pGraphics);
 }
 
 CSkin::CSkinMetricVariableInt::operator int() const

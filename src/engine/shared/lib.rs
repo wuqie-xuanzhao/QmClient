@@ -17,6 +17,7 @@ extern crate ddnet_test;
 mod config;
 #[cfg(windows)]
 mod qm_update;
+mod qm_websocket;
 mod rust_version;
 #[allow(non_snake_case)]
 mod snapshot;

@@ -30,17 +30,17 @@ void CQmHudNotifications::OnRender()
 
 namespace
 {
-class CTestHudNotifications final : public CQmHudNotifications
-{
-public:
-};
+	class CTestHudNotifications final : public CQmHudNotifications
+	{
+	public:
+	};
 } // namespace
 
 TEST(QmHudNotifications, HandleServerChatUsesFallbackNotificationForUnknownMessage)
 {
 	CTestHudNotifications Notifications;
 	QmHudNotifications::SServerMessageAnalysis Analysis;
-	EXPECT_TRUE(Notifications.HandleServerChat("regular server message", true, false, false, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("regular server message", true, &Analysis));
 	EXPECT_TRUE(Analysis.m_UseFallbackLocalization);
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
 	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "regular server message");
@@ -51,9 +51,9 @@ TEST(QmHudNotifications, ConsecutiveIdenticalSystemNotificationsCollapseIntoRepe
 	CTestHudNotifications Notifications;
 	QmHudNotifications::SServerMessageAnalysis Analysis;
 
-	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
-	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
-	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, false, false, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, &Analysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("Team save already in progress", true, &Analysis));
 
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
 	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "Team save already in progress");
@@ -65,34 +65,34 @@ TEST(QmHudNotifications, HandleServerChatRespectsDisabledSystemRoute)
 {
 	CTestHudNotifications Notifications;
 	QmHudNotifications::SServerMessageAnalysis Analysis;
-	EXPECT_FALSE(Notifications.HandleServerChat("Team save already in progress", false, false, false, &Analysis));
+	EXPECT_FALSE(Notifications.HandleServerChat("Team save already in progress", false, &Analysis));
 	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::Prompt);
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 0);
 }
 
-TEST(QmHudNotifications, HandleServerChatConsumesHiddenBasicInfo)
+TEST(QmHudNotifications, HandleServerChatLeavesBasicInfoInChat)
 {
 	CTestHudNotifications Notifications;
 	QmHudNotifications::SServerMessageAnalysis Analysis;
-	EXPECT_TRUE(Notifications.HandleServerChat("DDraceNetwork Version: 18.9", true, true, false, &Analysis));
+	EXPECT_FALSE(Notifications.HandleServerChat("DDraceNetwork Version: 18.9", true, &Analysis));
 	EXPECT_EQ(Analysis.m_Class, QmHudNotifications::EServerMessageClass::BasicInfo);
 	EXPECT_EQ(Notifications.NotificationCountForTests(), 0);
 }
 
-TEST(QmHudNotifications, HandleServerChatClearsPendingCompatAfterHiddenSoloPrompt)
+TEST(QmHudNotifications, HandleServerChatClearsPendingCompatAfterQueuedSoloPrompt)
 {
 	CTestHudNotifications Notifications;
 	Notifications.SetPendingCompatPromptForTests(QmHudNotifications::ESoloPrompt::Enter, time_get() + time_freq());
 
-	QmHudNotifications::SServerMessageAnalysis HiddenAnalysis;
-	EXPECT_TRUE(Notifications.HandleServerChat("You are now in a solo part", true, false, true, &HiddenAnalysis));
-	EXPECT_EQ(HiddenAnalysis.m_Route, QmHudNotifications::EServerMessageRoute::Solo);
+	QmHudNotifications::SServerMessageAnalysis EnterAnalysis;
+	EXPECT_TRUE(Notifications.HandleServerChat("You are now in a solo part", true, &EnterAnalysis));
+	EXPECT_EQ(EnterAnalysis.m_Route, QmHudNotifications::EServerMessageRoute::Solo);
 	EXPECT_EQ(Notifications.PendingCompatPromptForTests(), QmHudNotifications::ESoloPrompt::None);
-	EXPECT_EQ(Notifications.NotificationCountForTests(), 0);
+	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
 
 	QmHudNotifications::SServerMessageAnalysis FollowupAnalysis;
-	EXPECT_TRUE(Notifications.HandleServerChat("You are now out of the solo part", true, false, false, &FollowupAnalysis));
+	EXPECT_TRUE(Notifications.HandleServerChat("You are now out of the solo part", true, &FollowupAnalysis));
 	EXPECT_EQ(FollowupAnalysis.m_Route, QmHudNotifications::EServerMessageRoute::Solo);
-	EXPECT_EQ(Notifications.NotificationCountForTests(), 1);
+	EXPECT_EQ(Notifications.NotificationCountForTests(), 2);
 	EXPECT_STREQ(Notifications.LastNotificationTextForTests(), "You are now out of the solo part");
 }

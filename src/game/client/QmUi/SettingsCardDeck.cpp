@@ -109,10 +109,7 @@ void CSettingsCardDeck::PrepareDefinitions(const std::vector<SSettingsCardDefini
 	{
 		const SSettingsCardDefinition *pDefinition = m_vDefinitionsByState[StateIndex];
 		if(pDefinition != nullptr)
-		{
-			const bool DefinitionAuthoritative = static_cast<bool>(pDefinition->m_OnCollapseChanged);
-			m_vRuntimeStates[StateIndex].m_DefaultCollapsed = SettingsCardDeckResolveCollapsedSnapshot(m_DefaultCollapsedByStableId, pDefinition->m_Spec.m_pStableId, pDefinition->m_DefaultCollapsed, DefinitionAuthoritative);
-		}
+			m_vRuntimeStates[StateIndex].m_DefaultCollapsed = SettingsCardDeckLoadCollapsed(m_DefaultCollapsedByStableId, pDefinition->m_Spec.m_pStableId, m_vRuntimeStates[StateIndex].m_DefaultCollapsed);
 	}
 }
 
@@ -162,7 +159,7 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	if(TabChanged)
 	{
 		m_LastRenderedTab = pTab;
-		m_FrameRuntime.OnTabChanged();
+		m_FrameRuntime.OnTabChanged(Motion.m_ContinuousEntry);
 		m_SuppressHoverFeedbackOnce = true;
 	}
 
@@ -259,7 +256,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			uint64_t &CachedMeasureRevision = m_vMeasureRevisions[StateIndex];
 			const float PreviousContentHeight = CachedContentHeight;
 			SRuntimeState &Runtime = m_vRuntimeStates[StateIndex];
-			const bool Collapsed = Runtime.m_DefaultCollapsed;
+			const bool HasCustomCollapsedState = static_cast<bool>(pDefinition->m_IsCollapsed);
+			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			const float ContentWidth = std::max(0.0f, Slot.w - 2.0f * ui_token::settings::CARD_PADDING * (Ctx.m_UiScale > 0.0f ? Ctx.m_UiScale : 1.0f));
 			if(std::abs(CachedContentWidth - ContentWidth) > 0.01f)
 			{
@@ -380,7 +378,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 			const SSettingsCardFrame PreLayoutFrame = ResolveSettingsCardDrawFrame(Card.m_Frame, Runtime.m_LastDrawOffsetX, Runtime.m_LastDrawOffsetY);
 			const bool ControllerVisible = pScrollRegion == nullptr || !pScrollRegion->RectClipped(PreLayoutFrame.m_Rect) || Card.m_pDefinition->m_RenderWhenClipped;
 			bool CardGeometryChanged = false;
-			const bool CollapsedBeforeHeader = Runtime.m_DefaultCollapsed;
+			const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
+			const bool CollapsedBeforeHeader = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			bool HeaderGeometryChanged = false;
 			// ActiveItem 可能在前一张卡片的释放阶段被清除。逐卡读取，避免
 			// 已经完成的点击继续驱动后续被裁剪卡片的预布局回调。
@@ -391,20 +390,18 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 				HeaderGeometryChanged = Card.m_pDefinition->m_PreLayoutHeaderInput(PreLayoutFrame, CollapsedBeforeHeader);
 				CardGeometryChanged = HeaderGeometryChanged;
 			}
-			else if((ControllerVisible || HasActiveHeaderContinuation) && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && SettingsCardDeckUsesDefaultCollapseControl() &&
+			else if((ControllerVisible || HasActiveHeaderContinuation) && Ctx.m_pUi != nullptr && !Ctx.m_pUi->RenderOnly() && SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput)) &&
 				Ctx.m_pUi->DoButtonLogic(&Runtime.m_DefaultCollapseButtonId, CollapsedBeforeHeader, &PreLayoutFrame.m_HandleRect, BUTTONFLAG_LEFT))
 			{
-				Runtime.m_DefaultCollapsed = SettingsCardDeckApplyDefaultCollapseToggle(Runtime.m_DefaultCollapsed, true, false);
+				Runtime.m_DefaultCollapsed = SettingsCardDeckApplyDefaultCollapseToggle(HasCustomCollapsedState, Runtime.m_DefaultCollapsed, true, false);
 				SettingsCardDeckStoreCollapsed(m_DefaultCollapsedByStableId, Card.m_pDefinition->m_Spec.m_pStableId, Runtime.m_DefaultCollapsed);
-				if(Card.m_pDefinition->m_OnCollapseChanged)
-					Card.m_pDefinition->m_OnCollapseChanged(Runtime.m_DefaultCollapsed);
 				CardGeometryChanged = true;
 				HeaderGeometryChanged = true;
 			}
 			if(HeaderGeometryChanged)
 				Ctx.m_pUi->ClosePopupMenus();
 
-			const bool Collapsed = Runtime.m_DefaultCollapsed;
+			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			const bool HasPendingPreLayoutInput = Card.m_pDefinition->m_HasPendingPreLayoutInput && Card.m_pDefinition->m_HasPendingPreLayoutInput();
 			const bool HasActiveContentContinuation = SettingsCardDeckHasActiveItemContinuation(HasPointerInput, Ctx.m_pUi != nullptr && Ctx.m_pUi->ActiveItem() != nullptr);
 			if(SettingsCardDeckShouldRunPreLayoutInput(HasPointerInput, HasPendingPreLayoutInput, HasActiveContentContinuation, ControllerVisible, Collapsed, PreLayoutFrame.m_ContentRect.h) && Card.m_pDefinition->m_PreLayoutInput)
@@ -439,7 +436,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	for(const SPreparedCard &Card : m_vPreparedCards)
 	{
 		SRuntimeState &Runtime = m_vRuntimeStates[Card.m_StateIndex];
-		const bool Collapsed = Runtime.m_DefaultCollapsed;
+		const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
+		const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 		if(Runtime.m_CollapsedInitialized && Runtime.m_LastCollapsed != Collapsed)
 			GeometryStateChanged = true;
 		Runtime.m_CollapsedInitialized = true;
@@ -458,34 +456,47 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 	bool SnapReflow = SettingsCardDeckShouldSnapReflow(GeometryStateChanged, m_Drag.Active()) || ContentHeightTargetChanged || ContentHeightAnimationActive;
 	if(Ctx.m_pAnim != nullptr)
 	{
-		uint64_t EntryKey = 0;
-		bool HasEntryKey = false;
-		const auto ResolveEntryKey = [&]() {
-			if(!HasEntryKey)
+		if(Motion.m_ContinuousEntry)
+		{
+			if(m_FrameRuntime.EntryCyclePending() || m_FrameRuntime.EntryWasActive())
 			{
-				EntryKey = SettingsCardEntryNodeKey(pTab);
-				HasEntryKey = true;
+				// 轨道属于可见 Deck，不随分类字符串变化；预热 Deck 使用自己的实例。
+				const uint64_t EntryKey = BuildUiAnimNodeKey(str_quickhash("settings-card-deck-continuous-entry"), reinterpret_cast<uintptr_t>(this));
+				DeckEntryOffsetY = m_FrameRuntime.ResolveContinuousEntryOffset(*Ctx.m_pAnim, EntryKey, Motion);
+				EntryPositionActive = m_FrameRuntime.EntryWasActive();
 			}
-			return EntryKey;
-		};
-		if(m_FrameRuntime.ConsumeEntryCycle())
-		{
-			Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, m_FrameRuntime.AnimateEntry() ? Motion.m_EntryDistance : 0.0f);
-			m_FrameRuntime.SetEntryActive(m_FrameRuntime.AnimateEntry() && Motion.m_EntryDuration > 0.0f);
 		}
-		if(m_FrameRuntime.EntryWasActive() && Motion.m_EntryDuration > 0.0f)
+		else
 		{
-			if(Input.m_pDiagnostics != nullptr)
-				m_FrameRuntime.CountEntryAnimationResolve();
-			const uint64_t ResolvedEntryKey = ResolveEntryKey();
-			DeckEntryOffsetY = ResolveUiAnimValue(*Ctx.m_pAnim, ResolvedEntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
-			EntryPositionActive = Ctx.m_pAnim->HasActiveAnimation(ResolvedEntryKey, EUiAnimProperty::POS_Y);
-			m_FrameRuntime.SetEntryActive(EntryPositionActive);
-		}
-		else if(m_FrameRuntime.EntryWasActive())
-		{
-			Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, 0.0f);
-			m_FrameRuntime.SetEntryActive(false);
+			uint64_t EntryKey = 0;
+			bool HasEntryKey = false;
+			const auto ResolveEntryKey = [&]() {
+				if(!HasEntryKey)
+				{
+					EntryKey = SettingsCardEntryNodeKey(pTab);
+					HasEntryKey = true;
+				}
+				return EntryKey;
+			};
+			if(m_FrameRuntime.ConsumeEntryCycle())
+			{
+				Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, m_FrameRuntime.AnimateEntry() ? Motion.m_EntryDistance : 0.0f);
+				m_FrameRuntime.SetEntryActive(m_FrameRuntime.AnimateEntry() && Motion.m_EntryDuration > 0.0f);
+			}
+			if(m_FrameRuntime.EntryWasActive() && Motion.m_EntryDuration > 0.0f)
+			{
+				if(Input.m_pDiagnostics != nullptr)
+					m_FrameRuntime.CountEntryAnimationResolve();
+				const uint64_t ResolvedEntryKey = ResolveEntryKey();
+				DeckEntryOffsetY = ResolveUiAnimValue(*Ctx.m_pAnim, ResolvedEntryKey, EUiAnimProperty::POS_Y, 0.0f, Motion.m_EntryDuration, EEasing::EASE_OUT);
+				EntryPositionActive = Ctx.m_pAnim->HasActiveAnimation(ResolvedEntryKey, EUiAnimProperty::POS_Y);
+				m_FrameRuntime.SetEntryActive(EntryPositionActive);
+			}
+			else if(m_FrameRuntime.EntryWasActive())
+			{
+				Ctx.m_pAnim->SetValue(ResolveEntryKey(), EUiAnimProperty::POS_Y, 0.0f);
+				m_FrameRuntime.SetEntryActive(false);
+			}
 		}
 		EntryPending = false;
 		for(const SPreparedCard &Card : m_vPreparedCards)
@@ -552,7 +563,8 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		{
 			Result.m_AutoScrollDelta = SettingsCardDeckAutoScrollDelta(Input.m_MouseY, ScrollViewport, Ctx.m_UiScale);
 			if(Result.m_AutoScrollDelta != 0.0f)
-				pScrollRegion->ScrollRelativeDirect(Result.m_AutoScrollDelta * std::max(0.0f, Input.m_FrameDt));
+				// 拖拽边缘滚动是当前输入，恢复前台时不补做后台期间的交互位移。
+				pScrollRegion->ScrollRelativeDirect(Result.m_AutoScrollDelta * std::clamp(Input.m_FrameDt, 0.0f, 1.0f / 15.0f));
 		}
 
 		if(Input.m_MouseReleased)
@@ -683,9 +695,10 @@ SSettingsCardDeckResult CSettingsCardDeck::RenderInternal(const IUiContext &Ctx,
 		{
 			if(Input.m_pDiagnostics != nullptr)
 				m_FrameRuntime.CountRenderedCard(SettingsCardShouldDrawChrome(Ctx.m_pUi != nullptr && Ctx.m_pUi->RenderOnly()));
-			const bool Collapsed = Runtime.m_DefaultCollapsed;
+			const bool HasCustomCollapsedState = static_cast<bool>(Card.m_pDefinition->m_IsCollapsed);
+			const bool Collapsed = SettingsCardDeckResolveCollapsed(HasCustomCollapsedState, HasCustomCollapsedState && Card.m_pDefinition->m_IsCollapsed(), Runtime.m_DefaultCollapsed);
 			State.m_Collapsed = Collapsed;
-			State.m_ShowDefaultCollapseButton = SettingsCardDeckUsesDefaultCollapseControl();
+			State.m_ShowDefaultCollapseButton = SettingsCardDeckUsesDefaultCollapseControl(HasCustomCollapsedState, static_cast<bool>(Card.m_pDefinition->m_PreLayoutHeaderInput));
 			State.m_HoverFeedbackEnabled = !m_SuppressHoverFeedbackOnce && !ScrollMovedThisFrame && !EntryPositionActive &&
 						       !ContentHeightAnimationActive && !ReflowTargetChanged && !ReflowPositionActive;
 			bool PointerInsideDrawFrame = false;

@@ -41,6 +41,7 @@
 #include <game/client/QmUi/UiContainers.h>
 #include <game/client/QmUi/UiContext.h>
 #include <game/client/QmUi/UiForms.h>
+#include <game/client/QmUi/UiMotion.h>
 #include <game/client/QmUi/UiNavigation.h>
 #include <game/client/QmUi/UiSurface.h>
 #include <game/client/QmUi/UiTheme.h>
@@ -181,13 +182,13 @@ using namespace std::chrono_literals;
 
 namespace
 {
-	constexpr float MENU_SWITCH_DURATION = 0.18f;
+	constexpr float MENU_SWITCH_DURATION = ui_token::motion::PAGE_SLIDE.m_DurationSec;
 	constexpr float MENU_SWITCH_ALPHA_MAX = 0.12f;
-	constexpr float MENU_TAB_HOVER_DURATION = 0.10f;
+	constexpr float MENU_TAB_HOVER_DURATION = ui_token::motion::HOVER_FADE.m_DurationSec;
 	constexpr float MENU_TAB_DEFAULT_X_OFFSET = 0.0f;
-	constexpr float MENU_TAB_DEFAULT_Y_OFFSET = -1.5f;
+	constexpr float MENU_TAB_DEFAULT_Y_OFFSET = 0.0f;
 	constexpr float MENU_TAB_DEFAULT_W_OFFSET = 0.0f;
-	constexpr float MENU_TAB_DEFAULT_H_OFFSET = 3.0f;
+	constexpr float MENU_TAB_DEFAULT_H_OFFSET = 0.0f;
 	constexpr float MENU_TAB_ANIM_EPSILON = 0.0001f;
 	constexpr int MENU_IDLE_REFRESH_RATE = 60;
 	constexpr auto MENU_IDLE_INTERACTION_GRACE_TIME = 450ms;
@@ -1010,18 +1011,7 @@ void CMenus::TriggerUiSwitchAnimation(const uint64_t NodeKey, const float Durati
 		return;
 
 	CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-	AnimRuntime.SetValue(NodeKey, EUiAnimProperty::POS_X, 1.0f);
-
-	SUiAnimRequest Request;
-	Request.m_NodeKey = NodeKey;
-	Request.m_Property = EUiAnimProperty::POS_X;
-	Request.m_Target = 0.0f;
-	Request.m_Transition.m_DurationSec = DurationSec;
-	Request.m_Transition.m_DelaySec = 0.0f;
-	Request.m_Transition.m_Priority = 1;
-	Request.m_Transition.m_Interrupt = EUiAnimInterruptPolicy::MERGE_TARGET;
-	Request.m_Transition.m_Easing = EEasing::EASE_OUT;
-	AnimRuntime.RequestAnimation(Request);
+	BeginUiSwitchAnimation(AnimRuntime, NodeKey, DurationSec);
 }
 
 float CMenus::ReadUiSwitchAnimation(const uint64_t NodeKey) const
@@ -1226,7 +1216,7 @@ int CMenus::DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const c
 	CUiScopedGaussianBlurSuppression GaussianBlurSuppression(Ui());
 	const bool MouseInside = Ui()->HotItem() == pButtonContainer;
 	CUIRect AnimatedLabelRect = *pRect;
-	const bool TabActive = Checked || MouseInside;
+	const bool TabActive = MouseInside;
 	const float AnimValue = ResolveMenuTabAnimationValue(pButtonContainer, TabActive, MENU_TAB_HOVER_DURATION);
 
 	float XOffset = MENU_TAB_DEFAULT_X_OFFSET;
@@ -1252,8 +1242,12 @@ int CMenus::DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const c
 	if(CapsuleTab)
 	{
 		// 胶囊 Tab 的激活外观由滑块胶囊承担，Tab 自己不再画分块底色，只保留 hover 反馈。
-		if(MouseInside)
-			DrawRoundedSurface(Ui(), *pRect, MenuCapsuleTabHoverColor(), ColorRGBA(), ui_token::radius::PILL, 0.0f, Corners);
+		if(AnimValue > MENU_TAB_ANIM_EPSILON)
+		{
+			ColorRGBA HoverColor = MenuCapsuleTabHoverColor();
+			HoverColor.a *= AnimValue;
+			DrawRoundedSurface(Ui(), *pRect, HoverColor, ColorRGBA(), ui_token::radius::PILL, 0.0f, Corners);
+		}
 	}
 	else if(Checked)
 	{
@@ -1267,7 +1261,7 @@ int CMenus::DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const c
 	}
 	else
 	{
-		if(MouseInside)
+		if(AnimValue > MENU_TAB_ANIM_EPSILON)
 		{
 			ColorRGBA HoverColorMenuTab = ms_ColorTabbarHover;
 			if(pHoverColor)
@@ -1275,7 +1269,13 @@ int CMenus::DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const c
 			else if(g_Config.m_QmNewUi)
 				HoverColorMenuTab = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiSelectedColor)).WithAlpha(0.20f);
 
-			DrawRoundedSurface(Ui(), *pRect, HoverColorMenuTab, ColorRGBA(), EdgeRounding, 0.0f, Corners);
+			const ColorRGBA IdleColor = pDefaultColor != nullptr ? *pDefaultColor : ms_ColorTabbarInactive;
+			const ColorRGBA AnimatedColor(
+				mix(IdleColor.r, HoverColorMenuTab.r, AnimValue),
+				mix(IdleColor.g, HoverColorMenuTab.g, AnimValue),
+				mix(IdleColor.b, HoverColorMenuTab.b, AnimValue),
+				mix(IdleColor.a, HoverColorMenuTab.a, AnimValue));
+			DrawRoundedSurface(Ui(), *pRect, AnimatedColor, ColorRGBA(), EdgeRounding, 0.0f, Corners);
 		}
 		else
 		{
@@ -1761,6 +1761,38 @@ int CMenus::DoSettingsButton_Menu(int Page, int Tab, int Subtab, CButtonContaine
 	return DoSettingsButton_Menu(Page, Tab, Subtab, pBC, pTextId, pText, Checked, pRect, Flags, Corners, Rounding, Color, FontFactor, Metrics.m_BodySize);
 }
 
+int CMenus::DoSettingsButton_CapsuleSegment(int Page, int Tab, int Subtab, CButtonContainer *pBC, const char *pTextId, const char *pText, int Checked, const CUIRect *pRect, float BodySize, const ColorRGBA *pLabelColor, const ColorRGBA *pHoverColor)
+{
+	dbg_assert(pBC != nullptr, "capsule segment requires a stable button container");
+	const float ResolvedBodySize = BodySize > 0.0f ? BodySize : CurrentSettingsContentMetrics().m_BodySize;
+	// 胶囊分段不画自己的分块底色（容器与滑块由 NestedSegmentChrome 统一绘制），
+	// 只保留 hover 反馈与文字，所以边框圆角按胶囊给满。
+	const float Rounding = ui_token::radius::PILL;
+	// 压在主滑块上的次级分段：字色不能吃容器级自适应（容器上正常的字色压到主滑块上会看不见），
+	// 由调用方给出实色，并关掉 CapsuleTab 的强制字色。
+	const bool ExplicitLabelColor = pLabelColor != nullptr;
+	const bool CapsuleTab = !ExplicitLabelColor;
+	CUIRect Text = MenuButtonTextRect(pRect, 0.0f, 0.0f);
+	SLabelProperties Props;
+	Props.m_MaxWidth = Text.w;
+	const char *pResolvedTextId = pTextId != nullptr ? pTextId : "";
+	const SMenuTextStyleKey StyleKey = BuildMenuTextStyleKey(&Text, ResolvedBodySize, TEXTALIGN_MC, Props);
+	if(m_MenuTextPlanCollecting)
+	{
+		CollectMenuTextPlanItem(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pResolvedTextId, pText, &Text, ResolvedBodySize, TEXTALIGN_MC, Props, StyleKey);
+		return 0;
+	}
+	CUIElement *pTextElement = pTextId != nullptr ? &MenuTextElement(MENU_TEXT_SCOPE_SETTINGS, Page, Tab, Subtab, pResolvedTextId, StyleKey) : nullptr;
+	const ColorRGBA Transparent = ColorRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+	const ColorRGBA PreviousLabelColor = TextRender()->GetTextColor();
+	if(ExplicitLabelColor)
+		TextRender()->TextColor(*pLabelColor);
+	const int Result = DoButton_MenuTab(pBC, pText, Checked, pRect, IGraphics::CORNER_ALL, nullptr, &Transparent, &Transparent, pHoverColor, Rounding, nullptr, pTextElement, ResolvedBodySize, CapsuleTab);
+	if(ExplicitLabelColor)
+		TextRender()->TextColor(PreviousLabelColor);
+	return Result;
+}
+
 bool CMenus::DoSettingsScrollbarOption(int Page, int Tab, const char *pTextId, const void *pId, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned Flags, const char *pSuffix, const char *pMaxText)
 {
 	return DoSettingsScrollbarOption(Page, Tab, -1, pTextId, pId, pOption, pRect, pStr, Min, Max, pScale, Flags, pSuffix, pMaxText);
@@ -2203,10 +2235,11 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 	TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
 
 	const bool UseNewUi = g_Config.m_QmNewUi != 0;
-	auto RenderFavoriteMapsIcon = [&](const CUIRect &Tab) {
+	auto RenderFavoriteMapsIcon = [&](const CUIRect &Tab, const bool OnIndicator) {
 		const float IconSide = minimum(Tab.w, Tab.h) * 0.56f;
 		const CUIRect IconRect{Tab.x + (Tab.w - IconSide) * 0.5f, Tab.y + (Tab.h - IconSide) * 0.5f, IconSide, IconSide};
-		const ColorRGBA IconColor = ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+		// 滑块上的图标必须是深色：qm_ui_icon_color 默认强制白色，压在亮滑块上会看不见。
+		const ColorRGBA IconColor = OnIndicator ? MenuCapsuleTabActiveLabelColor() : ConfiguredQmUiIconColor(ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
 		if(!GameClient()->QmIconManager()->PreferFontFallback() && GameClient()->QmIconManager()->RenderIcon(EQmIcon::BOOKMARK, IconRect, IconColor))
 			return;
 
@@ -2369,50 +2402,107 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 
 			const float BrowserButtonWidth = 58.0f * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			Box.VSplitLeft(6.0f, nullptr, &Box);
-			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
-			static CButtonContainer s_InternetButton;
-			if(DoMenuTabV2_QmIcon(&s_InternetButton, EQmIcon::EARTH_AMERICAS, FONT_ICON_EARTH_AMERICAS, ActivePage == PAGE_INTERNET, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
-			{
-				NewPage = PAGE_INTERNET;
-			}
-			MenubarTrackActive(PAGE_INTERNET, Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_InternetButton, &Button, Localize("Internet"));
 
-			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
-			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
-			static CButtonContainer s_LanButton;
-			if(DoMenuTabV2_QmIcon(&s_LanButton, EQmIcon::NETWORK_WIRED, FONT_ICON_NETWORK_WIRED, ActivePage == PAGE_LAN, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
+			// 胶囊 Tabbar：页签槽位（含收藏社区页签的展开宽度）先全部算完，再画容器与滑块，
+			// 最后画图标 —— 滑块必须压在图标之下，布局与绘制不能混在同一遍里做。
+			static CButtonContainer s_aStartTabButtons[9];
+			struct SStartTab
 			{
-				NewPage = PAGE_LAN;
-			}
-			MenubarTrackActive(PAGE_LAN, Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_LanButton, &Button, Localize("LAN"));
+				int m_Page;
+				EQmIcon m_Icon;
+				const char *m_pIcon;
+				bool m_bFavoriteMapsIcon;
+				const CCommunityIcon *m_pCommunityIcon;
+				const char *m_pTooltip;
+				float m_AppearStrength;
+			};
+			SStartTab aStartTabs[std::size(s_aStartTabButtons)];
+			CUIRect aStartTabSlots[std::size(s_aStartTabButtons)];
+			int NumStartTabs = 0;
+			int ActiveStartTab = -1;
+			auto AddStartTab = [&](const int Page, const EQmIcon Icon, const char *pIcon, const bool FavoriteMapsIcon, const CCommunityIcon *pCommunityIcon, const char *pTooltip, const float AppearStrength, const CUIRect &Slot) {
+				aStartTabs[NumStartTabs] = {Page, Icon, pIcon, FavoriteMapsIcon, pCommunityIcon, pTooltip, AppearStrength};
+				aStartTabSlots[NumStartTabs] = Slot;
+				if(ActivePage == Page)
+					ActiveStartTab = NumStartTabs;
+				++NumStartTabs;
+			};
+			{
+				const int aFixedPages[] = {PAGE_INTERNET, PAGE_LAN, PAGE_FAVORITES, PAGE_FAVORITE_MAPS};
+				const EQmIcon aFixedIcons[] = {EQmIcon::EARTH_AMERICAS, EQmIcon::NETWORK_WIRED, EQmIcon::STAR, EQmIcon::COUNT};
+				const char *const apFixedIcons[] = {FONT_ICON_EARTH_AMERICAS, FONT_ICON_NETWORK_WIRED, FONT_ICON_STAR, ""};
+				const char *const apFixedTooltips[] = {Localize("Internet"), Localize("LAN"), Localize("Favorites"), Localize("Favorite map")};
+				CUIRect TabsRemainder = Box;
+				for(size_t Fixed = 0; Fixed < std::size(aFixedPages); ++Fixed)
+				{
+					if(NumStartTabs > 0)
+						TabsRemainder.VSplitLeft(MenubarItemGap, nullptr, &TabsRemainder);
+					CUIRect Slot;
+					TabsRemainder.VSplitLeft(BrowserButtonWidth, &Slot, &TabsRemainder);
+					AddStartTab(aFixedPages[Fixed], aFixedIcons[Fixed], apFixedIcons[Fixed], Fixed == std::size(aFixedPages) - 1, nullptr, apFixedTooltips[Fixed], 1.0f, Slot);
+				}
 
-			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
-			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
-			static CButtonContainer s_FavoritesButton;
-			if(DoMenuTabV2_QmIcon(&s_FavoritesButton, EQmIcon::STAR, FONT_ICON_STAR, ActivePage == PAGE_FAVORITES, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
-			{
-				NewPage = PAGE_FAVORITES;
-			}
-			MenubarTrackActive(PAGE_FAVORITES, Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_FavoritesButton, &Button, Localize("Favorites"));
+				static const uint64_t s_FavoriteCommunityAppearScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_community_tab_appear"));
+				CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
+				CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();
+				SUiAnimTransition AppearTransition;
+				AppearTransition.m_DurationSec = 0.18f;
+				AppearTransition.m_Easing = EEasing::EASE_OUT;
+				static_assert(std::size(s_aStartTabButtons) == 4 + (size_t)PAGE_FAVORITE_COMMUNITY_5 - PAGE_FAVORITE_COMMUNITY_1 + 1);
+				static_assert(std::size(s_aStartTabButtons) - 4 == (size_t)BIT_TAB_FAVORITE_COMMUNITY_5 - BIT_TAB_FAVORITE_COMMUNITY_1 + 1);
+				static_assert(std::size(s_aStartTabButtons) - 4 == (size_t)IServerBrowser::TYPE_FAVORITE_COMMUNITY_5 - IServerBrowser::TYPE_FAVORITE_COMMUNITY_1 + 1);
+				for(const CCommunity *pCommunity : ServerBrowser()->FavoriteCommunities())
+				{
+					if((size_t)NumStartTabs >= std::size(s_aStartTabButtons))
+						break;
+					// 宽度不够时后面的社区页签不参与，避免挤掉右侧图标簇。
+					if(TabsRemainder.w < BrowserButtonWidth + MenubarItemGap)
+						break;
+					TabsRemainder.VSplitLeft(MenubarItemGap, nullptr, &TabsRemainder);
+					CUIRect Slot;
+					TabsRemainder.VSplitLeft(BrowserButtonWidth, &Slot, &TabsRemainder);
 
-			TextRender()->SetRenderFlags(0);
-			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
-			Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
-			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
-			static CButtonContainer s_FavoriteMapsButton;
-			if(DoMenuTabV2(&s_FavoriteMapsButton, "", ActivePage == PAGE_FAVORITE_MAPS, &Button, IGraphics::CORNER_ALL, nullptr, nullptr, nullptr, nullptr, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
-			{
-				NewPage = PAGE_FAVORITE_MAPS;
+					const uint64_t NodeKey = BuildUiAnimNodeKey(s_FavoriteCommunityAppearScopeHash, static_cast<uint64_t>(str_quickhash(pCommunity->Id())));
+					const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, NodeKey, true, AppearTransition);
+					const float AppearStrength = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);
+					const float RevealWidth = maximum(2.0f, Slot.w * AppearStrength);
+					Slot.x += (Slot.w - RevealWidth) * 0.5f;
+					Slot.w = RevealWidth;
+
+					const int Page = PAGE_FAVORITE_COMMUNITY_1 + (NumStartTabs - 4);
+					AddStartTab(Page, EQmIcon::ELLIPSIS, FONT_ICON_ELLIPSIS, false, m_CommunityIcons.Find(pCommunity->Id()), pCommunity->Name(), AppearStrength, Slot);
+				}
+				// 右侧图标簇紧接着页签右边排，中间不留额外空白。
+				Box = TabsRemainder;
 			}
-			RenderFavoriteMapsIcon(Button);
-			MenubarTrackActive(PAGE_FAVORITE_MAPS, Button);
-			GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
+
+			const IUiContext TabBarCtx = TabBarUiContext();
+			ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash("menubar_capsule_start_tabs"), ui_widget::CapsuleTabBarRowRect(aStartTabSlots, NumStartTabs), ActiveStartTab >= 0 ? &aStartTabSlots[ActiveStartTab] : nullptr, MenuCapsuleTabBarStyle());
 
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
 			TextRender()->SetRenderFlags(ETextRenderFlags::TEXT_RENDER_FLAG_ONLY_ADVANCE_WIDTH | ETextRenderFlags::TEXT_RENDER_FLAG_NO_X_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_Y_BEARING | ETextRenderFlags::TEXT_RENDER_FLAG_NO_PIXEL_ALIGNMENT | ETextRenderFlags::TEXT_RENDER_FLAG_NO_OVERSIZE);
+			for(int TabIndex = 0; TabIndex < NumStartTabs; ++TabIndex)
+			{
+				const SStartTab &Tab = aStartTabs[TabIndex];
+				const bool TabActive = ActivePage == Tab.m_Page;
+				ColorRGBA InactiveColor = MenuTabDefaultColor();
+				ColorRGBA ActiveColor = MenuTabActiveColor();
+				ColorRGBA HoverColor = MenuMenubarHoverColor();
+				InactiveColor.a *= Tab.m_AppearStrength;
+				ActiveColor.a *= Tab.m_AppearStrength;
+				HoverColor.a *= Tab.m_AppearStrength;
+				if(DoMenuTabV2_QmIcon(&s_aStartTabButtons[TabIndex], Tab.m_Icon, Tab.m_pIcon, TabActive, &aStartTabSlots[TabIndex], IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, Tab.m_pCommunityIcon, nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW, true))
+				{
+					NewPage = Tab.m_Page;
+				}
+				if(Tab.m_bFavoriteMapsIcon)
+					RenderFavoriteMapsIcon(aStartTabSlots[TabIndex], TabActive);
+				MenubarTrackActive(Tab.m_Page, aStartTabSlots[TabIndex]);
+				GameClient()->m_Tooltips.DoToolTip(&s_aStartTabButtons[TabIndex], &aStartTabSlots[TabIndex], Tab.m_pTooltip);
+			}
+
+			TextRender()->SetRenderFlags(0);
+			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 
 			int MaxPage = PAGE_FAVORITES + ServerBrowser()->FavoriteCommunities().size();
 			if(
@@ -2457,52 +2547,6 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 				}
 			}
 
-			size_t FavoriteCommunityIndex = 0;
-			static CButtonContainer s_aFavoriteCommunityButtons[5];
-			static const uint64_t s_FavoriteCommunityAppearScopeHash = static_cast<uint64_t>(str_quickhash("menu_favorite_community_tab_appear"));
-			CUiV2AnimationRuntime &AnimRuntime = GameClient()->UiRuntimeV2()->AnimRuntime();
-			CUiV2Tree &Tree = GameClient()->UiRuntimeV2()->Tree();
-			SUiAnimTransition AppearTransition;
-			AppearTransition.m_DurationSec = 0.18f;
-			AppearTransition.m_Easing = EEasing::EASE_OUT;
-			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)PAGE_FAVORITE_COMMUNITY_5 - PAGE_FAVORITE_COMMUNITY_1 + 1);
-			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)BIT_TAB_FAVORITE_COMMUNITY_5 - BIT_TAB_FAVORITE_COMMUNITY_1 + 1);
-			static_assert(std::size(s_aFavoriteCommunityButtons) == (size_t)IServerBrowser::TYPE_FAVORITE_COMMUNITY_5 - IServerBrowser::TYPE_FAVORITE_COMMUNITY_1 + 1);
-			for(const CCommunity *pCommunity : ServerBrowser()->FavoriteCommunities())
-			{
-				if(Box.w < BrowserButtonWidth + MenubarItemGap)
-					break;
-				Box.VSplitLeft(MenubarItemGap, nullptr, &Box);
-				Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
-
-				const uint64_t NodeKey = BuildUiAnimNodeKey(s_FavoriteCommunityAppearScopeHash, static_cast<uint64_t>(str_quickhash(pCommunity->Id())));
-				const SUiPresenceResult Presence = Tree.ResolvePresence(AnimRuntime, NodeKey, true, AppearTransition);
-				const float AppearStrength = std::clamp(Presence.m_Alpha, 0.0f, 1.0f);
-				const float RevealWidth = maximum(2.0f, Button.w * AppearStrength);
-				CUIRect AnimatedButton = Button;
-				AnimatedButton.x += (Button.w - RevealWidth) * 0.5f;
-				AnimatedButton.w = RevealWidth;
-
-				ColorRGBA InactiveColor = MenuTabDefaultColor();
-				ColorRGBA ActiveColor = MenuTabActiveColor();
-				ColorRGBA HoverColor = MenuMenubarHoverColor();
-				InactiveColor.a *= AppearStrength;
-				ActiveColor.a *= AppearStrength;
-				HoverColor.a *= AppearStrength;
-
-				const int Page = PAGE_FAVORITE_COMMUNITY_1 + FavoriteCommunityIndex;
-				if(DoMenuTabV2_QmIcon(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], EQmIcon::ELLIPSIS, FONT_ICON_ELLIPSIS, ActivePage == Page, &AnimatedButton, IGraphics::CORNER_ALL, &InactiveColor, &ActiveColor, &HoverColor, m_CommunityIcons.Find(pCommunity->Id()), nullptr, MENU_MENUBAR_CONTENT_SCALE_NEW))
-				{
-					NewPage = Page;
-				}
-				MenubarTrackActive(Page, AnimatedButton);
-				GameClient()->m_Tooltips.DoToolTip(&s_aFavoriteCommunityButtons[FavoriteCommunityIndex], &AnimatedButton, pCommunity->Name());
-
-				++FavoriteCommunityIndex;
-				if(FavoriteCommunityIndex >= std::size(s_aFavoriteCommunityButtons))
-					break;
-			}
-
 			TextRender()->SetRenderFlags(0);
 			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		}
@@ -2521,59 +2565,66 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			const float CallVoteButtonWidth = (CompactOnlineMenuTabs ? 80.0f : 88.0f) * MENU_MENUBAR_CONTENT_SCALE_NEW;
 			const float OnlineTabGap = 4.0f;
 
-			Box.VSplitLeft(GameButtonWidth, &Button, &Box);
-			static CButtonContainer s_GameButton;
-			if(DoIngameMenuTab(&s_GameButton, PAGE_GAME, "ingame-tab-game", Localize("Game"), ActivePage == PAGE_GAME, &Button, IGraphics::CORNER_ALL))
-				NewPage = PAGE_GAME;
-			MenubarTrackActive(PAGE_GAME, Button);
-
-			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
-			Box.VSplitLeft(PlayersButtonWidth, &Button, &Box);
-			static CButtonContainer s_PlayersButton;
-			if(DoIngameMenuTab(&s_PlayersButton, PAGE_PLAYERS, "ingame-tab-players", Localize("Players"), ActivePage == PAGE_PLAYERS, &Button, IGraphics::CORNER_ALL))
-				NewPage = PAGE_PLAYERS;
-			MenubarTrackActive(PAGE_PLAYERS, Button);
-
-			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
-			Box.VSplitLeft(ServerInfoButtonWidth, &Button, &Box);
-			static CButtonContainer s_ServerInfoButton;
-			if(DoIngameMenuTab(&s_ServerInfoButton, PAGE_SERVER_INFO, "ingame-tab-server-info", Localize("Server info"), ActivePage == PAGE_SERVER_INFO, &Button, IGraphics::CORNER_ALL))
-				NewPage = PAGE_SERVER_INFO;
-			MenubarTrackActive(PAGE_SERVER_INFO, Button);
-
-			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
-			Box.VSplitLeft(BrowserButtonWidth, &Button, &Box);
-			static CButtonContainer s_NetworkButton;
-			if(DoIngameMenuTab(&s_NetworkButton, PAGE_NETWORK, "ingame-tab-browser", Localize("Browser"), ActivePage == PAGE_NETWORK, &Button, IGraphics::CORNER_ALL))
-				NewPage = PAGE_NETWORK;
-			MenubarTrackActive(PAGE_NETWORK, Button);
-
-			if(GameClient()->m_GameInfo.m_Race)
+			// 胶囊 Tabbar：先把所有页签槽位算完，再画容器与滑块，最后画页签文字。
+			// 滑块必须压在文字之下，所以布局与绘制不能混在同一遍里做。
+			static CButtonContainer s_aOnlineTabButtons[7];
+			struct SOnlineTab
 			{
-				Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
-				Box.VSplitLeft(GhostButtonWidth, &Button, &Box);
-				static CButtonContainer s_GhostButton;
-				if(DoIngameMenuTab(&s_GhostButton, PAGE_GHOST, "ingame-tab-ghost", Localize("Ghost"), ActivePage == PAGE_GHOST, &Button, IGraphics::CORNER_ALL))
-					NewPage = PAGE_GHOST;
-				MenubarTrackActive(PAGE_GHOST, Button);
-
-				Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
-				Box.VSplitLeft(RankDemoButtonWidth, &Button, &Box);
-				static CButtonContainer s_RankDemoButton;
-				if(DoIngameMenuTab(&s_RankDemoButton, PAGE_RANK_DEMO, "ingame-tab-rank-demo", Localize("Rank 1"), ActivePage == PAGE_RANK_DEMO, &Button, IGraphics::CORNER_ALL))
-					NewPage = PAGE_RANK_DEMO;
-				MenubarTrackActive(PAGE_RANK_DEMO, Button);
+				int m_Page;
+				const char *m_pTextId;
+				const char *m_pText;
+				float m_Width;
+				bool m_Visible;
+			};
+			const bool ShowGhostTab = GameClient()->m_GameInfo.m_Race;
+			const SOnlineTab aOnlineTabs[] = {
+				{PAGE_GAME, "ingame-tab-game", Localize("Game"), GameButtonWidth, true},
+				{PAGE_PLAYERS, "ingame-tab-players", Localize("Players"), PlayersButtonWidth, true},
+				{PAGE_SERVER_INFO, "ingame-tab-server-info", Localize("Server info"), ServerInfoButtonWidth, true},
+				{PAGE_NETWORK, "ingame-tab-browser", Localize("Browser"), BrowserButtonWidth, true},
+				{PAGE_GHOST, "ingame-tab-ghost", Localize("Ghost"), GhostButtonWidth, ShowGhostTab},
+				{PAGE_RANK_DEMO, "ingame-tab-rank-demo", Localize("Rank 1"), RankDemoButtonWidth, ShowGhostTab},
+				{PAGE_CALLVOTE, "ingame-tab-call-vote", Localize("Call vote"), CallVoteButtonWidth, true},
+			};
+			static_assert(std::size(aOnlineTabs) == std::size(s_aOnlineTabButtons));
+			CUIRect aOnlineTabSlots[std::size(aOnlineTabs)];
+			int NumOnlineTabs = 0;
+			int ActiveOnlineTab = -1;
+			{
+				CUIRect TabsRemainder = Box;
+				for(const SOnlineTab &Tab : aOnlineTabs)
+				{
+					if(!Tab.m_Visible)
+						continue; // Ghost / Rank 1 页签只在竞速图出现，跳过的槽位不留空
+					if(NumOnlineTabs > 0)
+						TabsRemainder.VSplitLeft(OnlineTabGap, nullptr, &TabsRemainder);
+					TabsRemainder.VSplitLeft(Tab.m_Width, &aOnlineTabSlots[NumOnlineTabs], &TabsRemainder);
+					if(ActivePage == Tab.m_Page)
+						ActiveOnlineTab = NumOnlineTabs;
+					++NumOnlineTabs;
+				}
+				// 右侧图标簇紧接着页签右边排，中间不留额外空白。
+				Box = TabsRemainder;
 			}
 
-			Box.VSplitLeft(OnlineTabGap, nullptr, &Box);
-			Box.VSplitLeft(CallVoteButtonWidth, &Button, &Box);
-			static CButtonContainer s_CallVoteButton;
-			if(DoIngameMenuTab(&s_CallVoteButton, PAGE_CALLVOTE, "ingame-tab-call-vote", Localize("Call vote"), ActivePage == PAGE_CALLVOTE, &Button, IGraphics::CORNER_ALL))
+			const IUiContext TabBarCtx = TabBarUiContext();
+			ui_widget::CapsuleTabBarChrome(TabBarCtx, MakeUiScopeHash("menubar_capsule_ingame_tabs"), ui_widget::CapsuleTabBarRowRect(aOnlineTabSlots, NumOnlineTabs), ActiveOnlineTab >= 0 ? &aOnlineTabSlots[ActiveOnlineTab] : nullptr, MenuCapsuleTabBarStyle());
+
+			int DrawnOnlineTabs = 0;
+			for(const SOnlineTab &Tab : aOnlineTabs)
 			{
-				NewPage = PAGE_CALLVOTE;
-				m_ControlPageOpening = true;
+				if(!Tab.m_Visible)
+					continue;
+				const CUIRect &TabRect = aOnlineTabSlots[DrawnOnlineTabs];
+				if(DoIngameMenuTab(&s_aOnlineTabButtons[DrawnOnlineTabs], Tab.m_Page, Tab.m_pTextId, Tab.m_pText, ActivePage == Tab.m_Page, &TabRect, IGraphics::CORNER_ALL))
+				{
+					NewPage = Tab.m_Page;
+					if(Tab.m_Page == PAGE_CALLVOTE)
+						m_ControlPageOpening = true;
+				}
+				MenubarTrackActive(Tab.m_Page, TabRect);
+				++DrawnOnlineTabs;
 			}
-			MenubarTrackActive(PAGE_CALLVOTE, Button);
 		}
 	}
 	else
@@ -2707,7 +2758,7 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 			{
 				NewPage = PAGE_FAVORITE_MAPS;
 			}
-			RenderFavoriteMapsIcon(Button);
+			RenderFavoriteMapsIcon(Button, false);
 			GameClient()->m_Tooltips.DoToolTip(&s_FavoriteMapsButton, &Button, Localize("Favorite map"));
 
 			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
@@ -2862,23 +2913,9 @@ void CMenus::RenderMenubar(CUIRect Box, IClient::EClientState ClientState)
 		}
 	}
 
-	// feat-004: draw a 2px ACCENT_PRIMARY underline below the active page tab.
-	// This includes page-shaped icon buttons such as Settings/Demos, but still
-	// excludes pure action buttons like Quit/Editor.
-	if(UseNewUi && MenubarHaveActive && !Ui()->RenderOnly())
-	{
-		CUIRect IndicatorTarget;
-		IndicatorTarget.x = MenubarActiveRect.x + MenubarActiveRect.w * 0.15f;
-		IndicatorTarget.y = MenubarActiveRect.y + MenubarActiveRect.h - 3.0f;
-		IndicatorTarget.w = MenubarActiveRect.w * 0.70f;
-		IndicatorTarget.h = 3.0f;
-
-		const uint64_t IndicatorNode = BuildUiAnimNodeKey(MakeUiScopeHash("menubar_v2_indicator"), static_cast<uint64_t>(ClientState));
-		CUiV2AnimationRuntime &AnimRt = GameClient()->UiRuntimeV2()->AnimRuntime();
-		const CUIRect IndicatorRect = ResolveUiAnimValueRect(AnimRt, IndicatorNode, IndicatorTarget, ui_curve::EMPHASIZED.m_DurationSec, ui_curve::EMPHASIZED.m_Easing);
-		const ColorRGBA IndicatorColor = g_Config.m_QmNewUi != 0 ? MenuUiColorAccent(1.0f) : ui_token::color::ACCENT_PRIMARY;
-		IndicatorRect.Draw(IndicatorColor, IGraphics::CORNER_ALL, 1.5f);
-	}
+	// 新 UI 的激活位置改由各排胶囊 Tabbar 的滑块胶囊表达（见
+	// ui_widget::CapsuleTabBarChrome），这里不再画页签下方的下划线小块。
+	// 旧 UI 仍按原来的 ui_color 下划线走。
 
 	// Draw a 2px ui_color underline below the active tab. The X/W position
 	// eases between tabs via the v2 runtime so changing pages glides instead of
@@ -2972,7 +3009,7 @@ void CMenus::RenderLoadingDirect(const char *pCaption, const char *pContent, std
 		Box.HSplitBottom(30.0f, &Box, nullptr);
 		Box.HSplitBottom(25.0f, &Box, &ProgressBar);
 		ProgressBar.VMargin(20.0f, &ProgressBar);
-		Ui()->RenderProgressBar(ProgressBar, std::clamp(Progress.value(), 0.0f, 1.0f));
+		GameClient()->m_Hud.RenderProgressBarWithTee(ProgressBar, std::clamp(Progress.value(), 0.0f, 1.0f), ms_GuiColor);
 	}
 
 	Graphics()->SetColor(1.0, 1.0, 1.0, 1.0);
@@ -8210,7 +8247,7 @@ void CMenus::SetMenuPage(int NewPage)
 	const bool NewIsBrowser = IsBrowserPage(NewPage);
 	if(OldIsBrowser && NewIsBrowser && OldPage != NewPage)
 	{
-		m_BrowserTabTransitionDirection = BrowserPageVisualOrder(NewPage) > BrowserPageVisualOrder(OldPage) ? 1.0f : -1.0f;
+		m_BrowserTabTransitionDirection = ResolveUiSwitchDirection(GameClient()->UiRuntimeV2()->AnimRuntime(), UiAnimNodeKey("browser_page_switch"), m_BrowserTabTransitionDirection, BrowserPageVisualOrder(NewPage) > BrowserPageVisualOrder(OldPage) ? 1.0f : -1.0f);
 		TriggerUiSwitchAnimation(UiAnimNodeKey("browser_page_switch"), MENU_SWITCH_DURATION);
 	}
 	else
@@ -8219,7 +8256,7 @@ void CMenus::SetMenuPage(int NewPage)
 	}
 	if(OldPage != NewPage && !(OldIsBrowser && NewIsBrowser))
 	{
-		m_MenuPageTransitionDirection = NewPage > OldPage ? 1.0f : -1.0f;
+		m_MenuPageTransitionDirection = ResolveUiSwitchDirection(GameClient()->UiRuntimeV2()->AnimRuntime(), UiAnimNodeKey("menu_page_switch"), m_MenuPageTransitionDirection, NewPage > OldPage ? 1.0f : -1.0f);
 		TriggerUiSwitchAnimation(UiAnimNodeKey("menu_page_switch"), MENU_SWITCH_DURATION);
 	}
 	else
@@ -8280,7 +8317,7 @@ void CMenus::SetGamePage(int NewPage)
 	m_GamePage = NewPage;
 	if(OldPage != NewPage)
 	{
-		m_GamePageTransitionDirection = NewPage > OldPage ? 1.0f : -1.0f;
+		m_GamePageTransitionDirection = ResolveUiSwitchDirection(GameClient()->UiRuntimeV2()->AnimRuntime(), UiAnimNodeKey("game_page_switch"), m_GamePageTransitionDirection, NewPage > OldPage ? 1.0f : -1.0f);
 		TriggerUiSwitchAnimation(UiAnimNodeKey("game_page_switch"), MENU_SWITCH_DURATION);
 	}
 	else

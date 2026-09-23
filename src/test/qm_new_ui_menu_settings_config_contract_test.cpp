@@ -27,8 +27,6 @@
 #include <sstream>
 #include <string>
 
-
-
 TEST(QmNewUiMenuSettingsConfigContract, ConfigPageLocalizesVariableHelpText)
 {
 	const std::string ConfigHeader = ReadTextFile("src/engine/shared/config.h");

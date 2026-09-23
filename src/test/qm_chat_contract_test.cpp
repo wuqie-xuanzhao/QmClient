@@ -11,7 +11,7 @@
 TEST(QmChatSecurity, SensitiveLoginCommandsAreNotPersisted)
 {
 	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
-	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
+	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(int MsgType, void *pRawMsg, int SourceConnection)");
 	const std::string SendChatQueued = SourceFunctionBody(Chat, "void CChat::SendChatQueued(int Team");
 
 	EXPECT_NE(OnMessage.find("GameClient()->IsLocalClientId(pMsg->m_ClientId)"), std::string::npos);
@@ -48,7 +48,7 @@ TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)
 	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/tclient/menus_tclient.cpp");
 	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
-	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
+	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(int MsgType, void *pRawMsg, int SourceConnection)");
 	const std::string WarListSettings = SourceFunctionBody(Menus, "void CMenus::RenderSettingsTClientWarList(");
 
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmWarListBlockEnemyChat, qm_warlist_block_enemy_chat, 0, 0, 1"), std::string::npos);
@@ -61,7 +61,7 @@ TEST(QmWarListEnemyChat, FilteringKeepsChatLogPersistenceIndependent)
 	EXPECT_NE(WarListSettings.find("\"tclient-warlist-block-enemy-chat\""), std::string::npos);
 	EXPECT_NE(WarListSettings.find("\"Block enemy chat\""), std::string::npos);
 
-	const size_t AddLineCall = OnMessage.find("AddLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage)");
+	const size_t AddLineCall = OnMessage.find("AddLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage, false, std::nullopt, SourceConnection)");
 	const size_t SaveLogCall = OnMessage.find("SaveChatLogLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage)");
 	ASSERT_NE(AddLineCall, std::string::npos);
 	ASSERT_NE(SaveLogCall, std::string::npos);
@@ -108,8 +108,6 @@ TEST(QmWindowModesContract, GraphicsMenuMapsAllFiveModesToDistinctBackendStates)
 	EXPECT_NE(RenderSettingsGraphics.find("Graphics()->SetWindowParams(1, false);"), std::string::npos);
 }
 
-
-
 TEST(QmFastPracticeCommands, TeleportDefaultsToAimingOrSpectatingPosition)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
@@ -121,12 +119,16 @@ TEST(QmFastPracticeCommands, TeleportDefaultsToAimingOrSpectatingPosition)
 	EXPECT_EQ(Source.find("PracticeTeleCursorTarget", CommandBlock), std::string::npos);
 }
 
-TEST(QmFastPracticeCommands, ResetUsesEnableAnchorAndServerInputIsNeutral)
+TEST(QmFastPracticeCommands, ResetRecapturesAnchorFromSnapshotAndServerInputIsNeutral)
 {
 	const std::string Source = ReadTestSourceFile("src/game/client/components/tclient/fast_practice.cpp");
 	const std::string ResetBody = SourceFunctionBody(Source, "void CFastPractice::ResetPracticeToAnchor()");
 	ASSERT_NE(ResetBody.find("m_MainAnchor.m_Valid"), std::string::npos);
-	EXPECT_EQ(ResetBody.find("CaptureAnchorsFromSnapshot"), std::string::npos);
+	// 每次 /r 重新捕获锚点（与远程一致），不再是"沿用开启练习时的锚点"。
+	EXPECT_NE(ResetBody.find("CaptureAnchorsFromSnapshot();"), std::string::npos);
+	// 必须先初始化练习世界再捕获，否则捕获到的快照与练习世界不同步。
+	EXPECT_LT(ResetBody.find("InitPracticeWorld()"), ResetBody.find("CaptureAnchorsFromSnapshot();"));
+	EXPECT_LT(ResetBody.find("CaptureAnchorsFromSnapshot();"), ResetBody.find("m_MainAnchor.m_Valid"));
 
 	const std::string LockBody = SourceFunctionBody(Source, "void CFastPractice::CaptureServerLockedInputs()");
 	EXPECT_NE(LockBody.find("Input.m_Direction = 0;"), std::string::npos);
@@ -209,7 +211,7 @@ TEST(QmChatBlockWords, MatchedMessageKeepsRawConsoleAndChatLogPaths)
 	const std::string Chat = ReadTestSourceFile("src/game/client/components/chat.cpp");
 	const std::string Menus = ReadTestSourceFile("src/game/client/components/qmclient/menus_qmclient.cpp");
 	const std::string AddLine = SourceFunctionBody(Chat, "void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional");
-	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(");
+	const std::string OnMessage = SourceFunctionBody(Chat, "void CChat::OnMessage(int MsgType, void *pRawMsg, int SourceConnection)");
 
 	EXPECT_NE(Config.find("MACRO_CONFIG_INT(QmBlockWordsAction, qm_block_words_action, 0, 0, 1"), std::string::npos);
 	EXPECT_NE(Menus.find("g_Config.m_QmBlockWordsAction == 0"), std::string::npos);

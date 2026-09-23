@@ -4,15 +4,13 @@
 #ifndef GAME_CLIENT_QMUI_QMTREE_H
 #define GAME_CLIENT_QMUI_QMTREE_H
 
+#include "QmAnimationBackend.h"
+
 #include <game/client/ui_rect.h>
 
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
-
-class CUiV2AnimationRuntime;
-struct SUiSpringConfig;
-struct SUiAnimTransition;
 
 struct SUiPresenceResult
 {

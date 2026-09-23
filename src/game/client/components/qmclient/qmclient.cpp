@@ -1,6 +1,7 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 #include "qmclient.h"
 
+#include "qm_title_style.h"
 #include "statistics_file.h"
 
 #include <base/hash.h>
@@ -115,6 +116,9 @@ static constexpr int QMCLIENT_DEVELOPER_SYNC_INTERVAL_SECONDS = 5;
 static constexpr const char *QMCLIENT_LIFECYCLE_MARKER_FILE = "qmclient/lifecycle_pending.marker";
 static constexpr const char *QMCLIENT_PLAYTIME_CLIENT_ID_FILE = "qmclient/playtime_client_id.txt";
 static constexpr const char *QMCLIENT_MACHINE_ID_FALLBACK_FILE = "qmclient/voice_machine_id.txt";
+// 广播 markdown 的磁盘缓存：界面立即生效，落盘只保留最新完整快照（交给作业完成）。
+static constexpr const char *QMCLIENT_MARKDOWN_BROADCAST_CACHE_FILE = "qmclient/markdown_broadcast.json";
+static constexpr int QMCLIENT_MARKDOWN_BROADCAST_CACHE_VERSION = 1;
 static constexpr int QMCLIENT_SERVER_TIME_SYNC_INTERVAL_SECONDS = 15;
 static constexpr int QMCLIENT_PLAYTIME_QUERY_INTERVAL_SECONDS = 10;
 static constexpr int QMCLIENT_RECOVERY_RETRY_SECONDS = 3;
@@ -802,6 +806,8 @@ void CQmClient::OnInit()
 {
 	InitQmClientLifecycle();
 	LoadQmClientLocalModeStats();
+	// 先把上次会话缓存的广播内容读回来，界面不必等下一次服务端推送。
+	LoadQmMarkdownBroadcastCache();
 	if(!m_QmStatisticsFileExists)
 		SaveQmClientStatistics();
 	InitQmDeveloperAuthentication();
@@ -1331,6 +1337,15 @@ void CQmClient::EndQmClientLocalModePlaytime()
 
 void CQmClient::OnShutdown()
 {
+	if(m_pQmRealtimeTransport)
+		m_pQmRealtimeTransport->Disconnect();
+	{
+		std::lock_guard<std::mutex> Lock(m_QmRealtimeTransportMutex);
+		m_QmRealtimeTransportMessages.clear();
+	}
+	m_QmRealtimeChannel.SetAddress(nullptr);
+	m_QmRealtimeEvents.clear();
+	m_QmRealtimeEmoticonEvents.clear();
 	EndQmClientLocalModePlaytime();
 	SaveQmClientStatistics();
 	if(!m_QmClientShutdownReported)
@@ -1367,6 +1382,8 @@ void CQmClient::OnShutdown()
 
 void CQmClient::OnUpdate()
 {
+	DrainQmRealtimeTransportMessages();
+	UpdateQmRealtimeChannel();
 	UpdateQmClientLocalModePlaytime();
 	UpdateQmClientRecognition();
 	UpdateQmDeveloperPresence();
@@ -1405,6 +1422,314 @@ void CQmClient::OnUpdate()
 	}
 	if((HasAxiomGoresStats || (GameClient() != nullptr && GameClient()->m_QmAxiomAutoLogin.IsAxiomCommunity())) && m_aQmDdnetPlayerName[0] != '\0')
 		GameClient()->m_QmAxiomScores.EnsureQueried(m_aQmDdnetPlayerName);
+}
+
+void CQmClient::DrainQmRealtimeTransportMessages()
+{
+	std::deque<std::string> Messages;
+	{
+		std::lock_guard<std::mutex> Lock(m_QmRealtimeTransportMutex);
+		Messages.swap(m_QmRealtimeTransportMessages);
+	}
+	for(const std::string &Message : Messages)
+		EnqueueQmRealtimeMessage(Message.data(), Message.size());
+}
+
+void CQmClient::ApplyQmRealtimeServiceData(const SQmRealtimeMessage &Message)
+{
+	if(Message.m_HasServerTime && Message.m_ServerTime > 0)
+	{
+		m_QmClientServerNow = Message.m_ServerTime;
+		m_QmClientServerTimeLastSync = time_get();
+		const double Measured = static_cast<double>(Message.m_ServerTime) - Client()->GlobalTime();
+		m_TitleServerTimeOffset = m_TitleServerTimeOffsetValid ? (m_TitleServerTimeOffset * 0.75 + Measured * 0.25) : Measured;
+		m_TitleServerTimeOffsetValid = true;
+	}
+	if(Message.m_HasPlaytimeSeconds && Message.m_PlaytimeSeconds >= 0)
+		m_QmClientServerPlaytimeSeconds = Message.m_PlaytimeSeconds;
+	if(Message.m_HasTitleProfile)
+	{
+		bool Changed = false;
+		if(!Message.m_TitleText.empty() && str_comp(m_aTitleText, Message.m_TitleText.c_str()) != 0)
+		{
+			str_copy(m_aTitleText, Message.m_TitleText.c_str());
+			Changed = true;
+		}
+		if(!Message.m_TitleBoundName.empty() && str_comp(m_aTitleBoundName, Message.m_TitleBoundName.c_str()) != 0)
+		{
+			str_copy(m_aTitleBoundName, Message.m_TitleBoundName.c_str());
+			Changed = true;
+		}
+		if(!Message.m_TitleStyle.empty() && str_comp(m_aaPlayerTitleStyles[0], Message.m_TitleStyle.c_str()) != 0)
+		{
+			str_copy(m_aaPlayerTitleStyles[0], Message.m_TitleStyle.c_str());
+			Changed = true;
+		}
+		if(Changed)
+			++m_TitleRevision;
+	}
+	if(Message.m_HasTitleAuthenticated)
+		m_TitleAuthenticated = Message.m_TitleAuthenticated;
+}
+
+void CQmClient::ApplyQmRealtimeBroadcast(const SQmRealtimeMessage &Message)
+{
+	// 只有内容真的变化时才落盘（Apply 内部已做版本单调与去重判断）。
+	if(Message.m_HasBroadcast && m_QmMarkdownBroadcast.Apply(Message.m_BroadcastMarkdown, Message.m_BroadcastVersion))
+		SaveQmMarkdownBroadcastCache();
+}
+
+void CQmClient::SaveQmMarkdownBroadcastCache()
+{
+	char aPath[IO_MAX_PATH_LENGTH];
+	Storage()->GetCompletePath(IStorage::TYPE_SAVE, QMCLIENT_MARKDOWN_BROADCAST_CACHE_FILE, aPath, sizeof(aPath));
+	// 序列化与文件操作在作业里完成，不占用主线程，也不访问组件与配置。
+	if(auto pJob = m_QmMarkdownBroadcastCacheWriter.Enqueue(aPath, QMCLIENT_MARKDOWN_BROADCAST_CACHE_VERSION, m_QmMarkdownBroadcast.Version(), m_QmMarkdownBroadcast.Markdown()))
+		Engine()->AddJob(pJob);
+}
+
+void CQmClient::LoadQmMarkdownBroadcastCache()
+{
+	char aPath[IO_MAX_PATH_LENGTH];
+	Storage()->GetCompletePath(IStorage::TYPE_SAVE, QMCLIENT_MARKDOWN_BROADCAST_CACHE_FILE, aPath, sizeof(aPath));
+	IOHANDLE File = io_open(aPath, IOFLAG_READ);
+	if(!File)
+		return;
+	const unsigned Length = (unsigned)io_length(File);
+	if(Length == 0)
+	{
+		io_close(File);
+		return;
+	}
+	std::vector<char> vBuffer(Length);
+	const bool ReadOk = io_read(File, vBuffer.data(), Length) == Length;
+	io_close(File);
+	if(!ReadOk)
+		return;
+
+	json_value *pRoot = json_parse(vBuffer.data(), Length);
+	if(pRoot == nullptr)
+		return;
+	const json_value *pCacheVersion = json_object_get(pRoot, "cache_version");
+	const json_value *pVersion = json_object_get(pRoot, "version");
+	const json_value *pMarkdown = json_object_get(pRoot, "markdown");
+	// 缓存格式版本不符时直接丢弃：宁可本次会话没有内容，也不用旧格式喂给解析器。
+	if(pCacheVersion != nullptr && pCacheVersion->type == json_integer &&
+		pCacheVersion->u.integer == QMCLIENT_MARKDOWN_BROADCAST_CACHE_VERSION &&
+		pVersion != nullptr && pVersion->type == json_integer &&
+		pMarkdown != nullptr && pMarkdown->type == json_string)
+	{
+		m_QmMarkdownBroadcast.Apply(std::string(pMarkdown->u.string.ptr, pMarkdown->u.string.length), (int)pVersion->u.integer);
+	}
+	json_value_free(pRoot);
+}
+
+void CQmClient::UpdateQmRealtimeChannel()
+{
+	const double Now = time_get() / static_cast<double>(time_freq());
+	SQmRealtimeMessage RealtimeMessage;
+	while(PopQmRealtimeMessage(RealtimeMessage))
+	{
+		if(RealtimeMessage.m_Event == EQmRealtimeEvent::BROADCAST)
+			ApplyQmRealtimeBroadcast(RealtimeMessage);
+		if(RealtimeMessage.m_Event == EQmRealtimeEvent::TIME || RealtimeMessage.m_Event == EQmRealtimeEvent::PLAYTIME || RealtimeMessage.m_Event == EQmRealtimeEvent::TITLE_PROFILE || RealtimeMessage.m_Event == EQmRealtimeEvent::TITLE_STATUS)
+			ApplyQmRealtimeServiceData(RealtimeMessage);
+		if(RealtimeMessage.m_Event == EQmRealtimeEvent::STATE && RealtimeMessage.m_StatePayloadValid)
+		{
+			if(RealtimeMessage.m_HasOnlineUsers)
+				m_QmClientOnlineUserCount = RealtimeMessage.m_OnlineUsers;
+			if(RealtimeMessage.m_HasOnlineDummies)
+				m_QmClientOnlineDummyCount = RealtimeMessage.m_OnlineDummies;
+		}
+		else if(RealtimeMessage.m_Event == EQmRealtimeEvent::PING && m_pQmRealtimeTransport &&
+			m_pQmRealtimeTransport->State() == EQmWebSocketState::CONNECTED)
+		{
+			static constexpr const char *pPong = "{\"type\":\"pong\"}";
+			m_pQmRealtimeTransport->SendText(pPong, str_length(pPong));
+		}
+	}
+	if(!m_pQmRealtimeTransport)
+	{
+		IQmWebSocketClient::SCallbacks Callbacks;
+		Callbacks.m_Open = [this]() { m_QmRealtimeChannel.MarkConnected(); };
+		Callbacks.m_Disconnected = [this](const std::string &, bool) {
+			m_QmRealtimeChannel.MarkDisconnected(time_get() / static_cast<double>(time_freq()));
+		};
+		Callbacks.m_Error = [this](const std::string &) {
+			m_QmRealtimeChannel.MarkDisconnected(time_get() / static_cast<double>(time_freq()));
+		};
+		Callbacks.m_Message = [this](EQmWebSocketMessageType Type, const char *pData, size_t Size) {
+			if(Type != EQmWebSocketMessageType::TEXT || pData == nullptr || Size == 0 || Size > 1024 * 1024)
+				return;
+			std::lock_guard<std::mutex> Lock(m_QmRealtimeTransportMutex);
+			if(m_QmRealtimeTransportMessages.size() >= 128)
+				m_QmRealtimeTransportMessages.pop_front();
+			m_QmRealtimeTransportMessages.emplace_back(pData, Size);
+		};
+		m_pQmRealtimeTransport = CreateQmWebSocketClient(std::move(Callbacks));
+	}
+	const char *pConfiguredUrl = g_Config.m_QmRealtimeWebsocketUrl;
+	if(Client()->State() != IClient::STATE_ONLINE)
+	{
+		if(m_pQmRealtimeTransport->Desired())
+			m_pQmRealtimeTransport->Disconnect();
+		m_QmRealtimeHelloSent = false;
+		m_QmRealtimeChannel.SetAddress(nullptr);
+		return;
+	}
+	SQmWebSocketConnectConfig ConnectConfig;
+	const std::string ParseError = ParseQmWebSocketUrl(pConfiguredUrl, ConnectConfig);
+	if(pConfiguredUrl[0] != '\0' && ParseError.empty())
+	{
+		if(m_QmRealtimeChannel.Address() != pConfiguredUrl)
+		{
+			if(m_pQmRealtimeTransport->Desired())
+				m_pQmRealtimeTransport->Disconnect();
+			m_QmRealtimeHelloSent = false;
+			m_QmRealtimeChannel.SetAddress(pConfiguredUrl);
+		}
+		if(!m_pQmRealtimeTransport->Desired() && m_QmRealtimeChannel.ShouldConnect(Now))
+		{
+			std::string Error;
+			if(m_pQmRealtimeTransport->Connect(ConnectConfig, Error))
+				m_QmRealtimeChannel.BeginConnect(Now);
+			else
+				m_QmRealtimeChannel.MarkDisconnected(Now);
+		}
+		if(m_pQmRealtimeTransport->State() == EQmWebSocketState::CONNECTED)
+		{
+			if(!m_QmRealtimeHelloSent)
+			{
+				char aServerAddress[NETADDR_MAXSTRSIZE] = "";
+				if(Client()->ServerAddress())
+					net_addr_str(Client()->ServerAddress(), aServerAddress, sizeof(aServerAddress), true);
+				CJsonStringWriter Writer;
+				Writer.BeginObject();
+				Writer.WriteAttribute("type");
+				Writer.WriteStrValue("hello");
+				Writer.WriteAttribute("v");
+				Writer.WriteIntValue(1);
+				Writer.WriteAttribute("player_name");
+				Writer.WriteStrValue(g_Config.m_PlayerName);
+				Writer.WriteAttribute("server_address");
+				Writer.WriteStrValue(aServerAddress);
+				Writer.EndObject();
+				const std::string Body = Writer.GetOutputString();
+				m_QmRealtimeHelloSent = m_pQmRealtimeTransport->SendText(Body.c_str(), Body.size());
+			}
+			std::string Outgoing;
+			while(m_QmRealtimeChannel.PopOutgoing(Outgoing))
+				if(!m_pQmRealtimeTransport->SendText(Outgoing.c_str(), Outgoing.size()))
+					break;
+			m_QmRealtimeChannel.MarkConnected();
+		}
+		else
+		{
+			m_QmRealtimeHelloSent = false;
+			if(m_QmRealtimeChannel.State() == EQmRealtimeConnectionState::CONNECTED)
+				m_QmRealtimeChannel.MarkDisconnected(Now);
+		}
+		return;
+	}
+
+	// 没有有效 WebSocket 配置时，继续使用本地已有的 HTTP/UDP 实时状态链。
+	if(m_pQmRealtimeTransport->Desired())
+		m_pQmRealtimeTransport->Disconnect();
+	m_QmRealtimeHelloSent = false;
+
+	char aAddress[NETADDR_MAXSTRSIZE] = "";
+	if(Client()->ServerAddress())
+		net_addr_str(Client()->ServerAddress(), aAddress, sizeof(aAddress), true);
+	const char *pVoiceServer = GetEffectiveQmVoiceServer();
+	if(aAddress[0] == '\0' || pVoiceServer == nullptr || pVoiceServer[0] == '\0')
+	{
+		m_QmRealtimeServerAddress.clear();
+		m_QmRealtimeChannel.SetAddress(nullptr);
+		return;
+	}
+	char aChannelAddress[NETADDR_MAXSTRSIZE + 16];
+	str_format(aChannelAddress, sizeof(aChannelAddress), "%s/%s", pVoiceServer, aAddress);
+	m_QmRealtimeServerAddress = aChannelAddress;
+	m_QmRealtimeChannel.SetAddress(aChannelAddress);
+	if(m_QmRealtimeChannel.ShouldConnect(Now))
+		m_QmRealtimeChannel.BeginConnect(Now);
+}
+
+void CQmClient::EnqueueQmRealtimeMessage(const char *pData, size_t Size)
+{
+	SQmRealtimeMessage Message;
+	if(!ParseQmRealtimeMessage(pData, Size, Message))
+		return;
+	if(Message.m_Event == EQmRealtimeEvent::EMOTICON && Client()->State() == IClient::STATE_ONLINE && Client()->ServerAddress())
+	{
+		char aServer[NETADDR_MAXSTRSIZE] = "";
+		net_addr_str(Client()->ServerAddress(), aServer, sizeof(aServer), true);
+		if(!Message.m_EmoticonServerAddress.empty() && NormalizeQmServerAddress(aServer) != NormalizeQmServerAddress(Message.m_EmoticonServerAddress.c_str()))
+			return;
+		if(Message.m_EmoticonPlayerId < 0 || Message.m_EmoticonPlayerId >= MAX_CLIENTS ||
+			(!Message.m_EmoticonPlayerName.empty() && (!GameClient()->m_aClients[Message.m_EmoticonPlayerId].m_Active ||
+									  str_comp(GameClient()->m_aClients[Message.m_EmoticonPlayerId].m_aName, Message.m_EmoticonPlayerName.c_str()) != 0)))
+		{
+			for(int Candidate = 0; Candidate < MAX_CLIENTS; ++Candidate)
+				if(GameClient()->m_aClients[Candidate].m_Active && str_comp(GameClient()->m_aClients[Candidate].m_aName, Message.m_EmoticonPlayerName.c_str()) == 0)
+				{
+					Message.m_EmoticonPlayerId = Candidate;
+					break;
+				}
+		}
+	}
+	if(Message.m_Event == EQmRealtimeEvent::EMOTICON)
+	{
+		if(m_QmRealtimeEmoticonEvents.size() >= 64)
+			m_QmRealtimeEmoticonEvents.pop_front();
+		m_QmRealtimeEmoticonEvents.push_back(std::move(Message));
+		return;
+	}
+	if(m_QmRealtimeEvents.size() >= 128)
+		m_QmRealtimeEvents.pop_front();
+	m_QmRealtimeEvents.push_back(std::move(Message));
+}
+
+bool CQmClient::PopQmRealtimeMessage(SQmRealtimeMessage &Message)
+{
+	if(m_QmRealtimeEvents.empty())
+		return false;
+	Message = std::move(m_QmRealtimeEvents.front());
+	m_QmRealtimeEvents.pop_front();
+	return true;
+}
+
+bool CQmClient::PopQmRealtimeEmoticon(SQmRealtimeMessage &Message)
+{
+	if(m_QmRealtimeEmoticonEvents.empty())
+		return false;
+	Message = std::move(m_QmRealtimeEmoticonEvents.front());
+	m_QmRealtimeEmoticonEvents.pop_front();
+	return true;
+}
+
+void CQmClient::SendQmAnonymousEmoticon(int Emoticon, int PlayerId, bool LaunchMode, bool SuperLaunch)
+{
+	if(Emoticon < 0 || Emoticon >= NUM_EMOTICONS || PlayerId < 0 || PlayerId >= MAX_CLIENTS || !LaunchMode)
+		return;
+	CJsonStringWriter Writer;
+	Writer.BeginObject();
+	Writer.WriteAttribute("type");
+	Writer.WriteStrValue("emoticon");
+	Writer.WriteAttribute("emoticon");
+	Writer.WriteIntValue(Emoticon);
+	Writer.WriteAttribute("player_id");
+	Writer.WriteIntValue(PlayerId);
+	Writer.WriteAttribute("launch_mode");
+	Writer.WriteBoolValue(LaunchMode);
+	Writer.WriteAttribute("super_launch");
+	Writer.WriteBoolValue(SuperLaunch);
+	Writer.EndObject();
+	const std::string Body = Writer.GetOutputString();
+	if(m_pQmRealtimeTransport && m_pQmRealtimeTransport->State() == EQmWebSocketState::CONNECTED)
+		m_pQmRealtimeTransport->SendText(Body.c_str(), Body.size());
+	else
+		m_QmRealtimeChannel.QueueOutgoing(Body.c_str(), Body.size());
 }
 
 void CQmClient::OnStateChange(int NewState, int OldState)
@@ -2835,6 +3160,18 @@ const char *CQmClient::PlayerTitle(int ClientId) const
 	return "";
 }
 
+const char *CQmClient::PlayerTitleStyle(int ClientId) const
+{
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || !GameClient()->m_aClients[ClientId].m_Active || GameClient()->ShouldHideStreamerIdentity(ClientId))
+		return "";
+	return m_aaPlayerTitleStyles[ClientId];
+}
+
+double CQmClient::TitleAnimationTime() const
+{
+	return QmTitleAnimationTime(Client()->GlobalTime(), m_TitleServerTimeOffset, m_TitleServerTimeOffsetValid);
+}
+
 void CQmClient::UpdateTitleAuthentication()
 {
 	if(m_pTitleOperation && m_pTitleOperation->Done())
@@ -2902,11 +3239,19 @@ void CQmClient::UpdateTitleAuthentication()
 		if(m_pTitleList->State() == EHttpState::DONE && m_pTitleList->StatusCode() == 200 && str_comp(aServer, m_aTitlePendingServer) == 0)
 		{
 			json_value *pRoot = m_pTitleList->ResultJson();
-			for(const auto &Presence : ParseQmTitlePresences(pRoot, aServer))
+			int64_t ServerTime = 0;
+			for(const auto &Presence : ParseQmTitlePresences(pRoot, aServer, &ServerTime))
 			{
 				str_copy(m_aaTitleNames[Presence.m_PlayerId], Presence.m_PlayerName.c_str());
 				str_format(m_aaPlayerTitles[Presence.m_PlayerId], sizeof(m_aaPlayerTitles[Presence.m_PlayerId]), "[%s]", Presence.m_Title.c_str());
+				str_copy(m_aaPlayerTitleStyles[Presence.m_PlayerId], Presence.m_Style.c_str());
 				m_aTitleExpires[Presence.m_PlayerId] = time_get() + Presence.m_RemainingSeconds * time_freq();
+			}
+			if(ServerTime > 0)
+			{
+				const double Measured = (double)ServerTime - Client()->GlobalTime();
+				m_TitleServerTimeOffset = m_TitleServerTimeOffsetValid ? (m_TitleServerTimeOffset * 0.75 + Measured * 0.25) : Measured;
+				m_TitleServerTimeOffsetValid = true;
 			}
 			json_value_free(pRoot);
 		}

@@ -1,5 +1,11 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
+#include "test.h"
+
+#include <engine/storage.h>
+
+#include <game/client/components/qmclient/local_save_display.h>
 #include <game/client/components/qmclient/map_history_ui.h>
+#include <game/client/components/qmclient/map_vote_difficulty.h>
 #include <game/client/components/tclient/map_history.h>
 
 #include <gtest/gtest.h>
@@ -188,4 +194,199 @@ TEST(MapHistory, SortedFiltersUnfinishedAndRecent)
 	EXPECT_EQ(Recent[0].m_MapId, "finished");
 	EXPECT_EQ(Recent[1].m_MapId, "unfinished-new");
 	EXPECT_EQ(Recent[2].m_MapId, "unfinished-old");
+}
+
+TEST(MapHistory, SortedIndicesKeepFilterAndTieOrderWithoutMovingRecords)
+{
+	CMapHistory History;
+	History.RecordVisit("Zulu", "z", 200, "2026-09-20");
+	History.RecordVisit("Old", "old", 100, "2026-09-19");
+	History.RecordVisit("Alpha", "a", 200, "2026-09-20");
+	History.MarkFinished("z", 1000, 1000);
+	std::vector<size_t> vIndices;
+
+	History.SortedIndices(EMapHistoryFilter::RECENT, vIndices);
+	EXPECT_EQ(vIndices, (std::vector<size_t>{2, 0, 1}));
+	EXPECT_EQ(History.Entries()[0].m_MapId, "z");
+	History.SortedIndices(EMapHistoryFilter::UNFINISHED, vIndices);
+	EXPECT_EQ(vIndices, (std::vector<size_t>{2, 1}));
+	History.SortedIndices(EMapHistoryFilter::FINISHED, vIndices);
+	EXPECT_EQ(vIndices, (std::vector<size_t>{0}));
+}
+
+TEST(MapHistory, SortedIndicesReuseStorageAndReadCurrentCounters)
+{
+	CMapHistory History;
+	History.RecordVisit(std::string(128, 'a'), "a", 100, "2026-09-20");
+	History.RecordVisit(std::string(128, 'b'), "b", 200, "2026-09-20");
+	std::vector<size_t> vIndices;
+	History.SortedIndices(EMapHistoryFilter::RECENT, vIndices);
+	const size_t Capacity = vIndices.capacity();
+	const size_t *pStorage = vIndices.data();
+	History.AddDeath("b", 3);
+	History.UpdatePlayTime("b", 42000);
+	History.SortedIndices(EMapHistoryFilter::RECENT, vIndices);
+	ASSERT_EQ(vIndices.size(), 2u);
+	EXPECT_EQ(vIndices.data(), pStorage);
+	EXPECT_EQ(vIndices.capacity(), Capacity);
+	EXPECT_EQ(History.Entries()[vIndices[0]].m_DeathCount, 3);
+	EXPECT_EQ(History.Entries()[vIndices[0]].m_PlayTimeMs, 42000);
+}
+
+TEST(MapHistory, SortedIndicesRebuildAfterRemovalAndClear)
+{
+	CMapHistory History;
+	History.RecordVisit("A", "a", 100, "2026-09-20");
+	History.RecordVisit("B", "b", 200, "2026-09-20");
+	std::vector<size_t> vIndices;
+	History.SortedIndices(EMapHistoryFilter::RECENT, vIndices);
+	ASSERT_TRUE(History.Remove("a"));
+	History.SortedIndices(EMapHistoryFilter::RECENT, vIndices);
+	ASSERT_EQ(vIndices.size(), 1u);
+	EXPECT_EQ(History.Entries()[vIndices[0]].m_MapId, "b");
+	History.Clear();
+	History.SortedIndices(EMapHistoryFilter::RECENT, vIndices);
+	EXPECT_TRUE(vIndices.empty());
+}
+
+TEST(LocalSaveDisplay, ParsingPreservesQuotedFieldsHeaderAndRawLine)
+{
+	const char *pText = "Time,Players,Map,Code\n2026-09-20,\"A, B\", Map ,\"say \"\"hi\"\"\"\r\n\n";
+	const auto vEntries = qm_local_saves::ParseEntries(pText);
+	ASSERT_EQ(vEntries.size(), 1u);
+	EXPECT_EQ(vEntries[0].m_Time, "2026-09-20");
+	EXPECT_EQ(vEntries[0].m_Players, "A, B");
+	EXPECT_EQ(vEntries[0].m_Map, "Map");
+	EXPECT_EQ(vEntries[0].m_Code, "say \"hi\"");
+	EXPECT_EQ(vEntries[0].m_RawLine, "2026-09-20,\"A, B\", Map ,\"say \"\"hi\"\"\"");
+	EXPECT_TRUE(qm_local_saves::ParseEntries("").empty());
+	EXPECT_EQ(qm_local_saves::ParseEntries("date,player,map,code").size(), 1u);
+}
+
+TEST(LocalSaveDisplay, PublishesOnlyFinishedJobsAndKeepsSnapshotDuringRefresh)
+{
+	CTestInfo Info;
+	auto pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	char aPath[IO_MAX_PATH_LENGTH];
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, "saves.csv", aPath, sizeof(aPath));
+	IOHANDLE File = io_open(aPath, IOFLAG_WRITE);
+	ASSERT_NE(File, nullptr);
+	const char *pText = "date,player,map,code\n";
+	io_write(File, pText, str_length(pText));
+	io_close(File);
+
+	CQmLocalSaveDisplayCache Cache;
+	auto pJob = Cache.Refresh(aPath, 100, 20);
+	ASSERT_NE(pJob, nullptr);
+	EXPECT_FALSE(Cache.Ready());
+	EXPECT_EQ(Cache.Refresh(aPath, 101, 20), nullptr);
+	CJobPool Pool;
+	Pool.Init(1);
+	Pool.Add(pJob);
+	Pool.Shutdown();
+	EXPECT_EQ(Cache.Refresh(aPath, 101, 20), nullptr);
+	ASSERT_TRUE(Cache.Ready());
+	ASSERT_TRUE(Cache.FileExists());
+	ASSERT_EQ(Cache.Entries().size(), 1u);
+	EXPECT_EQ(Cache.Entries()[0].m_Code, "code");
+
+	ASSERT_EQ(fs_remove(aPath), 0);
+	pJob = Cache.Refresh(aPath, 121, 20);
+	ASSERT_NE(pJob, nullptr);
+	EXPECT_TRUE(Cache.FileExists());
+	EXPECT_EQ(Cache.Entries().size(), 1u);
+	Pool.Init(1);
+	Pool.Add(pJob);
+	Pool.Shutdown();
+	EXPECT_EQ(Cache.Refresh(aPath, 122, 20), nullptr);
+	EXPECT_TRUE(Cache.Ready());
+	EXPECT_FALSE(Cache.FileExists());
+	EXPECT_TRUE(Cache.Entries().empty());
+	Cache.Reset();
+	EXPECT_FALSE(Cache.Ready());
+}
+
+TEST(LocalSaveDisplay, EmptyFileIsDistinctFromMissingAndJobOutlivesReset)
+{
+	CTestInfo Info;
+	auto pStorage = Info.CreateTestStorage();
+	ASSERT_NE(pStorage, nullptr);
+	char aPath[IO_MAX_PATH_LENGTH];
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, "empty.csv", aPath, sizeof(aPath));
+	IOHANDLE File = io_open(aPath, IOFLAG_WRITE);
+	ASSERT_NE(File, nullptr);
+	io_close(File);
+	CQmLocalSaveDisplayCache Cache;
+	auto pJob = Cache.Refresh(aPath, 100, 20);
+	CJobPool Pool;
+	Pool.Init(1);
+	Pool.Add(pJob);
+	Pool.Shutdown();
+	EXPECT_EQ(Cache.Refresh(aPath, 101, 20), nullptr);
+	EXPECT_TRUE(Cache.Ready());
+	EXPECT_TRUE(Cache.FileExists());
+	EXPECT_TRUE(Cache.Entries().empty());
+
+	pJob = Cache.Refresh(aPath, 121, 20);
+	ASSERT_NE(pJob, nullptr);
+	Cache.Reset();
+	Pool.Init(1);
+	Pool.Add(pJob);
+	Pool.Shutdown();
+	EXPECT_EQ(pJob->State(), IJob::STATE_DONE);
+	EXPECT_FALSE(Cache.Ready());
+	EXPECT_TRUE(Cache.Entries().empty());
+}
+
+TEST(MapVoteDifficulty, KeepsFirstValidMatchAndCaseInsensitiveExactNames)
+{
+	CVoteOptionClient aOptions[5] = {};
+	const char *apDescriptions[] = {
+		"Alpha by author 9/5",
+		"alpha by author 3/5",
+		"ALPHA by other 1/5",
+		"Alpha Two by author 5/5",
+		"Beta by author 0/5",
+	};
+	for(int i = 0; i < 5; ++i)
+	{
+		str_copy(aOptions[i].m_aDescription, apDescriptions[i]);
+		aOptions[i].m_pNext = i < 4 ? &aOptions[i + 1] : nullptr;
+	}
+	CQmMapVoteDifficulty Cache;
+	EXPECT_EQ(Cache.Find(1, aOptions, "AlPhA"), 3);
+	EXPECT_EQ(Cache.Find(1, aOptions, "Alpha Two"), 5);
+	EXPECT_EQ(Cache.Find(1, aOptions, "beta"), 0);
+	EXPECT_EQ(Cache.Find(1, aOptions, "Alph"), -1);
+	EXPECT_EQ(Cache.Find(1, aOptions, ""), -1);
+}
+
+TEST(MapVoteDifficulty, RevisionRebuildsAfterSameCountReplacementAndClear)
+{
+	CVoteOptionClient Option = {};
+	str_copy(Option.m_aDescription, "Map by author 2/5");
+	CQmMapVoteDifficulty Cache;
+	EXPECT_EQ(Cache.Find(4, &Option, "Map"), 2);
+	str_copy(Option.m_aDescription, "Other by author 4/5");
+	EXPECT_EQ(Cache.Find(4, &Option, "Map"), 2);
+	EXPECT_EQ(Cache.Find(5, &Option, "Map"), -1);
+	EXPECT_EQ(Cache.Find(5, &Option, "Other"), 4);
+	EXPECT_EQ(Cache.Find(6, nullptr, "Other"), -1);
+}
+
+TEST(MapVoteDifficulty, PreservesStarParsingAndRejectsMalformedDescriptions)
+{
+	CQmMapVoteDifficulty Cache;
+	CVoteOptionClient Option = {};
+	str_copy(Option.m_aDescription, "Map BY author 00000005/5");
+	EXPECT_EQ(Cache.Find(1, &Option, "Map"), 0);
+	str_copy(Option.m_aDescription, "Map by author /5");
+	EXPECT_EQ(Cache.Find(2, &Option, "Map"), -1);
+	str_copy(Option.m_aDescription, "Map 3/5");
+	EXPECT_EQ(Cache.Find(3, &Option, "Map"), -1);
+	str_copy(Option.m_aDescription, "Map by author 6/5");
+	EXPECT_EQ(Cache.Find(4, &Option, "Map"), -1);
+	str_copy(Option.m_aDescription, "Map by author 2/5 then 4/5");
+	EXPECT_EQ(Cache.Find(5, &Option, "Map"), 2);
 }

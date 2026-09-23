@@ -61,8 +61,6 @@ TEST(VoiceUtils, WriteReadU16)
 	EXPECT_EQ(ReadU16(aBuf), 0xFFFF);
 }
 
-
-
 TEST(VoiceUtils, WriteReadU32)
 {
 	uint8_t aBuf[4];
@@ -83,8 +81,6 @@ TEST(VoiceUtils, WriteReadU32)
 	EXPECT_EQ(ReadU32(aBuf), 0xFFFFFFFFu);
 }
 
-
-
 TEST(VoiceUtils, WriteReadFloat)
 {
 	uint8_t aBuf[4];
@@ -104,8 +100,6 @@ TEST(VoiceUtils, WriteReadFloat)
 	WriteFloat(aBuf, 12345.6789f);
 	EXPECT_NEAR(ReadFloat(aBuf), 12345.6789f, 0.001f);
 }
-
-
 
 TEST(VoiceUtils, WriteReadVoicePacketHeader)
 {
@@ -137,8 +131,6 @@ TEST(VoiceUtils, WriteReadVoicePacketHeader)
 	EXPECT_FLOAT_EQ(Parsed.m_PosX, Header.m_PosX);
 	EXPECT_FLOAT_EQ(Parsed.m_PosY, Header.m_PosY);
 }
-
-
 
 TEST(VoiceUtils, WriteVoicePacketHeaderMatchesExactAudioVector)
 {
@@ -191,8 +183,6 @@ TEST(VoiceUtils, WriteVoicePacketHeaderMatchesExactAudioVector)
 	EXPECT_EQ(mem_comp(aBuf, aExpected, sizeof(aExpected)), 0);
 }
 
-
-
 TEST(VoiceUtils, WriteVoicePacketHeaderMatchesExactPingVector)
 {
 	SVoicePacketHeader Header;
@@ -243,8 +233,6 @@ TEST(VoiceUtils, WriteVoicePacketHeaderMatchesExactPingVector)
 	};
 	EXPECT_EQ(mem_comp(aBuf, aExpected, sizeof(aExpected)), 0);
 }
-
-
 
 TEST(VoiceUtils, WriteVoicePacketHeaderMatchesExactPongVector)
 {
@@ -297,8 +285,6 @@ TEST(VoiceUtils, WriteVoicePacketHeaderMatchesExactPongVector)
 	EXPECT_EQ(mem_comp(aBuf, aExpected, sizeof(aExpected)), 0);
 }
 
-
-
 TEST(VoiceUtils, WriteReadVoicePacketHeaderKeepsContextTokenAndSender)
 {
 	SVoicePacketHeader Header;
@@ -324,8 +310,6 @@ TEST(VoiceUtils, WriteReadVoicePacketHeaderKeepsContextTokenAndSender)
 	EXPECT_EQ(Parsed.m_Sequence, Header.m_Sequence);
 }
 
-
-
 TEST(VoiceUtils, VoicePacketTypeNameReturnsExpectedNames)
 {
 	EXPECT_STREQ(VoicePacketTypeName(VOICE_TYPE_AUDIO), "audio");
@@ -333,8 +317,6 @@ TEST(VoiceUtils, VoicePacketTypeNameReturnsExpectedNames)
 	EXPECT_STREQ(VoicePacketTypeName(VOICE_TYPE_PONG), "pong");
 	EXPECT_STREQ(VoicePacketTypeName(99), "unknown");
 }
-
-
 
 TEST(VoiceUtils, ReadVoicePacketHeaderRejectsBadMagic)
 {
@@ -348,8 +330,6 @@ TEST(VoiceUtils, ReadVoicePacketHeaderRejectsBadMagic)
 	SVoicePacketHeader Parsed;
 	EXPECT_FALSE(ReadVoicePacketHeader(aBuf, sizeof(aBuf), Parsed));
 }
-
-
 
 TEST(VoiceUtils, ReadVoicePacketHeaderRejectsTruncatedBuffer)
 {
@@ -365,15 +345,11 @@ TEST(VoiceUtils, ReadVoicePacketHeaderRejectsTruncatedBuffer)
 	EXPECT_FALSE(ReadVoicePacketHeader(aBuf, VOICE_PACKET_HEADER_SIZE - 1, Parsed));
 }
 
-
-
 TEST(VoiceUtils, ReadVoicePacketHeaderRejectsNullBuffer)
 {
 	SVoicePacketHeader Parsed;
 	EXPECT_FALSE(ReadVoicePacketHeader(nullptr, VOICE_PACKET_HEADER_SIZE, Parsed));
 }
-
-
 
 TEST(VoiceUtils, ReadVoicePacketHeaderRejectsZeroSize)
 {
@@ -384,8 +360,6 @@ TEST(VoiceUtils, ReadVoicePacketHeaderRejectsZeroSize)
 	EXPECT_FALSE(ReadVoicePacketHeader(aBuf, 0, Parsed));
 }
 
-
-
 TEST(VoiceUtils, WriteVoicePacketHeaderRejectsNullBuffer)
 {
 	SVoicePacketHeader Header;
@@ -393,8 +367,6 @@ TEST(VoiceUtils, WriteVoicePacketHeaderRejectsNullBuffer)
 	Header.m_Type = VOICE_TYPE_AUDIO;
 	EXPECT_FALSE(WriteVoicePacketHeader(nullptr, VOICE_PACKET_HEADER_SIZE, Header));
 }
-
-
 
 TEST(VoiceUtils, WriteVoicePacketHeaderRejectsInsufficientSize)
 {

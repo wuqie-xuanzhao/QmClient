@@ -1,5 +1,6 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 import { basename } from 'node:path';
+import { configurationSummary, type PerfConfigurationSummary } from './configuration.ts';
 
 import type { PerfEntry, ParseDiagnostics } from './parse.ts';
 import { operationSignature, type OperationSignature } from './quality_core.ts';
@@ -14,6 +15,7 @@ import {
   detectSpikes,
   inferSamplingThreshold,
   isSamplingBiased,
+  hasUnifiedFrameSamples,
   fpsSummaries,
   hasOnlineTargetSettingsFpsSummary,
   pagePerformanceAttribution,
@@ -40,6 +42,7 @@ export interface ReportQuality {
   totalEntries: number;
   totalLines: number;
   invalidLines: number;
+  sampledEntries: number;
   samplingThresholdMs: number;
   biased: boolean;
   operation: OperationSignature;
@@ -209,6 +212,7 @@ export interface PerfBundleSummary {
   nonCardMenu: NonCardMenuBudgetSummary;
   targetSettings: TargetSettingsSnapshot;
   stutterDiagnostics: StutterDiagnosticsSummary;
+  configuration: PerfConfigurationSummary;
   assetsPreviewAdmission: {
     available: boolean;
     visibleFirstAvailable: boolean;
@@ -361,8 +365,17 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
   const frameEntries = selectFrameTimeEntries(entries);
   const durations = frameEntries.map(e => entryDurationMs(e) ?? e.durationMs);
   const samplingThresholdMs = inferSamplingThreshold(durations);
-  const biased = isSamplingBiased(durations, BUDGET.samplingDefault);
+  const biased = !hasUnifiedFrameSamples(entries) && isSamplingBiased(durations, BUDGET.samplingDefault);
   const warnings: string[] = [];
+  if ((diagnostics.sampledEntries ?? 0) > 0) {
+    warnings.push('analysis_sampled: 大日志已使用有界样本，百分位和合规率为估计值，窗口归因仅覆盖保留事件；完整记录见原日志');
+  }
+  if (diagnostics.configurationIncomplete || configurationSummary(entries).incomplete) {
+    warnings.push('configuration_incomplete: 配置记录存在缺失或未完成的分段');
+  }
+  const droppedDetails = entries.filter(e => e.system === 'perf/session' && e.fields.event === 'detail_sampling')
+    .reduce((sum, e) => sum + Number(e.fields.dropped ?? 0), 0);
+  if (droppedDetails > 0) warnings.push('detail_sampling: 明细达到自动限流预算，完整帧统计和卡顿摘要不受客户端明细限流影响');
 
   if (frameEntries.length === 0) {
     warnings.push('no frame-time samples; percentile and verdict data are unavailable');
@@ -465,9 +478,10 @@ export function reportQuality(entries: PerfEntry[], diagnostics: ParseDiagnostic
 
   return {
     sampleCount: frameEntries.length,
-    totalEntries: entries.length,
+    totalEntries: diagnostics.totalEntries ?? entries.length,
     totalLines: diagnostics.totalLines,
     invalidLines: diagnostics.invalidLines,
+    sampledEntries: diagnostics.sampledEntries ?? 0,
     samplingThresholdMs,
     biased,
     operation: operationSignature(entries),
@@ -494,11 +508,13 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
   const budgetCorrelation = budgetCorrelationSummary(entries);
   const stutterDiagnostics = stutterDiagnosticsSummary(entries);
   const quality = reportQuality(entries, diagnostics);
+  const configuration = configurationSummary(entries);
+  configuration.incomplete ||= diagnostics.configurationIncomplete ?? false;
   return {
     generatedAt: new Date().toISOString(),
     sourceFile: basename(sourceFile),
     percentiles,
-    verdict: quality.failed ? 'FAIL' : frameEntries.length === 0 ? 'WARN' : computeVerdict(percentiles, spikes.length),
+    verdict: quality.failed ? 'FAIL' : frameEntries.length === 0 || (quality.sampledEntries > 0 && computeVerdict(percentiles, spikes.length) === 'PASS') ? 'WARN' : computeVerdict(percentiles, spikes.length),
     verdictAvailable: frameEntries.length > 0,
     spikeCount: spikes.length,
     quality,
@@ -512,6 +528,7 @@ export function summarizeForBundle(entries: PerfEntry[], sourceFile: string, dia
     nonCardMenu,
     targetSettings,
     stutterDiagnostics,
+    configuration,
     assetsPreviewAdmission,
     assetsVisibleReady,
     previewBudget,

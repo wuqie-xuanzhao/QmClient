@@ -24,8 +24,10 @@
 #include <game/client/components/console.h>
 #include <game/client/components/message_gradient.h>
 #include <game/client/components/qmclient/colored_parts.h>
+#include <game/client/components/qmclient/demo_display.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/perf_logging.h>
+#include <game/client/components/qmclient/qm_chat_avatar.h>
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
@@ -421,7 +423,6 @@ CChat::CChat()
 	m_LargeAreaOpenTick = 0;
 	m_LastPresentationShowLargeArea = false;
 	m_PendingConsoleLineIndex = -1;
-	m_aChatLogLastCleanupDate[0] = '\0';
 
 	m_Input.SetCalculateOffsetCallback([this]() { return m_IsInputCensored; });
 	m_Input.SetDisplayTextCallback([this](char *pStr, size_t NumChars) {
@@ -517,6 +518,8 @@ void CChat::ClearLines()
 	m_LastPresentationUpdateTime = 0;
 	m_LargeAreaOpenTick = 0;
 	m_LastPresentationShowLargeArea = false;
+	// 清屏时直接丢弃 echo 重复计数，不清算：补出来的统计行会立刻被清掉。
+	ResetPendingEchoRepeat();
 }
 
 int CChat::GetLineIndex(const CLine *pLine) const
@@ -775,8 +778,53 @@ void CChat::ConchainChatWidth(IConsole::IResult *pResult, void *pUserData, ICons
 	pChat->RebuildChat();
 }
 
+void CChat::EchoLine(const char *pString, bool ForceVisible)
+{
+	AddLine(CLIENT_MSG, 0, pString, ForceVisible);
+	if(pString != nullptr && pString[0] != '\0')
+	{
+		str_copy(m_aPendingEchoRepeat, pString);
+		m_PendingEchoRepeatCount = 1;
+		m_PendingEchoRepeatTime = time();
+	}
+}
+
+bool CChat::GateEchoRepeat(const char *pString)
+{
+	// echo 合并始终生效（不受 qm_message_merge 影响）：相同文本在窗口内连续出现时返回 true，
+	// 调用方什么都不做——控制台聊天栏与通知栏都不会被刷屏。
+	const int WindowMs = std::clamp(g_Config.m_QmEchoMergeWindowMs, 0, 60000);
+	const int64_t Now = time();
+	if(WindowMs > 0 && pString != nullptr && pString[0] != '\0' && str_comp(m_aPendingEchoRepeat, pString) == 0 &&
+		EchoRepeatWithinWindow(Now, m_PendingEchoRepeatTime, WindowMs))
+	{
+		++m_PendingEchoRepeatCount;
+		m_PendingEchoRepeatTime = Now;
+		return true;
+	}
+
+	// 换了一条 echo 或被关闭时，先把上一段的 [N] 统计收口。
+	if(!HasPendingEchoRepeat())
+		return false;
+
+	// 用滑动窗口而不是「不同文本才收口」：否则重复段过长时末尾统计永远不落地。
+	// 计数交给聊天渲染已有的 [N] 显示（CLIENT_MSG 用的是 "[N] 文本" 前缀，与玩家消息合并
+	// 共用同一套计数），这里不再拼第二份后缀。
+	char aText[sizeof(m_aPendingEchoRepeat)];
+	str_copy(aText, m_aPendingEchoRepeat);
+	const int RepeatCount = m_PendingEchoRepeatCount;
+	const int64_t LastTime = m_PendingEchoRepeatTime;
+	ResetPendingEchoRepeat();
+	if(EchoRepeatWithinWindow(Now, LastTime, WindowMs))
+		AddLine(CLIENT_MSG, 0, aText, false, std::nullopt, -1, RepeatCount);
+	return false;
+}
+
 void CChat::Echo(const char *pString)
 {
+	// 合并判定放在最外层：被抑制的重复 echo 连 Console()->Print 都不会走到。
+	if(GateEchoRepeat(pString))
+		return;
 	const bool FocusHideEcho = GetQmFocusModeDecisions().m_HideEchoMessages;
 	const unsigned EchoColor = g_Config.m_ClMessageClientColor;
 	if(!FocusHideEcho && GameClient()->m_QmHudNotifications.QueueEcho(pString, EchoColor))
@@ -786,11 +834,13 @@ void CChat::Echo(const char *pString)
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/client", aBuf, color_cast<ColorRGBA>(ColorHSLA(EchoColor)));
 		return;
 	}
-	AddLine(CLIENT_MSG, 0, pString);
+	EchoLine(pString, false);
 }
 
 void CChat::Echo(const char *pString, bool ForceVisible)
 {
+	if(GateEchoRepeat(pString))
+		return;
 	const bool FocusHideEcho = GetQmFocusModeDecisions().m_HideEchoMessages && !ForceVisible;
 	const unsigned EchoColor = g_Config.m_ClMessageClientColor;
 	if(!FocusHideEcho && GameClient()->m_QmHudNotifications.QueueEcho(pString, EchoColor))
@@ -800,7 +850,7 @@ void CChat::Echo(const char *pString, bool ForceVisible)
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat/client", aBuf, color_cast<ColorRGBA>(ColorHSLA(EchoColor)));
 		return;
 	}
-	AddLine(CLIENT_MSG, 0, pString, ForceVisible);
+	EchoLine(pString, ForceVisible);
 }
 
 void CChat::OnConsoleInit()
@@ -1291,6 +1341,11 @@ void CChat::DisableMode()
 
 void CChat::OnMessage(int MsgType, void *pRawMsg)
 {
+	OnMessage(MsgType, pRawMsg, -1);
+}
+
+void CChat::OnMessage(int MsgType, void *pRawMsg, int SourceConnection)
+{
 	if(GameClient()->m_SuppressEvents)
 		return;
 
@@ -1319,7 +1374,7 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			const bool FocusHideSystemInfoMessages = Focus.m_HideSystemInfoMessages;
 			const bool FocusHideSystemPromptMessages = Focus.m_HideSystemPromptMessages;
 			QmHudNotifications::SServerMessageAnalysis ServerMessageAnalysis;
-			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages, &ServerMessageAnalysis);
+			const bool ServerMessageHandled = GameClient()->m_QmHudNotifications.HandleServerChat(pMsg->m_pMessage, g_Config.m_QmHudNotificationsSystem != 0, &ServerMessageAnalysis);
 			char aLocalizedServerMessage[1024];
 			const bool ServerMessageLocalized = QmHudNotifications::TryFormatLocalizedServerChatMessage(pMsg->m_pMessage, aLocalizedServerMessage, sizeof(aLocalizedServerMessage));
 			const char *pDisplayMessage = ServerMessageLocalized ? aLocalizedServerMessage : pMsg->m_pMessage;
@@ -1332,16 +1387,17 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 					static_cast<int>(ServerMessageAnalysis.m_Route), static_cast<int>(ServerMessageAnalysis.m_Class), str_length(pMsg->m_pMessage));
 				QmMacosGraphicsDiagnosticsLogPayload("perf/autodiag_chat", aPayload, Client());
 			}
-			if(ServerMessageHandled && QmHudNotifications::ShouldSuppressServerMessageChat(ServerMessageAnalysis, FocusHideSystemInfoMessages, FocusHideSystemPromptMessages))
+			// 区间把「按隐藏标志吞消息」改成只按分析结果判定：单机/单人路由消息在聊天里被抑制。
+			if(ServerMessageHandled && QmHudNotifications::ShouldSuppressServerMessageChat(ServerMessageAnalysis))
 			{
 				PrintSuppressedServerMessage();
 				return;
 			}
-			AddLine(pMsg->m_ClientId, pMsg->m_Team, pDisplayMessage, false, ServerMessageAnalysis.m_Class);
+			AddLine(pMsg->m_ClientId, pMsg->m_Team, pDisplayMessage, false, ServerMessageAnalysis.m_Class, SourceConnection);
 		}
 		else
 		{
-			AddLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage);
+			AddLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage, false, std::nullopt, SourceConnection);
 		}
 
 		SaveChatLogLine(pMsg->m_ClientId, pMsg->m_Team, pMsg->m_pMessage);
@@ -1435,14 +1491,14 @@ void CChat::StoreSave(const char *pText)
 	io_close(File);
 }
 
-bool CChat::EnsureChatLogFolder() const
+static bool EnsureChatLogFolder(IStorage *pStorage)
 {
-	if(!Storage()->CreateFolder("qmclient", IStorage::TYPE_SAVE) && !Storage()->FolderExists("qmclient", IStorage::TYPE_SAVE))
+	if(!pStorage->CreateFolder("qmclient", IStorage::TYPE_SAVE) && !pStorage->FolderExists("qmclient", IStorage::TYPE_SAVE))
 	{
 		log_error("chat", "Failed to create chat log root folder");
 		return false;
 	}
-	if(!Storage()->CreateFolder(QM_CHAT_LOG_DIR, IStorage::TYPE_SAVE) && !Storage()->FolderExists(QM_CHAT_LOG_DIR, IStorage::TYPE_SAVE))
+	if(!pStorage->CreateFolder(QM_CHAT_LOG_DIR, IStorage::TYPE_SAVE) && !pStorage->FolderExists(QM_CHAT_LOG_DIR, IStorage::TYPE_SAVE))
 	{
 		log_error("chat", "Failed to create chat log folder '%s'", QM_CHAT_LOG_DIR);
 		return false;
@@ -1450,9 +1506,9 @@ bool CChat::EnsureChatLogFolder() const
 	return true;
 }
 
-void CChat::CleanupOldChatLogs(const char *pToday)
+static void CleanupOldChatLogs(IStorage *pStorage, const char *pToday, int KeepDays, std::string &LastCleanupDate)
 {
-	if(g_Config.m_QmChatLogKeepDays <= 0 || str_comp(m_aChatLogLastCleanupDate, pToday) == 0)
+	if(KeepDays <= 0 || LastCleanupDate == pToday)
 		return;
 
 	time_t TodayDate = 0;
@@ -1460,22 +1516,19 @@ void CChat::CleanupOldChatLogs(const char *pToday)
 		return;
 
 	SChatLogCleanupData Data;
-	Data.m_pStorage = Storage();
-	Data.m_CutoffDate = TodayDate - (time_t)maximum(g_Config.m_QmChatLogKeepDays - 1, 0) * 24 * 60 * 60;
-	Storage()->ListDirectory(IStorage::TYPE_SAVE, QM_CHAT_LOG_DIR, ChatLogCleanupCallback, &Data);
-	str_copy(m_aChatLogLastCleanupDate, pToday);
+	Data.m_pStorage = pStorage;
+	Data.m_CutoffDate = TodayDate - (time_t)maximum(KeepDays - 1, 0) * 24 * 60 * 60;
+	pStorage->ListDirectory(IStorage::TYPE_SAVE, QM_CHAT_LOG_DIR, ChatLogCleanupCallback, &Data);
+	LastCleanupDate = pToday;
 }
 
 void CChat::SaveChatLogLine(int ClientId, int Team, const char *pLine)
 {
 	if(!g_Config.m_QmChatLogAutoSave || Client()->State() == IClient::STATE_DEMOPLAYBACK || pLine == nullptr || pLine[0] == '\0')
 		return;
-	if(!EnsureChatLogFolder())
-		return;
 
 	char aDate[11];
 	str_timestamp_format(aDate, sizeof(aDate), "%Y-%m-%d");
-	CleanupOldChatLogs(aDate);
 
 	char aTimestamp[20];
 	str_timestamp_format(aTimestamp, sizeof(aTimestamp), FORMAT_SPACE);
@@ -1505,22 +1558,30 @@ void CChat::SaveChatLogLine(int ClientId, int Team, const char *pLine)
 
 	char aFilename[IO_MAX_PATH_LENGTH];
 	str_format(aFilename, sizeof(aFilename), "%s/%s%s%s", QM_CHAT_LOG_DIR, QM_CHAT_LOG_PREFIX, aDate, QM_CHAT_LOG_EXTENSION);
-	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_APPEND, IStorage::TYPE_SAVE);
-	if(!File)
-	{
-		log_error("chat", "Failed to open chat log '%s'", aFilename);
-		return;
-	}
-
 	char aLine[512];
 	if(ClientId == SERVER_MSG || ClientId == CLIENT_MSG)
 		str_format(aLine, sizeof(aLine), "[%s] [%s] %s", aTimestamp, ChatLogKind(ClientId, Team), aText);
 	else
 		str_format(aLine, sizeof(aLine), "[%s] [%s] %s: %s", aTimestamp, ChatLogKind(ClientId, Team), aName, aText);
 
-	io_write(File, aLine, str_length(aLine));
-	io_write_newline(File);
-	io_close(File);
+	// 收消息时快照所有输入，worker 不访问组件、配置或玩家状态。
+	auto pJob = m_ChatLogWrites.Enqueue([pStorage = Storage(), pLastCleanupDate = m_pChatLogLastCleanupDate,
+						    Date = std::string(aDate), Filename = std::string(aFilename), Line = std::string(aLine), KeepDays = g_Config.m_QmChatLogKeepDays] {
+		if(!EnsureChatLogFolder(pStorage))
+			return;
+		CleanupOldChatLogs(pStorage, Date.c_str(), KeepDays, *pLastCleanupDate);
+		IOHANDLE File = pStorage->OpenFile(Filename.c_str(), IOFLAG_APPEND, IStorage::TYPE_SAVE);
+		if(!File)
+		{
+			log_error("chat", "Failed to open chat log '%s'", Filename.c_str());
+			return;
+		}
+		io_write(File, Line.data(), Line.size());
+		io_write_newline(File);
+		io_close(File);
+	});
+	if(pJob)
+		Engine()->AddJob(pJob);
 }
 
 void CChat::PrintBlockedMessageToConsole(int ClientId, int Team, const char *pLine)
@@ -1686,7 +1747,7 @@ void CChat::PrintLineToConsole(const CLine &Line) const
 	if(!Merged)
 	{
 		str_format(aBuf, sizeof(aBuf), "%s%s%s", Line.m_aName, Line.m_ClientId >= 0 ? ": " : "", Line.m_aText);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor);
+		GameClient()->m_GameConsole.PrintLineWithColorSpans(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor, nullptr, 0, Line.m_pExportMetadata);
 		return;
 	}
 
@@ -1707,7 +1768,15 @@ void CChat::PrintLineToConsole(const CLine &Line) const
 	str_format(aCount, sizeof(aCount), " [%d]: ", Line.m_TimesRepeated + 1);
 	str_append(aBuf, aCount, sizeof(aBuf));
 	str_append(aBuf, Line.m_aText, sizeof(aBuf));
-	GameClient()->m_GameConsole.PrintLineWithColorSpans(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor, vColorSpans.data(), vColorSpans.size());
+	// 导出记录里的发送者带合并次数，导出的聊天记录才能看出这是一条被合并过的重复消息。
+	auto pMetadata = std::make_shared<QmChatExport::SMetadata>();
+	if(Line.m_pExportMetadata)
+		*pMetadata = *Line.m_pExportMetadata;
+	char aRepeated[16];
+	str_format(aRepeated, sizeof(aRepeated), " [%d]", Line.m_TimesRepeated + 1);
+	pMetadata->m_Sender = std::string(Line.m_aName) + aRepeated;
+	pMetadata->m_Message = Line.m_aText;
+	GameClient()->m_GameConsole.PrintLineWithColorSpans(IConsole::OUTPUT_LEVEL_STANDARD, pFrom, aBuf, ChatLogColor, vColorSpans.data(), vColorSpans.size(), std::move(pMetadata));
 }
 
 void CChat::FlushPendingConsoleLine(bool Force)
@@ -1727,12 +1796,40 @@ void CChat::FlushPendingConsoleLine(bool Force)
 	m_PendingConsoleLineIndex = -1;
 }
 
-void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible)
+// 收到消息时固化身份与头像：之后改名、换皮肤或断线都不影响已导出/待导出的历史消息。
+static std::shared_ptr<const QmChatExport::SMetadata> CaptureChatExportMetadata(CGameClient *pGameClient, int ClientId, int Team, const char *pName, const char *pMessage, int SourceConnection)
 {
-	AddLine(ClientId, Team, pLine, ForceVisible, std::nullopt);
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return nullptr;
+	auto pMetadata = std::make_shared<QmChatExport::SMetadata>();
+	pMetadata->m_Sender = pName;
+	pMetadata->m_Message = pMessage;
+	const int LocalId = pGameClient->m_Snap.m_LocalClientId;
+	const bool DemoPlayback = pGameClient->Client()->State() == IClient::STATE_DEMOPLAYBACK;
+	const int Connection = SourceConnection >= 0 && SourceConnection < NUM_DUMMIES ? SourceConnection : g_Config.m_ClDummy;
+	pMetadata->m_Local = Team == TEAM_WHISPER_SEND || pGameClient->IsLocalClientId(ClientId) ||
+			     (DemoPlayback && ClientId == LocalId);
+	// 发出私聊时协议中的 ClientId 指向收件人，头像应取实际发件人。
+	const int SenderId = QmChatExport::ResolveSenderId(ClientId, Team == TEAM_WHISPER_SEND, Connection, pGameClient->m_aLocalIds, std::size(pGameClient->m_aLocalIds), LocalId, DemoPlayback);
+	if(SenderId >= 0 && SenderId < MAX_CLIENTS && pGameClient->m_aClients[SenderId].m_Active)
+	{
+		pMetadata->m_pAvatar = QmChatAvatar::Capture(pGameClient->m_aClients[SenderId].m_RenderInfo, Connection);
+		if(Team == TEAM_WHISPER_SEND)
+		{
+			char aSenderName[MAX_NAME_LENGTH];
+			pGameClient->FormatStreamerName(SenderId, aSenderName, sizeof(aSenderName));
+			pMetadata->m_Sender = std::string(aSenderName) + " " + pName;
+		}
+	}
+	return pMetadata;
 }
 
-void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass)
+void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible)
+{
+	AddLine(ClientId, Team, pLine, ForceVisible, std::nullopt, -1);
+}
+
+void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible, std::optional<QmHudNotifications::EServerMessageClass> KnownServerMessageClass, int SourceConnection, int TimesRepeated)
 {
 	if(*pLine == 0 ||
 		(ClientId == SERVER_MSG && !g_Config.m_ClShowChatSystem) ||
@@ -1743,6 +1840,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 					  (GameClient()->m_Snap.m_LocalClientId != ClientId && g_Config.m_ClShowChatTeamMembersOnly && GameClient()->IsOtherTeam(ClientId) && GameClient()->m_Teams.Team(GameClient()->m_Snap.m_LocalClientId) != TEAM_FLOCK) ||
 					  (GameClient()->m_Snap.m_LocalClientId != ClientId && GameClient()->m_aClients[ClientId].m_Foe))))
 		return;
+
+	// 其它消息出现时先给上一段 echo 重复计数收口，避免统计被后面的消息挤掉。
+	// 必须放在下面「不显示客户端消息」的提前返回之前：被过滤掉的 echo 也要能触发收口。
+	if(HasPendingEchoRepeat())
+		GateEchoRepeat(nullptr);
 
 	// TClient
 	if(ClientId == CLIENT_MSG && !g_Config.m_TcShowChatClient)
@@ -1910,6 +2012,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 	CurrentLine.m_CustomColor = CustomColor;
 	CurrentLine.m_ForceVisible = ForceVisible;
 	CurrentLine.m_ConsoleSuppressed = BlockWordsConsolePrinted;
+	// echo 重复段的计数直接落到行上，聊天渲染已有的 [N] 计数显示会负责呈现它。
+	CurrentLine.m_TimesRepeated = TimesRepeated;
 
 	CurrentLine.m_Highlighted = Highlighted;
 
@@ -1985,6 +2089,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 			AddMergedAuthor(CurrentLine, ClientId);
 	}
 
+	CurrentLine.m_pExportMetadata = CaptureChatExportMetadata(GameClient(), ClientId, Team, CurrentLine.m_aName, CurrentLine.m_aText, SourceConnection);
 	if(g_Config.m_QmMessageMerge && ClientId >= 0 && Team < TEAM_WHISPER_SEND && !CurrentLine.m_ConsoleSuppressed)
 		m_PendingConsoleLineIndex = m_CurrentLine;
 	else
@@ -2033,7 +2138,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine, bool ForceVisible
 #if defined(CONF_VIDEORECORDER)
 			if(IVideo::Current())
 			{
-				PlaySound &= (bool)g_Config.m_ClVideoShowChat;
+				PlaySound &= qm_demo_display::Resolve(g_Config, Client()->State() == IClient::STATE_DEMOPLAYBACK, true).m_Chat;
 			}
 #endif
 			if(PlaySound)
@@ -2724,10 +2829,12 @@ void CChat::OnRender()
 	}
 
 #if defined(CONF_VIDEORECORDER)
-	if(!((g_Config.m_ClShowChat && !IVideo::Current()) || (g_Config.m_ClVideoShowChat && IVideo::Current())))
+	const bool VideoRendering = IVideo::Current() != nullptr;
 #else
-	if(!g_Config.m_ClShowChat)
+	const bool VideoRendering = false;
 #endif
+	// 回放/导出走独立显示选项；其余情况沿用 cl_showchat / cl_video_showchat。
+	if(!qm_demo_display::Resolve(g_Config, Client()->State() == IClient::STATE_DEMOPLAYBACK, VideoRendering).m_Chat)
 	{
 		GameClient()->m_HudEditor.EndTransform(HudEditorScope);
 		return;

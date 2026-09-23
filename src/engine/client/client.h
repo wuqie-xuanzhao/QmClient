@@ -26,6 +26,8 @@
 #include <engine/textrender.h>
 #include <engine/warning.h>
 
+#include <game/client/components/qmclient/perf_diagnostics.h>
+
 #include <atomic>
 #include <chrono>
 #include <deque>
@@ -341,7 +343,14 @@ private:
 	// 通过 CQmPerfFileSwitchLogger 包装切换内部 logger（文件 ↔ noop）实现。
 	std::shared_ptr<ILogger> m_pQmPerfFileSwitchLogger = nullptr; // 持有包装（基类引用，跨线程安全）
 	CQmPerfFileSwitchLogger *m_pQmPerfFileSwitch = nullptr; // 具体类型指针，仅 client.cpp 使用
+	bool m_QmPerfFileLoggerWanted = false; // 配置要求开启；打开失败时不置 active，等下次开关变化再试
 	bool m_QmPerfFileLoggerActive = false; // 当前是否已打开性能日志文件
+	// QmClient：生效配置快照（脱敏后写入性能日志），见 perf_diagnostics.h。
+	CQmPerfConfigSnapshot m_QmPerfConfigSnapshot;
+	CQmPerfFrameBatch m_QmPerfFrameBatch; // 逐帧阶段日志攒批：容量或耗时到阈值即落盘
+	int64_t m_QmPerfLastConfigCheck = 0; // 上次写入配置增量快照的时间
+	int64_t m_QmPerfLastFrameEnd = 0; // 上一渲染帧结束时间；0 表示会话刚开始
+	void FinishQmPerfSession(bool Shutdown);
 	int m_QmPerfLogReopenCounter = 0; // 本进程内第几次开启性能日志（文件名序号，避免覆盖旧日志）
 
 	std::shared_ptr<ILogger> m_pFileLogger = nullptr;

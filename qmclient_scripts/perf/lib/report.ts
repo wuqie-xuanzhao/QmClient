@@ -2,6 +2,8 @@
 // report.ts — 生成自包含 ECharts HTML 报表（R-style 论文式排版，纸面图表主题）
 
 import { basename } from 'node:path';
+import { configurationSummary } from './configuration.ts';
+import { configurationReport } from './configuration_report.ts';
 
 import type { PerfEntry } from './parse.ts';
 import { FPS_BASELINES, fpsBaselineVerdict, nonCardMenuBudgetSummary, reportQuality, type ParseDiagnostics } from './quality.ts';
@@ -12,7 +14,7 @@ import {
   inferSamplingThreshold, sectionPerformanceTop, fpsSummaries, targetSettingsSnapshot, PERF_SYSTEM,
   settingsTextAnalysis, assetsPreviewAdmissionSummary, assetsVisibleReadySummary, demoBrowserPhaseSummary, adaptiveBudgetSummary, settingsUiBudgetSummary,
   previewBudgetSummary, textRuntimeBudgetSummary, budgetCorrelationSummary, coldTabSwitchFpsSummaries, warmTabSwitchFpsSummaries,
-  stutterDiagnosticsSummary,
+  stutterDiagnosticsSummary, hasUnifiedFrameSamples,
   type BudgetCorrelationWindow, type Percentiles, type SpikeInfo, type PageStats, type ComparisonResult,
 } from './stats.ts';
 
@@ -140,7 +142,7 @@ export function generateReport(
 ): string {
   const interactionEntries = entries.filter(e => e.system === PERF_SYSTEM.INTERACTION);
   const frameTimeEntries = selectFrameTimeEntries(entries);
-  const menuEntries = frameTimeEntries.filter(e => e.system === PERF_SYSTEM.MENU && (e.stage.includes('render_total') || e.stage.includes('page_content')));
+  const menuEntries = entries.filter(e => e.system === PERF_SYSTEM.MENU && (e.stage.includes('render_total') || e.stage.includes('page_content')));
   const deviceEntries = entries.filter(e => e.system === PERF_SYSTEM.DEVICE);
   const skinUxEntries = entries.filter(e => e.system === PERF_SYSTEM.SKIN_UX);
   const allEntries = frameTimeEntries;
@@ -196,10 +198,10 @@ export function generateReport(
   const compliance240 = complianceRate(frameDurations, BUDGET.h240);
   const compliance120 = complianceRate(frameDurations, BUDGET.h120);
   const compliance60 = complianceRate(frameDurations, BUDGET.h60);
-  const biased = isSamplingBiased(frameDurations);
+  const biased = !hasUnifiedFrameSamples(entries) && isSamplingBiased(frameDurations);
   const samplingThresholdMs = inferSamplingThreshold(frameDurations);
   const quality = reportQuality(entries, diagnostics);
-  const verdict = quality.failed ? 'FAIL' : frameTimeEntries.length === 0 ? 'WARN' : computeVerdict(p, spikes.length);
+  const verdict = quality.failed ? 'FAIL' : frameTimeEntries.length === 0 || (quality.sampledEntries > 0 && computeVerdict(p, spikes.length) === 'PASS') ? 'WARN' : computeVerdict(p, spikes.length);
   const narrative = generateNarrative(p, spikes, compliance240, compliance120, compliance60, biased, samplingThresholdMs);
   const targetSettingsAcceptanceBlocked = targetSettings.stableTextCoverage.acceptanceBlocked ||
     !targetSettings.verdictAvailable;
@@ -552,7 +554,7 @@ export function generateReport(
     ? stutterDiagnostics.featureStates.filter(feature => feature.stutterId === worstStutterWindow.stutterId && feature.segment === worstStutterWindow.segment).slice(0, 80)
     : [];
   const stutterDiagnosticsHtml = !stutterDiagnostics.available
-    ? '<p class="body-text" style="color:rgba(var(--ink-rgb),0.4);font-style:italic">本次日志未包含卡顿诊断数据。请在启动客户端前设置 <code>qm_perf_stutter_diagnostics 1</code>。</p>'
+    ? '<p class="body-text" style="color:rgba(var(--ink-rgb),0.4);font-style:italic">本次日志未包含卡顿诊断数据。请开启 <code>qm_perf_debug 1</code> 并采集实际游戏帧。</p>'
     : `<div class="coverage-panel">
       <div class="coverage-title">
         <span>300 FPS / 3.333ms Diagnosis</span>
@@ -591,7 +593,10 @@ export function generateReport(
       <p class="small-note">组件墙钟时间衡量 CPU 提交成本，不是逐模块 GPU 时间。graphics_swap 偏高只能指向 GPU、驱动或 VSync 压力；未覆盖的输入、消息、snapshot 和后台线程成本属于未归因部分。功能配置、当前页面和组件耗时来自同一最慢帧窗口；通用组件没有可靠可见性接口时，HUD/Settings/Executed 显示 unknown，不根据耗时猜测。</p>
     </div>`;
 
+  const configuration = configurationSummary(entries);
+  configuration.incomplete ||= diagnostics.configurationIncomplete ?? false;
   const dataJson = JSON.stringify({
+    configuration,
     percentiles: percentilesToChartData(p),
     timeline: ts,
     spikes: spikes.slice(0, 20),
@@ -624,7 +629,7 @@ export function generateReport(
     sectionTop,
     skinUx: skinUxEntries.map(e => ({ timestamp: e.timestamp, event: e.fields.event ?? '', durMs: e.fields.dur_ms ?? e.fields.duration_ms ?? '', total: e.fields.total ?? '', visibleRows: e.fields.visible_rows ?? '' })),
     devices: deviceEntries.map(e => ({ timestamp: e.timestamp, frame: e.fields.frame ?? '', gpuUtil: e.fields.gpu_util_percent ?? '', gpuDedicated: e.fields.gpu_dedicated_vram_mb ?? '', gpuShared: e.fields.gpu_shared_vram_mb ?? '', cpuProcess: e.fields.cpu_process_percent ?? '', cpuTotal: e.fields.cpu_total_percent ?? '', mem: e.fields.memory_process_mb ?? '', disk: e.fields.disk_read_mb_s ?? '' })),
-  });
+  }).replace(/</g, '\\u003c');
 
   const kpiClass = (v: number, okThresh: number, warnThresh: number) =>
     v <= okThresh ? 'ok' : v <= warnThresh ? 'warn' : 'bad';
@@ -808,7 +813,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
 
 <header class="title-page">
   <h1>QmClient 设置页性能分析报告</h1>
-  <div class="subtitle">Settings Page UI Performance Quantitative Analysis</div>
+  <div class="subtitle">Client Performance Diagnostics & Configuration</div>
   <div class="meta-grid">
     <span class="label">Date</span><span class="value">${genDate}</span>
     <span class="label">Source</span><span class="value">${escapeHtml(sourceFile.replace(/^.*[\\/]/, ''))}</span>
@@ -821,7 +826,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
     <span class="label">Report Generation</span><span class="value">${generationDurationLabel}</span>
   </div>
   ${biased ? `<div style="max-width:var(--max-w);margin:0 auto;padding:1rem 2rem;border-bottom:1px solid var(--hairline);font-family:var(--mono);font-size:0.75rem;color:var(--warn);background:var(--warn-bg)">
-    ⚠ Sampling Bias Detected — 当前采样阈值估计 p5=${samplingThresholdMs.toFixed(1)}ms（当前默认 4ms），日志可能仅包含超过阈值的帧，合规率和百分位统计不能反映实际帧分布。建议设置 <code style="background:rgba(0,0,0,0.06);padding:0.1em 0.3em;border-radius:2px">qm_perf_debug_threshold_ms 4</code> 后重新采集。
+    ⚠ Sampling Bias Detected — 当前采样阈值估计 p5=${samplingThresholdMs.toFixed(1)}ms（旧版过滤阈值约 4ms），日志可能仅包含超过阈值的帧，合规率和百分位统计不能反映实际帧分布。建议设置 <code style="background:rgba(0,0,0,0.06);padding:0.1em 0.3em;border-radius:2px">qm_perf_debug 1</code> 后重新采集。
   </div>` : ''}
 </header>
 
@@ -940,6 +945,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weigh
     <h2>客户端卡顿诊断</h2>
   </div>
   ${stutterDiagnosticsHtml}
+  ${configurationReport(configuration)}
 </section>
 
 <section class="section">
@@ -1220,9 +1226,9 @@ ${pages.length > 1 ? `<section class="section">
     <span class="section-num">§${pages.length > 1 ? '12' : '11'}</span>
     <h2>数据采集方法</h2>
   </div>
-  <p>性能数据通过 QmClient 内置的 <code>perf/menu</code> 日志系统采集，需启用 <code>qm_perf_debug 1</code> 和 <code>qm_perf_logfile 1</code>。日志输出至 <code>%APPDATA%/DDNet/dumps/QmClient_Perf/</code>。</p>
+  <p>性能数据通过 QmClient 内置的统一性能诊断系统；新日志的帧统计使用 <code>perf/frame</code> 完整渲染间隔，菜单和组件阶段仅用于归因采集，只需启用 <code>qm_perf_debug 1</code>。日志输出至 <code>%APPDATA%/DDNet/dumps/QmClient_Perf/</code>。</p>
   <p>帧预算基准：240Hz → 4.17ms，120Hz → 8.33ms，60Hz → 16.67ms。百分位采用最近秩法 (nearest-rank)。直方图分桶 [0, 2, 4, 8, 16, 33, 100, 500] ms。</p>
-  ${biased ? `<p style="color:var(--warn)">当前采样阈值估计 p5=${samplingThresholdMs.toFixed(1)}ms（配置项 <code>qm_perf_debug_threshold_ms</code>，当前默认 4ms）。日志可能仅包含超过阈值的帧，因此本报告中的合规率和百分位仅反映被采样帧的分布，不能代表实际渲染性能。确认阈值为 4ms 后，可获取完整帧分布和真实合规率。</p>` : ''}
+  ${biased ? `<p style="color:var(--warn)">当前采样阈值估计 p5=${samplingThresholdMs.toFixed(1)}ms（旧版日志的过滤行为）。日志可能仅包含超过阈值的帧，因此本报告中的合规率和百分位仅反映被采样帧的分布，不能代表实际渲染性能。统一诊断会批量记录完整渲染间隔；大日志分析阶段若再次抽样，会单独标记。</p>` : ''}
   <p>判定标准：p99 &lt; 16.67ms 且尖峰 &lt; 5 → <span class="badge ok">PASS</span>；p99 &lt; 33ms 或尖峰 &ge; 1 → <span class="badge warn">WARN</span>；p99 &ge; 33ms 或尖峰 &ge; 5 → <span class="badge bad">FAIL</span>。</p>
 </section>
 
@@ -1230,6 +1236,12 @@ ${pages.length > 1 ? `<section class="section">
 
 <script>
 const DATA = ${dataJson};
+document.getElementById('configuration-filter')?.addEventListener('input', event => {
+  const query = event.target.value.toLocaleLowerCase();
+  document.querySelectorAll('[data-config-row]').forEach(row => {
+    row.hidden = !row.textContent.toLocaleLowerCase().includes(query);
+  });
+});
 
 (function(){
   // ── Morandi Chart Theme ──

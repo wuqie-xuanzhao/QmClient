@@ -52,7 +52,7 @@ TEST(QmHudNotifications, RoutesServerSystemMessagesWhenEnabled)
 	EXPECT_EQ(QmHudNotifications::ServerMessageRoute(nullptr, QmHudNotifications::ESoloPrompt::None, true), QmHudNotifications::EServerMessageRoute::None);
 }
 
-TEST(QmHudNotifications, ClassifiesServerSystemMessagesForFocusMode)
+TEST(QmHudNotifications, ClassifiesServerSystemMessages)
 {
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("DDraceNetwork 版本: 18.9", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);
 	EXPECT_EQ(QmHudNotifications::ServerMessageClass("请访问 DDNet.org，或输入 /info，并确保阅读 /rules", QmHudNotifications::ESoloPrompt::None), QmHudNotifications::EServerMessageClass::BasicInfo);

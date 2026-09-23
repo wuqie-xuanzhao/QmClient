@@ -10,6 +10,7 @@
 
 #include <game/client/QmUi/QmAnimResolve.h>
 #include <game/client/ui_rect.h>
+#include <game/teamscore.h>
 
 #include <algorithm>
 #include <array>
@@ -17,7 +18,49 @@
 #include <cstddef>
 #include <cstdint>
 
-constexpr float QmHudMediaIslandDesignScale = 0.8f;
+// 只维护本次连接中实际触发过开关的队伍；保留每队 256 槽的直接索引。
+struct SHudSwitchCountdownTracker
+{
+	int m_aaEndTick[NUM_DDRACE_TEAMS][256] = {};
+	int m_aaTouchTick[NUM_DDRACE_TEAMS][256] = {};
+	int m_aaClientId[NUM_DDRACE_TEAMS][256] = {};
+	int m_aaConnection[NUM_DDRACE_TEAMS][256] = {};
+	std::array<bool, NUM_DDRACE_TEAMS> m_aTouchedTeams{};
+
+	SHudSwitchCountdownTracker()
+	{
+		// 首次初始化所有槽位；后续 Reset 只需要清空写入过的队伍。
+		m_aTouchedTeams.fill(true);
+		Reset();
+	}
+
+	void Track(int Team, int Number, int EndTick, int TouchTick, int ClientId, int Connection)
+	{
+		m_aTouchedTeams[Team] = true;
+		m_aaEndTick[Team][Number] = EndTick;
+		m_aaTouchTick[Team][Number] = TouchTick;
+		m_aaClientId[Team][Number] = ClientId;
+		m_aaConnection[Team][Number] = Connection;
+	}
+
+	void Reset()
+	{
+		for(int Team = 0; Team < NUM_DDRACE_TEAMS; ++Team)
+		{
+			if(!m_aTouchedTeams[Team])
+				continue;
+			for(int Number = 0; Number < 256; ++Number)
+			{
+				m_aaEndTick[Team][Number] = 0;
+				m_aaTouchTick[Team][Number] = 0;
+				m_aaClientId[Team][Number] = -1;
+				m_aaConnection[Team][Number] = -1;
+			}
+			m_aTouchedTeams[Team] = false;
+		}
+	}
+};
+constexpr float QmHudMediaIslandDesignScale = 0.7f;
 
 constexpr float QmHudMediaIslandScaled(float Value)
 {
@@ -86,6 +129,22 @@ inline bool QmHudMediaIslandShouldShowTrackDetails(int64_t Now, int64_t DetailsU
 inline bool QmHudMediaIslandShouldResetMarquee(const char *pPrevious, const char *pCurrent)
 {
 	return str_comp(pPrevious != nullptr ? pPrevious : "", pCurrent != nullptr ? pCurrent : "") != 0;
+}
+
+// SDF 抗锯齿羽化宽度用的「屏幕映射单位 → 物理像素」比例：取 x/y 两个方向里较大的那个，
+// 保证非等比拉伸时羽化在较细的方向上也够宽。灵动岛与录制红点共用同一口径。
+inline float QmHudMediaIslandScreenPixelSize(float ScreenX0, float ScreenY0, float ScreenX1, float ScreenY1, int ScreenWidth, int ScreenHeight)
+{
+	return std::max(
+		(ScreenX1 - ScreenX0) / (float)std::max(1, ScreenWidth),
+		(ScreenY1 - ScreenY0) / (float)std::max(1, ScreenHeight));
+}
+
+// 两处录制红点共用 2.4 秒呼吸周期，透明度保持在 65%～95%，不影响布局和显隐条件。
+inline float QmHudRecordingDotAlpha(double Seconds)
+{
+	const double Phase = std::fmod(Seconds, 2.4) / 2.4;
+	return static_cast<float>(0.80 + 0.15 * std::cos(Phase * 2.0 * pi));
 }
 
 inline float QmHudMediaIslandMarqueeOffset(float TextWidth, float ViewportWidth, float ElapsedSeconds, float Speed = 32.0f)
@@ -292,6 +351,54 @@ inline vec2 QmHudSwitchCountdownFollowTarget(vec2 TeePosition, int Side, int Slo
 	return TeePosition + vec2(
 				     Side * (BaseOffsetX + ItemSpacing * Slot),
 				     -OffsetY + std::sin(Now / 2.0f) * BobAmount);
+}
+
+// 钩子环固定在开关环的正上方：同一侧、同一条竖直线上，只把纵向偏移再抬高一段。
+// 抬升量必须大于两个卫星半径之和（2 × 10.25），否则两个环会叠在一起。
+inline constexpr float QM_HUD_HOOK_COUNTDOWN_RISE = 28.0f;
+
+inline vec2 QmHudHookCountdownFollowTarget(vec2 TeePosition, int Side, float Now)
+{
+	// 先按开关环的槽位 0 取同一个 (x, y)，保证横向完全对齐，再单独抬高 y。
+	const vec2 SwitchTarget = QmHudSwitchCountdownFollowTarget(TeePosition, Side, 0, Now);
+	return vec2(SwitchTarget.x, SwitchTarget.y - QM_HUD_HOOK_COUNTDOWN_RISE);
+}
+
+// 钩住玩家时这一钩的寿命基准（秒）：1.2 秒强制脱钩上限 + 钩链收回时长。
+// 环只在钩住玩家/分身时显示，所以基准就取玩家钩的那个硬上限 —— gamecore.cpp 里
+// m_HookTick > SERVER_TICK_SPEED + SERVER_TICK_SPEED / 5（即 1.2 秒）就自动脱钩。
+// 收回时长 = 1.25 - m_HookDuration，和出钩时长同一个 m_HookTick 计数器的另一处口径；
+// 所以环走空 ≈ 钩住的人马上要被放开。钩墙/钩地形不出环（没有这个时限）。
+inline float QmHudHookCountdownLifespanSeconds(float HookDurationSeconds)
+{
+	constexpr float PlayerHookMaxSeconds = 1.2f;
+	constexpr float HookCycleCeiling = 1.25f;
+	// m_HookDuration 超过 1.25 时引擎侧 m_HookTick 已为负、收回瞬间完成，钳到 0 即可。
+	const float RetractSeconds = HookCycleCeiling - std::clamp(HookDurationSeconds, 0.0f, HookCycleCeiling);
+	return PlayerHookMaxSeconds + RetractSeconds;
+}
+
+// 钩子倒计时环：钩住玩家期间走下坡，环空 = 钩住的人即将被强制放开。
+// 松钩后钩子立即回到 idle，但环不该瞬间跳回满格，所以冻结进度，只靠淡出收尾。
+inline float QmHudHookCountdownProgress(
+	float HookDurationSeconds,
+	float HeldSeconds,
+	float PreviousProgress)
+{
+	const float Lifespan = QmHudHookCountdownLifespanSeconds(HookDurationSeconds);
+	if(Lifespan <= 0.0f)
+		return 0.0f;
+	const float Elapsed = std::max(0.0f, HeldSeconds);
+	if(Elapsed >= Lifespan)
+		return 0.0f;
+	const float Progress = 1.0f - Elapsed / Lifespan;
+	return std::clamp(std::min(Progress, PreviousProgress), 0.0f, 1.0f);
+}
+
+// 钩子环固定蓝色，与黄色系开关环区分；环内底色沿用灵动岛背景色配置。
+inline ColorRGBA QmHudHookCountdownColor()
+{
+	return ColorRGBA(0.20f, 0.62f, 1.0f, 1.0f);
 }
 
 struct SHudMediaIslandSwapLifecycle
@@ -613,13 +720,6 @@ constexpr float QmHudMediaIslandBlobSpringWindowPeriods = 12.0f;
 // 退出不再额外加速：窗口内弹簧自然收敛到 0，加速会带走"被拉回"的过程本身。
 // 速度归一化基准：wn=9.0、zeta=0.60 时速度峰值 4.49，取 4.6 使最大拉伸落在 1.065 附近。
 constexpr float QmHudMediaIslandBlobSpringPeakVelocity = 4.6f;
-// 单帧步长上限：只防超大卡顿导致的跳变，正常帧远小于它。
-constexpr float QmHudMediaIslandBlobStepMaxSeconds = 0.20f;
-// 物理固定子步长。取 1/480s：比 wn=9 的时间尺度小两个数量级，积分的相位误差可忽略，
-// 同时让 60/120/144/240Hz 都恰好落在整数子步上。
-constexpr float QmHudMediaIslandBlobSpringInternalStepSeconds = 1.0f / 480.0f;
-// 单帧最多推进的子步数（对应 0.2s 上限），防极端卡顿后的追帧风暴。
-constexpr int QmHudMediaIslandBlobSpringMaxStepsPerFrame = 96;
 // 停车判据：窗口走完 + 速度归零 + 离目标亚像素。阈值 0.002 对应约 12.4px 行程上的
 // 0.025px，停车本身看不出来。
 constexpr float QmHudMediaIslandBlobRestOffset = 0.002f;
@@ -635,9 +735,6 @@ struct SHudMediaIslandBlobSpring
 	float m_Value = 0.0f;
 	float m_Velocity = 0.0f;
 	float m_StopSeconds = 0.0f;
-	// 固定子步长累加器：物理只在整数个 InternalStepSeconds 上推进，
-	// 因此帧率与步长都不影响结果（详见 Advance）。
-	float m_Accumulator = 0.0f;
 	// 最近一次求值得到的显示进度（0..1，过冲按 1 处理）。供"是否需要渲染"之类的
 	// 布尔判断复用，不参与动力学。
 	mutable float m_Progress = 0.0f;
@@ -654,18 +751,24 @@ inline float QmHudMediaIslandBlobSpringWindowSeconds()
 	return QmHudMediaIslandBlobSpringAngularFrequency > 0.0f ? QmHudMediaIslandBlobSpringWindowPeriods / QmHudMediaIslandBlobSpringAngularFrequency : 0.0f;
 }
 
-// 半隐式（symplectic）欧拉一步：无条件稳定，且保持欠阻尼的过冲特征。
+// 直接求欠阻尼弹簧在真实帧间隔后的位移和速度，避免固定子步产生重复姿态。
 inline void QmHudMediaIslandBlobSpringIntegrate(SHudMediaIslandBlobSpring &Spring, float Target, float StepSeconds)
 {
-	const float Displacement = Spring.m_Value - Target;
-	Spring.m_Velocity += (-QmHudMediaIslandBlobSpringAngularFrequency * QmHudMediaIslandBlobSpringAngularFrequency * Displacement -
-				     2.0f * QmHudMediaIslandBlobSpringDamping * QmHudMediaIslandBlobSpringAngularFrequency * Spring.m_Velocity) *
-			     StepSeconds;
-	Spring.m_Value += Spring.m_Velocity * StepSeconds;
+	const double AngularFrequency = QmHudMediaIslandBlobSpringAngularFrequency;
+	const double Damping = QmHudMediaIslandBlobSpringDamping;
+	const double DecayRate = Damping * AngularFrequency;
+	const double DampedFrequency = AngularFrequency * std::sqrt(1.0 - Damping * Damping);
+	const double Displacement = static_cast<double>(Spring.m_Value) - Target;
+	const double Velocity = Spring.m_Velocity;
+	const double Phase = DampedFrequency * StepSeconds;
+	const double Decay = std::exp(-DecayRate * StepSeconds);
+	const double CosPhase = std::cos(Phase);
+	const double SinPhase = std::sin(Phase);
+	Spring.m_Value = static_cast<float>(Target + Decay * (Displacement * CosPhase + (Velocity + DecayRate * Displacement) / DampedFrequency * SinPhase));
+	Spring.m_Velocity = static_cast<float>(Decay * (Velocity * CosPhase - (DecayRate * Velocity + AngularFrequency * AngularFrequency * Displacement) / DampedFrequency * SinPhase));
 }
 
-// 按帧推进。物理只在整数个 InternalStepSeconds 上跑，所以 60Hz 与 240Hz、
-// 以及一次大 dt 与多次小 dt，都会走完全相同的子步序列，结果逐位一致。
+// 按完整经过时间推进，任意刷新率和分帧方式都沿同一条连续轨迹运动。
 inline void QmHudMediaIslandBlobSpringAdvance(SHudMediaIslandBlobSpring &Spring, float DeltaSeconds, float PeriodSeconds, bool TargetVisible)
 {
 	if(!Spring.m_Initialized)
@@ -676,7 +779,6 @@ inline void QmHudMediaIslandBlobSpringAdvance(SHudMediaIslandBlobSpring &Spring,
 		Spring.m_Value = TargetVisible ? 0.0f : 1.0f;
 		Spring.m_Velocity = 0.0f;
 		Spring.m_StopSeconds = 0.0f;
-		Spring.m_Accumulator = 0.0f;
 		Spring.m_Progress = Spring.m_Value;
 	}
 	const float Target = QmHudMediaIslandBlobSpringTarget(TargetVisible);
@@ -694,16 +796,10 @@ inline void QmHudMediaIslandBlobSpringAdvance(SHudMediaIslandBlobSpring &Spring,
 		// 把"已消耗的子步时间"累加后再取整，未满一个子步的余量留在累加器里。
 		// 关键是累加器只保存余量（< 一个子步），所以同一总时长无论被切成多少帧，
 		// 走过的子步序列都一样 —— 帧率不影响结果。
-		const float Consumed = Spring.m_Accumulator + DeltaSeconds;
-		int Steps = (int)(Consumed / QmHudMediaIslandBlobSpringInternalStepSeconds);
-		Spring.m_Accumulator = Consumed - Steps * QmHudMediaIslandBlobSpringInternalStepSeconds;
-		if(Steps > QmHudMediaIslandBlobSpringMaxStepsPerFrame)
-			Steps = QmHudMediaIslandBlobSpringMaxStepsPerFrame;
-		for(int i = 0; i < Steps; ++i)
-		{
-			QmHudMediaIslandBlobSpringIntegrate(Spring, Target, QmHudMediaIslandBlobSpringInternalStepSeconds);
-			Spring.m_StopSeconds += QmHudMediaIslandBlobSpringInternalStepSeconds;
-		}
+		// 静止状态无需重复求解；长帧也只求解一次，不截断时间或积压追帧。
+		if(Spring.m_Value != Target || Spring.m_Velocity != 0.0f)
+			QmHudMediaIslandBlobSpringIntegrate(Spring, Target, DeltaSeconds);
+		Spring.m_StopSeconds += DeltaSeconds;
 		// 窗口走完、速度归零、且已贴住目标（亚像素）时停车，
 		// 让静止位姿精确落在 1 / 0（指数尾巴在数学上永远到不了零）。
 		// 判据必须看"离目标的距离"：过冲峰值处速度也为零，只看速度会停在峰值上。
@@ -711,7 +807,6 @@ inline void QmHudMediaIslandBlobSpringAdvance(SHudMediaIslandBlobSpring &Spring,
 		{
 			Spring.m_Value = Target;
 			Spring.m_Velocity = 0.0f;
-			Spring.m_Accumulator = 0.0f;
 		}
 	}
 	Spring.m_Progress = std::clamp(Spring.m_Value, 0.0f, 1.0f);
@@ -725,7 +820,6 @@ inline void QmHudMediaIslandBlobSetBinary(SHudMediaIslandBlobSpring &Spring, boo
 	Spring.m_Value = QmHudMediaIslandBlobSpringTarget(TargetVisible);
 	Spring.m_Velocity = 0.0f;
 	Spring.m_StopSeconds = QmHudMediaIslandBlobSpringWindowSeconds();
-	Spring.m_Accumulator = 0.0f;
 	Spring.m_Progress = Spring.m_Value;
 }
 
@@ -813,7 +907,7 @@ inline void QmHudAdvanceMediaIslandLiquidProgress(SHudMediaIslandBlobSpring &Spr
 		return;
 	}
 	const float PeriodSeconds = QmHudMediaIslandBlobSpringWindowSeconds();
-	const float DeltaSeconds = (float)std::clamp(RawDelta, 0.0, (double)QmHudMediaIslandBlobStepMaxSeconds);
+	const float DeltaSeconds = static_cast<float>(RawDelta);
 	QmHudMediaIslandBlobSpringAdvance(Spring, DeltaSeconds, PeriodSeconds, TargetVisible);
 }
 
@@ -902,7 +996,7 @@ struct SHudMediaIslandSdfCapsule
 	float m_SmoothUnion = 0.0f;
 };
 
-constexpr uint64_t QmHudMediaIslandBlurRefreshIntervalFrames = 3;
+constexpr uint64_t QmHudMediaIslandBlurRefreshIntervalFrames = 1;
 
 // 模糊底图只在透明度满 100% 时关闭：0% 也照常准备（"亚克力板"语义）。着色器里
 // Background.a 是整块板的不透明度：模糊底图与背景色先按它混合，再整体按它合成，
@@ -947,6 +1041,11 @@ struct SHudMediaIslandSdfRenderState
 	float m_ScreenPixelSize = 1.0f;
 	float m_OuterShadowSize = 0.0f;
 	float m_OuterShadowOpacity = 0.0f;
+	// 轮廓环：贴着主体外轮廓（圆角矩形/胶囊）绕一圈的倒计时环，供「一整块宽岛」使用。
+	// 厚度为 0 时关闭，退回「每个 item 各自一个圆环」的卫星环语义（HUD 动态岛走那条）。
+	float m_OutlineRingThickness = 0.0f;
+	// 环中心线相对主体轮廓外扩的距离；环整条都在轮廓外侧。
+	float m_OutlineRingOffset = 0.0f;
 	vec4 m_BackdropUv{};
 };
 
@@ -966,7 +1065,9 @@ inline float QmHudMediaIslandSdfPadding(const SHudMediaIslandSdfRenderState &Sta
 	const float Feather = std::max(State.m_ScreenPixelSize, 0.0001f) * 0.9f;
 	const float ShapeOverflow = std::max(0.0f, MaxSmoothUnion) * 0.25f + Feather;
 	const float ShadowOverflow = std::max(0.0f, State.m_OuterShadowSize) + Feather;
-	return std::max(1.5f, std::max(ShapeOverflow, ShadowOverflow));
+	// 轮廓环整条都在主体外侧：外沿 = 中心线外扩距离 + 半个厚度。
+	const float OutlineOverflow = std::max(0.0f, State.m_OutlineRingOffset) + std::max(0.0f, State.m_OutlineRingThickness) * 0.5f + Feather;
+	return std::max(1.5f, std::max(std::max(ShapeOverflow, ShadowOverflow), OutlineOverflow));
 }
 
 inline CUIRect QmHudMediaIslandSdfOuterRect(const SHudMediaIslandSdfRenderState &State)
@@ -1017,7 +1118,7 @@ inline bool QmHudMediaIslandBuildGpuSdfParams(const SHudMediaIslandSdfRenderStat
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_MAIN_PARAMS] = vec4(State.m_MainRadius, State.m_MainDisabledCornerRadius, State.m_RingRadius, State.m_RingThickness);
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_METADATA] = vec4((float)State.m_ItemCount, (float)State.m_MainCorners, State.m_HasRightCapsule ? 1.0f : 0.0f, std::max(State.m_ScreenPixelSize, 0.0001f));
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_CAPSULE_PARAMS] = vec4(State.m_RightCapsule.m_Radius, State.m_RightCapsule.m_SmoothUnion, 0.0f, 0.0f);
-	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED] = vec4(std::max(0.0f, State.m_OuterShadowSize), std::clamp(State.m_OuterShadowOpacity, 0.0f, 1.0f), 0.0f, 0.0f);
+	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_RESERVED] = vec4(std::max(0.0f, State.m_OuterShadowSize), std::clamp(State.m_OuterShadowOpacity, 0.0f, 1.0f), std::max(0.0f, State.m_OutlineRingThickness), std::max(0.0f, State.m_OutlineRingOffset));
 	Params.m_aData[IGraphics::SMediaIslandSdfParams::DATA_BACKDROP_UV] = State.m_BackdropUv;
 
 	for(int i = 0; i < State.m_ItemCount; ++i)

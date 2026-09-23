@@ -4,6 +4,7 @@
 
 #include <qm-soda-hook/qm_soda_protocol.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 
@@ -17,7 +18,9 @@ public:
 	CQmSodaHookProvider(const CQmSodaHookProvider &) = delete;
 	CQmSodaHookProvider &operator=(const CQmSodaHookProvider &) = delete;
 
-	void Start(const char *pHelperPath);
+	void Start(const char *pHelperPath, const char *pSource = "soda");
+	bool RunKugouSetup(bool Restore);
+	bool GetStatus(char *pBuffer, size_t BufferSize) const;
 	void Stop();
 	bool Read(QmSodaHook::SSnapshot *pSnapshot, int TimeoutMs);
 	bool IsRunning() const;

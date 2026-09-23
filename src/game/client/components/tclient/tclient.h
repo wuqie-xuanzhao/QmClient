@@ -18,6 +18,8 @@
 #include <game/client/component.h>
 #include <game/client/components/qmclient/modes.h>
 #include <game/client/components/qmclient/red_packet_auto_claim.h>
+#include <game/client/components/qmclient/route_start_index.h>
+#include <game/client/components/qmclient/route_visited.h>
 #include <game/client/components/qmclient/update_manifest.h>
 #include <game/client/components/tclient/map_history.h>
 #include <game/client/components/tclient/swap_countdown_message.h>
@@ -239,6 +241,10 @@ class CTClient : public CComponent
 	std::vector<unsigned char> m_vGoresCMap; // 0=normal 1=blocked 2=tele 3=penalty 4=reward
 	std::vector<std::vector<int>> m_vvGoresDirectTeleOuts;
 	std::vector<int> m_vGoresDistanceToFinish;
+	// 路线显示的两处每帧开销：起点靠扫描全图、访问位图整张分配并清零。
+	// 前者沿用距离场已有的递增地图扫描记录潜在起点，后者只清理上一条路径触及的位图字。
+	CQmRouteStartIndex m_GoresRouteStartIndex;
+	mutable CQmRouteVisited m_GoresDebugRouteVisited;
 	EGoresDistanceFieldBuildStage m_GoresDistanceFieldBuildStage = EGoresDistanceFieldBuildStage::IDLE;
 	int m_GoresDistanceFieldBuildMapSize = 0;
 	int m_GoresDistanceFieldBuildCursor = 0;
@@ -515,6 +521,7 @@ public:
 	SQmFocusConfigOverrideState m_FocusStatusBarOverrideState;
 	SQmFocusConfigOverrideState m_FocusNamePlatesOverrideState;
 	SQmFocusConfigOverrideState m_FocusNamePlatesOwnOverrideState;
+	SQmFocusConfigOverrideState m_FocusNameplateShowScopeOverrideState;
 	SQmFocusConfigOverrideState m_FocusNameplateCoordsOverrideState;
 	SQmFocusConfigOverrideState m_FocusNameplateCoordsOwnOverrideState;
 	SQmFocusConfigOverrideState m_FocusNameplateCoordXOverrideState;

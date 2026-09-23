@@ -128,29 +128,42 @@ TEST(AssetsEditorBlendMode, MultiplyMatchesLegacyChannelTint)
 	EXPECT_NEAR(Result.a, 0.80f, 0.0001f);
 }
 
-TEST(AssetsEditorBlendMode, SupportsScreenOverlayAndNormalModes)
+TEST(AssetsEditorBlendMode, StandardModesMatchReferenceColors)
 {
-	const ColorRGBA Base(0.25f, 0.70f, 0.50f, 0.80f);
-	const ColorRGBA Tint(0.80f, 0.40f, 0.30f, 0.60f);
-
-	const ColorRGBA Normal = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_NORMAL);
-	const ColorRGBA Screen = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN);
-	const ColorRGBA Overlay = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_OVERLAY);
-
-	EXPECT_GT(Normal.r, Base.r);
-	EXPECT_LT(Normal.g, Base.g);
-	EXPECT_LT(Normal.b, Base.b);
-	EXPECT_NEAR(Normal.a, Base.a, 0.0001f);
-
-	EXPECT_GT(Screen.r, Normal.r);
-	EXPECT_GT(Screen.g, Normal.g);
-	EXPECT_GT(Screen.b, Normal.b);
-	EXPECT_NEAR(Screen.a, Base.a, 0.0001f);
-
-	EXPECT_NE(Overlay.r, Normal.r);
-	EXPECT_NE(Overlay.g, Screen.g);
-	EXPECT_NE(Overlay.b, Base.b);
-	EXPECT_NEAR(Overlay.a, Base.a, 0.0001f);
+	const ColorRGBA Base(0.25f, 0.50f, 0.75f, 0.80f);
+	const ColorRGBA Tint(0.80f, 0.20f, 0.40f, 1.0f);
+	// 固定参考值覆盖逐通道运算和保留明度的颜色分量运算。
+	const struct
+	{
+		int m_Mode;
+		ColorRGBA m_Expected;
+	} aCases[] = {
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_MULTIPLY, ColorRGBA(0.20f, 0.10f, 0.30f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_NORMAL, ColorRGBA(0.80f, 0.20f, 0.40f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN, ColorRGBA(0.85f, 0.60f, 0.85f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_OVERLAY, ColorRGBA(0.40f, 0.20f, 0.70f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_DARKEN, ColorRGBA(0.25f, 0.20f, 0.40f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN, ColorRGBA(0.0625f, 0.0f, 0.375f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_LIGHTEN, ColorRGBA(0.80f, 0.50f, 0.75f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE, ColorRGBA(1.0f, 0.625f, 1.0f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_SOFT_LIGHT, ColorRGBA(0.40f, 0.35f, 0.7125f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_HARD_LIGHT, ColorRGBA(0.70f, 0.20f, 0.60f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_DIFFERENCE, ColorRGBA(0.55f, 0.30f, 0.35f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_EXCLUSION, ColorRGBA(0.65f, 0.50f, 0.55f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_HUE, ColorRGBA(0.78416667f, 0.28416667f, 0.45083333f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_SATURATION, ColorRGBA(0.2095f, 0.5095f, 0.8095f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR, ColorRGBA(0.8505f, 0.2505f, 0.4505f)},
+		{CMenus::ASSETS_EDITOR_COLOR_BLEND_LUMINOSITY, ColorRGBA(0.1995f, 0.4495f, 0.6995f)},
+	};
+	for(const auto &Case : aCases)
+	{
+		SCOPED_TRACE(Case.m_Mode);
+		const ColorRGBA Result = CMenus::AssetsEditorBlendColor(Base, Tint, Case.m_Mode);
+		EXPECT_NEAR(Result.r, Case.m_Expected.r, 0.0001f);
+		EXPECT_NEAR(Result.g, Case.m_Expected.g, 0.0001f);
+		EXPECT_NEAR(Result.b, Case.m_Expected.b, 0.0001f);
+		EXPECT_FLOAT_EQ(Result.a, Base.a);
+	}
 }
 
 TEST(AssetsEditorBlendMode, InvalidModesFallBackToMultiply)
@@ -228,38 +241,105 @@ TEST(AssetsEditorCompose, ColorOverrideSkipsFullyTransparentPixels)
 	EXPECT_EQ(aPixels[7], 0);
 }
 
-TEST(AssetsEditorBlendMode, WhiteHighlightsBecomeClearlyTinted)
+TEST(AssetsEditorBlendMode, ScreenAndOverlayPreserveWhiteHighlights)
 {
-	const ColorRGBA Base(0.96f, 0.94f, 0.90f, 1.0f);
+	const ColorRGBA Base(1.0f, 1.0f, 1.0f, 1.0f);
 	const ColorRGBA Tint(1.0f, 0.0f, 0.0f, 1.0f);
-
-	for(int Mode = CMenus::ASSETS_EDITOR_COLOR_BLEND_MULTIPLY; Mode < CMenus::ASSETS_EDITOR_COLOR_BLEND_COUNT; ++Mode)
+	for(const int Mode : {CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN, CMenus::ASSETS_EDITOR_COLOR_BLEND_OVERLAY})
 	{
 		const ColorRGBA Result = CMenus::AssetsEditorBlendColor(Base, Tint, Mode);
-		EXPECT_GT(Result.r, 0.75f) << Mode;
-		EXPECT_LT(Result.g, 0.30f) << Mode;
-		EXPECT_LT(Result.b, 0.30f) << Mode;
-		EXPECT_NEAR(Result.a, 1.0f, 0.0001f) << Mode;
+		EXPECT_FLOAT_EQ(Result.r, 1.0f);
+		EXPECT_FLOAT_EQ(Result.g, 1.0f);
+		EXPECT_FLOAT_EQ(Result.b, 1.0f);
 	}
 }
 
-TEST(AssetsEditorBlendMode, DistinctModesProduceDistinctVisibleOutput)
+TEST(AssetsEditorBlendMode, StrengthInterpolatesWithoutChangingTransparency)
 {
 	const ColorRGBA Base(0.40f, 0.60f, 0.20f, 0.75f);
 	const ColorRGBA Tint(1.0f, 0.20f, 0.70f, 1.0f);
+	for(int Mode = 0; Mode < CMenus::ASSETS_EDITOR_COLOR_BLEND_COUNT; ++Mode)
+	{
+		const ColorRGBA Full = CMenus::AssetsEditorBlendColor(Base, Tint, Mode);
+		for(const float Strength : {0.0f, 0.25f, 1.0f})
+		{
+			ColorRGBA PartialTint = Tint;
+			PartialTint.a = Strength;
+			const ColorRGBA Result = CMenus::AssetsEditorBlendColor(Base, PartialTint, Mode);
+			EXPECT_NEAR(Result.r, Base.r + (Full.r - Base.r) * Strength, 0.0001f);
+			EXPECT_NEAR(Result.g, Base.g + (Full.g - Base.g) * Strength, 0.0001f);
+			EXPECT_NEAR(Result.b, Base.b + (Full.b - Base.b) * Strength, 0.0001f);
+			EXPECT_FLOAT_EQ(Result.a, Base.a);
+		}
+	}
+}
 
-	const ColorRGBA Multiply = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_MULTIPLY);
-	const ColorRGBA Normal = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_NORMAL);
-	const ColorRGBA Screen = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN);
-	const ColorRGBA Overlay = CMenus::AssetsEditorBlendColor(Base, Tint, CMenus::ASSETS_EDITOR_COLOR_BLEND_OVERLAY);
+TEST(AssetsEditorBlendMode, DodgeBurnAndSoftLightHandleEndpoints)
+{
+	const ColorRGBA Black(0.0f, 0.0f, 0.0f, 1.0f);
+	const ColorRGBA White(1.0f, 1.0f, 1.0f, 1.0f);
+	EXPECT_FLOAT_EQ(CMenus::AssetsEditorBlendColor(Black, White, CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE).r, 0.0f);
+	EXPECT_FLOAT_EQ(CMenus::AssetsEditorBlendColor(White, Black, CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN).r, 1.0f);
+	EXPECT_FLOAT_EQ(CMenus::AssetsEditorBlendColor(White, Black, CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR_DODGE).r, 1.0f);
+	EXPECT_FLOAT_EQ(CMenus::AssetsEditorBlendColor(Black, White, CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR_BURN).r, 0.0f);
+	const ColorRGBA Result = CMenus::AssetsEditorBlendColor(ColorRGBA(0.10f, 0.25f, 0.64f), White, CMenus::ASSETS_EDITOR_COLOR_BLEND_SOFT_LIGHT);
+	EXPECT_NEAR(Result.r, 0.296f, 0.0001f);
+	EXPECT_NEAR(Result.g, 0.50f, 0.0001f);
+	EXPECT_NEAR(Result.b, 0.80f, 0.0001f);
+}
 
-	EXPECT_NE(Multiply.r, Normal.r);
-	EXPECT_NE(Multiply.g, Screen.g);
-	EXPECT_NE(Screen.b, Overlay.b);
-	EXPECT_NE(Normal.r, Overlay.r);
-	EXPECT_GT(Screen.r, Normal.r);
-	EXPECT_NEAR(Multiply.a, Base.a, 0.0001f);
-	EXPECT_NEAR(Normal.a, Base.a, 0.0001f);
-	EXPECT_NEAR(Screen.a, Base.a, 0.0001f);
-	EXPECT_NEAR(Overlay.a, Base.a, 0.0001f);
+TEST(AssetsEditorBlendMode, ColorModesPreserveLuminosityAfterGamutClipping)
+{
+	for(const float Gray : {0.0f, 0.05f, 0.5f, 0.95f, 1.0f})
+	{
+		const ColorRGBA Base(Gray, Gray, Gray, 0.4f);
+		for(const ColorRGBA Tint : {ColorRGBA(1.0f, 0.0f, 0.0f), ColorRGBA(0.0f, 0.0f, 1.0f), ColorRGBA(0.5f, 0.5f, 0.5f)})
+		{
+			for(const int Mode : {CMenus::ASSETS_EDITOR_COLOR_BLEND_HUE, CMenus::ASSETS_EDITOR_COLOR_BLEND_SATURATION, CMenus::ASSETS_EDITOR_COLOR_BLEND_COLOR})
+			{
+				const ColorRGBA Result = CMenus::AssetsEditorBlendColor(Base, Tint, Mode);
+				EXPECT_NEAR(Result.r * 0.3f + Result.g * 0.59f + Result.b * 0.11f, Gray, 0.0001f);
+				for(const float Channel : {Result.r, Result.g, Result.b})
+				{
+					EXPECT_GE(Channel, 0.0f);
+					EXPECT_LE(Channel, 1.0f);
+				}
+				EXPECT_FLOAT_EQ(Result.a, Base.a);
+			}
+		}
+	}
+}
+
+TEST(AssetsEditorCompose, WhiteScreenTintChangesOnlyTheSelectedImageRect)
+{
+	CImageInfo Image;
+	Image.m_Width = 3;
+	Image.m_Height = 1;
+	Image.m_Format = CImageInfo::FORMAT_RGBA;
+	uint8_t aPixels[] = {10, 20, 30, 255, 40, 50, 60, 128, 70, 80, 90, 0};
+	Image.m_pData = aPixels;
+	CMenus::AssetsEditorApplyColorOverrideToImageRect(Image, 1, 0, 2, 1, ColorRGBA(1.0f, 1.0f, 1.0f), CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN);
+	const uint8_t aExpected[] = {10, 20, 30, 255, 255, 255, 255, 128, 70, 80, 90, 0};
+	for(size_t Index = 0; Index < sizeof(aPixels); ++Index)
+		EXPECT_EQ(aPixels[Index], aExpected[Index]);
+}
+
+TEST(AssetsEditorCompose, PartsHaveIndependentModesAndStrengths)
+{
+	auto vSlots = CMenus::BuildStrongWeakEditorSlots("default");
+	ASSERT_GE(vSlots.size(), 2u);
+	const CMenus::SAssetsEditorPartSlot Original = vSlots[1];
+	vSlots[0].m_ColorBlendMode = CMenus::ASSETS_EDITOR_COLOR_BLEND_SCREEN;
+	vSlots[0].m_BlendStrength = 25;
+	EXPECT_TRUE(CMenus::AssetsEditorSlotNeedsProcessing(vSlots[0], "default"));
+	EXPECT_FALSE(CMenus::AssetsEditorSlotNeedsProcessing(vSlots[1], "default"));
+	EXPECT_EQ(vSlots[1].m_ColorBlendMode, Original.m_ColorBlendMode);
+	EXPECT_EQ(vSlots[1].m_BlendStrength, Original.m_BlendStrength);
+	EXPECT_EQ(vSlots[1].m_Color, Original.m_Color);
+	EXPECT_FLOAT_EQ(CMenus::AssetsEditorSlotTint(vSlots[0]).a, 0.25f);
+	vSlots[0].m_BlendStrength = 0;
+	EXPECT_FALSE(CMenus::AssetsEditorSlotNeedsProcessing(vSlots[0], "default"));
+	// 即使关闭调色，替换来源仍需参与合成。
+	str_copy(vSlots[0].m_aSourceAsset, "donor");
+	EXPECT_TRUE(CMenus::AssetsEditorSlotNeedsProcessing(vSlots[0], "default"));
 }

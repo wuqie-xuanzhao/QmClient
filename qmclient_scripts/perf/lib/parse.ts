@@ -1,6 +1,8 @@
 // 请抬头享受阳光｜日子很好 我很我---------致咩子
 // parse.ts — 解析 QmClient 性能日志（支持旧 key=value 格式 + JSON Lines）
 
+import { expandFrameBatch } from './stream.ts';
+
 export interface PerfEntry {
   /** 原始日志时间戳 (ISO) */
   timestamp: string;
@@ -17,6 +19,10 @@ export interface PerfEntry {
 export interface ParseDiagnostics {
   totalLines: number;
   invalidLines: number;
+  totalEntries?: number;
+  retainedEntries?: number;
+  sampledEntries?: number;
+  configurationIncomplete?: boolean;
 }
 
 export interface ParseResult {
@@ -35,6 +41,9 @@ export function parseLine(line: string): PerfEntry | null {
   const parseJsonPayload = (jsonText: string, fallbackTimestamp = '', fallbackSystem = ''): PerfEntry | null => {
     try {
       const obj = JSON.parse(jsonText);
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      const system = obj.sys ?? obj.system ?? fallbackSystem;
+      if (typeof system !== 'string' || !system.startsWith('perf/')) return null;
       return {
         timestamp: obj.t ?? obj.timestamp ?? fallbackTimestamp,
         system: obj.sys ?? obj.system ?? fallbackSystem,
@@ -59,8 +68,7 @@ export function parseLine(line: string): PerfEntry | null {
 
   const [, rawTs, system, fieldsStr] = match;
   if (fieldsStr.startsWith('{')) {
-    const parsed = parseJsonPayload(fieldsStr, parseTimestamp(rawTs), system);
-    if (parsed) return parsed;
+    return parseJsonPayload(fieldsStr, parseTimestamp(rawTs), system);
   }
   const fields: Record<string, string> = {};
   let matchKv: RegExpExecArray | null;
@@ -98,7 +106,11 @@ export function parseLogWithDiagnostics(content: string): ParseResult {
       invalidLines++;
       continue;
     }
-    entries.push(entry);
+    try {
+      entries.push(...expandFrameBatch(entry));
+    } catch {
+      invalidLines++;
+    }
   }
 
   return {

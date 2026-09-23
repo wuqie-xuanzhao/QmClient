@@ -197,7 +197,7 @@ public:
 			*pAnalysisResult = Analysis;
 		if(pDecisionResult != nullptr)
 			*pDecisionResult = Decision;
-		return Decision.m_ConsumeHiddenMessage || Decision.m_QueueNotification;
+		return Decision.m_QueueNotification;
 	}
 
 	bool QueueEcho(const char *pMessage, unsigned EchoColor);
@@ -213,8 +213,6 @@ public:
 		}
 		if(pAnalysisResult != nullptr)
 			*pAnalysisResult = Analysis;
-		if(Decision.m_ConsumeHiddenMessage)
-			return true;
 		if(Analysis.m_Route == QmHudNotifications::EServerMessageRoute::Solo)
 		{
 			QueueSolo(Analysis.m_SoloPrompt);
@@ -232,12 +230,10 @@ public:
 		}
 		return false;
 	}
-	bool HandleServerChat(const char *pMessage, bool RouteSystemMessages, bool HideBasicInfo, bool HidePrompt, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr)
+	bool HandleServerChat(const char *pMessage, bool RouteSystemMessages, QmHudNotifications::SServerMessageAnalysis *pAnalysisResult = nullptr)
 	{
 		QmHudNotifications::SServerMessageRouteConfig RouteConfig;
 		RouteConfig.m_RouteSystemMessages = RouteSystemMessages;
-		RouteConfig.m_HideBasicInfo = HideBasicInfo;
-		RouteConfig.m_HidePrompt = HidePrompt;
 		return HandleServerChat(pMessage, RouteConfig, pAnalysisResult);
 	}
 	// 这些测试接口只暴露入口级副作用，避免测试重新退回 helper 层，确保能直接验证 HandleServerChat 的真实行为。
@@ -267,7 +263,6 @@ public:
 		m_PendingCompatUntil = PendingUntil;
 	}
 	bool ShouldSuppressServerChat(const char *pMessage);
-	bool ShouldConsumeHiddenServerChat(const char *pMessage, bool HideBasicInfo, bool HidePrompt);
 
 private:
 	enum class EKind
@@ -306,7 +301,7 @@ private:
 	QmHudNotifications::ESoloPrompt m_PendingCompatPrompt = QmHudNotifications::ESoloPrompt::None;
 	int64_t m_PendingCompatUntil = 0;
 
-	static QmHudNotifications::SServerMessageRouteConfig CurrentRouteConfig(bool HideBasicInfo, bool HidePrompt)
+	static QmHudNotifications::SServerMessageRouteConfig CurrentRouteConfig()
 	{
 		QmHudNotifications::SServerMessageRouteConfig Config;
 		Config.m_RouteSystemMessages = g_Config.m_QmHudNotificationsSystem != 0;
@@ -315,8 +310,6 @@ private:
 		Config.m_ShowHelpInfo = g_Config.m_QmHudNotificationsShowHelpInfo != 0;
 		Config.m_ShowPrompts = g_Config.m_QmHudNotificationsShowPrompts != 0;
 		Config.m_ShowUnknown = g_Config.m_QmHudNotificationsShowUnknown != 0;
-		Config.m_HideBasicInfo = HideBasicInfo;
-		Config.m_HidePrompt = HidePrompt;
 		return Config;
 	}
 
