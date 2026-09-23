@@ -70,6 +70,12 @@
 static constexpr int QMCLIENT_MAX_LOCAL_MODE_STATS = 256;
 static constexpr int QMCLIENT_REALTIME_PROTOCOL_VERSION = 2;
 
+static void LogQmWebSocketEvent(const char *pChannel, const char *pStage)
+{
+	if(g_Config.m_QmWebSocketLog)
+		log_info("qmclient", "%s websocket %s", pChannel, pStage);
+}
+
 static void LogQmClientDistributionEvent(const char *pStage, int Users, int Dummies, int LocalMarks)
 {
 	log_info("qmclient", "distribution %s: users=%d dummies=%d local_marks=%d", pStage, Users, Dummies, LocalMarks);
@@ -1804,6 +1810,7 @@ void CQmClient::UpdateQmRealtime()
 	{
 		if(m_pQmRealtimeTransport->Desired())
 			m_pQmRealtimeTransport->Disconnect();
+		LogQmWebSocketEvent("realtime", "endpoint_changed");
 		str_copy(m_aQmRealtimeUrl, pConfiguredUrl);
 		m_QmRealtimeFailureLogged = false;
 		m_QmRealtimeEvents.clear();
@@ -1844,11 +1851,16 @@ void CQmClient::UpdateQmRealtime()
 			}
 		}
 		else
+		{
 			m_QmRealtimeFailureLogged = false;
+			LogQmWebSocketEvent("realtime", "connecting");
+		}
 	}
 
 	if(m_pQmRealtimeTransport->State() != EQmWebSocketState::CONNECTED)
 	{
+		if(m_QmRealtimeConnectedTick != 0)
+			LogQmWebSocketEvent("realtime", "disconnected");
 		m_QmRealtimeHelloSent = false;
 		m_QmRealtimeTitleRevision = -1;
 		m_QmRealtimeConnectedTick = 0;
@@ -1863,6 +1875,7 @@ void CQmClient::UpdateQmRealtime()
 	const int64_t ConnectedTick = m_pQmRealtimeTransport->LastConnectedTick();
 	if(m_QmRealtimeConnectedTick != ConnectedTick)
 	{
+		LogQmWebSocketEvent("realtime", "connected");
 		m_QmRealtimeConnectedTick = ConnectedTick;
 		m_QmRealtimeHelloSent = false;
 		m_QmRealtimeTitleRevision = -1;
@@ -1958,6 +1971,8 @@ void CQmClient::StopQmAnonymousEmotes()
 		m_pQmAnonymousEmote->Disconnect();
 		m_pQmAnonymousEmote.reset();
 	}
+	if(m_QmAnonymousConnectedTick != 0)
+		LogQmWebSocketEvent("anonymous_emote", "disconnected");
 	m_aQmAnonymousClientId[0] = '\0';
 	m_aQmAnonymousSessionId[0] = '\0';
 	m_QmAnonymousConnectedTick = 0;
@@ -2057,9 +2072,12 @@ void CQmClient::UpdateQmAnonymousEmotes()
 		std::string Error;
 		if(!m_pQmAnonymousEmote->Connect(Config, Error))
 			return;
+		LogQmWebSocketEvent("anonymous_emote", "connecting");
 	}
 	if(m_pQmAnonymousEmote->State() != EQmWebSocketState::CONNECTED)
 	{
+		if(m_QmAnonymousConnectedTick != 0)
+			LogQmWebSocketEvent("anonymous_emote", "disconnected");
 		m_QmAnonymousConnectedTick = 0;
 		m_QmAnonymousHelloBody.clear();
 		m_QmRealtimeEmoticonEvents.clear();
@@ -2069,6 +2087,7 @@ void CQmClient::UpdateQmAnonymousEmotes()
 	const int64_t ConnectedTick = m_pQmAnonymousEmote->LastConnectedTick();
 	if(m_QmAnonymousConnectedTick != ConnectedTick)
 	{
+		LogQmWebSocketEvent("anonymous_emote", "connected");
 		m_QmAnonymousConnectedTick = ConnectedTick;
 		m_QmAnonymousHelloBody.clear();
 		m_QmRealtimeEmoticonEvents.clear();

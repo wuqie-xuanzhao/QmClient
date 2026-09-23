@@ -868,6 +868,19 @@ namespace
 		return EQmIcon::COUNT;
 	}
 
+	const char *MediaIslandCountdownFontIcon(EQmIcon Icon)
+	{
+		switch(Icon)
+		{
+		case EQmIcon::CHECK: return "\xEE\x86\x82";
+		case EQmIcon::ARROWS_IN: return "\xEE\x82\x9A";
+		case EQmIcon::ARROWS_OUT: return "\xEE\x82\xA2";
+		case EQmIcon::SWAP: return "\xEE\xA0\xBC";
+		case EQmIcon::SPEAKER_SLASH: return "\xEE\x91\x9A";
+		default: return nullptr;
+		}
+	}
+
 	void DrawTexturedQuad(IGraphics *pGraphics, IGraphics::CTextureHandle Texture, vec2 Center, float Radius, float Alpha = 1.0f)
 	{
 		if(pGraphics == nullptr || !Texture.IsValid() || Radius <= 0.0f)
@@ -5139,27 +5152,36 @@ void CHud::RenderMediaIsland()
 			return CUIRect{ContentX + (IconSize - Width) * 0.5f, SatelliteCenterY - Height * 0.5f, Width, Height};
 		};
 		const float IconAlpha = 0.88f * SpectatorLiquidCapsule.m_ContentAlpha * EntranceContentAlpha;
-		// Keep the spectator eye on the text path when OpenGL loses this atlas draw.
+		const auto RenderTextEye = [&](const char *pGlyph, const CUIRect &Rect, float Alpha) {
+			if(Alpha <= 0.001f)
+				return;
+			const EFontPreset PreviousPreset = TextRender()->GetFontPreset();
+			const ColorRGBA PreviousColor = TextRender()->GetTextColor();
+			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
+			const float GlyphSize = Rect.h;
+			const float GlyphWidth = TextRender()->TextWidth(GlyphSize, pGlyph);
+			TextRender()->TextColor(0.98f, 0.99f, 1.0f, IconAlpha * Alpha);
+			TextRender()->Text(Rect.x + (Rect.w - GlyphWidth) * 0.5f, Rect.y, GlyphSize, pGlyph, -1.0f);
+			TextRender()->TextColor(PreviousColor);
+			TextRender()->SetFontPreset(PreviousPreset);
+		};
 		if(IsOpenGlBackend())
 		{
-			TextRender()->SetFontPreset(EFontPreset::ICON_FONT);
-			const auto RenderTextEye = [&](const char *pGlyph, const CUIRect &Rect, float Alpha) {
-				if(Alpha <= 0.001f)
-					return;
-				const float GlyphSize = Rect.h;
-				const float GlyphWidth = TextRender()->TextWidth(GlyphSize, pGlyph);
-				TextRender()->TextColor(0.98f, 0.99f, 1.0f, IconAlpha * Alpha);
-				TextRender()->Text(Rect.x + (Rect.w - GlyphWidth) * 0.5f, Rect.y, GlyphSize, pGlyph, -1.0f);
-			};
 			RenderTextEye(FontIcons::FONT_ICON_EYE_SLASH, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), SpectatorIconPose.m_ClosedAlpha);
 			RenderTextEye(FontIcons::FONT_ICON_EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), SpectatorIconPose.m_OpenAlpha);
-			TextRender()->SetFontPreset(EFontPreset::DEFAULT_FONT);
 		}
-		else if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
+		else
 		{
 			// 等比契约的显式豁免只作用于这条眼睛动画（见常量处的说明）。
-			pIconManager->RenderIcon(EQmIcon::EYE_OFF, IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_ClosedAlpha), QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT);
-			pIconManager->RenderIcon(EQmIcon::EYE, IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY), ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_OpenAlpha), QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT);
+			CQmIconManager *pIconManager = GameClient()->QmIconManager();
+			const CUIRect ClosedRect = IconRect(SpectatorIconPose.m_ClosedScale, SpectatorIconPose.m_ClosedScale);
+			const CUIRect OpenRect = IconRect(SpectatorIconPose.m_OpenScaleX, SpectatorIconPose.m_OpenScaleY);
+			if(!pIconManager || pIconManager->PreferFontFallback() ||
+				!pIconManager->RenderIcon(EQmIcon::EYE_OFF, ClosedRect, ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_ClosedAlpha), QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT))
+				RenderTextEye(FontIcons::FONT_ICON_EYE_SLASH, ClosedRect, SpectatorIconPose.m_ClosedAlpha);
+			if(!pIconManager || pIconManager->PreferFontFallback() ||
+				!pIconManager->RenderIcon(EQmIcon::EYE, OpenRect, ColorRGBA(0.98f, 0.99f, 1.0f, IconAlpha * SpectatorIconPose.m_OpenAlpha), QM_HUD_SPECTATOR_EYE_PRESERVE_ASPECT))
+				RenderTextEye(FontIcons::FONT_ICON_EYE, OpenRect, SpectatorIconPose.m_OpenAlpha);
 		}
 		const float CountAlpha = QmHudMediaIslandSpectatorCountAlpha(ShowSpectator, SpectatorIconPose);
 		if(CountAlpha > 0.001f)
@@ -5176,11 +5198,9 @@ void CHud::RenderMediaIsland()
 			continue;
 		const float IconSize = SatelliteIconSize * Item.m_ContentScale * EntranceContentAlpha;
 		const CUIRect IconRect = {Item.m_Center.x - IconSize * 0.5f, Item.m_Center.y - IconSize * 0.5f, IconSize, IconSize};
-		if(CQmIconManager *pIconManager = GameClient()->QmIconManager())
-		{
-			const ColorRGBA IconColor = Item.m_Completed ? ColorRGBA(0.20f, 1.0f, 0.42f, 0.96f * Item.m_ContentAlpha * EntranceContentAlpha) : ColorRGBA(0.98f, 0.99f, 1.0f, 0.94f * Item.m_ContentAlpha * EntranceContentAlpha);
-			pIconManager->RenderIcon(MediaIslandCountdownIcon(Item.m_Type, Item.m_Completed, Item.m_SwapOutgoing), IconRect, IconColor);
-		}
+		const ColorRGBA IconColor = Item.m_Completed ? ColorRGBA(0.20f, 1.0f, 0.42f, 0.96f * Item.m_ContentAlpha * EntranceContentAlpha) : ColorRGBA(0.98f, 0.99f, 1.0f, 0.94f * Item.m_ContentAlpha * EntranceContentAlpha);
+		const EQmIcon Icon = MediaIslandCountdownIcon(Item.m_Type, Item.m_Completed, Item.m_SwapOutgoing);
+		Ui()->DrawQmIcon(IconRect, Icon, MediaIslandCountdownFontIcon(Icon), IconColor);
 	}
 
 	const auto BuildTrackMetaText = [](const SHudMediaIslandTrackSnapshot &Track, char *pBuf, size_t BufSize) {

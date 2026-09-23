@@ -3,9 +3,10 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <limits>
 
-// 四边形旋转缓存：CPU 旋转顶点时按角度取 (cos, sin)。行为契约只有两条——
-// 轴对齐角度给出正确的单位方向；相同角度复用、不同角度必须重算（不能返回陈旧值）。
+// 四边形旋转缓存按角度取 (cos, sin)：重复角度可复用结果，
+// 角度变化或无效输入后不能返回陈旧方向。
 TEST(QmQuadRotationCache, AxisAlignedAnglesGiveUnitDirections)
 {
 	CQmQuadRotationCache Cache;
@@ -68,4 +69,34 @@ TEST(QmQuadRotationCache, RecomputesWhenAngleChanges)
 	EXPECT_NEAR(Tiny.x, std::cos(1e-4f), 1e-6f);
 	EXPECT_NEAR(Tiny.y, std::sin(1e-4f), 1e-6f);
 	EXPECT_NE(Tiny.y, 0.0f);
+}
+
+TEST(QmQuadRotationCache, AdjacentFloatAnglesAndOtherInstancesDoNotReuseStaleDirections)
+{
+	CQmQuadRotationCache Cache;
+	const float Adjacent = std::nextafter(0.75f, 1.0f);
+	for(const float Angle : {0.75f, 0.75f, Adjacent, -0.75f, 8.0f * pi, 0.75f})
+	{
+		const vec2 Direction = Cache.Get(Angle);
+		EXPECT_EQ(Direction.x, std::cos(Angle));
+		EXPECT_EQ(Direction.y, std::sin(Angle));
+	}
+	CQmQuadRotationCache Other;
+	Other.Get(-1.0f);
+	EXPECT_EQ(Cache.Get(0.75f).x, std::cos(0.75f));
+	EXPECT_EQ(Cache.Get(0.75f).y, std::sin(0.75f));
+}
+
+TEST(QmQuadRotationCache, NonFiniteAnglesDoNotContaminateLaterDraws)
+{
+	CQmQuadRotationCache Cache;
+	for(const float Angle : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+	{
+		const vec2 Invalid = Cache.Get(Angle);
+		EXPECT_TRUE(std::isnan(Invalid.x));
+		EXPECT_TRUE(std::isnan(Invalid.y));
+		const vec2 Valid = Cache.Get(-0.5f);
+		EXPECT_EQ(Valid.x, std::cos(-0.5f));
+		EXPECT_EQ(Valid.y, std::sin(-0.5f));
+	}
 }

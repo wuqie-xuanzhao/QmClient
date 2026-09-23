@@ -45,6 +45,7 @@ TEST(QmMapUpload, SearchIndexMatchesNestedMapsWithoutMatchingFolders)
 	}
 	QmMapUpload::CSearchIndex Index;
 	Index.Reset(1);
+	ASSERT_TRUE(Index.Busy());
 	for(int Step = 0; Step < 100 && Index.Busy(); ++Step)
 		Index.ScanNext(pStorage.get());
 	ASSERT_FALSE(Index.Busy());
