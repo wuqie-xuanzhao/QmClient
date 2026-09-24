@@ -66,6 +66,8 @@ public:
 		Browser.SetInfo(Browser.m_vpServerlist[0], Info);
 	}
 	static void Sort(CServerBrowser &Browser) { Browser.Sort(); }
+	static void CleanUp(CServerBrowser &Browser) { Browser.CleanUp(); }
+	static bool NeedsResort(const CServerBrowser &Browser) { return Browser.m_NeedResort; }
 	static void SetPingCache(CServerBrowser &Browser, IServerBrowserPingCache *pCache)
 	{
 		Browser.m_pPingCache = pCache;
@@ -204,6 +206,108 @@ TEST_F(CServerBrowserStateTest, FriendCountSortBreaksTiesByPopulationAndRefreshe
 	CServerBrowserTestAccess::Sort(m_Browser);
 	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Tie with more players");
 	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "More friends");
+}
+
+TEST_F(CServerBrowserStateTest, QmClientCountSortFollowsPushedDistributionInBothDirections)
+{
+	AddServer("127.0.0.1:8303", "Alpha", 1, 1, {});
+	AddServer("127.0.0.1:8304", "Beta", 1, 1, {});
+	AddServer("127.0.0.1:8305", "Gamma", 1, 1, {});
+	g_Config.m_BrSort = IServerBrowser::SORT_QM_CLIENTS;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Browser.NumSortedServers(), 3);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Alpha");
+
+	m_Browser.SetQmClientServerCounts({{"127.0.0.1:8304", 5}, {"127.0.0.1:8305", 2}});
+	EXPECT_TRUE(CServerBrowserTestAccess::NeedsResort(m_Browser));
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Beta");
+	EXPECT_EQ(m_Browser.SortedGet(0)->m_QmClientCount, 5);
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Gamma");
+	EXPECT_EQ(m_Browser.SortedGet(1)->m_QmClientCount, 2);
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "Alpha");
+	EXPECT_EQ(m_Browser.SortedGet(2)->m_QmClientCount, 0);
+
+	g_Config.m_BrSortOrder = 1;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Alpha");
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Gamma");
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "Beta");
+
+	m_Browser.SetQmClientServerCounts({{"127.0.0.1:8303", 7}, {"127.0.0.1:8304", 1}});
+	EXPECT_TRUE(CServerBrowserTestAccess::NeedsResort(m_Browser));
+	CServerBrowserTestAccess::Sort(m_Browser);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Gamma");
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Beta");
+	EXPECT_STREQ(m_Browser.SortedGet(2)->m_aName, "Alpha");
+	EXPECT_EQ(m_Browser.SortedGet(2)->m_QmClientCount, 7);
+}
+
+TEST_F(CServerBrowserStateTest, QmClientCountsStayCurrentWhileSortingByName)
+{
+	AddServer("127.0.0.1:8303", "Alpha", 1, 1, {});
+	AddServer("127.0.0.1:8304", "Beta", 1, 1, {});
+	CServerBrowserTestAccess::Sort(m_Browser);
+
+	m_Browser.SetQmClientServerCounts({{"127.0.0.1:8304", 7}});
+	EXPECT_FALSE(CServerBrowserTestAccess::NeedsResort(m_Browser));
+	ASSERT_EQ(m_Browser.NumSortedServers(), 2);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Alpha");
+	EXPECT_EQ(m_Browser.SortedGet(0)->m_QmClientCount, 0);
+	EXPECT_EQ(m_Browser.SortedGet(1)->m_QmClientCount, 7);
+
+	// 服务器信息的计数不能覆盖游戏层推送的分布。
+	CServerInfo Updated = *m_Browser.Get(0);
+	Updated.m_QmClientCount = 99;
+	CServerBrowserTestAccess::SetFirstInfo(m_Browser, Updated);
+	EXPECT_EQ(m_Browser.Get(0)->m_QmClientCount, 0);
+	m_Browser.SetQmClientServerCounts({});
+	EXPECT_EQ(m_Browser.SortedGet(1)->m_QmClientCount, 0);
+	EXPECT_FALSE(CServerBrowserTestAccess::NeedsResort(m_Browser));
+}
+
+TEST_F(CServerBrowserStateTest, QmClientCountsApplyBeforeFirstServerAndAfterListReload)
+{
+	m_Browser.SetQmClientServerCounts({{"127.0.0.1:8304", 3}});
+	AddServer("127.0.0.1:8303", "Alpha", 1, 1, {});
+	AddServer("127.0.0.1:8304", "Beta", 1, 1, {});
+	g_Config.m_BrSort = IServerBrowser::SORT_QM_CLIENTS;
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Browser.NumSortedServers(), 2);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Beta");
+	EXPECT_EQ(m_Browser.SortedGet(0)->m_QmClientCount, 3);
+
+	CServerBrowserTestAccess::CleanUp(m_Browser);
+	EXPECT_EQ(m_Browser.NumServers(), 0);
+	AddServer("127.0.0.1:8303", "Alpha", 1, 1, {});
+	AddServer("127.0.0.1:8304", "Beta", 1, 1, {});
+	CServerBrowserTestAccess::Sort(m_Browser);
+	ASSERT_EQ(m_Browser.NumSortedServers(), 2);
+	EXPECT_STREQ(m_Browser.SortedGet(0)->m_aName, "Beta");
+	EXPECT_EQ(m_Browser.SortedGet(0)->m_QmClientCount, 3);
+	EXPECT_STREQ(m_Browser.SortedGet(1)->m_aName, "Alpha");
+	EXPECT_EQ(m_Browser.SortedGet(1)->m_QmClientCount, 0);
+}
+
+TEST_F(CServerBrowserStateTest, QmClientCountFollowsReplacedServerAddress)
+{
+	AddServer("127.0.0.1:8303", "Alpha", 1, 1, {});
+	m_Browser.SetQmClientServerCounts({{"127.0.0.1:8303", 4}, {"127.0.0.1:8304", 9}});
+	ASSERT_EQ(m_Browser.Get(0)->m_QmClientCount, 4);
+
+	NETADDR OriginalAddress;
+	ASSERT_FALSE(net_addr_from_str(&OriginalAddress, "127.0.0.1:8303"));
+	NETADDR Address;
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8304"));
+	CServerBrowserTestAccess::ReplaceFirstAddress(m_Browser, Address);
+	EXPECT_EQ(m_Browser.Get(0)->m_QmClientCount, 9);
+	EXPECT_EQ(m_Browser.Find(OriginalAddress), nullptr);
+	EXPECT_NE(m_Browser.Find(Address), nullptr);
+
+	ASSERT_FALSE(net_addr_from_str(&Address, "127.0.0.1:8305"));
+	CServerBrowserTestAccess::ReplaceFirstAddress(m_Browser, Address);
+	EXPECT_EQ(m_Browser.Get(0)->m_QmClientCount, 0);
+	EXPECT_NE(m_Browser.Find(Address), nullptr);
 }
 
 TEST_F(CServerBrowserStateTest, FriendListMovesOnlineEntriesAndKeepsServerSnapshots)
