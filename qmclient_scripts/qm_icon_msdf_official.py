@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the pinned official msdf-atlas-gen tool and emit a QmClient page.
+"""Run the pinned official msdf-atlas-gen tool and emit one QmClient icon page.
 
 The client consumes the small QmClient manifest format, while the generator
 uses the upstream JSON layout. This adapter keeps the baking tool replaceable

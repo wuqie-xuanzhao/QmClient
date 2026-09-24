@@ -399,6 +399,11 @@ bool ShouldRenderMapProgressBar(bool MapProgressEnabled, int MapProgressStyle, b
 	return MapProgressEnabled && !(MapProgressStyle != 0 && PlayerStatsHudEnabled) && GoresMapProgressEnabled;
 }
 
+bool ShouldHideFocusGuideLines(bool FocusActive, bool HideGuideLines)
+{
+	return FocusActive && HideGuideLines;
+}
+
 bool ShouldRenderFocusFilteredChatLine(bool FocusHidePlayerMessages, bool FocusHideSystemInfoMessages, bool FocusHideSystemPromptMessages, bool FocusHideEcho, int ClientId, bool ForceVisible, bool ServerMessageIsBasicInfo)
 {
 	if(ForceVisible)

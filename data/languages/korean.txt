@@ -995,9 +995,6 @@ Auto chat when dying in water
 Auto concurrency: %d (smart default)
 == 자동 동시 실행 수: %d (스마트 기본값)
 
-Auto disable when time expires
-== 시간이 만료되면 자동 비활성화
-
 Auto enable in Gores mode
 == Gores 모드에서 자동 활성화
 
@@ -1096,9 +1093,6 @@ Auto-close chat after unfreeze
 
 Auto-create CSV on game end
 == 게임 종료 시 CSV 자동 생성
-
-Auto-disable speedrun timer when time runs out
-== 시간 초과 후 스피드런 타이머 자동 비활성화
 
 Auto-fetch all players' skins for dummy rotation queue
 == 맵 전체 플레이어 스킨을 자동으로 가져와 더미 순환 대기열로 사용
@@ -3908,9 +3902,6 @@ Enable sound when rendering video
 Enable spectator cursor (if available)
 == 관전자 커서 활성화 (가능한 경우)
 
-Enable speedrun timer
-== 스피드런 타이머 활성화
-
 Enable Spotify lyric integration
 == Spotify 가사 통합 활성화
 
@@ -4426,9 +4417,6 @@ Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 
 Flip:
 == 뒤집기:
-
-Focus mode
-== 집중 모드
 
 Folder
 == 폴더
@@ -5245,9 +5233,6 @@ Horizontal position
 
 Hostname of DNSBL provider for IP verification
 == IP 확인용 DNSBL 제공자 호스트명
-
-Hours
-== 시간
 
 Hover for tooltip
 == 툴팁을 보려면 마우스를 올리세요
@@ -6377,6 +6362,9 @@ Map upload endpoint
 Map upload endpoint (empty disables map upload)
 == 맵 업로드 엔드포인트(비워 두면 맵 업로드 사용 안 함)
 
+Map upload endpoint must use HTTP or HTTPS
+== 맵 업로드 엔드포인트는 HTTP 또는 HTTPS를 사용해야 합니다
+
 Map upload in progress...
 == 맵 업로드 중...
 
@@ -6629,9 +6617,6 @@ Microphone volume
 Microphone volume (percent)
 == 마이크 볼륨 (백분율)
 
-Milliseconds
-== 밀리초
-
 Milliseconds to apply quick input early
 == 빠른 입력을 미리 적용할 밀리초
 
@@ -6691,9 +6676,6 @@ Minimum time between map votes (in seconds)
 
 Minimum width for name column in server browser
 == 서버 브라우저에서 이름 열의 최소 너비
-
-Minutes
-== 분
 
 Minutes on server before a player can call a map change vote (0 = disabled)
 == 플레이어가 맵 변경 투표를 요청할 수 있기까지 서버에서 보내야 하는 시간 (분) (0 = 비활성화)
@@ -8456,6 +8438,9 @@ q = Connection quality
 Qm
 == Qm
 
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
+== Qm 향상된 렌더링: 0=끄기(순수 Vulkan), 1=자동 폴백, 2=강제 켜기
+
 Qm UI custom icon color
 == Qm UI 아이콘 사용자 지정 색상
 
@@ -9694,9 +9679,6 @@ Sec-WebSocket-Protocol sent during the realtime handshake
 
 Secondary
 == 보조
-
-Seconds
-== 초
 
 Seconds to wait before reconnecting (0=off, when server is full)
 == 재연결 전 대기 시간 (초) (서버가 가득 찼을 때, 0=끄기)
@@ -11318,27 +11300,6 @@ Speed up the demo
 Speed:
 == 속도:
 
-Speedrun countdown timer
-== 스피드런 카운트다운 타이머
-
-Speedrun timer
-== 스피드런 타이머
-
-Speedrun timer hours
-== 스피드런 타이머 시간
-
-Speedrun timer milliseconds
-== 스피드런 타이머 밀리초
-
-Speedrun timer minutes
-== 스피드런 타이머 분
-
-Speedrun timer seconds
-== 스피드런 타이머 초
-
-Speedrun timer time (MM:SS, legacy)
-== 스피드런 타이머 시간 (MMSS 형식, 구버전 호환)
-
 Sphere
 == 구체
 
@@ -12212,9 +12173,6 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
 == 원격 콘솔 인증 실패 시 클라이언트가 차단되는 시간. 0은 추방만 사용
 
-TIME EXPIRED!
-== 시간 초과!
-
 Time in seconds before economy authentication timeout.
 == 경제 인증 시간 초과 전 시간 (초)
 
@@ -12932,6 +12890,9 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 == 적 목록을 사용하여 플레이어 표시기 구동
 
+Use Gaussian blur pipeline when enhanced rendering is active
+== 향상된 렌더링이 활성화되면 가우시안 블러 파이프라인 사용
+
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 == 높은 대역폭 모드 사용 (서버 대역폭 두 배, LAN 전용)
 
@@ -12943,6 +12904,9 @@ Use large emote
 
 Use mouse sensitivity when dynamic camera is on
 == 동적 카메라가 켜져 있을 때 마우스 감도 사용
+
+Use MSDF icon pipeline when enhanced rendering is active
+== 향상된 렌더링이 활성화되면 MSDF 아이콘 파이프라인 사용
 
 Use multi-char replacement based on word length
 == 단어 길이에 따른 다중 문자 대체 사용
@@ -12976,6 +12940,9 @@ Use original style for Dynamic Island
 
 Use pre-input to predict other players for more accurate input prediction
 == 사전 입력을 사용하여 다른 플레이어를 예측해 더 정확한 입력 예측
+
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
+== 향상된 렌더링이 활성화되면 Dynamic Island 및 둥근 사각형에 SDF 파이프라인 사용
 
 Use skin color for frozen Tee's feet
 == 얼어붙은 Tee의 발에도 스킨 색상 사용

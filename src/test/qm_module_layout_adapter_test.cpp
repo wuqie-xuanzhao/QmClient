@@ -84,7 +84,6 @@ static std::vector<SQmModuleEntry> MakeAllDefaults()
 		{EQmModuleId::CollisionHitbox, EQmModuleColumn::Right, 5, "collision_hitbox"},
 		{EQmModuleId::FavoriteMaps, EQmModuleColumn::Right, 6, "favorite_maps"},
 		{EQmModuleId::HJAssist, EQmModuleColumn::Right, 7, "hj_assist"},
-		{EQmModuleId::SpeedrunTimer, EQmModuleColumn::Right, 8, "speedrun_timer"},
 		{EQmModuleId::DebugGraph, EQmModuleColumn::Right, 9, "debug_graph"},
 		{EQmModuleId::InputOverlay, EQmModuleColumn::Right, 10, "input_overlay"},
 		{EQmModuleId::HudNotifications, EQmModuleColumn::Right, 11, "hud_notifications"},

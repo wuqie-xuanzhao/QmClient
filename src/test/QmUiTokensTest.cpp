@@ -173,7 +173,8 @@ TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
 	const std::string PopupSource = ReadTestSourceFile("src/game/client/qm_ime_candidate_popup.cpp");
 	const std::string PopupHeader = ReadTestSourceFile("src/game/client/qm_ime_candidate_popup.h");
 
-	EXPECT_NE(ManagerSource.find("State.m_Visible = HasComposition && CandidateCount > 0;"), std::string::npos);
+	EXPECT_NE(ManagerSource.find("State.m_Visible = QmImePopupShouldBeVisible(CandidateCount);"), std::string::npos);
+	EXPECT_EQ(ManagerSource.find("State.m_Visible = HasComposition && CandidateCount > 0;"), std::string::npos);
 	EXPECT_NE(PopupHeader.find("SPresentationTargets"), std::string::npos);
 	EXPECT_NE(PopupSource.find("SImePresentationTarget"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("ResolveImePresentationStateValue"), std::string::npos);
@@ -193,6 +194,11 @@ TEST(QmImePresentationSource, PopupUsesContinuousRedirectablePresentationState)
 	EXPECT_EQ(PopupSource.find("(void)CandidateAlpha;"), std::string::npos);
 	EXPECT_NE(PopupSource.find("IME_CONTENT_TIME_SCALE = 0.40f"), std::string::npos);
 	EXPECT_NE(PopupSource.find("BuildCandidateViewport"), std::string::npos);
+	EXPECT_NE(PopupSource.find("QmImeResolveCandidateWindowStart"), std::string::npos);
+	EXPECT_NE(PopupSource.find("QmImeLayoutMeasureUsesSelectedPadding"), std::string::npos);
+	EXPECT_NE(PopupSource.find("QmImeSelectedLayoutExtraWidth"), std::string::npos);
+	EXPECT_NE(PopupSource.find("m_CandidateStart = CandidateStart"), std::string::npos);
+	EXPECT_EQ(PopupSource.find("(void)CandidateViewport"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("ResolveMotionValue"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("ResolveMotionRect"), std::string::npos);
 	EXPECT_EQ(PopupSource.find("FitCandidates"), std::string::npos);
@@ -221,6 +227,7 @@ TEST(QmUiPresentationSource, OverlaysUsePresentationState)
 
 TEST(QmUiTokens, MotionRefsBindToAnimCurves)
 {
+	// 动效 token 统一为「快速起步、平稳收尾」：短时长 + EASE_OUT_QUART，弹簧语义独立于曲线预设。
 	EXPECT_EQ(ui_token::motion::HOVER_FADE.m_Easing, EEasing::EASE_OUT_QUART);
 	EXPECT_EQ(ui_token::motion::PRESS_SCALE.m_Easing, EEasing::EASE_OUT_QUART);
 	EXPECT_EQ(ui_token::motion::PAGE_SLIDE.m_Easing, EEasing::EASE_OUT_QUART);

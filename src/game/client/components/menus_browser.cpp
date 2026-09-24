@@ -4113,7 +4113,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView, bool DrawBackground)
 		View.Margin(6.0f, &View);
 	else
 	{
-		View.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, ui_token::radius::CARD);
+		View.Draw(ms_ColorTabbarActive, IGraphics::CORNER_B, 10.0f);
 		View.Margin(10.0f, &View);
 	}
 

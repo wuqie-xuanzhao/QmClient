@@ -1153,8 +1153,8 @@ polish = "c = Pozycja gracza"
 [[message]]
 key = "Camera view"
 [message.translations]
-simplified_chinese = "摄像机视角"
-traditional_chinese = "鏡頭視角"
+simplified_chinese = "镜头与视野"
+traditional_chinese = "鏡頭與視野"
 japanese = "カメラビュー"
 korean = "카메라 보기"
 russian = "Вид камеры"
@@ -2162,8 +2162,8 @@ polish = "Zrzuca status antibota"
 [[message]]
 key = "Dynamic island"
 [message.translations]
-simplified_chinese = "动态岛"
-traditional_chinese = "動態島"
+simplified_chinese = "灵动岛"
+traditional_chinese = "靈動島"
 japanese = "ダイナミックアイランド"
 korean = "다이나믹 아일랜드"
 russian = "Динамический остров"
@@ -2995,8 +2995,8 @@ polish = "Daje ci nieskończony skok"
 [[message]]
 key = "Gores"
 [message.translations]
-simplified_chinese = "血腥模式"
-traditional_chinese = "血腥模式"
+simplified_chinese = "Gores 模式"
+traditional_chinese = "Gores 模式"
 japanese = "ゴア"
 korean = "고어스"
 russian = "Горы"
@@ -3011,11 +3011,11 @@ polish = "Gores"
 [[message]]
 key = "Gores actor"
 [message.translations]
-simplified_chinese = "Gores 角色"
-traditional_chinese = "Gores 演員"
+simplified_chinese = "演员模式"
+traditional_chinese = "演員模式"
 japanese = "ゴアアクター"
 korean = "고어스 액터"
-russian = "Горы актёр"
+russian = "Актёр Gores"
 german = "Gores-Akteur"
 spanish = "Actor Gores"
 french = "Acteur Gores"
@@ -4579,8 +4579,8 @@ polish = "Wiadomości"
 [[message]]
 key = "Mini features"
 [message.translations]
-simplified_chinese = "迷你功能"
-traditional_chinese = "迷你功能"
+simplified_chinese = "梦の百宝箱"
+traditional_chinese = "夢の百寶箱"
 japanese = "ミニ機能"
 korean = "미니 기능"
 russian = "Мини-функции"
@@ -8129,22 +8129,6 @@ turkish = "Hız:"
 polish = "Prędkość:"
 
 [[message]]
-key = "Speedrun timer"
-[message.translations]
-simplified_chinese = "速通计时器"
-traditional_chinese = "速通計時器"
-japanese = "スピードラインタイマー"
-korean = "스피드런 타이머"
-russian = "Таймер спидранa"
-german = "Speedrun-Timer"
-spanish = "Temporizador de speedrun"
-french = "Chronomètre de speedrun"
-brazilian_portuguese = "Temporizador de speedrun"
-portuguese = "Temporizador de speedrun"
-turkish = "Hızlı koşu zamanlayıcısı"
-polish = "Stoper speedrun"
-
-[[message]]
 key = "Spree"
 [message.translations]
 simplified_chinese = "连杀"
@@ -9135,22 +9119,6 @@ brazilian_portuguese = "Contornos de tiles"
 portuguese = "Contornos de tiles"
 turkish = "Karo ana hatları"
 polish = "Kontury kafelków"
-
-[[message]]
-key = "TIME EXPIRED!"
-[message.translations]
-simplified_chinese = "时间耗尽！"
-traditional_chinese = "時間耗盡！"
-japanese = "時間切れ！"
-korean = "시간 초과!"
-russian = "ВРЕМЯ ИСТЕКЛО!"
-german = "ZEIT ABGELAUFEN!"
-spanish = "¡TIEMPO AGOTADO!"
-french = "TEMPS ÉCOULÉ !"
-brazilian_portuguese = "TEMPO ESGOTADO!"
-portuguese = "TEMPO EXPIRADO!"
-turkish = "SÜRE DOLDU!"
-polish = "CZAS MINĄŁ!"
 
 [[message]]
 key = "Time limit: %d min"

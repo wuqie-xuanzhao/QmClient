@@ -50,6 +50,7 @@
 #include <engine/shared/protocol7.h>
 #include <engine/shared/protocol_ex.h>
 #include <engine/shared/protocolglue.h>
+#include <engine/shared/qm_removed_config.h>
 #include <engine/shared/rust_version.h>
 #include <engine/shared/snapshot.h>
 #include <engine/shared/uuid_manager.h>

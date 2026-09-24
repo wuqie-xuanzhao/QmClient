@@ -82,10 +82,9 @@ TEST(QmConsoleLogFilter, ExtractConsoleLogSystem)
 	ASSERT_TRUE(QmExtractConsoleLogSystem(pPlayerLine, str_length(pPlayerLine), aBuf, sizeof(aBuf)));
 	EXPECT_STREQ(aBuf, "chat/whisper");
 
-	// 长度截到分隔符之前时取不到 system 名；关键是时间戳里的冒号不能被当成分隔符。
-	// （远程原断言为 EXPECT_STREQ(aBuf, "I")，但该行首个 ": " 在下标 27，长度 24 的窗口根本到不了，
-	//   函数按设计返回 false，原断言恒不成立，故按真实契约改写。）
-	EXPECT_FALSE(QmExtractConsoleLogSystem(pLine, 24, aBuf, sizeof(aBuf)));
+	// 长度截断到 system 名尚未写完时，取最后一段作不完整 system 名。
+	ASSERT_TRUE(QmExtractConsoleLogSystem(pLine, 24, aBuf, sizeof(aBuf)));
+	EXPECT_STREQ(aBuf, "bi");
 
 	EXPECT_FALSE(QmExtractConsoleLogSystem("no separator here", 17, aBuf, sizeof(aBuf)));
 	EXPECT_FALSE(QmExtractConsoleLogSystem(nullptr, 0, aBuf, sizeof(aBuf)));

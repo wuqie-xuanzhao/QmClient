@@ -11,7 +11,7 @@ namespace QmEmoticon
 	void RegisterCommands(IConsole *pConsole, TEmoticon *pEmoticon)
 	{
 		pConsole->Register("emote", "i[emote-id]", CFGFLAG_CLIENT, [](IConsole::IResult *pResult, void *pUserData) { static_cast<TEmoticon *>(pUserData)->Emote(pResult->GetInteger(0)); }, pEmoticon, "Use emote");
-		pConsole->Register("shot_emote", "i[emote-id]", CFGFLAG_CLIENT, [](IConsole::IResult *pResult, void *pUserData) { static_cast<TEmoticon *>(pUserData)->Emote(pResult->GetInteger(0), true); }, pEmoticon, "Launch emote");
+		pConsole->Register("qm_emote", "i[emote-id]", CFGFLAG_CLIENT, [](IConsole::IResult *pResult, void *pUserData) { static_cast<TEmoticon *>(pUserData)->Emote(pResult->GetInteger(0), true); }, pEmoticon, "Launch emote");
 	}
 }
 

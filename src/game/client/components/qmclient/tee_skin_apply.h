@@ -7,18 +7,12 @@
 
 // 皮肤列表双击的目标角色：0=本体（主号），1=分身（dummy）。
 // 子标签只决定单击的编辑对象；双击显式指定一侧，不改变当前子标签。
+// 左键双击＝本体、右键双击＝分身由调用点直接决定，不需要按键序号到角色的映射。
 enum class ETeeSkinApplyTarget
 {
 	MAIN = 0,
 	DUMMY = 1,
 };
-
-// 皮肤列表双击按键对应的目标角色：左键=本体，右键=分身。
-// 入参是 Ui()->DoButtonLogic(BUTTONFLAG_LEFT | BUTTONFLAG_RIGHT) 的返回值（1=左键，2=右键）。
-inline ETeeSkinApplyTarget QmTeeSkinApplyTargetForButton(const int ButtonResult)
-{
-	return ButtonResult == 2 ? ETeeSkinApplyTarget::DUMMY : ETeeSkinApplyTarget::MAIN;
-}
 
 inline int QmTeeSkinApplyTargetDummy(const ETeeSkinApplyTarget Target)
 {

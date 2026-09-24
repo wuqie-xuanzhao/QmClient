@@ -60,8 +60,6 @@ namespace qm_card_catalog
 			case EQmModuleId::Background3D: return ResolveQmHudBackground3DHeight(Metrics, ContentWidth, g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
 			case EQmModuleId::BindStatusHud:
 				return Rows(6.0f); // 4 个状态开关 + 自定义列表编辑行 + 格式提示行
-			// 本地专属卡：公式取自本地页面级 EstimateContentHeight（menus_qmclient.cpp:4793），保持高度不变。
-			case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? Rows(6.0f) : Rows(1.0f);
 			default: return Rows(1.0f);
 			}
 		}
@@ -87,8 +85,6 @@ namespace qm_card_catalog
 			case EQmModuleId::SystemMediaControls: return g_Config.m_QmSmtcEnable ? 1u : 0u;
 			case EQmModuleId::Lyrics: return (g_Config.m_QmSpotifyEnable ? 1u : 0u) | (g_Config.m_QmKugouHookEnable ? 2u : 0u) | (g_Config.m_QmQQMusicHookEnable ? 4u : 0u); // 来源附加行影响布局高度
 			case EQmModuleId::Background3D: return ResolveQmHudBackground3DRevision(g_Config.m_Qm3DParticles != 0, g_Config.m_Qm3DParticlesColorMode == 1, g_Config.m_Qm3DParticlesGlow != 0, g_Config.m_Qm3DParticlesTrail != 0, g_Config.m_Qm3DParticlesPulse != 0, g_Config.m_Qm3DParticlesTwinkle != 0);
-			// 本地专属卡：取自本地页面级 MeasureContentRevision（menus_qmclient.cpp:4811）。
-			case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? 1u : 0u;
 			default: return 0u;
 			}
 		}
@@ -380,10 +376,6 @@ namespace qm_card_catalog
 			return true;
 		case EQmModuleId::BindStatusHud:
 			Add(Id, "qm:bind_status_hud", "DDRace HUD Pro", "Dummy key/hammer/control/copy status switches", [pMenus, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { qm_card_catalog::QmCardRenderHook::RenderQmHudBindStatusContent(pMenus, Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
-			return true;
-		// 本地专属卡（远程目录无此项）：内容渲染经桥接调用本地既有的 RenderQmHudSpeedrunTimerContent。
-		case EQmModuleId::SpeedrunTimer:
-			Add(Id, "qm:speedrun_timer", "Speedrun Timer", "Speedrun countdown timer", [pMenus, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly](CUIRect &Content) { qm_card_catalog::QmCardRenderHook::RenderQmHudSpeedrunTimerContent(pMenus, Content, LineHeight, BodySize, LineSpacing, LabelWidth, ReadOnly); });
 			return true;
 		default:
 			return false;

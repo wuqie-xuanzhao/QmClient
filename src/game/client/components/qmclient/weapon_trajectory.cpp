@@ -30,6 +30,8 @@ bool CQmWeaponTrajectory::IsVisible() const
 	const int TrajectoryMode = std::clamp(g_Config.m_QmWeaponTrajectory, 0, 2);
 	const bool ManualTrajectoryVisible = GameClient()->m_Controls.m_aShowWeaponTrajectory[g_Config.m_ClDummy] != 0;
 	const bool TrajectoryVisible = TrajectoryMode == 2 || (TrajectoryMode == 1 && ManualTrajectoryVisible);
+	if(ShouldHideFocusGuideLines(g_Config.m_QmFocusMode != 0, g_Config.m_QmFocusModeHideGuideLines != 0))
+		return false;
 	return TrajectoryVisible && !GameClient()->m_TClient.ShouldHideGoresGuides(TrajectoryVisible);
 }
 

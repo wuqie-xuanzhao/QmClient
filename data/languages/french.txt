@@ -995,9 +995,6 @@ Auto chat when dying in water
 Auto concurrency: %d (smart default)
 == Concurrence automatique : %d (par défaut intelligent)
 
-Auto disable when time expires
-== Désactiver automatiquement à l'expiration du temps
-
 Auto enable in Gores mode
 == Activer automatiquement en mode Gores
 
@@ -1096,9 +1093,6 @@ Auto-close chat after unfreeze
 
 Auto-create CSV on game end
 == Créer automatiquement un CSV à la fin de la partie
-
-Auto-disable speedrun timer when time runs out
-== Désactiver automatiquement le chronomètre de speedrun après expiration du temps
 
 Auto-fetch all players' skins for dummy rotation queue
 == Récupérer automatiquement les skins des joueurs de la carte entière et les utiliser comme file d’attente de rotation pour le Dummy
@@ -3908,9 +3902,6 @@ Enable sound when rendering video
 Enable spectator cursor (if available)
 == Activer le curseur du spectateur (si disponible)
 
-Enable speedrun timer
-== Activer le chronomètre de speedrun
-
 Enable Spotify lyric integration
 == Activer l'intégration des paroles de Spotify
 
@@ -4426,9 +4417,6 @@ Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 
 Flip:
 == Retourner :
-
-Focus mode
-== Mode focus
 
 Folder
 == Dossier
@@ -5245,9 +5233,6 @@ Horizontal position
 
 Hostname of DNSBL provider for IP verification
 == Nom d'hôte du fournisseur DNSBL pour la vérification IP
-
-Hours
-== Heures
 
 Hover for tooltip
 == Survoler pour l'infobulle
@@ -6377,6 +6362,9 @@ Map upload endpoint
 Map upload endpoint (empty disables map upload)
 == Point de terminaison d'envoi de carte (vide le désactive)
 
+Map upload endpoint must use HTTP or HTTPS
+== Le point d'envoi des cartes doit utiliser HTTP ou HTTPS
+
 Map upload in progress...
 == Envoi de la carte en cours...
 
@@ -6629,9 +6617,6 @@ Microphone volume
 Microphone volume (percent)
 == Volume du microphone (pourcentage)
 
-Milliseconds
-== Millisecondes
-
 Milliseconds to apply quick input early
 == Millisecondes pour appliquer l'entrée rapide en avance
 
@@ -6691,9 +6676,6 @@ Minimum time between map votes (in seconds)
 
 Minimum width for name column in server browser
 == Largeur minimale pour la colonne du nom dans le navigateur de serveurs
-
-Minutes
-== Minutes
 
 Minutes on server before a player can call a map change vote (0 = disabled)
 == Minutes sur le serveur avant qu'un joueur puisse demander un vote de changement de carte (0 = désactivé)
@@ -8456,6 +8438,9 @@ q = Connection quality
 Qm
 == Qm
 
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
+== Rendu amélioré Qm : 0=désactivé (Vulkan pur), 1=retour automatique, 2=forcé
+
 Qm UI custom icon color
 == Couleur personnalisée des icônes Qm UI
 
@@ -9694,9 +9679,6 @@ Sec-WebSocket-Protocol sent during the realtime handshake
 
 Secondary
 == Secondaire
-
-Seconds
-== Secondes
 
 Seconds to wait before reconnecting (0=off, when server is full)
 == Secondes d'attente avant de se reconnecter (0 = désactivé, quand le serveur est plein)
@@ -11318,27 +11300,6 @@ Speed up the demo
 Speed:
 == Vitesse :
 
-Speedrun countdown timer
-== Minuteur de compte à rebours de speedrun
-
-Speedrun timer
-== Chronomètre de speedrun
-
-Speedrun timer hours
-== Heures du chronomètre de speedrun
-
-Speedrun timer milliseconds
-== Millisecondes du chronomètre de speedrun
-
-Speedrun timer minutes
-== Minutes du chronomètre de speedrun
-
-Speedrun timer seconds
-== Secondes du chronomètre de speedrun
-
-Speedrun timer time (MM:SS, legacy)
-== Temps du chronomètre de speedrun (format MMSS, compatible avec l'ancienne version)
-
 Sphere
 == Sphère
 
@@ -12212,9 +12173,6 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
 == Temps de bannissement du client si l'authentification de la console distante échoue. 0 pour seulement expulser
 
-TIME EXPIRED!
-== TEMPS ÉCOULÉ !
-
 Time in seconds before economy authentication timeout.
 == Temps en secondes avant le délai d'authentification économique
 
@@ -12932,6 +12890,9 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 == Utiliser la liste des ennemis pour piloter les indicateurs de joueur
 
+Use Gaussian blur pipeline when enhanced rendering is active
+== Utiliser le pipeline de flou gaussien lorsque le rendu amélioré est actif
+
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 == Utiliser le mode haute bande passante (double la bande passante du serveur, LAN uniquement)
 
@@ -12943,6 +12904,9 @@ Use large emote
 
 Use mouse sensitivity when dynamic camera is on
 == Utiliser la sensibilité de la souris lorsque la caméra dynamique est activée
+
+Use MSDF icon pipeline when enhanced rendering is active
+== Utiliser le pipeline d’icônes MSDF lorsque le rendu amélioré est actif
 
 Use multi-char replacement based on word length
 == Utiliser le remplacement multi-caractères basé sur la longueur du mot
@@ -12976,6 +12940,9 @@ Use original style for Dynamic Island
 
 Use pre-input to predict other players for more accurate input prediction
 == Utiliser la pré-saisie pour prédire les autres joueurs afin d'obtenir une prédiction d'entrée plus précise
+
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
+== Utiliser les pipelines SDF pour Dynamic Island et les rectangles arrondis lorsque le rendu amélioré est actif
 
 Use skin color for frozen Tee's feet
 == Utiliser la couleur du skin pour les pieds du Tee gelé

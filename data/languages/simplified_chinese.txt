@@ -995,9 +995,6 @@ Auto chat when dying in water
 Auto concurrency: %d (smart default)
 == 自动并发数：%d（智能默认）
 
-Auto disable when time expires
-== 时间耗尽后自动禁用
-
 Auto enable in Gores mode
 == Gores 模式自动启用
 
@@ -1096,9 +1093,6 @@ Auto-close chat after unfreeze
 
 Auto-create CSV on game end
 == 游戏结束时自动创建 CSV
-
-Auto-disable speedrun timer when time runs out
-== 时间耗尽后自动禁用速通计时器
 
 Auto-fetch all players' skins for dummy rotation queue
 == 自动获取全图玩家皮肤并作为分身轮换队列
@@ -1626,7 +1620,7 @@ Camera slowdown during fast cursor movement. High values may cause delayed camer
 == 光标快速移动期间相机减速的量。高值可能会导致相机移动延迟
 
 Camera view
-== 摄像机视角
+== 镜头与视野
 
 Can only drop onto same-size parts.
 == 只能拖放到同尺寸部件上。
@@ -3492,7 +3486,7 @@ Dynamic FOV smoothness (0=instant, 100=smoothest)
 == 动态视场角平滑度（0=瞬时，100=最平滑）
 
 Dynamic island
-== 动态岛
+== 灵动岛
 
 Dynamic Island background alpha
 == 灵动岛背景透明度
@@ -3907,9 +3901,6 @@ Enable sound when rendering video
 
 Enable spectator cursor (if available)
 == 启用旁观光标（如果可用）
-
-Enable speedrun timer
-== 启用速通计时器
 
 Enable Spotify lyric integration
 == 启用 Spotify 歌词集成
@@ -4427,9 +4418,6 @@ Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 Flip:
 == 翻转：
 
-Focus mode
-== 专注模式
-
 Folder
 == 文件夹
 
@@ -4863,10 +4851,10 @@ Golden Grace
 == 黄金恩泽
 
 Gores
-== 血腥模式
+== Gores 模式
 
 Gores actor
-== Gores 角色
+== 演员模式
 
 Gores auto weapon switch
 == Gores 自动武器切换
@@ -5245,9 +5233,6 @@ Horizontal position
 
 Hostname of DNSBL provider for IP verification
 == 用于 IP 验证的 DNSBL 提供商的主机名
-
-Hours
-== 小时
 
 Hover for tooltip
 == 悬停显示提示
@@ -6377,6 +6362,9 @@ Map upload endpoint
 Map upload endpoint (empty disables map upload)
 == 地图上传端点（留空则禁用地图上传）
 
+Map upload endpoint must use HTTP or HTTPS
+== 地图上传端点必须使用 HTTP 或 HTTPS
+
 Map upload in progress...
 == 正在上传地图……
 
@@ -6629,9 +6617,6 @@ Microphone volume
 Microphone volume (percent)
 == 麦克风音量（百分比）
 
-Milliseconds
-== 毫秒
-
 Milliseconds to apply quick input early
 == 快速输入提前应用的毫秒数
 
@@ -6639,7 +6624,7 @@ Min size
 == 最小尺寸
 
 Mini features
-== 迷你功能
+== 梦の百宝箱
 
 Mini voting UI
 == 缩小投票界面
@@ -6691,9 +6676,6 @@ Minimum time between map votes (in seconds)
 
 Minimum width for name column in server browser
 == 服务器浏览器中名称列的最小宽度
-
-Minutes
-== 分钟
 
 Minutes on server before a player can call a map change vote (0 = disabled)
 == 玩家发起地图更改投票前必须在服务器上游玩的分钟数（0=禁用）
@@ -8456,6 +8438,9 @@ q = Connection quality
 Qm
 == 栖梦
 
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
+== Qm 增强渲染：0=关闭（纯 Vulkan），1=自动回退，2=强制开启
+
 Qm UI custom icon color
 == Qm 界面图标自定义颜色
 
@@ -9694,9 +9679,6 @@ Sec-WebSocket-Protocol sent during the realtime handshake
 
 Secondary
 == 次要
-
-Seconds
-== 秒
 
 Seconds to wait before reconnecting (0=off, when server is full)
 == 重新连接前等待多少秒（服务器已满时，0 表示关闭）
@@ -11318,27 +11300,6 @@ Speed up the demo
 Speed:
 == 速度：
 
-Speedrun countdown timer
-== 速通倒计时器
-
-Speedrun timer
-== 速通计时器
-
-Speedrun timer hours
-== 速通计时器小时
-
-Speedrun timer milliseconds
-== 速通计时器毫秒
-
-Speedrun timer minutes
-== 速通计时器分钟
-
-Speedrun timer seconds
-== 速通计时器秒
-
-Speedrun timer time (MM:SS, legacy)
-== 速通计时器时间（MM:SS 格式，兼容旧版）
-
 Sphere
 == 球体
 
@@ -12212,9 +12173,6 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
 == 如果远程控制台身份验证失败，客户端被禁止的时间。0 让它只使用踢
 
-TIME EXPIRED!
-== 时间耗尽！
-
 Time in seconds before economy authentication timeout.
 == 经济身份验证超时之前的时间（秒）
 
@@ -12932,6 +12890,9 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 == 用敌对列表驱动玩家指示器
 
+Use Gaussian blur pipeline when enhanced rendering is active
+== 启用增强渲染时使用高斯模糊管线
+
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 == 使用高带宽模式。服务器所需的带宽加倍。仅限局域网使用
 
@@ -12943,6 +12904,9 @@ Use large emote
 
 Use mouse sensitivity when dynamic camera is on
 == 启用动态摄像机时使用鼠标灵敏度
+
+Use MSDF icon pipeline when enhanced rendering is active
+== 启用增强渲染时使用 MSDF 图标管线
 
 Use multi-char replacement based on word length
 == 根据词语长度使用多字符替换
@@ -12976,6 +12940,9 @@ Use original style for Dynamic Island
 
 Use pre-input to predict other players for more accurate input prediction
 == 使用预输入预测其他玩家以获得更精确的输入预测
+
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
+== 启用增强渲染时，为灵动岛和圆角矩形使用 SDF 管线
 
 Use skin color for frozen Tee's feet
 == 冻结 Tee 的脚部也使用皮肤颜色

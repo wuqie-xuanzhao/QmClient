@@ -330,7 +330,6 @@ Auto agree vote
 Auto chat in water
 Auto chat when dying in water
 Auto concurrency: %d (smart default)
-Auto disable when time expires
 Auto enable in Gores mode
 Auto enable/disable IME on text focus
 Auto execute
@@ -364,7 +363,6 @@ Auto vote on map change after min duration (0=Off, 1=Oppose, 2=Agree)
 Auto weapon switch
 Auto-close chat after unfreeze
 Auto-create CSV on game end
-Auto-disable speedrun timer when time runs out
 Auto-fetch all players' skins for dummy rotation queue
 Auto-fetch all players' skins for rotation queue
 Auto-follow delay
@@ -1301,7 +1299,6 @@ Enable SodaMusic hook integration
 Enable sound
 Enable sound when rendering video
 Enable spectator cursor (if available)
-Enable speedrun timer
 Enable Spotify lyric integration
 Enable Spotify lyrics
 Enable squishy Tee deformation
@@ -1474,7 +1471,6 @@ Fire
 First page in console
 Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 Flip:
-Focus mode
 Folder
 Folder Link
 Follow
@@ -1747,7 +1743,6 @@ Hookable/unhookable tile outline width
 Hooking L/R: %.0f%%/%.0f%%
 Horizontal position
 Hostname of DNSBL provider for IP verification
-Hours
 Hover for tooltip
 How far the plasma gun tracks a tee
 How far the tractor tracks a tee
@@ -2124,6 +2119,7 @@ Map upload
 Map upload cancelled.
 Map upload endpoint
 Map upload endpoint (empty disables map upload)
+Map upload endpoint must use HTTP or HTTPS
 Map upload in progress...
 Map upload network error.
 Map uploaded successfully.
@@ -2208,7 +2204,6 @@ Microphone
 Microphone permission denied by system
 Microphone volume
 Microphone volume (percent)
-Milliseconds
 Milliseconds to apply quick input early
 Min size
 Mini features
@@ -2229,7 +2224,6 @@ Minimum time between kick votes (in seconds)
 Minimum time between kills (in seconds)
 Minimum time between map votes (in seconds)
 Minimum width for name column in server browser
-Minutes
 Minutes on server before a player can call a map change vote (0 = disabled)
 Minutes to save replay on ESC menu
 Misc
@@ -2817,6 +2811,7 @@ Puts you out of solo part
 Pyramid
 q = Connection quality
 Qm
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
 Qm UI custom icon color
 Qm UI duotone secondary icon color
 Qm UI icon color: 1=White, 2=Black, 3=Custom, 4=Rainbow
@@ -3230,7 +3225,6 @@ Searching
 Searching all map folders...
 Sec-WebSocket-Protocol sent during the realtime handshake
 Secondary
-Seconds
 Seconds to wait before reconnecting (0=off, when server is full)
 Seconds to wait before reconnecting (after timeout, 0 to disable).
 SecretId
@@ -3771,13 +3765,6 @@ Speed
 Speed of camera moving to desired position (higher = faster)
 Speed up the demo
 Speed:
-Speedrun countdown timer
-Speedrun timer
-Speedrun timer hours
-Speedrun timer milliseconds
-Speedrun timer minutes
-Speedrun timer seconds
-Speedrun timer time (MM:SS, legacy)
 Sphere
 Spin pop
 Spirit Light
@@ -4069,7 +4056,6 @@ Time between info changes (name/skin/color) (in seconds), set very high to avoid
 Time between team changes (in seconds) (spectator/in-game)
 Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
-TIME EXPIRED!
 Time in seconds before economy authentication timeout.
 Time interval (seconds) between chat messages.
 Time limit
@@ -4309,10 +4295,12 @@ Use embedded HUD progress bar
 Use emote
 Use enemy color instead of frozen color
 Use enemy list to drive player indicators
+Use Gaussian blur pipeline when enhanced rendering is active
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 Use k key to kill (restart), q to pause and watch other players. See settings for other key binds.
 Use large emote
 Use mouse sensitivity when dynamic camera is on
+Use MSDF icon pipeline when enhanced rendering is active
 Use multi-char replacement based on word length
 Use native UI for IME (may break IME in fullscreen mode, requires restart)
 Use new smoothing algorithm
@@ -4324,6 +4312,7 @@ Use old rainbow team colors (restores old behavior)
 Use original style
 Use original style for Dynamic Island
 Use pre-input to predict other players for more accurate input prediction
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
 Use skin color for frozen Tee's feet
 Use skin color when Tee is frozen
 Use sounds

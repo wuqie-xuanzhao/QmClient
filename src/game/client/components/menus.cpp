@@ -1354,9 +1354,9 @@ int CMenus::DoButton_MenuTabInternal(CButtonContainer *pButtonContainer, const c
 		}
 		if(Icon != EQmIcon::COUNT)
 			Ui()->DoLabel_QmIcon(&Label, Icon, pFallbackIcon, FontSize, TEXTALIGN_MC, Props);
-		else if(pTextUiElement != nullptr && pTextUiElement->AreRectsInit())
+		else if(pText != nullptr && pTextUiElement != nullptr && pTextUiElement->AreRectsInit())
 			Ui()->DoLabelStreamed(*pTextUiElement->Rect(0), &Label, pText, FontSize, TEXTALIGN_MC, Props);
-		else
+		else if(pText != nullptr)
 			Ui()->DoLabel(&Label, pText, FontSize, TEXTALIGN_MC, Props);
 	}
 
@@ -2194,7 +2194,7 @@ int CMenus::DoMenuTabV2Internal(CButtonContainer *pButtonContainer, const char *
 		{
 			Ui()->DoLabel_QmIcon(&Label, Icon, pFallbackIcon, LabelFontSize, TEXTALIGN_MC);
 		}
-		else if(pTextUiElement != nullptr)
+		else if(pText != nullptr && pTextUiElement != nullptr)
 		{
 			CUIElement::SUIElementRect *pElementRect = pTextUiElement->Rect(0);
 			const bool HadReadyContainer = pElementRect->m_UITextContainer.Valid();
@@ -2205,7 +2205,7 @@ int CMenus::DoMenuTabV2Internal(CButtonContainer *pButtonContainer, const char *
 				Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);
 			}
 		}
-		else
+		else if(pText != nullptr)
 			Ui()->DoLabel(&Label, pText, LabelFontSize, TEXTALIGN_MC);
 	}
 
@@ -3026,7 +3026,9 @@ void CMenus::RenderLoadingDirect(const char *pCaption, const char *pContent, std
 		Box.HSplitBottom(30.0f, &Box, nullptr);
 		Box.HSplitBottom(25.0f, &Box, &ProgressBar);
 		ProgressBar.VMargin(20.0f, &ProgressBar);
-		GameClient()->m_Hud.RenderProgressBarWithTee(ProgressBar, std::clamp(Progress.value(), 0.0f, 1.0f), ms_GuiColor);
+		// 启动加载条使用显式 Qm UI 强调色；旧 ui_color 的默认值是黑色，不能作为进度填充色。
+		const ColorRGBA LoadingFillColor = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_QmUiAccentColor)).WithAlpha(1.0f);
+		GameClient()->m_Hud.RenderProgressBarWithTee(ProgressBar, std::clamp(Progress.value(), 0.0f, 1.0f), LoadingFillColor);
 	}
 
 	Graphics()->SetColor(1.0, 1.0, 1.0, 1.0);

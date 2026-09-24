@@ -15,8 +15,8 @@
 #include <engine/sqlite.h>
 #include <engine/storage.h>
 
-#include <game/client/components/qmclient/browser_friend_list.h>
 #include <game/client/components/qmclient/browser_column_layout.h>
+#include <game/client/components/qmclient/browser_friend_list.h>
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>

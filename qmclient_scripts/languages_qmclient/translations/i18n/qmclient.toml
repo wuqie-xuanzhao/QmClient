@@ -1055,38 +1055,6 @@ turkish = "Apple Media kullanıcı-medya-belirteci"
 polish = "Apple Music  token użytkownika multimediów"
 
 [[message]]
-key = "Apply Best input to other Tees"
-[message.translations]
-simplified_chinese = "将 Best input 应用于其他 Tee"
-traditional_chinese = "將 Best input 應用於其他 Tee"
-japanese = "Best input を他の Tee に適用"
-korean = "Best input을 다른 Tee에 적용"
-russian = "Применить Best input к другим Tee"
-german = "Best input auf andere Tees anwenden"
-spanish = "Aplicar Best input a otros Tees"
-french = "Appliquer Best input aux autres Tees"
-brazilian_portuguese = "Aplicar Best input a outros Tees"
-portuguese = "Aplicar Best input a outros Tees"
-turkish = "Best input'u diğer Tee'lere uygula"
-polish = "Zastosuj Best input do innych Tee"
-
-[[message]]
-key = "Apply Saiko+ to other Tees"
-[message.translations]
-simplified_chinese = "将 Saiko+ 应用于其他 Tee"
-traditional_chinese = "將 Saiko+ 應用於其他 Tee"
-japanese = "Saiko+ を他の Tee に適用"
-korean = "Saiko+를 다른 Tee에 적용"
-russian = "Применить Saiko+ к другим Tee"
-german = "Saiko+ auf andere Tees anwenden"
-spanish = "Aplicar Saiko+ a otros Tees"
-french = "Appliquer Saiko+ aux autres Tees"
-brazilian_portuguese = "Aplicar Saiko+ a outros Tees"
-portuguese = "Aplicar Saiko+ a outros Tees"
-turkish = "Saiko+'yı diğer Tee'lere uygula"
-polish = "Zastosuj Saiko+ do innych Tee"
-
-[[message]]
 key = "Apply squishy Tee deformation to other players"
 [message.translations]
 simplified_chinese = "将 Q 弹 Tee 形变应用到其他玩家"
@@ -1293,22 +1261,6 @@ brazilian_portuguese = "Concorrência automática: %d (padrão inteligente)"
 portuguese = "Concorrência automática: %d (padrão inteligente)"
 turkish = "Otomatik eşzamanlılık: %d (akıllı varsayılan)"
 polish = "Automatyczna współbieżność: %d (inteligentne ustawienie domyślne)"
-
-[[message]]
-key = "Auto disable when time expires"
-[message.translations]
-simplified_chinese = "时间耗尽后自动禁用"
-traditional_chinese = "時間耗盡後自動禁用"
-japanese = "時間切れで自動無効化"
-korean = "시간이 만료되면 자동 비활성화"
-russian = "Автоотключение по истечении времени"
-german = "Automatisch deaktivieren bei Zeitablauf"
-spanish = "Desactivar automáticamente cuando se acabe el tiempo"
-french = "Désactiver automatiquement à l'expiration du temps"
-brazilian_portuguese = "Desativar automaticamente quando o tempo expirar"
-portuguese = "Desativar automaticamente quando o tempo expirar"
-turkish = "Süre dolduğunda otomatik devre dışı bırak"
-polish = "Automatycznie wyłącz po upływie czasu"
 
 [[message]]
 key = "Auto enable in Gores mode"
@@ -1661,22 +1613,6 @@ brazilian_portuguese = "Fechar chat automaticamente após descongelar"
 portuguese = "Fechar chat automaticamente após descongelar"
 turkish = "Çözülmeden sonra sohbeti otomatik kapat"
 polish = "Automatyczne zamykanie czatu po odmrożeniu"
-
-[[message]]
-key = "Auto-disable speedrun timer when time runs out"
-[message.translations]
-simplified_chinese = "时间耗尽后自动禁用速通计时器"
-traditional_chinese = "時間耗盡後自動禁用速通計時器"
-japanese = "時間切れ後にスピードラインタイマーを自動無効化"
-korean = "시간 초과 후 스피드런 타이머 자동 비활성화"
-russian = "Автоматически отключать таймер спидран-заезда по истечении времени"
-german = "Speedrun-Timer nach Zeitablauf automatisch deaktivieren"
-spanish = "Desactivar automáticamente el temporizador de speedrun al agotarse el tiempo"
-french = "Désactiver automatiquement le chronomètre de speedrun après expiration du temps"
-brazilian_portuguese = "Desativar automaticamente o cronômetro de speedrun após o tempo acabar"
-portuguese = "Desativar automaticamente o temporizador de speedrun após o tempo expirar"
-turkish = "Süre dolduğunda hızlı geçiş zamanlayıcısını otomatik devre dışı bırak"
-polish = "Automatycznie wyłącz timer speedruna po upływie czasu"
 
 [[message]]
 key = "Auto-fetch all players' skins for dummy rotation queue"
@@ -2397,70 +2333,6 @@ brazilian_portuguese = "Baseado em uma pilha de... coisas do Windows"
 portuguese = "Baseado numa pilha de coisas do Windows..."
 turkish = "Bir yığın Windows... şeyine dayanmaktadır"
 polish = "Oparte na stercie Windows... rzeczy"
-
-[[message]]
-key = "Best input delay compensation percentage"
-[message.translations]
-simplified_chinese = "Best input 延迟补偿百分比"
-traditional_chinese = "Best input 延遲補償百分比"
-japanese = "Best input 遅延補正パーセンテージ"
-korean = "Best input 지연 보상 비율"
-russian = "Процент компенсации задержки Best input"
-german = "Best input Latenzkompensationsprozentsatz"
-spanish = "Best input compensación de retardo porcentual"
-french = "Pourcentage de compensation de latence Best input"
-brazilian_portuguese = "Melhor entrada - compensação de atraso percentual"
-portuguese = "Melhor entrada compensação de atraso percentual"
-turkish = "Best input gecikme telafisi yüzdesi"
-polish = "Procent kompensacji opóźnienia Best input"
-
-[[message]]
-key = "Best input interpolation mode (1=linear 2=cubic 3=smooth)"
-[message.translations]
-simplified_chinese = "Best input 插值模式（1=线性，2=三次，3=平滑）"
-traditional_chinese = "Best input 插值模式（1=linear 2=cubic 3=smooth）"
-japanese = "Best input 補間モード（1=linear 2=cubic 3=smooth）"
-korean = "Best input 보간 모드 (1=linear 2=cubic 3=smooth)"
-russian = "Режим интерполяции Best input (1=linear 2=cubic 3=smooth)"
-german = "Best input Interpolationsmodus (1=linear 2=kubisch 3=glatt)"
-spanish = "Best input modo de interpolación (1=lineal 2=cúbico 3=suave)"
-french = "Mode d'interpolation Best input (1=linéaire 2=cubique 3=lissé)"
-brazilian_portuguese = "Melhor entrada - modo de interpolação (1=linear 2=cúbico 3=suave)"
-portuguese = "Melhor entrada modo de interpolação (1=linear 2=cúbico 3=suave)"
-turkish = "Best input enterpolasyon modu (1=linear 2=cubic 3=smooth)"
-polish = "Tryb interpolacji Best input (1=linear 2=cubic 3=smooth)"
-
-[[message]]
-key = "Best input prediction offset (0.01 tick)"
-[message.translations]
-simplified_chinese = "Best input 预测偏移（0.01 tick）"
-traditional_chinese = "Best input 預測偏移（0.01 tick）"
-japanese = "Best input 予測オフセット（0.01 tick）"
-korean = "Best input 예측 오프셋 (0.01 tick)"
-russian = "Смещение прогноза Best input (0.01 tick)"
-german = "Best input Vorhersageversatz (0.01 Tick)"
-spanish = "Best input desplazamiento de predicción (0.01 tick)"
-french = "Meilleure prédiction d'entrée (0.01 tick)"
-brazilian_portuguese = "Melhor entrada - deslocamento de previsão (0.01 tick)"
-portuguese = "Melhor entrada deslocamento de previsão (0.01 tick)"
-turkish = "Best input tahmin kayması (0.01 tick)"
-polish = "Przesunięcie predykcji Best input (0.01 tick)"
-
-[[message]]
-key = "Best input smooth percentage"
-[message.translations]
-simplified_chinese = "Best input 平滑百分比"
-traditional_chinese = "Best input 平滑百分比"
-japanese = "Best input スムージングパーセンテージ"
-korean = "Best input 평활화 비율"
-russian = "Процент сглаживания Best input"
-german = "Best input Glättungsprozentsatz"
-spanish = "Best input suavizado porcentual"
-french = "Pourcentage de lissage Best input"
-brazilian_portuguese = "Melhor entrada - suavização percentual"
-portuguese = "Melhor entrada suavização percentual"
-turkish = "Best input yumuşatma yüzdesi"
-polish = "Procent wygładzania Best input"
 
 [[message]]
 key = "Best match"
@@ -6219,22 +6091,6 @@ turkish = "Cilt değiştirme animasyonunu etkinleştir"
 polish = "Włącz animację zmiany skórki"
 
 [[message]]
-key = "Enable speedrun timer"
-[message.translations]
-simplified_chinese = "启用速通计时器"
-traditional_chinese = "啟用速通計時器"
-japanese = "スピードランのタイマーを有効にする"
-korean = "스피드런 타이머 활성화"
-russian = "Включить таймер спидран"
-german = "Speedrun-Timer aktivieren"
-spanish = "Activar temporizador de speedrun"
-french = "Activer le chronomètre de speedrun"
-brazilian_portuguese = "Ativar cronômetro de speedrun"
-portuguese = "Ativar temporizador de speedrun"
-turkish = "Hızlı koşu zamanlayıcısını etkinleştir"
-polish = "Włącz timer speedrun"
-
-[[message]]
 key = "Enable squishy Tee deformation"
 [message.translations]
 simplified_chinese = "启用 Q 弹 Tee 形变"
@@ -8521,22 +8377,6 @@ brazilian_portuguese = "Posição horizontal"
 portuguese = "Posição horizontal"
 turkish = "Yatay konum"
 polish = "Pozycja pozioma"
-
-[[message]]
-key = "Hours"
-[message.translations]
-simplified_chinese = "小时"
-traditional_chinese = "小時"
-japanese = "時間"
-korean = "시간"
-russian = "Часы"
-german = "Stunden"
-spanish = "Horas"
-french = "Heures"
-brazilian_portuguese = "Horas"
-portuguese = "Horas"
-turkish = "Saat"
-polish = "Godziny"
 
 [[message]]
 key = "HUD editor layout"
@@ -11659,22 +11499,6 @@ turkish = "Mikrofon ses seviyesi (yüzde)"
 polish = "Głośność mikrofonu (procent)"
 
 [[message]]
-key = "Milliseconds"
-[message.translations]
-simplified_chinese = "毫秒"
-traditional_chinese = "毫秒"
-japanese = "ミリ秒"
-korean = "밀리초"
-russian = "Миллисекунды"
-german = "Millisekunden"
-spanish = "Milisegundos"
-french = "Millisecondes"
-brazilian_portuguese = "Milissegundos"
-portuguese = "Milissegundos"
-turkish = "Milisaniye"
-polish = "Milisekundy"
-
-[[message]]
 key = "Min size"
 [message.translations]
 simplified_chinese = "最小尺寸"
@@ -11753,22 +11577,6 @@ brazilian_portuguese = "Caracteres mínimos de correspondência"
 portuguese = "Caracteres mínimos de correspondência"
 turkish = "Minimum eşleşme karakteri"
 polish = "Minimalna liczba pasujących znaków"
-
-[[message]]
-key = "Minutes"
-[message.translations]
-simplified_chinese = "分钟"
-traditional_chinese = "分鐘"
-japanese = "分"
-korean = "분"
-russian = "Минуты"
-german = "Minuten"
-spanish = "Minutos"
-french = "Minutes"
-brazilian_portuguese = "Minutos"
-portuguese = "Minutos"
-turkish = "Dakika"
-polish = "Minuty"
 
 [[message]]
 key = "Mixed"
@@ -15163,22 +14971,6 @@ turkish = "Oyuncular için hızlı işlem menüsü"
 polish = "Menu szybkich akcji dla graczy"
 
 [[message]]
-key = "Quick input mode (0=Fast 3=Best 4=Saiko+; 1/2 legacy mapped to Best)"
-[message.translations]
-simplified_chinese = "快速输入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容旧值并映射到 Best）"
-traditional_chinese = "快速輸入模式（0=Fast 3=Best 4=Saiko+；1/2 兼容舊值並映射到 Best）"
-japanese = "クイック入力モード（0=Fast 3=Best 4=Saiko+；1/2 は旧値互換で Best にマッピング）"
-korean = "빠른 입력 모드（0=Fast 3=Best 4=Saiko+；1/2는 이전 값 호환 및 Best로 매핑）"
-russian = "Режим быстрого ввода (0=Fast 3=Best 4=Saiko+; 1/2 совместимы со старыми значениями и отображаются на Best)"
-german = "Schnelleingabemodus (0=Fast 3=Best 4=Saiko+; 1/2 kompatibel mit alten Werten und auf Best abgebildet)"
-spanish = "Modo de entrada rápida (0=Fast 3=Best 4=Saiko+; 1/2 son compatibles con valores antiguos y se asignan a Best)"
-french = "Mode de saisie rapide (0=Rapide 3=Meilleur 4=Saiko+ ; 1/2 compatibles avec les anciennes valeurs et mappés sur Meilleur)"
-brazilian_portuguese = "Modo de entrada rápida (0=Rápido 3=Melhor 4=Saiko+; 1/2 compatível com valores antigos e mapeado para Melhor)"
-portuguese = "Modo de entrada rápida (0=Fast 3=Best 4=Saiko+; 1/2 compatível com valores antigos e mapeado para Best)"
-turkish = "Hızlı giriş modu (0=Fast 3=Best 4=Saiko+; 1/2 eski değerlerle uyumludur ve Best'e eşlenir)"
-polish = "Tryb szybkiego wejścia (0=Fast 3=Best 4=Saiko+; 1/2 zgodne wstecznie i mapowane na Best)"
-
-[[message]]
 key = "Quickly locate feature modules"
 [message.translations]
 simplified_chinese = "快速定位功能模块"
@@ -15963,22 +15755,6 @@ turkish = "chai betiğini çalıştır"
 polish = "Uruchom skrypt chai"
 
 [[message]]
-key = "Saiko+ input amount (0.01 tick)"
-[message.translations]
-simplified_chinese = "Saiko+ 输入量（0.01 tick）"
-traditional_chinese = "Saiko+ 輸入量（0.01 tick）"
-japanese = "Saiko+ 入力量（0.01 tick）"
-korean = "Saiko+ 입력량（0.01 tick）"
-russian = "Saiko+ входной объём (0.01 тик)"
-german = "Saiko+ Eingabemenge (0.01 Tick)"
-spanish = "Entrada Saiko+ (0.01 tick)"
-french = "Quantité d'entrée Saiko+ (0.01 tick)"
-brazilian_portuguese = "Quantidade de entrada Saiko+ (0.01 tick)"
-portuguese = "Quantidade de entrada Saiko+ (0.01 tick)"
-turkish = "Saiko+ giriş miktarı (0.01 tick)"
-polish = "Saiko+ Ilość wejścia (0.01 tick)"
-
-[[message]]
 key = "Same group full map listening"
 [message.translations]
 simplified_chinese = "同组全图收听"
@@ -16137,22 +15913,6 @@ brazilian_portuguese = "Velocidade de rolagem"
 portuguese = "Velocidade de deslocamento"
 turkish = "Kaydırma hızı"
 polish = "Prędkość przewijania"
-
-[[message]]
-key = "Seconds"
-[message.translations]
-simplified_chinese = "秒"
-traditional_chinese = "秒"
-japanese = "秒"
-korean = "초"
-russian = "Секунды"
-german = "Sekunden"
-spanish = "Segundos"
-french = "Secondes"
-brazilian_portuguese = "Segundos"
-portuguese = "Segundos"
-turkish = "Saniye"
-polish = "Sekundy"
 
 [[message]]
 key = "SecretId"
@@ -18633,118 +18393,6 @@ brazilian_portuguese = "Limiar de ativação de fala"
 portuguese = "Limiar de ativação de fala"
 turkish = "Konuşma tetikleme eşiği"
 polish = "Próg wyzwalania mowy"
-
-[[message]]
-key = "Speedrun countdown timer"
-[message.translations]
-simplified_chinese = "速通倒计时器"
-traditional_chinese = "速通倒計時器"
-japanese = "スピードランのカウントダウンタイマー"
-korean = "스피드런 카운트다운 타이머"
-russian = "Таймер обратного отсчёта спидран"
-german = "Speedrun-Countdown-Timer"
-spanish = "Temporizador de cuenta atrás de speedrun"
-french = "Minuteur de compte à rebours de speedrun"
-brazilian_portuguese = "Cronômetro de contagem regressiva de speedrun"
-portuguese = "Temporizador de contagem decrescente de speedrun"
-turkish = "Hızlı koşu geri sayım zamanlayıcısı"
-polish = "Licznik czasu odliczania speedruna"
-
-[[message]]
-key = "Speedrun Timer"
-[message.translations]
-simplified_chinese = "速通计时器"
-traditional_chinese = "速通計時器"
-japanese = "スピードランタイマー"
-korean = "스피드런 타이머"
-russian = "Таймер спидран"
-german = "Speedrun-Timer"
-spanish = "Temporizador de speedrun"
-french = "Minuteur de speedrun"
-brazilian_portuguese = "Temporizador de Speedrun"
-portuguese = "Temporizador de speedrun"
-turkish = "Hızlı koşu zamanlayıcısı"
-polish = "Licznik czasu speedruna"
-
-[[message]]
-key = "Speedrun timer hours"
-[message.translations]
-simplified_chinese = "速通计时器小时"
-traditional_chinese = "速通計時器小時"
-japanese = "スピードラインタイマーの時"
-korean = "스피드런 타이머 시간"
-russian = "Часы таймера спидран-забега"
-german = "Speedrun-Timer Stunden"
-spanish = "Horas del temporizador de speedrun"
-french = "Heures du chronomètre de speedrun"
-brazilian_portuguese = "Horas do cronômetro de speedrun"
-portuguese = "Horas do temporizador de speedrun"
-turkish = "Hızlı geçiş sayacı saat"
-polish = "Godziny licznika czasu speedrun"
-
-[[message]]
-key = "Speedrun timer milliseconds"
-[message.translations]
-simplified_chinese = "速通计时器毫秒"
-traditional_chinese = "速通計時器毫秒"
-japanese = "スピードラインタイマーのミリ秒"
-korean = "스피드런 타이머 밀리초"
-russian = "Миллисекунды таймера спидран-забега"
-german = "Speedrun-Timer Millisekunden"
-spanish = "Milisegundos del temporizador de speedrun"
-french = "Millisecondes du chronomètre de speedrun"
-brazilian_portuguese = "Milissegundos do cronômetro de speedrun"
-portuguese = "Milissegundos do temporizador de speedrun"
-turkish = "Hızlı geçiş sayacı milisaniye"
-polish = "Milisekundy licznika czasu speedrun"
-
-[[message]]
-key = "Speedrun timer minutes"
-[message.translations]
-simplified_chinese = "速通计时器分钟"
-traditional_chinese = "速通計時器分鐘"
-japanese = "スピードラインタイマーの分"
-korean = "스피드런 타이머 분"
-russian = "Минуты таймера спидран-забега"
-german = "Speedrun-Timer Minuten"
-spanish = "Minutos del temporizador de speedrun"
-french = "Minutes du chronomètre de speedrun"
-brazilian_portuguese = "Minutos do cronômetro de speedrun"
-portuguese = "Minutos do temporizador de speedrun"
-turkish = "Hızlı geçiş sayacı dakika"
-polish = "Minuty licznika czasu speedrun"
-
-[[message]]
-key = "Speedrun timer seconds"
-[message.translations]
-simplified_chinese = "速通计时器秒"
-traditional_chinese = "速通計時器秒"
-japanese = "スピードラインタイマーの秒"
-korean = "스피드런 타이머 초"
-russian = "Секунды таймера спидран-забега"
-german = "Speedrun-Timer Sekunden"
-spanish = "Segundos del temporizador de speedrun"
-french = "Secondes du chronomètre de speedrun"
-brazilian_portuguese = "Segundos do cronômetro de speedrun"
-portuguese = "Segundos do temporizador de speedrun"
-turkish = "Hızlı geçiş sayacı saniye"
-polish = "Sekundy licznika czasu speedrun"
-
-[[message]]
-key = "Speedrun timer time (MM:SS, legacy)"
-[message.translations]
-simplified_chinese = "速通计时器时间（MM:SS 格式，兼容旧版）"
-traditional_chinese = "速通計時器時間（MMSS 格式，兼容舊版）"
-japanese = "スピードラインタイマーの時間（MMSS 形式、旧バージョン互換）"
-korean = "스피드런 타이머 시간 (MMSS 형식, 구버전 호환)"
-russian = "Время таймера спидран-забега (формат MMSS, совместимость со старыми версиями)"
-german = "Speedrun-Timer Zeit (MMSS-Format, kompatibel mit älteren Versionen)"
-spanish = "Tiempo del temporizador de speedrun (formato MMSS, compatible con versiones antiguas)"
-french = "Temps du chronomètre de speedrun (format MMSS, compatible avec l'ancienne version)"
-brazilian_portuguese = "Tempo do cronômetro de speedrun (formato MMSS, compatível com versões antigas)"
-portuguese = "Tempo do temporizador de speedrun (formato MMSS, compatível com versões antigas)"
-turkish = "Hızlı geçiş sayacı süresi (MMSS formatı, eski sürümle uyumlu)"
-polish = "Czas licznika speedrun (format MMSS, zgodny ze starszymi wersjami)"
 
 [[message]]
 key = "Sphere"
@@ -29712,6 +29360,22 @@ turkish = "Harita yükleme uç noktası"
 polish = "Punkt końcowy przesyłania map"
 
 [[message]]
+key = "Map upload endpoint must use HTTP or HTTPS"
+[message.translations]
+simplified_chinese = "地图上传端点必须使用 HTTP 或 HTTPS"
+traditional_chinese = "地圖上傳端點必須使用 HTTP 或 HTTPS"
+japanese = "マップアップロード先には HTTP または HTTPS を使用してください"
+korean = "맵 업로드 엔드포인트는 HTTP 또는 HTTPS를 사용해야 합니다"
+russian = "Для загрузки карт требуется адрес HTTP или HTTPS"
+german = "Der Karten-Upload-Endpunkt muss HTTP oder HTTPS verwenden"
+spanish = "El punto de subida de mapas debe usar HTTP o HTTPS"
+french = "Le point d'envoi des cartes doit utiliser HTTP ou HTTPS"
+brazilian_portuguese = "O endpoint de envio de mapas deve usar HTTP ou HTTPS"
+portuguese = "O endpoint de envio de mapas deve usar HTTP ou HTTPS"
+turkish = "Harita yükleme uç noktası HTTP veya HTTPS kullanmalıdır"
+polish = "Punkt przesyłania map musi używać HTTP lub HTTPS"
+
+[[message]]
 key = "Map upload endpoint (empty disables map upload)"
 [message.translations]
 simplified_chinese = "地图上传端点（留空则禁用地图上传）"
@@ -31094,3 +30758,67 @@ brazilian_portuguese = "URL do servidor de voz (ws:// ou wss://)"
 portuguese = "URL do servidor de voz (ws:// ou wss://)"
 turkish = "Ses sunucusu URL’si (ws:// veya wss://)"
 polish = "URL serwera głosowego (ws:// lub wss://)"
+
+[[message]]
+key = "Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on"
+[message.translations]
+simplified_chinese = "Qm 增强渲染：0=关闭（纯 Vulkan），1=自动回退，2=强制开启"
+traditional_chinese = "Qm 增強渲染：0=關閉（純 Vulkan），1=自動回退，2=強制開啟"
+japanese = "Qm 拡張レンダリング：0=オフ（純粋な Vulkan）、1=自動フォールバック、2=強制オン"
+korean = "Qm 향상된 렌더링: 0=끄기(순수 Vulkan), 1=자동 폴백, 2=강제 켜기"
+russian = "Расширенный рендеринг Qm: 0=выкл. (чистый Vulkan), 1=автооткат, 2=вкл. принудительно"
+german = "Qm-erweitertes Rendering: 0=aus (reines Vulkan), 1=automatischer Fallback, 2=erzwingen"
+spanish = "Renderizado mejorado de Qm: 0=desactivado (Vulkan puro), 1=retroceso automático, 2=forzado"
+french = "Rendu amélioré Qm : 0=désactivé (Vulkan pur), 1=retour automatique, 2=forcé"
+brazilian_portuguese = "Renderização aprimorada do Qm: 0=desativada (Vulkan puro), 1=recuo automático, 2=forçada"
+portuguese = "Renderização melhorada do Qm: 0=desativada (Vulkan puro), 1=recuo automático, 2=forçada"
+turkish = "Qm gelişmiş işleme: 0=kapalı (saf Vulkan), 1=otomatik geri dönüş, 2=zorla açık"
+polish = "Ulepszone renderowanie Qm: 0=wyłączone (czysty Vulkan), 1=automatyczny powrót, 2=wymuszone"
+
+[[message]]
+key = "Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active"
+[message.translations]
+simplified_chinese = "启用增强渲染时，为灵动岛和圆角矩形使用 SDF 管线"
+traditional_chinese = "啟用增強渲染時，為動態島和圓角矩形使用 SDF 管線"
+japanese = "拡張レンダリング有効時に Dynamic Island と角丸矩形で SDF パイプラインを使用"
+korean = "향상된 렌더링이 활성화되면 Dynamic Island 및 둥근 사각형에 SDF 파이프라인 사용"
+russian = "Использовать конвейеры SDF для Dynamic Island и скруглённых прямоугольников при включённом расширенном рендеринге"
+german = "SDF-Pipelines für Dynamic Island und abgerundete Rechtecke bei aktiviertem erweitertem Rendering verwenden"
+spanish = "Usar canalizaciones SDF para Dynamic Island y rectángulos redondeados con el renderizado mejorado activo"
+french = "Utiliser les pipelines SDF pour Dynamic Island et les rectangles arrondis lorsque le rendu amélioré est actif"
+brazilian_portuguese = "Usar pipelines SDF para Dynamic Island e retângulos arredondados quando a renderização aprimorada estiver ativa"
+portuguese = "Usar pipelines SDF para Dynamic Island e retângulos arredondados quando a renderização melhorada estiver ativa"
+turkish = "Gelişmiş işleme etkin olduğunda Dynamic Island ve yuvarlatılmış dikdörtgenler için SDF işlem hatlarını kullan"
+polish = "Używaj potoków SDF dla Dynamic Island i zaokrąglonych prostokątów przy włączonym ulepszonym renderowaniu"
+
+[[message]]
+key = "Use Gaussian blur pipeline when enhanced rendering is active"
+[message.translations]
+simplified_chinese = "启用增强渲染时使用高斯模糊管线"
+traditional_chinese = "啟用增強渲染時使用高斯模糊管線"
+japanese = "拡張レンダリング有効時にガウスぼかしパイプラインを使用"
+korean = "향상된 렌더링이 활성화되면 가우시안 블러 파이프라인 사용"
+russian = "Использовать конвейер гауссова размытия при включённом расширенном рендеринге"
+german = "Gaußschen Unschärfe-Pipeline bei aktiviertem erweitertem Rendering verwenden"
+spanish = "Usar la canalización de desenfoque gaussiano con el renderizado mejorado activo"
+french = "Utiliser le pipeline de flou gaussien lorsque le rendu amélioré est actif"
+brazilian_portuguese = "Usar o pipeline de desfoque gaussiano quando a renderização aprimorada estiver ativa"
+portuguese = "Usar o pipeline de desfoque gaussiano quando a renderização melhorada estiver ativa"
+turkish = "Gelişmiş işleme etkin olduğunda Gauss bulanıklığı işlem hattını kullan"
+polish = "Używaj potoku rozmycia gaussowskiego przy włączonym ulepszonym renderowaniu"
+
+[[message]]
+key = "Use MSDF icon pipeline when enhanced rendering is active"
+[message.translations]
+simplified_chinese = "启用增强渲染时使用 MSDF 图标管线"
+traditional_chinese = "啟用增強渲染時使用 MSDF 圖示管線"
+japanese = "拡張レンダリング有効時に MSDF アイコンパイプラインを使用"
+korean = "향상된 렌더링이 활성화되면 MSDF 아이콘 파이프라인 사용"
+russian = "Использовать конвейер значков MSDF при включённом расширенном рендеринге"
+german = "MSDF-Symbol-Pipeline bei aktiviertem erweitertem Rendering verwenden"
+spanish = "Usar la canalización de iconos MSDF con el renderizado mejorado activo"
+french = "Utiliser le pipeline d’icônes MSDF lorsque le rendu amélioré est actif"
+brazilian_portuguese = "Usar o pipeline de ícones MSDF quando a renderização aprimorada estiver ativa"
+portuguese = "Usar o pipeline de ícones MSDF quando a renderização melhorada estiver ativa"
+turkish = "Gelişmiş işleme etkin olduğunda MSDF simge işlem hattını kullan"
+polish = "Używaj potoku ikon MSDF przy włączonym ulepszonym renderowaniu"

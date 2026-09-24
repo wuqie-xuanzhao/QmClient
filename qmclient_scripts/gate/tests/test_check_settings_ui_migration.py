@@ -184,7 +184,7 @@ bool CMenus::SetSettingsPageFromCardTab(const char *pTab)
 		navigation = self.root / "src/game/client/components/menus.cpp"
 		navigation.parent.mkdir(parents=True, exist_ok=True)
 		navigation.write_text('bool CMenus::SetSettingsPageFromCardTab(const char *pTab) { return str_comp(pTab, "visual") == 0; }', encoding="utf-8")
-		catalogue = self.root / "src/game/client/QmUi/cards/QmCardCatalog.cpp"
+		catalogue = self.root / "src/game/client/QmUi/cards/QmCardCatalogIds.cpp"
 		catalogue.parent.mkdir(parents=True, exist_ok=True)
 		catalogue.write_text('s_vHudCards = {"qm:skin_appearance"};\ns_vVisualCards = {"qm:skin_appearance"};', encoding="utf-8")
 		with patch.dict(PAGE_STABLE_IDS, {"qmclient_visual": ("qm:skin_appearance",)}):

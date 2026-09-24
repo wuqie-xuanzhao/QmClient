@@ -1041,38 +1041,6 @@ turkish = "Arka plan vuruş genişliği"
 polish = "Szerokość pociągnięcia tła"
 
 [[message]]
-key = "Best input"
-[message.translations]
-simplified_chinese = "最佳输入"
-traditional_chinese = "最佳輸入"
-japanese = "ベスト入力"
-korean = "최고 입력"
-russian = "Лучший ввод"
-german = "Beste Eingabe"
-spanish = "Mejor entrada"
-french = "Meilleure entrée"
-brazilian_portuguese = "Melhor entrada"
-portuguese = "Melhor entrada"
-turkish = "En iyi giriş"
-polish = "Najlepsze wejście"
-
-[[message]]
-key = "Best input others"
-[message.translations]
-simplified_chinese = "最佳输入（他人）"
-traditional_chinese = "最佳輸入其他"
-japanese = "ベスト入力（他人）"
-korean = "최고 입력 (다른 사람)"
-russian = "Лучший ввод других"
-german = "Beste Eingabe anderer"
-spanish = "Mejor entrada (otros)"
-french = "Meilleure entrée des autres"
-brazilian_portuguese = "Melhor entrada de outros"
-portuguese = "Melhor entrada (outros)"
-turkish = "En iyi giriş (diğerleri)"
-polish = "Najlepsze wejście innych"
-
-[[message]]
 key = "Bind Wheel"
 [message.translations]
 simplified_chinese = "绑定轮盘"
@@ -3953,38 +3921,6 @@ turkish = "Giriş"
 polish = "Wejście"
 
 [[message]]
-key = "Input smoothing"
-[message.translations]
-simplified_chinese = "输入平滑"
-traditional_chinese = "輸入平滑"
-japanese = "入力スムージング"
-korean = "입력 평활화"
-russian = "Сглаживание ввода"
-german = "Eingabeglättung"
-spanish = "Suavizado de entrada"
-french = "Lissage d'entrée"
-brazilian_portuguese = "Suavização de entrada"
-portuguese = "Suavização de entrada"
-turkish = "Giriş yumuşatma"
-polish = "Wygładzanie wejścia"
-
-[[message]]
-key = "Interpolation"
-[message.translations]
-simplified_chinese = "插值"
-traditional_chinese = "插值"
-japanese = "補間"
-korean = "보간"
-russian = "Интерполяция"
-german = "Interpolation"
-spanish = "Interpolación"
-french = "Interpolation"
-brazilian_portuguese = "Interpolação"
-portuguese = "Interpolação"
-turkish = "Enterpolasyon"
-polish = "Interpolacja"
-
-[[message]]
 key = "Item type"
 [message.translations]
 simplified_chinese = "物品类型"
@@ -4111,22 +4047,6 @@ brazilian_portuguese = "Latência"
 portuguese = "Latência"
 turkish = "Gecikme"
 polish = "Opóźnienie"
-
-[[message]]
-key = "Latency compensation"
-[message.translations]
-simplified_chinese = "延迟补偿"
-traditional_chinese = "延遲補償"
-japanese = "レイテンシ補正"
-korean = "지연 보상"
-russian = "Компенсация задержки"
-german = "Latenzkompensation"
-spanish = "Compensación de latencia"
-french = "Compensation de latence"
-brazilian_portuguese = "Compensação de latência"
-portuguese = "Compensação de latência"
-turkish = "Gecikme telafisi"
-polish = "Kompensacja opóźnienia"
 
 [[message]]
 key = "Latency Jitter"
@@ -5361,22 +5281,6 @@ turkish = "Donduğunda tahmin marjı"
 polish = "Margines predykcji podczas zamrożenia"
 
 [[message]]
-key = "Prediction offset"
-[message.translations]
-simplified_chinese = "预测偏移"
-traditional_chinese = "預測偏移"
-japanese = "予測オフセット"
-korean = "예측 오프셋"
-russian = "Смещение предсказания"
-german = "Vorhersage-Offset"
-spanish = "Desfase de predicción"
-french = "Décalage de prédiction"
-brazilian_portuguese = "Deslocamento de predição"
-portuguese = "Deslocamento de previsão"
-turkish = "Tahmin kayması"
-polish = "Przesunięcie przewidywania"
-
-[[message]]
 key = "Print command executed by this name or all chat binds"
 [message.translations]
 simplified_chinese = "打印该名称或所有聊天绑定执行的命令"
@@ -6287,22 +6191,6 @@ brazilian_portuguese = "Girar martelo com o cursor como outras armas"
 portuguese = "Rodar martelo com o cursor como outras armas"
 turkish = "Çekici diğer silahlar gibi imleçle döndür"
 polish = "Obracaj młotek kursorem jak inne bronie"
-
-[[message]]
-key = "Saiko+ others"
-[message.translations]
-simplified_chinese = "Saiko+ 他人"
-traditional_chinese = "Saiko+ 其他"
-japanese = "Saiko+ その他"
-korean = "Saiko+ 기타"
-russian = "Saiko+ других"
-german = "Saiko+ andere"
-spanish = "Saiko+ otros"
-french = "Saiko+ autres"
-brazilian_portuguese = "Saiko+ outros"
-portuguese = "Saiko+ outros"
-turkish = "Saiko+ diğerleri"
-polish = "Saiko+ innych"
 
 [[message]]
 key = "Save drawings to a given csv file (defaults to map name)"

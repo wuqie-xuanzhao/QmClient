@@ -24,7 +24,8 @@ inline SQmBrowserNameMapLayout QmBrowserNameMapLayout(float Width, float RightWi
 	const float Split = std::clamp(NameShare, 0.35f, 0.75f);
 	const float NameWidth = NameMapWidth >= Minimum ?
 					MinNameWidth + (NameMapWidth - Minimum) * Split :
-					Minimum > 0.0f ? NameMapWidth * MinNameWidth / Minimum : NameMapWidth * Split;
+				Minimum > 0.0f ? NameMapWidth * MinNameWidth / Minimum :
+						 NameMapWidth * Split;
 	return {RightScale, NameWidth, NameMapWidth - NameWidth};
 }
 

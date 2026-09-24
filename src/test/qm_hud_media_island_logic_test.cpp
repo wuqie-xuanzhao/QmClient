@@ -1500,7 +1500,7 @@ TEST(QmMediaIslandGpuSdfContract, BackendsPublishActualShaderCapability)
 	const std::string OpenGlSource = ReadTestSourceFile("src/engine/client/backend/opengl/backend_opengl3.cpp");
 	const std::string VulkanSource = ReadTestSourceFile("src/engine/client/backend/vulkan/backend_vulkan.cpp");
 	EXPECT_NE(OpenGlSource.find("m_MediaIslandSdf = m_MediaIslandSdfProgramValid"), std::string::npos);
-	EXPECT_NE(VulkanSource.find("m_MediaIslandSdf = true"), std::string::npos);
+	EXPECT_NE(VulkanSource.find("m_pCapabilities->m_MediaIslandSdf = m_QmMediaIslandSdfPipelineValid"), std::string::npos);
 }
 
 TEST(QmMediaIslandGpuSdfContract, ShapePassAvoidsPerFragmentDistanceArrayAndInactiveItemIterations)

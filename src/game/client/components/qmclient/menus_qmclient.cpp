@@ -141,7 +141,6 @@ namespace
 		{qm_module::EQmModuleId::CollisionHitbox, qm_module::EQmModuleColumn::Right, 5, "collision_hitbox"},
 		{qm_module::EQmModuleId::FavoriteMaps, qm_module::EQmModuleColumn::Right, 6, "favorite_maps"},
 		{qm_module::EQmModuleId::HJAssist, qm_module::EQmModuleColumn::Right, 7, "hj_assist"},
-		{qm_module::EQmModuleId::SpeedrunTimer, qm_module::EQmModuleColumn::Right, 8, "speedrun_timer"},
 		{qm_module::EQmModuleId::DebugGraph, qm_module::EQmModuleColumn::Right, 9, "debug_graph"},
 		{qm_module::EQmModuleId::InputOverlay, qm_module::EQmModuleColumn::Right, 10, "input_overlay"},
 		{qm_module::EQmModuleId::HudNotifications, qm_module::EQmModuleColumn::Right, 11, "hud_notifications"},
@@ -154,9 +153,10 @@ namespace
 		{qm_module::EQmModuleId::DebugMode, qm_module::EQmModuleColumn::Right, 19, "debug_mode"},
 		{qm_module::EQmModuleId::BindStatusHud, qm_module::EQmModuleColumn::Right, 20, "bind_status_hud"},
 		{qm_module::EQmModuleId::SoloSplit, qm_module::EQmModuleColumn::Left, 17, "solo_split"},
-		// 本地差异：远程把表情卡放在 Left/17、地图上传卡放在 Right/8，
-		// 但本地这两个槽位已被 SoloSplit（Left/17）与 SpeedrunTimer（Right/8）占用，
-		// 故按「追加到列尾」放置，既不与既有卡片抢序，也不改变既有卡片顺序。
+		// 本地差异：远程把表情卡放在 Left/17、地图上传卡放在 Right/8。
+		// 本地 Left/17 已被独有的 SoloSplit 占用，故表情卡追加到 Left/18；
+		// Right/8 随速通计时器删除而空出，但地图上传卡仍保持在列尾，
+		// 不改动既有卡片的既有顺序。
 		{qm_module::EQmModuleId::Emoticons, qm_module::EQmModuleColumn::Left, 18, "emoticons"},
 		{qm_module::EQmModuleId::MapUpload, qm_module::EQmModuleColumn::Right, 21, "map_upload"}}};
 }
@@ -3875,37 +3875,6 @@ void CMenus::RenderQmFunctionHJAssistContent(CUIRect &Content, float LineHeight,
 	Content.HSplitTop(LineSpacing, nullptr, &Content);
 }
 
-void CMenus::RenderQmHudSpeedrunTimerContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
-{
-	CUIRect Row, LabelColumn, ControlColumn;
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &g_Config.m_QmSpeedrunTimer, "Enable speedrun timer", Localize("Enable speedrun timer"), g_Config.m_QmSpeedrunTimer, &Row))
-		g_Config.m_QmSpeedrunTimer ^= 1;
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-	if(!g_Config.m_QmSpeedrunTimer)
-		return;
-
-	auto RenderValue = [&](const char *pTextId, const char *pText, const void *pInputId, int *pValue, int MinValue, int MaxValue) {
-		Content.HSplitTop(LineHeight, &Row, &Content);
-		Row.VSplitLeft(LabelWidth, &LabelColumn, &ControlColumn);
-		DoSettingsMenuLabel(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, pTextId, &LabelColumn, Localize(pText), BodySize, TEXTALIGN_ML, {}, (int)LabelColumn.w);
-		RenderQmSettingsSliderWithValueInput(pInputId, ControlColumn, pValue, MinValue, MaxValue, "", PrewarmOnly);
-		Content.HSplitTop(LineSpacing, nullptr, &Content);
-	};
-	static int s_QmSpeedrunTimerHoursInputId;
-	static int s_QmSpeedrunTimerMinutesInputId;
-	static int s_QmSpeedrunTimerSecondsInputId;
-	static int s_QmSpeedrunTimerMillisecondsInputId;
-	RenderValue("qmclient-speedrun-timer-hours", "Hours", &s_QmSpeedrunTimerHoursInputId, &g_Config.m_QmSpeedrunTimerHours, 0, 99);
-	RenderValue("qmclient-speedrun-timer-minutes", "Minutes", &s_QmSpeedrunTimerMinutesInputId, &g_Config.m_QmSpeedrunTimerMinutes, 0, 59);
-	RenderValue("qmclient-speedrun-timer-seconds", "Seconds", &s_QmSpeedrunTimerSecondsInputId, &g_Config.m_QmSpeedrunTimerSeconds, 0, 59);
-	RenderValue("qmclient-speedrun-timer-milliseconds", "Milliseconds", &s_QmSpeedrunTimerMillisecondsInputId, &g_Config.m_QmSpeedrunTimerMilliseconds, 0, 999);
-	Content.HSplitTop(LineHeight, &Row, &Content);
-	if(DoSettingsButton_CheckBox(SETTINGS_QMCLIENT, QMCLIENT_SETTINGS_TAB_HUD, QMCLIENT_SETTINGS_TAB_HUD, &g_Config.m_QmSpeedrunTimerAutoDisable, "Auto disable when time expires", Localize("Auto disable when time expires"), g_Config.m_QmSpeedrunTimerAutoDisable, &Row))
-		g_Config.m_QmSpeedrunTimerAutoDisable ^= 1;
-	Content.HSplitTop(LineSpacing, nullptr, &Content);
-}
-
 void CMenus::RenderQmHudBindStatusContent(CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
 {
 	// 内置四项状态开关（自外观页 DDRace HUD 卡片迁移）
@@ -5205,7 +5174,6 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		case EQmModuleId::DummyMiniView: return ResolveQmHudDummyMiniViewHeight(Metrics, DummyMiniViewExpanded);
 		case EQmModuleId::Coords: return ResolveQmHudCoordsHeight(Metrics);
 		case EQmModuleId::PlayerStats: return ResolveQmHudPlayerStatsHeight(Metrics, g_Config.m_QmPlayerStatsMapProgress != 0, g_Config.m_QmPlayerStatsMapProgressStyle != 0);
-		case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? Rows(6.0f) : Rows(1.0f);
 		case EQmModuleId::DebugGraph: return Rows(2.0f);
 		case EQmModuleId::DebugMode: return Rows(5.0f);
 		case EQmModuleId::InputOverlay: return ResolveQmHudInputOverlayHeight(Metrics, g_Config.m_QmInputOverlay != 0);
@@ -5223,7 +5191,6 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 		{
 		case EQmModuleId::DummyMiniView: return DummyMiniViewExpanded ? 1u : 0u;
 		case EQmModuleId::PlayerStats: return (g_Config.m_QmPlayerStatsMapProgress ? 1u : 0u) | (g_Config.m_QmPlayerStatsMapProgressStyle ? 2u : 0u);
-		case EQmModuleId::SpeedrunTimer: return g_Config.m_QmSpeedrunTimer ? 1u : 0u;
 		case EQmModuleId::InputOverlay: return g_Config.m_QmInputOverlay ? 1u : 0u;
 		case EQmModuleId::HudNotifications:
 		{
@@ -5289,10 +5256,6 @@ void CMenus::RenderSettingsQmClientHudDeck(CUIRect MainView, bool PrewarmOnly)
 				}
 				HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmPlayerStatsResetOnJoin, &g_Config.m_QmPlayerStatsResetOnJoin);
 				return Changed;
-			};
-		case EQmModuleId::SpeedrunTimer:
-			return [this, LineHeight, LineSpacing](CUIRect Content) {
-				return HandleQmHudCheckboxInput(Content, LineHeight, LineSpacing, &g_Config.m_QmSpeedrunTimer, &g_Config.m_QmSpeedrunTimer);
 			};
 		case EQmModuleId::HudNotifications:
 			return [this, LineHeight, LineSpacing, ConsumeQmHudRow](CUIRect Content) {

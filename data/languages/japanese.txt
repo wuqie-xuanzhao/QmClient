@@ -995,9 +995,6 @@ Auto chat when dying in water
 Auto concurrency: %d (smart default)
 == 自動同時実行数: %d（スマートデフォルト）
 
-Auto disable when time expires
-== 時間切れで自動無効化
-
 Auto enable in Gores mode
 == Gores モードで自動有効化
 
@@ -1096,9 +1093,6 @@ Auto-close chat after unfreeze
 
 Auto-create CSV on game end
 == ゲーム終了時に CSV を自動作成
-
-Auto-disable speedrun timer when time runs out
-== 時間切れ後にスピードラインタイマーを自動無効化
 
 Auto-fetch all players' skins for dummy rotation queue
 == 全マッププレイヤーのスキンを自動取得しダミーローテーションキューとして使用
@@ -3908,9 +3902,6 @@ Enable sound when rendering video
 Enable spectator cursor (if available)
 == 観戦カーソルを有効にする（利用可能な場合）
 
-Enable speedrun timer
-== スピードランのタイマーを有効にする
-
 Enable Spotify lyric integration
 == Spotify 歌詞統合を有効化
 
@@ -4426,9 +4417,6 @@ Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 
 Flip:
 == 反転：
-
-Focus mode
-== フォーカスモード
 
 Folder
 == フォルダ
@@ -5245,9 +5233,6 @@ Horizontal position
 
 Hostname of DNSBL provider for IP verification
 == IP 検証用 DNSBL プロバイダーのホスト名
-
-Hours
-== 時間
 
 Hover for tooltip
 == ホバーでツールチップ
@@ -6377,6 +6362,9 @@ Map upload endpoint
 Map upload endpoint (empty disables map upload)
 == マップアップロードのエンドポイント（空欄で無効）
 
+Map upload endpoint must use HTTP or HTTPS
+== マップアップロード先には HTTP または HTTPS を使用してください
+
 Map upload in progress...
 == マップをアップロード中...
 
@@ -6629,9 +6617,6 @@ Microphone volume
 Microphone volume (percent)
 == マイク音量（パーセント）
 
-Milliseconds
-== ミリ秒
-
 Milliseconds to apply quick input early
 == クイック入力を早めるミリ秒数
 
@@ -6691,9 +6676,6 @@ Minimum time between map votes (in seconds)
 
 Minimum width for name column in server browser
 == サーバーブラウザの名前列の最小幅
-
-Minutes
-== 分
 
 Minutes on server before a player can call a map change vote (0 = disabled)
 == プレイヤーがマップ変更投票を呼び出せるまでのサーバー滞在時間（分）（0 = 無効）
@@ -8456,6 +8438,9 @@ q = Connection quality
 Qm
 == Qm
 
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
+== Qm 拡張レンダリング：0=オフ（純粋な Vulkan）、1=自動フォールバック、2=強制オン
+
 Qm UI custom icon color
 == Qm UI アイコンのカスタム色
 
@@ -9694,9 +9679,6 @@ Sec-WebSocket-Protocol sent during the realtime handshake
 
 Secondary
 == セカンダリ
-
-Seconds
-== 秒
 
 Seconds to wait before reconnecting (0=off, when server is full)
 == 再接続までの待機秒数（サーバー満員時、0 = オフ）
@@ -11318,27 +11300,6 @@ Speed up the demo
 Speed:
 == 速度：
 
-Speedrun countdown timer
-== スピードランのカウントダウンタイマー
-
-Speedrun timer
-== スピードラインタイマー
-
-Speedrun timer hours
-== スピードラインタイマーの時
-
-Speedrun timer milliseconds
-== スピードラインタイマーのミリ秒
-
-Speedrun timer minutes
-== スピードラインタイマーの分
-
-Speedrun timer seconds
-== スピードラインタイマーの秒
-
-Speedrun timer time (MM:SS, legacy)
-== スピードラインタイマーの時間（MMSS 形式、旧バージョン互換）
-
 Sphere
 == 球体
 
@@ -12212,9 +12173,6 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
 == リモートコンソール認証失敗時の BAN 時間。0 はキックのみ使用
 
-TIME EXPIRED!
-== 時間切れ！
-
 Time in seconds before economy authentication timeout.
 == エコノミー認証のタイムアウトまでの時間（秒）
 
@@ -12932,6 +12890,9 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 == 敵リストを使用してプレイヤーインジケーターを駆動
 
+Use Gaussian blur pipeline when enhanced rendering is active
+== 拡張レンダリング有効時にガウスぼかしパイプラインを使用
+
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 == 高帯域モードを使用（サーバー帯域を 2 倍、LAN のみ）
 
@@ -12943,6 +12904,9 @@ Use large emote
 
 Use mouse sensitivity when dynamic camera is on
 == 動的カメラオン時にマウス感度を使用
+
+Use MSDF icon pipeline when enhanced rendering is active
+== 拡張レンダリング有効時に MSDF アイコンパイプラインを使用
 
 Use multi-char replacement based on word length
 == 単語の長さに基づいて複数文字置換を使用
@@ -12976,6 +12940,9 @@ Use original style for Dynamic Island
 
 Use pre-input to predict other players for more accurate input prediction
 == プリ入力を使用して他のプレイヤーを予測し、より正確な入力予測を実現
+
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
+== 拡張レンダリング有効時に Dynamic Island と角丸矩形で SDF パイプラインを使用
 
 Use skin color for frozen Tee's feet
 == フリーズ Tee の足にもスキン色を使用

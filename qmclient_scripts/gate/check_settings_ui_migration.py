@@ -45,7 +45,6 @@ PAGE_STABLE_IDS = {
 	"qmclient_hud": (
 		"qm:coords",
 		"qm:player_stats",
-		"qm:speedrun_timer",
 		"qm:debug_graph",
 		"qm:debug_mode",
 		"qm:input_overlay",
@@ -314,7 +313,7 @@ _DEFAULT_SOURCE = Path("src/game/client/components/menus_settings.cpp")
 _REGISTRY_SOURCE = Path("src/game/client/QmUi/QmCardRegistry.cpp")
 _NAVIGATION_SOURCE = Path("src/game/client/components/menus.cpp")
 # 卡片生产的归属：页面声明「这一页有哪些卡片」，具体生产在全局卡片目录的分类模块里（N3）。
-_CATALOGUE_SOURCE = Path("src/game/client/QmUi/cards/QmCardCatalog.cpp")
+_CATALOGUE_SOURCE = Path("src/game/client/QmUi/cards/QmCardCatalogIds.cpp")
 PAGE_CATALOGUE_LIST = {
 	"qmclient_hud": "HudCardStableIds",
 	"qmclient_function": "FunctionCardStableIds",

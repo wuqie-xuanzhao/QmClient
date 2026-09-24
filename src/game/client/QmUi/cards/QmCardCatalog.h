@@ -138,11 +138,10 @@ namespace qm_card_catalog
 		static void RenderQmHudBindStatusContent(CMenus *pMenus, CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 		static bool HandleQmHudCheckboxInput(CMenus *pMenus, CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, int *pValue);
 		static bool ToggleQmHudCountdownLocation(CMenus *pMenus, CUIRect &Content, float LineHeight, float LineSpacing, const void *pId, int *pValue);
-		// 本地专属卡片的渲染入口（远程目录不含这三张：禅模式 / 单机分割 / 速通计时器）。
-		// 这三张卡在本地是既有能力，吸收远程目录时必须一并模块化，否则切换 BuildCards 后会从 UI 消失。
+		// 本地专属卡片的渲染入口（远程目录不含这两张：禅模式 / 单机分割）。
+		// 这两张卡在本地是既有能力，吸收远程目录时必须一并模块化，否则切换 BuildCards 后会从 UI 消失。
 		static void RenderQmVisualFocusModeContent(CMenus *pMenus, CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float ColumnGap, float LabelWidth);
 		static void RenderQmFunctionSoloSplitContent(CMenus *pMenus, CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
-		static void RenderQmHudSpeedrunTimerContent(CMenus *pMenus, CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly);
 		// CComponent 的保护成员（菜单本身是组件）：卡片模块经桥接取用，不直接调用。
 		static bool DoButtonLogic(CMenus *pMenus, const void *pId, int Checked, const CUIRect *pRect, int Flags = 0);
 		// 设置页统一文案渲染（streamed 托管，卡片目录与分类页标签同源）。

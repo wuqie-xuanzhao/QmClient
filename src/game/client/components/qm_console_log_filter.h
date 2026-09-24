@@ -92,8 +92,41 @@ inline bool QmExtractConsoleLogSystem(const char *pLine, size_t Length, char *pB
 		}
 		++pIt;
 	}
+	// 截断到冒号前时取不到 ": "，但行里仍有时间戳冒号：取最后一个空白分隔片段
+	// 作为不完整的 system 名，保证限长解析不会整行丢弃。
 	if(pColon == nullptr)
-		return false;
+	{
+		bool HasColon = false;
+		for(const char *pScan = pLine; pScan + 1 < pEnd; ++pScan)
+		{
+			if(pScan[0] == ':')
+			{
+				HasColon = true;
+				break;
+			}
+		}
+		if(!HasColon)
+			return false;
+		const char *pTokenStart = pLine;
+		const char *pTokenIt = pEnd;
+		while(pTokenIt > pLine && pTokenIt[-1] == ' ')
+			--pTokenIt;
+		pColon = pTokenIt;
+		while(pTokenStart < pTokenIt && pTokenStart[0] == ' ')
+			++pTokenStart;
+		const char *pLastSpace = pTokenStart;
+		for(const char *pScan = pTokenStart; pScan < pTokenIt; ++pScan)
+		{
+			if(pScan[0] == ' ')
+				pLastSpace = pScan + 1;
+		}
+		if(pLastSpace >= pTokenIt)
+			return false;
+		const size_t NameLength = (size_t)(pTokenIt - pLastSpace);
+		const size_t CopyLength = NameLength + 1 < BufSize ? NameLength + 1 : BufSize;
+		str_copy(pBuf, pLastSpace, CopyLength);
+		return pBuf[0] != '\0';
+	}
 
 	const char *pNameStart = pColon;
 	while(pNameStart > pLine && pNameStart[-1] != ' ')

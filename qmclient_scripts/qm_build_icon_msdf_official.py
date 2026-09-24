@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the pinned upstream msdf-atlas-gen tool for offline atlas baking."""
+"""Build the pinned upstream msdf-atlas-gen tool for offline icon MTSDF baking."""
 
 from __future__ import annotations
 

@@ -9,7 +9,7 @@ duotone 的双层编码来自字体本身：偶数码点是 primary 层，奇数
 secondary 层。RGB 放 primary 的 MSDF，Alpha 放 secondary 的真 SDF，
 manifest 声明 secondary_mask: alpha —— 与着色器契约保持不变。
 
-用法（官方工具构建见 qm_nameplate_msdf_official_build.py；需 freetype/png/zlib DLL 在 PATH）：
+用法（官方工具构建见 qm_build_icon_msdf_official.py；需 freetype/png/zlib DLL 在 PATH）：
   py -3 qmclient_scripts/qm_build_icon_msdf_font.py \
     --tool cmake-build-official/bin/Release/msdf-atlas-gen.exe \
     --fonts-dir data/qmclient/fonts/Phosphor \
@@ -81,8 +81,8 @@ def write_charset(path: Path, codepoints: list[int]) -> None:
 
 
 def run_official(tool: Path, font: Path, charset: Path, json_out: Path, image_out: Path, page_size: int) -> tuple[dict, Path]:
-    """调用官方工具（经 nameplate 适配器），返回 (页面 manifest, 页面 PNG 路径)。"""
-    adapter = Path(__file__).with_name("qm_nameplate_msdf_official.py")
+    """通过唯一的图标 MTSDF 适配器调用官方工具，返回页面 manifest 和 PNG。"""
+    adapter = Path(__file__).with_name("qm_icon_msdf_official.py")
     subprocess.run([
         sys.executable, str(adapter), "--tool", str(tool), "--font", str(font),
         "--charset", str(charset), "--output", str(json_out), "--image", str(image_out),
@@ -308,5 +308,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
 

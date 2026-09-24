@@ -978,7 +978,8 @@ class CGraphics_Threaded : public IEngineGraphics
 	};
 
 	CCommandBuffer::SState m_State;
-	IGraphicsBackend *m_pBackend;
+	// 必须先置空：Init() 的重复初始化分支会用 nullptr 判断，未初始化垃圾指针会直接虚调用崩溃。
+	IGraphicsBackend *m_pBackend = nullptr;
 	bool m_GLTileBufferingEnabled;
 	bool m_GLQuadBufferingEnabled;
 	bool m_GLTextBufferingEnabled;

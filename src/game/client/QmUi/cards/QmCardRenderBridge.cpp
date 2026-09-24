@@ -76,11 +76,6 @@ void qm_card_catalog::QmCardRenderHook::RenderQmFunctionSoloSplitContent(CMenus 
 	pMenus->RenderQmFunctionSoloSplitContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly);
 }
 
-void qm_card_catalog::QmCardRenderHook::RenderQmHudSpeedrunTimerContent(CMenus *pMenus, CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth, bool PrewarmOnly)
-{
-	pMenus->RenderQmHudSpeedrunTimerContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth, PrewarmOnly);
-}
-
 void qm_card_catalog::QmCardRenderHook::RenderQmFunctionKeyBindsContent(CMenus *pMenus, CUIRect &Content, float LineHeight, float BodySize, float LineSpacing, float LabelWidth)
 {
 	pMenus->RenderQmFunctionKeyBindsContent(Content, LineHeight, BodySize, LineSpacing, LabelWidth);

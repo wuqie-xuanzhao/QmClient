@@ -260,6 +260,8 @@ int fs_chdir(const char *path)
 
 char *fs_getcwd(char *buffer, int buffer_size)
 {
+	if(buffer == nullptr || buffer_size <= 0)
+		return nullptr;
 #if defined(CONF_FAMILY_WINDOWS)
 	const DWORD size_needed = GetCurrentDirectoryW(0, nullptr);
 	std::wstring wide_current_dir(size_needed, L'0');

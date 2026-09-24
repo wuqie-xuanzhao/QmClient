@@ -231,6 +231,7 @@ CGraphics_Threaded::CGraphics_Threaded()
 	m_pCommandBuffer = nullptr;
 	m_apCommandBuffers[0] = nullptr;
 	m_apCommandBuffers[1] = nullptr;
+	m_pBackend = nullptr;
 
 	m_NumVertices = 0;
 

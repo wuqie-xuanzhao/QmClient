@@ -760,8 +760,7 @@ static bool IsValidQmClientPlaytimeId(const char *pClientId)
 
 void CQmClient::OnInit()
 {
-	if(str_comp(g_Config.m_QmWebSocketUrl, "wss://qmclient.icu/ws") == 0 &&
-		str_comp(g_Config.m_QmRealtimeWebsocketUrl, "wss://qmclient.icu/ws") != 0)
+	if(g_Config.m_QmWebSocketUrl[0] == '\0' && g_Config.m_QmRealtimeWebsocketUrl[0] != '\0')
 		str_copy(g_Config.m_QmWebSocketUrl, g_Config.m_QmRealtimeWebsocketUrl);
 	InitQmClientLifecycle();
 	LoadQmClientLocalModeStats();

@@ -995,9 +995,6 @@ Auto chat when dying in water
 Auto concurrency: %d (smart default)
 == Автоконкурентность: %d (умное значение по умолчанию)
 
-Auto disable when time expires
-== Автоотключение по истечении времени
-
 Auto enable in Gores mode
 == Автовключение в режиме Gores
 
@@ -1096,9 +1093,6 @@ Auto-close chat after unfreeze
 
 Auto-create CSV on game end
 == Автоматически создавать CSV при завершении игры
-
-Auto-disable speedrun timer when time runs out
-== Автоматически отключать таймер спидран-заезда по истечении времени
 
 Auto-fetch all players' skins for dummy rotation queue
 == Автоматически получать скины игроков на карте и использовать их для ротации дамми
@@ -3908,9 +3902,6 @@ Enable sound when rendering video
 Enable spectator cursor (if available)
 == Включить курсор наблюдателя (если доступен)
 
-Enable speedrun timer
-== Включить таймер спидран
-
 Enable Spotify lyric integration
 == Включить интеграцию текстов песен Spotify
 
@@ -4427,9 +4418,6 @@ Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 Flip:
 == Отразить:
 
-Focus mode
-== Режим фокуса
-
 Folder
 == Папка
 
@@ -4866,7 +4854,7 @@ Gores
 == Горы
 
 Gores actor
-== Горы актёр
+== Актёр Gores
 
 Gores auto weapon switch
 == Автосмена оружия Gores
@@ -5245,9 +5233,6 @@ Horizontal position
 
 Hostname of DNSBL provider for IP verification
 == Имя хоста провайдера DNSBL для проверки IP
-
-Hours
-== Часы
 
 Hover for tooltip
 == Наведите для подсказки
@@ -6377,6 +6362,9 @@ Map upload endpoint
 Map upload endpoint (empty disables map upload)
 == Конечная точка загрузки карт (пусто — загрузка отключена)
 
+Map upload endpoint must use HTTP or HTTPS
+== Для загрузки карт требуется адрес HTTP или HTTPS
+
 Map upload in progress...
 == Загрузка карты...
 
@@ -6629,9 +6617,6 @@ Microphone volume
 Microphone volume (percent)
 == Громкость микрофона (в процентах)
 
-Milliseconds
-== Миллисекунды
-
 Milliseconds to apply quick input early
 == Миллисекунды для раннего применения быстрого ввода
 
@@ -6691,9 +6676,6 @@ Minimum time between map votes (in seconds)
 
 Minimum width for name column in server browser
 == Минимальная ширина столбца имени в браузере серверов
-
-Minutes
-== Минуты
 
 Minutes on server before a player can call a map change vote (0 = disabled)
 == Минуты на сервере, прежде чем игрок сможет вызвать голосование за смену карты (0 = отключено)
@@ -8456,6 +8438,9 @@ q = Connection quality
 Qm
 == Qm
 
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
+== Расширенный рендеринг Qm: 0=выкл. (чистый Vulkan), 1=автооткат, 2=вкл. принудительно
+
 Qm UI custom icon color
 == Пользовательский цвет значков Qm UI
 
@@ -9694,9 +9679,6 @@ Sec-WebSocket-Protocol sent during the realtime handshake
 
 Secondary
 == Вторичная
-
-Seconds
-== Секунды
 
 Seconds to wait before reconnecting (0=off, when server is full)
 == Секунд ожидания перед переподключением (0 = выкл., когда сервер полон)
@@ -11318,27 +11300,6 @@ Speed up the demo
 Speed:
 == Скорость:
 
-Speedrun countdown timer
-== Таймер обратного отсчёта спидран
-
-Speedrun timer
-== Таймер спидранa
-
-Speedrun timer hours
-== Часы таймера спидран-забега
-
-Speedrun timer milliseconds
-== Миллисекунды таймера спидран-забега
-
-Speedrun timer minutes
-== Минуты таймера спидран-забега
-
-Speedrun timer seconds
-== Секунды таймера спидран-забега
-
-Speedrun timer time (MM:SS, legacy)
-== Время таймера спидран-забега (формат MMSS, совместимость со старыми версиями)
-
 Sphere
 == Сфера
 
@@ -12212,9 +12173,6 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
 == Время бана клиента при неудачной аутентификации удалённой консоли. 0 только кик
 
-TIME EXPIRED!
-== ВРЕМЯ ИСТЕКЛО!
-
 Time in seconds before economy authentication timeout.
 == Время в секундах до тайм-аута аутентификации экономики.
 
@@ -12932,6 +12890,9 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 == Использовать список врагов для управления индикаторами игроков
 
+Use Gaussian blur pipeline when enhanced rendering is active
+== Использовать конвейер гауссова размытия при включённом расширенном рендеринге
+
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 == Использовать режим высокой пропускной способности (удваивает пропускную способность сервера, только LAN)
 
@@ -12943,6 +12904,9 @@ Use large emote
 
 Use mouse sensitivity when dynamic camera is on
 == Использовать чувствительность мыши при включённой динамической камере
+
+Use MSDF icon pipeline when enhanced rendering is active
+== Использовать конвейер значков MSDF при включённом расширенном рендеринге
 
 Use multi-char replacement based on word length
 == Использовать замену несколькими символами в зависимости от длины слова
@@ -12976,6 +12940,9 @@ Use original style for Dynamic Island
 
 Use pre-input to predict other players for more accurate input prediction
 == Использовать предварительный ввод для прогнозирования других игроков для более точного прогнозирования ввода
+
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
+== Использовать конвейеры SDF для Dynamic Island и скруглённых прямоугольников при включённом расширенном рендеринге
 
 Use skin color for frozen Tee's feet
 == Использовать цвет скина для ног замороженного Tee

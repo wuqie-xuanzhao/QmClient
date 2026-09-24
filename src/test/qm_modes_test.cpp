@@ -986,25 +986,25 @@ namespace
 	};
 }
 
-TEST_F(CQmEmoteCommandsTest, ShotEmoteRegistersWithEmoteIntegerSyntaxForClientOnly)
+TEST_F(CQmEmoteCommandsTest, QmEmoteRegistersWithEmoteIntegerSyntaxForClientOnly)
 {
 	const auto *pEmote = m_pConsole->GetCommandInfo("emote", CFGFLAG_CLIENT, false);
-	const auto *pShotEmote = m_pConsole->GetCommandInfo("shot_emote", CFGFLAG_CLIENT, false);
+	const auto *pShotEmote = m_pConsole->GetCommandInfo("qm_emote", CFGFLAG_CLIENT, false);
 	ASSERT_NE(pEmote, nullptr);
 	ASSERT_NE(pShotEmote, nullptr);
 	EXPECT_STREQ(pShotEmote->Params(), pEmote->Params());
 	EXPECT_STREQ(pShotEmote->Params(), "i[emote-id]");
 	EXPECT_EQ(pShotEmote->Flags(), CFGFLAG_CLIENT);
-	EXPECT_EQ(m_pConsole->GetCommandInfo("shot_emote", CFGFLAG_CHAT, false), nullptr);
+	EXPECT_EQ(m_pConsole->GetCommandInfo("qm_emote", CFGFLAG_CHAT, false), nullptr);
 }
 
-TEST_F(CQmEmoteCommandsTest, ShotEmoteDispatchesValidIdsWithForceLaunch)
+TEST_F(CQmEmoteCommandsTest, QmEmoteDispatchesValidIdsWithForceLaunch)
 {
 	for(int Emoticon = 0; Emoticon < NUM_EMOTICONS; ++Emoticon)
 	{
 		SCOPED_TRACE(Emoticon);
 		m_Receiver.m_vRequests.clear();
-		const std::string Command = "shot_emote " + std::to_string(Emoticon);
+		const std::string Command = "qm_emote " + std::to_string(Emoticon);
 		m_pConsole->ExecuteLine(Command.c_str());
 		ASSERT_EQ(m_Receiver.m_vRequests.size(), 1u);
 		EXPECT_EQ(m_Receiver.m_vRequests[0].m_Emoticon, Emoticon);
@@ -1032,7 +1032,7 @@ TEST_F(CQmEmoteCommandsTest, BothCommandsShareParsingAndShotForceDoesNotPersist)
 	for(const SCase &Case : aCases)
 	{
 		SCOPED_TRACE(Case.m_pArguments);
-		for(const char *pName : {"emote", "shot_emote"})
+		for(const char *pName : {"emote", "qm_emote"})
 		{
 			SCOPED_TRACE(pName);
 			m_Receiver.m_vRequests.clear();
@@ -1043,12 +1043,12 @@ TEST_F(CQmEmoteCommandsTest, BothCommandsShareParsingAndShotForceDoesNotPersist)
 			if(Case.m_Dispatched)
 			{
 				EXPECT_EQ(m_Receiver.m_vRequests[0].m_Emoticon, Case.m_Emoticon);
-				EXPECT_EQ(m_Receiver.m_vRequests[0].m_ForceLaunch, std::string(pName) == "shot_emote");
+				EXPECT_EQ(m_Receiver.m_vRequests[0].m_ForceLaunch, std::string(pName) == "qm_emote");
 			}
 		}
 	}
 	m_Receiver.m_vRequests.clear();
-	m_pConsole->ExecuteLine("shot_emote 2; emote 3");
+	m_pConsole->ExecuteLine("qm_emote 2; emote 3");
 	ASSERT_EQ(m_Receiver.m_vRequests.size(), 2u);
 	EXPECT_EQ(m_Receiver.m_vRequests[0].m_Emoticon, 2);
 	EXPECT_TRUE(m_Receiver.m_vRequests[0].m_ForceLaunch);

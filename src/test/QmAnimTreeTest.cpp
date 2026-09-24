@@ -283,7 +283,7 @@ TEST(UiV2TreePresence, EnterStartsFromTransparentAndAnimatesToVisible)
 	Tree.EndFrame(Runtime);
 	EXPECT_EQ(Tree.NodeCount(), 1);
 
-	AdvanceFor(Runtime, 0.12f);
+	AdvanceFor(Runtime, 0.06f);
 	Tree.BeginFrame();
 	const float MidAlpha = Tree.ResolvePresenceAlpha(Runtime, NodeKey, ui_token::motion::HOVER_FADE);
 	EXPECT_GT(MidAlpha, 0.0f);

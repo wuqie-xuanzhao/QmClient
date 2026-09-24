@@ -71,6 +71,12 @@ MACRO_CONFIG_COL(QmSkinOutlineColor, qm_skin_outline_color, 0xFFFFFFFF, CFGFLAG_
 MACRO_CONFIG_INT(QmSkinOutlineWidth, qm_skin_outline_width, 2, 1, 6, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Generated skin outline width")
 MACRO_CONFIG_INT(QmSkinOutlineAlpha, qm_skin_outline_alpha, 100, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Generated skin outline opacity")
 
+// QmVulkan 扩展总开关：0=关（纯净 Vulkan + 几何/CPU 兜底），1=自动（失败/设备丢失回退），2=强制开
+MACRO_CONFIG_INT(QmEnhancedRendering, qm_enhanced_rendering, 1, 0, 2, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on")
+MACRO_CONFIG_INT(QmEnhancedSdf, qm_enhanced_sdf, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active")
+MACRO_CONFIG_INT(QmEnhancedBlur, qm_enhanced_blur, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use Gaussian blur pipeline when enhanced rendering is active")
+MACRO_CONFIG_INT(QmEnhancedMsdf, qm_enhanced_msdf, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Use MSDF icon pipeline when enhanced rendering is active")
+
 // Report / 举报
 MACRO_CONFIG_STR(QmReportEndpoint, qm_report_endpoint, 128, "http://124.222.146.111:8790", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Report service URL")
 MACRO_CONFIG_STR(QmReportAppId, qm_report_app_id, 128, "desktop", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Report service App ID")
@@ -278,8 +284,8 @@ MACRO_CONFIG_INT(QmVoiceEnable, qm_voice_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFL
 MACRO_CONFIG_INT(QmVoiceAgcEnable, qm_voice_agc_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatic gain control (0=off 1=on)")
 MACRO_CONFIG_INT(QmVoiceProtocolVersion, qm_voice_protocol_version, 3, 1, 255, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Voice protocol version")
 MACRO_CONFIG_STR(QmVoiceServer, qm_voice_server, 256, "wss://qmclient.icu/ws/voice", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Voice server URL (ws:// or wss://)")
-MACRO_CONFIG_STR(QmRealtimeWebsocketUrl, qm_realtime_websocket_url, 512, "wss://qmclient.icu/ws", CFGFLAG_CLIENT, "Legacy realtime WebSocket URL (migrated to qm_websocket_url)")
-MACRO_CONFIG_STR(QmWebSocketUrl, qm_websocket_url, 512, "wss://qmclient.icu/ws", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)")
+MACRO_CONFIG_STR(QmRealtimeWebsocketUrl, qm_realtime_websocket_url, 512, "", CFGFLAG_CLIENT, "Legacy realtime WebSocket URL (migrated to qm_websocket_url)")
+MACRO_CONFIG_STR(QmWebSocketUrl, qm_websocket_url, 512, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Dedicated WebSocket endpoint (empty uses wss://qmclient.icu/ws)")
 MACRO_CONFIG_STR(QmWebSocketProtocol, qm_websocket_protocol, 64, "qmclient-json", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Sec-WebSocket-Protocol sent during the realtime handshake")
 MACRO_CONFIG_INT(QmWebSocketHeartbeat, qm_websocket_heartbeat, 15, 0, 600, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Realtime channel heartbeat interval (seconds, 0 uses default)")
 MACRO_CONFIG_INT(QmWebSocketBackoffBaseMs, qm_websocket_backoff_base_ms, 1000, 100, 60000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Realtime channel reconnect backoff base (ms)")
@@ -597,15 +603,6 @@ MACRO_CONFIG_STR(QmQQMusicHookHelperPath, qm_qqmusic_hook_helper_path, 512, "", 
 // 共享同一套歌词展示开关(qm_lyrics / qm_lyrics_in_media_island)。
 MACRO_CONFIG_INT(QmSpotifyEnable, qm_spotify_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Enable Spotify lyric integration")
 MACRO_CONFIG_STR(QmSpotifySpDc, qm_spotify_sp_dc, 1024, "", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Spotify sp_dc cookie (from browser DevTools, long-lived)")
-
-// Speedrun Timer - 速通倒计时器
-MACRO_CONFIG_INT(QmSpeedrunTimer, qm_speedrun_timer, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun countdown timer")
-MACRO_CONFIG_INT(QmSpeedrunTimerTime, qm_speedrun_timer_time, 0, 0, 9999, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun timer time (MM:SS, legacy)")
-MACRO_CONFIG_INT(QmSpeedrunTimerHours, qm_speedrun_timer_hours, 0, 0, 99, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun timer hours")
-MACRO_CONFIG_INT(QmSpeedrunTimerMinutes, qm_speedrun_timer_minutes, 0, 0, 59, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun timer minutes")
-MACRO_CONFIG_INT(QmSpeedrunTimerSeconds, qm_speedrun_timer_seconds, 0, 0, 59, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun timer seconds")
-MACRO_CONFIG_INT(QmSpeedrunTimerMilliseconds, qm_speedrun_timer_milliseconds, 0, 0, 999, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Speedrun timer milliseconds")
-MACRO_CONFIG_INT(QmSpeedrunTimerAutoDisable, qm_speedrun_timer_auto_disable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Auto-disable speedrun timer when time runs out")
 
 // Translate - 翻译模块
 MACRO_CONFIG_STR(QmTranslateBackend, qm_translate_backend, 32, "llm", CFGFLAG_CLIENT | CFGFLAG_SAVE, "Translation backend (llm/tencentcloud/libretranslate/ftapi)")

@@ -304,13 +304,17 @@ float QmTitleShimmerFactor(const SQmTitleShimmer &Shimmer, const int CharIndex, 
 	const float TimePhase = TimeSec * Shimmer.m_Speed / 100.0f;
 	const float Phase = std::fmod(CharPhase + TimePhase, 1.0f);
 	// 相位回绕时高光窗留在负数侧，否则最后一个字符会突然整片变亮。
+	// DutyCycle 表示高光占行宽比例，窗宽即 Duty，半宽为 Duty/2。
 	const float Duty = std::clamp(Shimmer.m_DutyCycle, 0.01f, 0.99f);
+	const float HalfDuty = Duty * 0.5f;
 	const float Distance = Phase < 0.5f ? Phase : Phase - 1.0f;
-	if(std::fabs(Distance) > Duty)
+	if(std::fabs(Distance) > HalfDuty)
 		return 0.0f;
 
 	// 余弦窗代替线性窗：起止平滑，观感是镜面掠过而不是一条硬边扫过。
-	return std::cos(Distance / Duty * (float)pi * 0.5f) * Shimmer.m_Amount;
+	// 结果夹到 [0, Amount]，避免 cos(±π/2) 浮点噪声给出极小负值。
+	const float Window = std::cos(Distance / HalfDuty * (float)pi * 0.5f) * Shimmer.m_Amount;
+	return std::clamp(Window, 0.0f, Shimmer.m_Amount);
 }
 
 int QmTitleShimmerUtf8CharCount(const char *pText)

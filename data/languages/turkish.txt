@@ -995,9 +995,6 @@ Auto chat when dying in water
 Auto concurrency: %d (smart default)
 == Otomatik eşzamanlılık: %d (akıllı varsayılan)
 
-Auto disable when time expires
-== Süre dolduğunda otomatik devre dışı bırak
-
 Auto enable in Gores mode
 == Gores modunda otomatik etkinleştir
 
@@ -1096,9 +1093,6 @@ Auto-close chat after unfreeze
 
 Auto-create CSV on game end
 == Oyun sonunda otomatik CSV oluştur
-
-Auto-disable speedrun timer when time runs out
-== Süre dolduğunda hızlı geçiş zamanlayıcısını otomatik devre dışı bırak
 
 Auto-fetch all players' skins for dummy rotation queue
 == Haritadaki Tüm Oyuncuların Skinlerini Otomatik Al ve Dummy Döngü Kuyruğu Olarak Kullan
@@ -3908,9 +3902,6 @@ Enable sound when rendering video
 Enable spectator cursor (if available)
 == Seyirci imlecini etkinleştir (varsa)
 
-Enable speedrun timer
-== Hızlı koşu zamanlayıcısını etkinleştir
-
 Enable Spotify lyric integration
 == Spotify şarkı sözü entegrasyonunu etkinleştir
 
@@ -4426,9 +4417,6 @@ Fixed-size scoreboard rows with mouse wheel scrolling for crowded servers
 
 Flip:
 == Çevir:
-
-Focus mode
-== Odak modu
 
 Folder
 == Klasör
@@ -5245,9 +5233,6 @@ Horizontal position
 
 Hostname of DNSBL provider for IP verification
 == IP doğrulaması için DNSBL sağlayıcısının ana bilgisayar adı
-
-Hours
-== Saat
 
 Hover for tooltip
 == İpucu için üzerine gel
@@ -6377,6 +6362,9 @@ Map upload endpoint
 Map upload endpoint (empty disables map upload)
 == Harita yükleme uç noktası (boşsa yükleme kapalı)
 
+Map upload endpoint must use HTTP or HTTPS
+== Harita yükleme uç noktası HTTP veya HTTPS kullanmalıdır
+
 Map upload in progress...
 == Harita yükleniyor...
 
@@ -6629,9 +6617,6 @@ Microphone volume
 Microphone volume (percent)
 == Mikrofon ses seviyesi (yüzde)
 
-Milliseconds
-== Milisaniye
-
 Milliseconds to apply quick input early
 == Hızlı girişi erken uygulamak için milisaniye
 
@@ -6691,9 +6676,6 @@ Minimum time between map votes (in seconds)
 
 Minimum width for name column in server browser
 == Sunucu tarayıcısında isim sütunu için minimum genişlik
-
-Minutes
-== Dakika
 
 Minutes on server before a player can call a map change vote (0 = disabled)
 == Bir oyuncunun harita değiştirme oylaması çağırmadan önce sunucuda geçirmesi gereken dakika (0 = devre dışı)
@@ -8456,6 +8438,9 @@ q = Connection quality
 Qm
 == Qm
 
+Qm enhanced rendering: 0=Off pure Vulkan, 1=Auto fallback, 2=Force on
+== Qm gelişmiş işleme: 0=kapalı (saf Vulkan), 1=otomatik geri dönüş, 2=zorla açık
+
 Qm UI custom icon color
 == Qm arayüzü simgesi özel rengi
 
@@ -9694,9 +9679,6 @@ Sec-WebSocket-Protocol sent during the realtime handshake
 
 Secondary
 == İkincil
-
-Seconds
-== Saniye
 
 Seconds to wait before reconnecting (0=off, when server is full)
 == Yeniden bağlanmadan önce beklenecek saniye (0=kapalı, sunucu dolu olduğunda)
@@ -11318,27 +11300,6 @@ Speed up the demo
 Speed:
 == Hız:
 
-Speedrun countdown timer
-== Hızlı koşu geri sayım zamanlayıcısı
-
-Speedrun timer
-== Hızlı koşu zamanlayıcısı
-
-Speedrun timer hours
-== Hızlı geçiş sayacı saat
-
-Speedrun timer milliseconds
-== Hızlı geçiş sayacı milisaniye
-
-Speedrun timer minutes
-== Hızlı geçiş sayacı dakika
-
-Speedrun timer seconds
-== Hızlı geçiş sayacı saniye
-
-Speedrun timer time (MM:SS, legacy)
-== Hızlı geçiş sayacı süresi (MMSS formatı, eski sürümle uyumlu)
-
 Sphere
 == Küre
 
@@ -12212,9 +12173,6 @@ Time client is banned if economy authentication fails. 0 just closes connection.
 Time client is banned if remote console auth fails. 0 to only use kick
 == Uzaktan konsol kimlik doğrulaması başarısız olursa istemcinin yasaklanma süresi. 0 sadece atmayı kullanır
 
-TIME EXPIRED!
-== SÜRE DOLDU!
-
 Time in seconds before economy authentication timeout.
 == Ekonomi kimlik doğrulaması zaman aşımından önceki süre (saniye).
 
@@ -12932,6 +12890,9 @@ Use enemy color instead of frozen color
 Use enemy list to drive player indicators
 == Oyuncu göstergelerini yönlendirmek için düşman listesini kullan
 
+Use Gaussian blur pipeline when enhanced rendering is active
+== Gelişmiş işleme etkin olduğunda Gauss bulanıklığı işlem hattını kullan
+
 Use high bandwidth mode (doubles server bandwidth, LAN only)
 == Yüksek bant genişliği modunu kullan (sunucu bant genişliğini iki katına çıkarır, yalnızca LAN)
 
@@ -12943,6 +12904,9 @@ Use large emote
 
 Use mouse sensitivity when dynamic camera is on
 == Dinamik kamera açıkken fare hassasiyetini kullan
+
+Use MSDF icon pipeline when enhanced rendering is active
+== Gelişmiş işleme etkin olduğunda MSDF simge işlem hattını kullan
 
 Use multi-char replacement based on word length
 == Kelime uzunluğuna göre çok karakterli değiştirme kullan
@@ -12976,6 +12940,9 @@ Use original style for Dynamic Island
 
 Use pre-input to predict other players for more accurate input prediction
 == Daha doğru girdi tahmini için diğer oyuncuları tahmin etmek üzere ön girdi kullan
+
+Use SDF pipelines for Dynamic Island / rounded rects when enhanced rendering is active
+== Gelişmiş işleme etkin olduğunda Dynamic Island ve yuvarlatılmış dikdörtgenler için SDF işlem hatlarını kullan
 
 Use skin color for frozen Tee's feet
 == Donmuş Tee'nin ayakları için skin rengi kullan

@@ -225,10 +225,10 @@ if(TARGET_OS STREQUAL "windows" AND TARGET_BITS STREQUAL "64")
   target_sources(qm-nmt-helper PRIVATE
     src/qm-nmt-hook/qm_netease_bootstrap.cpp
     src/qm-nmt-hook/qm_netease_cdp.cpp
+    src/qm-nmt-hook/qm_netease_cdp_client.cpp
     src/qm-music-hook/qm_music_source.h
     src/qm-music-hook/qm_kugou_protocol.h
     src/qm-music-hook/qm_qqmusic_protocol.h
-    src/qm-nmt-hook/qm_netease_cdp_client.cpp
     src/qm-nmt-hook/qm_netease_frontend_bridge.cpp
     src/game/client/components/qmclient/netease/netease_lyric_parser.cpp
     src/game/client/components/qmclient/netease/netease_lyric_state.cpp
@@ -2563,6 +2563,7 @@ add_custom_target(qm-icon-msdf-atlas
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   DEPENDS
     qmclient_scripts/qm_build_icon_msdf_font.py
+    qmclient_scripts/qm_icon_msdf_official.py
     datasrc/qm_icons/phosphor.codepoints
     data/qmclient/fonts/Phosphor/Phosphor-Regular.ttf
     data/qmclient/fonts/Phosphor/Phosphor-Light.ttf
@@ -2992,6 +2993,8 @@ if(CLIENT)
     backend/opengles/opengles_sl_program.cpp
     backend/vulkan/backend_vulkan.cpp
     backend/vulkan/backend_vulkan.h
+    backend/vulkan/backend_vulkan_qm_ext.cpp
+    backend/vulkan/backend_vulkan_qm_ext.h
     backend_egl.cpp
     backend_egl.h
     backend_sdl.cpp
@@ -3108,6 +3111,7 @@ if(CLIENT)
     QmUi/QmCardRegistry.h
     QmUi/cards/QmCardCatalog.cpp
     QmUi/cards/QmCardCatalog.h
+    QmUi/cards/QmCardCatalogIds.cpp
     QmUi/cards/QmCardCatalogFunction.cpp
     QmUi/cards/QmCardCatalogFunctionMetrics.h
     QmUi/cards/QmCardCatalogHud.cpp
@@ -4256,7 +4260,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_perf_diagnostics_test.cpp
     qm_music_hook_protocol_test.cpp
     QmUiTokensTest.cpp
-    qm_ui_presentation_contract_test.cpp
     qm_card_order_model_test.cpp
     qm_card_order_model_contract_test.cpp
     qm_card_registry_test.cpp
@@ -4337,6 +4340,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_jump_hint_utils_test.cpp
     qm_hud_hook_countdown_test.cpp
     qm_hud_media_island_logic_test.cpp
+    qm_vulkan_enhanced_test.cpp
     qm_hud_notifications_catalog_test.cpp
     qm_hud_notifications_formatting_test.cpp
     qm_hud_notifications_state_test.cpp
@@ -4400,7 +4404,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     netease_lyric_timeline_test.cpp
     netease_lyric_state_test.cpp
     netease_shared_memory_test.cpp
-    qm_netease_cdp_test.cpp
     qm_netease_hook_protocol_test.cpp
     qm_music_app_watcher_test.cpp
     qm_qqmusic_protocol_test.cpp
@@ -4428,7 +4431,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     qm_prepared_media_art_test.cpp
     websocket_client_test.cpp
     qm_map_upload_test.cpp
-    qm_tee_skin_apply_test.cpp
     qm_title_style_test.cpp
     qm_skin_outline_test.cpp
     qm_scoreboard_skin_test.cpp
@@ -4554,6 +4556,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     voice_spatial_utils_test.cpp
   )
   set(TESTS_EXTRA
+    src/engine/client/backend/vulkan/backend_vulkan_qm_ext.cpp
     src/engine/client/backend/graphics_backend_contract.cpp
     src/engine/client/backend/metal/metal_frame_state.cpp
     src/engine/client/backend/metal/metal_render_target_state.cpp
@@ -4584,6 +4587,7 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/QmUi/QmScroll.cpp
     src/game/client/QmUi/QmTree.cpp
     src/game/client/QmUi/QmCardRegistry.cpp
+    src/game/client/QmUi/cards/QmCardCatalogIds.cpp
     src/game/client/QmUi/SettingsCardDeckLogic.cpp
     src/game/client/QmUi/QmModuleLayoutAdapter.cpp
     src/game/client/QmUi/SettingsCardGeometry.cpp
@@ -4613,12 +4617,9 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
     src/game/client/components/qmclient/netease/netease_shared_memory.cpp
     src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
-    src/qm-nmt-hook/qm_netease_bootstrap.cpp
-    src/qm-nmt-hook/qm_netease_cdp.cpp
     src/qm-music-hook/qm_music_source.h
     src/qm-music-hook/qm_kugou_protocol.h
     src/qm-music-hook/qm_qqmusic_protocol.h
-    src/qm-nmt-hook/qm_netease_cdp_client.cpp
     src/game/client/components/qmclient/modes.cpp
     src/game/client/components/qmclient/settings_resource_preview.cpp
     src/game/client/components/qmclient/tee_hue_cycle.cpp
@@ -4649,16 +4650,21 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
     src/engine/client/serverbrowser_ping_cache.h
     src/engine/client/sqlite.cpp
   )
+  # Windows 专用：bootstrap 无跨平台实现（winsock2/CreateFileW），仅 Windows 编入 testrunner
+  if(TARGET_OS STREQUAL "windows")
+    list(APPEND TESTS src/test/qm_netease_cdp_test.cpp)
+    list(APPEND TESTS_EXTRA
+      src/qm-nmt-hook/qm_netease_bootstrap.cpp
+      src/qm-nmt-hook/qm_netease_cdp.cpp
+      src/qm-nmt-hook/qm_netease_cdp_client.cpp
+    )
+  endif()
 
   if(METAL)
     list(APPEND TESTS_EXTRA
       src/engine/client/backend/backend_base.cpp
       src/engine/client/backend/metal/backend_metal.mm
     )
-  endif()
-
-  if(TARGET_OS STREQUAL "windows")
-    list(APPEND TESTS_EXTRA src/qm-nmt-hook/qm_netease_bootstrap.cpp)
   endif()
 
   set(TARGET_TESTRUNNER testrunner)
@@ -4719,7 +4725,6 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
       src/test/netease_lyric_state_test.cpp
       src/test/netease_lyric_timeline_test.cpp
       src/test/netease_shared_memory_test.cpp
-      src/test/qm_netease_cdp_test.cpp
       src/test/qm_netease_hook_protocol_test.cpp
       src/test/qm_spotify_crypto_test.cpp
       src/test/qm_spotify_token_test.cpp
@@ -4743,18 +4748,24 @@ if((GTEST_FOUND OR DOWNLOAD_GTEST) AND SERVER)
       src/game/client/components/qmclient/netease/netease_lyric_timeline.cpp
       src/game/client/components/qmclient/netease/netease_shared_memory.cpp
       src/game/client/components/qmclient/netease_hook/qm_netease_hook_protocol.cpp
-      src/qm-nmt-hook/qm_netease_bootstrap.cpp
       src/qm-nmt-hook/qm_netease_cdp.cpp
       src/qm-music-hook/qm_music_source.h
       src/qm-music-hook/qm_kugou_protocol.h
       src/qm-music-hook/qm_qqmusic_protocol.h
-      src/qm-nmt-hook/qm_netease_cdp_client.cpp
       src/engine/external/json-parser/json.c
     )
     target_include_directories(qm-nmt-tests PRIVATE src)
+    if(MSVC)
+      target_compile_options(qm-nmt-tests PRIVATE /utf-8)
+    endif()
     # 使用 plain 签名，与文件内 target_link_libraries 循环（无 keyword）保持一致
     target_link_libraries(qm-nmt-tests ${QM_NMT_GTEST_MAIN_TARGET})
     if(TARGET_OS STREQUAL "windows")
+      target_sources(qm-nmt-tests PRIVATE
+        src/test/qm_netease_cdp_test.cpp
+        src/qm-nmt-hook/qm_netease_bootstrap.cpp
+        src/qm-nmt-hook/qm_netease_cdp_client.cpp
+      )
       target_compile_definitions(qm-nmt-tests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
       target_link_libraries(qm-nmt-tests bcrypt winhttp ws2_32)
     endif()

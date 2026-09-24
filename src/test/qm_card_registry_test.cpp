@@ -1004,7 +1004,6 @@ TEST(QmCardRegistry, QmCardsPreserveLegacyModuleSearchKeywords)
 		{"qm:mini_features", "候选栏"},
 		{"qm:friend_notify", "自动刷新"},
 		{"qm:block_words", "屏蔽词"},
-		{"qm:speedrun_timer", "速通"},
 		{"qm:voice", "按住说话"},
 		{"qm:background_3d", "月牙"},
 		{"qm:chat_bubble", "消息气泡"},

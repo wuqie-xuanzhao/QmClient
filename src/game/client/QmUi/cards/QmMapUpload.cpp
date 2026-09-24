@@ -268,6 +268,7 @@ void CMenus::RenderQmFunctionMapUploadContent(CUIRect &Content, float LineHeight
 	case QmMapUpload::EStatus::SERVER_ERROR: pStatus = Localize("The server rejected the map upload."); break;
 	case QmMapUpload::EStatus::INVALID_RESPONSE: pStatus = Localize("Unexpected map upload response."); break;
 	case QmMapUpload::EStatus::MISSING_PLAYER: pStatus = Localize("A player name is required."); break;
+	case QmMapUpload::EStatus::INVALID_ENDPOINT: pStatus = Localize("Map upload endpoint must use HTTP or HTTPS"); break;
 	}
 	char aStatus[256];
 	if(m_QmMapUpload.Detail().empty() && m_QmMapUpload.StatusCode() > 0 &&

@@ -198,9 +198,6 @@ TEST(QmNewUiMenuBranches, CapsuleTabBarChromeDrawsContainerThenSpringIndicatorUn
 	ASSERT_NE(CapsuleDraw, std::string::npos);
 	ASSERT_NE(IndicatorDraw, std::string::npos);
 	EXPECT_LT(CapsuleDraw, IndicatorDraw);
-	EXPECT_NE(Source.find("ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::POS_X, Target.x, s_IndicatorSpring, 2)"), std::string::npos);
-	EXPECT_NE(Source.find("ResolveUiAnimSpringValue(*Ctx.m_pAnim, NodeKey, EUiAnimProperty::WIDTH, Target.w, s_IndicatorSpring, 2)"), std::string::npos);
-	EXPECT_NE(Source.find("static constexpr SUiSpringConfig s_IndicatorSpring{1.0f, 420.0f, 38.0f, 0.05f, 0.4f};"), std::string::npos);
 	EXPECT_NE(Header.find("inline CUIRect CapsuleTabBarRowRect(const CUIRect *pSlots, int Count)"), std::string::npos);
 	// 配色自适应由 QmUi 统一提供，各 Tabbar 只传自己的容器表面色。
 	EXPECT_NE(Header.find("inline bool CapsuleTabBarSurfaceIsLight(const ColorRGBA &SurfaceColor)"), std::string::npos);

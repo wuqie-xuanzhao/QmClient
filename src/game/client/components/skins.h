@@ -354,6 +354,9 @@ public:
 		const void *ListItemId() const { return &m_ListItemId; }
 		const void *FavoriteButtonId() const { return &m_FavoriteButtonId; }
 		const void *ErrorTooltipId() const { return &m_ErrorTooltipId; }
+		// 右键双击的目标角色判定需要独立状态：列表框左键双击用的是 ListItemId，
+		// 共用会让一次左键单击把右键双击状态提前置位。
+		const void *RightDoubleClickId() const { return &m_RightDoubleClickId; }
 
 		/**
 		 * Request that this skin should be loaded and should stay loaded.
@@ -371,6 +374,7 @@ public:
 		char m_ListItemId;
 		char m_FavoriteButtonId;
 		char m_ErrorTooltipId;
+		char m_RightDoubleClickId;
 	};
 
 	class CSkinList

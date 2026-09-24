@@ -38,7 +38,6 @@ namespace qm_module
 		CollisionHitbox,
 		FavoriteMaps,
 		HJAssist,
-		SpeedrunTimer,
 		DebugGraph,
 		InputOverlay,
 		HudNotifications,
@@ -73,7 +72,7 @@ namespace qm_module
 		const char *m_pKey;
 	};
 
-	constexpr size_t QmModuleCount = 42;
+	constexpr size_t QmModuleCount = 41;
 } // namespace qm_module
 
 #endif // GAME_CLIENT_QMUI_QMMODULETYPES_H

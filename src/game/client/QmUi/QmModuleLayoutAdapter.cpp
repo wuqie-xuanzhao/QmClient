@@ -113,7 +113,6 @@ namespace qm_module
 		case EQmModuleId::CollisionHitbox: return "qm:collision_hitbox";
 		case EQmModuleId::FavoriteMaps: return "qm:favorite_maps";
 		case EQmModuleId::HJAssist: return "qm:hj_assist";
-		case EQmModuleId::SpeedrunTimer: return "qm:speedrun_timer";
 		case EQmModuleId::DebugGraph: return "qm:debug_graph";
 		case EQmModuleId::InputOverlay: return "qm:input_overlay";
 		case EQmModuleId::HudNotifications: return "qm:hud_notifications";
